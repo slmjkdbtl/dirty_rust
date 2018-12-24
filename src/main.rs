@@ -6,10 +6,15 @@ extern crate glium;
 extern crate image;
 
 use std::io::Cursor;
+use std::thread;
+use std::time;
 use glium::glutin;
 use glium::Surface;
 use glium::index::PrimitiveType;
 
+mod app;
+mod gfx;
+mod audio;
 mod math;
 
 fn main() {
@@ -29,7 +34,7 @@ fn main() {
 
 	let image_dimensions = image.dimensions();
 	let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-	let texture = glium::texture::Texture2d::new(&display, image).unwrap();
+	let texture = glium::texture::SrgbTexture2d::new(&display, image).unwrap();
 
 	#[derive(Copy, Clone)]
 	struct Vertex {
@@ -114,6 +119,9 @@ fn main() {
 				_ => (),
 			}
 		});
+
+		thread::sleep(time::Duration::from_millis(16));
+
 	}
 
 }

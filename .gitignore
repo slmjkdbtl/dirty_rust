@@ -1,6 +1,7 @@
 # wengwengweng
 
-/target
-/dist
-/Cargo.lock
+target/
+dist/
+Cargo.lock
+**/*.rs.bk
 
