@@ -14,11 +14,10 @@ macos_bin = macos_bundle + "/Contents/MacOS"
 macos_plist_template = "misc/mac.plist"
 
 windows_target = "x86_64-pc-windows-gnu"
-windows_exe = "dist/" + name + ".exe"
 windows_zip = "dist/" + name + ".windows.zip"
 
 linux_target = "x86_64-unknown-linux-gnu"
-wasm_target = "wasm32-unknown-unknown"
+wasm_target = "asmjs-unknown-emscripten"
 ios_target = "x86_64-apple-ios"
 android_target = "x86_64-linux-android"
 
@@ -61,18 +60,18 @@ windows:
 
 	# clean
 	rm -rf {{windows_zip}}
-	rm -rf {{windows_exe}}
 
 	# setup
 	mkdir -p dist
+	mkdir -p dist/{{name}}
 
 	# copy
-	cp target/{{windows_target}}/release/{{name}}.exe dist/{{name}}.exe
+	cp target/{{windows_target}}/release/{{name}}.exe dist/{{name}}/{{name}}.exe
 
 	# zip
 	cd dist; \
-		zip -9 -y -r -q {{name}}.windows.zip {{name}}.exe
-	rm -rf {{windows_exe}}
+		zip -9 -y -r -q {{name}}.windows.zip {{name}}
+	rm -rf dist/{{name}}
 
 linux:
 	cargo build --target {{linux_target}} --release

@@ -66,6 +66,14 @@ impl Matrix4 {
 
 	}
 
+	pub fn rotate(self, rot: f32) -> Matrix4 {
+
+		let mut m = mat4();
+
+		return self * m;
+
+	}
+
 	pub fn matrix(&self) -> [[f32; 4]; 4] {
 		return self.m;
 	}

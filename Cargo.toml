@@ -7,9 +7,13 @@ authors = ["t <voygagaga@outlook.com>"]
 edition = "2018"
 
 [dependencies]
-glium = "*"
 image = "*"
 rodio = "*"
 rand = "*"
 serde = "*"
+gl = "*"
+
+[dependencies.sdl2]
+version = "*"
+features = ["static-link", "bundled"]
 
