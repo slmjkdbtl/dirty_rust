@@ -43,10 +43,6 @@ fn main() {
 
 	gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
 
-	let image = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
-		.unwrap()
-		.to_rgba();
-
 	let mut vao: GLuint = 0;
 	let mut vert_buf: GLuint = 0;
 	let mut uv_buf: GLuint = 0;
@@ -70,6 +66,15 @@ fn main() {
 		0, 1, 3,
 		1, 2, 3,
 	];
+
+	let image = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
+		.unwrap()
+		.to_rgba();
+	let width: GLint = image.width() as GLint;
+	let height: GLint = image.height() as GLint;
+	let pixels: Vec<u8> = image.into_raw();
+
+	let mut texture_id: GLuint = 0;
 
 	unsafe {
 
@@ -121,6 +126,27 @@ fn main() {
 		gl::BindBuffer(gl::ARRAY_BUFFER, 0);
 		gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
 
+		gl::GenTextures(1, &mut texture_id);
+		gl::BindTexture(gl::TEXTURE_2D, texture_id);
+		gl::TexImage2D(
+			gl::TEXTURE_2D,
+			0,
+			gl::RGBA8 as GLint,
+			width,
+			height,
+			0,
+			gl::RGBA,
+			gl::UNSIGNED_BYTE,
+			pixels.as_ptr() as *const _
+		);
+
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+		gl::GenerateMipmap(gl::TEXTURE_2D);
+		gl::BindTexture(gl::TEXTURE_2D, 0);
+
 	}
 
 	let program = create_program(
@@ -129,13 +155,33 @@ fn main() {
 	);
 
 	let mut event_pump = sdl_context.event_pump().unwrap();
+	let mut index = 0;
 
 	'running: loop {
+
+		let trans = math::mat4()
+			.translate(240.0, 240.0)
+			.scale((width as f32) * 0.25 * 2.0, (height as f32) * 2.0);
+
+		if (index < 3) {
+			index += 1;
+		} else {
+			index = 0;
+		}
+
+		let proj = math::ortho(0.0, 640.0, 480.0, 0.0, -1.0, 1.0);
+		let quad = math::vec4((index as f32) * 0.25, 0.0, 0.25, 1.0);
+		let tint = math::vec4(1.0, 1.0, 1.0, 1.0);
 
 		unsafe {
 
 			gl::Clear(gl::COLOR_BUFFER_BIT);
+			uniform_vec4(program, "tint", tint.as_array());
+			uniform_vec4(program, "quad", quad.as_array());
+			uniform_mat4(program, "proj", proj.as_array());
+			uniform_mat4(program, "trans", trans.as_array());
 			gl::UseProgram(program);
+			gl::BindTexture(gl::TEXTURE_2D, texture_id);
 			gl::BindVertexArray(vao);
 			gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
 
@@ -207,111 +253,28 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 
 }
 
-// fn main() {
+fn uniform_vec4(id: GLuint, name: &str, value: [f32; 4]) {
+	unsafe {
+		gl::ProgramUniform4fv(
+			id,
+			gl::GetUniformLocation(id, CString::new(name).unwrap().as_ptr()),
+			1,
+			value.as_ptr()
+		);
+	}
+}
 
-// 	let mut events_loop = glutin::EventsLoop::new();
+fn uniform_mat4(id: GLuint, name: &str, value: [[f32; 4]; 4]) {
 
-// 	let window = glutin::WindowBuilder::new()
-// 		.with_dimensions((640, 480).into())
-// 		.with_title("yo");
+	unsafe {
+		gl::ProgramUniformMatrix4fv(
+			id,
+			gl::GetUniformLocation(id, CString::new(name).unwrap().as_ptr()),
+			1,
+			gl::FALSE,
+			&value[0][0]
+		);
+	}
 
-// 	let context = glutin::ContextBuilder::new();
-// 	let display = glium::Display::new(window, context, &events_loop).unwrap();
-
-// 	let image = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
-// 		.unwrap()
-// 		.to_rgba();
-
-// 	let image_dimensions = image.dimensions();
-// 	let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-// 	let texture = glium::texture::SrgbTexture2d::new(&display, image).unwrap();
-
-// 	#[derive(Copy, Clone)]
-// 	struct Vertex {
-// 		pos: [f32; 2],
-// 		uv: [f32; 2],
-// 	}
-
-// 	implement_vertex!(Vertex, pos, uv);
-
-// 	let vertex_buffer = glium::VertexBuffer::new(&display,
-// 		&[
-// 			Vertex { pos: [-1.0, -1.0], uv: [0.0, 0.0] },
-// 			Vertex { pos: [-1.0,  1.0], uv: [0.0, 1.0] },
-// 			Vertex { pos: [ 1.0,  1.0], uv: [1.0, 1.0] },
-// 			Vertex { pos: [ 1.0, -1.0], uv: [1.0, 0.0] }
-// 		]
-// 	).unwrap();
-
-// 	let index_buffer = glium::IndexBuffer::new(&display, PrimitiveType::TriangleStrip, &[1 as u16, 2, 0, 3]).unwrap();
-
-// 	let vs_src = r#"
-// 		#version 100
-// 		precision mediump float;
-// 		attribute vec2 pos;
-// 		attribute vec2 uv;
-// 		varying vec2 tex_coord;
-// 		uniform mat4 projection;
-// 		uniform mat4 transform;
-// 		uniform vec4 quad;
-// 		void main() {
-// 			tex_coord = quad.xy + uv * quad.zw;
-// 			gl_Position = projection * transform * vec4(pos, 0.0, 1.0);
-// 		}
-// 	"#;
-
-// 	let fs_src = r#"
-// 		#version 100
-// 		precision mediump float;
-// 		varying vec2 tex_coord;
-// 		uniform sampler2D tex;
-// 		uniform vec4 tint;
-// 		void main() {
-// 			gl_FragColor = texture2D(tex, tex_coord) * tint;
-// 		}
-// 	"#;
-
-// 	let program = glium::Program::from_source(&display, vs_src, fs_src, None).unwrap();
-
-// 	let mut closed = false;
-
-// 	while !closed {
-
-// 		let mut target = display.draw();
-
-// 		let trans = math::mat4()
-// 			.translate(120.0, 120.0)
-// 			.scale(100.0, 100.0);
-
-// 		let proj = math::ortho(0.0, 640.0, 480.0, 0.0, -1.0, 1.0);
-
-// 		let uniforms = uniform!{
-// 			projection: proj.matrix(),
-// 			transform: trans.matrix(),
-// 			quad: math::vec4(0.0, 0.0, 0.25, 1.0).arr(),
-// 			tex: texture.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest),
-// 			tint: math::vec4(1.0, 1.0, 1.0, 1.0).arr(),
-// 		};
-
-// 		target.clear_color(0.0, 0.0, 0.0, 1.0);
-// 		target.draw(&vertex_buffer, &index_buffer, &program, &uniforms, &Default::default()).unwrap();
-// 		target.finish().unwrap();
-
-// 		events_loop.poll_events(|ev| {
-// 			match ev {
-// 				glutin::Event::WindowEvent { event, .. } => match event {
-// 					glutin::WindowEvent::CloseRequested =>
-// 						closed = true,
-// 					_ =>
-// 						(),
-// 				},
-// 				_ => (),
-// 			}
-// 		});
-
-// 		thread::sleep(time::Duration::from_millis(16));
-
-// 	}
-
-// }
+}
 

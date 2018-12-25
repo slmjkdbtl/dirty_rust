@@ -11,6 +11,7 @@ uniform mat4 proj;
 uniform vec4 quad;
 
 void main() {
-	gl_Position = vec4(vertices, 0.0, 1.0);
+	tex_coord = quad.xy + quad.zw * uv;
+	gl_Position = proj * trans * vec4(vertices, 0.0, 1.0);
 }
 
