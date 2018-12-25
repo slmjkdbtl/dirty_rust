@@ -5,6 +5,7 @@
 extern crate image;
 extern crate gl;
 extern crate sdl2;
+extern crate rodio;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -17,6 +18,9 @@ use std::thread;
 use std::time;
 use std::ptr;
 use std::str;
+use std::fs::File;
+use std::io::BufReader;
+use rodio::Source;
 
 mod app;
 mod gfx;
@@ -42,6 +46,11 @@ fn main() {
 	let ctx = window.gl_create_context().unwrap();
 
 	gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
+
+	let device = rodio::default_output_device().unwrap();
+
+	let source = rodio::Decoder::new(Cursor::new(&include_bytes!("pop.ogg")[..])).unwrap();
+	rodio::play_raw(&device, source.convert_samples());
 
 	let mut vao: GLuint = 0;
 	let mut vert_buf: GLuint = 0;
@@ -254,6 +263,7 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 }
 
 fn uniform_vec4(id: GLuint, name: &str, value: [f32; 4]) {
+
 	unsafe {
 		gl::ProgramUniform4fv(
 			id,
@@ -262,6 +272,7 @@ fn uniform_vec4(id: GLuint, name: &str, value: [f32; 4]) {
 			value.as_ptr()
 		);
 	}
+
 }
 
 fn uniform_mat4(id: GLuint, name: &str, value: [[f32; 4]; 4]) {

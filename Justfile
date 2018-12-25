@@ -6,7 +6,7 @@ identifier = "me.wengwengweng.yo"
 version = "0.0.0"
 
 macos_target = "x86_64-apple-darwin"
-macos_bundle = "dist/" + name + ".app"
+macos_bundle = "dist/" + name + "/" + name + ".app"
 macos_zip = "dist/" + name + ".mac.zip"
 macos_plist = macos_bundle + "/Contents/Info.plist"
 macos_resources = macos_bundle + "/Contents/Resources"
@@ -33,6 +33,7 @@ macos:
 
 	# setup
 	mkdir -p dist
+	mkdir -p dist/{{name}}
 	mkdir -p {{macos_bundle}}/Contents
 
 	# plist
@@ -52,8 +53,8 @@ macos:
 
 	# compress
 	cd dist; \
-		zip -9 -y -r -q {{name}}.mac.zip {{name}}.app
-	rm -rf {{macos_bundle}}
+		zip -9 -y -r -q {{name}}.mac.zip {{name}}
+	rm -rf dist/{{name}}
 
 windows:
 	cargo build --target {{windows_target}} --release
