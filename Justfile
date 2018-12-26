@@ -86,3 +86,6 @@ ios:
 android:
 	cargo build --target {{android_target}} --release
 
+doc crate:
+	cargo doc -p {{crate}} --no-deps --open
+
