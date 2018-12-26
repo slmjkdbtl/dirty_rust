@@ -7,23 +7,35 @@ use std::io::Seek;
 use std::ptr;
 use std::mem;
 
-pub struct Mesh {
-
-	buffers: Vec<GLuint>,
-	index_buffer: GLuint,
-
+pub struct Buffer {
+	id: GLuint,
 }
 
-impl Mesh {
+impl Buffer {
 
-	pub fn make_buf(&mut self, data: &Vec<GLfloat>) -> &mut Mesh {
+	pub fn bind(&self) -> &Buffer {
+
+		unsafe {
+			gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
+		}
+
+		return self;
+	}
+
+	pub fn unbind(&self) -> &Buffer {
+
+		unsafe {
+			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+		}
+
+		return self;
+	}
+
+	pub fn data(&self, data: &Vec<GLfloat>) -> &Buffer {
 
 		unsafe {
 
-			let mut id: GLuint = 0;
-
-			gl::GenBuffers(1, &mut id);
-			gl::BindBuffer(gl::ARRAY_BUFFER, id);
+			self.bind();
 
 			gl::BufferData(
 				gl::ARRAY_BUFFER,
@@ -32,8 +44,7 @@ impl Mesh {
 				gl::STATIC_DRAW
 			);
 
-			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-			self.buffers.push(id);
+			self.unbind();
 
 		}
 
@@ -41,14 +52,53 @@ impl Mesh {
 
 	}
 
-	pub fn make_index_buf(&mut self, data: &Vec<GLuint>) -> &mut Mesh {
+	pub fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Buffer {
 
 		unsafe {
 
-			let mut id: GLuint = 0;
+			self.bind();
+			gl::VertexAttribPointer(attr_index, buf_size, gl::FLOAT, gl::FALSE, 0, ptr::null());
+			gl::EnableVertexAttribArray(attr_index);
+			self.unbind();
 
-			gl::GenBuffers(1, &mut id);
-			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, id);
+		}
+
+		return self;
+
+	}
+
+}
+
+pub struct IndexBuffer {
+	id: GLuint,
+}
+
+impl IndexBuffer {
+
+	pub fn bind(&self) -> &IndexBuffer {
+
+		unsafe {
+			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
+		}
+
+		return self;
+	}
+
+	pub fn unbind(&self) -> &IndexBuffer {
+
+		unsafe {
+			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+		}
+
+		return self;
+
+	}
+
+	pub fn data(&self, data: &Vec<GLuint>) -> &IndexBuffer {
+
+		unsafe {
+
+			self.bind();
 
 			gl::BufferData(
 				gl::ELEMENT_ARRAY_BUFFER,
@@ -57,8 +107,7 @@ impl Mesh {
 				gl::STATIC_DRAW
 			);
 
-			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-			self.index_buffer = id;
+			self.unbind();
 
 		}
 
@@ -66,24 +115,83 @@ impl Mesh {
 
 	}
 
-	pub fn attr(&self, attr_index: GLuint, buf_index: usize) -> &Mesh {
+}
+
+pub struct Mesh {
+
+	buffers: Vec<Buffer>,
+	index_buffer: IndexBuffer,
+
+}
+
+fn make_buffer() -> Buffer {
+
+	unsafe {
+
+		let mut id: GLuint = 0;
+
+		gl::GenBuffers(1, &mut id);
+
+		return Buffer {
+			id: id,
+		};
+
+	}
+
+}
+
+fn make_index_buffer() -> IndexBuffer {
+
+	unsafe {
+
+		let mut id: GLuint = 0;
+
+		gl::GenBuffers(1, &mut id);
+
+		return IndexBuffer {
+			id: id,
+		};
+
+	}
+
+}
+
+impl Mesh {
+
+	pub fn make_buf(&mut self, data: &Vec<GLfloat>) -> &Buffer {
 
 		unsafe {
 
-			gl::BindBuffer(gl::ARRAY_BUFFER, self.buffers[buf_index]);
-			gl::VertexAttribPointer(attr_index, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
-			gl::EnableVertexAttribArray(attr_index);
+			let buf = make_buffer();
+
+			buf.data(&data);
+			self.buffers.push(buf);
+
+			return &self.buffers[self.buffers.len() - 1];
 
 		}
 
-		return self
+	}
+
+	pub fn make_index_buf(&mut self, data: &Vec<GLuint>) -> &IndexBuffer {
+
+		unsafe {
+
+			let buf = make_index_buffer();
+
+			buf.data(&data);
+			self.index_buffer = buf;
+
+			return &self.index_buffer;
+
+		}
 
 	}
 
 	pub fn draw(&self) {
 
 		unsafe {
-			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.index_buffer);
+			self.index_buffer.bind();
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
 		}
 
@@ -95,7 +203,7 @@ pub fn make_mesh() -> Mesh {
 
 	return Mesh {
 		buffers: vec![],
-		index_buffer: 0,
+		index_buffer: IndexBuffer{id: 0},
 	};
 
 }
@@ -315,6 +423,7 @@ pub fn init() {
 		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+		clear();
 
 	}
 
