@@ -1,5 +1,6 @@
 // wengwengweng
 
+#![windows_subsystem = "windows"]
 #[macro_use]
 
 extern crate image;
@@ -11,12 +12,14 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::video::GLProfile;
 use gl::types::*;
-use std::ffi::{CString};
+use std::ffi::CString;
 use std::io::Cursor;
 use std::os::raw::c_void;
 use std::thread;
 use std::time;
 use std::ptr;
+use std::ptr::null;
+use std::ptr::null_mut;
 use std::str;
 use std::fs::File;
 use std::io::BufReader;
@@ -33,10 +36,8 @@ fn main() {
 	let video_subsystem = sdl_context.video().unwrap();
 	let gl_attr = video_subsystem.gl_attr();
 
-	gl_attr.set_context_profile(GLProfile::Core);
-	gl_attr.set_context_version(3, 3);
-	gl_attr.set_context_flags()
-		.forward_compatible();
+	gl_attr.set_context_profile(GLProfile::Compatibility);
+	gl_attr.set_context_version(2, 1);
 
 	let window = video_subsystem.window("yo", 640, 480)
 		.opengl()
@@ -47,12 +48,11 @@ fn main() {
 
 	gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
 
-	let device = rodio::default_output_device().unwrap();
+// 	let device = rodio::default_output_device().unwrap();
 
-	let source = rodio::Decoder::new(Cursor::new(&include_bytes!("pop.ogg")[..])).unwrap();
-	rodio::play_raw(&device, source.convert_samples());
+// 	let source = rodio::Decoder::new(Cursor::new(&include_bytes!("pop.ogg")[..])).unwrap();
+// 	rodio::play_raw(&device, source.convert_samples());
 
-	let mut vao: GLuint = 0;
 	let mut vert_buf: GLuint = 0;
 	let mut uv_buf: GLuint = 0;
 	let mut index_buf: GLuint = 0;
@@ -84,19 +84,22 @@ fn main() {
 	let pixels: Vec<u8> = image.into_raw();
 
 	let mut texture_id: GLuint = 0;
+	let mut vert_attr: GLint;
+
+	let program = create_program(
+		include_str!("quad.vert").to_owned(),
+		include_str!("quad.frag").to_owned()
+	);
 
 	unsafe {
 
 		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+		gl::ClearColor(0.0, 0.0, 1.0, 1.0);
 
 		gl::GenBuffers(1, &mut vert_buf);
 		gl::GenBuffers(1, &mut uv_buf);
 		gl::GenBuffers(1, &mut index_buf);
-		gl::GenVertexArrays(1, &mut vao);
-
-		gl::BindVertexArray(vao);
 
 		gl::BindBuffer(gl::ARRAY_BUFFER, vert_buf);
 
@@ -104,6 +107,15 @@ fn main() {
 			gl::ARRAY_BUFFER,
 			(vertices.len() * std::mem::size_of::<GLfloat>()) as GLsizeiptr,
 			&vertices[0] as *const f32 as *const c_void,
+			gl::STATIC_DRAW
+		);
+
+		gl::BindBuffer(gl::ARRAY_BUFFER, uv_buf);
+
+		gl::BufferData(
+			gl::ARRAY_BUFFER,
+			(uv.len() * std::mem::size_of::<GLfloat>()) as GLsizeiptr,
+			&uv[0] as *const f32 as *const c_void,
 			gl::STATIC_DRAW
 		);
 
@@ -116,27 +128,19 @@ fn main() {
 			gl::STATIC_DRAW
 		);
 
-		gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 2 * std::mem::size_of::<GLfloat>() as GLsizei, ptr::null());
-		gl::EnableVertexAttribArray(0);
-
-		gl::BindBuffer(gl::ARRAY_BUFFER, uv_buf);
-
-		gl::BufferData(
-			gl::ARRAY_BUFFER,
-			(uv.len() * std::mem::size_of::<GLfloat>()) as GLsizeiptr,
-			&uv[0] as *const f32 as *const c_void,
-			gl::STATIC_DRAW
-		);
-
-		gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 2 * std::mem::size_of::<GLfloat>() as GLsizei, ptr::null());
-		gl::EnableVertexAttribArray(1);
-
-		gl::BindVertexArray(0);
 		gl::BindBuffer(gl::ARRAY_BUFFER, 0);
 		gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
 
+		gl::BindBuffer(gl::ARRAY_BUFFER, vert_buf);
+		gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+		gl::EnableVertexAttribArray(0);
+		gl::BindBuffer(gl::ARRAY_BUFFER, uv_buf);
+		gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+		gl::EnableVertexAttribArray(1);
+
 		gl::GenTextures(1, &mut texture_id);
 		gl::BindTexture(gl::TEXTURE_2D, texture_id);
+
 		gl::TexImage2D(
 			gl::TEXTURE_2D,
 			0,
@@ -157,11 +161,6 @@ fn main() {
 		gl::BindTexture(gl::TEXTURE_2D, 0);
 
 	}
-
-	let program = create_program(
-		include_str!("quad.vert").to_owned(),
-		include_str!("quad.frag").to_owned()
-	);
 
 	let mut event_pump = sdl_context.event_pump().unwrap();
 	let mut index = 0;
@@ -185,14 +184,15 @@ fn main() {
 		unsafe {
 
 			gl::Clear(gl::COLOR_BUFFER_BIT);
+			gl::Viewport(0, 0, 640, 480);
 			uniform_vec4(program, "tint", tint.as_array());
 			uniform_vec4(program, "quad", quad.as_array());
 			uniform_mat4(program, "proj", proj.as_array());
 			uniform_mat4(program, "trans", trans.as_array());
 			gl::UseProgram(program);
+			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, index_buf);
 			gl::BindTexture(gl::TEXTURE_2D, texture_id);
-			gl::BindVertexArray(vao);
-			gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
 
 		}
 
@@ -223,6 +223,8 @@ fn create_program(vs_src: String, fs_src: String) -> GLuint {
 
 		gl::AttachShader(program, vs);
 		gl::AttachShader(program, fs);
+		gl::BindAttribLocation(program, 0, CString::new("pos").unwrap().as_ptr());
+		gl::BindAttribLocation(program, 1, CString::new("uv").unwrap().as_ptr());
 		gl::LinkProgram(program);
 
 		return program;
@@ -247,12 +249,21 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 
 		if status != (gl::TRUE as GLint) {
 
-			let mut log_length = 0;
+			let mut log_length: GLint = std::mem::uninitialized();
+
 			gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut log_length);
-			let log: Vec<i8> = Vec::with_capacity(log_length as usize);
-			gl::GetShaderInfoLog(id, 512, ptr::null_mut(), log.as_ptr() as *mut i8);
-			eprintln!("{:?}", log);
-			gl::DeleteShader(id);
+
+			let mut log: Vec<u8> = Vec::with_capacity(log_length as usize);
+
+			gl::GetShaderInfoLog(
+				id,
+				log_length,
+				&mut log_length,
+				log.as_mut_ptr() as *mut GLchar
+			);
+
+			log.set_len(log_length as usize);
+			panic!("{}", String::from_utf8(log).unwrap());
 
 		}
 
@@ -265,11 +276,12 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 fn uniform_vec4(id: GLuint, name: &str, value: [f32; 4]) {
 
 	unsafe {
-		gl::ProgramUniform4fv(
-			id,
+		gl::Uniform4f(
 			gl::GetUniformLocation(id, CString::new(name).unwrap().as_ptr()),
-			1,
-			value.as_ptr()
+			value[0],
+			value[1],
+			value[2],
+			value[3],
 		);
 	}
 
@@ -278,8 +290,7 @@ fn uniform_vec4(id: GLuint, name: &str, value: [f32; 4]) {
 fn uniform_mat4(id: GLuint, name: &str, value: [[f32; 4]; 4]) {
 
 	unsafe {
-		gl::ProgramUniformMatrix4fv(
-			id,
+		gl::UniformMatrix4fv(
 			gl::GetUniformLocation(id, CString::new(name).unwrap().as_ptr()),
 			1,
 			gl::FALSE,
@@ -288,4 +299,9 @@ fn uniform_mat4(id: GLuint, name: &str, value: [[f32; 4]; 4]) {
 	}
 
 }
+
+fn cstr_ptr(data: &str) -> *const GLchar {
+	return CString::new(data).unwrap().as_ptr();
+}
+
 
