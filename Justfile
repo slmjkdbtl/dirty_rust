@@ -28,8 +28,8 @@ macos:
 	cargo build --target {{macos_target}} --release
 
 	# clean
+	rm -rf dist/{{name}}
 	rm -rf {{macos_zip}}
-	rm -rf {{macos_bundle}}
 
 	# setup
 	mkdir -p dist
@@ -60,6 +60,7 @@ windows:
 	cargo build --target {{windows_target}} --release
 
 	# clean
+	rm -rf dist/{{name}}
 	rm -rf {{windows_zip}}
 
 	# setup
