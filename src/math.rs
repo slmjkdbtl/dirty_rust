@@ -25,19 +25,19 @@ pub struct Matrix4 {
 }
 
 impl Vector2 {
-	pub fn as_array(&self) -> [f32; 2] {
+	pub fn as_arr(&self) -> [f32; 2] {
 		return [self.x, self.y];
 	}
 }
 
 impl Vector3 {
-	pub fn as_array(&self) -> [f32; 3] {
+	pub fn as_arr(&self) -> [f32; 3] {
 		return [self.x, self.y, self.z];
 	}
 }
 
 impl Vector4 {
-	pub fn as_array(&self) -> [f32; 4] {
+	pub fn as_arr(&self) -> [f32; 4] {
 		return [self.x, self.y, self.z, self.w];
 	}
 }
@@ -74,7 +74,7 @@ impl Matrix4 {
 
 	}
 
-	pub fn as_array(&self) -> [[f32; 4]; 4] {
+	pub fn as_arr(&self) -> [[f32; 4]; 4] {
 		return self.m;
 	}
 
