@@ -12,6 +12,7 @@ rodio = "*"
 rand = "*"
 serde = "*"
 gl = "*"
+tobj = "*"
 
 [dependencies.sdl2]
 version = "*"

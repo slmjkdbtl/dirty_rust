@@ -2,10 +2,70 @@
 
 use gl::types::*;
 use std::ffi::CString;
-use std::io::BufRead;
-use std::io::Seek;
 use std::ptr;
 use std::mem;
+
+use crate::math;
+
+struct Renderer2D {
+
+	mesh: Mesh,
+	program: Program,
+
+}
+
+impl Renderer2D {
+
+	fn draw(&self) {
+		self.program.bind();
+		self.mesh.draw();
+	}
+
+}
+
+fn make_renderer_2d() -> Renderer2D {
+
+	let vertices: Vec<GLfloat> = vec![
+		-0.5,  0.5,
+		 0.5,  0.5,
+		 0.5, -0.5,
+		-0.5, -0.5,
+	];
+
+	let uv: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0
+	];
+
+	let indices: Vec<GLuint> = vec![
+		0, 1, 3,
+		1, 2, 3,
+	];
+
+	let mut mesh = make_mesh();
+
+	mesh.make_buf(&vertices).attr(0, 2);
+	mesh.make_buf(&uv).attr(1, 2);
+	mesh.make_index_buf(&indices);
+
+	let program = make_program(
+		include_str!("quad.vert").to_owned(),
+		include_str!("quad.frag").to_owned()
+	);
+
+	program
+		.attr(0, "pos")
+		.attr(1, "uv")
+		.link();
+
+	return Renderer2D {
+		mesh: mesh,
+		program: program,
+	};
+
+}
 
 pub struct Buffer {
 	id: GLuint,
@@ -13,7 +73,7 @@ pub struct Buffer {
 
 impl Buffer {
 
-	pub fn bind(&self) -> &Buffer {
+	pub fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
@@ -22,7 +82,7 @@ impl Buffer {
 		return self;
 	}
 
-	pub fn unbind(&self) -> &Buffer {
+	pub fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -31,7 +91,7 @@ impl Buffer {
 		return self;
 	}
 
-	pub fn data(&self, data: &Vec<GLfloat>) -> &Buffer {
+	pub fn data(&self, data: &Vec<GLfloat>) -> &Self {
 
 		unsafe {
 
@@ -52,7 +112,7 @@ impl Buffer {
 
 	}
 
-	pub fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Buffer {
+	pub fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Self {
 
 		unsafe {
 
@@ -75,7 +135,7 @@ pub struct IndexBuffer {
 
 impl IndexBuffer {
 
-	pub fn bind(&self) -> &IndexBuffer {
+	pub fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
@@ -84,7 +144,7 @@ impl IndexBuffer {
 		return self;
 	}
 
-	pub fn unbind(&self) -> &IndexBuffer {
+	pub fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
@@ -94,7 +154,7 @@ impl IndexBuffer {
 
 	}
 
-	pub fn data(&self, data: &Vec<GLuint>) -> &IndexBuffer {
+	pub fn data(&self, data: &Vec<GLuint>) -> &Self {
 
 		unsafe {
 
@@ -203,7 +263,9 @@ pub fn make_mesh() -> Mesh {
 
 	return Mesh {
 		buffers: vec![],
-		index_buffer: IndexBuffer{id: 0},
+		index_buffer: IndexBuffer{
+			id: 0
+		},
 	};
 
 }
@@ -218,7 +280,7 @@ pub struct Texture {
 
 impl Texture {
 
-	pub fn bind(&self) -> &Texture {
+	pub fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindTexture(gl::TEXTURE_2D, self.id);
@@ -228,7 +290,7 @@ impl Texture {
 
 	}
 
-	pub fn unbind(&self) -> &Texture {
+	pub fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindTexture(gl::TEXTURE_2D, 0);
@@ -240,7 +302,7 @@ impl Texture {
 
 }
 
-pub fn make_texture(pixels: &Vec<u8>, width: u32, height: u32) -> Texture {
+pub fn make_texture(pixels: &[u8], width: u32, height: u32) -> Texture {
 
 	unsafe {
 
@@ -284,7 +346,7 @@ pub struct Program {
 
 impl Program {
 
-	pub fn attr(&self, index: GLuint, name: &str) -> &Program {
+	pub fn attr(&self, index: GLuint, name: &str) -> &Self {
 
 		unsafe {
 			gl::BindAttribLocation(self.id, index, CString::new(name).unwrap().as_ptr());
@@ -294,7 +356,7 @@ impl Program {
 
 	}
 
-	pub fn bind(&self) -> &Program {
+	pub fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(self.id);
@@ -304,7 +366,7 @@ impl Program {
 
 	}
 
-	pub fn unbind(&self) -> &Program {
+	pub fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(0);
@@ -314,7 +376,7 @@ impl Program {
 
 	}
 
-	pub fn link(&self) -> &Program {
+	pub fn link(&self) -> &Self {
 
 		unsafe {
 			gl::LinkProgram(self.id);
@@ -324,7 +386,7 @@ impl Program {
 
 	}
 
-	pub fn uniform_vec4(&self, name: &str, value: [f32; 4]) -> &Program {
+	pub fn uniform_vec4(&self, name: &str, value: [f32; 4]) -> &Self {
 
 		unsafe {
 			gl::Uniform4f(
@@ -340,7 +402,7 @@ impl Program {
 
 	}
 
-	pub fn uniform_mat4(&self, name: &str, value: [[f32; 4]; 4]) -> &Program {
+	pub fn uniform_mat4(&self, name: &str, value: [[f32; 4]; 4]) -> &Self {
 
 		unsafe {
 			gl::UniformMatrix4fv(
