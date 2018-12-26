@@ -15,8 +15,6 @@ use gl::types::*;
 use std::io::Cursor;
 use std::thread;
 use std::time;
-use std::ptr;
-use std::mem;
 use rodio::Source;
 
 mod app;
@@ -26,22 +24,25 @@ mod math;
 
 fn main() {
 
-	let sdl_context = sdl2::init().unwrap();
-	let audio_subsystem = sdl_context.audio().unwrap();
-	let video_subsystem = sdl_context.video().unwrap();
-	let gl_attr = video_subsystem.gl_attr();
+	let sdl_ctx = sdl2::init().unwrap();
+	let video = sdl_ctx.video().unwrap();
+	let gl_attr = video.gl_attr();
 
 	gl_attr.set_context_profile(GLProfile::Compatibility);
 	gl_attr.set_context_version(2, 1);
 
-	let window = video_subsystem.window("yo", 640, 480)
+	let window = video.window("yo", 640, 480)
 		.opengl()
 		.build()
 		.unwrap();
 
 	let ctx = window.gl_create_context().unwrap();
 
-	gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
+	gl::load_with(|name| {
+		video.gl_get_proc_address(name) as *const std::os::raw::c_void
+	});
+
+	gfx::init();
 
 // 	let device = rodio::default_output_device().unwrap();
 
@@ -97,9 +98,7 @@ fn main() {
 		height,
 	);
 
-	gfx::init();
-
-	let mut event_pump = sdl_context.event_pump().unwrap();
+	let mut event_pump = sdl_ctx.event_pump().unwrap();
 	let mut index = 0;
 
 	'running: loop {
