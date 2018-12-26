@@ -27,6 +27,7 @@ mod math;
 fn main() {
 
 	let sdl_context = sdl2::init().unwrap();
+	let audio_subsystem = sdl_context.audio().unwrap();
 	let video_subsystem = sdl_context.video().unwrap();
 	let gl_attr = video_subsystem.gl_attr();
 
@@ -68,12 +69,9 @@ fn main() {
 
 	let mut mesh = gfx::make_mesh();
 
-	mesh
-		.make_buf(&vertices)
-		.make_buf(&uv)
-		.make_index_buf(&indices)
-		.attr(0, 0)
-		.attr(1, 1);
+	mesh.make_buf(&vertices).attr(0, 2);
+	mesh.make_buf(&uv).attr(1, 2);
+	mesh.make_index_buf(&indices);
 
 	let program = gfx::make_program(
 		include_str!("quad.vert").to_owned(),
@@ -106,22 +104,23 @@ fn main() {
 
 	'running: loop {
 
-		let trans = math::mat4()
-			.translate(240.0, 240.0)
-			.rotate(0.0)
-			.scale((tex.width as f32) * 0.25 * 2.0, (tex.height as f32) * 2.0);
-
 		if (index < 3) {
 			index += 1;
 		} else {
 			index = 0;
 		}
 
+		gfx::clear();
+		tex.bind();
+
 		let proj = math::ortho(0.0, 640.0, 480.0, 0.0, -1.0, 1.0);
 		let quad = math::vec4((index as f32) * 0.25, 0.0, 0.25, 1.0);
 		let tint = math::vec4(1.0, 1.0, 1.0, 1.0);
 
-		gfx::clear();
+		let trans = math::mat4()
+			.translate(240.0, 240.0)
+			.rotate(0.0)
+			.scale((tex.width as f32) * 0.25 * 2.0, (tex.height as f32) * 2.0);
 
 		program
 			.uniform_vec4("tint", tint.as_arr())
@@ -130,16 +129,18 @@ fn main() {
 			.uniform_mat4("trans", trans.as_arr())
 			.bind();
 
-		tex.bind();
 		mesh.draw();
 
 		window.gl_swap_window();
 
 		for event in event_pump.poll_iter() {
 			match event {
-				Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-					break 'running
+				Event::Quit {..} => {
+					break 'running;
 				},
+				Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+					break 'running;
+				}
 				_ => {}
 			}
 		}
