@@ -85,39 +85,21 @@ fn main() {
 		.attr(1, "uv")
 		.link();
 
-	let tex = gfx::make_texture();
-
-	let image = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
+	let img = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
 		.unwrap()
 		.to_rgba();
 
-	let width: GLint = image.width() as GLint;
-	let height: GLint = image.height() as GLint;
-	let pixels: Vec<u8> = image.into_raw();
+	let width = img.width();
+	let height = img.height();
+	let pixels = img.into_raw();
 
-	unsafe {
+	let tex = gfx::make_texture(
+		&pixels,
+		width,
+		height,
+	);
 
-		gl::Enable(gl::BLEND);
-		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-		gl::ClearColor(0.0, 0.0, 1.0, 1.0);
-
-		tex.bind();
-
-		gl::TexImage2D(
-			gl::TEXTURE_2D,
-			0,
-			gl::RGBA8 as GLint,
-			width,
-			height,
-			0,
-			gl::RGBA,
-			gl::UNSIGNED_BYTE,
-			pixels.as_ptr() as *const GLvoid
-		);
-
-		tex.unbind();
-
-	}
+	gfx::init();
 
 	let mut event_pump = sdl_context.event_pump().unwrap();
 	let mut index = 0;
@@ -127,7 +109,7 @@ fn main() {
 		let trans = math::mat4()
 			.translate(240.0, 240.0)
 			.rotate(0.0)
-			.scale((width as f32) * 0.25 * 2.0, (height as f32) * 2.0);
+			.scale((tex.width as f32) * 0.25 * 2.0, (tex.height as f32) * 2.0);
 
 		if (index < 3) {
 			index += 1;
@@ -139,21 +121,17 @@ fn main() {
 		let quad = math::vec4((index as f32) * 0.25, 0.0, 0.25, 1.0);
 		let tint = math::vec4(1.0, 1.0, 1.0, 1.0);
 
-		unsafe {
+		gfx::clear();
 
-			gl::Clear(gl::COLOR_BUFFER_BIT);
+		program
+			.uniform_vec4("tint", tint.as_arr())
+			.uniform_vec4("quad", quad.as_arr())
+			.uniform_mat4("proj", proj.as_arr())
+			.uniform_mat4("trans", trans.as_arr())
+			.bind();
 
-			program
-				.uniform_vec4("tint", tint.as_arr())
-				.uniform_vec4("quad", quad.as_arr())
-				.uniform_mat4("proj", proj.as_arr())
-				.uniform_mat4("trans", trans.as_arr())
-				.bind();
-
-			tex.bind();
-			mesh.draw();
-
-		}
+		tex.bind();
+		mesh.draw();
 
 		window.gl_swap_window();
 
@@ -170,11 +148,5 @@ fn main() {
 
 	}
 
-}
-
-fn test(v: &Vec<GLfloat>) {
-	for i in v {
-		println!("{}", i);
-	}
 }
 
