@@ -2,6 +2,8 @@
 
 use gl::types::*;
 use std::ffi::CString;
+use std::io::BufRead;
+use std::io::Seek;
 use std::ptr;
 use std::mem;
 
@@ -99,7 +101,11 @@ pub fn make_mesh() -> Mesh {
 }
 
 pub struct Texture {
+
 	id: GLuint,
+	pub width: u32,
+	pub height: u32,
+
 }
 
 impl Texture {
@@ -126,7 +132,7 @@ impl Texture {
 
 }
 
-pub fn make_texture() -> Texture {
+pub fn make_texture(pixels: &Vec<u8>, width: u32, height: u32) -> Texture {
 
 	unsafe {
 
@@ -139,10 +145,25 @@ pub fn make_texture() -> Texture {
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 		gl::GenerateMipmap(gl::TEXTURE_2D);
+
+		gl::TexImage2D(
+			gl::TEXTURE_2D,
+			0,
+			gl::RGBA8 as GLint,
+			width as GLint,
+			height as GLint,
+			0,
+			gl::RGBA,
+			gl::UNSIGNED_BYTE,
+			pixels.as_ptr() as *const GLvoid
+		);
+
 		gl::BindTexture(gl::TEXTURE_2D, 0);
 
 		return Texture {
-			id
+			id: id,
+			width: width,
+			height: height,
 		};
 
 	}
@@ -240,7 +261,7 @@ pub fn make_program(vs_src: String, fs_src: String) -> Program {
 		gl::AttachShader(id, fs);
 
 		return Program {
-			id
+			id: id
 		};
 
 	}
@@ -285,5 +306,23 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 
 	}
 
+}
+
+pub fn init() {
+
+	unsafe {
+
+		gl::Enable(gl::BLEND);
+		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+
+	}
+
+}
+
+pub fn clear() {
+	unsafe {
+		gl::Clear(gl::COLOR_BUFFER_BIT);
+	}
 }
 
