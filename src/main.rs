@@ -1,7 +1,6 @@
 // wengwengweng
 
 #![windows_subsystem = "windows"]
-#[macro_use]
 
 extern crate image;
 extern crate gl;
@@ -83,13 +82,17 @@ fn main() {
 	let height: GLint = image.height() as GLint;
 	let pixels: Vec<u8> = image.into_raw();
 
-	let mut texture_id: GLuint = 0;
-	let mut vert_attr: GLint;
-
-	let program = create_program(
+	let program = make_program(
 		include_str!("quad.vert").to_owned(),
 		include_str!("quad.frag").to_owned()
 	);
+
+	program
+		.attr(0, "pos")
+		.attr(1, "uv")
+		.link();
+
+	let tex = make_texture();
 
 	unsafe {
 
@@ -138,8 +141,7 @@ fn main() {
 		gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
 		gl::EnableVertexAttribArray(1);
 
-		gl::GenTextures(1, &mut texture_id);
-		gl::BindTexture(gl::TEXTURE_2D, texture_id);
+		tex.bind();
 
 		gl::TexImage2D(
 			gl::TEXTURE_2D,
@@ -153,12 +155,7 @@ fn main() {
 			pixels.as_ptr() as *const _
 		);
 
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
-		gl::GenerateMipmap(gl::TEXTURE_2D);
-		gl::BindTexture(gl::TEXTURE_2D, 0);
+		tex.unbind();
 
 	}
 
@@ -185,13 +182,16 @@ fn main() {
 
 			gl::Clear(gl::COLOR_BUFFER_BIT);
 			gl::Viewport(0, 0, 640, 480);
-			uniform_vec4(program, "tint", tint.as_array());
-			uniform_vec4(program, "quad", quad.as_array());
-			uniform_mat4(program, "proj", proj.as_array());
-			uniform_mat4(program, "trans", trans.as_array());
-			gl::UseProgram(program);
+
+			program
+				.uniform_vec4("tint", tint.as_array())
+				.uniform_vec4("quad", quad.as_array())
+				.uniform_mat4("proj", proj.as_array())
+				.uniform_mat4("trans", trans.as_array())
+				.bind();
+
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, index_buf);
-			gl::BindTexture(gl::TEXTURE_2D, texture_id);
+			tex.bind();
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
 
 		}
@@ -213,21 +213,158 @@ fn main() {
 
 }
 
-fn create_program(vs_src: String, fs_src: String) -> GLuint {
+struct Mesh {
+	// ...
+}
+
+fn make_mesh() -> Mesh {
+	return Mesh {};
+}
+
+struct Texture {
+	id: GLuint,
+}
+
+impl Texture {
+
+	fn bind(&self) -> &Texture {
+
+		unsafe {
+			gl::BindTexture(gl::TEXTURE_2D, self.id);
+		}
+
+		return self;
+
+	}
+
+	fn unbind(&self) -> &Texture {
+
+		unsafe {
+			gl::BindTexture(gl::TEXTURE_2D, 0);
+		}
+
+		return self;
+
+	}
+
+}
+
+fn make_texture() -> Texture {
+
+	unsafe {
+
+		let mut id: GLuint = 0;
+
+		gl::GenTextures(1, &mut id);
+		gl::BindTexture(gl::TEXTURE_2D, id);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+		gl::GenerateMipmap(gl::TEXTURE_2D);
+		gl::BindTexture(gl::TEXTURE_2D, 0);
+
+		return Texture {
+			id
+		};
+
+	}
+
+}
+
+struct Program {
+	id: GLuint,
+}
+
+impl Program {
+
+	fn attr(&self, index: GLuint, name: &str) -> &Program {
+
+		unsafe {
+			gl::BindAttribLocation(self.id, index, CString::new(name).unwrap().as_ptr());
+		}
+
+		return self;
+
+	}
+
+	fn bind(&self) -> &Program {
+
+		unsafe {
+			gl::UseProgram(self.id);
+		}
+
+		return self;
+
+	}
+
+	fn unbind(&self) -> &Program {
+
+		unsafe {
+			gl::UseProgram(0);
+		}
+
+		return self;
+
+	}
+
+	fn link(&self) -> &Program {
+
+		unsafe {
+			gl::LinkProgram(self.id);
+		}
+
+		return self;
+
+	}
+
+	fn uniform_vec4(&self, name: &str, value: [f32; 4]) -> &Program {
+
+		unsafe {
+			gl::Uniform4f(
+				gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr()),
+				value[0],
+				value[1],
+				value[2],
+				value[3],
+			);
+		}
+
+		return self;
+
+	}
+
+	fn uniform_mat4(&self, name: &str, value: [[f32; 4]; 4]) -> &Program {
+
+		unsafe {
+			gl::UniformMatrix4fv(
+				gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr()),
+				1,
+				gl::FALSE,
+				&value[0][0]
+			);
+		}
+
+		return self;
+
+	}
+
+}
+
+fn make_program(vs_src: String, fs_src: String) -> Program {
 
 	unsafe {
 
 		let vs: GLuint = compile_shader(gl::VERTEX_SHADER, vs_src);
 		let fs: GLuint = compile_shader(gl::FRAGMENT_SHADER, fs_src);
-		let program: GLuint = gl::CreateProgram();
+		let id: GLuint = gl::CreateProgram();
 
-		gl::AttachShader(program, vs);
-		gl::AttachShader(program, fs);
-		gl::BindAttribLocation(program, 0, CString::new("pos").unwrap().as_ptr());
-		gl::BindAttribLocation(program, 1, CString::new("uv").unwrap().as_ptr());
-		gl::LinkProgram(program);
+		gl::AttachShader(id, vs);
+		gl::AttachShader(id, fs);
 
-		return program;
+		return Program {
+			id
+		};
 
 	}
 
@@ -272,36 +409,4 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 	}
 
 }
-
-fn uniform_vec4(id: GLuint, name: &str, value: [f32; 4]) {
-
-	unsafe {
-		gl::Uniform4f(
-			gl::GetUniformLocation(id, CString::new(name).unwrap().as_ptr()),
-			value[0],
-			value[1],
-			value[2],
-			value[3],
-		);
-	}
-
-}
-
-fn uniform_mat4(id: GLuint, name: &str, value: [[f32; 4]; 4]) {
-
-	unsafe {
-		gl::UniformMatrix4fv(
-			gl::GetUniformLocation(id, CString::new(name).unwrap().as_ptr()),
-			1,
-			gl::FALSE,
-			&value[0][0]
-		);
-	}
-
-}
-
-fn cstr_ptr(data: &str) -> *const GLchar {
-	return CString::new(data).unwrap().as_ptr();
-}
-
 
