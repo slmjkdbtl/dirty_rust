@@ -1,14 +1,12 @@
 # wengwengweng
 
 [package]
-name = "yo"
+name = "dirty_addons"
 version = "0.0.0"
 authors = ["t <voygagaga@outlook.com>"]
 edition = "2018"
 
 [dependencies.dirty]
-path = "../src/engine"
+path = "../engine"
 
-[dependencies.dirty_addons]
-path = "../src/addons"
 

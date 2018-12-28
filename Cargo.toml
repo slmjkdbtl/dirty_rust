@@ -3,7 +3,8 @@
 [workspace]
 
 members = [
-	"src/lib",
+	"src/engine",
+	"src/addons",
 	"examples",
 ]
 

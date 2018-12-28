@@ -5,8 +5,8 @@ use std::ffi::CString;
 use std::ptr;
 use std::mem;
 
-use crate::math;
 use crate::app;
+use crate::math;
 
 static mut GFX: Option<GfxCtx> = None;
 
@@ -14,6 +14,21 @@ fn get_ctx() -> &'static GfxCtx {
 
 	unsafe {
 		match &GFX {
+			Some(g) => {
+				return g;
+			}
+			None => {
+				panic!("gfx not initialized");
+			},
+		}
+	}
+
+}
+
+fn get_ctx_mut() -> &'static mut GfxCtx {
+
+	unsafe {
+		match &mut GFX {
 			Some(g) => {
 				return g;
 			}
@@ -42,40 +57,106 @@ pub fn init() {
 
 }
 
+pub fn update() {
+
+	let mut g = get_ctx_mut();
+
+	g.renderer_2d.g_trans_stack.clear();
+
+}
+
 struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, scale: math::Vector2, quad: math::Vector4) {
+pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: math::Vector4) {
 
 	let g = get_ctx();
+	let renderer = &g.renderer_2d;
 	let (width, height) = app::size();
 	let proj = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 	let quad = quad;
 	let tint = math::vec4(1.0, 1.0, 1.0, 1.0);
 
-	let trans = math::mat4()
-		.translate(pos.x, pos.y)
-		.rotate(r)
-		.scale((tex.width as f32) * quad.z * scale.x, (tex.height as f32) * quad.w * scale.y);
+	push();
+	translate(pos.x, pos.y);
+	scale((tex.width as f32) * quad.z * s.x, (tex.height as f32) * quad.w * s.y);
 
 	tex.bind();
 
-	g.renderer_2d.program
+	renderer.program
 		.uniform_vec4("tint", tint.as_arr())
 		.uniform_vec4("quad", quad.as_arr())
 		.uniform_mat4("proj", proj.as_arr())
-		.uniform_mat4("trans", trans.as_arr())
+		.uniform_mat4("trans", renderer.g_trans.as_arr())
 		.bind();
 
-	g.renderer_2d.mesh.draw();
+	pop();
 
+	renderer.mesh.draw();
+	tex.unbind();
+
+}
+
+pub fn rect(quad: math::Vector4, r: f32) {
+
+	let g = get_ctx();
+	let renderer = &g.renderer_2d;
+
+	draw(&renderer.empty_tex, math::vec2(quad.x, quad.y), r, math::vec2(quad.z, quad.w), math::vec4(0.0, 0.0, 1.0, 1.0));
+
+}
+
+pub fn line(p1: math::Vector2, p2: math::Vector2) {
+	// ...
+}
+
+pub fn push() {
+
+	let mut g = get_ctx_mut();
+	let stack = &mut g.renderer_2d.g_trans_stack;
+
+	if (stack.len() < 32) {
+		stack.push(g.renderer_2d.g_trans);
+	} else {
+		panic!("cannot push anymore");
+	}
+
+}
+
+pub fn pop() {
+
+	let mut g = get_ctx_mut();
+	let stack = &mut g.renderer_2d.g_trans_stack;
+
+	match stack.pop() {
+		Some(t) => {
+			g.renderer_2d.g_trans = t;
+		}
+		None => {
+			panic!("cannot pop anymore");
+		}
+	}
+
+}
+
+pub fn translate(x: f32, y: f32) {
+	let g = get_ctx_mut();
+	g.renderer_2d.g_trans = g.renderer_2d.g_trans.translate(x, y);
+}
+
+pub fn scale(sx: f32, sy: f32) {
+	let g = get_ctx_mut();
+	g.renderer_2d.g_trans = g.renderer_2d.g_trans.scale(sx, sy);
 }
 
 struct Renderer2D {
 
 	mesh: Mesh,
 	program: Program,
+	empty_tex: Texture,
+	g_trans: math::Matrix4,
+	g_trans_stack: Vec<math::Matrix4>,
 
 }
 
@@ -121,6 +202,9 @@ impl Renderer2D {
 		return Renderer2D {
 			mesh: mesh,
 			program: program,
+			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
+			g_trans: math::mat4(),
+			g_trans_stack: vec![],
 		};
 
 	}
@@ -336,15 +420,7 @@ pub struct Texture {
 
 impl Texture {
 
-	pub fn from_byte(data: &[u8]) -> Self {
-
-		let img = image::load(std::io::Cursor::new(data), image::PNG)
-			.unwrap()
-			.to_rgba();
-
-		let width = img.width();
-		let height = img.height();
-		let pixels = img.into_raw();
+	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
 
 		unsafe {
 
@@ -379,6 +455,20 @@ impl Texture {
 			};
 
 		}
+
+	}
+
+	pub fn from_bytes(data: &[u8]) -> Self {
+
+		let img = image::load(std::io::Cursor::new(data), image::PNG)
+			.unwrap()
+			.to_rgba();
+
+		let width = img.width();
+		let height = img.height();
+		let pixels = img.into_raw();
+
+		return Texture::from_raw(&pixels, width, height);
 
 	}
 
