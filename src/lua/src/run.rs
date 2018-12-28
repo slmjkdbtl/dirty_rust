@@ -68,13 +68,6 @@ fn fread(fname: &str) -> String {
 }
 
 pub fn file(fname: &str) -> Result<()> {
-
-	let lua = Lua::new();
-
-	bind(&lua)?;
-	lua.exec::<_>(&fread(fname)[..], None)?;
-
-	return Ok(());
-
+	return code(&fread(fname)[..]);
 }
 
