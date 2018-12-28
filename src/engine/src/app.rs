@@ -8,38 +8,10 @@ use std::time;
 
 use crate::gfx;
 use crate::audio;
+use crate::utils;
+use crate::create_context;
 
-static mut APP: Option<AppCtx> = None;
-
-fn get_ctx() -> &'static AppCtx {
-
-	unsafe {
-		match &APP {
-			Some(g) => {
-				return g;
-			}
-			None => {
-				panic!("app not initialized");
-			},
-		}
-	}
-
-}
-
-fn get_ctx_mut() -> &'static mut AppCtx {
-
-	unsafe {
-		match &mut APP {
-			Some(g) => {
-				return g;
-			}
-			None => {
-				panic!("gfx not initialized");
-			},
-		}
-	}
-
-}
+create_context!(APP, AppCtx);
 
 struct AppCtx {
 

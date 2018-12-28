@@ -6,6 +6,10 @@ version = "0.0.0"
 authors = ["t <voygagaga@outlook.com>"]
 edition = "2018"
 
+[features]
+col = []
+res = []
+
 [dependencies]
 image = "*"
 rodio = "*"
