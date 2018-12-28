@@ -17,6 +17,7 @@ fn main() {
 
 	app::init("yo", 640, 480);
 	gfx::init();
+	#[cfg(not(target_os = "windows"))]
 	audio::init();
 
 	let tex = gfx::make_texture(&include_bytes!("car.png")[..]);
