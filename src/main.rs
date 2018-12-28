@@ -22,8 +22,6 @@ mod gfx;
 mod audio;
 mod math;
 
-fn test(a: u8) {}
-
 fn main() {
 
 // 	let device = rodio::default_output_device().unwrap();
@@ -31,7 +29,7 @@ fn main() {
 // 	let source = rodio::Decoder::new(Cursor::new(&include_bytes!("pop.ogg")[..])).unwrap();
 // 	rodio::play_raw(&device, source.convert_samples());
 
-	app::init("yo", 960, 640);
+	app::init("yo", 640, 480);
 	gfx::init();
 
 	let img = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
