@@ -21,8 +21,8 @@ wasm_target = "asmjs-unknown-emscripten"
 ios_target = "x86_64-apple-ios"
 android_target = "x86_64-linux-android"
 
-run:
-	cargo run
+run bin="yo":
+	cargo run --bin {{bin}}
 
 macos:
 	cargo build --target {{macos_target}} --release

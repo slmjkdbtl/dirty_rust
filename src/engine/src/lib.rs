@@ -1,5 +1,8 @@
 // wengwengweng
 
+#![allow(unused_parens)]
+#![allow(dead_code)]
+
 mod ctx;
 
 pub mod app;

@@ -8,10 +8,9 @@ use std::time;
 
 use crate::gfx;
 use crate::audio;
-use crate::create_ctx;
-use crate::init_ctx;
+use crate::ctx;
 
-create_ctx!(APP: AppCtx);
+ctx!(APP: AppCtx);
 
 struct AppCtx {
 
@@ -45,7 +44,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 	#[cfg(not(target_os = "windows"))]
 	audio::init();
 
-	init_ctx!(APP -> AppCtx {
+	init_ctx(AppCtx {
 		sdl_ctx: sdl_ctx,
 		window: window,
 		gl_ctx: gl_ctx,

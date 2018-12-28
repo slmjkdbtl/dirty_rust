@@ -1,9 +1,8 @@
 // wengwengweng
 
-use crate::create_ctx;
-use crate::init_ctx;
+use crate::ctx;
 
-create_ctx!(AUDIO: AudioCtx);
+ctx!(AUDIO: AudioCtx);
 
 struct AudioCtx {
 	device: rodio::Device,
@@ -13,7 +12,7 @@ pub fn init() {
 
 	let device = rodio::default_output_device().unwrap();
 
-	init_ctx!(AUDIO -> AudioCtx {
+	init_ctx(AudioCtx {
 		device: device,
 	});
 

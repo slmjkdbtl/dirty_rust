@@ -7,14 +7,13 @@ use std::mem;
 
 use crate::app;
 use crate::math;
-use crate::create_ctx;
-use crate::init_ctx;
+use crate::ctx;
 
-create_ctx!(GFX: GfxCtx);
+ctx!(GFX: GfxCtx);
 
 pub fn init() {
 
-	init_ctx!(GFX -> GfxCtx {
+	init_ctx(GfxCtx {
 		renderer_2d: Renderer2D::new(),
 	});
 
@@ -31,7 +30,7 @@ pub fn init() {
 
 pub fn update() {
 
-	let mut g = get_ctx_mut();
+	let g = get_ctx_mut();
 
 	g.renderer_2d.g_trans_stack.clear();
 
@@ -92,7 +91,7 @@ pub fn line(p1: math::Vector2, p2: math::Vector2, width: u8, tint: math::Vector4
 
 pub fn push() {
 
-	let mut g = get_ctx_mut();
+	let g = get_ctx_mut();
 	let stack = &mut g.renderer_2d.g_trans_stack;
 
 	if (stack.len() < 32) {
