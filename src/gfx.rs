@@ -13,7 +13,6 @@ static mut GFX: Option<GfxCtx> = None;
 fn get_ctx() -> &'static GfxCtx {
 
 	unsafe {
-
 		match &GFX {
 			Some(g) => {
 				return g;
@@ -22,7 +21,6 @@ fn get_ctx() -> &'static GfxCtx {
 				panic!("gfx not initialized");
 			},
 		}
-
 	}
 
 }

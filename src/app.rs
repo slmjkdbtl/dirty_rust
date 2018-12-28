@@ -11,7 +11,6 @@ static mut APP: Option<AppCtx> = None;
 fn get_ctx() -> &'static AppCtx {
 
 	unsafe {
-
 		match &APP {
 			Some(g) => {
 				return g;
@@ -20,7 +19,6 @@ fn get_ctx() -> &'static AppCtx {
 				panic!("app not initialized");
 			},
 		}
-
 	}
 
 }
@@ -63,7 +61,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 }
 
-pub fn run(f: impl Fn()) {
+pub fn run(f: &mut FnMut()) {
 
 	let app = get_ctx();
 	let mut event_pump = app.sdl_ctx.event_pump().unwrap();
