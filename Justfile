@@ -1,84 +1,31 @@
 # wengwengweng
 
-name = "yo"
-dname = "yo"
-identifier = "me.wengwengweng.yo"
-version = "0.0.0"
-
 macos_target = "x86_64-apple-darwin"
-macos_bin = "target/" + macos_target + "/release/" + name
-macos_bundle = "dist/" + name + "/" + name + ".app"
-macos_zip = "dist/" + name + ".mac.zip"
-macos_plist = macos_bundle + "/Contents/Info.plist"
-macos_resources = macos_bundle + "/Contents/Resources"
-macos_exec = macos_bundle + "/Contents/MacOS"
-macos_plist_template = "misc/mac.plist"
-
 windows_target = "x86_64-pc-windows-gnu"
-windows_bin = "target/" + windows_target + "/release/" + name
-windows_zip = "dist/" + name + ".windows.zip"
-
 linux_target = "x86_64-unknown-linux-gnu"
 wasm_target = "asmjs-unknown-emscripten"
 ios_target = "x86_64-apple-ios"
 android_target = "x86_64-linux-android"
 
+default: macos
+
+run args="":
+	./dist/macos/dirty {{args}}
+
 example bin="yo":
 	cargo run --example {{bin}}
 
-run bin="lua":
-	cargo run --bin {{bin}}
-
 macos:
 	cargo build --target {{macos_target}} --release
-
-	# clean
-	rm -rf dist/{{name}}
-	rm -rf {{macos_zip}}
-
-	# setup
-	mkdir -p dist
-	mkdir -p dist/{{name}}
-	mkdir -p {{macos_bundle}}/Contents
-
-	# plist
-	cp {{macos_plist_template}} {{macos_plist}}
-	sed -i "" "s/##name##/"{{name}}"/" {{macos_plist}}
-	sed -i "" "s/##dname##/"{{dname}}"/" {{macos_plist}}
-	sed -i "" "s/##identifier##/"{{identifier}}"/" {{macos_plist}}
-	sed -i "" "s/##version##/"{{version}}"/" {{macos_plist}}
-
-	# bin
-	mkdir -p {{macos_exec}}
-	cp target/{{macos_target}}/release/{{name}} {{macos_exec}}/{{name}}
-
-	# resources
-	mkdir -p {{macos_resources}}
-	sips -s format icns icon.png --out {{macos_bundle}}/Contents/Resources/icon.icns
-
-	# compress
-	cd dist; \
-		zip -9 -y -r -q {{name}}.mac.zip {{name}}
-	rm -rf dist/{{name}}
+	rm -rf dist/macos
+	mkdir -p dist/macos
+	cp target/{{macos_target}}/release/lua dist/macos/dirty
 
 windows:
 	cargo build --target {{windows_target}} --release
-
-	# clean
-	rm -rf dist/{{name}}
-	rm -rf {{windows_zip}}
-
-	# setup
-	mkdir -p dist
-	mkdir -p dist/{{name}}
-
-	# copy
-	cp target/{{windows_target}}/release/{{name}}.exe dist/{{name}}/{{name}}.exe
-
-	# zip
-	cd dist; \
-		zip -9 -y -r -q {{name}}.windows.zip {{name}}
-	rm -rf dist/{{name}}
+	rm -rf dist/windows
+	mkdir -p dist/windows
+	cp target/{{windows_target}}/release/lua.exe dist/windows/dirty.exe
 
 linux:
 	cargo build --target {{linux_target}} --release
