@@ -1,36 +1,9 @@
 // wengwengweng
 
-static mut AUDIO: Option<AudioCtx> = None;
+use crate::utils;
+use crate::create_context;
 
-fn get_ctx() -> &'static AudioCtx {
-
-	unsafe {
-		match &AUDIO {
-			Some(g) => {
-				return g;
-			}
-			None => {
-				panic!("audio not initialized");
-			},
-		}
-	}
-
-}
-
-fn get_ctx_mut() -> &'static mut AudioCtx {
-
-	unsafe {
-		match &mut AUDIO {
-			Some(g) => {
-				return g;
-			}
-			None => {
-				panic!("gfx not initialized");
-			},
-		}
-	}
-
-}
+create_context!(AUDIO, AudioCtx);
 
 struct AudioCtx {
 	device: rodio::Device,

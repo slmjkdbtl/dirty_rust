@@ -7,8 +7,7 @@ authors = ["t <voygagaga@outlook.com>"]
 edition = "2018"
 
 [dependencies.dirty]
+version = "*"
 path = "../src/engine"
-
-[dependencies.dirty_addons]
-path = "../src/addons"
+features = ["col", "res"]
 

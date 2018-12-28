@@ -7,38 +7,10 @@ use std::mem;
 
 use crate::app;
 use crate::math;
+use crate::utils;
+use crate::create_context;
 
-static mut GFX: Option<GfxCtx> = None;
-
-fn get_ctx() -> &'static GfxCtx {
-
-	unsafe {
-		match &GFX {
-			Some(g) => {
-				return g;
-			}
-			None => {
-				panic!("gfx not initialized");
-			},
-		}
-	}
-
-}
-
-fn get_ctx_mut() -> &'static mut GfxCtx {
-
-	unsafe {
-		match &mut GFX {
-			Some(g) => {
-				return g;
-			}
-			None => {
-				panic!("gfx not initialized");
-			},
-		}
-	}
-
-}
+create_context!(GFX, GfxCtx);
 
 pub fn init() {
 
