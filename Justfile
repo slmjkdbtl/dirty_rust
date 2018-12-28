@@ -6,14 +6,16 @@ identifier = "me.wengwengweng.yo"
 version = "0.0.0"
 
 macos_target = "x86_64-apple-darwin"
+macos_bin = "target/" + macos_target + "/release/" + name
 macos_bundle = "dist/" + name + "/" + name + ".app"
 macos_zip = "dist/" + name + ".mac.zip"
 macos_plist = macos_bundle + "/Contents/Info.plist"
 macos_resources = macos_bundle + "/Contents/Resources"
-macos_bin = macos_bundle + "/Contents/MacOS"
+macos_exec = macos_bundle + "/Contents/MacOS"
 macos_plist_template = "misc/mac.plist"
 
 windows_target = "x86_64-pc-windows-gnu"
+windows_bin = "target/" + windows_target + "/release/" + name
 windows_zip = "dist/" + name + ".windows.zip"
 
 linux_target = "x86_64-unknown-linux-gnu"
@@ -21,7 +23,10 @@ wasm_target = "asmjs-unknown-emscripten"
 ios_target = "x86_64-apple-ios"
 android_target = "x86_64-linux-android"
 
-run bin="yo":
+example bin="yo":
+	cargo run --example {{bin}}
+
+run bin="lua":
 	cargo run --bin {{bin}}
 
 macos:
@@ -44,8 +49,8 @@ macos:
 	sed -i "" "s/##version##/"{{version}}"/" {{macos_plist}}
 
 	# bin
-	mkdir -p {{macos_bin}}
-	cp target/{{macos_target}}/release/{{name}} {{macos_bin}}/{{name}}
+	mkdir -p {{macos_exec}}
+	cp target/{{macos_target}}/release/{{name}} {{macos_exec}}/{{name}}
 
 	# resources
 	mkdir -p {{macos_resources}}
