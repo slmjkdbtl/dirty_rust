@@ -30,7 +30,7 @@ pub fn init() {
 	unsafe {
 
 		GFX = Some(GfxCtx {
-			renderer_2d: make_renderer2d(),
+			renderer_2d: Renderer2D::new(),
 		});
 
 		gl::Enable(gl::BLEND);
@@ -79,11 +79,75 @@ struct Renderer2D {
 
 }
 
+impl Renderer2D {
+
+	fn new() -> Self {
+
+		let vertices: Vec<GLfloat> = vec![
+			-0.5,  0.5,
+			 0.5,  0.5,
+			 0.5, -0.5,
+			-0.5, -0.5,
+		];
+
+		let uv: Vec<GLfloat> = vec![
+			0.0, 1.0,
+			1.0, 1.0,
+			1.0, 0.0,
+			0.0, 0.0
+		];
+
+		let indices: Vec<GLuint> = vec![
+			0, 1, 3,
+			1, 2, 3,
+		];
+
+		let mut mesh = Mesh::new();
+
+		mesh.make_buf(&vertices).attr(0, 2);
+		mesh.make_buf(&uv).attr(1, 2);
+		mesh.make_index_buf(&indices);
+
+		let program = Program::new(
+			include_str!("quad.vert").to_owned(),
+			include_str!("quad.frag").to_owned()
+		);
+
+		program
+			.attr(0, "pos")
+			.attr(1, "uv")
+			.link();
+
+		return Renderer2D {
+			mesh: mesh,
+			program: program,
+		};
+
+	}
+
+}
+
 struct Buffer {
 	id: GLuint,
 }
 
 impl Buffer {
+
+	fn new() -> Self {
+
+		unsafe {
+
+			let mut id: GLuint = 0;
+
+			gl::GenBuffers(1, &mut id);
+
+			return Buffer {
+				id: id,
+			};
+
+		}
+
+	}
 
 	fn bind(&self) -> &Self {
 
@@ -148,6 +212,23 @@ struct IndexBuffer {
 
 impl IndexBuffer {
 
+	fn new() -> Self {
+
+		unsafe {
+
+			let mut id: GLuint = 0;
+
+			gl::GenBuffers(1, &mut id);
+
+			return IndexBuffer {
+				id: id,
+				size: 0,
+			};
+
+		}
+
+	}
+
 	fn bind(&self) -> &Self {
 
 		unsafe {
@@ -200,9 +281,21 @@ struct Mesh {
 
 impl Mesh {
 
+	fn new() -> Self {
+
+		return Mesh {
+			buffers: vec![],
+			index_buffer: IndexBuffer{
+				id: 0,
+				size: 0,
+			},
+		};
+
+	}
+
 	fn make_buf(&mut self, data: &Vec<GLfloat>) -> &Buffer {
 
-		let buf = make_buffer();
+		let buf = Buffer::new();
 
 		buf.data(&data);
 		self.buffers.push(buf);
@@ -213,7 +306,7 @@ impl Mesh {
 
 	fn make_index_buf(&mut self, data: &Vec<GLuint>) -> &IndexBuffer {
 
-		let mut buf = make_index_buffer();
+		let mut buf = IndexBuffer::new();
 
 		buf.data(&data);
 		self.index_buffer = buf;
@@ -243,6 +336,52 @@ pub struct Texture {
 
 impl Texture {
 
+	pub fn from_byte(data: &[u8]) -> Self {
+
+		let img = image::load(std::io::Cursor::new(data), image::PNG)
+			.unwrap()
+			.to_rgba();
+
+		let width = img.width();
+		let height = img.height();
+		let pixels = img.into_raw();
+
+		unsafe {
+
+			let mut id: GLuint = 0;
+
+			gl::GenTextures(1, &mut id);
+			gl::BindTexture(gl::TEXTURE_2D, id);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+			gl::GenerateMipmap(gl::TEXTURE_2D);
+
+			gl::TexImage2D(
+				gl::TEXTURE_2D,
+				0,
+				gl::RGBA8 as GLint,
+				width as GLint,
+				height as GLint,
+				0,
+				gl::RGBA,
+				gl::UNSIGNED_BYTE,
+				pixels.as_ptr() as *const GLvoid
+			);
+
+			gl::BindTexture(gl::TEXTURE_2D, 0);
+
+			return Texture {
+				id: id,
+				width: width,
+				height: height,
+			};
+
+		}
+
+	}
+
 	fn bind(&self) -> &Self {
 
 		unsafe {
@@ -270,6 +409,25 @@ struct Program {
 }
 
 impl Program {
+
+	fn new(vs_src: String, fs_src: String) -> Self {
+
+		unsafe {
+
+			let vs: GLuint = compile_shader(gl::VERTEX_SHADER, vs_src);
+			let fs: GLuint = compile_shader(gl::FRAGMENT_SHADER, fs_src);
+			let id: GLuint = gl::CreateProgram();
+
+			gl::AttachShader(id, vs);
+			gl::AttachShader(id, fs);
+
+			return Program {
+				id: id
+			};
+
+		}
+
+	}
 
 	fn attr(&self, index: GLuint, name: &str) -> &Self {
 
@@ -389,160 +547,6 @@ pub fn clear() {
 	unsafe {
 		gl::Clear(gl::COLOR_BUFFER_BIT);
 	}
-
-}
-
-fn make_program(vs_src: String, fs_src: String) -> Program {
-
-	unsafe {
-
-		let vs: GLuint = compile_shader(gl::VERTEX_SHADER, vs_src);
-		let fs: GLuint = compile_shader(gl::FRAGMENT_SHADER, fs_src);
-		let id: GLuint = gl::CreateProgram();
-
-		gl::AttachShader(id, vs);
-		gl::AttachShader(id, fs);
-
-		return Program {
-			id: id
-		};
-
-	}
-
-}
-
-fn make_mesh() -> Mesh {
-
-	return Mesh {
-		buffers: vec![],
-		index_buffer: IndexBuffer{
-			id: 0,
-			size: 0,
-		},
-	};
-
-}
-
-fn make_buffer() -> Buffer {
-
-	unsafe {
-
-		let mut id: GLuint = 0;
-
-		gl::GenBuffers(1, &mut id);
-
-		return Buffer {
-			id: id,
-		};
-
-	}
-
-}
-
-fn make_index_buffer() -> IndexBuffer {
-
-	unsafe {
-
-		let mut id: GLuint = 0;
-
-		gl::GenBuffers(1, &mut id);
-
-		return IndexBuffer {
-			id: id,
-			size: 0,
-		};
-
-	}
-
-}
-
-pub fn make_texture(data: &[u8]) -> Texture {
-
-	let img = image::load(std::io::Cursor::new(data), image::PNG)
-		.unwrap()
-		.to_rgba();
-
-	let width = img.width();
-	let height = img.height();
-	let pixels = img.into_raw();
-
-	unsafe {
-
-		let mut id: GLuint = 0;
-
-		gl::GenTextures(1, &mut id);
-		gl::BindTexture(gl::TEXTURE_2D, id);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
-		gl::GenerateMipmap(gl::TEXTURE_2D);
-
-		gl::TexImage2D(
-			gl::TEXTURE_2D,
-			0,
-			gl::RGBA8 as GLint,
-			width as GLint,
-			height as GLint,
-			0,
-			gl::RGBA,
-			gl::UNSIGNED_BYTE,
-			pixels.as_ptr() as *const GLvoid
-		);
-
-		gl::BindTexture(gl::TEXTURE_2D, 0);
-
-		return Texture {
-			id: id,
-			width: width,
-			height: height,
-		};
-
-	}
-
-}
-
-fn make_renderer2d() -> Renderer2D {
-
-	let vertices: Vec<GLfloat> = vec![
-		-0.5,  0.5,
-		 0.5,  0.5,
-		 0.5, -0.5,
-		-0.5, -0.5,
-	];
-
-	let uv: Vec<GLfloat> = vec![
-		0.0, 1.0,
-		1.0, 1.0,
-		1.0, 0.0,
-		0.0, 0.0
-	];
-
-	let indices: Vec<GLuint> = vec![
-		0, 1, 3,
-		1, 2, 3,
-	];
-
-	let mut mesh = make_mesh();
-
-	mesh.make_buf(&vertices).attr(0, 2);
-	mesh.make_buf(&uv).attr(1, 2);
-	mesh.make_index_buf(&indices);
-
-	let program = make_program(
-		include_str!("quad.vert").to_owned(),
-		include_str!("quad.frag").to_owned()
-	);
-
-	program
-		.attr(0, "pos")
-		.attr(1, "uv")
-		.link();
-
-	return Renderer2D {
-		mesh: mesh,
-		program: program,
-	};
 
 }
 

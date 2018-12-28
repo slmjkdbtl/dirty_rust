@@ -3,15 +3,12 @@
 #![windows_subsystem = "windows"]
 #![allow(unused_parens)]
 
-extern crate image;
-extern crate gl;
-extern crate sdl2;
-extern crate rodio;
+extern crate dirty;
 
-mod app;
-mod gfx;
-mod audio;
-mod math;
+use dirty::app;
+use dirty::gfx;
+use dirty::audio;
+use dirty::math;
 
 fn main() {
 
@@ -20,7 +17,7 @@ fn main() {
 	#[cfg(not(target_os = "windows"))]
 	audio::init();
 
-	let tex = gfx::make_texture(&include_bytes!("car.png")[..]);
+	let tex = gfx::Texture::from_byte(&include_bytes!("car.png")[..]);
 	let mut index = 0;
 
 	app::run(&mut || {
