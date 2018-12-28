@@ -1,0 +1,20 @@
+# wengwengweng
+
+[package]
+name = "dirty"
+version = "0.1.0"
+authors = ["t <voygagaga@outlook.com>"]
+edition = "2018"
+
+[dependencies]
+image = "*"
+rodio = "*"
+rand = "*"
+serde = "*"
+gl = "*"
+tobj = "*"
+
+[dependencies.sdl2]
+version = "*"
+features = ["static-link", "bundled"]
+
