@@ -13,18 +13,19 @@ ctx!(GFX: GfxCtx);
 
 pub fn init() {
 
-	init_ctx(GfxCtx {
-		renderer_2d: Renderer2D::new(),
-	});
-
 	unsafe {
 
 		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-		clear();
 
 	}
+
+	clear();
+
+	init_ctx(GfxCtx {
+		renderer_2d: Renderer2D::new(),
+	});
 
 }
 
