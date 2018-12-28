@@ -1,9 +1,9 @@
 // wengwengweng
 
 #[macro_export]
-macro_rules! create_context {
+macro_rules! create_ctx {
 
-	($name:ident, $type:ident) => (
+	($name:ident: $type:ty) => (
 
 		static mut $name: Option<$type> = None;
 
@@ -14,7 +14,7 @@ macro_rules! create_context {
 						return g;
 					}
 					None => {
-						panic!("app not initialized");
+						panic!("ctx not initialized");
 					},
 				}
 			}
@@ -27,7 +27,7 @@ macro_rules! create_context {
 						return g;
 					}
 					None => {
-						panic!("app not initialized");
+						panic!("ctx not initialized");
 					},
 				}
 			}
@@ -36,4 +36,26 @@ macro_rules! create_context {
 	)
 
 }
+
+#[macro_export]
+macro_rules! init_ctx {
+
+	($name:ident -> $ctx:expr) => {
+
+		unsafe {
+			match &$name {
+				Some(_) => {
+					panic!("cannot init twice");
+				}
+				None => {
+					$name = Some($ctx);
+				}
+			}
+
+		}
+
+	}
+
+}
+
 
