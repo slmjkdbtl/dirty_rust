@@ -8,8 +8,6 @@ extern crate gl;
 extern crate sdl2;
 extern crate rodio;
 
-use std::io::Cursor;
-
 mod app;
 mod gfx;
 mod audio;
@@ -21,20 +19,7 @@ fn main() {
 	gfx::init();
 	audio::init();
 
-	let img = image::load(Cursor::new(&include_bytes!("car.png")[..]), image::PNG)
-		.unwrap()
-		.to_rgba();
-
-	let width = img.width();
-	let height = img.height();
-	let pixels = img.into_raw();
-
-	let tex = gfx::make_texture(
-		&pixels,
-		width,
-		height,
-	);
-
+	let tex = gfx::make_texture(&include_bytes!("car.png")[..]);
 	let mut index = 0;
 
 	app::run(&mut || {
@@ -48,7 +33,7 @@ fn main() {
 		gfx::clear();
 		gfx::draw(&tex, math::vec2(240.0, 240.0), 0.0, math::vec2(2.0, 2.0), math::vec4((index as f32) * 0.25, 0.0, 0.25, 1.0));
 
-	})
+	});
 
 }
 
