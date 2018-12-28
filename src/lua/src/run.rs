@@ -7,17 +7,11 @@ use rlua::Function;
 // use rlua::UserData;
 // use rlua::UserDataMethods;
 
-use std::fs::File;
-use std::io::Read;
-
 use dirty::*;
 
 fn bind(lua: &Lua) -> Result<()> {
 
 	let globals = lua.globals();
-
-	globals.set("string_var", "hello")?;
-	globals.set("int_var", 42)?;
 
 	globals.set("d_init", lua.create_function(|_, (title, width, height): (String, u32, u32)| {
 		app::init(&title[..], width, height);
@@ -36,11 +30,6 @@ fn bind(lua: &Lua) -> Result<()> {
 		return Ok(());
 	})?)?;
 
-	globals.set("d_line", lua.create_function(|_, (): ()| {
-		// ...
-		return Ok(());
-	})?)?;
-
 	return Ok(());
 
 }
@@ -54,20 +43,5 @@ pub fn code(code: &str) -> Result<()> {
 
 	return Ok(());
 
-}
-
-fn fread(fname: &str) -> String {
-
-	let mut file = File::open(fname).expect("no file");
-	let mut contents = String::new();
-
-	file.read_to_string(&mut contents).expect("cannot read file");
-
-	return contents;
-
-}
-
-pub fn file(fname: &str) -> Result<()> {
-	return code(&fread(fname)[..]);
 }
 
