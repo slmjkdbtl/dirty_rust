@@ -2,24 +2,28 @@
 
 use core::ops::Mul;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Vector2 {
-	x: f32,
-	y: f32,
+	pub x: f32,
+	pub y: f32,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct Vector3 {
-	x: f32,
-	y: f32,
-	z: f32,
+	pub x: f32,
+	pub y: f32,
+	pub z: f32,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct Vector4 {
-	x: f32,
-	y: f32,
-	z: f32,
-	w: f32,
+	pub x: f32,
+	pub y: f32,
+	pub z: f32,
+	pub w: f32,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct Matrix4 {
 	m: [[f32; 4]; 4],
 }
