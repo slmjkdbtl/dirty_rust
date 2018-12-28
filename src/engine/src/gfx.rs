@@ -69,17 +69,17 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: math::Vector4) {
+pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: math::Vector4, tint: math::Vector4) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 	let (width, height) = app::size();
 	let proj = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 	let quad = quad;
-	let tint = math::vec4(1.0, 1.0, 1.0, 1.0);
 
 	push();
 	translate(pos.x, pos.y);
+	rotate(r);
 	scale((tex.width as f32) * quad.z * s.x, (tex.height as f32) * quad.w * s.y);
 
 	tex.bind();
@@ -98,17 +98,24 @@ pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: m
 
 }
 
-pub fn rect(quad: math::Vector4, r: f32) {
+pub fn rect(quad: math::Vector4, r: f32, tint: math::Vector4) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 
-	draw(&renderer.empty_tex, math::vec2(quad.x, quad.y), r, math::vec2(quad.z, quad.w), math::vec4(0.0, 0.0, 1.0, 1.0));
+	draw(&renderer.empty_tex, math::vec2(quad.x, quad.y), r, math::vec2(quad.z, quad.w), math::vec4(0.0, 0.0, 1.0, 1.0), tint);
 
 }
 
-pub fn line(p1: math::Vector2, p2: math::Vector2) {
-	// ...
+pub fn line(p1: math::Vector2, p2: math::Vector2, width: u8, tint: math::Vector4) {
+
+	let cx = p1.x + (p2.x - p1.x) / 2.0;
+	let cy = p1.y + (p2.y - p1.y) / 2.0;
+	let dis = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
+	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
+
+	rect(math::vec4(cx, cy, dis, width as f32), rot, tint);
+
 }
 
 pub fn push() {
@@ -141,13 +148,30 @@ pub fn pop() {
 }
 
 pub fn translate(x: f32, y: f32) {
+
 	let g = get_ctx_mut();
-	g.renderer_2d.g_trans = g.renderer_2d.g_trans.translate(x, y);
+	let r = &mut g.renderer_2d;
+
+	r.g_trans = r.g_trans.translate(x, y);
+
+}
+
+pub fn rotate(rot: f32) {
+
+	let g = get_ctx_mut();
+	let r = &mut g.renderer_2d;
+
+	r.g_trans = r.g_trans.rotate(rot);
+
 }
 
 pub fn scale(sx: f32, sy: f32) {
+
 	let g = get_ctx_mut();
-	g.renderer_2d.g_trans = g.renderer_2d.g_trans.scale(sx, sy);
+	let r = &mut g.renderer_2d;
+
+	r.g_trans = r.g_trans.scale(sx, sy);
+
 }
 
 struct Renderer2D {
