@@ -42,7 +42,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 	gl_attr.set_context_profile(GLProfile::Compatibility);
 	gl_attr.set_context_version(2, 1);
 
-	let window = video.window("yo", 640, 480)
+	let window = video.window(title, width, height)
 		.opengl()
 		.build()
 		.unwrap();
@@ -78,9 +78,6 @@ pub fn run(f: impl Fn()) {
 				Event::Quit {..} => {
 					break 'running;
 				},
-				Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-					break 'running;
-				}
 				_ => {}
 			}
 		}
@@ -89,5 +86,9 @@ pub fn run(f: impl Fn()) {
 
 	}
 
+}
+
+pub fn size() -> (u32, u32) {
+	return get_ctx().window.size();
 }
 

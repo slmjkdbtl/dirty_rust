@@ -6,6 +6,7 @@ use std::ptr;
 use std::mem;
 
 use crate::math;
+use crate::app;
 
 static mut GFX: Option<GfxCtx> = None;
 
@@ -50,7 +51,8 @@ struct GfxCtx {
 pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, scale: math::Vector2, quad: math::Vector4) {
 
 	let g = get_ctx();
-	let proj = math::ortho(0.0, 640.0, 480.0, 0.0, -1.0, 1.0);
+	let (width, height) = app::size();
+	let proj = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 	let quad = quad;
 	let tint = math::vec4(1.0, 1.0, 1.0, 1.0);
 
