@@ -25,11 +25,11 @@ fn main() -> Result<()> {
 	globals.set("d_init", lua.create_function(|_, (title, width, height): (String, u32, u32)| {
 		app::init(&title[..], width, height);
 		return Ok(());
-	})?);
+	})?)?;
 
 	globals.set("d_run", lua.create_function(|_, f: Function| {
 		app::run(&mut || {
-			f.call::<_, ()>(());
+			f.call::<_, ()>(()).expect("something terrible happened");
 		});
 		return Ok(());
 	})?)?;
