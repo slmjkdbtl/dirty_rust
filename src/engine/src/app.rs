@@ -6,6 +6,9 @@ use sdl2::video::GLProfile;
 use std::thread;
 use std::time;
 
+use crate::gfx;
+use crate::audio;
+
 static mut APP: Option<AppCtx> = None;
 
 fn get_ctx() -> &'static AppCtx {
@@ -17,6 +20,21 @@ fn get_ctx() -> &'static AppCtx {
 			}
 			None => {
 				panic!("app not initialized");
+			},
+		}
+	}
+
+}
+
+fn get_ctx_mut() -> &'static mut AppCtx {
+
+	unsafe {
+		match &mut APP {
+			Some(g) => {
+				return g;
+			}
+			None => {
+				panic!("gfx not initialized");
 			},
 		}
 	}
@@ -51,6 +69,10 @@ pub fn init(title: &str, width: u32, height: u32) {
 		video.gl_get_proc_address(name) as *const std::os::raw::c_void
 	});
 
+	gfx::init();
+	#[cfg(not(target_os = "windows"))]
+	audio::init();
+
 	unsafe {
 		APP = Some(AppCtx {
 			sdl_ctx: sdl_ctx,
@@ -68,6 +90,7 @@ pub fn run(f: &mut FnMut()) {
 
 	'running: loop {
 
+		gfx::update();
 		f();
 		app.window.gl_swap_window();
 

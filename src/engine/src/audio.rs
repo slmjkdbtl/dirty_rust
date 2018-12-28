@@ -17,6 +17,21 @@ fn get_ctx() -> &'static AudioCtx {
 
 }
 
+fn get_ctx_mut() -> &'static mut AudioCtx {
+
+	unsafe {
+		match &mut AUDIO {
+			Some(g) => {
+				return g;
+			}
+			None => {
+				panic!("gfx not initialized");
+			},
+		}
+	}
+
+}
+
 struct AudioCtx {
 	device: rodio::Device,
 }
