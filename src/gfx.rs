@@ -456,7 +456,15 @@ fn make_index_buffer() -> IndexBuffer {
 
 }
 
-pub fn make_texture(pixels: &[u8], width: u32, height: u32) -> Texture {
+pub fn make_texture(data: &[u8]) -> Texture {
+
+	let img = image::load(std::io::Cursor::new(data), image::PNG)
+		.unwrap()
+		.to_rgba();
+
+	let width = img.width();
+	let height = img.height();
+	let pixels = img.into_raw();
 
 	unsafe {
 
