@@ -1,9 +1,9 @@
 # wengwengweng
 
 [workspace]
-
 members = [
 	"src/engine",
+	"src/lua",
 	"examples",
 ]
 
