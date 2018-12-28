@@ -7,18 +7,18 @@ use std::mem;
 
 use crate::app;
 use crate::math;
-use crate::utils;
-use crate::create_context;
+use crate::create_ctx;
+use crate::init_ctx;
 
-create_context!(GFX, GfxCtx);
+create_ctx!(GFX: GfxCtx);
 
 pub fn init() {
 
-	unsafe {
+	init_ctx!(GFX -> GfxCtx {
+		renderer_2d: Renderer2D::new(),
+	});
 
-		GFX = Some(GfxCtx {
-			renderer_2d: Renderer2D::new(),
-		});
+	unsafe {
 
 		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
