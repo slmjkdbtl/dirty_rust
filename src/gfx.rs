@@ -72,20 +72,20 @@ pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, scale: math::Vector2, qua
 
 }
 
-pub struct Renderer2D {
+struct Renderer2D {
 
 	mesh: Mesh,
 	program: Program,
 
 }
 
-pub struct Buffer {
+struct Buffer {
 	id: GLuint,
 }
 
 impl Buffer {
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
@@ -94,7 +94,7 @@ impl Buffer {
 		return self;
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -103,7 +103,7 @@ impl Buffer {
 		return self;
 	}
 
-	pub fn data(&self, data: &Vec<GLfloat>) -> &Self {
+	fn data(&self, data: &Vec<GLfloat>) -> &Self {
 
 		unsafe {
 
@@ -124,7 +124,7 @@ impl Buffer {
 
 	}
 
-	pub fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Self {
+	fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Self {
 
 		unsafe {
 
@@ -141,14 +141,14 @@ impl Buffer {
 
 }
 
-pub struct IndexBuffer {
+struct IndexBuffer {
 	id: GLuint,
 	size: GLint,
 }
 
 impl IndexBuffer {
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
@@ -157,7 +157,7 @@ impl IndexBuffer {
 		return self;
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
@@ -167,7 +167,7 @@ impl IndexBuffer {
 
 	}
 
-	pub fn data(&mut self, data: &Vec<GLuint>) -> &Self {
+	fn data(&mut self, data: &Vec<GLuint>) -> &Self {
 
 		unsafe {
 
@@ -191,7 +191,7 @@ impl IndexBuffer {
 
 }
 
-pub struct Mesh {
+struct Mesh {
 
 	buffers: Vec<Buffer>,
 	index_buffer: IndexBuffer,
@@ -200,7 +200,7 @@ pub struct Mesh {
 
 impl Mesh {
 
-	pub fn make_buf(&mut self, data: &Vec<GLfloat>) -> &Buffer {
+	fn make_buf(&mut self, data: &Vec<GLfloat>) -> &Buffer {
 
 		let buf = make_buffer();
 
@@ -211,7 +211,7 @@ impl Mesh {
 
 	}
 
-	pub fn make_index_buf(&mut self, data: &Vec<GLuint>) -> &IndexBuffer {
+	fn make_index_buf(&mut self, data: &Vec<GLuint>) -> &IndexBuffer {
 
 		let mut buf = make_index_buffer();
 
@@ -222,7 +222,7 @@ impl Mesh {
 
 	}
 
-	pub fn draw(&self) {
+	fn draw(&self) {
 
 		unsafe {
 			self.index_buffer.bind();
@@ -243,7 +243,7 @@ pub struct Texture {
 
 impl Texture {
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindTexture(gl::TEXTURE_2D, self.id);
@@ -253,7 +253,7 @@ impl Texture {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindTexture(gl::TEXTURE_2D, 0);
@@ -265,13 +265,13 @@ impl Texture {
 
 }
 
-pub struct Program {
+struct Program {
 	id: GLuint,
 }
 
 impl Program {
 
-	pub fn attr(&self, index: GLuint, name: &str) -> &Self {
+	fn attr(&self, index: GLuint, name: &str) -> &Self {
 
 		unsafe {
 			gl::BindAttribLocation(self.id, index, CString::new(name).unwrap().as_ptr());
@@ -281,7 +281,7 @@ impl Program {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(self.id);
@@ -291,7 +291,7 @@ impl Program {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(0);
@@ -301,7 +301,7 @@ impl Program {
 
 	}
 
-	pub fn link(&self) -> &Self {
+	fn link(&self) -> &Self {
 
 		unsafe {
 			gl::LinkProgram(self.id);
@@ -311,7 +311,7 @@ impl Program {
 
 	}
 
-	pub fn uniform_vec4(&self, name: &str, value: [f32; 4]) -> &Self {
+	fn uniform_vec4(&self, name: &str, value: [f32; 4]) -> &Self {
 
 		unsafe {
 			gl::Uniform4f(
@@ -327,7 +327,7 @@ impl Program {
 
 	}
 
-	pub fn uniform_mat4(&self, name: &str, value: [[f32; 4]; 4]) -> &Self {
+	fn uniform_mat4(&self, name: &str, value: [[f32; 4]; 4]) -> &Self {
 
 		unsafe {
 			gl::UniformMatrix4fv(
@@ -392,7 +392,7 @@ pub fn clear() {
 
 }
 
-pub fn make_program(vs_src: String, fs_src: String) -> Program {
+fn make_program(vs_src: String, fs_src: String) -> Program {
 
 	unsafe {
 
@@ -411,7 +411,7 @@ pub fn make_program(vs_src: String, fs_src: String) -> Program {
 
 }
 
-pub fn make_mesh() -> Mesh {
+fn make_mesh() -> Mesh {
 
 	return Mesh {
 		buffers: vec![],
@@ -502,7 +502,7 @@ pub fn make_texture(data: &[u8]) -> Texture {
 
 }
 
-pub fn make_renderer2d() -> Renderer2D {
+fn make_renderer2d() -> Renderer2D {
 
 	let vertices: Vec<GLfloat> = vec![
 		-0.5,  0.5,
