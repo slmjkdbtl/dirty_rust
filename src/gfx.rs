@@ -5,9 +5,9 @@ use std::ffi::CString;
 use std::ptr;
 use std::mem;
 
+use crate::ctx;
 use crate::app;
 use crate::math;
-use crate::ctx;
 
 ctx!(GFX: GfxCtx);
 
@@ -41,18 +41,18 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: math::Vector4, tint: math::Vector4) {
+pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: math::Rect, tint: math::Color) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 	let (width, height) = app::size();
-	let proj = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	let proj = math::Matrix4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 	let quad = quad;
 
 	push();
 	translate(pos.x, pos.y);
 	rotate(r);
-	scale((tex.width as f32) * quad.z * s.x, (tex.height as f32) * quad.w * s.y);
+	scale((tex.width as f32) * quad.w * s.x, (tex.height as f32) * quad.h * s.y);
 
 	tex.bind();
 
@@ -70,23 +70,23 @@ pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: m
 
 }
 
-pub fn rect(quad: math::Vector4, r: f32, tint: math::Vector4) {
+pub fn rect(quad: math::Rect, r: f32, tint: math::Color) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 
-	draw(&renderer.empty_tex, math::vec2(quad.x, quad.y), r, math::vec2(quad.z, quad.w), math::vec4(0.0, 0.0, 1.0, 1.0), tint);
+	draw(&renderer.empty_tex, math::vec2(quad.x, quad.y), r, math::vec2(quad.w, quad.h), math::rect(0.0, 0.0, 1.0, 1.0), tint);
 
 }
 
-pub fn line(p1: math::Vector2, p2: math::Vector2, width: u8, tint: math::Vector4) {
+pub fn line(p1: math::Vector2, p2: math::Vector2, width: u8, tint: math::Color) {
 
 	let cx = p1.x + (p2.x - p1.x) / 2.0;
 	let cy = p1.y + (p2.y - p1.y) / 2.0;
 	let dis = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
-	rect(math::vec4(cx, cy, dis, width as f32), rot, tint);
+	rect(math::rect(cx, cy, dis, width as f32), rot, tint);
 
 }
 
@@ -195,11 +195,11 @@ impl Renderer2D {
 			.attr(1, "uv")
 			.link();
 
-		return Renderer2D {
+		return Self {
 			mesh: mesh,
 			program: program,
 			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
-			g_trans: math::mat4(),
+			g_trans: math::Matrix4::identity(),
 			g_trans_stack: vec![],
 		};
 
@@ -221,7 +221,7 @@ impl Buffer {
 
 			gl::GenBuffers(1, &mut id);
 
-			return Buffer {
+			return Self {
 				id: id,
 			};
 
@@ -300,7 +300,7 @@ impl IndexBuffer {
 
 			gl::GenBuffers(1, &mut id);
 
-			return IndexBuffer {
+			return Self {
 				id: id,
 				size: 0,
 			};
@@ -363,7 +363,7 @@ impl Mesh {
 
 	fn new() -> Self {
 
-		return Mesh {
+		return Self {
 			buffers: vec![],
 			index_buffer: IndexBuffer{
 				id: 0,
@@ -507,7 +507,7 @@ impl Program {
 			gl::AttachShader(id, vs);
 			gl::AttachShader(id, fs);
 
-			return Program {
+			return Self {
 				id: id
 			};
 
