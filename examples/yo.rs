@@ -15,6 +15,8 @@ fn main() {
 
 	res::load_sprites("./", vec!["car"]);
 
+	println!("{:?}", vec2!(2) * 2.0);
+
 	app::run(&mut || {
 
 		if (index < 3) {

@@ -54,11 +54,20 @@ macro_rules! make_vec {
 			}
 		}
 
-		impl Mul for $name {
+		impl Mul<$name> for $name {
 			type Output = $name;
 			fn mul(self, other: $name) -> $name {
 				return $name {
 					$($member: self.$member * other.$member,)*
+				}
+			}
+		}
+
+		impl Mul<f32> for $name {
+			type Output = $name;
+			fn mul(self, other: f32) -> $name {
+				return $name {
+					$($member: self.$member * other,)*
 				}
 			}
 		}
