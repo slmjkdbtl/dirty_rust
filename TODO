@@ -3,6 +3,7 @@
 - [+] 2d global transforms
 - [+] 2d primitives
 - [+] use macros to generate vector structs
+- [+] vector operation overloads
 
 - [*] res loader
 - [*] fix macro import
