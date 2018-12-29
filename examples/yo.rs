@@ -13,6 +13,8 @@ fn main() {
 	let tex = gfx::Texture::from_bytes(&include_bytes!("car.png")[..]);
 	let mut index = 0;
 
+	col::sat();
+
 	app::run(&mut || {
 
 		if (index < 3) {

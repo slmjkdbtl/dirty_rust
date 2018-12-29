@@ -7,7 +7,7 @@ use rlua::Function;
 // use rlua::UserData;
 // use rlua::UserDataMethods;
 
-use dirty::*;
+use crate::*;
 
 fn bind(lua: &Lua) -> Result<()> {
 
@@ -34,7 +34,7 @@ fn bind(lua: &Lua) -> Result<()> {
 
 }
 
-pub fn code(code: &str) -> Result<()> {
+pub fn run(code: &str) -> Result<()> {
 
 	let lua = Lua::new();
 
@@ -44,4 +44,5 @@ pub fn code(code: &str) -> Result<()> {
 	return Ok(());
 
 }
+
 

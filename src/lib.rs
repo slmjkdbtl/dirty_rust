@@ -14,4 +14,6 @@ pub mod math;
 pub mod res;
 #[cfg(feature = "col")]
 pub mod col;
+#[cfg(feature = "lua")]
+pub mod lua;
 
