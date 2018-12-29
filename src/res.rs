@@ -3,7 +3,7 @@
 use std::fs;
 use crate::ctx;
 use crate::gfx;
-use crate::math;
+use crate::math::*;
 
 ctx!(RES: ResCtx);
 
@@ -21,7 +21,7 @@ pub fn init() {
 
 struct SpriteData {
 	tex: gfx::Texture,
-	frames: Vec<math::Vector4>,
+	frames: Vec<Rect>,
 }
 
 pub fn load_sprites(dir: &str, names: Vec<&str>) {
