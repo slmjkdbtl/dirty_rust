@@ -7,7 +7,7 @@ use std::mem;
 
 use crate::ctx;
 use crate::app;
-use crate::math;
+use crate::math::*;
 
 ctx!(GFX: GfxCtx);
 
@@ -41,12 +41,12 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: math::Rect, tint: math::Color) {
+pub fn draw(tex: &Texture, pos: Vec2, r: f32, s: Vec2, quad: Rect, tint: Color) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 	let (width, height) = app::size();
-	let proj = math::Matrix4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	let proj = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 	let quad = quad;
 
 	push();
@@ -70,23 +70,23 @@ pub fn draw(tex: &Texture, pos: math::Vector2, r: f32, s: math::Vector2, quad: m
 
 }
 
-pub fn rect(quad: math::Rect, r: f32, tint: math::Color) {
+pub fn rect(quad: Rect, r: f32, tint: Color) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 
-	draw(&renderer.empty_tex, math::vec2(quad.x, quad.y), r, math::vec2(quad.w, quad.h), math::rect(0.0, 0.0, 1.0, 1.0), tint);
+	draw(&renderer.empty_tex, Vec2::new(quad.x, quad.y), r, Vec2::new(quad.w, quad.h), Rect::new(0.0, 0.0, 1.0, 1.0), tint);
 
 }
 
-pub fn line(p1: math::Vector2, p2: math::Vector2, width: u8, tint: math::Color) {
+pub fn line(p1: Vec2, p2: Vec2, width: u8, tint: Color) {
 
 	let cx = p1.x + (p2.x - p1.x) / 2.0;
 	let cy = p1.y + (p2.y - p1.y) / 2.0;
 	let dis = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
-	rect(math::rect(cx, cy, dis, width as f32), rot, tint);
+	rect(Rect::new(cx, cy, dis, width as f32), rot, tint);
 
 }
 
@@ -151,8 +151,8 @@ struct Renderer2D {
 	mesh: Mesh,
 	program: Program,
 	empty_tex: Texture,
-	g_trans: math::Matrix4,
-	g_trans_stack: Vec<math::Matrix4>,
+	g_trans: Mat4,
+	g_trans_stack: Vec<Mat4>,
 
 }
 
@@ -199,7 +199,7 @@ impl Renderer2D {
 			mesh: mesh,
 			program: program,
 			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
-			g_trans: math::Matrix4::identity(),
+			g_trans: Mat4::identity(),
 			g_trans_stack: vec![],
 		};
 

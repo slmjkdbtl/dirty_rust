@@ -1,15 +1,15 @@
 // wengwengweng
 
-use core::ops::Mul;
+use core::ops::{Add,Sub,Mul,Div};
 
 macro_rules! make_vec {
 
 	// ugly hack
-	($name:ident($short_name:ident) -> ($($member:ident),*): $type:ty, $count:expr) => {
-		make_vec!($name($short_name) -> ($($member),*): $type, $count, $);
+	($name:ident($sname:ident) -> ($($member:ident),*): $type:ty, $count:expr) => {
+		make_vec!($name($sname) -> ($($member),*): $type, $count, $);
 	};
 
-	($name:ident($short_name:ident) -> ($($member:ident),*): $type:ty, $count:expr, $dol:tt) => {
+	($name:ident($sname:ident) -> ($($member:ident),*): $type:ty, $count:expr, $d:tt) => {
 
 		#[derive(Debug, Copy, Clone, Default)]
 		pub struct $name {
@@ -17,56 +17,85 @@ macro_rules! make_vec {
 		}
 
 		impl $name {
+
 			pub fn new($($member: $type,)*) -> Self {
 				return Self {
 					$($member: $member,)*
 				};
 			}
+
 			pub fn all(x: $type) -> Self {
 				return Self {
 					$($member: x,)*
 				}
 			}
+
 			pub fn as_arr(&self) -> [$type; $count] {
 				return [$(self.$member),*];
 			}
+
 		}
 
-		pub fn $short_name($($member: $type,)*) -> $name {
-			return $name {
-				$($member: $member,)*
-			};
+		impl Add for $name {
+			type Output = $name;
+			fn add(self, other: $name) -> $name {
+				return $name {
+					$($member: self.$member + other.$member,)*
+				}
+			}
+		}
+
+		impl Sub for $name {
+			type Output = $name;
+			fn sub(self, other: $name) -> $name {
+				return $name {
+					$($member: self.$member - other.$member,)*
+				}
+			}
+		}
+
+		impl Mul for $name {
+			type Output = $name;
+			fn mul(self, other: $name) -> $name {
+				return $name {
+					$($member: self.$member * other.$member,)*
+				}
+			}
 		}
 
 		#[macro_export]
-		macro_rules! $short_name {
+		macro_rules! $sname {
+
 			() => {
 				$name::default();
 			};
+
 			($v:expr) => {
 				$name::all($v as $type);
 			};
-			($dol($v:expr),*) => {
-				$name::new($dol($v as $type),*)
+
+			($d($v:expr),*) => {
+				$name::new($d($v as $type),*)
 			}
+
 		}
 
 	}
 
 }
 
-make_vec!(Vector2(vec2) -> (x, y): f32, 2);
-make_vec!(Vector3(vec3) -> (x, y, z): f32, 3);
-make_vec!(Vector4(vec4) -> (x, y, z, w): f32, 4);
+make_vec!(Vec2(vec2) -> (x, y): f32, 2);
+make_vec!(Vec3(vec3) -> (x, y, z): f32, 3);
+make_vec!(Vec4(vec4) -> (x, y, z, w): f32, 4);
 make_vec!(Color(color) -> (r, g, b, a): f32, 4);
 make_vec!(Rect(rect) -> (x, y, w, h): f32, 4);
 
 #[derive(Debug, Copy, Clone)]
-pub struct Matrix4 {
+pub struct Mat4 {
 	m: [[f32; 4]; 4],
 }
 
-impl Matrix4 {
+impl Mat4 {
 
 	pub fn identity() -> Self {
 
@@ -83,7 +112,7 @@ impl Matrix4 {
 
 	pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Self {
 
-		let mut m = Matrix4::identity();
+		let mut m = Mat4::identity();
 
 		m.m[0][0] = 2.0 / (right - left);
 		m.m[1][1] = 2.0 / (top - bottom);
@@ -99,7 +128,7 @@ impl Matrix4 {
 
 	pub fn translate(self, x: f32, y: f32) -> Self {
 
-		let mut m = Matrix4::identity();
+		let mut m = Mat4::identity();
 
 		m.m[3][0] = x;
 		m.m[3][1] = y;
@@ -110,7 +139,7 @@ impl Matrix4 {
 
 	pub fn scale(self, sx: f32, sy: f32) -> Self {
 
-		let mut m = Matrix4::identity();
+		let mut m = Mat4::identity();
 
 		m.m[0][0] = sx;
 		m.m[1][1] = sy;
@@ -121,7 +150,7 @@ impl Matrix4 {
 
 	pub fn rotate(self, rot: f32) -> Self {
 
-		let mut m = Matrix4::identity();
+		let mut m = Mat4::identity();
 
 		let c = rot.cos();
 		let s = rot.sin();
@@ -147,7 +176,7 @@ impl Matrix4 {
 
 	pub fn inverse(&self) -> Self {
 
-		let mut nm = Matrix4::identity();
+		let mut nm = Mat4::identity();
 
 		let f00 = self.m[2][2] * self.m[3][3] - self.m[3][2] * self.m[2][3];
 		let f01 = self.m[2][1] * self.m[3][3] - self.m[3][1] * self.m[2][3];
@@ -205,7 +234,7 @@ impl Matrix4 {
 
 	}
 
-	pub fn forward(&self, pt: Vector2) -> Vector2 {
+	pub fn forward(&self, pt: Vec2) -> Vec2 {
 
 		let mut npt = vec2!();
 
@@ -222,13 +251,13 @@ impl Matrix4 {
 
 }
 
-impl Mul for Matrix4 {
+impl Mul for Mat4 {
 
 	type Output = Self;
 
 	fn mul(self, other: Self) -> Self {
 
-		let mut nm = Matrix4::identity();
+		let mut nm = Mat4::identity();
 
 		for i in 0..4 {
 			for j in 0..4 {
