@@ -1,8 +1,30 @@
 # wengwengweng
 
-[workspace]
-members = [
-	"src/engine",
-	"src/lua",
-]
+[package]
+name = "dirty"
+version = "0.0.0"
+authors = ["t <voygagaga@outlook.com>"]
+edition = "2018"
+
+[features]
+col = []
+res = []
+lua = []
+
+[dependencies]
+image = "*"
+rodio = "*"
+rand = "*"
+serde = "*"
+gl = "*"
+tobj = "*"
+rlua = "*"
+
+[dependencies.sdl2]
+version = "*"
+features = ["static-link", "bundled"]
+
+[[example]]
+name = "lua"
+required-features = ["lua"]
 
