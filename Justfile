@@ -1,7 +1,7 @@
 # wengwengweng
 
 run bin="yo":
-	cargo run --example {{bin}} --features=col,res,lua
+	cargo run --example {{bin}}
 
 doc crate:
 	cargo doc -p {{crate}} --no-deps --open

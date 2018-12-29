@@ -6,9 +6,7 @@ use sdl2::video::GLProfile;
 use std::thread;
 use std::time;
 
-use crate::gfx;
-use crate::audio;
-use crate::ctx;
+use crate::*;
 
 ctx!(APP: AppCtx);
 
@@ -43,6 +41,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 	gfx::init();
 	#[cfg(not(target_os = "windows"))]
 	audio::init();
+	res::init();
 
 	init_ctx(AppCtx {
 		sdl_ctx: sdl_ctx,

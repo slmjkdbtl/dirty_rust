@@ -10,10 +10,10 @@ fn main() {
 
 	app::init("yo", 640, 480);
 
-	let tex = gfx::Texture::from_bytes(&include_bytes!("car.png")[..]);
+	let tex = gfx::Texture::from_bytes(&include_bytes!("./car.png")[..]);
 	let mut index = 0;
 
-	col::sat();
+	res::load_sprites("./", vec!["car"]);
 
 	app::run(&mut || {
 

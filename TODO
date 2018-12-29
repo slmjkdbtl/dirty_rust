@@ -1,0 +1,19 @@
+- [+] basic window creation
+- [+] basic 2d rendering
+- [+] 2d global transforms
+- [+] 2d primitives
+
+- [*] res loader
+- [*] lua bindings
+
+- [ ] input
+- [ ] audio
+- [ ] window configs / queries
+- [ ] custom shaders
+- [ ] frame buffers
+- [ ] 3d
+- [ ] collision detections
+- [ ] pure lua cli
+- [ ] imgui
+- [ ] editor
+

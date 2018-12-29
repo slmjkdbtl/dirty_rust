@@ -4,12 +4,10 @@
 name = "dirty"
 version = "0.0.0"
 authors = ["t <voygagaga@outlook.com>"]
+description = "dirty tool kit"
+repository = "https://github.com/slmjkdbtl/DIRTY"
+license = "Zlib"
 edition = "2018"
-
-[features]
-col = []
-res = []
-lua = []
 
 [dependencies]
 image = "*"
@@ -23,8 +21,4 @@ rlua = "*"
 [dependencies.sdl2]
 version = "*"
 features = ["static-link", "bundled"]
-
-[[example]]
-name = "lua"
-required-features = ["lua"]
 
