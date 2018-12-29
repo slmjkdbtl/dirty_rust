@@ -1,7 +1,9 @@
 // wengwengweng
 
 use std::fs;
-use crate::*;
+use crate::ctx;
+use crate::gfx;
+use crate::math;
 
 ctx!(RES: ResCtx);
 

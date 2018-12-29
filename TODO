@@ -2,8 +2,10 @@
 - [+] basic 2d rendering
 - [+] 2d global transforms
 - [+] 2d primitives
+- [+] use macros to generate vector structs
 
 - [*] res loader
+- [*] fix macro import
 - [*] lua bindings
 
 - [ ] input
@@ -16,4 +18,7 @@
 - [ ] pure lua cli
 - [ ] imgui
 - [ ] editor
+- [ ] particle system
+- [ ] cap framerate
+- [ ] sprite batching
 

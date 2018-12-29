@@ -7,7 +7,11 @@ use rlua::Function;
 // use rlua::UserData;
 // use rlua::UserDataMethods;
 
-use crate::*;
+use crate::app;
+use crate::gfx;
+use crate::audio;
+use crate::res;
+use crate::math;
 
 fn bind(lua: &Lua) -> Result<()> {
 

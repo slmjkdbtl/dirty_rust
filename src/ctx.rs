@@ -3,7 +3,7 @@
 #[macro_export]
 macro_rules! ctx {
 
-	($name:ident: $type:ty) => (
+	($name:ident: $type:ty) => {
 
 		static mut $name: Option<$type> = None;
 
@@ -11,12 +11,12 @@ macro_rules! ctx {
 			unsafe {
 				match &$name {
 					Some(_) => {
-						panic!("cannot init twice");
-					}
+						panic!("cannot initialize twice");
+					},
 					None => {
 						$name = Some(c);
-					}
-				}
+					},
+				};
 
 			}
 		}
@@ -33,7 +33,7 @@ macro_rules! ctx {
 			}
 		}
 
-	)
+	}
 
 }
 

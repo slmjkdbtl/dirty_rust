@@ -6,7 +6,10 @@ use sdl2::video::GLProfile;
 use std::thread;
 use std::time;
 
-use crate::*;
+use crate::ctx;
+use crate::gfx;
+use crate::audio;
+use crate::res;
 
 ctx!(APP: AppCtx);
 
