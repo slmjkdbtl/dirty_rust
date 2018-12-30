@@ -1,9 +1,7 @@
 // wengwengweng
 
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Scancode;
-use sdl2::video::GLProfile;
 use std::thread;
 use std::time;
 use std::collections::HashMap;
@@ -39,7 +37,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 	let video = sdl_ctx.video().unwrap();
 	let gl_attr = video.gl_attr();
 
-	gl_attr.set_context_profile(GLProfile::Compatibility);
+	gl_attr.set_context_profile(sdl2::video::GLProfile::Compatibility);
 	gl_attr.set_context_version(2, 1);
 
 	let window = video.window(title, width, height)
@@ -58,7 +56,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 	audio::init();
 	res::init();
 
-	let mut events = sdl_ctx.event_pump().unwrap();
+	let events = sdl_ctx.event_pump().unwrap();
 
 	init_ctx(AppCtx {
 		sdl_ctx: sdl_ctx,
@@ -239,7 +237,7 @@ fn key_to_scancode(code: &str) -> Option<Scancode> {
 
 fn check_key_state(k: &str, state: ButtonState) -> bool {
 
-	return match key_to_scancode(k) {
+	match key_to_scancode(k) {
 		Some(code) => {
 			match get_ctx().key_states.get(&code) {
 				Some(s) => {

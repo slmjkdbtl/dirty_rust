@@ -4,12 +4,14 @@
 - [+] 2d primitives
 - [+] use macros to generate vector structs
 - [+] vector operation overloads
+- [+] keyboard inputs
+- [+] fix macro import
 
 - [*] res loader
-- [*] fix macro import
 - [*] lua bindings
+- [*] mouse inputs
+- [*] res file reading
 
-- [ ] input
 - [ ] audio
 - [ ] window configs / queries
 - [ ] custom shaders
