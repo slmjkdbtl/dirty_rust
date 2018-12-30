@@ -13,7 +13,7 @@ fn main() {
 	let tex = gfx::Texture::from_bytes(&include_bytes!("./car.png")[..]);
 	let mut index = 0;
 
-	res::load_sprites("./", vec!["car"]);
+	res::load_sprites(".", vec!["car"]);
 
 	app::run(&mut || {
 

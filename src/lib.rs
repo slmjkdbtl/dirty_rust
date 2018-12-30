@@ -13,4 +13,5 @@ pub mod res;
 pub mod col;
 pub mod lua;
 pub mod math;
+pub mod fs;
 

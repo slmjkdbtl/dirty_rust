@@ -4,8 +4,8 @@ use rlua::Lua;
 use rlua::Result;
 use rlua::Function;
 use rlua::UserData;
-use rlua::UserDataMethods;
-use rlua::MetaMethod;
+// use rlua::UserDataMethods;
+// use rlua::MetaMethod;
 
 use crate::*;
 use crate::math::*;
