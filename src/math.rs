@@ -2,24 +2,11 @@
 
 use core::ops;
 use std::fmt;
-
-macro_rules! nested_macro {
-
-	($($body:tt)*) => {
-
-		macro_rules! __nested_macro {
-			$($body)*
-		}
-
-		__nested_macro!($);
-
-	}
-
-}
+use crate::*;
 
 macro_rules! gen_vec {
 
-	($name:ident($sname:ident) -> ($($member:ident),*): $type:ty, $count:expr) => {
+	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty) => {
 
 		nested_macro! {
 
@@ -48,40 +35,42 @@ macro_rules! gen_vec {
 
 		#[derive(Debug, Copy, Clone, Default, PartialEq)]
 		pub struct $name {
-			$(pub $member: $type),*
+			$(pub $member: $type),+
 		}
 
 		impl $name {
 
-			pub fn new($($member: $type,)*) -> Self {
+			pub fn new($($member: $type,)+) -> Self {
 				return Self {
-					$($member: $member,)*
+					$($member: $member,)+
 				};
 			}
 
 			pub fn all(x: $type) -> Self {
 				return Self {
-					$($member: x,)*
+					$($member: x,)+
 				}
 			}
 
-			pub fn as_arr(&self) -> [$type; $count] {
-				return [$(self.$member),*];
+			pub fn as_arr(&self) -> [$type; count_expr!($($member),+)] {
+				return [$(self.$member),+];
 			}
 
 		}
 
-// 		impl fmt::Display for $name {
-// 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-// 				return write!(f, "{}($({}),*)", $sname, $(self.$member),*);
-// 			}
-// 		}
+		impl fmt::Display for $name {
+
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				return write!(f, "{}({})", stringify!($sname), vec![$(format!("{}", self.$member)),+].join(", "));
+			}
+
+		}
 
 		impl ops::Add for $name {
 			type Output = $name;
 			fn add(self, other: $name) -> $name {
 				return $name {
-					$($member: self.$member + other.$member,)*
+					$($member: self.$member + other.$member,)+
 				}
 			}
 		}
@@ -90,7 +79,7 @@ macro_rules! gen_vec {
 			type Output = $name;
 			fn sub(self, other: $name) -> $name {
 				return $name {
-					$($member: self.$member - other.$member,)*
+					$($member: self.$member - other.$member,)+
 				}
 			}
 		}
@@ -99,7 +88,7 @@ macro_rules! gen_vec {
 			type Output = $name;
 			fn mul(self, other: $name) -> $name {
 				return $name {
-					$($member: self.$member * other.$member,)*
+					$($member: self.$member * other.$member,)+
 				}
 			}
 		}
@@ -108,7 +97,7 @@ macro_rules! gen_vec {
 			type Output = $name;
 			fn mul(self, other: f32) -> $name {
 				return $name {
-					$($member: self.$member * other,)*
+					$($member: self.$member * other,)+
 				}
 			}
 		}
@@ -124,7 +113,7 @@ macro_rules! gen_vec {
 			type Output = $name;
 			fn div(self, other: $name) -> $name {
 				return $name {
-					$($member: self.$member / other.$member,)*
+					$($member: self.$member / other.$member,)+
 				}
 			}
 		}
@@ -133,7 +122,7 @@ macro_rules! gen_vec {
 			type Output = $name;
 			fn div(self, other: f32) -> $name {
 				return $name {
-					$($member: self.$member / other,)*
+					$($member: self.$member / other,)+
 				}
 			}
 		}
@@ -149,11 +138,11 @@ macro_rules! gen_vec {
 
 }
 
-gen_vec!(Vec2(vec2) -> (x, y): f32, 2);
-gen_vec!(Vec3(vec3) -> (x, y, z): f32, 3);
-gen_vec!(Vec4(vec4) -> (x, y, z, w): f32, 4);
-gen_vec!(Color(color) -> (r, g, b, a): f32, 4);
-gen_vec!(Rect(rect) -> (x, y, w, h): f32, 4);
+gen_vec!(Vec2(vec2) -> (x, y): f32);
+gen_vec!(Vec3(vec3) -> (x, y, z): f32);
+gen_vec!(Vec4(vec4) -> (x, y, z, w): f32);
+gen_vec!(Color(color) -> (r, g, b, a): f32);
+gen_vec!(Rect(rect) -> (x, y, w, h): f32);
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mat4 {

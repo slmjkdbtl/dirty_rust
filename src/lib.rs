@@ -4,6 +4,7 @@
 #![allow(dead_code)]
 
 mod ctx;
+mod utils;
 
 pub mod app;
 pub mod gfx;
