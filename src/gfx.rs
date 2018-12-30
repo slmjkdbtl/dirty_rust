@@ -44,8 +44,8 @@ pub fn draw(tex: &Texture, pos: Vec2, r: f32, s: Vec2, quad: Rect, tint: Color) 
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
-	let (width, height) = app::size();
-	let proj = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	let size = app::size();
+	let proj = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
 	let quad = quad;
 
 	push();
