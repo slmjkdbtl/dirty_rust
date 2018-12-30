@@ -5,8 +5,7 @@ use std::ffi::CString;
 use std::ptr;
 use std::mem;
 
-use crate::ctx;
-use crate::app;
+use crate::*;
 use crate::math::*;
 
 ctx!(GFX: GfxCtx);
@@ -75,7 +74,7 @@ pub fn rect(quad: Rect, r: f32, tint: Color) {
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 
-	draw(&renderer.empty_tex, Vec2::new(quad.x, quad.y), r, Vec2::new(quad.w, quad.h), Rect::new(0.0, 0.0, 1.0, 1.0), tint);
+	draw(&renderer.empty_tex, vec2!(quad.x, quad.y), r, vec2!(quad.w, quad.h), rect!(0, 0, 1, 1), tint);
 
 }
 
@@ -86,7 +85,7 @@ pub fn line(p1: Vec2, p2: Vec2, width: u8, tint: Color) {
 	let dis = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
-	rect(Rect::new(cx, cy, dis, width as f32), rot, tint);
+	rect(rect!(cx, cy, dis, width), rot, tint);
 
 }
 
