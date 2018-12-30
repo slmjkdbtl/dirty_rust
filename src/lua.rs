@@ -17,22 +17,28 @@ fn bind(lua: &Lua) -> Result<()> {
 
 	let globals = lua.globals();
 
-	globals.set("d_init", lua.create_function(|_, (title, width, height): (String, u32, u32)| {
-		app::init(&title[..], width, height);
-		return Ok(());
-	})?)?;
+	macro_rules! bind_func {
+		($name:expr, ($($args:ident),*): ($($arg_types:ty),*) $code:block) => {
+			globals.set($name, lua.create_function(|_, ($($args),*): ($($arg_types),*)| {
+				$code;
+				return Ok(());
+			})?)?;
+		}
+	}
 
-	globals.set("d_run", lua.create_function(|_, f: Function| {
+	bind_func!("d_init", (title, width, height): (String, u32, u32) {
+		app::init(&title[..], width, height);
+	});
+
+	bind_func!("d_run", (f): (Function) {
 		app::run(&mut || {
 			f.call::<_, ()>(()).expect("something terrible happened");
 		});
-		return Ok(());
-	})?)?;
+	});
 
-	globals.set("d_clear", lua.create_function(|_, (): ()| {
+	bind_func!("d_clear", (): () {
 		gfx::clear();
-		return Ok(());
-	})?)?;
+	});
 
 	return Ok(());
 
