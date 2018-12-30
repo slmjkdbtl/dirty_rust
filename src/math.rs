@@ -1,5 +1,6 @@
 // wengwengweng
 
+use rand::Rng;
 use core::ops;
 use std::fmt;
 use crate::*;
@@ -25,7 +26,7 @@ macro_rules! gen_vec {
 
 					($d($v:expr),*) => {
 						$name::new($d($v as $type),*)
-					}
+					};
 
 				}
 
@@ -141,6 +142,10 @@ gen_vec!(Vec3(vec3) -> (x, y, z): f32);
 gen_vec!(Vec4(vec4) -> (x, y, z, w): f32);
 gen_vec!(Color(color) -> (r, g, b, a): f32);
 gen_vec!(Rect(rect) -> (x, y, w, h): f32);
+
+pub fn random() -> f32 {
+	return rand::random::<f32>();
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mat4 {

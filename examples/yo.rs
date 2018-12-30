@@ -26,6 +26,10 @@ fn main() {
 		gfx::clear();
 		gfx::draw(&tex, vec2!(240, 240), 0.0, vec2!(2), rect!((index as f32) * 0.25, 0, 0.25, 1), color!(1));
 
+		if app::key_down("esc") {
+			app::quit();
+		}
+
 	});
 
 }
