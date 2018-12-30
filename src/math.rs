@@ -3,14 +3,48 @@
 use core::ops;
 use std::fmt;
 
+macro_rules! nested_macro {
+
+	($($body:tt)*) => {
+
+		macro_rules! __nested_macro {
+			$($body)*
+		}
+
+		__nested_macro!($);
+
+	}
+
+}
+
 macro_rules! gen_vec {
 
-	// ugly hack
 	($name:ident($sname:ident) -> ($($member:ident),*): $type:ty, $count:expr) => {
-		gen_vec!($name($sname) -> ($($member),*): $type, $count, $);
-	};
 
-	($name:ident($sname:ident) -> ($($member:ident),*): $type:ty, $count:expr, $d:tt) => {
+		nested_macro! {
+
+			($d:tt) => {
+
+				#[macro_export]
+				macro_rules! $sname {
+
+					() => {
+						$name::default();
+					};
+
+					($v:expr) => {
+						$name::all($v as $type);
+					};
+
+					($d($v:expr),*) => {
+						$name::new($d($v as $type),*)
+					}
+
+				}
+
+			}
+
+		}
 
 		#[derive(Debug, Copy, Clone, Default, PartialEq)]
 		pub struct $name {
@@ -109,23 +143,6 @@ macro_rules! gen_vec {
 			fn div(self, other: i32) -> $name {
 				return self / (other as f32);
 			}
-		}
-
-		#[macro_export]
-		macro_rules! $sname {
-
-			() => {
-				$name::default();
-			};
-
-			($v:expr) => {
-				$name::all($v as $type);
-			};
-
-			($d($v:expr),*) => {
-				$name::new($d($v as $type),*)
-			}
-
 		}
 
 	}
