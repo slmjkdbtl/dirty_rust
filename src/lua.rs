@@ -3,15 +3,11 @@
 use rlua::Lua;
 use rlua::Result;
 use rlua::Function;
-// use rlua::MetaMethod;
-// use rlua::UserData;
+use rlua::UserData;
 // use rlua::UserDataMethods;
+// use rlua::MetaMethod;
 
-use crate::app;
-use crate::gfx;
-use crate::audio;
-use crate::res;
-use crate::math;
+use crate::*;
 
 fn bind(lua: &Lua) -> Result<()> {
 
@@ -20,8 +16,7 @@ fn bind(lua: &Lua) -> Result<()> {
 	macro_rules! bind_func {
 		($name:expr, ($($args:ident),*): ($($arg_types:ty),*) $code:block) => {
 			globals.set($name, lua.create_function(|_, ($($args),*): ($($arg_types),*)| {
-				$code;
-				return Ok(());
+				return Ok($code);
 			})?)?;
 		}
 	}
@@ -39,6 +34,14 @@ fn bind(lua: &Lua) -> Result<()> {
 	bind_func!("d_clear", (): () {
 		gfx::clear();
 	});
+
+	impl UserData for math::Vec2 {}
+
+// 	let vec2_constructor = lua.create_function(|_, (x, y): (f32, f32)|{
+// 		return Ok(math::Vec2::new(x, y));
+// 	})?;
+
+// 	globals.set("vec2", vec2_constructor)?;
 
 	return Ok(());
 
