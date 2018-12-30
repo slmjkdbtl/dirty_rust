@@ -6,6 +6,7 @@ use sdl2::keyboard::Scancode;
 use sdl2::video::GLProfile;
 use std::thread;
 use std::time;
+use std::collections::HashMap;
 
 use crate::*;
 use crate::math::*;
@@ -20,9 +21,11 @@ struct AppCtx {
 	events: sdl2::EventPump,
 	platform: &'static str,
 	running: bool,
+	key_states: HashMap<Scancode, ButtonState>,
 
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum ButtonState {
 	Up,
 	Pressed,
@@ -64,39 +67,66 @@ pub fn init(title: &str, width: u32, height: u32) {
 		events: events,
 		platform: sdl2::get_platform(),
 		running: false,
+		key_states: HashMap::new(),
 	});
 
 }
 
 pub fn run(f: &mut FnMut()) {
 
-	let app = get_ctx_mut();
+	let app = get_ctx();
+	let app_mut = get_ctx_mut();
+	let keyboard_state = app.events.keyboard_state();
 
-	app.running = true;
+	app_mut.running = true;
 
 	'running: loop {
+
+		for event in app_mut.events.poll_iter() {
+
+			match event {
+
+				Event::Quit {..} => {
+					break 'running;
+				},
+
+				Event::KeyDown { repeat: false, .. } => {
+					for code in keyboard_state.pressed_scancodes() {
+						if !app.key_states.contains_key(&code) || app.key_states[&code] == ButtonState::Up {
+							app_mut.key_states.insert(code, ButtonState::Pressed);
+						}
+					}
+				},
+
+				_ => {}
+
+			}
+
+		}
 
 		gfx::update();
 		f();
 		app.window.gl_swap_window();
 
-		for event in app.events.poll_iter() {
-			match event {
-				Event::Quit {..} => {
-					break 'running;
+		if !app.running {
+			break 'running;
+		}
+
+		for (code, state) in &mut app_mut.key_states {
+			match state {
+				ButtonState::Pressed => {
+					*state = ButtonState::Down;
 				},
-				Event::KeyDown { repeat: false, .. } => {
-					// ...
+				ButtonState::Released => {
+					*state = ButtonState::Up;
 				},
-				Event::KeyUp { repeat: false, .. } => {
-					// ...
+				ButtonState::Down => {
+					if !keyboard_state.is_scancode_pressed(*code) {
+						*state = ButtonState::Released;
+					}
 				},
 				_ => {}
 			}
-		}
-
-		if !app.running {
-			break 'running;
 		}
 
 		thread::sleep(time::Duration::from_millis(16));
@@ -207,25 +237,36 @@ fn key_to_scancode(code: &str) -> Option<Scancode> {
 
 }
 
-pub fn key_pressed(k: &str) -> bool {
-	return false;
-}
+fn check_key_state(k: &str, state: ButtonState) -> bool {
 
-pub fn key_down(k: &str) -> bool {
-
-	match key_to_scancode(k) {
-		Some(k) => {
-			return get_ctx().events.keyboard_state().is_scancode_pressed(k);
+	return match key_to_scancode(k) {
+		Some(code) => {
+			match get_ctx().key_states.get(&code) {
+				Some(s) => {
+					return *s == state;
+				}
+				None => {
+					return false;
+				}
+			}
 		},
 		None => {
 			return false;
 		}
-	}
+	};
 
 }
 
+pub fn key_pressed(k: &str) -> bool {
+	return check_key_state(k, ButtonState::Pressed);
+}
+
+pub fn key_down(k: &str) -> bool {
+	return check_key_state(k, ButtonState::Down);
+}
+
 pub fn key_released(k: &str) -> bool {
-	return false;
+	return check_key_state(k, ButtonState::Released);
 }
 
 pub fn is_macos() -> bool {
