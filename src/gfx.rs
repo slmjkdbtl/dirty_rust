@@ -4,6 +4,7 @@ use gl::types::*;
 use std::ffi::CString;
 use std::ptr;
 use std::mem;
+use std::collections::HashMap;
 
 use crate::*;
 use crate::math::*;
@@ -22,8 +23,62 @@ pub fn init() {
 
 	clear();
 
+	let vertices: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0,
+	];
+
+	let uv: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0
+	];
+
+	let indices: Vec<GLuint> = vec![
+		0, 1, 3,
+		1, 2, 3,
+	];
+
+	let mut mesh = Mesh::new();
+
+	mesh.make_buf(&vertices).attr(0, 2);
+	mesh.make_buf(&uv).attr(1, 2);
+	mesh.make_index_buf(&indices);
+
+	let program = Program::new(
+		include_str!("quad.vert").to_owned(),
+		include_str!("quad.frag").to_owned()
+	);
+
+	program
+		.attr(0, "pos")
+		.attr(1, "uv")
+		.link();
+
+	let default_font = Font::new(
+		Texture::from_bytes(include_bytes!("font.png")),
+		32,
+		8,
+		r##"                                 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##,
+	);
+
 	init_ctx(GfxCtx {
-		renderer_2d: Renderer2D::new(),
+
+		renderer_2d: Renderer2D {
+
+			mesh: mesh,
+			program: program,
+			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
+			transform: Mat4::identity(),
+			transform_stack: vec![],
+			tint: color!(1),
+			default_font: default_font,
+
+		},
+
 	});
 
 }
@@ -32,7 +87,8 @@ pub fn update() {
 
 	let g = get_ctx_mut();
 
-	g.renderer_2d.g_trans_stack.clear();
+	g.renderer_2d.transform_stack.clear();
+	g.renderer_2d.transform = Mat4::identity();
 
 }
 
@@ -40,41 +96,58 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-pub fn draw(tex: &Texture, pos: Vec2, r: f32, s: Vec2, quad: Rect, tint: Color) {
+pub fn color(tint: Color) {
+	get_ctx_mut().renderer_2d.tint = tint;
+}
+
+pub fn draw(tex: &Texture, quad: Rect) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 	let size = app::size();
-	let proj = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
-	let quad = quad;
-
-	push();
-	translate(pos.x, pos.y);
-	rotate(r);
-	scale((tex.width as f32) * quad.w * s.x, (tex.height as f32) * quad.h * s.y);
+	let projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
 
 	tex.bind();
 
+	push();
+	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
+
 	renderer.program
-		.uniform_vec4("tint", tint.as_arr())
+		.uniform_vec4("tint", renderer.tint.as_arr())
 		.uniform_vec4("quad", quad.as_arr())
-		.uniform_mat4("proj", proj.as_arr())
-		.uniform_mat4("trans", renderer.g_trans.as_arr())
+		.uniform_mat4("projection", projection.as_arr())
+		.uniform_mat4("transform", renderer.transform.as_arr())
 		.bind();
 
 	pop();
-
 	renderer.mesh.draw();
 	tex.unbind();
 
 }
 
-pub fn rect(quad: Rect, r: f32, tint: Color) {
+pub fn text(s: &str) {
+
+	let gfx = get_ctx();
+	let renderer = &gfx.renderer_2d;
+	let font = &renderer.default_font;
+
+	push();
+
+	for (i, ch) in s.chars().enumerate() {
+		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
+		draw(&font.tex, font.map[&ch]);
+	}
+
+	pop();
+
+}
+
+pub fn rect(quad: Rect, r: f32) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 
-	draw(&renderer.empty_tex, vec2!(quad.x, quad.y), r, vec2!(quad.w, quad.h), rect!(0, 0, 1, 1), tint);
+	draw(&renderer.empty_tex, rect!(0, 0, 1, 1));
 
 }
 
@@ -85,17 +158,17 @@ pub fn line(p1: Vec2, p2: Vec2, width: u8, tint: Color) {
 	let dis = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
-	rect(rect!(cx, cy, dis, width), rot, tint);
+	rect(rect!(cx, cy, dis, width), rot);
 
 }
 
 pub fn push() {
 
 	let g = get_ctx_mut();
-	let stack = &mut g.renderer_2d.g_trans_stack;
+	let stack = &mut g.renderer_2d.transform_stack;
 
 	if (stack.len() < 32) {
-		stack.push(g.renderer_2d.g_trans);
+		stack.push(g.renderer_2d.transform);
 	} else {
 		panic!("cannot push anymore");
 	}
@@ -105,12 +178,12 @@ pub fn push() {
 pub fn pop() {
 
 	let mut g = get_ctx_mut();
-	let stack = &mut g.renderer_2d.g_trans_stack;
+	let stack = &mut g.renderer_2d.transform_stack;
 
 	match stack.pop() {
 		Some(t) => {
-			g.renderer_2d.g_trans = t;
-		}
+			g.renderer_2d.transform = t;
+		},
 		None => {
 			panic!("cannot pop anymore");
 		}
@@ -118,12 +191,12 @@ pub fn pop() {
 
 }
 
-pub fn translate(x: f32, y: f32) {
+pub fn translate(pos: Vec2) {
 
 	let g = get_ctx_mut();
 	let r = &mut g.renderer_2d;
 
-	r.g_trans = r.g_trans.translate(x, y);
+	r.transform = r.transform.translate(pos.x, pos.y);
 
 }
 
@@ -132,16 +205,55 @@ pub fn rotate(rot: f32) {
 	let g = get_ctx_mut();
 	let r = &mut g.renderer_2d;
 
-	r.g_trans = r.g_trans.rotate(rot);
+	r.transform = r.transform.rotate(rot);
 
 }
 
-pub fn scale(sx: f32, sy: f32) {
+pub fn scale(s: Vec2) {
 
 	let g = get_ctx_mut();
 	let r = &mut g.renderer_2d;
 
-	r.g_trans = r.g_trans.scale(sx, sy);
+	r.transform = r.transform.scale(s.x, s.y);
+
+}
+
+pub struct Font {
+
+	tex: Texture,
+	map: HashMap<char, Rect>,
+	grid_size: Vec2,
+
+}
+
+impl Font {
+
+	pub fn new(tex: Texture, cols: usize, rows: usize, chars: &str) -> Self {
+
+		let mut map = HashMap::new();
+		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
+
+		for (i, ch) in chars.chars().enumerate() {
+
+			map.insert(ch, rect!(
+
+				(i % cols) as f32 * grid_size.x,
+				(i / cols) as f32 * grid_size.y,
+				grid_size.x,
+				grid_size.y
+
+			));
+
+		}
+
+		return Self {
+
+			tex: tex,
+			map: map,
+			grid_size: grid_size,
+
+		}
+	}
 
 }
 
@@ -150,59 +262,10 @@ struct Renderer2D {
 	mesh: Mesh,
 	program: Program,
 	empty_tex: Texture,
-	g_trans: Mat4,
-	g_trans_stack: Vec<Mat4>,
-
-}
-
-impl Renderer2D {
-
-	fn new() -> Self {
-
-		let vertices: Vec<GLfloat> = vec![
-			-0.5,  0.5,
-			 0.5,  0.5,
-			 0.5, -0.5,
-			-0.5, -0.5,
-		];
-
-		let uv: Vec<GLfloat> = vec![
-			0.0, 1.0,
-			1.0, 1.0,
-			1.0, 0.0,
-			0.0, 0.0
-		];
-
-		let indices: Vec<GLuint> = vec![
-			0, 1, 3,
-			1, 2, 3,
-		];
-
-		let mut mesh = Mesh::new();
-
-		mesh.make_buf(&vertices).attr(0, 2);
-		mesh.make_buf(&uv).attr(1, 2);
-		mesh.make_index_buf(&indices);
-
-		let program = Program::new(
-			include_str!("quad.vert").to_owned(),
-			include_str!("quad.frag").to_owned()
-		);
-
-		program
-			.attr(0, "pos")
-			.attr(1, "uv")
-			.link();
-
-		return Self {
-			mesh: mesh,
-			program: program,
-			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
-			g_trans: Mat4::identity(),
-			g_trans_stack: vec![],
-		};
-
-	}
+	transform: Mat4,
+	transform_stack: Vec<Mat4>,
+	tint: Color,
+	default_font: Font,
 
 }
 
