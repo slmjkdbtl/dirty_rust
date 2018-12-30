@@ -75,6 +75,7 @@ pub fn init() {
 			transform: Mat4::identity(),
 			transform_stack: vec![],
 			tint: color!(1),
+			line_width: 1,
 			default_font: default_font,
 
 		},
@@ -98,6 +99,10 @@ struct GfxCtx {
 
 pub fn color(tint: Color) {
 	get_ctx_mut().renderer_2d.tint = tint;
+}
+
+pub fn line_width(line_width: u8) {
+	get_ctx_mut().renderer_2d.line_width = line_width;
 }
 
 pub fn draw(tex: &Texture, quad: Rect) {
@@ -142,23 +147,30 @@ pub fn text(s: &str) {
 
 }
 
-pub fn rect(quad: Rect, r: f32) {
+pub fn rect(size: Vec2) {
 
 	let g = get_ctx();
 	let renderer = &g.renderer_2d;
 
+	push();
+	scale(size);
 	draw(&renderer.empty_tex, rect!(0, 0, 1, 1));
+	pop();
 
 }
 
-pub fn line(p1: Vec2, p2: Vec2, width: u8, tint: Color) {
+pub fn line(p1: Vec2, p2: Vec2) {
 
+	let gfx = get_ctx();
 	let cx = p1.x + (p2.x - p1.x) / 2.0;
 	let cy = p1.y + (p2.y - p1.y) / 2.0;
-	let dis = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
+	let len = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
-	rect(rect!(cx, cy, dis, width), rot);
+	push();
+	rotate(rot);
+	rect(vec2!(len, gfx.renderer_2d.line_width));
+	pop();
 
 }
 
@@ -216,6 +228,14 @@ pub fn scale(s: Vec2) {
 
 	r.transform = r.transform.scale(s.x, s.y);
 
+
+}
+pub fn clear() {
+
+	unsafe {
+		gl::Clear(gl::COLOR_BUFFER_BIT);
+	}
+
 }
 
 pub struct Font {
@@ -265,6 +285,7 @@ struct Renderer2D {
 	transform: Mat4,
 	transform_stack: Vec<Mat4>,
 	tint: Color,
+	line_width: u8,
 	default_font: Font,
 
 }
@@ -686,14 +707,6 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 
 		return id;
 
-	}
-
-}
-
-pub fn clear() {
-
-	unsafe {
-		gl::Clear(gl::COLOR_BUFFER_BIT);
 	}
 
 }
