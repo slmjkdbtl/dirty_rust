@@ -15,3 +15,6 @@ pub mod lua;
 pub mod math;
 pub mod fs;
 
+pub use sdl2::keyboard::Scancode as Key;
+pub use sdl2::mouse::MouseButton as Mouse;
+

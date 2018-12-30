@@ -2,6 +2,8 @@
 
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
+use sdl2::mouse::MouseButton;
+use sdl2::video::{Window, FullscreenType, SwapInterval};
 use std::thread;
 use std::time;
 use std::collections::HashMap;
@@ -14,16 +16,18 @@ ctx!(APP: AppCtx);
 struct AppCtx {
 
 	sdl_ctx: sdl2::Sdl,
-	window: sdl2::video::Window,
+	window: Window,
 	gl_ctx: sdl2::video::GLContext,
 	events: sdl2::EventPump,
 	platform: &'static str,
-	running: bool,
+	is_running: bool,
+	is_fullscreen: bool,
 	key_states: HashMap<Scancode, ButtonState>,
+	mouse_states: HashMap<MouseButton, ButtonState>,
 
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 enum ButtonState {
 	Up,
 	Pressed,
@@ -51,6 +55,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 		video.gl_get_proc_address(name) as *const std::os::raw::c_void
 	});
 
+	video.gl_set_swap_interval(SwapInterval::VSync);
 	gfx::init();
 	#[cfg(not(target_os = "windows"))]
 	audio::init();
@@ -59,13 +64,17 @@ pub fn init(title: &str, width: u32, height: u32) {
 	let events = sdl_ctx.event_pump().unwrap();
 
 	init_ctx(AppCtx {
+
 		sdl_ctx: sdl_ctx,
 		window: window,
 		gl_ctx: gl_ctx,
 		events: events,
 		platform: sdl2::get_platform(),
-		running: false,
 		key_states: HashMap::new(),
+		mouse_states: HashMap::new(),
+		is_running: false,
+		is_fullscreen: false,
+
 	});
 
 }
@@ -75,8 +84,9 @@ pub fn run(f: &mut FnMut()) {
 	let app = get_ctx();
 	let app_mut = get_ctx_mut();
 	let keyboard_state = app.events.keyboard_state();
+	let mouse_state = app.events.mouse_state();
 
-	app_mut.running = true;
+	app_mut.is_running = true;
 
 	'running: loop {
 
@@ -96,6 +106,14 @@ pub fn run(f: &mut FnMut()) {
 					}
 				},
 
+				Event::MouseButtonDown { .. } => {
+					for code in mouse_state.pressed_mouse_buttons() {
+						if !app.mouse_states.contains_key(&code) || app.mouse_states[&code] == ButtonState::Up {
+							app_mut.mouse_states.insert(code, ButtonState::Pressed);
+						}
+					}
+				},
+
 				_ => {}
 
 			}
@@ -106,7 +124,7 @@ pub fn run(f: &mut FnMut()) {
 		f();
 		app.window.gl_swap_window();
 
-		if !app.running {
+		if !app.is_running {
 			break 'running;
 		}
 
@@ -127,6 +145,23 @@ pub fn run(f: &mut FnMut()) {
 			}
 		}
 
+		for (code, state) in &mut app_mut.mouse_states {
+			match state {
+				ButtonState::Pressed => {
+					*state = ButtonState::Down;
+				},
+				ButtonState::Released => {
+					*state = ButtonState::Up;
+				},
+				ButtonState::Down => {
+					if !mouse_state.is_mouse_button_pressed(*code) {
+						*state = ButtonState::Released;
+					}
+				},
+				_ => {}
+			}
+		}
+
 		thread::sleep(time::Duration::from_millis(16));
 
 	}
@@ -138,133 +173,54 @@ pub fn size() -> Vec2 {
 	return vec2!(w, h);
 }
 
-fn key_to_scancode(code: &str) -> Option<Scancode> {
+fn check_key_state(code: Scancode, state: ButtonState) -> bool {
 
-	return match code {
-
-		"a" => Some(Scancode::A),
-		"b" => Some(Scancode::B),
-		"c" => Some(Scancode::C),
-		"d" => Some(Scancode::D),
-		"e" => Some(Scancode::E),
-		"f" => Some(Scancode::F),
-		"g" => Some(Scancode::G),
-		"h" => Some(Scancode::H),
-		"i" => Some(Scancode::I),
-		"j" => Some(Scancode::J),
-		"k" => Some(Scancode::K),
-		"l" => Some(Scancode::L),
-		"m" => Some(Scancode::M),
-		"n" => Some(Scancode::N),
-		"o" => Some(Scancode::O),
-		"p" => Some(Scancode::P),
-		"q" => Some(Scancode::Q),
-		"r" => Some(Scancode::R),
-		"s" => Some(Scancode::S),
-		"t" => Some(Scancode::T),
-		"u" => Some(Scancode::U),
-		"v" => Some(Scancode::V),
-		"w" => Some(Scancode::W),
-		"x" => Some(Scancode::X),
-		"y" => Some(Scancode::Y),
-		"z" => Some(Scancode::Z),
-		"1" => Some(Scancode::Num1),
-		"2" => Some(Scancode::Num2),
-		"3" => Some(Scancode::Num3),
-		"4" => Some(Scancode::Num4),
-		"5" => Some(Scancode::Num5),
-		"6" => Some(Scancode::Num6),
-		"7" => Some(Scancode::Num7),
-		"8" => Some(Scancode::Num8),
-		"9" => Some(Scancode::Num9),
-		"0" => Some(Scancode::Num0),
-		"-" => Some(Scancode::Minus),
-		"=" => Some(Scancode::Equals),
-		" " => Some(Scancode::Space),
-		"," => Some(Scancode::Comma),
-		"." => Some(Scancode::Period),
-		"/" => Some(Scancode::Slash),
-		"]" => Some(Scancode::LeftBracket),
-		"[" => Some(Scancode::RightBracket),
-		"\\" => Some(Scancode::Backslash),
-		";" => Some(Scancode::Semicolon),
-		"enter" => Some(Scancode::Return),
-		"esc" => Some(Scancode::Escape),
-		"back" => Some(Scancode::Backspace),
-		"tab" => Some(Scancode::Tab),
-		"quote" => Some(Scancode::Apostrophe),
-		"backquote" => Some(Scancode::Grave),
-		"capslock" => Some(Scancode::CapsLock),
-		"f1" => Some(Scancode::F1),
-		"f2" => Some(Scancode::F2),
-		"f3" => Some(Scancode::F3),
-		"f4" => Some(Scancode::F4),
-		"f5" => Some(Scancode::F5),
-		"f6" => Some(Scancode::F6),
-		"f7" => Some(Scancode::F7),
-		"f8" => Some(Scancode::F8),
-		"f9" => Some(Scancode::F9),
-		"f10" => Some(Scancode::F10),
-		"f11" => Some(Scancode::F11),
-		"f12" => Some(Scancode::F12),
-		"printscreen" => Some(Scancode::PrintScreen),
-		"scrolllock" => Some(Scancode::ScrollLock),
-		"pause" => Some(Scancode::Pause),
-		"insert" => Some(Scancode::Insert),
-		"home" => Some(Scancode::Home),
-		"pageup" => Some(Scancode::PageUp),
-		"pagedown" => Some(Scancode::PageDown),
-		"delete" => Some(Scancode::Delete),
-		"end" => Some(Scancode::End),
-		"right" => Some(Scancode::Right),
-		"left" => Some(Scancode::Left),
-		"down" => Some(Scancode::Down),
-		"up" => Some(Scancode::Up),
-		"numlock" => Some(Scancode::NumLockClear),
-		"lctrl" => Some(Scancode::LCtrl),
-		"lshift" => Some(Scancode::LShift),
-		"lalt" => Some(Scancode::LAlt),
-		"lgui" => Some(Scancode::LGui),
-		"rctrl" => Some(Scancode::RCtrl),
-		"rshift" => Some(Scancode::RShift),
-		"ralt" => Some(Scancode::RAlt),
-		"rgui" => Some(Scancode::RGui),
-		_ => None,
-
-	};
-
-}
-
-fn check_key_state(k: &str, state: ButtonState) -> bool {
-
-	match key_to_scancode(k) {
-		Some(code) => {
-			match get_ctx().key_states.get(&code) {
-				Some(s) => {
-					return *s == state;
-				}
-				None => {
-					return false;
-				}
-			}
-		},
+	match get_ctx().key_states.get(&code) {
+		Some(s) => {
+			return *s == state;
+		}
 		None => {
 			return false;
 		}
-	};
+	}
 
 }
 
-pub fn key_pressed(k: &str) -> bool {
+fn check_mouse_state(code: MouseButton, state: ButtonState) -> bool {
+
+	match get_ctx().mouse_states.get(&code) {
+		Some(s) => {
+			return *s == state;
+		}
+		None => {
+			return false;
+		}
+	}
+
+}
+
+pub fn key_pressed(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Pressed);
 }
 
-pub fn key_down(k: &str) -> bool {
+pub fn key_down(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Down);
 }
 
-pub fn key_released(k: &str) -> bool {
+pub fn key_released(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Released);
+}
+
+pub fn mouse_pressed(b: MouseButton) -> bool {
+	return check_mouse_state(b, ButtonState::Pressed);
+}
+
+pub fn mouse_down(b: MouseButton) -> bool {
+	return check_mouse_state(b, ButtonState::Down);
+}
+
+pub fn mouse_released(b: MouseButton) -> bool {
+	return check_mouse_state(b, ButtonState::Released);
 }
 
 pub fn is_macos() -> bool {
@@ -287,7 +243,33 @@ pub fn is_ios() -> bool {
 	return get_ctx().platform == "iOS";
 }
 
+pub fn set_fullscreen(b: bool) {
+
+	let app_mut = get_ctx_mut();
+
+	app_mut.is_fullscreen = b;
+
+	if b {
+		app_mut.window.set_fullscreen(FullscreenType::Desktop);
+	} else {
+		app_mut.window.set_fullscreen(FullscreenType::Off);
+	}
+
+}
+
+pub fn get_fullscreen() -> bool {
+	return get_ctx().is_fullscreen;
+}
+
+pub fn show_cursor() {
+	get_ctx_mut().sdl_ctx.mouse().show_cursor(true);
+}
+
+pub fn hide_cursor() {
+	get_ctx_mut().sdl_ctx.mouse().show_cursor(false);
+}
+
 pub fn quit() {
-	get_ctx_mut().running = false;
+	get_ctx_mut().is_running = false;
 }
 
