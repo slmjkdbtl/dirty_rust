@@ -9,9 +9,15 @@ use std::collections::HashMap;
 use crate::*;
 use crate::math::*;
 
+// context
 ctx!(GFX: GfxCtx);
 
-pub fn init() {
+struct GfxCtx {
+	renderer_2d: Renderer2D,
+}
+
+// local public functions
+pub(crate) fn init() {
 
 	unsafe {
 
@@ -84,31 +90,23 @@ pub fn init() {
 
 }
 
-pub fn update() {
+pub(crate) fn update() {
 
-	let g = get_ctx_mut();
+	let gfx_mut = get_ctx_mut();
+	let renderer = &mut gfx_mut.renderer_2d;
 
-	g.renderer_2d.transform_stack.clear();
-	g.renderer_2d.transform = Mat4::identity();
+	renderer.transform_stack.clear();
+	renderer.transform = Mat4::identity();
+	renderer.line_width = 1;
+	renderer.tint = color!(1);
 
 }
 
-struct GfxCtx {
-	renderer_2d: Renderer2D,
-}
-
-pub fn color(tint: Color) {
-	get_ctx_mut().renderer_2d.tint = tint;
-}
-
-pub fn line_width(line_width: u8) {
-	get_ctx_mut().renderer_2d.line_width = line_width;
-}
-
+// public functions
 pub fn draw(tex: &Texture, quad: Rect) {
 
-	let g = get_ctx();
-	let renderer = &g.renderer_2d;
+	let gfx = get_ctx();
+	let renderer = &gfx.renderer_2d;
 	let size = app::size();
 	let projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
 
@@ -118,8 +116,8 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
 
 	renderer.program
-		.uniform_vec4("tint", renderer.tint.as_arr())
-		.uniform_vec4("quad", quad.as_arr())
+		.uniform_color("tint", renderer.tint)
+		.uniform_rect("quad", quad)
 		.uniform_mat4("projection", projection.as_arr())
 		.uniform_mat4("transform", renderer.transform.as_arr())
 		.bind();
@@ -149,8 +147,8 @@ pub fn text(s: &str) {
 
 pub fn rect(size: Vec2) {
 
-	let g = get_ctx();
-	let renderer = &g.renderer_2d;
+	let gfx = get_ctx();
+	let renderer = &gfx.renderer_2d;
 
 	push();
 	scale(size);
@@ -172,6 +170,14 @@ pub fn line(p1: Vec2, p2: Vec2) {
 	rect(vec2!(len, gfx.renderer_2d.line_width));
 	pop();
 
+}
+
+pub fn color(tint: Color) {
+	get_ctx_mut().renderer_2d.tint = tint;
+}
+
+pub fn line_width(line_width: u8) {
+	get_ctx_mut().renderer_2d.line_width = line_width;
 }
 
 pub fn push() {
@@ -205,8 +211,8 @@ pub fn pop() {
 
 pub fn translate(pos: Vec2) {
 
-	let g = get_ctx_mut();
-	let r = &mut g.renderer_2d;
+	let gfx = get_ctx_mut();
+	let r = &mut gfx.renderer_2d;
 
 	r.transform = r.transform.translate(pos.x, pos.y);
 
@@ -214,8 +220,8 @@ pub fn translate(pos: Vec2) {
 
 pub fn rotate(rot: f32) {
 
-	let g = get_ctx_mut();
-	let r = &mut g.renderer_2d;
+	let gfx = get_ctx_mut();
+	let r = &mut gfx.renderer_2d;
 
 	r.transform = r.transform.rotate(rot);
 
@@ -223,8 +229,8 @@ pub fn rotate(rot: f32) {
 
 pub fn scale(s: Vec2) {
 
-	let g = get_ctx_mut();
-	let r = &mut g.renderer_2d;
+	let gfx = get_ctx_mut();
+	let r = &mut gfx.renderer_2d;
 
 	r.transform = r.transform.scale(s.x, s.y);
 
@@ -234,6 +240,91 @@ pub fn clear() {
 
 	unsafe {
 		gl::Clear(gl::COLOR_BUFFER_BIT);
+	}
+
+}
+
+// public structs
+pub struct Texture {
+
+	id: GLuint,
+	pub width: u32,
+	pub height: u32,
+
+}
+
+impl Texture {
+
+	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
+
+		unsafe {
+
+			let mut id: GLuint = 0;
+
+			gl::GenTextures(1, &mut id);
+			gl::BindTexture(gl::TEXTURE_2D, id);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+			gl::GenerateMipmap(gl::TEXTURE_2D);
+
+			gl::TexImage2D(
+				gl::TEXTURE_2D,
+				0,
+				gl::RGBA8 as GLint,
+				width as GLint,
+				height as GLint,
+				0,
+				gl::RGBA,
+				gl::UNSIGNED_BYTE,
+				pixels.as_ptr() as *const GLvoid
+			);
+
+			gl::BindTexture(gl::TEXTURE_2D, 0);
+
+			return Texture {
+				id: id,
+				width: width,
+				height: height,
+			};
+
+		}
+
+	}
+
+	pub fn from_bytes(data: &[u8]) -> Self {
+
+		let img = image::load(std::io::Cursor::new(data), image::PNG)
+			.unwrap()
+			.to_rgba();
+
+		let width = img.width();
+		let height = img.height();
+		let pixels = img.into_raw();
+
+		return Texture::from_raw(&pixels, width, height);
+
+	}
+
+	fn bind(&self) -> &Self {
+
+		unsafe {
+			gl::BindTexture(gl::TEXTURE_2D, self.id);
+		}
+
+		return self;
+
+	}
+
+	fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::BindTexture(gl::TEXTURE_2D, 0);
+		}
+
+		return self;
+
 	}
 
 }
@@ -277,6 +368,7 @@ impl Font {
 
 }
 
+// local structs
 struct Renderer2D {
 
 	mesh: Mesh,
@@ -489,90 +581,6 @@ impl Mesh {
 
 }
 
-pub struct Texture {
-
-	id: GLuint,
-	pub width: u32,
-	pub height: u32,
-
-}
-
-impl Texture {
-
-	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
-
-		unsafe {
-
-			let mut id: GLuint = 0;
-
-			gl::GenTextures(1, &mut id);
-			gl::BindTexture(gl::TEXTURE_2D, id);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
-			gl::GenerateMipmap(gl::TEXTURE_2D);
-
-			gl::TexImage2D(
-				gl::TEXTURE_2D,
-				0,
-				gl::RGBA8 as GLint,
-				width as GLint,
-				height as GLint,
-				0,
-				gl::RGBA,
-				gl::UNSIGNED_BYTE,
-				pixels.as_ptr() as *const GLvoid
-			);
-
-			gl::BindTexture(gl::TEXTURE_2D, 0);
-
-			return Texture {
-				id: id,
-				width: width,
-				height: height,
-			};
-
-		}
-
-	}
-
-	pub fn from_bytes(data: &[u8]) -> Self {
-
-		let img = image::load(std::io::Cursor::new(data), image::PNG)
-			.unwrap()
-			.to_rgba();
-
-		let width = img.width();
-		let height = img.height();
-		let pixels = img.into_raw();
-
-		return Texture::from_raw(&pixels, width, height);
-
-	}
-
-	fn bind(&self) -> &Self {
-
-		unsafe {
-			gl::BindTexture(gl::TEXTURE_2D, self.id);
-		}
-
-		return self;
-
-	}
-
-	fn unbind(&self) -> &Self {
-
-		unsafe {
-			gl::BindTexture(gl::TEXTURE_2D, 0);
-		}
-
-		return self;
-
-	}
-
-}
-
 struct Program {
 	id: GLuint,
 }
@@ -638,15 +646,23 @@ impl Program {
 
 	}
 
-	fn uniform_vec4(&self, name: &str, value: [f32; 4]) -> &Self {
+	fn uniform_color(&self, name: &str, c: Color) -> &Self {
+		return self.uniform_vec4(name, vec4!(c.r, c.g, c.b, c.a));
+	}
+
+	fn uniform_rect(&self, name: &str, r: Rect) -> &Self {
+		return self.uniform_vec4(name, vec4!(r.x, r.y, r.w, r.h));
+	}
+
+	fn uniform_vec4(&self, name: &str, v: Vec4) -> &Self {
 
 		unsafe {
 			gl::Uniform4f(
 				gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr()),
-				value[0],
-				value[1],
-				value[2],
-				value[3],
+				v.x,
+				v.y,
+				v.z,
+				v.w,
 			);
 		}
 
