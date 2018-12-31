@@ -49,20 +49,14 @@ pub fn init(title: &str, width: u32, height: u32) {
 		video.gl_get_proc_address(name) as *const std::os::raw::c_void
 	});
 
-	video.gl_set_swap_interval(SwapInterval::VSync);
-	gfx::init();
-	#[cfg(not(target_os = "windows"))]
-	audio::init();
-	res::init();
-
-	let events = sdl_ctx.event_pump().unwrap();
+	video.gl_set_swap_interval(SwapInterval::VSync).expect("vsync failed");
 
 	init_ctx(AppCtx {
 
-		sdl_ctx: sdl_ctx,
+		events: sdl_ctx.event_pump().unwrap(),
 		window: window,
 		gl_ctx: gl_ctx,
-		events: events,
+		sdl_ctx: sdl_ctx,
 		platform: sdl2::get_platform(),
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
@@ -70,6 +64,11 @@ pub fn init(title: &str, width: u32, height: u32) {
 		is_fullscreen: false,
 
 	});
+
+	gfx::init();
+	#[cfg(not(target_os = "windows"))]
+	audio::init();
+	res::init();
 
 }
 
@@ -218,9 +217,9 @@ pub fn set_fullscreen(b: bool) {
 	app_mut.is_fullscreen = b;
 
 	if b {
-		app_mut.window.set_fullscreen(FullscreenType::Desktop);
+		app_mut.window.set_fullscreen(FullscreenType::Desktop).expect("fullscreen failed");
 	} else {
-		app_mut.window.set_fullscreen(FullscreenType::Off);
+		app_mut.window.set_fullscreen(FullscreenType::Off).expect("fullscreen failed");
 	}
 
 }

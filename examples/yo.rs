@@ -26,7 +26,7 @@ fn main() {
 
 		gfx::translate(vec2!(100));
 		gfx::scale(vec2!(2));
-		gfx::rotate(15.0f32.to_radians());
+		gfx::rotate(16.0f32.to_radians());
 		gfx::draw(&tex, rect!((index as f32) * 0.25, 0, 0.25, 1));
 		gfx::text("yo");
 		gfx::color(color!(1, 1, 0, 1));

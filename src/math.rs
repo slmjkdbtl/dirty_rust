@@ -255,25 +255,25 @@ impl Mat4 {
 		let f17 = self.m[1][0] * self.m[2][2] - self.m[2][0] * self.m[1][2];
 		let f18 = self.m[1][0] * self.m[2][1] - self.m[2][0] * self.m[1][1];
 
-		nm.m[0][0] = (self.m[1][1] * f00 - self.m[1][2] * f01 + self.m[1][3] * f02);
+		nm.m[0][0] = self.m[1][1] * f00 - self.m[1][2] * f01 + self.m[1][3] * f02;
 		nm.m[1][0] = -(self.m[1][0] * f00 - self.m[1][2] * f03 + self.m[1][3] * f04);
-		nm.m[2][0] = (self.m[1][0] * f01 - self.m[1][1] * f03 + self.m[1][3] * f05);
+		nm.m[2][0] = self.m[1][0] * f01 - self.m[1][1] * f03 + self.m[1][3] * f05;
 		nm.m[3][0] = -(self.m[1][0] * f02 - self.m[1][1] * f04 + self.m[1][2] * f05);
 
 		nm.m[0][1] = -(self.m[0][1] * f00 - self.m[0][2] * f01 + self.m[0][3] * f02);
-		nm.m[1][1] = (self.m[0][0] * f00 - self.m[0][2] * f03 + self.m[0][3] * f04);
+		nm.m[1][1] = self.m[0][0] * f00 - self.m[0][2] * f03 + self.m[0][3] * f04;
 		nm.m[2][1] = -(self.m[0][0] * f01 - self.m[0][1] * f03 + self.m[0][3] * f05);
-		nm.m[3][1] = (self.m[0][0] * f02 - self.m[0][1] * f04 + self.m[0][2] * f05);
+		nm.m[3][1] = self.m[0][0] * f02 - self.m[0][1] * f04 + self.m[0][2] * f05;
 
-		nm.m[0][2] = (self.m[0][1] * f06 - self.m[0][2] * f07 + self.m[0][3] * f08);
+		nm.m[0][2] = self.m[0][1] * f06 - self.m[0][2] * f07 + self.m[0][3] * f08;
 		nm.m[1][2] = -(self.m[0][0] * f06 - self.m[0][2] * f09 + self.m[0][3] * f10);
-		nm.m[2][2] = (self.m[0][0] * f11 - self.m[0][1] * f09 + self.m[0][3] * f12);
+		nm.m[2][2] = self.m[0][0] * f11 - self.m[0][1] * f09 + self.m[0][3] * f12;
 		nm.m[3][2] = -(self.m[0][0] * f08 - self.m[0][1] * f10 + self.m[0][2] * f12);
 
 		nm.m[0][3] = -(self.m[0][1] * f13 - self.m[0][2] * f14 + self.m[0][3] * f15);
-		nm.m[1][3] = (self.m[0][0] * f13 - self.m[0][2] * f16 + self.m[0][3] * f17);
+		nm.m[1][3] = self.m[0][0] * f13 - self.m[0][2] * f16 + self.m[0][3] * f17;
 		nm.m[2][3] = -(self.m[0][0] * f14 - self.m[0][1] * f16 + self.m[0][3] * f18);
-		nm.m[3][3] = (self.m[0][0] * f15 - self.m[0][1] * f17 + self.m[0][2] * f18);
+		nm.m[3][3] = self.m[0][0] * f15 - self.m[0][1] * f17 + self.m[0][2] * f18;
 
 		let det =
 			self.m[0][0] * nm.m[0][0] +
