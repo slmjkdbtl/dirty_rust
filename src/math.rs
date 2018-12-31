@@ -53,10 +53,6 @@ macro_rules! gen_vec {
 				}
 			}
 
-			pub fn as_arr(&self) -> [$type; count_expr!($($member),+)] {
-				return [$(self.$member),+];
-			}
-
 		}
 
 		impl fmt::Display for $name {
