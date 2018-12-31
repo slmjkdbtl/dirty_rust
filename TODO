@@ -9,13 +9,13 @@
 - [+] default font * bitmap font rendering
 - [+] 2d point game/screen transform
 
+- [*] time stuff
 - [*] res loader
 - [*] lua bindings
 - [*] mouse inputs
 - [*] res file reading
 - [*] documenting
 
-- [ ] time stuff
 - [ ] audio
 - [ ] window configs / queries
 - [ ] custom shaders

@@ -1,7 +1,7 @@
 // wengwengweng
 
-// use rand::Rng;
 use core::ops;
+use core::cmp;
 use std::fmt;
 use crate::*;
 
@@ -141,6 +141,14 @@ gen_vec!(Rect(rect) -> (x, y, w, h): f32);
 
 pub fn rand() -> f32 {
 	return rand::random::<f32>();
+}
+
+pub fn rand_vec2() -> Vec2 {
+	return vec2!(rand(), rand());
+}
+
+pub fn rand_from<T>(v: &Vec<T>) -> &T {
+	return &v[(rand() * v.len() as f32) as usize];
 }
 
 #[derive(Debug, Copy, Clone)]
