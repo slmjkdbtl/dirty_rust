@@ -64,8 +64,8 @@ pub(crate) fn init() {
 		.attr(1, "uv")
 		.link();
 
-	let default_font = make_font(
-		make_tex(include_bytes!("misc/CP437.png")),
+	let default_font = Font::new(
+		Texture::from_bytes(include_bytes!("misc/CP437.png")),
 		32,
 		8,
 		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,
@@ -80,7 +80,7 @@ pub(crate) fn init() {
 
 			mesh: mesh,
 			program: program,
-			empty_tex: make_tex_from_raw(&[255, 255, 255, 255], 1, 1),
+			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
 			transform: Mat4::identity(),
 			projection: projection,
 			transform_stack: vec![],
@@ -128,6 +128,10 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	renderer.mesh.draw();
 	tex.unbind();
 
+}
+
+pub fn render(canvas: &Canvas) {
+	draw(&canvas.tex, rect!(0, 0, 1, 1));
 }
 
 pub fn text(s: &str) {
@@ -284,89 +288,12 @@ pub fn clear() {
 
 }
 
-pub fn make_tex_from_raw(pixels: &[u8], width: u32, height: u32) -> Texture {
-
-	unsafe {
-
-		let mut id: GLuint = 0;
-
-		gl::GenTextures(1, &mut id);
-		gl::BindTexture(gl::TEXTURE_2D, id);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
-		gl::GenerateMipmap(gl::TEXTURE_2D);
-
-		gl::TexImage2D(
-			gl::TEXTURE_2D,
-			0,
-			gl::RGBA8 as GLint,
-			width as GLint,
-			height as GLint,
-			0,
-			gl::RGBA,
-			gl::UNSIGNED_BYTE,
-			pixels.as_ptr() as *const GLvoid
-		);
-
-		gl::BindTexture(gl::TEXTURE_2D, 0);
-
-		return Texture {
-
-			id: id,
-			width: width,
-			height: height,
-
-		};
-
-	}
-
+pub fn draw_on(canvas: &Canvas) {
+	// ...
 }
 
-pub fn make_tex(data: &[u8]) -> Texture {
-
-	let img = image::load(std::io::Cursor::new(data), image::PNG)
-		.unwrap()
-		.to_rgba();
-
-	let width = img.width();
-	let height = img.height();
-	let pixels = img.into_raw();
-
-	return make_tex_from_raw(&pixels, width, height);
-
-}
-
-pub fn make_font(tex: Texture, cols: usize, rows: usize, chars: &str) -> Font {
-
-	let mut map = HashMap::new();
-	let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
-
-	assert_eq!(tex.width % cols as u32, 0, "font size not right");
-	assert_eq!(tex.height % rows as u32, 0, "font size not right");
-
-	for (i, ch) in chars.chars().enumerate() {
-
-		map.insert(ch, rect!(
-
-			(i % cols) as f32 * grid_size.x,
-			(i / cols) as f32 * grid_size.y,
-			grid_size.x,
-			grid_size.y
-
-		));
-
-	}
-
-	return Font {
-
-		tex: tex,
-		map: map,
-		grid_size: grid_size,
-
-	}
-
+pub fn stop_draw_on(canvas: &Canvas) {
+	// ...
 }
 
 // public structs
@@ -379,6 +306,88 @@ pub struct Texture {
 }
 
 impl Texture {
+
+	pub fn new(width: u32, height: u32) -> Self {
+
+		let mut id: GLuint = 0;
+
+		unsafe {
+			gl::GenTextures(1, &mut id);
+		}
+
+		return Self {
+
+			id: id,
+			width: width,
+			height: height,
+
+		}
+
+	}
+
+	pub fn from_bytes(data: &[u8]) -> Self {
+
+		let img = image::load(std::io::Cursor::new(data), image::PNG)
+			.unwrap()
+			.to_rgba();
+
+		let width = img.width();
+		let height = img.height();
+		let pixels = img.into_raw();
+
+		return Self::from_raw(&pixels, width, height);
+
+	}
+
+	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
+
+		unsafe {
+
+			let mut tex = Self::new(0, 0);
+
+			tex.data(pixels, width, height);
+
+			return tex;
+
+		}
+
+	}
+
+	fn data(&mut self, pixels: &[u8], width: u32, height: u32) -> &Self {
+
+		self.bind();
+		self.width = width;
+		self.height = height;
+
+		unsafe {
+
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+			gl::GenerateMipmap(gl::TEXTURE_2D);
+
+			gl::TexImage2D(
+
+				gl::TEXTURE_2D,
+				0,
+				gl::RGBA8 as GLint,
+				width as GLint,
+				height as GLint,
+				0,
+				gl::RGBA,
+				gl::UNSIGNED_BYTE,
+				pixels.as_ptr() as *const GLvoid
+
+			);
+
+		}
+
+		self.unbind();
+
+		return self;
+
+	}
 
 	fn bind(&self) -> &Self {
 
@@ -402,11 +411,94 @@ impl Texture {
 
 }
 
+pub struct Canvas {
+
+	tex: Texture,
+	id: GLuint,
+
+}
+
+impl Canvas {
+
+	pub fn new() -> Self {
+
+		let mut id: GLuint = 0;
+
+		unsafe {
+			gl::GenFramebuffers(1, &mut id);
+		}
+
+		return Self {
+
+			id: id,
+			tex: Texture::new(0, 0),
+
+		}
+
+	}
+
+	pub fn bind(&self) -> &Self {
+
+		unsafe {
+			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
+		}
+
+		return self;
+
+	}
+
+	pub fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+		}
+
+		return self;
+
+	}
+
+}
+
 pub struct Font {
 
 	tex: Texture,
 	map: HashMap<char, Rect>,
 	grid_size: Vec2,
+
+}
+
+impl Font {
+
+	pub fn new(tex: Texture, cols: usize, rows: usize, chars: &str) -> Self {
+
+		let mut map = HashMap::new();
+		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
+
+		assert_eq!(tex.width % cols as u32, 0, "font size not right");
+		assert_eq!(tex.height % rows as u32, 0, "font size not right");
+
+		for (i, ch) in chars.chars().enumerate() {
+
+			map.insert(ch, rect!(
+
+				(i % cols) as f32 * grid_size.x,
+				(i / cols) as f32 * grid_size.y,
+				grid_size.x,
+				grid_size.y
+
+			));
+
+		}
+
+		return Self {
+
+			tex: tex,
+			map: map,
+			grid_size: grid_size,
+
+		}
+
+	}
 
 }
 

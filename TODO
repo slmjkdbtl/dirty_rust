@@ -9,6 +9,7 @@
 - [+] default font * bitmap font rendering
 - [+] 2d point game/screen transform
 
+- [*] frame buffers
 - [*] time stuff
 - [*] res loader
 - [*] lua bindings
@@ -19,7 +20,6 @@
 - [ ] audio
 - [ ] window configs / queries
 - [ ] custom shaders
-- [ ] frame buffers
 - [ ] 3d
 - [ ] ecs
 - [ ] collision detections

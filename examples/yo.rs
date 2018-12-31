@@ -9,7 +9,8 @@ fn main() {
 
 	app::init("yo", 640, 480);
 
-	let tex = gfx::make_tex(&include_bytes!("./car.png")[..]);
+	let tex = gfx::Texture::from_bytes(&include_bytes!("./car.png")[..]);
+	let canvas = gfx::Canvas::new();
 	let mut index = 0;
 	let margin = 16;
 
@@ -56,12 +57,16 @@ fn main() {
 		gfx::color(color!(1, 0, 1, 1));
 		gfx::poly(pts);
 
+		gfx::draw_on(&canvas);
 		gfx::color(color!(1));
 		gfx::push();
 		gfx::translate(vec2!(64, 64.0 + (app::time() * 0.2).sin() * 4.0));
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
 		gfx::pop();
+		gfx::stop_draw_on(&canvas);
+
+		gfx::render(&canvas);
 
 		if app::key_pressed(Key::F) {
 			app::set_fullscreen(!app::get_fullscreen())
