@@ -439,10 +439,10 @@ impl Canvas {
 
 			gl::GenRenderbuffers(1, &mut rbo);
 			gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
-			gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, width as GLint, height as GLint);
+			gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT16, width as GLint, height as GLint);
 			gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
 
-			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_STENCIL_ATTACHMENT, gl::RENDERBUFFER, rbo);
+			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
 			if(!gl::CheckFramebufferStatus(gl::FRAMEBUFFER) == gl::FRAMEBUFFER_COMPLETE) {
 				panic!("canvas init failed");
