@@ -11,6 +11,14 @@ fn main() {
 
 	let tex = gfx::make_tex(&include_bytes!("./car.png")[..]);
 	let mut index = 0;
+	let margin = 16;
+
+	let pts = vec![
+		vec2!(0, 0) + vec2!(-margin, -margin),
+		vec2!(tex.width / 4, 0) + vec2!(margin, -margin),
+		vec2!(tex.width / 4, tex.height) + vec2!(margin, margin),
+		vec2!(0, tex.height) + vec2!(-margin, margin),
+	];
 
 	res::load_sprites(".", vec!["car"]);
 
@@ -26,15 +34,6 @@ fn main() {
 
 		gfx::clear();
 
-		let margin = 16;
-
-		let pts = vec![
-			vec2!(0, 0) + vec2!(-margin, -margin),
-			vec2!(tex.width / 4, 0) + vec2!(margin, -margin),
-			vec2!(tex.width / 4, tex.height) + vec2!(margin, margin),
-			vec2!(0, tex.height) + vec2!(-margin, margin),
-		];
-
 		gfx::push();
 		gfx::translate(vec2!(196, 164));
 		gfx::scale(vec2!(2));
@@ -42,14 +41,16 @@ fn main() {
 		gfx::rotate(((app::time() * 0.2).sin() * 8.0).to_radians());
 		gfx::translate(vec2!(-64));
 
-		let pts: Vec<Vec2> = pts.iter().map(|&p| gfx::warp(p)).collect();
+		let pts: Vec<Vec2> = pts.iter()
+			.map(|&p| gfx::warp(p))
+			.collect();
 
 		gfx::draw(&tex, rect!((index as f32) * 0.25, 0, 0.25, 1));
 		gfx::pop();
 
 		gfx::line_width(3);
 		gfx::color(color!(1, 1, 0, 1));
-		gfx::line(vec2!(rand() * width as f32, rand() * height as f32), vec2!(rand() * width as f32, rand() * height as f32));
+		gfx::line(rand_vec2() * vec2!(width, height), rand_vec2() * vec2!(width, height));
 
 		gfx::line_width(1);
 		gfx::color(color!(1, 0, 1, 1));
