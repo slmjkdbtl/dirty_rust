@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use crate::*;
 use crate::math::*;
 
+// context
 ctx!(APP: AppCtx);
 
 struct AppCtx {
@@ -27,14 +28,7 @@ struct AppCtx {
 
 }
 
-#[derive(Debug, PartialEq)]
-enum ButtonState {
-	Up,
-	Pressed,
-	Down,
-	Released,
-}
-
+// public functions
 pub fn init(title: &str, width: u32, height: u32) {
 
 	let sdl_ctx = sdl2::init().unwrap();
@@ -173,32 +167,6 @@ pub fn size() -> Vec2 {
 	return vec2!(w, h);
 }
 
-fn check_key_state(code: Scancode, state: ButtonState) -> bool {
-
-	match get_ctx().key_states.get(&code) {
-		Some(s) => {
-			return *s == state;
-		}
-		None => {
-			return false;
-		}
-	}
-
-}
-
-fn check_mouse_state(code: MouseButton, state: ButtonState) -> bool {
-
-	match get_ctx().mouse_states.get(&code) {
-		Some(s) => {
-			return *s == state;
-		}
-		None => {
-			return false;
-		}
-	}
-
-}
-
 pub fn key_pressed(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Pressed);
 }
@@ -271,5 +239,40 @@ pub fn hide_cursor() {
 
 pub fn quit() {
 	get_ctx_mut().is_running = false;
+}
+
+// private structs
+#[derive(Debug, PartialEq)]
+enum ButtonState {
+	Up,
+	Pressed,
+	Down,
+	Released,
+}
+
+fn check_key_state(code: Scancode, state: ButtonState) -> bool {
+
+	match get_ctx().key_states.get(&code) {
+		Some(s) => {
+			return *s == state;
+		}
+		None => {
+			return false;
+		}
+	}
+
+}
+
+fn check_mouse_state(code: MouseButton, state: ButtonState) -> bool {
+
+	match get_ctx().mouse_states.get(&code) {
+		Some(s) => {
+			return *s == state;
+		}
+		None => {
+			return false;
+		}
+	}
+
 }
 

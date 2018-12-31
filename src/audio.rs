@@ -1,14 +1,16 @@
 // wengwengweng
 
-use crate::ctx;
+use crate::*;
 
+// context
 ctx!(AUDIO: AudioCtx);
 
 struct AudioCtx {
 	device: rodio::Device,
 }
 
-pub fn init() {
+// local public functions
+pub(crate) fn init() {
 
 	let device = rodio::default_output_device().unwrap();
 

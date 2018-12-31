@@ -1,6 +1,5 @@
 // wengwengweng
 
-#[macro_export]
 macro_rules! nested_macro {
 
 	($($body:tt)*) => {

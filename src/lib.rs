@@ -1,9 +1,17 @@
 // wengwengweng
 
+//! # DIRTY
+//! game toolkit
+
+#![crate_name = "dirty"]
+#![crate_type = "lib"]
+
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
+#[macro_use]
 mod ctx;
+#[macro_use]
 mod utils;
 
 pub mod app;
