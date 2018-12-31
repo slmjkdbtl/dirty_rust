@@ -98,13 +98,11 @@ pub(crate) fn update() {
 
 	let gfx_mut = get_ctx_mut();
 	let renderer = &mut gfx_mut.renderer_2d;
-	let (width, height) = app::size();
 
 	renderer.transform_stack.clear();
 	renderer.transform = Mat4::identity();
 	renderer.line_width = 1;
 	renderer.tint = color!(1);
-	renderer.projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 }
 

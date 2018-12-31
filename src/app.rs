@@ -28,6 +28,7 @@ struct AppCtx {
 	dt: f32,
 	time: f32,
 	frame: u64,
+	size: (u32, u32),
 
 }
 
@@ -43,6 +44,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	let window = video.window(title, width, height)
 		.opengl()
+		.resizable()
 		.build()
 		.unwrap();
 
@@ -68,6 +70,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 		dt: 0.0,
 		time: 0.0,
 		frame: 0,
+		size: (width, height),
 
 	});
 
@@ -199,7 +202,7 @@ pub fn quit() {
 }
 
 pub fn size() -> (u32, u32) {
-	return get_ctx().window.size();
+	return get_ctx().size;
 }
 
 pub fn key_pressed(k: Scancode) -> bool {
