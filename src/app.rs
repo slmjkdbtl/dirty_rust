@@ -74,10 +74,13 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	});
 
+	let app = get_ctx();
+
 	gfx::init();
 	#[cfg(not(target_os = "windows"))]
 	audio::init();
 	res::init();
+	swap();
 
 }
 
@@ -124,7 +127,7 @@ pub fn run(f: &mut FnMut()) {
 
 		gfx::update();
 		f();
-		app.window.gl_swap_window();
+		swap();
 
 		if !app.is_running {
 			break 'running;
@@ -273,6 +276,10 @@ enum ButtonState {
 }
 
 // private functions
+fn swap() {
+	get_ctx().window.gl_swap_window();
+}
+
 fn check_key_state(code: Scancode, state: ButtonState) -> bool {
 
 	match get_ctx().key_states.get(&code) {
