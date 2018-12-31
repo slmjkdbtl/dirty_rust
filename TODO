@@ -6,12 +6,14 @@
 - [+] vector operation overloads
 - [+] keyboard inputs
 - [+] fix macro import
+- [+] default font * bitmap font rendering
 
 - [*] res loader
 - [*] lua bindings
 - [*] mouse inputs
 - [*] res file reading
 
+- [ ] time stuff
 - [ ] audio
 - [ ] window configs / queries
 - [ ] custom shaders
