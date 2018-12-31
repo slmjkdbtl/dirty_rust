@@ -17,6 +17,7 @@ serde = "*"
 gl = "*"
 tobj = "*"
 rlua = "*"
+num = "*"
 
 [dependencies.sdl2]
 version = "*"

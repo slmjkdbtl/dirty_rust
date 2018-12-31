@@ -35,6 +35,7 @@ fn main() {
 
 		gfx::clear();
 
+// 		gfx::draw_on(&canvas);
 		gfx::push();
 		gfx::translate(vec2!(196, 164));
 		gfx::scale(vec2!(2));
@@ -57,16 +58,15 @@ fn main() {
 		gfx::color(color!(1, 0, 1, 1));
 		gfx::poly(pts);
 
-		gfx::draw_on(&canvas);
 		gfx::color(color!(1));
 		gfx::push();
 		gfx::translate(vec2!(64, 64.0 + (app::time() * 0.2).sin() * 4.0));
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
 		gfx::pop();
-		gfx::stop_draw_on(&canvas);
+// 		gfx::stop_draw_on(&canvas);
 
-		gfx::render(&canvas);
+// 		gfx::render(&canvas);
 
 		if app::key_pressed(Key::F) {
 			app::set_fullscreen(!app::get_fullscreen())
