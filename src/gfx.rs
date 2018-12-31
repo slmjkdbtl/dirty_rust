@@ -177,6 +177,20 @@ pub fn line(p1: Vec2, p2: Vec2) {
 
 }
 
+pub fn poly(pts: Vec<Vec2>) {
+
+	for (i, p) in pts.iter().enumerate() {
+
+		if (i == pts.len() - 1) {
+			line(*p, pts[0]);
+		} else {
+			line(*p, pts[i + 1]);
+		}
+
+	}
+
+}
+
 pub fn color(tint: Color) {
 	get_ctx_mut().renderer_2d.tint = tint;
 }
@@ -248,17 +262,17 @@ pub fn warp(pt: Vec2) -> Vec2 {
 	let renderer = &gfx.renderer_2d;
 	let trans = renderer.transform;
 
-	return trans.inverse().forward(pt);
+	return trans.forward(pt);
 
 }
 
-pub fn anti_warp(pt: Vec2) -> Vec2 {
+pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 	let gfx = get_ctx();
 	let renderer = &gfx.renderer_2d;
 	let trans = renderer.transform;
 
-	return trans.forward(pt);
+	return trans.inverse().forward(pt);
 
 }
 
