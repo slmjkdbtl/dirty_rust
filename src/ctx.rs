@@ -1,6 +1,5 @@
 // wengwengweng
 
-#[macro_export]
 macro_rules! ctx {
 
 	($name:ident: $type:ty) => {

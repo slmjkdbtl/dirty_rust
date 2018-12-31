@@ -139,8 +139,12 @@ gen_vec!(Vec4(vec4) -> (x, y, z, w): f32);
 gen_vec!(Color(color) -> (r, g, b, a): f32);
 gen_vec!(Rect(rect) -> (x, y, w, h): f32);
 
-pub fn random() -> f32 {
+pub fn rand() -> f32 {
 	return rand::random::<f32>();
+}
+
+pub fn rand_in<T>(x: T, y: T) -> T {
+	return x;
 }
 
 #[derive(Debug, Copy, Clone)]

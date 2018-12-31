@@ -1,7 +1,6 @@
 // wengwengweng
 
 #![windows_subsystem = "windows"]
-#![allow(unused_parens)]
 
 use dirty::*;
 use dirty::math::*;
@@ -10,14 +9,14 @@ fn main() {
 
 	app::init("yo", 640, 480);
 
-	let tex = gfx::Texture::from_bytes(&include_bytes!("./car.png")[..]);
+	let tex = gfx::make_tex(&include_bytes!("./car.png")[..]);
 	let mut index = 0;
 
 	res::load_sprites(".", vec!["car"]);
 
 	app::run(&mut || {
 
-		if (index < 3) {
+		if index < 3 {
 			index += 1;
 		} else {
 			index = 0;
@@ -33,7 +32,7 @@ fn main() {
 		gfx::color(color!(1, 1, 0, 1));
 		gfx::line(vec2!(0), vec2!(640, 480));
 
-		if (app::key_pressed(Key::F)) {
+		if app::key_pressed(Key::F) {
 			app::set_fullscreen(!app::get_fullscreen())
 		}
 
