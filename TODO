@@ -7,6 +7,7 @@
 - [+] keyboard inputs
 - [+] fix macro import
 - [+] default font * bitmap font rendering
+- [+] 2d point game/screen transform
 
 - [*] res loader
 - [*] lua bindings

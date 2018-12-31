@@ -71,6 +71,9 @@ pub(crate) fn init() {
 		r##"                                 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##,
 	);
 
+	let size = app::size();
+	let projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
+
 	init_ctx(GfxCtx {
 
 		renderer_2d: Renderer2D {
@@ -79,6 +82,7 @@ pub(crate) fn init() {
 			program: program,
 			empty_tex: make_tex_from_raw(&[255, 255, 255, 255], 1, 1),
 			transform: Mat4::identity(),
+			projection: projection,
 			transform_stack: vec![],
 			tint: color!(1),
 			line_width: 1,
@@ -94,11 +98,13 @@ pub(crate) fn update() {
 
 	let gfx_mut = get_ctx_mut();
 	let renderer = &mut gfx_mut.renderer_2d;
+	let size = app::size();
 
 	renderer.transform_stack.clear();
 	renderer.transform = Mat4::identity();
 	renderer.line_width = 1;
 	renderer.tint = color!(1);
+	renderer.projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
 
 }
 
@@ -107,8 +113,6 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = get_ctx();
 	let renderer = &gfx.renderer_2d;
-	let size = app::size();
-	let projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
 
 	tex.bind();
 
@@ -118,7 +122,7 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	renderer.program
 		.uniform_color("tint", renderer.tint)
 		.uniform_rect("quad", quad)
-		.uniform_mat4("projection", projection.as_arr())
+		.uniform_mat4("projection", renderer.projection.as_arr())
 		.uniform_mat4("transform", renderer.transform.as_arr())
 		.bind();
 
@@ -134,14 +138,18 @@ pub fn text(s: &str) {
 	let renderer = &gfx.renderer_2d;
 	let font = &renderer.default_font;
 
-	push();
-
 	for (i, ch) in s.chars().enumerate() {
-		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
-		draw(&font.tex, font.map[&ch]);
-	}
 
-	pop();
+		push();
+		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
+
+		if ch != ' ' {
+			draw(&font.tex, font.map[&ch]);
+		}
+
+		pop();
+
+	}
 
 }
 
@@ -160,8 +168,6 @@ pub fn rect(size: Vec2) {
 pub fn line(p1: Vec2, p2: Vec2) {
 
 	let gfx = get_ctx();
-	let cx = p1.x + (p2.x - p1.x) / 2.0;
-	let cy = p1.y + (p2.y - p1.y) / 2.0;
 	let len = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
@@ -236,6 +242,27 @@ pub fn scale(s: Vec2) {
 
 
 }
+
+pub fn to_game(pt: Vec2) -> Vec2 {
+
+	let gfx = get_ctx();
+	let renderer = &gfx.renderer_2d;
+	let trans = renderer.transform;
+
+	return trans.inverse().forward(pt);
+
+}
+
+pub fn to_screen(pt: Vec2) -> Vec2 {
+
+	let gfx = get_ctx();
+	let renderer = &gfx.renderer_2d;
+	let trans = renderer.transform;
+
+	return trans.forward(pt);
+
+}
+
 pub fn clear() {
 
 	unsafe {
@@ -376,6 +403,7 @@ struct Renderer2D {
 	mesh: Mesh,
 	program: Program,
 	empty_tex: Texture,
+	projection: Mat4,
 	transform: Mat4,
 	transform_stack: Vec<Mat4>,
 	tint: Color,
