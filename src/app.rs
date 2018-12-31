@@ -25,6 +25,9 @@ struct AppCtx {
 	is_fullscreen: bool,
 	key_states: HashMap<Scancode, ButtonState>,
 	mouse_states: HashMap<MouseButton, ButtonState>,
+	dt: f32,
+	time: f32,
+	frame: u64,
 
 }
 
@@ -62,6 +65,9 @@ pub fn init(title: &str, width: u32, height: u32) {
 		mouse_states: HashMap::new(),
 		is_running: false,
 		is_fullscreen: false,
+		dt: 0.0,
+		time: 0.0,
+		frame: 0,
 
 	});
 
@@ -155,15 +161,45 @@ pub fn run(f: &mut FnMut()) {
 			}
 		}
 
+		app_mut.dt = 0.16;
+		app_mut.frame += 1;
+		app_mut.time += app.dt;
 		thread::sleep(time::Duration::from_millis(16));
 
 	}
 
 }
 
-pub fn size() -> Vec2 {
-	let (w, h) = get_ctx().window.size();
-	return vec2!(w, h);
+pub fn dt() -> f32 {
+	return get_ctx().dt;
+}
+
+pub fn frame() -> u64 {
+	return get_ctx().frame;
+}
+
+pub fn time() -> f32 {
+	return get_ctx().time;
+}
+
+pub fn get_fullscreen() -> bool {
+	return get_ctx().is_fullscreen;
+}
+
+pub fn show_cursor() {
+	get_ctx_mut().sdl_ctx.mouse().show_cursor(true);
+}
+
+pub fn hide_cursor() {
+	get_ctx_mut().sdl_ctx.mouse().show_cursor(false);
+}
+
+pub fn quit() {
+	get_ctx_mut().is_running = false;
+}
+
+pub fn size() -> (u32, u32) {
+	return get_ctx().window.size();
 }
 
 pub fn key_pressed(k: Scancode) -> bool {
@@ -224,22 +260,6 @@ pub fn set_fullscreen(b: bool) {
 
 }
 
-pub fn get_fullscreen() -> bool {
-	return get_ctx().is_fullscreen;
-}
-
-pub fn show_cursor() {
-	get_ctx_mut().sdl_ctx.mouse().show_cursor(true);
-}
-
-pub fn hide_cursor() {
-	get_ctx_mut().sdl_ctx.mouse().show_cursor(false);
-}
-
-pub fn quit() {
-	get_ctx_mut().is_running = false;
-}
-
 // private structs
 #[derive(Debug, PartialEq)]
 enum ButtonState {
@@ -249,6 +269,7 @@ enum ButtonState {
 	Released,
 }
 
+// private functions
 fn check_key_state(code: Scancode, state: ButtonState) -> bool {
 
 	match get_ctx().key_states.get(&code) {

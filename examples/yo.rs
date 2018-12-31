@@ -16,6 +16,8 @@ fn main() {
 
 	app::run(&mut || {
 
+		let (width, height) = app::size();
+
 		if index < 3 {
 			index += 1;
 		} else {
@@ -24,13 +26,21 @@ fn main() {
 
 		gfx::clear();
 
-		gfx::translate(vec2!(100));
+		gfx::push();
+		gfx::translate(vec2!(108));
 		gfx::scale(vec2!(2));
-		gfx::rotate(16.0f32.to_radians());
+		gfx::translate(vec2!(64));
+		gfx::rotate(app::time().to_radians());
+		gfx::translate(vec2!(-64));
 		gfx::draw(&tex, rect!((index as f32) * 0.25, 0, 0.25, 1));
-		gfx::text("yo");
+		gfx::text("yo♪");
+		gfx::pop();
+
 		gfx::color(color!(1, 1, 0, 1));
-		gfx::line(vec2!(0), vec2!(640, 480));
+		gfx::line_width(2);
+		let p1 = vec2!(rand() * width as f32, rand() * height as f32);
+		let p2 = vec2!(rand() * width as f32, rand() * height as f32);
+		gfx::line(p1, p2);
 
 		if app::key_pressed(Key::F) {
 			app::set_fullscreen(!app::get_fullscreen())

@@ -143,10 +143,6 @@ pub fn rand() -> f32 {
 	return rand::random::<f32>();
 }
 
-pub fn rand_in<T>(x: T, y: T) -> T {
-	return x;
-}
-
 #[derive(Debug, Copy, Clone)]
 pub struct Mat4 {
 	m: [[f32; 4]; 4],

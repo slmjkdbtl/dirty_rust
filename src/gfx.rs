@@ -65,14 +65,14 @@ pub(crate) fn init() {
 		.link();
 
 	let default_font = make_font(
-		make_tex(include_bytes!("misc/font.png")),
+		make_tex(include_bytes!("misc/CP437.png")),
 		32,
 		8,
-		r##"                                 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##,
+		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,
 	);
 
-	let size = app::size();
-	let projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
+	let (width, height) = app::size();
+	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 	init_ctx(GfxCtx {
 
@@ -98,13 +98,13 @@ pub(crate) fn update() {
 
 	let gfx_mut = get_ctx_mut();
 	let renderer = &mut gfx_mut.renderer_2d;
-	let size = app::size();
+	let (width, height) = app::size();
 
 	renderer.transform_stack.clear();
 	renderer.transform = Mat4::identity();
 	renderer.line_width = 1;
 	renderer.tint = color!(1);
-	renderer.projection = Mat4::ortho(0.0, (size.x as f32), (size.y as f32), 0.0, -1.0, 1.0);
+	renderer.projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 }
 
@@ -172,6 +172,7 @@ pub fn line(p1: Vec2, p2: Vec2) {
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
 	push();
+	translate(p1);
 	rotate(rot);
 	rect(vec2!(len, gfx.renderer_2d.line_width));
 	pop();
@@ -243,7 +244,7 @@ pub fn scale(s: Vec2) {
 
 }
 
-pub fn to_game(pt: Vec2) -> Vec2 {
+pub fn warp(pt: Vec2) -> Vec2 {
 
 	let gfx = get_ctx();
 	let renderer = &gfx.renderer_2d;
@@ -253,7 +254,7 @@ pub fn to_game(pt: Vec2) -> Vec2 {
 
 }
 
-pub fn to_screen(pt: Vec2) -> Vec2 {
+pub fn anti_warp(pt: Vec2) -> Vec2 {
 
 	let gfx = get_ctx();
 	let renderer = &gfx.renderer_2d;
