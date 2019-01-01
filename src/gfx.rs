@@ -19,13 +19,10 @@ struct GfxCtx {
 // local public functions
 pub(crate) fn init() {
 
-	let (width, height) = app::size();
-
 	unsafe {
 
-		gl::Enable(gl::BLEND | gl::DEPTH_TEST);
+		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-		gl::Viewport(0, 0, width as GLint, height as GLint);
 		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
 	}
@@ -286,17 +283,17 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 pub fn clear() {
 
 	unsafe {
-		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+		gl::Clear(gl::COLOR_BUFFER_BIT);
 	}
 
 }
 
 pub fn draw_on(canvas: &Canvas) {
-	canvas.bind();
+	// ...
 }
 
 pub fn stop_draw_on(canvas: &Canvas) {
-	canvas.unbind();
+	// ...
 }
 
 // public structs
@@ -426,36 +423,15 @@ impl Canvas {
 	pub fn new() -> Self {
 
 		let mut id: GLuint = 0;
-		let mut rbo: GLuint = 0;
-		let (width, height) = app::size();
-		let tex = Texture::new(width, height);
 
 		unsafe {
-
 			gl::GenFramebuffers(1, &mut id);
-			gl::BindFramebuffer(gl::FRAMEBUFFER, id);
-			gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
-			gl::FramebufferTexture2D(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, tex.id, 0);
-
-			gl::GenRenderbuffers(1, &mut rbo);
-			gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
-			gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT16, width as GLint, height as GLint);
-			gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
-
-			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
-
-			if(!gl::CheckFramebufferStatus(gl::FRAMEBUFFER) == gl::FRAMEBUFFER_COMPLETE) {
-				panic!("canvas init failed");
-			}
-
-			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-
 		}
 
 		return Self {
 
 			id: id,
-			tex: tex,
+			tex: Texture::new(0, 0),
 
 		}
 
@@ -549,15 +525,17 @@ impl Buffer {
 
 	fn new() -> Self {
 
-		let mut id: GLuint = 0;
-
 		unsafe {
-			gl::GenBuffers(1, &mut id);
-		}
 
-		return Self {
-			id: id,
-		};
+			let mut id: GLuint = 0;
+
+			gl::GenBuffers(1, &mut id);
+
+			return Self {
+				id: id,
+			};
+
+		}
 
 	}
 
@@ -628,16 +606,18 @@ impl IndexBuffer {
 
 	fn new() -> Self {
 
-		let mut id: GLuint = 0;
-
 		unsafe {
-			gl::GenBuffers(1, &mut id);
-		}
 
-		return Self {
-			id: id,
-			size: 0,
-		};
+			let mut id: GLuint = 0;
+
+			gl::GenBuffers(1, &mut id);
+
+			return Self {
+				id: id,
+				size: 0,
+			};
+
+		}
 
 	}
 

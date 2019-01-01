@@ -10,7 +10,7 @@ fn main() {
 	app::init("yo", 640, 480);
 
 	let tex = gfx::Texture::from_bytes(&include_bytes!("./car.png")[..]);
-	let canvas = gfx::Canvas::new();
+// 	let canvas = gfx::Canvas::new();
 	let mut index = 0;
 	let margin = 16;
 

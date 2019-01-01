@@ -74,8 +74,6 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	});
 
-	let app = get_ctx();
-
 	gfx::init();
 	#[cfg(not(target_os = "windows"))]
 	audio::init();
