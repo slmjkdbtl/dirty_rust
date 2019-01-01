@@ -19,32 +19,35 @@ pub fn init() {
 
 }
 
-struct SpriteData {
+pub struct SpriteData {
 
-	tex: gfx::Texture,
-	frames: Vec<Rect>,
+	pub tex: gfx::Texture,
+	pub frames: Vec<Rect>,
 
 }
 
-pub fn load_sprites(dir: &str, names: Vec<&str>) {
+pub fn load_sprites(dir: &str, names: Vec<&'static str>) {
 
 	let res_mut = get_ctx_mut();
 
 	for name in names {
 
-		let img_path = format!("{}/{}.png", dir, name);
-		let json_path = format!("{}/{}.json", dir, name);
+		let img_path = &format!("{}{}.png", dir, name);
+		let json_path = &format!("{}{}.json", dir, name);
+		let data = fs::file_read(img_path);
+		let tex = gfx::Texture::from_bytes(&data);
+		let mut frames = vec![];
 
-		if fs::file_exists(&json_path[..]) {
+		if fs::file_exists(json_path) {
 			// ...
 		} else {
-			// ...
+			frames = vec![rect!(0, 0, 1, 1)];
 		}
 
-// 		res_mut.sprites.insert(name, SpriteData {
-// 			tex: tex,
-// 			frames: frames,
-// 		});
+		res_mut.sprites.insert(name, SpriteData {
+			tex: tex,
+			frames: frames,
+		});
 
 	}
 
@@ -59,6 +62,7 @@ pub fn load_sprites(dir: &str, names: Vec<&str>) {
 
 // }
 
-// pub fn get_sprite(name: &str) {
-// }
+pub fn get_sprite(name: &str) -> &SpriteData {
+	return &get_ctx().sprites[name];
+}
 

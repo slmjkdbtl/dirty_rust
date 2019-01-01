@@ -326,7 +326,7 @@ impl Texture {
 
 	pub fn from_bytes(data: &[u8]) -> Self {
 
-		let img = image::load(std::io::Cursor::new(data), image::PNG)
+		let img = image::load_from_memory(data)
 			.unwrap()
 			.to_rgba();
 

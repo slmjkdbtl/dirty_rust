@@ -10,10 +10,13 @@ fn main() {
 	app::init("yo", 640, 480);
 
 	let (width, height) = app::size();
-	let tex = gfx::Texture::from_bytes(&include_bytes!("./car.png")[..]);
 	let canvas = gfx::Canvas::new(width, height);
 	let mut index = 0;
 	let margin = 16;
+
+	res::load_sprites("examples/", vec!["car"]);
+
+	let tex = &res::get_sprite("car").tex;
 
 	let pts = vec![
 		vec2!(0, 0) + vec2!(-margin, -margin),
@@ -21,8 +24,6 @@ fn main() {
 		vec2!(tex.width / 4, tex.height) + vec2!(margin, margin),
 		vec2!(0, tex.height) + vec2!(-margin, margin),
 	];
-
-	res::load_sprites(".", vec!["car"]);
 
 	app::run(&mut || {
 
