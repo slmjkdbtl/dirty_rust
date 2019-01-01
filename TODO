@@ -11,9 +11,10 @@
 - [+] fix macro import
 - [+] default font * bitmap font rendering
 - [+] 2d point game/screen transform
+- [+] frame buffers
 
 # DOING
-- [*] frame buffers
+- [*] frame buffer upside-down bug
 - [*] time stuff
 - [*] res loader
 - [*] lua bindings

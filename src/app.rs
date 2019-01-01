@@ -123,7 +123,7 @@ pub fn run(f: &mut FnMut()) {
 
 		}
 
-		gfx::update();
+		gfx::reset();
 		f();
 		swap();
 
