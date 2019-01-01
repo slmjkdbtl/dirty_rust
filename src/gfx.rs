@@ -94,7 +94,7 @@ pub(crate) fn init() {
 
 }
 
-pub(crate) fn update() {
+pub(crate) fn reset() {
 
 	let gfx_mut = get_ctx_mut();
 	let renderer = &mut gfx_mut.renderer_2d;
@@ -417,9 +417,8 @@ pub struct Canvas {
 
 impl Canvas {
 
-	pub fn new() -> Self {
+	pub fn new(width: u32, height: u32) -> Self {
 
-		let (width, height) = app::size();
 		let mut id: GLuint = 0;
 		let mut rbo: GLuint = 0;
 		let tex = Texture::from_raw(&[], width, height);
