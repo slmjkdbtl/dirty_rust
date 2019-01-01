@@ -113,7 +113,6 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let renderer = &gfx.renderer_2d;
 
 	tex.bind();
-
 	push();
 	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
 
@@ -289,11 +288,11 @@ pub fn clear() {
 }
 
 pub fn draw_on(canvas: &Canvas) {
-	// ...
+	canvas.bind();
 }
 
 pub fn stop_draw_on(canvas: &Canvas) {
-	// ...
+	canvas.unbind();
 }
 
 // public structs
@@ -343,9 +342,9 @@ impl Texture {
 
 		unsafe {
 
-			let mut tex = Self::new(0, 0);
+			let mut tex = Self::new(width, height);
 
-			tex.data(pixels, width, height);
+			tex.data(pixels);
 
 			return tex;
 
@@ -353,11 +352,9 @@ impl Texture {
 
 	}
 
-	fn data(&mut self, pixels: &[u8], width: u32, height: u32) -> &Self {
+	fn data(&mut self, pixels: &[u8]) -> &Self {
 
 		self.bind();
-		self.width = width;
-		self.height = height;
 
 		unsafe {
 
@@ -372,8 +369,8 @@ impl Texture {
 				gl::TEXTURE_2D,
 				0,
 				gl::RGBA8 as GLint,
-				width as GLint,
-				height as GLint,
+				self.width as GLint,
+				self.height as GLint,
 				0,
 				gl::RGBA,
 				gl::UNSIGNED_BYTE,
@@ -422,16 +419,39 @@ impl Canvas {
 
 	pub fn new() -> Self {
 
+		let (width, height) = app::size();
 		let mut id: GLuint = 0;
+		let mut rbo: GLuint = 0;
+		let tex = Texture::from_raw(&[], width, height);
 
 		unsafe {
+
 			gl::GenFramebuffers(1, &mut id);
+			gl::BindFramebuffer(gl::FRAMEBUFFER, id);
+			gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
+
+			gl::FramebufferTexture2D(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, tex.id, 0);
+
+			gl::GenRenderbuffers(1, &mut rbo);
+			gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
+			gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT16, width as GLint, height as GLint);
+			gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
+
+			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
+
+			if(!gl::CheckFramebufferStatus(gl::FRAMEBUFFER) == gl::FRAMEBUFFER_COMPLETE) {
+				panic!("canvas init failed");
+			}
+
+			gfx::clear();
+			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
 		}
 
 		return Self {
 
 			id: id,
-			tex: Texture::new(0, 0),
+			tex: tex,
 
 		}
 
