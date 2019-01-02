@@ -1,22 +1,13 @@
 // wengwengweng
 
-#![windows_subsystem = "windows"]
-
 use dirty::*;
 use dirty::math::*;
-
-macro_rules! b {
-	($name:expr) => {
-		include_bytes!($name)
-	}
-}
 
 fn main() {
 
 	app::init("yo", 640, 480);
 	gfx::init();
 	gfx::init();
-	#[cfg(not(target_os = "windows"))]
 	audio::init();
 	res::init();
 
