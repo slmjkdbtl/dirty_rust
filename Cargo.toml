@@ -16,8 +16,8 @@ rand = "*"
 serde = "*"
 gl = "*"
 tobj = "*"
-rlua = "*"
 num = "*"
+json = "*"
 
 [dependencies.sdl2]
 version = "*"

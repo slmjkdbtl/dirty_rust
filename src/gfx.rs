@@ -16,8 +16,8 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-// local public functions
-pub(crate) fn init() {
+// public functions
+pub fn init() {
 
 	unsafe {
 
@@ -28,6 +28,7 @@ pub(crate) fn init() {
 	}
 
 	clear();
+	app::swap();
 
 	let vertices: Vec<GLfloat> = vec![
 		0.0, 1.0,
@@ -94,7 +95,7 @@ pub(crate) fn init() {
 
 }
 
-pub(crate) fn reset() {
+pub fn reset() {
 
 	let gfx_mut = get_ctx_mut();
 	let renderer = &mut gfx_mut.renderer_2d;
@@ -106,7 +107,6 @@ pub(crate) fn reset() {
 
 }
 
-// public functions
 pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = get_ctx();

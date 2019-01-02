@@ -1,6 +1,6 @@
 # wengwengweng
 
-# DONE
+== DONE
 - [+] basic window creation
 - [+] basic 2d rendering
 - [+] 2d global transforms
@@ -13,7 +13,7 @@
 - [+] 2d point game/screen transform
 - [+] frame buffers
 
-# DOING
+== DOING
 - [*] frame buffer upside-down bug
 - [*] time stuff
 - [*] res loader
@@ -22,7 +22,7 @@
 - [*] res file reading
 - [*] documenting
 
-# TO DO
+== TO DO
 - [ ] audio
 - [ ] window configs / queries
 - [ ] custom shaders

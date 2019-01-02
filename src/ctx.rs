@@ -8,15 +8,7 @@ macro_rules! ctx {
 
 		fn init_ctx(c: $type) {
 			unsafe {
-				match &$name {
-					Some(_) => {
-						panic!("cannot initialize twice");
-					},
-					None => {
-						$name = Some(c);
-					},
-				};
-
+				$name = Some(c);
 			}
 		}
 

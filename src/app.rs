@@ -74,12 +74,6 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	});
 
-	gfx::init();
-	#[cfg(not(target_os = "windows"))]
-	audio::init();
-	res::init();
-	swap();
-
 }
 
 pub fn run(f: &mut FnMut()) {
@@ -274,7 +268,7 @@ enum ButtonState {
 }
 
 // private functions
-fn swap() {
+pub(crate) fn swap() {
 	get_ctx().window.gl_swap_window();
 }
 
