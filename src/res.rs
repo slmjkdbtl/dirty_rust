@@ -8,7 +8,7 @@ use crate::math::*;
 ctx!(RES: ResCtx);
 
 struct ResCtx {
-	sprites: HashMap<&'static str, SpriteData>,
+	sprites: HashMap<String, SpriteData>,
 }
 
 pub fn init() {
@@ -19,48 +19,86 @@ pub fn init() {
 
 }
 
+#[derive(Debug)]
+pub enum AnimDir {
+	Forward,
+	Reverse,
+	PingPong,
+}
+
+#[derive(Debug)]
+pub struct Anim {
+
+	from: u8,
+	to: u8,
+	dir: AnimDir,
+
+}
+
 pub struct SpriteData {
 
 	pub tex: gfx::Texture,
 	pub frames: Vec<Rect>,
+	pub anims: HashMap<String, Anim>,
 
 }
 
-pub fn load_sprites(dir: &str, names: Vec<&'static str>) {
+pub fn load_sprite(name: &'static str, img: &[u8], json: &str) {
 
 	let res_mut = get_ctx_mut();
+	let tex = gfx::Texture::from_bytes(&img);
+	let (width, height) = (tex.width as f32, tex.height as f32);
+	let mut frames = vec![];
+	let mut anims = HashMap::new();
 
-	for name in names {
+	if let Ok(data) = json::parse(json) {
 
-		let img_path = &format!("{}{}.png", dir, name);
-		let json_path = &format!("{}{}.json", dir, name);
-		let data = fs::file_read(img_path);
-		let tex = gfx::Texture::from_bytes(&data);
-		let mut frames = vec![];
+		for i in data["frames"].members() {
 
-		if fs::file_exists(json_path) {
-			// ...
-		} else {
-			frames = vec![rect!(0, 0, 1, 1)];
+			let frame = &i["frame"];
+			let x = frame["x"].as_f32().unwrap();
+			let y = frame["y"].as_f32().unwrap();
+			let w = frame["w"].as_f32().unwrap();
+			let h = frame["h"].as_f32().unwrap();
+
+			frames.push(rect!(x / width, y / height, w / width, h / height));
+
 		}
 
-		res_mut.sprites.insert(name, SpriteData {
-			tex: tex,
-			frames: frames,
-		});
+		for i in data["meta"]["frameTags"].members() {
+
+			let label = i["name"].as_str().unwrap();
+			let from = i["from"].as_u8().unwrap();
+			let to = i["to"].as_u8().unwrap();
+
+			let dir = match i["direction"].as_str().unwrap() {
+				"forward" => AnimDir::Forward,
+				"reverse" => AnimDir::Reverse,
+				"pingpong" => AnimDir::PingPong,
+				_ => AnimDir::Forward,
+			};
+
+			anims.insert(String::from(label), Anim {
+				from: from,
+				to: to,
+				dir: dir,
+			});
+
+		}
+
+	} else {
+
+		frames = vec![rect!(0, 0, 1, 1)];
 
 	}
 
+	res_mut.sprites.insert(String::from(name), SpriteData {
+		tex: tex,
+		frames: frames,
+		anims: anims,
+	});
+
 }
-
-// pub fn load_all_sprites(dir: &str) {
-
-// 	let files = fs::read_dir(dir).unwrap();
-
-// 	for file in files {
-// 	}
-
-// }
 
 pub fn get_sprite(name: &str) -> &SpriteData {
 	return &get_ctx().sprites[name];

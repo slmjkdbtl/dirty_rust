@@ -9,8 +9,7 @@ struct AudioCtx {
 	device: rodio::Device,
 }
 
-// local public functions
-pub(crate) fn init() {
+pub fn init() {
 
 	let device = rodio::default_output_device().unwrap();
 
