@@ -10,8 +10,10 @@
 - [+] keyboard inputs
 - [+] fix macro import
 - [+] default font * bitmap font rendering
+- [+] window configs / queries
 - [+] 2d point game/screen transform
 - [+] frame buffers
+- [+] read from macos resources folder
 
 == DOING
 - [*] frame buffer upside-down bug
@@ -21,7 +23,6 @@
 - [*] mouse inputs
 
 == TO DO
-- [ ] window configs / queries
 - [ ] custom shaders
 - [ ] 3d
 - [ ] ecs

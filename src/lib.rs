@@ -13,6 +13,7 @@
 mod ctx;
 #[macro_use]
 mod utils;
+pub mod fs;
 
 pub mod app;
 pub mod gfx;

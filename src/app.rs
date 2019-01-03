@@ -22,7 +22,6 @@ struct AppCtx {
 	events: sdl2::EventPump,
 	platform: &'static str,
 	is_running: bool,
-	is_fullscreen: bool,
 	key_states: HashMap<Scancode, ButtonState>,
 	mouse_states: HashMap<MouseButton, ButtonState>,
 	dt: f32,
@@ -66,7 +65,6 @@ pub fn init(title: &str, width: u32, height: u32) {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		is_running: false,
-		is_fullscreen: false,
 		dt: 0.0,
 		time: 0.0,
 		frame: 0,
@@ -180,8 +178,20 @@ pub fn time() -> f32 {
 	return get_ctx().time;
 }
 
+pub fn set_fullscreen(b: bool) {
+
+	let app_mut = get_ctx_mut();
+
+	if b {
+		app_mut.window.set_fullscreen(FullscreenType::Desktop).expect("fullscreen failed");
+	} else {
+		app_mut.window.set_fullscreen(FullscreenType::Off).expect("fullscreen failed");
+	}
+
+}
+
 pub fn get_fullscreen() -> bool {
-	return get_ctx().is_fullscreen;
+	return get_ctx().window.fullscreen_state() == FullscreenType::Desktop;
 }
 
 pub fn show_cursor() {
@@ -190,6 +200,14 @@ pub fn show_cursor() {
 
 pub fn hide_cursor() {
 	get_ctx_mut().sdl_ctx.mouse().show_cursor(false);
+}
+
+pub fn set_relative(b: bool) {
+	get_ctx_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
+}
+
+pub fn get_relative() -> bool {
+	return get_ctx().sdl_ctx.mouse().relative_mouse_mode();
 }
 
 pub fn quit() {
@@ -242,20 +260,6 @@ pub fn is_android() -> bool {
 
 pub fn is_ios() -> bool {
 	return get_ctx().platform == "iOS";
-}
-
-pub fn set_fullscreen(b: bool) {
-
-	let app_mut = get_ctx_mut();
-
-	app_mut.is_fullscreen = b;
-
-	if b {
-		app_mut.window.set_fullscreen(FullscreenType::Desktop).expect("fullscreen failed");
-	} else {
-		app_mut.window.set_fullscreen(FullscreenType::Off).expect("fullscreen failed");
-	}
-
 }
 
 // private structs

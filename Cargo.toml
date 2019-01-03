@@ -13,13 +13,17 @@ edition = "2018"
 image = "*"
 rodio = "*"
 rand = "*"
-serde = "*"
 gl = "*"
 tobj = "*"
 num = "*"
 json = "*"
+core-foundation = "*"
 
 [dependencies.sdl2]
 version = "*"
 features = ["static-link", "bundled"]
+
+[dependencies.serde]
+version  = "*"
+features = ["derive"]
 
