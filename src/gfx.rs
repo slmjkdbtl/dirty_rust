@@ -145,7 +145,9 @@ pub fn text(s: &str) {
 		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
 
 		if ch != ' ' {
-			draw(&font.tex, font.map[&ch]);
+			if let Some(quad) = font.map.get(&ch) {
+				draw(&font.tex, *quad);
+			}
 		}
 
 		pop();
