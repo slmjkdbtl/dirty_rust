@@ -8,13 +8,15 @@ use crate::math::*;
 ctx!(RES: ResCtx);
 
 struct ResCtx {
-	sprites: HashMap<String, SpriteData>,
+	sprites: HashMap<&'static str, SpriteData>,
+	sounds: HashMap<&'static str, audio::Track>,
 }
 
 pub fn init() {
 
 	init_ctx(ResCtx {
 		sprites: HashMap::new(),
+		sounds: HashMap::new(),
 	});
 
 }
@@ -92,15 +94,29 @@ pub fn load_sprite(name: &'static str, img: &[u8], json: &str) {
 
 	}
 
-	res_mut.sprites.insert(String::from(name), SpriteData {
+	let data = SpriteData {
 		tex: tex,
 		frames: frames,
 		anims: anims,
-	});
+	};
+
+	res_mut.sprites.insert(name, data);
 
 }
 
 pub fn get_sprite(name: &str) -> &SpriteData {
 	return &get_ctx().sprites[name];
+}
+
+pub fn load_sound(name: &'static str, data: &'static [u8]) {
+
+	let res_mut = get_ctx_mut();
+
+	res_mut.sounds.insert(name, audio::Track::from_bytes(data));
+
+}
+
+pub fn get_sound(name: &str) -> &audio::Track {
+	return &get_ctx().sounds[name];
 }
 

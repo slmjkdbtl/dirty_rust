@@ -1,5 +1,6 @@
 // wengwengweng
 
+use rodio::Source;
 use crate::*;
 
 // context
@@ -16,6 +17,45 @@ pub fn init() {
 	init_ctx(AudioCtx {
 		device: device,
 	});
+
+}
+
+pub fn play(track: &Track) {
+
+	let audio = get_ctx();
+	let sink = &track.sink;
+	let data = track.cursor.clone();
+	let src = rodio::Decoder::new(data).unwrap().convert_samples();
+
+	rodio::play_raw(&audio.device, src);
+
+}
+
+pub fn pause(track: &Track) {
+	track.sink.pause();
+}
+
+pub struct Track {
+
+	sink: rodio::Sink,
+	cursor: std::io::Cursor<&'static [u8]>
+
+}
+
+impl Track {
+
+	pub fn from_bytes(data: &'static [u8]) -> Self {
+
+		let audio = get_ctx();
+		let sink = rodio::Sink::new(&audio.device);
+		let cursor = std::io::Cursor::new(data);
+
+		return Self {
+			sink: sink,
+			cursor: cursor,
+		};
+
+	}
 
 }
 

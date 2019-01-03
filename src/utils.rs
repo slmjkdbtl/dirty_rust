@@ -14,3 +14,14 @@ macro_rules! nested_macro {
 
 }
 
+macro_rules! fail {
+
+	($($arg:tt)*) => {
+
+		eprintln!($($arg)*);
+		std::process::exit(1);
+
+	};
+
+}
+
