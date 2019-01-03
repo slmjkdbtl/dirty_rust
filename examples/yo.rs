@@ -22,6 +22,11 @@ fn main() {
 		include_str!("car.json")
 	);
 
+	res::load_sound(
+		"pop",
+		include_bytes!("pop.ogg")
+	);
+
 	let sprite = res::get_sprite("car");
 	let tex = &sprite.tex;
 	let frames = &sprite.frames;
@@ -78,6 +83,10 @@ fn main() {
 
 // 		gfx::stop_draw_on(&canvas);
 // 		gfx::render(&canvas);
+
+		if app::key_pressed(Key::Space) {
+			audio::play(res::get_sound("pop"));
+		}
 
 		if app::key_pressed(Key::F) {
 			app::set_fullscreen(!app::get_fullscreen())

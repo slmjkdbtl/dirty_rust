@@ -15,15 +15,12 @@
 
 == DOING
 - [*] frame buffer upside-down bug
+- [*] audio
 - [*] time stuff
 - [*] res loader
-- [*] lua bindings
 - [*] mouse inputs
-- [*] res file reading
-- [*] documenting
 
 == TO DO
-- [ ] audio
 - [ ] window configs / queries
 - [ ] custom shaders
 - [ ] 3d
@@ -34,6 +31,9 @@
 - [ ] editor
 - [ ] particle system
 - [ ] cap framerate
+- [ ] documenting
+- [ ] lua bindings
 - [ ] sprite batching
 - [ ] vector swizzle fields
+- [ ] try gfx
 
