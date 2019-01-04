@@ -5,13 +5,13 @@ use dirty::math::*;
 
 fn main() {
 
-	app::init("yo", 640, 480);
-	gfx::init();
+	app::init();
+	window::init("yo", 640, 480);
 	gfx::init();
 	audio::init();
 	res::init();
 
-	let (width, height) = app::size();
+	let (width, height) = window::size();
 	let canvas = gfx::Canvas::new(width, height);
 	let mut index = 0;
 	let margin = 16;
@@ -84,15 +84,15 @@ fn main() {
 // 		gfx::stop_draw_on(&canvas);
 // 		gfx::render(&canvas);
 
-		if app::key_pressed(Key::Space) {
+		if window::key_pressed(Key::Space) {
 			audio::play(res::get_sound("pop"));
 		}
 
-		if app::key_pressed(Key::F) {
-			app::set_fullscreen(!app::get_fullscreen())
+		if window::key_pressed(Key::F) {
+			window::set_fullscreen(!window::get_fullscreen())
 		}
 
-		if app::key_pressed(Key::Escape) {
+		if window::key_pressed(Key::Escape) {
 			app::quit();
 		}
 

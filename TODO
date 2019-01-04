@@ -14,6 +14,8 @@
 - [+] 2d point game/screen transform
 - [+] frame buffers
 - [+] read from macos resources folder
+- [+] error screen
+- [+] allow windowless
 
 == DOING
 - [*] frame buffer upside-down bug
@@ -21,7 +23,6 @@
 - [*] time stuff
 - [*] res loader
 - [*] mouse inputs
-- [*] error screen
 
 == TO DO
 - [ ] custom shaders
