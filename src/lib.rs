@@ -1,7 +1,7 @@
 // wengwengweng
 
 //! # DIRTY
-//! game toolkit
+//! simple toolkit for creating game-like experiences
 
 #![crate_name = "dirty"]
 #![crate_type = "lib"]

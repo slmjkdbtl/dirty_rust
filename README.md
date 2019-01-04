@@ -1,5 +1,5 @@
 # DIRTY
-small toolkit for creating game-like experiences
+simple toolkit for creating game-like experiences
 
 ## usage
 add to `Cargo.toml`
@@ -7,7 +7,7 @@ add to `Cargo.toml`
 [dependencies.dirty]
 git = "https://github.com/slmjkdbtl/DIRTY"
 ```
-not on crates.io yet due to conflicted crate name
+not on crates.io yet due to duplicate crate name
 
 ## example
 ```rust

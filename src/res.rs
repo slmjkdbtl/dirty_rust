@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Handles resource loading
+
 use std::collections::HashMap;
 
 use crate::*;

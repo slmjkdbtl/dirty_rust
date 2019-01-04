@@ -23,6 +23,7 @@
 - [*] time stuff
 - [*] res loader
 - [*] mouse inputs
+- [*] documenting
 
 == TO DO
 - [ ] custom shaders
@@ -34,7 +35,6 @@
 - [ ] editor
 - [ ] particle system
 - [ ] cap framerate
-- [ ] documenting
 - [ ] lua bindings
 - [ ] sprite batching
 - [ ] vector swizzle fields

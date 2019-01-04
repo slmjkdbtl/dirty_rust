@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Handles math
+
 use num;
 use core::ops;
 use core::cmp;

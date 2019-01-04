@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Handles sounds
+
 use rodio::Source;
 use crate::*;
 
