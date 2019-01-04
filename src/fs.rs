@@ -43,24 +43,24 @@ fn get_res_dir() -> String {
 }
 
 pub fn exists(path: &str) -> bool {
-	return Path::new(path).exists();
+	return validate_path(path).is_ok();
 }
 
-pub fn validate_path(path: &str) -> String {
+fn validate_path(path: &str) -> Result<String, ()> {
 
-	if !exists(path) {
+	if !Path::new(path).exists() {
 
 		let with_res = format!("{}/{}", get_res_dir(), path);
 
-		if exists(&with_res) {
-			return with_res;
+		if Path::new(&with_res).exists() {
+			return Ok(with_res);
 		} else {
-			fail!("can't find file {}", path);
+			return Err(());
 		}
 
 	} else {
 
-		return path.to_owned();
+		return Ok(path.to_owned());
 
 	}
 
@@ -68,21 +68,25 @@ pub fn validate_path(path: &str) -> String {
 
 pub fn read_bytes(path: &str) -> Vec<u8> {
 
-	let path = validate_path(path);
-
-	return fs::read(&path).unwrap_or_else(|s| {
+	if let Ok(path) = validate_path(path) {
+		return fs::read(&path).unwrap_or_else(|s| {
+			fail!("failed to read{}", path);
+		});
+	} else {
 		fail!("failed to read {}", path);
-	});
+	}
 
 }
 
 pub fn read_str(path: &str) -> String {
 
-	let path = validate_path(path);
-
-	return fs::read_to_string(&path).unwrap_or_else(|s| {
+	if let Ok(path) = validate_path(path) {
+		return fs::read_to_string(&path).unwrap_or_else(|s| {
+			fail!("failed to read{}", path);
+		});
+	} else {
 		fail!("failed to read {}", path);
-	});
+	}
 
 }
 

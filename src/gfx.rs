@@ -75,7 +75,7 @@ pub fn init() {
 	let (width, height) = app::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
-	init_ctx(GfxCtx {
+	ctx_init(GfxCtx {
 
 		renderer_2d: Renderer2D {
 
@@ -95,9 +95,13 @@ pub fn init() {
 
 }
 
+pub fn enabled() -> bool {
+	return ctx_is_ok();
+}
+
 pub fn reset() {
 
-	let gfx_mut = get_ctx_mut();
+	let gfx_mut = ctx_get_mut();
 	let renderer = &mut gfx_mut.renderer_2d;
 
 	renderer.transform_stack.clear();
@@ -109,7 +113,7 @@ pub fn reset() {
 
 pub fn draw(tex: &Texture, quad: Rect) {
 
-	let gfx = get_ctx();
+	let gfx = ctx_get();
 	let renderer = &gfx.renderer_2d;
 
 	tex.bind();
@@ -135,7 +139,7 @@ pub fn render(canvas: &Canvas) {
 
 pub fn text(s: &str) {
 
-	let gfx = get_ctx();
+	let gfx = ctx_get();
 	let renderer = &gfx.renderer_2d;
 	let font = &renderer.default_font;
 
@@ -158,7 +162,7 @@ pub fn text(s: &str) {
 
 pub fn rect(size: Vec2) {
 
-	let gfx = get_ctx();
+	let gfx = ctx_get();
 	let renderer = &gfx.renderer_2d;
 
 	push();
@@ -170,7 +174,7 @@ pub fn rect(size: Vec2) {
 
 pub fn line(p1: Vec2, p2: Vec2) {
 
-	let gfx = get_ctx();
+	let gfx = ctx_get();
 	let len = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
@@ -197,16 +201,16 @@ pub fn poly(pts: Vec<Vec2>) {
 }
 
 pub fn color(tint: Color) {
-	get_ctx_mut().renderer_2d.tint = tint;
+	ctx_get_mut().renderer_2d.tint = tint;
 }
 
 pub fn line_width(line_width: u8) {
-	get_ctx_mut().renderer_2d.line_width = line_width;
+	ctx_get_mut().renderer_2d.line_width = line_width;
 }
 
 pub fn push() {
 
-	let g = get_ctx_mut();
+	let g = ctx_get_mut();
 	let stack = &mut g.renderer_2d.transform_stack;
 
 	if (stack.len() < 32) {
@@ -219,7 +223,7 @@ pub fn push() {
 
 pub fn pop() {
 
-	let mut g = get_ctx_mut();
+	let mut g = ctx_get_mut();
 	let stack = &mut g.renderer_2d.transform_stack;
 
 	match stack.pop() {
@@ -235,7 +239,7 @@ pub fn pop() {
 
 pub fn translate(pos: Vec2) {
 
-	let gfx = get_ctx_mut();
+	let gfx = ctx_get_mut();
 	let r = &mut gfx.renderer_2d;
 
 	r.transform = r.transform.translate(pos.x, pos.y);
@@ -244,7 +248,7 @@ pub fn translate(pos: Vec2) {
 
 pub fn rotate(rot: f32) {
 
-	let gfx = get_ctx_mut();
+	let gfx = ctx_get_mut();
 	let r = &mut gfx.renderer_2d;
 
 	r.transform = r.transform.rotate(rot);
@@ -253,7 +257,7 @@ pub fn rotate(rot: f32) {
 
 pub fn scale(s: Vec2) {
 
-	let gfx = get_ctx_mut();
+	let gfx = ctx_get_mut();
 	let r = &mut gfx.renderer_2d;
 
 	r.transform = r.transform.scale(s.x, s.y);
@@ -263,7 +267,7 @@ pub fn scale(s: Vec2) {
 
 pub fn warp(pt: Vec2) -> Vec2 {
 
-	let gfx = get_ctx();
+	let gfx = ctx_get();
 	let renderer = &gfx.renderer_2d;
 	let trans = renderer.transform;
 
@@ -273,7 +277,7 @@ pub fn warp(pt: Vec2) -> Vec2 {
 
 pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
-	let gfx = get_ctx();
+	let gfx = ctx_get();
 	let renderer = &gfx.renderer_2d;
 	let trans = renderer.transform;
 

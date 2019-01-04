@@ -22,6 +22,7 @@ struct AppCtx {
 	events: sdl2::EventPump,
 	platform: &'static str,
 	is_running: bool,
+	failed: bool,
 	key_states: HashMap<Scancode, ButtonState>,
 	mouse_states: HashMap<MouseButton, ButtonState>,
 	dt: f32,
@@ -55,7 +56,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	video.gl_set_swap_interval(SwapInterval::VSync).expect("vsync failed");
 
-	init_ctx(AppCtx {
+	ctx_init(AppCtx {
 
 		events: sdl_ctx.event_pump().unwrap(),
 		window: window,
@@ -65,6 +66,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		is_running: false,
+		failed: false,
 		dt: 0.0,
 		time: 0.0,
 		frame: 0,
@@ -74,10 +76,14 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 }
 
+pub fn enabled() -> bool {
+	return ctx_is_ok();
+}
+
 pub fn run(f: &mut FnMut()) {
 
-	let app = get_ctx();
-	let app_mut = get_ctx_mut();
+	let app = ctx_get();
+	let app_mut = ctx_get_mut();
 	let keyboard_state = app.events.keyboard_state();
 	let mouse_state = app.events.mouse_state();
 
@@ -166,21 +172,29 @@ pub fn run(f: &mut FnMut()) {
 
 }
 
+pub fn error(log: &str) {
+
+	let app_mut = ctx_get_mut();
+
+	app_mut.failed = true;
+
+}
+
 pub fn dt() -> f32 {
-	return get_ctx().dt;
+	return ctx_get().dt;
 }
 
 pub fn frame() -> u64 {
-	return get_ctx().frame;
+	return ctx_get().frame;
 }
 
 pub fn time() -> f32 {
-	return get_ctx().time;
+	return ctx_get().time;
 }
 
 pub fn set_fullscreen(b: bool) {
 
-	let app_mut = get_ctx_mut();
+	let app_mut = ctx_get_mut();
 
 	if b {
 		app_mut.window.set_fullscreen(FullscreenType::Desktop).expect("fullscreen failed");
@@ -191,31 +205,31 @@ pub fn set_fullscreen(b: bool) {
 }
 
 pub fn get_fullscreen() -> bool {
-	return get_ctx().window.fullscreen_state() == FullscreenType::Desktop;
+	return ctx_get().window.fullscreen_state() == FullscreenType::Desktop;
 }
 
 pub fn show_cursor() {
-	get_ctx_mut().sdl_ctx.mouse().show_cursor(true);
+	ctx_get_mut().sdl_ctx.mouse().show_cursor(true);
 }
 
 pub fn hide_cursor() {
-	get_ctx_mut().sdl_ctx.mouse().show_cursor(false);
+	ctx_get_mut().sdl_ctx.mouse().show_cursor(false);
 }
 
 pub fn set_relative(b: bool) {
-	get_ctx_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
+	ctx_get_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
 }
 
 pub fn get_relative() -> bool {
-	return get_ctx().sdl_ctx.mouse().relative_mouse_mode();
+	return ctx_get().sdl_ctx.mouse().relative_mouse_mode();
 }
 
 pub fn quit() {
-	get_ctx_mut().is_running = false;
+	ctx_get_mut().is_running = false;
 }
 
 pub fn size() -> (u32, u32) {
-	return get_ctx().size;
+	return ctx_get().size;
 }
 
 pub fn key_pressed(k: Scancode) -> bool {
@@ -243,23 +257,23 @@ pub fn mouse_released(b: MouseButton) -> bool {
 }
 
 pub fn is_macos() -> bool {
-	return get_ctx().platform == "Mac OS X";
+	return ctx_get().platform == "Mac OS X";
 }
 
 pub fn is_windows() -> bool {
-	return get_ctx().platform == "Windows";
+	return ctx_get().platform == "Windows";
 }
 
 pub fn is_linux() -> bool {
-	return get_ctx().platform == "Linux";
+	return ctx_get().platform == "Linux";
 }
 
 pub fn is_android() -> bool {
-	return get_ctx().platform == "Android";
+	return ctx_get().platform == "Android";
 }
 
 pub fn is_ios() -> bool {
-	return get_ctx().platform == "iOS";
+	return ctx_get().platform == "iOS";
 }
 
 // private structs
@@ -273,12 +287,12 @@ enum ButtonState {
 
 // private functions
 pub(crate) fn swap() {
-	get_ctx().window.gl_swap_window();
+	ctx_get().window.gl_swap_window();
 }
 
 fn check_key_state(code: Scancode, state: ButtonState) -> bool {
 
-	match get_ctx().key_states.get(&code) {
+	match ctx_get().key_states.get(&code) {
 		Some(s) => {
 			return *s == state;
 		}
@@ -291,7 +305,7 @@ fn check_key_state(code: Scancode, state: ButtonState) -> bool {
 
 fn check_mouse_state(code: MouseButton, state: ButtonState) -> bool {
 
-	match get_ctx().mouse_states.get(&code) {
+	match ctx_get().mouse_states.get(&code) {
 		Some(s) => {
 			return *s == state;
 		}

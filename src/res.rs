@@ -14,11 +14,15 @@ struct ResCtx {
 
 pub fn init() {
 
-	init_ctx(ResCtx {
+	ctx_init(ResCtx {
 		sprites: HashMap::new(),
 		sounds: HashMap::new(),
 	});
 
+}
+
+pub fn enabled() -> bool {
+	return ctx_is_ok();
 }
 
 #[derive(Debug)]
@@ -45,9 +49,13 @@ pub struct SpriteData {
 
 }
 
+pub fn load_all_sprites(path: &str) {
+	// ...
+}
+
 pub fn load_sprite(name: &'static str, img: &[u8], json: &str) {
 
-	let res_mut = get_ctx_mut();
+	let res_mut = ctx_get_mut();
 	let tex = gfx::Texture::from_bytes(&img);
 	let (width, height) = (tex.width as f32, tex.height as f32);
 	let mut frames = vec![];
@@ -105,18 +113,18 @@ pub fn load_sprite(name: &'static str, img: &[u8], json: &str) {
 }
 
 pub fn get_sprite(name: &str) -> &SpriteData {
-	return &get_ctx().sprites[name];
+	return &ctx_get().sprites[name];
 }
 
 pub fn load_sound(name: &'static str, data: &'static [u8]) {
 
-	let res_mut = get_ctx_mut();
+	let res_mut = ctx_get_mut();
 
 	res_mut.sounds.insert(name, audio::Track::from_bytes(data));
 
 }
 
 pub fn get_sound(name: &str) -> &audio::Track {
-	return &get_ctx().sounds[name];
+	return &ctx_get().sounds[name];
 }
 
