@@ -1,11 +1,11 @@
 // wengwengweng
 
+//! Handles window and events
+
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 use sdl2::video::{Window, FullscreenType, SwapInterval};
-use std::thread;
-use std::time;
 use std::collections::HashMap;
 
 use crate::*;
@@ -26,7 +26,7 @@ struct WindowCtx {
 
 }
 
-// public functions
+/// start window with title, width, and height
 pub fn init(title: &str, width: u32, height: u32) {
 
 	if !app::enabled() {
@@ -68,11 +68,12 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 }
 
+/// check if window is initiated
 pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
-pub fn poll_events() {
+pub(crate) fn poll_events() {
 
 	let window = ctx_get();
 	let window_mut = ctx_get_mut();
@@ -153,6 +154,7 @@ enum ButtonState {
 	Released,
 }
 
+/// set window fullscreen state
 pub fn set_fullscreen(b: bool) {
 
 	let app_mut = ctx_get_mut();
@@ -165,50 +167,62 @@ pub fn set_fullscreen(b: bool) {
 
 }
 
+/// get window fullscreen state
 pub fn get_fullscreen() -> bool {
 	return ctx_get().window.fullscreen_state() == FullscreenType::Desktop;
 }
 
+/// show cursor
 pub fn show_cursor() {
 	ctx_get_mut().sdl_ctx.mouse().show_cursor(true);
 }
 
+/// hide cursor
 pub fn hide_cursor() {
 	ctx_get_mut().sdl_ctx.mouse().show_cursor(false);
 }
 
+/// set mouse relative state
 pub fn set_relative(b: bool) {
 	ctx_get_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
 }
 
+/// get mouse relative state
 pub fn get_relative() -> bool {
 	return ctx_get().sdl_ctx.mouse().relative_mouse_mode();
 }
 
+/// get window size
 pub fn size() -> (u32, u32) {
 	return ctx_get().size;
 }
 
+/// check if a key was pressed this frame
 pub fn key_pressed(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Pressed);
 }
 
+/// check if a key is holding down
 pub fn key_down(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Down);
 }
 
+/// check if a key was released this frame
 pub fn key_released(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Released);
 }
 
+/// check if a mouse button was pressed this frame
 pub fn mouse_pressed(b: MouseButton) -> bool {
 	return check_mouse_state(b, ButtonState::Pressed);
 }
 
+/// check if a mouse button is holding down
 pub fn mouse_down(b: MouseButton) -> bool {
 	return check_mouse_state(b, ButtonState::Down);
 }
 
+/// check if a mouse button was released this frame
 pub fn mouse_released(b: MouseButton) -> bool {
 	return check_mouse_state(b, ButtonState::Released);
 }

@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Handles collision detection
+
 type Poly = Vec<Vec2>;
 
 use crate::*;

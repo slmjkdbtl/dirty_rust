@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Handles rendering
+
 use gl::types::*;
 use std::ffi::CString;
 use std::ptr;
@@ -16,7 +18,7 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-// public functions
+/// init graphics module
 pub fn init() {
 
 	if !window::enabled() {
@@ -99,10 +101,12 @@ pub fn init() {
 
 }
 
+/// check if gfx is initiated
 pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
+/// reset global transforms and style states
 pub fn reset() {
 
 	let gfx_mut = ctx_get_mut();
@@ -115,6 +119,7 @@ pub fn reset() {
 
 }
 
+/// draw a texture with visible quad area
 pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
@@ -137,10 +142,12 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 }
 
+/// draw canvas
 pub fn render(canvas: &Canvas) {
 	draw(&canvas.tex, rect!(0, 0, 1, 1));
 }
 
+/// draw text
 pub fn text(s: &str) {
 
 	let gfx = ctx_get();
@@ -164,6 +171,7 @@ pub fn text(s: &str) {
 
 }
 
+/// draw rectangle with size
 pub fn rect(size: Vec2) {
 
 	let gfx = ctx_get();
@@ -176,6 +184,7 @@ pub fn rect(size: Vec2) {
 
 }
 
+/// draw line
 pub fn line(p1: Vec2, p2: Vec2) {
 
 	let gfx = ctx_get();
@@ -190,6 +199,7 @@ pub fn line(p1: Vec2, p2: Vec2) {
 
 }
 
+/// draw polygon with vertices
 pub fn poly(pts: Vec<Vec2>) {
 
 	for (i, p) in pts.iter().enumerate() {
@@ -204,14 +214,17 @@ pub fn poly(pts: Vec<Vec2>) {
 
 }
 
+/// set global tint
 pub fn color(tint: Color) {
 	ctx_get_mut().renderer_2d.tint = tint;
 }
 
+/// set line width
 pub fn line_width(line_width: u8) {
 	ctx_get_mut().renderer_2d.line_width = line_width;
 }
 
+/// push transform matrix
 pub fn push() {
 
 	let g = ctx_get_mut();
@@ -225,6 +238,7 @@ pub fn push() {
 
 }
 
+/// pop transform matrix
 pub fn pop() {
 
 	let mut g = ctx_get_mut();
@@ -241,6 +255,7 @@ pub fn pop() {
 
 }
 
+/// global translate
 pub fn translate(pos: Vec2) {
 
 	let gfx = ctx_get_mut();
@@ -250,6 +265,7 @@ pub fn translate(pos: Vec2) {
 
 }
 
+/// global rotate
 pub fn rotate(rot: f32) {
 
 	let gfx = ctx_get_mut();
@@ -259,6 +275,7 @@ pub fn rotate(rot: f32) {
 
 }
 
+/// global scale
 pub fn scale(s: Vec2) {
 
 	let gfx = ctx_get_mut();
@@ -269,6 +286,7 @@ pub fn scale(s: Vec2) {
 
 }
 
+/// warp a 2d point through current transformed matrix
 pub fn warp(pt: Vec2) -> Vec2 {
 
 	let gfx = ctx_get();
@@ -279,6 +297,7 @@ pub fn warp(pt: Vec2) -> Vec2 {
 
 }
 
+/// inverse warp a 2d point through current transformed matrix
 pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 	let gfx = ctx_get();
@@ -289,6 +308,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 }
 
+/// clear view
 pub fn clear() {
 
 	unsafe {
@@ -297,10 +317,12 @@ pub fn clear() {
 
 }
 
+/// start drawing on a canvas
 pub fn draw_on(canvas: &Canvas) {
 	canvas.bind();
 }
 
+/// stop drawing on a canvas
 pub fn stop_draw_on(canvas: &Canvas) {
 	canvas.unbind();
 }

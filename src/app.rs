@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Handles time and main loop
+
 use std::thread;
 use std::time;
 
@@ -19,7 +21,7 @@ struct AppCtx {
 
 }
 
-// public functions
+/// init app
 pub fn init() {
 
 	ctx_init(AppCtx {
@@ -34,10 +36,12 @@ pub fn init() {
 
 }
 
+/// check if app is initiated
 pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
+/// start main loop, call the callback every frame
 pub fn run(f: &mut FnMut()) {
 
 	let app = ctx_get();
@@ -74,6 +78,7 @@ pub fn run(f: &mut FnMut()) {
 
 }
 
+/// report error and go to error screen
 pub fn error(log: &str) {
 
 	if gfx::enabled() && window::enabled() {
@@ -128,18 +133,22 @@ pub fn error(log: &str) {
 
 }
 
+/// get delta time between frames
 pub fn dt() -> f32 {
 	return ctx_get().dt;
 }
 
+/// get total number of frames passed
 pub fn frame() -> u64 {
 	return ctx_get().frame;
 }
 
+/// get actual time since running
 pub fn time() -> f32 {
 	return ctx_get().time;
 }
 
+/// quit with success code
 pub fn quit() {
 	std::process::exit(0);
 }
@@ -148,22 +157,27 @@ pub(crate) fn bad_quit() {
 	std::process::exit(1);
 }
 
+/// check if current platform is MacOS
 pub fn is_macos() -> bool {
 	return ctx_get().platform == "Mac OS X";
 }
 
+/// check if current platform is Windows
 pub fn is_windows() -> bool {
 	return ctx_get().platform == "Windows";
 }
 
+/// check if current platform is Linux
 pub fn is_linux() -> bool {
 	return ctx_get().platform == "Linux";
 }
 
+/// check if current platform is Android
 pub fn is_android() -> bool {
 	return ctx_get().platform == "Android";
 }
 
+/// check if current platform is iOS
 pub fn is_ios() -> bool {
 	return ctx_get().platform == "iOS";
 }
