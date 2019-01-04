@@ -19,6 +19,10 @@ struct GfxCtx {
 // public functions
 pub fn init() {
 
+	if !window::enabled() {
+		app::error("can't init gfx without window");
+	}
+
 	unsafe {
 
 		gl::Enable(gl::BLEND);
@@ -28,7 +32,7 @@ pub fn init() {
 	}
 
 	clear();
-	app::swap();
+	window::swap();
 
 	let vertices: Vec<GLfloat> = vec![
 		0.0, 1.0,
@@ -72,7 +76,7 @@ pub fn init() {
 		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,
 	);
 
-	let (width, height) = app::size();
+	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 	ctx_init(GfxCtx {
