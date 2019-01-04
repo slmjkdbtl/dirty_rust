@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! lua bindings
+
 use rlua::Result;
 use rlua::Lua;
 use rlua::Function;
@@ -24,8 +26,24 @@ fn bind(lua: &Lua) -> Result<()> {
 		app::init()
 	});
 
-	bind_func!("window_init", (title, width, height): (String, u32, u32) -> {
-		window::init(&title[..], width, height)
+	bind_func!("app_quit", (): () -> {
+		app::quit()
+	});
+
+	bind_func!("app_time", (): () -> {
+		app::time()
+	});
+
+	bind_func!("app_dt", (): () -> {
+		app::dt()
+	});
+
+	bind_func!("app_frame", (): () -> {
+		app::frame()
+	});
+
+	bind_func!("app_error", (msg): (String) -> {
+		app::error(&msg)
 	});
 
 	bind_func!("app_run", (f): (Function) -> {
@@ -34,8 +52,40 @@ fn bind(lua: &Lua) -> Result<()> {
 		})
 	});
 
+	bind_func!("window_init", (title, width, height): (String, u32, u32) -> {
+		window::init(&title, width, height)
+	});
+
+	bind_func!("window_size", (): () -> {
+		window::size()
+	});
+
+	bind_func!("window_set_fullscreen", (b): (bool) -> {
+		window::set_fullscreen(b)
+	});
+
+	bind_func!("window_get_fullscreen", (): () -> {
+		window::get_fullscreen()
+	});
+
+	bind_func!("window_set_relative", (b): (bool) -> {
+		window::set_relative(b)
+	});
+
+	bind_func!("window_get_relative", (): () -> {
+		window::get_relative()
+	});
+
+	bind_func!("gfx_init", (): () -> {
+		gfx::init()
+	});
+
 	bind_func!("gfx_clear", (): () -> {
 		gfx::clear()
+	});
+
+	bind_func!("gfx_reset", (): () -> {
+		gfx::reset()
 	});
 
 	return Ok(());

@@ -24,6 +24,7 @@
 - [*] res loader
 - [*] mouse inputs
 - [*] documenting
+- [*] cli to run/export lua
 - [*] lua binding
 
 == TO DO

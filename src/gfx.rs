@@ -384,6 +384,10 @@ impl Texture {
 
 	}
 
+	pub fn from_file(fname: &str) -> Self {
+		return Self::from_bytes(&fs::read_bytes(fname));
+	}
+
 	fn data(&mut self, pixels: &[u8]) -> &Self {
 
 		self.bind();

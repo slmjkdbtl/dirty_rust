@@ -19,6 +19,7 @@ num = "*"
 json = "*"
 core-foundation = "*"
 rlua = "*"
+clap = "*"
 
 [dependencies.sdl2]
 version = "*"
