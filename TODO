@@ -24,6 +24,7 @@
 - [*] res loader
 - [*] mouse inputs
 - [*] documenting
+- [*] lua binding
 
 == TO DO
 - [ ] custom shaders

@@ -18,6 +18,7 @@ tobj = "*"
 num = "*"
 json = "*"
 core-foundation = "*"
+rlua = "*"
 
 [dependencies.sdl2]
 version = "*"
