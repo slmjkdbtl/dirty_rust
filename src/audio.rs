@@ -14,15 +14,19 @@ pub fn init() {
 
 	let device = rodio::default_output_device().unwrap();
 
-	init_ctx(AudioCtx {
+	ctx_init(AudioCtx {
 		device: device,
 	});
 
 }
 
+pub fn enabled() -> bool {
+	return ctx_is_ok();
+}
+
 pub fn play(track: &Track) {
 
-	let audio = get_ctx();
+	let audio = ctx_get();
 	let sink = &track.sink;
 	let data = track.cursor.clone();
 	let src = rodio::Decoder::new(data).unwrap().convert_samples();
@@ -46,7 +50,7 @@ impl Track {
 
 	pub fn from_bytes(data: &'static [u8]) -> Self {
 
-		let audio = get_ctx();
+		let audio = ctx_get();
 		let sink = rodio::Sink::new(&audio.device);
 		let cursor = std::io::Cursor::new(data);
 

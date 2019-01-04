@@ -6,21 +6,27 @@ macro_rules! ctx {
 
 		static mut $name: Option<$type> = None;
 
-		fn init_ctx(c: $type) {
+		fn ctx_init(c: $type) {
 			unsafe {
 				$name = Some(c);
 			}
 		}
 
-		fn get_ctx() -> &'static $type {
+		fn ctx_get() -> &'static $type {
 			unsafe {
 				return $name.as_ref().expect("ctx not initialized");
 			}
 		}
 
-		fn get_ctx_mut() -> &'static mut $type {
+		fn ctx_get_mut() -> &'static mut $type {
 			unsafe {
 				return $name.as_mut().expect("ctx not initialized");
+			}
+		}
+
+		fn ctx_is_ok() -> bool {
+			unsafe {
+				return $name.is_some();
 			}
 		}
 
