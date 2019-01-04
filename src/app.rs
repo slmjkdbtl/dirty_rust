@@ -23,6 +23,7 @@ struct AppCtx {
 	platform: &'static str,
 	is_running: bool,
 	failed: bool,
+	errlog: String,
 	key_states: HashMap<Scancode, ButtonState>,
 	mouse_states: HashMap<MouseButton, ButtonState>,
 	dt: f32,
@@ -67,6 +68,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 		mouse_states: HashMap::new(),
 		is_running: false,
 		failed: false,
+		errlog: String::new(),
 		dt: 0.0,
 		time: 0.0,
 		frame: 0,
@@ -84,6 +86,7 @@ pub fn run(f: &mut FnMut()) {
 
 	let app = ctx_get();
 	let app_mut = ctx_get_mut();
+	let (width, height) = app::size();
 	let keyboard_state = app.events.keyboard_state();
 	let mouse_state = app.events.mouse_state();
 
@@ -122,7 +125,33 @@ pub fn run(f: &mut FnMut()) {
 		}
 
 		gfx::reset();
-		f();
+
+		if app.failed {
+
+			let dy = (app::time() * 0.2).sin() * 4.0;
+
+			gfx::clear();
+
+			gfx::push();
+			gfx::translate(vec2!(64, 64.0 + dy));
+			gfx::scale(vec2!(2.4));
+			gfx::text("OH NO ♪");
+			gfx::pop();
+
+			gfx::push();
+			gfx::translate(vec2!(64, 108.0 + dy));
+			gfx::scale(vec2!(1.2));
+			gfx::text(&app.errlog);
+			gfx::pop();
+
+			gfx::line_width(3);
+			gfx::color(color!(1, 1, 0, 1));
+			gfx::line(rand_vec2() * vec2!(width, height), rand_vec2() * vec2!(width, height));
+
+		} else {
+			f();
+		}
+
 		swap();
 
 		if !app.is_running {
@@ -177,6 +206,7 @@ pub fn error(log: &str) {
 	let app_mut = ctx_get_mut();
 
 	app_mut.failed = true;
+	app_mut.errlog = log.to_owned();
 
 }
 

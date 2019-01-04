@@ -216,7 +216,7 @@ pub fn push() {
 	if (stack.len() < 32) {
 		stack.push(g.renderer_2d.transform);
 	} else {
-		fail!("cannot push anymore");
+		app::error("cannot push anymore");
 	}
 
 }
@@ -231,7 +231,7 @@ pub fn pop() {
 			g.renderer_2d.transform = t;
 		},
 		None => {
-			fail!("cannot pop anymore");
+			app::error("cannot pop anymore");
 		}
 	}
 
@@ -445,7 +445,7 @@ impl Canvas {
 			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
 			if(!gl::CheckFramebufferStatus(gl::FRAMEBUFFER) == gl::FRAMEBUFFER_COMPLETE) {
-				fail!("canvas init failed");
+				app::error("canvas init failed");
 			}
 
 			gfx::clear();
@@ -880,7 +880,7 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 			);
 
 			log.set_len(log_length as usize);
-			fail!("{}", String::from_utf8(log).unwrap());
+			app::error(&format!("{}", String::from_utf8(log).unwrap()));
 
 		}
 

@@ -14,14 +14,3 @@ macro_rules! nested_macro {
 
 }
 
-macro_rules! fail {
-
-	($($arg:expr),*) => {
-
-		eprintln!($($arg),*);
-		std::process::exit(1);
-
-	};
-
-}
-
