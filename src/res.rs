@@ -14,7 +14,6 @@ ctx!(RES: ResCtx);
 struct ResCtx {
 	sprites: HashMap<&'static str, SpriteData>,
 	sounds: HashMap<&'static str, audio::Sound>,
-	music: HashMap<&'static str, audio::Music>,
 }
 
 pub fn init() {
@@ -22,7 +21,6 @@ pub fn init() {
 	ctx_init(ResCtx {
 		sprites: HashMap::new(),
 		sounds: HashMap::new(),
-		music: HashMap::new(),
 	});
 
 }
@@ -58,6 +56,11 @@ pub struct SpriteData {
 pub fn load_sprite(name: &'static str, img: &[u8]) {
 
 	let res_mut = ctx_get_mut();
+
+	if res_mut.sprites.get(name).is_some() {
+		app::error(&format!("{} already used", name));
+	}
+
 	let tex = gfx::Texture::from_bytes(&img);
 	let frames = vec![rect!(0, 0, 1, 1)];
 	let anims = HashMap::new();
@@ -75,6 +78,11 @@ pub fn load_sprite(name: &'static str, img: &[u8]) {
 pub fn load_spritesheet(name: &'static str, img: &[u8], json: &str) {
 
 	let res_mut = ctx_get_mut();
+
+	if res_mut.sprites.get(name).is_some() {
+		app::error(&format!("{} already used", name));
+	}
+
 	let tex = gfx::Texture::from_bytes(&img);
 	let (width, height) = (tex.width as f32, tex.height as f32);
 	let mut frames = vec![];
@@ -126,15 +134,11 @@ pub fn load_sound(name: &'static str, data: &'static [u8]) {
 
 	let res_mut = ctx_get_mut();
 
+	if res_mut.sounds.get(name).is_some() {
+		app::error(&format!("{} already used", name));
+	}
+
 	res_mut.sounds.insert(name, audio::Sound::from_bytes(data));
-
-}
-
-pub fn load_music(name: &'static str, data: &'static [u8]) {
-
-	let res_mut = ctx_get_mut();
-
-	res_mut.music.insert(name, audio::Music::from_bytes(data));
 
 }
 
@@ -144,9 +148,5 @@ pub fn sprite(name: &str) -> &SpriteData {
 
 pub fn sound(name: &str) -> &audio::Sound {
 	return &ctx_get().sounds[name];
-}
-
-pub fn music(name: &str) -> &audio::Music {
-	return &ctx_get().music[name];
 }
 
