@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 use rodio::Source;
 use rodio::Decoder;
+use rodio::Sink;
 use rodio::buffer::SamplesBuffer;
 
 use crate::*;
@@ -38,23 +39,38 @@ pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
-pub fn effect(track: &Track) {
+pub fn sound(sound: &Sound) {
 
 	let audio = ctx_get();
 
-	rodio::play_raw(&audio.device, track.to_buffer());
+	rodio::play_raw(&audio.device, sound.to_buffer());
 
 }
 
-pub fn play(track: &Track) {
-	let audio = ctx_get();
+pub fn play(music: &Music) {
+
+	let data = music.data.clone();
+
+	if let Ok(source) = rodio::Decoder::new(data) {
+		music.sink.append(source);
+	} else {
+		app::error("failed to decode audio");
+	}
+
 }
 
-pub fn pause(track: &Track) {
-	// ...
+pub fn pause(music: &Music) {
+	music.sink.pause();
 }
 
-pub struct Track {
+pub struct Music {
+
+	sink: Sink,
+	data: Cursor<Vec<u8>>,
+
+}
+
+pub struct Sound {
 
 	channels: u16,
 	samples_rate: u32,
@@ -62,7 +78,24 @@ pub struct Track {
 
 }
 
-impl Track {
+impl Music {
+
+	pub fn from_bytes(data: &[u8]) -> Self {
+
+		return Self {
+			data: Cursor::new(data.to_owned()),
+			sink: Sink::new(&ctx_get().device),
+		};
+
+	}
+
+	pub fn from_file(fname: &str) -> Self {
+		return Self::from_bytes(&fs::read_bytes(fname));
+	}
+
+}
+
+impl Sound {
 
 	pub fn from_bytes(data: &[u8]) -> Self {
 

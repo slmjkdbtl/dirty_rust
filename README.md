@@ -53,7 +53,7 @@ fn main() {
 
 		// input
 		if window::key_released(Key::Space) {
-			audio::play(res::sound("pop"));
+			audio::sound(res::sound("pop"));
 		}
 
 		if window::key_pressed(Key::F) {

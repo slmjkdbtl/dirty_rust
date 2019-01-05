@@ -13,7 +13,8 @@ ctx!(RES: ResCtx);
 
 struct ResCtx {
 	sprites: HashMap<&'static str, SpriteData>,
-	sounds: HashMap<&'static str, audio::Track>,
+	sounds: HashMap<&'static str, audio::Sound>,
+	music: HashMap<&'static str, audio::Music>,
 }
 
 pub fn init() {
@@ -21,6 +22,7 @@ pub fn init() {
 	ctx_init(ResCtx {
 		sprites: HashMap::new(),
 		sounds: HashMap::new(),
+		music: HashMap::new(),
 	});
 
 }
@@ -50,6 +52,23 @@ pub struct SpriteData {
 	pub tex: gfx::Texture,
 	pub frames: Vec<Rect>,
 	pub anims: HashMap<String, Anim>,
+
+}
+
+pub fn load_sprite(name: &'static str, img: &[u8]) {
+
+	let res_mut = ctx_get_mut();
+	let tex = gfx::Texture::from_bytes(&img);
+	let frames = vec![rect!(0, 0, 1, 1)];
+	let anims = HashMap::new();
+
+	let data = SpriteData {
+		tex: tex,
+		frames: frames,
+		anims: anims,
+	};
+
+	res_mut.sprites.insert(name, data);
 
 }
 
@@ -103,37 +122,31 @@ pub fn load_spritesheet(name: &'static str, img: &[u8], json: &str) {
 
 }
 
-pub fn sprite(name: &str) -> &SpriteData {
-	return &ctx_get().sprites[name];
-}
-
-pub fn load_sprite(name: &'static str, img: &[u8]) {
-
-	let res_mut = ctx_get_mut();
-	let tex = gfx::Texture::from_bytes(&img);
-	let (width, height) = (tex.width as f32, tex.height as f32);
-	let mut frames = vec![rect!(0, 0, 1, 1)];
-	let mut anims = HashMap::new();
-
-	let data = SpriteData {
-		tex: tex,
-		frames: frames,
-		anims: anims,
-	};
-
-	res_mut.sprites.insert(name, data);
-
-}
-
 pub fn load_sound(name: &'static str, data: &'static [u8]) {
 
 	let res_mut = ctx_get_mut();
 
-	res_mut.sounds.insert(name, audio::Track::from_bytes(data));
+	res_mut.sounds.insert(name, audio::Sound::from_bytes(data));
 
 }
 
-pub fn sound(name: &str) -> &audio::Track {
+pub fn load_music(name: &'static str, data: &'static [u8]) {
+
+	let res_mut = ctx_get_mut();
+
+	res_mut.music.insert(name, audio::Music::from_bytes(data));
+
+}
+
+pub fn sprite(name: &str) -> &SpriteData {
+	return &ctx_get().sprites[name];
+}
+
+pub fn sound(name: &str) -> &audio::Sound {
 	return &ctx_get().sounds[name];
+}
+
+pub fn music(name: &str) -> &audio::Music {
+	return &ctx_get().music[name];
 }
 

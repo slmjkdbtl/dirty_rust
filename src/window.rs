@@ -2,11 +2,12 @@
 
 //! Handles window and events
 
+use std::collections::HashMap;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 use sdl2::video::{Window, FullscreenType, SwapInterval};
-use std::collections::HashMap;
 
 use crate::*;
 use crate::math::*;

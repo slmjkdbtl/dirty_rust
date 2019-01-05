@@ -18,15 +18,11 @@ fn main() {
 	let mut index = 0;
 	let margin = 16;
 
-	res::load_sprite(
-		"car",
-		include_bytes!("car.png"),
-	);
+	res::load_spritesheet("car", include_bytes!("car.png"), include_str!("car.json"));
+	res::load_sound("pop", include_bytes!("pop.ogg"));
+	res::load_music("yo", include_bytes!("yo.ogg"));
 
-	res::load_sound(
-		"pop",
-		include_bytes!("pop.ogg")
-	);
+	audio::play(res::music("yo"));
 
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
@@ -86,7 +82,8 @@ fn main() {
 // 		gfx::render(&canvas);
 
 		if window::key_pressed(Key::Space) {
-			audio::effect(res::sound("pop"));
+			audio::pause(res::music("yo"));
+			audio::sound(res::sound("pop"));
 		}
 
 		if window::key_pressed(Key::F) {
