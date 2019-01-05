@@ -2,7 +2,10 @@
 
 //! Handles sounds
 
+use std::io::Cursor;
 use rodio::Source;
+use rodio::Decoder;
+use rodio::buffer::SamplesBuffer;
 use crate::*;
 
 // context
@@ -14,11 +17,17 @@ struct AudioCtx {
 
 pub fn init() {
 
-	let device = rodio::default_output_device().unwrap();
+	if !app::enabled() {
+		app::error("can't init audio without app");
+	}
 
-	ctx_init(AudioCtx {
-		device: device,
-	});
+	if let Some(device) = rodio::default_output_device() {
+		ctx_init(AudioCtx {
+			device: device,
+		});
+	} else {
+		app::error("cannot find audio device")
+	}
 
 }
 
@@ -29,38 +38,51 @@ pub fn enabled() -> bool {
 pub fn play(track: &Track) {
 
 	let audio = ctx_get();
-	let sink = &track.sink;
-	let data = track.cursor.clone();
-	let src = rodio::Decoder::new(data).unwrap().convert_samples();
 
-	rodio::play_raw(&audio.device, src);
+	rodio::play_raw(&audio.device, track.to_buffer());
 
 }
 
+pub fn play_music(track: &Track) {
+	// ...
+}
+
 pub fn pause(track: &Track) {
-	track.sink.pause();
 }
 
 pub struct Track {
 
-	sink: rodio::Sink,
-	cursor: std::io::Cursor<&'static [u8]>
+	channels: u16,
+	samples_rate: u32,
+	samples: Vec<f32>,
 
 }
 
 impl Track {
 
-	pub fn from_bytes(data: &'static [u8]) -> Self {
+	pub fn from_bytes(data: &[u8]) -> Self {
 
 		let audio = ctx_get();
 		let sink = rodio::Sink::new(&audio.device);
-		let cursor = std::io::Cursor::new(data);
+		let cursor = Cursor::new(data.to_owned());
+		let source = Decoder::new(cursor).unwrap();
 
 		return Self {
-			sink: sink,
-			cursor: cursor,
+
+			channels: source.channels(),
+			samples_rate: source.sample_rate(),
+			samples: source.convert_samples().collect::<Vec<f32>>(),
+
 		};
 
+	}
+
+	pub fn from_file(fname: &str) -> Self {
+		return Self::from_bytes(&fs::read_bytes(fname));
+	}
+
+	pub fn to_buffer(&self) -> SamplesBuffer<f32> {
+		return SamplesBuffer::new(self.channels, self.samples_rate, self.samples.clone());
 	}
 
 }

@@ -372,15 +372,11 @@ impl Texture {
 
 	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
 
-		unsafe {
+		let mut tex = Self::new(width, height);
 
-			let mut tex = Self::new(width, height);
+		tex.data(pixels);
 
-			tex.data(pixels);
-
-			return tex;
-
-		}
+		return tex;
 
 	}
 
