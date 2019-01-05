@@ -30,5 +30,9 @@ fn main() {
 		.subcommand(export)
 		.get_matches();
 
+	if matches.subcommand_matches("run").is_some() {
+		// ...
+	}
+
 }
 

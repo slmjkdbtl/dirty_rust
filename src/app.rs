@@ -16,8 +16,8 @@ struct AppCtx {
 	dt: f32,
 	time: f32,
 	frame: u64,
-	is_running: bool,
 	platform: &'static str,
+	failed: bool,
 
 }
 
@@ -27,10 +27,10 @@ pub fn init() {
 	ctx_init(AppCtx {
 
 		platform: sdl2::get_platform(),
-		is_running: false,
 		dt: 0.0,
 		time: 0.0,
 		frame: 0,
+		failed: false,
 
 	});
 
@@ -47,9 +47,7 @@ pub fn run(f: &mut FnMut()) {
 	let app = ctx_get();
 	let app_mut = ctx_get_mut();
 
-	app_mut.is_running = true;
-
-	'running: loop {
+	loop {
 
 		if window::enabled() {
 			window::poll_events();
@@ -65,10 +63,6 @@ pub fn run(f: &mut FnMut()) {
 			window::swap();
 		}
 
-		if !app.is_running {
-			break 'running;
-		}
-
 		app_mut.dt = 0.16;
 		app_mut.frame += 1;
 		app_mut.time += app.dt;
@@ -81,13 +75,20 @@ pub fn run(f: &mut FnMut()) {
 /// report error and go to error screen
 pub fn error(log: &str) {
 
+	let app = ctx_get();
+	let app_mut = ctx_get_mut();
+
+	if app.failed {
+		return;
+	}
+
+	app_mut.failed = true;
+
 	if gfx::enabled() && window::enabled() {
 
-		let app = ctx_get();
-		let app_mut = ctx_get_mut();
 		let (width, height) = window::size();
 
-		'error_log: loop {
+		loop {
 
 			let dy = (app::time() * 0.2).sin() * 4.0;
 

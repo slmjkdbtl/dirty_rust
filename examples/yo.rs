@@ -1,5 +1,7 @@
 // wengwengweng
 
+#![windows_subsystem = "windows"]
+
 use dirty::*;
 use dirty::math::*;
 

@@ -68,16 +68,33 @@ fn validate_path(path: &str) -> Result<String, ()> {
 
 }
 
+pub fn glob(path: &str) -> Vec<String> {
+
+	if let Ok(path) = validate_path(path) {
+		if let Ok(entries) = fs::read_dir(&path) {
+			return vec![];
+		} else {
+			app::error(&format!("failed to read dir \"{}\"", path));
+		}
+	} else {
+		app::error(&format!("failed to read dir \"{}\"", path));
+	}
+
+	return vec![];
+}
+
 pub fn read_bytes(path: &str) -> Vec<u8> {
 
 	if let Ok(path) = validate_path(path) {
-		return fs::read(&path).unwrap_or_else(|s| {
+		if let Ok(content) = fs::read(&path) {
+			return content;
+		} else {
 			app::error(&format!("failed to read file \"{}\"", path));
-			return Vec::new();
-		});
+		}
 	} else {
 		app::error(&format!("failed to read file \"{}\"", path));
 	}
+
 
 	return Vec::new();
 
@@ -86,10 +103,11 @@ pub fn read_bytes(path: &str) -> Vec<u8> {
 pub fn read_str(path: &str) -> String {
 
 	if let Ok(path) = validate_path(path) {
-		return fs::read_to_string(&path).unwrap_or_else(|s| {
+		if let Ok(content) = fs::read_to_string(&path) {
+			return content;
+		} else {
 			app::error(&format!("failed to read file \"{}\"", path));
-			return String::new();
-		});
+		}
 	} else {
 		app::error(&format!("failed to read file \"{}\"", path));
 	}

@@ -17,9 +17,11 @@ gl = "*"
 tobj = "*"
 num = "*"
 json = "*"
-core-foundation = "*"
 rlua = "*"
 clap = "*"
+
+[target.'cfg(target_os="macos")'.dependencies]
+core-foundation = "*"
 
 [dependencies.sdl2]
 version = "*"
