@@ -20,9 +20,12 @@ fn main() {
 	app::init();
 	window::init("yo", 640, 480);
 	gfx::init();
+	audio::init();
+	res::init();
 
-	// create a texture
-	let tex = gfx::Texture::from_bytes!(include_bytes!("yo.png"));
+	// load resources
+	res::load_sprite("yo", include_bytes!("yo.png"));
+	res::load_sound("pop", include_bytes!("pop.ogg"));
 
 	// main loop
 	app::run(&mut || {
@@ -33,7 +36,7 @@ fn main() {
 		// transforms
 		gfx::push();
 		gfx::translate(vec2!(120, 120));
-		gfx::scale(vec2!(1));
+		gfx::scale(vec2!(4));
 		gfx::color(color!(0, 0, 1, 1));
 
 		// draw text
@@ -45,10 +48,14 @@ fn main() {
 		gfx::color(color!(1));
 
 		// draw texture
-		gfx::draw(&tex, rect!(0, 0, 1, 1));
+		gfx::draw(&res::sprite("yo").tex, rect!(0, 0, 1, 1));
 		gfx::pop();
 
 		// input
+		if window::key_released(Key::Space) {
+			audio::play(res::sound("pop"));
+		}
+
 		if window::key_pressed(Key::F) {
 			window::set_fullscreen(!window::get_fullscreen())
 		}
@@ -60,7 +67,6 @@ fn main() {
 	});
 
 }
-
 ```
 more under `examples/`
 

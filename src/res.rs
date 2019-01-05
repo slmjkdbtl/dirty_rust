@@ -4,6 +4,8 @@
 
 use std::collections::HashMap;
 
+use aseprite::SpritesheetData;
+
 use crate::*;
 use crate::math::*;
 
@@ -37,8 +39,8 @@ pub enum AnimDir {
 #[derive(Debug)]
 pub struct Anim {
 
-	from: u8,
-	to: u8,
+	from: u32,
+	to: u32,
 	dir: AnimDir,
 
 }
@@ -51,56 +53,43 @@ pub struct SpriteData {
 
 }
 
-pub fn load_all_sprites(path: &str) {
-	// ...
-}
-
-pub fn load_sprite(name: &'static str, img: &[u8], json: &str) {
+pub fn load_spritesheet(name: &'static str, img: &[u8], json: &str) {
 
 	let res_mut = ctx_get_mut();
 	let tex = gfx::Texture::from_bytes(&img);
 	let (width, height) = (tex.width as f32, tex.height as f32);
 	let mut frames = vec![];
 	let mut anims = HashMap::new();
+	let data: SpritesheetData = serde_json::from_str(json).unwrap();
 
-	if let Ok(data) = json::parse(json) {
+	for f in data.frames {
 
-		for i in data["frames"].members() {
+		frames.push(rect!(
+			f.frame.x as f32 / width,
+			f.frame.y as f32 / height,
+			f.frame.w as f32 / width,
+			f.frame.h as f32 / height
+		));
 
-			let frame = &i["frame"];
-			let x = frame["x"].as_f32().unwrap();
-			let y = frame["y"].as_f32().unwrap();
-			let w = frame["w"].as_f32().unwrap();
-			let h = frame["h"].as_f32().unwrap();
+	}
 
-			frames.push(rect!(x / width, y / height, w / width, h / height));
+	if let Some(frame_tags) = data.meta.frame_tags {
 
-		}
+		for anim in frame_tags {
 
-		for i in data["meta"]["frameTags"].members() {
-
-			let label = i["name"].as_str().unwrap();
-			let from = i["from"].as_u8().unwrap();
-			let to = i["to"].as_u8().unwrap();
-
-			let dir = match i["direction"].as_str().unwrap() {
-				"forward" => AnimDir::Forward,
-				"reverse" => AnimDir::Reverse,
-				"pingpong" => AnimDir::PingPong,
-				_ => AnimDir::Forward,
+			let dir = match anim.direction {
+				aseprite::Direction::Forward => AnimDir::Forward,
+				aseprite::Direction::Reverse => AnimDir::Reverse,
+				aseprite::Direction::Pingpong => AnimDir::PingPong,
 			};
 
-			anims.insert(String::from(label), Anim {
-				from: from,
-				to: to,
+			anims.insert(anim.name, Anim {
+				from: anim.from,
+				to: anim.to,
 				dir: dir,
 			});
 
 		}
-
-	} else {
-
-		frames = vec![rect!(0, 0, 1, 1)];
 
 	}
 
@@ -114,8 +103,26 @@ pub fn load_sprite(name: &'static str, img: &[u8], json: &str) {
 
 }
 
-pub fn get_sprite(name: &str) -> &SpriteData {
+pub fn sprite(name: &str) -> &SpriteData {
 	return &ctx_get().sprites[name];
+}
+
+pub fn load_sprite(name: &'static str, img: &[u8]) {
+
+	let res_mut = ctx_get_mut();
+	let tex = gfx::Texture::from_bytes(&img);
+	let (width, height) = (tex.width as f32, tex.height as f32);
+	let mut frames = vec![rect!(0, 0, 1, 1)];
+	let mut anims = HashMap::new();
+
+	let data = SpriteData {
+		tex: tex,
+		frames: frames,
+		anims: anims,
+	};
+
+	res_mut.sprites.insert(name, data);
+
 }
 
 pub fn load_sound(name: &'static str, data: &'static [u8]) {
@@ -126,7 +133,7 @@ pub fn load_sound(name: &'static str, data: &'static [u8]) {
 
 }
 
-pub fn get_sound(name: &str) -> &audio::Track {
+pub fn sound(name: &str) -> &audio::Track {
 	return &ctx_get().sounds[name];
 }
 

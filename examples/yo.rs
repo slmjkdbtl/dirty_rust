@@ -21,7 +21,6 @@ fn main() {
 	res::load_sprite(
 		"car",
 		include_bytes!("car.png"),
-		include_str!("car.json")
 	);
 
 	res::load_sound(
@@ -29,7 +28,7 @@ fn main() {
 		include_bytes!("pop.ogg")
 	);
 
-	let sprite = res::get_sprite("car");
+	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
 	let frames = &sprite.frames;
 	let anims = &sprite.anims;
@@ -87,7 +86,7 @@ fn main() {
 // 		gfx::render(&canvas);
 
 		if window::key_pressed(Key::Space) {
-			audio::play(res::get_sound("pop"));
+			audio::effect(res::sound("pop"));
 		}
 
 		if window::key_pressed(Key::F) {
