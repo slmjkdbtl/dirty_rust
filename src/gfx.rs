@@ -2,11 +2,12 @@
 
 //! Handles rendering
 
-use gl::types::*;
 use std::ffi::CString;
 use std::ptr;
 use std::mem;
 use std::collections::HashMap;
+
+use gl::types::*;
 
 use crate::*;
 use crate::math::*;

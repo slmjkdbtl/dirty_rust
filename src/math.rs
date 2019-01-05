@@ -2,10 +2,12 @@
 
 //! Handles math
 
-use num;
 use core::ops;
 use core::cmp;
 use std::fmt;
+
+use num;
+
 use crate::*;
 
 macro_rules! gen_vec {

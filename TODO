@@ -19,6 +19,7 @@
 - [+] cache sounds
 - [+] audio
 - [+] res loader
+- [+] allow streaming sounds
 
 == DOING
 - [*] play audio with settings
