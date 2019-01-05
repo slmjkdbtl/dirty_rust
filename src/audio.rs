@@ -3,9 +3,12 @@
 //! Handles sounds
 
 use std::io::Cursor;
+use std::collections::HashMap;
+
 use rodio::Source;
 use rodio::Decoder;
 use rodio::buffer::SamplesBuffer;
+
 use crate::*;
 
 // context
@@ -35,7 +38,7 @@ pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
-pub fn play(track: &Track) {
+pub fn effect(track: &Track) {
 
 	let audio = ctx_get();
 
@@ -43,11 +46,12 @@ pub fn play(track: &Track) {
 
 }
 
-pub fn play_music(track: &Track) {
-	// ...
+pub fn play(track: &Track) {
+	let audio = ctx_get();
 }
 
 pub fn pause(track: &Track) {
+	// ...
 }
 
 pub struct Track {
@@ -62,8 +66,6 @@ impl Track {
 
 	pub fn from_bytes(data: &[u8]) -> Self {
 
-		let audio = ctx_get();
-		let sink = rodio::Sink::new(&audio.device);
 		let cursor = Cursor::new(data.to_owned());
 		let source = Decoder::new(cursor).unwrap();
 
@@ -81,7 +83,7 @@ impl Track {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 
-	pub fn to_buffer(&self) -> SamplesBuffer<f32> {
+	fn to_buffer(&self) -> SamplesBuffer<f32> {
 		return SamplesBuffer::new(self.channels, self.samples_rate, self.samples.clone());
 	}
 

@@ -16,9 +16,10 @@ rand = "*"
 gl = "*"
 tobj = "*"
 num = "*"
-json = "*"
 rlua = "*"
 clap = "*"
+serde_json = "*"
+aseprite = "*"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"
