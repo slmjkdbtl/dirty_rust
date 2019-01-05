@@ -20,9 +20,9 @@ fn main() {
 
 	res::load_spritesheet("car", include_bytes!("car.png"), include_str!("car.json"));
 	res::load_sound("pop", include_bytes!("pop.ogg"));
-	res::load_music("yo", include_bytes!("yo.ogg"));
+	res::load_sound("yo", include_bytes!("yo.ogg"));
 
-	audio::play(res::music("yo"));
+	audio::play(res::sound("yo"));
 
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
@@ -82,8 +82,7 @@ fn main() {
 // 		gfx::render(&canvas);
 
 		if window::key_pressed(Key::Space) {
-			audio::pause(res::music("yo"));
-			audio::sound(res::sound("pop"));
+			audio::play(res::sound("pop"));
 		}
 
 		if window::key_pressed(Key::F) {
