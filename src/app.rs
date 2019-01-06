@@ -18,7 +18,8 @@ struct AppCtx {
 	frame: u64,
 	platform: String,
 	failed: bool,
-	fps: u8,
+	fps_cap: u8,
+	fps: u32,
 
 }
 
@@ -32,7 +33,8 @@ pub fn init() {
 		time: 0.0,
 		frame: 0,
 		failed: false,
-		fps: 60,
+		fps_cap: 60,
+		fps: 0,
 
 	});
 
@@ -67,18 +69,23 @@ pub fn run(f: &mut FnMut()) {
 			window::swap();
 		}
 
-		let dt = Instant::now() - start_time;
-		let expected_dt = Duration::from_millis(1000 / app.fps as u64);
-		let mut actual_dt = dt;
+		let actual_dt = start_time.elapsed();
+		let actual_dt = actual_dt.as_secs() as f32 * 1000.0 + actual_dt.subsec_millis() as f32;
+		let expected_dt = 1000.0 / app.fps_cap as f32;
 
-		if expected_dt > dt {
-			actual_dt = expected_dt - dt;
+		if expected_dt > actual_dt {
+			app_mut.dt = expected_dt as f32 / 1000.0;
+			thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
+		} else {
+			app_mut.dt = actual_dt as f32 / 1000.0;
 		}
 
-		app_mut.dt = actual_dt.as_secs() as f32 + actual_dt.subsec_millis() as f32 / 100.0;
 		app_mut.frame += 1;
 		app_mut.time += app.dt;
-		thread::sleep(actual_dt);
+
+		if app.dt != 0.0 {
+			app_mut.fps = (1.0 / app.dt) as u32;
+		}
 
 	}
 
@@ -102,7 +109,7 @@ pub fn error(log: &str) {
 
 		run(&mut || {
 
-			let dy = (app::time() * 0.2).sin() * 4.0;
+			let dy = (app::time() * 2.0).sin() * 4.0;
 
 			gfx::clear();
 
@@ -138,13 +145,18 @@ pub fn error(log: &str) {
 }
 
 /// set the expected fps
-pub fn set_fps(f: u8) {
-	ctx_get_mut().fps = f;
+pub fn set_fps_cap(f: u8) {
+	ctx_get_mut().fps_cap = f;
 }
 
 /// get delta time between frames
 pub fn dt() -> f32 {
 	return ctx_get().dt;
+}
+
+/// get current framerate
+pub fn fps() -> u32 {
+	return ctx_get().fps;
 }
 
 /// get total number of frames passed

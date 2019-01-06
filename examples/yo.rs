@@ -52,7 +52,7 @@ fn main() {
 		gfx::translate(vec2!(196, 164));
 		gfx::scale(vec2!(2));
 		gfx::translate(vec2!(64));
-		gfx::rotate(((app::time() * 0.2).sin() * 8.0).to_radians());
+		gfx::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
 		gfx::translate(vec2!(-64));
 
 		let pts: Vec<Vec2> = pts.iter()
@@ -60,6 +60,7 @@ fn main() {
 			.collect();
 
 		gfx::draw(&tex, rect!((index as f32) * 0.25, 0, 0.25, 1));
+		println!("{}", app::fps());
 		gfx::pop();
 
 		gfx::line_width(3);
@@ -72,7 +73,7 @@ fn main() {
 
 		gfx::color(color!(1));
 		gfx::push();
-		gfx::translate(vec2!(64, 64.0 + (app::time() * 0.2).sin() * 4.0));
+		gfx::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
 		gfx::pop();
