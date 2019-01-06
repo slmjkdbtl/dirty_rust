@@ -18,9 +18,8 @@ fn main() {
 	let mut index = 0;
 	let margin = 16;
 
-	res::load_spritesheet("car", include_bytes!("car.png"), include_str!("car.json"));
-	res::load_sound("pop", include_bytes!("pop.ogg"));
-	res::load_sound("yo", include_bytes!("yo.ogg"));
+	res::load_sprites("examples/", vec!["car"]);
+	res::load_sounds("examples/", vec!["pop", "yo"]);
 
 	audio::play(res::sound("yo"));
 

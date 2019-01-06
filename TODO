@@ -19,7 +19,7 @@
 - [+] cache sounds
 - [+] audio
 - [+] res loader
-- [+] allow streaming sounds
+- [+] glob loader
 
 == DOING
 - [*] play audio with settings
