@@ -12,8 +12,8 @@ use crate::math::*;
 ctx!(RES: ResCtx);
 
 struct ResCtx {
-	sprites: HashMap<&'static str, SpriteData>,
-	sounds: HashMap<&'static str, audio::Sound>,
+	sprites: HashMap<String, SpriteData>,
+	sounds: HashMap<String, audio::Sound>,
 }
 
 pub fn init() {
@@ -53,7 +53,54 @@ pub struct SpriteData {
 
 }
 
-pub fn load_sprite(name: &'static str, img: &[u8]) {
+pub fn load_all_sprites(dir: &str) {
+
+	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+		.iter()
+		.map(|f| fs::basename(f))
+		.collect();
+
+	load_sprites(dir, files.iter().map(|s| s.as_ref()).collect());
+
+}
+
+pub fn load_all_sounds(dir: &str) {
+
+	let files: Vec<String> = fs::glob(&format!("{}*.ogg", dir))
+		.iter()
+		.map(|f| fs::basename(f))
+		.collect();
+
+	load_sounds(dir, files.iter().map(|s| s.as_ref()).collect());
+
+}
+
+pub fn load_sprites(dir: &str, names: Vec<&str>) {
+
+	for name in names {
+
+		let img = format!("{}{}.png", dir, name);
+		let json = format!("{}{}.json", dir, name);
+
+		if fs::exists(&json) {
+			load_spritesheet(name, &fs::read_bytes(&img), &fs::read_str(&json));
+		} else {
+			load_sprite(name, &fs::read_bytes(&img));
+		}
+
+	}
+
+}
+
+pub fn load_sounds(dir: &str, names: Vec<&str>) {
+
+	for name in names {
+		load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
+	}
+
+}
+
+pub fn load_sprite(name: &str, img: &[u8]) {
 
 	let res_mut = ctx_get_mut();
 
@@ -71,11 +118,11 @@ pub fn load_sprite(name: &'static str, img: &[u8]) {
 		anims: anims,
 	};
 
-	res_mut.sprites.insert(name, data);
+	res_mut.sprites.insert(name.to_owned(), data);
 
 }
 
-pub fn load_spritesheet(name: &'static str, img: &[u8], json: &str) {
+pub fn load_spritesheet(name: &str, img: &[u8], json: &str) {
 
 	let res_mut = ctx_get_mut();
 
@@ -126,11 +173,11 @@ pub fn load_spritesheet(name: &'static str, img: &[u8], json: &str) {
 		anims: anims,
 	};
 
-	res_mut.sprites.insert(name, data);
+	res_mut.sprites.insert(name.to_owned(), data);
 
 }
 
-pub fn load_sound(name: &'static str, data: &'static [u8]) {
+pub fn load_sound(name: &str, data: &[u8]) {
 
 	let res_mut = ctx_get_mut();
 
@@ -138,7 +185,7 @@ pub fn load_sound(name: &'static str, data: &'static [u8]) {
 		app::error(&format!("{} already used", name));
 	}
 
-	res_mut.sounds.insert(name, audio::Sound::from_bytes(data));
+	res_mut.sounds.insert(name.to_owned(), audio::Sound::from_bytes(data));
 
 }
 

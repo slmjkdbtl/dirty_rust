@@ -18,6 +18,7 @@ tobj = "*"
 num = "*"
 rlua = "*"
 clap = "*"
+glob = "*"
 serde_json = "*"
 aseprite = "*"
 
