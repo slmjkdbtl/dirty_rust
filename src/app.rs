@@ -3,7 +3,7 @@
 //! Handles time and main loop
 
 use std::thread;
-use std::time;
+use std::time::{Instant, Duration};
 
 use crate::*;
 use crate::math::*;
@@ -16,8 +16,9 @@ struct AppCtx {
 	dt: f32,
 	time: f32,
 	frame: u64,
-	platform: &'static str,
+	platform: String,
 	failed: bool,
+	fps: u8,
 
 }
 
@@ -26,11 +27,12 @@ pub fn init() {
 
 	ctx_init(AppCtx {
 
-		platform: sdl2::get_platform(),
+		platform: sdl2::get_platform().to_owned(),
 		dt: 0.0,
 		time: 0.0,
 		frame: 0,
 		failed: false,
+		fps: 60,
 
 	});
 
@@ -49,6 +51,8 @@ pub fn run(f: &mut FnMut()) {
 
 	loop {
 
+		let start_time = Instant::now();
+
 		if window::enabled() {
 			window::poll_events();
 		}
@@ -63,10 +67,18 @@ pub fn run(f: &mut FnMut()) {
 			window::swap();
 		}
 
-		app_mut.dt = 0.16;
+		let dt = Instant::now() - start_time;
+		let expected_dt = Duration::from_millis(1000 / app.fps as u64);
+		let mut actual_dt = dt;
+
+		if expected_dt > dt {
+			actual_dt = expected_dt - dt;
+		}
+
+		app_mut.dt = actual_dt.as_secs() as f32 + actual_dt.subsec_millis() as f32 / 100.0;
 		app_mut.frame += 1;
 		app_mut.time += app.dt;
-		thread::sleep(time::Duration::from_millis(16));
+		thread::sleep(actual_dt);
 
 	}
 
@@ -88,12 +100,10 @@ pub fn error(log: &str) {
 
 		let (width, height) = window::size();
 
-		loop {
+		run(&mut || {
 
 			let dy = (app::time() * 0.2).sin() * 4.0;
 
-			window::poll_events();
-			gfx::reset();
 			gfx::clear();
 
 			gfx::push();
@@ -116,14 +126,7 @@ pub fn error(log: &str) {
 				app::bad_quit();
 			}
 
-			window::swap();
-
-			app_mut.dt = 0.16;
-			app_mut.frame += 1;
-			app_mut.time += app.dt;
-			thread::sleep(time::Duration::from_millis(16));
-
-		}
+		});
 
 	} else {
 
@@ -132,6 +135,11 @@ pub fn error(log: &str) {
 
 	}
 
+}
+
+/// set the expected fps
+pub fn set_fps(f: u8) {
+	ctx_get_mut().fps = f;
 }
 
 /// get delta time between frames

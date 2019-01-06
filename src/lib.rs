@@ -20,6 +20,7 @@ pub mod window;
 pub mod gfx;
 pub mod audio;
 pub mod res;
+pub mod ecs;
 pub mod col;
 pub mod math;
 pub mod lua;

@@ -56,26 +56,26 @@ pub struct SpriteData {
 pub fn load_all_sprites(dir: &str) {
 
 	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
-		.iter()
-		.map(|f| fs::basename(f))
+		.into_iter()
+		.map(|f| fs::basename(&f))
 		.collect();
 
-	load_sprites(dir, files.iter().map(|s| s.as_ref()).collect());
+	load_sprites(dir, &files.iter().map(|s| s.as_ref()).collect());
 
 }
 
 pub fn load_all_sounds(dir: &str) {
 
 	let files: Vec<String> = fs::glob(&format!("{}*.ogg", dir))
-		.iter()
-		.map(|f| fs::basename(f))
+		.into_iter()
+		.map(|f| fs::basename(&f))
 		.collect();
 
-	load_sounds(dir, files.iter().map(|s| s.as_ref()).collect());
+	load_sounds(dir, &files.iter().map(|s| s.as_ref()).collect());
 
 }
 
-pub fn load_sprites(dir: &str, names: Vec<&str>) {
+pub fn load_sprites(dir: &str, names: &Vec<&str>) {
 
 	for name in names {
 
@@ -92,7 +92,7 @@ pub fn load_sprites(dir: &str, names: Vec<&str>) {
 
 }
 
-pub fn load_sounds(dir: &str, names: Vec<&str>) {
+pub fn load_sounds(dir: &str, names: &Vec<&str>) {
 
 	for name in names {
 		load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
