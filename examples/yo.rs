@@ -18,8 +18,8 @@ fn main() {
 	let mut index = 0;
 	let margin = 16;
 
-	res::load_sprites("examples/", vec!["car"]);
-	res::load_sounds("examples/", vec!["pop", "yo"]);
+	res::load_sprites("examples/", &vec!["car"]);
+	res::load_sounds("examples/", &vec!["pop", "yo"]);
 
 	audio::play(res::sound("yo"));
 

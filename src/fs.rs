@@ -2,12 +2,12 @@
 
 //! Handles filesystems
 
-#[cfg(target_os = "macos")]
-use core_foundation::bundle;
-
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::env;
+
+#[cfg(target_os = "macos")]
+use core_foundation::bundle;
 
 use crate::*;
 
