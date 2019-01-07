@@ -3,7 +3,6 @@
 //! Handles collision detection
 
 use crate::*;
-use crate::math::*;
 
 type Poly = Vec<Vec2>;
 

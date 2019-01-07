@@ -92,7 +92,7 @@ fn bind(lua: &Lua) -> Result<()> {
 
 }
 
-pub fn run(code: &str) -> Result<()> {
+pub fn run_str(code: &str) -> Result<()> {
 
 	let lua = Lua::new();
 
@@ -101,5 +101,9 @@ pub fn run(code: &str) -> Result<()> {
 
 	return Ok(());
 
+}
+
+pub fn run(fname: &str) -> Result<()> {
+	return run_str(&fs::read_str(fname));
 }
 
