@@ -38,8 +38,8 @@ fn bind(lua: &Lua) -> Result<()> {
 		app::dt()
 	});
 
-	bind_func!("app_frame", (): () -> {
-		app::frame()
+	bind_func!("app_fps", (): () -> {
+		app::fps()
 	});
 
 	bind_func!("app_error", (msg): (String) -> {

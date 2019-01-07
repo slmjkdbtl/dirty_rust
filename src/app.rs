@@ -15,11 +15,9 @@ struct AppCtx {
 
 	dt: f32,
 	time: f32,
-	frame: u64,
 	platform: String,
 	failed: bool,
 	fps_cap: u8,
-	fps: u32,
 
 }
 
@@ -31,10 +29,8 @@ pub fn init() {
 		platform: sdl2::get_platform().to_owned(),
 		dt: 0.0,
 		time: 0.0,
-		frame: 0,
 		failed: false,
 		fps_cap: 60,
-		fps: 0,
 
 	});
 
@@ -80,12 +76,7 @@ pub fn run(f: &mut FnMut()) {
 			app_mut.dt = actual_dt as f32 / 1000.0;
 		}
 
-		app_mut.frame += 1;
 		app_mut.time += app.dt;
-
-		if app.dt != 0.0 {
-			app_mut.fps = (1.0 / app.dt) as u32;
-		}
 
 	}
 
@@ -156,12 +147,7 @@ pub fn dt() -> f32 {
 
 /// get current framerate
 pub fn fps() -> u32 {
-	return ctx_get().fps;
-}
-
-/// get total number of frames passed
-pub fn frame() -> u64 {
-	return ctx_get().frame;
+	return (1.0 / ctx_get().dt) as u32;
 }
 
 /// get actual time since running

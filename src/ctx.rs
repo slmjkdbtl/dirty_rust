@@ -14,13 +14,13 @@ macro_rules! ctx {
 
 		fn ctx_get() -> &'static $type {
 			unsafe {
-				return $state.as_ref().expect("ctx not initialized");
+				return $state.as_ref().expect(&format!("{} not initialized", stringify!($state).to_lowercase()));
 			}
 		}
 
 		fn ctx_get_mut() -> &'static mut $type {
 			unsafe {
-				return $state.as_mut().expect("ctx not initialized");
+				return $state.as_mut().expect(&format!("{} not initialized", stringify!($state).to_lowercase()));
 			}
 		}
 

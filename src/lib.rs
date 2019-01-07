@@ -13,7 +13,6 @@
 mod ctx;
 #[macro_use]
 mod utils;
-pub mod fs;
 
 pub mod app;
 pub mod window;
@@ -23,6 +22,7 @@ pub mod res;
 pub mod ecs;
 pub mod col;
 pub mod math;
+pub mod fs;
 pub mod lua;
 
 pub use sdl2::keyboard::Scancode as Key;
