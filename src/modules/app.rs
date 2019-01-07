@@ -84,6 +84,13 @@ pub fn run(f: &mut FnMut()) {
 /// report error and go to error screen
 pub fn error(log: &str) {
 
+	if !app::enabled() {
+
+		eprintln!("{}", log);
+		app::bad_quit();
+
+	}
+
 	let app = ctx_get();
 	let app_mut = ctx_get_mut();
 
