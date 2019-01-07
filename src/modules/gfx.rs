@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use gl::types::*;
 
 use crate::*;
-use crate::math::*;
 
 // context
 ctx!(GFX: GfxCtx);

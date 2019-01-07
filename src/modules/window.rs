@@ -10,7 +10,6 @@ use sdl2::mouse::MouseButton;
 use sdl2::video::{Window, FullscreenType, SwapInterval};
 
 use crate::*;
-use crate::math::*;
 
 // context
 ctx!(WINDOW: WindowCtx);
