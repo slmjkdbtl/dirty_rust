@@ -16,11 +16,11 @@ rand = "*"
 gl = "*"
 tobj = "*"
 num = "*"
-rlua = "*"
 clap = "*"
 glob = "*"
 serde_json = "*"
 aseprite = "*"
+rlua = "*"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"
