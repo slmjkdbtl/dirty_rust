@@ -62,8 +62,8 @@ pub fn init() {
 	mesh.make_index_buf(&indices);
 
 	let program = Program::new(
-		include_str!("shaders/quad.vert").to_owned(),
-		include_str!("shaders/quad.frag").to_owned()
+		include_str!("../shaders/quad.vert").to_owned(),
+		include_str!("../shaders/quad.frag").to_owned()
 	);
 
 	program
@@ -72,7 +72,7 @@ pub fn init() {
 		.link();
 
 	let default_font = Font::new(
-		Texture::from_bytes(include_bytes!("misc/CP437.png")),
+		Texture::from_bytes(include_bytes!("../misc/CP437.png")),
 		32,
 		8,
 		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,

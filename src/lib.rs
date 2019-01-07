@@ -4,6 +4,9 @@
 //! simple toolkit for creating game-like experiences
 
 #![crate_name = "dirty"]
+#![deny(clippy::all)]
+#![deny(clippy::implicit_return)]
+#![deny(clippy::shadow_same)]
 
 #[macro_use]
 mod utils;

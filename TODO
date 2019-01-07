@@ -1,45 +1,47 @@
 # wengwengweng
 
 == DONE
-- [+] basic window creation
-- [+] basic 2d rendering
-- [+] 2d global transforms
-- [+] 2d primitives
-- [+] use macros to generate vector structs
-- [+] vector operation overloads
-- [+] keyboard inputs
-- [+] fix macro import
-- [+] default font * bitmap font rendering
-- [+] window configs / queries
-- [+] 2d point game/screen transform
-- [+] frame buffers
-- [+] read from macos resources folder
-- [+] error screen
-- [+] allow windowless
-- [+] cache sounds
-- [+] audio
-- [+] res loader
-- [+] glob loader
-- [+] time stuff
+- basic window creation
+- basic 2d rendering
+- 2d global transforms
+- 2d primitives
+- use macros to generate vector structs
+- vector operation overloads
+- keyboard inputs
+- fix macro import
+- default font * bitmap font rendering
+- window configs / queries
+- 2d point game/screen transform
+- frame buffers
+- read from macos resources folder
+- error screen
+- allow windowless
+- cache sounds
+- audio
+- res loader
+- glob loader
+- time stuff
 
 == DOING
-- [*] play audio with settings
-- [*] frame buffer upside-down bug
-- [*] mouse inputs
-- [*] documenting
-- [*] cli to run/export lua
-- [*] lua binding
+- play audio with settings
+- frame buffer upside-down bug
+- mouse inputs
+- documenting
+- cli to run/export lua
+- lua binding
+- dyon binding
 
 == TO DO
-- [ ] custom shaders
-- [ ] 3d
-- [ ] ecs
-- [ ] collision detections
-- [ ] imgui
-- [ ] editor
-- [ ] particle system
-- [ ] cap framerate
-- [ ] sprite batching
-- [ ] vector swizzle fields
-- [ ] try gfx
+- custom shaders
+- 3d
+- ecs
+- collision detections
+- imgui
+- editor
+- particle system
+- cap framerate
+- sprite batching
+- vector swizzle fields
+- try gfx
+- web
 

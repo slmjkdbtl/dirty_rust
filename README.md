@@ -12,7 +12,6 @@ not on crates.io yet due to duplicate crate name
 ### example
 ```rust
 use dirty::*;
-use dirty::math::*;
 
 fn main() {
 

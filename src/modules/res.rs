@@ -44,6 +44,14 @@ pub struct Anim {
 
 }
 
+pub struct SD {
+
+	pub tex: gfx::Texture,
+	pub frames: Vec<Rect>,
+	pub anims: HashMap<String, Anim>,
+
+}
+
 pub struct SpriteData {
 
 	pub tex: gfx::Texture,

@@ -1,9 +1,6 @@
 // wengwengweng
 
-#![windows_subsystem = "windows"]
-
 use dirty::*;
-use dirty::math::*;
 
 fn main() {
 
@@ -59,7 +56,7 @@ fn main() {
 			.map(|&p| gfx::warp(p))
 			.collect();
 
-		gfx::draw(&tex, rect!((index as f32) * 0.25, 0, 0.25, 1));
+		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
 		gfx::line_width(3);
