@@ -60,7 +60,6 @@ fn main() {
 			.collect();
 
 		gfx::draw(&tex, rect!((index as f32) * 0.25, 0, 0.25, 1));
-		println!("{}", app::fps());
 		gfx::pop();
 
 		gfx::line_width(3);
