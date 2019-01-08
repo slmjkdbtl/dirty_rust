@@ -34,19 +34,25 @@ macro_rules! gen_vec {
 
 		}
 
+		/// $name
 		#[derive(Debug, Copy, Clone, Default, PartialEq)]
 		pub struct $name {
-			$(pub $member: $type),+
+			$(
+			/// $member
+			pub $member: $type
+			),+
 		}
 
 		impl $name {
 
+			/// initialize $name specifying all fields
 			pub fn new($($member: $type,)+) -> Self {
 				return Self {
 					$($member: $member,)+
 				};
 			}
 
+			/// initialize $name with same values in all fields
 			pub fn all(x: $type) -> Self {
 				return Self {
 					$($member: x,)+

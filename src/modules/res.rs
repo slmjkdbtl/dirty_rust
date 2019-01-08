@@ -15,6 +15,7 @@ struct ResCtx {
 	sounds: HashMap<String, audio::Sound>,
 }
 
+/// initialize res module
 pub fn init() {
 
 	ctx_init(ResCtx {
@@ -24,34 +25,48 @@ pub fn init() {
 
 }
 
+/// check if res is initialized
 pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+/// anim direction
 pub enum AnimDir {
+	/// forward
 	Forward,
+	/// reverse
 	Reverse,
+	/// pingpong
 	PingPong,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+/// anim
 pub struct Anim {
 
-	from: u32,
-	to: u32,
-	dir: AnimDir,
+	/// from frame
+	pub from: u32,
+	/// to frame
+	pub to: u32,
+	/// direction
+	pub dir: AnimDir,
 
 }
 
+/// sprite data
 pub struct SpriteData {
 
+	/// texture
 	pub tex: gfx::Texture,
+	/// frames
 	pub frames: Vec<Rect>,
+	/// anims
 	pub anims: HashMap<String, Anim>,
 
 }
 
+/// load all sprites from given directory
 pub fn load_all_sprites(dir: &str) {
 
 	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
@@ -63,6 +78,7 @@ pub fn load_all_sprites(dir: &str) {
 
 }
 
+/// load all sounds from given directory
 pub fn load_all_sounds(dir: &str) {
 
 	let files: Vec<String> = fs::glob(&format!("{}*.ogg", dir))
@@ -74,6 +90,7 @@ pub fn load_all_sounds(dir: &str) {
 
 }
 
+/// load all sprites from given directory with given names
 pub fn load_sprites(dir: &str, names: &Vec<&str>) {
 
 	for name in names {
@@ -91,6 +108,7 @@ pub fn load_sprites(dir: &str, names: &Vec<&str>) {
 
 }
 
+/// load all sounds from given directory with given names
 pub fn load_sounds(dir: &str, names: &Vec<&str>) {
 
 	for name in names {
@@ -99,6 +117,7 @@ pub fn load_sounds(dir: &str, names: &Vec<&str>) {
 
 }
 
+/// load a sprite with raw image data
 pub fn load_sprite(name: &str, img: &[u8]) {
 
 	let res_mut = ctx_get_mut();
@@ -121,6 +140,7 @@ pub fn load_sprite(name: &str, img: &[u8]) {
 
 }
 
+/// load a spritesheet with raw image data and json data
 pub fn load_spritesheet(name: &str, img: &[u8], json: &str) {
 
 	let res_mut = ctx_get_mut();
@@ -176,6 +196,7 @@ pub fn load_spritesheet(name: &str, img: &[u8], json: &str) {
 
 }
 
+/// load a sound with raw data
 pub fn load_sound(name: &str, data: &[u8]) {
 
 	let res_mut = ctx_get_mut();
@@ -188,10 +209,12 @@ pub fn load_sound(name: &str, data: &[u8]) {
 
 }
 
+/// get sprite that is loaded with given name
 pub fn sprite(name: &str) -> &SpriteData {
 	return &ctx_get().sprites[name];
 }
 
+/// get sound that is loaded with given name
 pub fn sound(name: &str) -> &audio::Sound {
 	return &ctx_get().sounds[name];
 }

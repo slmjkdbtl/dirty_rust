@@ -17,6 +17,7 @@ struct AudioCtx {
 	device: rodio::Device,
 }
 
+/// initialize audio module
 pub fn init() {
 
 	if !app::enabled() {
@@ -29,20 +30,25 @@ pub fn init() {
 
 }
 
+/// check if audio module is initialized
 pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
+/// play a given sound once till end
 pub fn play(sound: &Sound) {
 	rodio::play_raw(&ctx_get().device, sound.buffer.clone().convert_samples());
 }
 
+/// sound
 pub struct Sound {
+	/// buffer
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
 }
 
 impl Sound {
 
+	/// create a sound from bytes
 	pub fn from_bytes(data: &[u8]) -> Self {
 
 		let cursor = Cursor::new(data.to_owned());
@@ -54,6 +60,7 @@ impl Sound {
 
 	}
 
+	/// create a sound from file
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
