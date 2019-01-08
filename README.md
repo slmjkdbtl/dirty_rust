@@ -71,7 +71,7 @@ more under `examples/`
 ### notes
 
 - this lib is more opinionated than idiomatic, upon initialization each module has its hidden `static` state that dies when program ends
-- `app::init()` also redefines the panic behavior (also display messages to screen if `window` is initiated)
-- currently using OpenGL 2.0 to support legacy machines, might change to gfx-rs in the future
+- `app::init()` also overrides the panic behavior (also display messages to screen if `window` is initiated)
+- currently using OpenGL 2.1 for better compatibility, might change to gfx-rs in the future
 - planning on supporting various scripting tools, currently doing lua and ketos, help wanted
 

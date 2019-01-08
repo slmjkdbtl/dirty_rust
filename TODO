@@ -9,7 +9,8 @@
 - vector operation overloads
 - keyboard inputs
 - fix macro import
-- default font * bitmap font rendering
+- default font
+- bitmap font rendering
 - window configs / queries
 - 2d point game/screen transform
 - frame buffers
@@ -26,11 +27,12 @@
 - documenting
 
 == DOING
+- sprite batching
 - play audio with settings
 - frame buffer upside-down bug
 - mouse inputs
-- cli to run/export lua
-- lua binding
+- lua bindings
+- ketos bindings
 
 == TO DO
 - custom shaders
@@ -41,7 +43,6 @@
 - editor
 - particle system
 - async resource loading
-- sprite batching
 - vector swizzle fields
 - try gfx
 - web
