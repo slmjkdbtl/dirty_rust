@@ -9,6 +9,12 @@ fn main() {
 	audio::init();
 	res::init();
 
+	ketos::run_code(r#"
+		(define (foo a)
+			(* a 2))
+		(println "yo")
+	"#);
+
 	let (width, height) = window::size();
 	let canvas = gfx::Canvas::new(width, height);
 	let mut index = 0;

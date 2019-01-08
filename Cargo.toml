@@ -10,19 +10,37 @@ license = "Zlib"
 edition = "2018"
 
 [dependencies]
-image = "*"
-rodio = "*"
-rand = "*"
-gl = "*"
-tobj = "*"
-num = "*"
-glob = "*"
-serde_json = "*"
-aseprite = "*"
-rlua = "*"
-sdl2 = { version = "*", features = ["static-link", "bundled"] }
-serde = { version = "*", features = ["derive"] }
 
+# gfx
+gl = "*"
+image = "*"
+tobj = "*"
+
+# audio
+rodio = "*"
+
+# window
+sdl2 = { version = "*", features = ["static-link", "bundled"] }
+
+# file
+glob = "*"
+
+# serde
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+
+# math
+rand = "*"
+
+# misc
+num = "*"
+aseprite = "*"
+
+# bindings
+rlua = "*"
+ketos = "*"
+
+# macos
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"
 

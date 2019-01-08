@@ -3,16 +3,12 @@
 //! Common File Related Functions
 
 use std::fs;
-use std::env;
 use std::path::Path;
 
 #[cfg(target_os = "macos")]
-use core_foundation::bundle;
-
-use crate::*;
-
-#[cfg(target_os = "macos")]
 fn get_res_dir() -> String {
+
+	use core_foundation::bundle;
 
 	let bundle = bundle::CFBundle::main_bundle();
 
@@ -34,6 +30,8 @@ fn get_res_dir() -> String {
 
 #[cfg(not(target_os = "macos"))]
 fn get_res_dir() -> String {
+
+	use std::env;
 
 	return env::current_exe()
 		.expect("Cannot get application dir")
@@ -110,9 +108,6 @@ pub fn read_bytes(path: &str) -> Vec<u8> {
 		panic!("failed to read file \"{}\"", path);
 	}
 
-
-	return Vec::new();
-
 }
 
 /// get string read from given file
@@ -128,8 +123,6 @@ pub fn read_str(path: &str) -> String {
 		panic!("failed to read file \"{}\"", path);
 	}
 
-	return String::new();
-
 }
 
 /// get the basename of given file
@@ -144,8 +137,6 @@ pub fn basename(path: &str) -> String {
 	} else {
 		panic!("failed to read file \"{}\"", path);
 	}
-
-	return String::new();
 
 }
 
