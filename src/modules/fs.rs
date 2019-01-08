@@ -3,6 +3,7 @@
 //! Common File Related Functions
 
 use std::fs;
+use std::env;
 use std::path::Path;
 
 #[cfg(target_os = "macos")]
