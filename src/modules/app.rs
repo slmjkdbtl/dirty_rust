@@ -4,6 +4,7 @@
 
 use std::thread;
 use std::time::{Instant, Duration};
+use std::panic;
 
 use crate::*;
 
@@ -22,6 +23,75 @@ struct AppCtx {
 
 /// init app
 pub fn init() {
+
+	panic::set_hook(Box::new(|info| {
+
+		let log: &str;
+
+		if let Some(s) = info.payload().downcast_ref::<&str>() {
+			log = s;
+		} else if let Some(s) = info.payload().downcast_ref::<String>() {
+			log = &s;
+		} else {
+			log = "nonono";
+		}
+
+		if !app::enabled() {
+
+			eprintln!("{}", log);
+			return;
+
+		}
+
+		let app = ctx_get();
+		let app_mut = ctx_get_mut();
+
+		if app.failed {
+			return;
+		}
+
+		app_mut.failed = true;
+
+		if gfx::enabled() && window::enabled() {
+
+			let (width, height) = window::size();
+
+			run(&mut || {
+
+				let dy = (app::time() * 2.0).sin() * 4.0;
+
+				gfx::clear();
+
+				gfx::push();
+				gfx::translate(vec2!(64, 64.0 + dy));
+				gfx::scale(vec2!(2.4));
+				gfx::text("ERROR ♪");
+				gfx::pop();
+
+				gfx::push();
+				gfx::translate(vec2!(64, 108.0 + dy));
+				gfx::scale(vec2!(1.2));
+				gfx::text(log);
+				gfx::pop();
+
+				gfx::line_width(3);
+				gfx::color(color!(1, 1, 0, 1));
+				gfx::line(math::rand_vec2() * vec2!(width, height), math::rand_vec2() * vec2!(width, height));
+
+				if window::key_pressed(Key::Escape) {
+					app::bad_quit();
+				}
+
+			});
+
+		} else {
+
+			eprintln!("{}", log);
+			return;
+
+		}
+
+	}));
 
 	ctx_init(AppCtx {
 
@@ -76,66 +146,6 @@ pub fn run(f: &mut FnMut()) {
 		}
 
 		app_mut.time += app.dt;
-
-	}
-
-}
-
-/// report error and go to error screen
-pub fn error(log: &str) {
-
-	if !app::enabled() {
-
-		eprintln!("{}", log);
-		app::bad_quit();
-
-	}
-
-	let app = ctx_get();
-	let app_mut = ctx_get_mut();
-
-	if app.failed {
-		return;
-	}
-
-	app_mut.failed = true;
-
-	if gfx::enabled() && window::enabled() {
-
-		let (width, height) = window::size();
-
-		run(&mut || {
-
-			let dy = (app::time() * 2.0).sin() * 4.0;
-
-			gfx::clear();
-
-			gfx::push();
-			gfx::translate(vec2!(64, 64.0 + dy));
-			gfx::scale(vec2!(2.4));
-			gfx::text("ERROR ♪");
-			gfx::pop();
-
-			gfx::push();
-			gfx::translate(vec2!(64, 108.0 + dy));
-			gfx::scale(vec2!(1.2));
-			gfx::text(log);
-			gfx::pop();
-
-			gfx::line_width(3);
-			gfx::color(color!(1, 1, 0, 1));
-			gfx::line(math::rand_vec2() * vec2!(width, height), math::rand_vec2() * vec2!(width, height));
-
-			if window::key_pressed(Key::Escape) {
-				app::bad_quit();
-			}
-
-		});
-
-	} else {
-
-		eprintln!("{}", log);
-		app::bad_quit();
 
 	}
 

@@ -30,7 +30,7 @@ struct WindowCtx {
 pub fn init(title: &str, width: u32, height: u32) {
 
 	if !app::enabled() {
-		app::error("can't init window without app");
+		panic!("can't init window without app");
 	}
 
 	let sdl_ctx = sdl2::init().unwrap();

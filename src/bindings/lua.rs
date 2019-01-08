@@ -48,12 +48,11 @@ fn bind(lua: &Lua) -> Result<()> {
 	bind_func!("app_time", (): () -> app::time());
 	bind_func!("app_dt", (): () -> app::dt());
 	bind_func!("app_fps", (): () -> app::fps());
-	bind_func!("app_error", (msg): (String) -> app::error(&msg));
 
 	bind_func!("app_run", (f): (Function) ->
 		app::run(&mut || {
 			if f.call::<_, ()>(()).is_err() {
-				app::error("failed to run");
+				panic!("failed to run");
 			}
 		})
 	);
@@ -89,11 +88,11 @@ pub fn run_code(code: &str) {
 	let lua = Lua::new();
 
 	if bind(&lua).is_err() {
-		app::error("failed to bind lua");
+		panic!("failed to bind lua");
 	}
 
 	if lua.exec::<_, ()>(code, None).is_err() {
-		app::error("failed to run lua");
+		panic!("failed to run lua");
 	}
 
 }
