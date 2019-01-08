@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Handles sounds
+//! Sound loading & playback
 
 use std::io::Cursor;
 

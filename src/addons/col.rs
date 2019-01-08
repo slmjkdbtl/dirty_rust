@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Handles collision detection
+//! General Collision Detection
 
 use crate::*;
 

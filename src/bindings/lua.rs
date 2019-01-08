@@ -1,15 +1,13 @@
 // wengwengweng
 
-//! lua bindings
-
-use std::collections::HashMap;
+//! Lua Bindings
 
 use rlua::Result;
 use rlua::Lua;
 use rlua::Function;
 use rlua::UserData;
-use rlua::UserDataMethods;
-use rlua::MetaMethod;
+// use rlua::UserDataMethods;
+// use rlua::MetaMethod;
 
 use crate::*;
 
@@ -40,7 +38,6 @@ fn bind(lua: &Lua) -> Result<()> {
 	impl UserData for res::SpriteData {}
 	impl UserData for res::Anim {}
 	impl UserData for res::AnimDir {}
-	impl UserData for res::SD {}
 
 	bind_func!("vec2", (x, y): (f32, f32) -> vec2!(x, y));
 	bind_func!("color", (r, g, b, a): (f32, f32, f32, f32) -> color!(r, g, b, a));

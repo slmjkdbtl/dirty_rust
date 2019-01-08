@@ -21,6 +21,7 @@
 - res loader
 - glob loader
 - time stuff
+- cap framerate
 
 == DOING
 - play audio with settings
@@ -29,7 +30,6 @@
 - documenting
 - cli to run/export lua
 - lua binding
-- dyon binding
 
 == TO DO
 - custom shaders
@@ -39,7 +39,7 @@
 - imgui
 - editor
 - particle system
-- cap framerate
+- async resource loading
 - sprite batching
 - vector swizzle fields
 - try gfx

@@ -1,10 +1,9 @@
 // wengwengweng
 
-//! Handles filesystems
+//! Common File Related Functions
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::env;
+use std::path::Path;
 
 #[cfg(target_os = "macos")]
 use core_foundation::bundle;

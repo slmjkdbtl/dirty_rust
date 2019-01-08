@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Handles time and main loop
+//! App Lifecycles, Time and Errors
 
 use std::thread;
 use std::time::{Instant, Duration};
@@ -124,7 +124,7 @@ pub fn error(log: &str) {
 
 			gfx::line_width(3);
 			gfx::color(color!(1, 1, 0, 1));
-			gfx::line(rand_vec2() * vec2!(width, height), rand_vec2() * vec2!(width, height));
+			gfx::line(math::rand_vec2() * vec2!(width, height), math::rand_vec2() * vec2!(width, height));
 
 			if window::key_pressed(Key::Escape) {
 				app::bad_quit();
