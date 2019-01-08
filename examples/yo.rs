@@ -6,7 +6,6 @@ fn main() {
 
 	app::init();
 	window::init("yo", 640, 480);
-	gfx::init();
 	audio::init();
 	res::init();
 

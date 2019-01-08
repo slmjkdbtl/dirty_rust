@@ -66,6 +66,8 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	});
 
+	gfx::init();
+
 }
 
 /// check if window is initiated

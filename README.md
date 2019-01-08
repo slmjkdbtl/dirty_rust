@@ -18,7 +18,6 @@ fn main() {
 	// initialize modules
 	app::init();
 	window::init("yo", 640, 480);
-	gfx::init();
 	audio::init();
 	res::init();
 
@@ -68,4 +67,9 @@ fn main() {
 }
 ```
 more under `examples/`
+
+### notes
+
+- this lib is more opinionated than idiomatic, upon initialization each module has its hidden `static` state that dies when program ends
+- `app::init()` also redefines the panic behavior (also display messages to screen if `window` is initiated)
 

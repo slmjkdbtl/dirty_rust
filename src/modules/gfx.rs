@@ -19,12 +19,7 @@ struct GfxCtx {
 	renderer_2d: Renderer2D,
 }
 
-/// init graphics module
-pub fn init() {
-
-	if !window::enabled() {
-		panic!("can't init gfx without window");
-	}
+pub(crate) fn init() {
 
 	unsafe {
 
