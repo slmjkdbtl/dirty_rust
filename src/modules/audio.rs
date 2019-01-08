@@ -20,7 +20,7 @@ struct AudioCtx {
 pub fn init() {
 
 	if !app::enabled() {
-		app::error("can't init audio without app");
+		panic!("can't init audio without app");
 	}
 
 	if let Some(device) = rodio::default_output_device() {
@@ -28,7 +28,7 @@ pub fn init() {
 			device: device,
 		});
 	} else {
-		app::error("cannot find audio device")
+		panic!("cannot find audio device")
 	}
 
 }

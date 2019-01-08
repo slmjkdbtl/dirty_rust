@@ -104,7 +104,7 @@ pub fn load_sprite(name: &str, img: &[u8]) {
 	let res_mut = ctx_get_mut();
 
 	if res_mut.sprites.get(name).is_some() {
-		app::error(&format!("{} already used", name));
+		panic!("{} already used", name);
 	}
 
 	let tex = gfx::Texture::from_bytes(&img);
@@ -126,7 +126,7 @@ pub fn load_spritesheet(name: &str, img: &[u8], json: &str) {
 	let res_mut = ctx_get_mut();
 
 	if res_mut.sprites.get(name).is_some() {
-		app::error(&format!("{} already used", name));
+		panic!("{} already used", name);
 	}
 
 	let tex = gfx::Texture::from_bytes(&img);
@@ -181,7 +181,7 @@ pub fn load_sound(name: &str, data: &[u8]) {
 	let res_mut = ctx_get_mut();
 
 	if res_mut.sounds.get(name).is_some() {
-		app::error(&format!("{} already used", name));
+		panic!("{} already used", name);
 	}
 
 	res_mut.sounds.insert(name.to_owned(), audio::Sound::from_bytes(data));

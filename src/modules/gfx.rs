@@ -23,7 +23,7 @@ struct GfxCtx {
 pub fn init() {
 
 	if !window::enabled() {
-		app::error("can't init gfx without window");
+		panic!("can't init gfx without window");
 	}
 
 	unsafe {
@@ -236,7 +236,7 @@ pub fn push() {
 	if (stack.len() < 32) {
 		stack.push(g.renderer_2d.transform);
 	} else {
-		app::error("cannot push anymore");
+		panic!("cannot push anymore");
 	}
 
 }
@@ -252,7 +252,7 @@ pub fn pop() {
 			g.renderer_2d.transform = t;
 		},
 		None => {
-			app::error("cannot pop anymore");
+			panic!("cannot pop anymore");
 		}
 	}
 
@@ -507,7 +507,7 @@ impl Canvas {
 			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
 			if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
-				app::error("canvas init failed");
+				panic!("canvas init failed");
 			}
 
 			gfx::clear();
@@ -943,7 +943,7 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 			);
 
 			log.set_len(log_length as usize);
-			app::error(&format!("{}", String::from_utf8(log).unwrap()));
+			panic!("{}", String::from_utf8(log).unwrap());
 
 		}
 

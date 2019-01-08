@@ -87,7 +87,7 @@ pub fn glob(path: &str) -> Vec<String> {
 				}
 			}
 		} else {
-			app::error(&format!("failed to read dir \"{}\"", path));
+			panic!("failed to read dir \"{}\"", path);
 		}
 	}
 
@@ -101,10 +101,10 @@ pub fn read_bytes(path: &str) -> Vec<u8> {
 		if let Ok(content) = fs::read(&path) {
 			return content;
 		} else {
-			app::error(&format!("failed to read file \"{}\"", path));
+			panic!("failed to read file \"{}\"", path);
 		}
 	} else {
-		app::error(&format!("failed to read file \"{}\"", path));
+		panic!("failed to read file \"{}\"", path);
 	}
 
 
@@ -118,10 +118,10 @@ pub fn read_str(path: &str) -> String {
 		if let Ok(content) = fs::read_to_string(&path) {
 			return content;
 		} else {
-			app::error(&format!("failed to read file \"{}\"", path));
+			panic!("failed to read file \"{}\"", path);
 		}
 	} else {
-		app::error(&format!("failed to read file \"{}\"", path));
+		panic!("failed to read file \"{}\"", path);
 	}
 
 	return String::new();
@@ -134,10 +134,10 @@ pub fn basename(path: &str) -> String {
 		if let Some(name) = Path::new(&path).file_stem() {
 			return name.to_str().unwrap().to_owned();
 		} else {
-			app::error(&format!("failed to read file \"{}\"", path));
+			panic!("failed to read file \"{}\"", path);
 		}
 	} else {
-		app::error(&format!("failed to read file \"{}\"", path));
+		panic!("failed to read file \"{}\"", path);
 	}
 
 	return String::new();
