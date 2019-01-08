@@ -328,23 +328,29 @@ pub fn filter(filter: Filter) {
 	ctx_get_mut().renderer_2d.filter = filter;
 }
 
-// public structs
+/// texture
 pub struct Texture {
 
 	id: GLuint,
+	/// width
 	pub width: u32,
+	/// height
 	pub height: u32,
 
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+/// texture scaling filter
 pub enum Filter {
+	/// nearest
 	Nearest,
+	/// linear
 	Linear,
 }
 
 impl Texture {
 
+	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 
 		let mut id: GLuint = 0;
@@ -363,6 +369,7 @@ impl Texture {
 
 	}
 
+	/// create texture with raw data
 	pub fn from_bytes(data: &[u8]) -> Self {
 
 		let img = image::load_from_memory(data)
@@ -377,6 +384,7 @@ impl Texture {
 
 	}
 
+	/// create texture from pixel data, width and height
 	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
 
 		let mut tex = Self::new(width, height);
@@ -387,6 +395,7 @@ impl Texture {
 
 	}
 
+	/// create texture from a file
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
@@ -469,6 +478,7 @@ impl Texture {
 
 }
 
+/// frame buffer
 pub struct Canvas {
 
 	tex: Texture,
@@ -478,6 +488,7 @@ pub struct Canvas {
 
 impl Canvas {
 
+	/// create a frame buffer from width and height
 	pub fn new(width: u32, height: u32) -> Self {
 
 		let mut id: GLuint = 0;
@@ -517,7 +528,7 @@ impl Canvas {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
@@ -527,7 +538,7 @@ impl Canvas {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
@@ -539,6 +550,7 @@ impl Canvas {
 
 }
 
+/// bitmap font
 pub struct Font {
 
 	tex: Texture,
@@ -549,6 +561,7 @@ pub struct Font {
 
 impl Font {
 
+	/// creat a bitmap font from a texture, and grid of characters
 	pub fn new(tex: Texture, cols: usize, rows: usize, chars: &str) -> Self {
 
 		let mut map = HashMap::new();

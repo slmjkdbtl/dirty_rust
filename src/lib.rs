@@ -4,6 +4,7 @@
 //! simple toolkit for creating game-like experiences
 
 #![allow(unused_parens)]
+#![deny(missing_docs)]
 
 #[macro_use]
 mod utils;

@@ -45,6 +45,7 @@ fn get_res_dir() -> String {
 
 }
 
+/// check if given file exists
 pub fn exists(path: &str) -> bool {
 	return validate_path(path).is_ok();
 }
@@ -69,6 +70,7 @@ fn validate_path(path: &str) -> Result<String, ()> {
 
 }
 
+/// get a Vec of all filenames under given directory
 pub fn glob(path: &str) -> Vec<String> {
 
 	let mut entries: Vec<String> = Vec::new();
@@ -95,6 +97,7 @@ pub fn glob(path: &str) -> Vec<String> {
 
 }
 
+/// get bytes read from given file
 pub fn read_bytes(path: &str) -> Vec<u8> {
 
 	if let Ok(path) = validate_path(path) {
@@ -112,6 +115,7 @@ pub fn read_bytes(path: &str) -> Vec<u8> {
 
 }
 
+/// get string read from given file
 pub fn read_str(path: &str) -> String {
 
 	if let Ok(path) = validate_path(path) {
@@ -128,6 +132,7 @@ pub fn read_str(path: &str) -> String {
 
 }
 
+/// get the basename of given file
 pub fn basename(path: &str) -> String {
 
 	if let Ok(path) = validate_path(path) {
