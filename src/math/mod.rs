@@ -1,9 +1,9 @@
 // wengwengweng
 
-/// Common Math Functions
-
 pub(crate) mod vec;
 pub(crate) mod mat;
+
+/// Common Math Functions
 
 use crate::*;
 
