@@ -5,6 +5,8 @@
 
 #![allow(unused_parens)]
 #![deny(missing_docs)]
+#![deny(clippy::implicit_return)]
+#![allow(clippy::needless_return)]
 
 #[macro_use]
 mod utils;

@@ -5,6 +5,8 @@
 use core::ops;
 use std::fmt;
 
+use crate::*;
+
 macro_rules! gen_vec {
 
 	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty) => {
@@ -34,28 +36,35 @@ macro_rules! gen_vec {
 
 		}
 
-		/// $name
+		///
 		#[derive(Debug, Copy, Clone, Default, PartialEq)]
 		pub struct $name {
 			$(
-			/// $member
+			///
 			pub $member: $type
 			),+
 		}
 
 		impl $name {
 
-			/// initialize $name specifying all fields
+			/// initialize with specifying all fields
 			pub fn new($($member: $type,)+) -> Self {
 				return Self {
-					$($member: $member,)+
+					$($member: $member),+
 				};
 			}
 
-			/// initialize $name with same values in all fields
+			/// initialize with same value on all fields
 			pub fn all(x: $type) -> Self {
 				return Self {
-					$($member: x,)+
+					$($member: x),+
+				}
+			}
+
+			/// initialize with random values
+			pub fn rand() -> Self {
+				return Self {
+					$($member: math::rand()),+
 				}
 			}
 

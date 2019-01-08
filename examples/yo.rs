@@ -9,12 +9,6 @@ fn main() {
 	audio::init();
 	res::init();
 
-	ketos::run_code(r#"
-		(define (foo a)
-			(* a 2))
-		(println "yo")
-	"#);
-
 	let (width, height) = window::size();
 	let canvas = gfx::Canvas::new(width, height);
 	let mut index = 0;
@@ -66,7 +60,7 @@ fn main() {
 
 		gfx::line_width(3);
 		gfx::color(color!(1, 1, 0, 1));
-		gfx::line(math::rand_vec2() * vec2!(width, height), math::rand_vec2() * vec2!(width, height));
+		gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
 
 		gfx::line_width(1);
 		gfx::color(color!(1, 0, 1, 1));
@@ -97,4 +91,3 @@ fn main() {
 	});
 
 }
-

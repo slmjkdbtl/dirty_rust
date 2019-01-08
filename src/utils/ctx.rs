@@ -10,7 +10,11 @@ macro_rules! ctx {
 		#[allow(dead_code)]
 		fn ctx_init(c: $type) {
 			unsafe {
-				$state = Some(c);
+				if $state.is_none() {
+					$state = Some(c);
+				} else {
+					panic!("cannot initialize {} twice", stringify!($state).to_lowercase());
+				}
 			}
 		}
 
