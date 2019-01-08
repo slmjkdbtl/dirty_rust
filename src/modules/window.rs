@@ -18,6 +18,7 @@ struct WindowCtx {
 
 	sdl_ctx: sdl2::Sdl,
 	window: Window,
+	#[allow(dead_code)]
 	gl_ctx: sdl2::video::GLContext,
 	events: sdl2::EventPump,
 	key_states: HashMap<Scancode, ButtonState>,

@@ -33,17 +33,15 @@ pub fn init() {
 			log = s.clone();
 		}
 
-		let mut location = String::from("");
+// 		let mut location = String::from("");
 
-		if let Some(loc) = info.location() {
-			location = format!("from '{}', line {}", loc.file(), loc.line());
-		}
+// 		if let Some(loc) = info.location() {
+// 			location = format!("from '{}', line {}", loc.file(), loc.line());
+// 		}
 
 		if !app::enabled() {
 			return eprintln!("{}", log);
 		}
-
-		let app = ctx_get();
 
 		if gfx::enabled() && window::enabled() {
 
@@ -80,7 +78,7 @@ pub fn init() {
 				gfx::line(math::rand_vec2() * vec2!(width, height), math::rand_vec2() * vec2!(width, height));
 
 				if window::key_pressed(Key::Escape) {
-					app::bad_quit();
+					std::process::exit(1);
 				}
 
 			});
@@ -171,10 +169,6 @@ pub fn time() -> f32 {
 /// quit with success code
 pub fn quit() {
 	std::process::exit(0);
-}
-
-pub(crate) fn bad_quit() {
-	std::process::exit(1);
 }
 
 /// check if current platform is MacOS
