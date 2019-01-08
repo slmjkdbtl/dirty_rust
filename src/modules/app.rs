@@ -16,7 +16,6 @@ struct AppCtx {
 	dt: f32,
 	time: f32,
 	platform: String,
-	failed: bool,
 	fps_cap: u8,
 
 }
@@ -37,20 +36,10 @@ pub fn init() {
 		}
 
 		if !app::enabled() {
-
-			eprintln!("{}", log);
-			return;
-
+			return eprintln!("{}", log);
 		}
 
 		let app = ctx_get();
-		let app_mut = ctx_get_mut();
-
-		if app.failed {
-			return;
-		}
-
-		app_mut.failed = true;
 
 		if gfx::enabled() && window::enabled() {
 
@@ -85,10 +74,7 @@ pub fn init() {
 			});
 
 		} else {
-
-			eprintln!("{}", log);
-			return;
-
+			return eprintln!("{}", log);
 		}
 
 	}));
@@ -98,7 +84,6 @@ pub fn init() {
 		platform: sdl2::get_platform().to_owned(),
 		dt: 0.0,
 		time: 0.0,
-		failed: false,
 		fps_cap: 60,
 
 	});

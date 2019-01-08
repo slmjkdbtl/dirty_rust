@@ -163,9 +163,7 @@ pub fn text(s: &str) {
 		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
 
 		if ch != ' ' {
-			if let Some(quad) = font.map.get(&ch) {
-				draw(&font.tex, *quad);
-			}
+			draw(&font.tex, *font.map.get(&ch).expect(&format!("does not have char '{}'", ch)));
 		}
 
 		pop();
