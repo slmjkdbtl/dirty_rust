@@ -23,13 +23,9 @@ pub fn init() {
 		panic!("can't init audio without app");
 	}
 
-	if let Some(device) = rodio::default_output_device() {
-		ctx_init(AudioCtx {
-			device: device,
-		});
-	} else {
-		panic!("cannot find audio device")
-	}
+	ctx_init(AudioCtx {
+		device: rodio::default_output_device().expect("failed to get audio device"),
+	});
 
 }
 
