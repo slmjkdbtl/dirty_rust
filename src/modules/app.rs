@@ -25,14 +25,18 @@ pub fn init() {
 
 	panic::set_hook(Box::new(|info| {
 
-		let log: &str;
+		let mut log = String::from("nonono");
 
 		if let Some(s) = info.payload().downcast_ref::<&str>() {
-			log = s;
+			log = (*s).to_owned();
 		} else if let Some(s) = info.payload().downcast_ref::<String>() {
-			log = &s;
-		} else {
-			log = "nonono";
+			log = s.clone();
+		}
+
+		let mut location = String::from("");
+
+		if let Some(loc) = info.location() {
+			location = format!("from '{}', line {}", loc.file(), loc.line());
 		}
 
 		if !app::enabled() {
@@ -52,15 +56,23 @@ pub fn init() {
 				gfx::clear();
 
 				gfx::push();
-				gfx::translate(vec2!(64, 64.0 + dy));
-				gfx::scale(vec2!(2.4));
-				gfx::text("ERROR ♪");
-				gfx::pop();
 
-				gfx::push();
-				gfx::translate(vec2!(64, 108.0 + dy));
-				gfx::scale(vec2!(1.2));
-				gfx::text(log);
+					gfx::translate(vec2!(64, 64.0 + dy));
+
+					gfx::push();
+						gfx::scale(vec2!(2.4));
+						gfx::text("ERROR ♪");
+					gfx::pop();
+
+					gfx::translate(vec2!(0, 48));
+
+					gfx::push();
+						gfx::scale(vec2!(1.2));
+						gfx::text(&log);
+// 						gfx::translate(vec2!(0, 20));
+// 						gfx::text(&location);
+					gfx::pop();
+
 				gfx::pop();
 
 				gfx::line_width(3);
