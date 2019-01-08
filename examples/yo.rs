@@ -61,7 +61,7 @@ fn main() {
 
 		gfx::line_width(3);
 		gfx::color(color!(1, 1, 0, 1));
-		gfx::line(rand_vec2() * vec2!(width, height), rand_vec2() * vec2!(width, height));
+		gfx::line(math::rand_vec2() * vec2!(width, height), math::rand_vec2() * vec2!(width, height));
 
 		gfx::line_width(1);
 		gfx::color(color!(1, 0, 1, 1));

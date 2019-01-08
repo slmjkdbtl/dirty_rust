@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Handles resource loading
+//! Resource Loading
 
 use std::collections::HashMap;
 
@@ -28,27 +28,19 @@ pub fn enabled() -> bool {
 	return ctx_is_ok();
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum AnimDir {
 	Forward,
 	Reverse,
 	PingPong,
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Anim {
 
 	from: u32,
 	to: u32,
 	dir: AnimDir,
-
-}
-
-pub struct SD {
-
-	pub tex: gfx::Texture,
-	pub frames: Vec<Rect>,
-	pub anims: HashMap<String, Anim>,
 
 }
 

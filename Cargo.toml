@@ -20,15 +20,9 @@ glob = "*"
 serde_json = "*"
 aseprite = "*"
 rlua = "*"
+sdl2 = { version = "*", features = ["static-link", "bundled"] }
+serde = { version = "*", features = ["derive"] }
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"
-
-[dependencies.sdl2]
-version = "*"
-features = ["static-link", "bundled"]
-
-[dependencies.serde]
-version  = "*"
-features = ["derive"]
 

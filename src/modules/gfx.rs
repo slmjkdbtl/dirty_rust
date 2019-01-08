@@ -1,15 +1,16 @@
 // wengwengweng
 
-//! Handles rendering
+//! Rendering
 
-use std::ffi::CString;
 use std::ptr;
 use std::mem;
+use std::ffi::CString;
 use std::collections::HashMap;
 
 use gl::types::*;
 
 use crate::*;
+use crate::math::mat::Mat4;
 
 // context
 ctx!(GFX: GfxCtx);
@@ -94,6 +95,7 @@ pub fn init() {
 			tint: color!(1),
 			line_width: 1,
 			default_font: default_font,
+			filter: Filter::Nearest,
 
 		},
 
@@ -125,6 +127,7 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let gfx = ctx_get();
 	let renderer = &gfx.renderer_2d;
 
+	tex.set_filter(renderer.filter);
 	tex.bind();
 	push();
 	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
@@ -327,6 +330,11 @@ pub fn stop_draw_on(canvas: &Canvas) {
 	canvas.unbind();
 }
 
+/// set texture mag/min filter
+pub fn filter(filter: Filter) {
+	ctx_get_mut().renderer_2d.filter = filter;
+}
+
 // public structs
 pub struct Texture {
 
@@ -334,6 +342,12 @@ pub struct Texture {
 	pub width: u32,
 	pub height: u32,
 
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum Filter {
+	Nearest,
+	Linear,
 }
 
 impl Texture {
@@ -382,6 +396,28 @@ impl Texture {
 
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
+	}
+
+	fn set_filter(&self, filter: Filter) -> &Self {
+
+		self.bind();
+
+		unsafe {
+
+			let gl_filter = match filter {
+				Filter::Nearest => gl::NEAREST,
+				Filter::Linear => gl::LINEAR,
+			};
+
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl_filter as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl_filter as i32);
+
+		}
+
+		self.unbind();
+
+		return self;
+
 	}
 
 	fn data(&mut self, pixels: &[u8]) -> &Self {
@@ -470,7 +506,7 @@ impl Canvas {
 
 			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
-			if(!gl::CheckFramebufferStatus(gl::FRAMEBUFFER) == gl::FRAMEBUFFER_COMPLETE) {
+			if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
 				app::error("canvas init failed");
 			}
 
@@ -565,6 +601,7 @@ struct Renderer2D {
 	tint: Color,
 	line_width: u8,
 	default_font: Font,
+	filter: Filter,
 
 }
 
