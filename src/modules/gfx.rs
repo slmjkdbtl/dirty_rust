@@ -5,6 +5,7 @@
 use std::ptr;
 use std::mem;
 use std::ffi::CString;
+use std::ffi::c_void;
 use std::collections::HashMap;
 
 use gl::types::*;
@@ -128,7 +129,6 @@ pub fn reset() {
 pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
 
 	tex.bind();
 	push();
@@ -213,7 +213,7 @@ pub fn text(s: &str) {
 		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
 
 		if ch != ' ' {
-			draw(&font.tex, *font.map.get(&ch).expect(&format!("does not have char '{}'", ch)));
+			draw(&font.tex, *font.map.get(&ch).unwrap_or_else(|| panic!("does not have char '{}'", ch)));
 		}
 
 		pop();
@@ -301,27 +301,27 @@ pub fn pop() {
 /// global translate
 pub fn translate(pos: Vec2) {
 
-	let gfx = ctx_get_mut();
+	let state = &mut ctx_get_mut().state;
 
-	gfx.state.transform = gfx.state.transform.translate(pos.x, pos.y);
+	state.transform = state.transform.translate(pos);
 
 }
 
 /// global rotate
 pub fn rotate(rot: f32) {
 
-	let gfx = ctx_get_mut();
+	let state = &mut ctx_get_mut().state;
 
-	gfx.state.transform = gfx.state.transform.rotate(rot);
+	state.transform = state.transform.rotate(rot);
 
 }
 
 /// global scale
 pub fn scale(s: Vec2) {
 
-	let gfx = ctx_get_mut();
+	let state = &mut ctx_get_mut().state;
 
-	gfx.state.transform = gfx.state.transform.scale(s.x, s.y);
+	state.transform = state.transform.scale(s);
 
 
 }
@@ -669,7 +669,7 @@ impl Buffer {
 			gl::BufferData(
 				gl::ARRAY_BUFFER,
 				(data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				mem::transmute(data.as_ptr()),
+				data.as_ptr() as *const c_void,
 				gl::STATIC_DRAW
 			);
 
@@ -753,7 +753,7 @@ impl IndexBuffer {
 			gl::BufferData(
 				gl::ELEMENT_ARRAY_BUFFER,
 				(data.len() * mem::size_of::<GLuint>()) as GLsizeiptr,
-				mem::transmute(data.as_ptr()),
+				data.as_ptr() as *const c_void,
 				gl::STATIC_DRAW
 			);
 

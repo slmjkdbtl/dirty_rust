@@ -40,23 +40,23 @@ impl Mat4 {
 
 	}
 
-	pub fn translate(self, x: f32, y: f32) -> Self {
+	pub fn translate(self, pos: Vec2) -> Self {
 
 		let mut m = Mat4::identity();
 
-		m.m[3][0] = x;
-		m.m[3][1] = y;
+		m.m[3][0] = pos.x;
+		m.m[3][1] = pos.y;
 
 		return self * m;
 
 	}
 
-	pub fn scale(self, sx: f32, sy: f32) -> Self {
+	pub fn scale(self, scale: Vec2) -> Self {
 
 		let mut m = Mat4::identity();
 
-		m.m[0][0] = sx;
-		m.m[1][1] = sy;
+		m.m[0][0] = scale.x;
+		m.m[1][1] = scale.y;
 
 		return self * m;
 
