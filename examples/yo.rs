@@ -58,15 +58,18 @@ fn main() {
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
+		gfx::push();
 		gfx::line_width(3);
 		gfx::color(color!(1, 1, 0, 1));
 		gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
+		gfx::pop();
 
+		gfx::push();
 		gfx::line_width(1);
 		gfx::color(color!(1, 0, 1, 1));
-		gfx::poly(pts);
+		gfx::poly(&pts);
+		gfx::pop();
 
-		gfx::color(color!(1));
 		gfx::push();
 		gfx::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
 		gfx::scale(vec2!(3));

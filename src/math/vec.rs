@@ -9,7 +9,7 @@ use crate::*;
 
 macro_rules! gen_vec {
 
-	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty) => {
+	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty, ($($default:expr),+)) => {
 
 		nested_macro! {
 
@@ -37,7 +37,7 @@ macro_rules! gen_vec {
 		}
 
 		///
-		#[derive(Debug, Copy, Clone, Default, PartialEq)]
+		#[derive(Debug, Copy, Clone, PartialEq)]
 		pub struct $name {
 			$(
 			///
@@ -68,6 +68,12 @@ macro_rules! gen_vec {
 				}
 			}
 
+		}
+
+		impl Default for $name {
+			fn default() -> Self {
+				return $sname!($($default),+);
+			}
 		}
 
 		impl fmt::Display for $name {
@@ -148,9 +154,9 @@ macro_rules! gen_vec {
 
 }
 
-gen_vec!(Vec2(vec2) -> (x, y): f32);
-gen_vec!(Vec3(vec3) -> (x, y, z): f32);
-gen_vec!(Vec4(vec4) -> (x, y, z, w): f32);
-gen_vec!(Color(color) -> (r, g, b, a): f32);
-gen_vec!(Rect(rect) -> (x, y, w, h): f32);
+gen_vec!(Vec2(vec2) -> (x, y): f32, (0, 0));
+gen_vec!(Vec3(vec3) -> (x, y, z): f32, (0, 0, 0));
+gen_vec!(Vec4(vec4) -> (x, y, z, w): f32, (0, 0, 0, 0));
+gen_vec!(Color(color) -> (r, g, b, a): f32, (1, 1, 1, 1));
+gen_vec!(Rect(rect) -> (x, y, w, h): f32, (0, 0, 0, 0));
 

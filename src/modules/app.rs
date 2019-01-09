@@ -39,7 +39,7 @@ pub fn init() {
 // 			location = format!("from '{}', line {}", loc.file(), loc.line());
 // 		}
 
-		if !app::enabled() {
+		if !enabled() {
 			return eprintln!("{}", log);
 		}
 
@@ -49,7 +49,7 @@ pub fn init() {
 
 			run(&mut || {
 
-				let dy = (app::time() * 2.0).sin() * 4.0;
+				let dy = (time() * 2.0).sin() * 4.0;
 
 				gfx::clear();
 
