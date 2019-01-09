@@ -36,11 +36,10 @@ macro_rules! gen_vec {
 
 		}
 
-		///
+		#[allow(missing_docs)]
 		#[derive(Debug, Copy, Clone, PartialEq)]
 		pub struct $name {
 			$(
-			///
 			pub $member: $type
 			),+
 		}

@@ -7,7 +7,9 @@ use std::collections::HashMap;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
-use sdl2::video::{Window, FullscreenType, SwapInterval};
+use sdl2::video::Window;
+use sdl2::video::FullscreenType;
+use sdl2::video::SwapInterval;
 
 use crate::*;
 

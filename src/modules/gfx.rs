@@ -25,7 +25,6 @@ struct GfxCtx {
 	state_stack: Vec<State>,
 	default_font: Font,
 	state: State,
-// 	queue: HashMap<GLuint, DrawState>,
 
 }
 
@@ -36,54 +35,11 @@ struct State {
 	line_width: u8,
 }
 
-struct Vertex {
-	pos: Vec3,
-	uv: Vec2,
-	color: Color,
-}
-
-impl Vertex {
-
-	fn new(pos: Vec3, uv: Vec2, color: Color) -> Self {
-
-		return Self {
-			pos,
-			uv,
-			color,
-		};
-
-	}
-
-	fn to_data(verts: &[Self]) -> Vec<f32> {
-
-		let mut data = Vec::with_capacity(verts.len());
-
-		for v in verts {
-
-			data.push(v.pos.x);
-			data.push(v.pos.y);
-			data.push(v.pos.z);
-			data.push(v.uv.x);
-			data.push(v.uv.y);
-			data.push(v.color.r);
-			data.push(v.color.g);
-			data.push(v.color.b);
-			data.push(v.color.a);
-
-		}
-
-		return data;
-
-	}
-
-}
-
 pub(crate) fn init() {
 
 	unsafe {
 
 		gl::Enable(gl::BLEND);
-// 		gl::Enable(gl::DEPTH_TEST);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -92,11 +48,18 @@ pub(crate) fn init() {
 	clear();
 	window::swap();
 
-	let v = vec![
-		Vertex::new(vec3!(0, 1, 0), vec2!(0, 1), color!()),
-		Vertex::new(vec3!(1, 1, 0), vec2!(1, 1), color!()),
-		Vertex::new(vec3!(1, 0, 0), vec2!(1, 0), color!()),
-		Vertex::new(vec3!(0, 0, 0), vec2!(0, 0), color!()),
+	let verts: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0,
+	];
+
+	let uvs: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0
 	];
 
 	let indices: Vec<GLuint> = vec![
@@ -106,7 +69,8 @@ pub(crate) fn init() {
 
 	let mut mesh = Mesh::new();
 
-	mesh.make_buf(&Vertex::to_data(&v)).attr(0, 3, 9, 0).attr(1, 2, 9, 3).attr(2, 4, 9, 5);
+	mesh.make_buf(&verts).attr(0, 2);
+	mesh.make_buf(&uvs).attr(1, 2);
 	mesh.make_index_buf(&indices);
 
 	let program = Program::new(
@@ -117,7 +81,6 @@ pub(crate) fn init() {
 	program
 		.attr(0, "pos")
 		.attr(1, "uv")
-		.attr(2, "color")
 		.link();
 
 	let default_font = Font::new(
@@ -139,7 +102,6 @@ pub(crate) fn init() {
 		state_stack: vec![],
 		state: State::default(),
 		default_font: default_font,
-// 		queue: HashMap::new(),
 
 	});
 
@@ -168,55 +130,6 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	tex.bind();
 	push();
 	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
-
-// 	let state = gfx_mut.queue.entry(tex.id).or_insert(DrawState {
-// 		verts: Vec::new(),
-// 		uvs: Vec::new(),
-// 		colors: Vec::new(),
-// 		indices: Vec::new(),
-// 		count: 0,
-// 	});
-
-// 	let count = state.count;
-
-// 	let mut verts: Vec<GLfloat> = Vec::with_capacity(4);
-// 	let mut pts = Vec::with_capacity(4);
-
-// 	pts.push(trans.forward(vec2!(0, 1)));
-// 	pts.push(trans.forward(vec2!(1, 1)));
-// 	pts.push(trans.forward(vec2!(1, 0)));
-// 	pts.push(trans.forward(vec2!(0, 0)));
-
-// 	for p in pts {
-// 		verts.push(p.x);
-// 		verts.push(p.y);
-// 		verts.push(gfx.z);
-// 	}
-
-// 	let mut uvs: Vec<GLfloat> = vec![
-// 		0.0, quad.h,
-// 		quad.w, quad.h,
-// 		quad.w, 0.0,
-// 		0.0, 0.0
-// 	];
-
-// 	let mut colors: Vec<GLfloat> = vec![
-// 		tint.r, tint.g, tint.b, tint.a,
-// 		tint.r, tint.g, tint.b, tint.a,
-// 		tint.r, tint.g, tint.b, tint.a,
-// 		tint.r, tint.g, tint.b, tint.a,
-// 	];
-
-// 	let mut indices: Vec<GLuint> = vec![
-// 		count * 4 + 0, count * 4 + 1, count * 4 + 3,
-// 		count * 4 + 1, count * 4 + 2, count * 4 + 3,
-// 	];
-
-// 	state.verts.append(&mut verts);
-// 	state.uvs.append(&mut uvs);
-// 	state.colors.append(&mut colors);
-// 	state.indices.append(&mut indices);
-// 	state.count += 1;
 
 	gfx.program
 		.uniform_color("tint", gfx.state.tint)
@@ -716,21 +629,12 @@ impl Buffer {
 
 	}
 
-	fn attr(&self, attr_index: GLuint, buf_size: GLint, stride: usize, offset: usize) -> &Self {
+	fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Self {
 
 		unsafe {
 
 			self.bind();
-
-			gl::VertexAttribPointer(
-				attr_index,
-				buf_size,
-				gl::FLOAT,
-				gl::FALSE,
-				(stride * mem::size_of::<f32>()) as i32,
-				(offset * mem::size_of::<f32>()) as *const c_void
-			);
-
+			gl::VertexAttribPointer(attr_index, buf_size, gl::FLOAT, gl::FALSE, 0, ptr::null());
 			gl::EnableVertexAttribArray(attr_index);
 			self.unbind();
 

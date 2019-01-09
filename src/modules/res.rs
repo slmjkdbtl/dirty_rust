@@ -213,11 +213,11 @@ pub fn load_sound(name: &str, data: &[u8]) {
 
 /// get sprite that is loaded with given name
 pub fn sprite(name: &str) -> &SpriteData {
-	return &ctx_get().sprites[name];
+	return &ctx_get().sprites.get(name).unwrap_or_else(|| panic!("failed to get sprite {}", name));
 }
 
 /// get sound that is loaded with given name
 pub fn sound(name: &str) -> &audio::Sound {
-	return &ctx_get().sounds[name];
+	return &ctx_get().sounds.get(name).unwrap_or_else(|| panic!("failed to get sound {}", name));;
 }
 
