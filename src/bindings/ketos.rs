@@ -10,7 +10,7 @@ pub fn run_code(code: &str) {
 	// Create an interpreter.
 	let interp = Interpreter::new();
 
-	interp.run_code(code, None).unwrap();
+	interp.run_code(code, None).expect("failed to run code");
 
 }
 

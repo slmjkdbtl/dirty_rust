@@ -153,7 +153,7 @@ pub fn load_spritesheet(name: &str, img: &[u8], json: &str) {
 	let (width, height) = (tex.width as f32, tex.height as f32);
 	let mut frames = vec![];
 	let mut anims = HashMap::new();
-	let data: SpritesheetData = serde_json::from_str(json).unwrap();
+	let data: SpritesheetData = serde_json::from_str(json).expect("failed to parse json");
 
 	for f in data.frames {
 

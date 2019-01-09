@@ -34,8 +34,8 @@ pub fn init(title: &str, width: u32, height: u32) {
 		panic!("can't init window without app");
 	}
 
-	let sdl_ctx = sdl2::init().unwrap();
-	let video = sdl_ctx.video().unwrap();
+	let sdl_ctx = sdl2::init().expect("failed to init SDL context");
+	let video = sdl_ctx.video().expect("failed to init SDL video subsystem");
 	let gl_attr = video.gl_attr();
 
 	gl_attr.set_context_profile(sdl2::video::GLProfile::Compatibility);
@@ -45,9 +45,9 @@ pub fn init(title: &str, width: u32, height: u32) {
 		.opengl()
 		.resizable()
 		.build()
-		.unwrap();
+		.expect("failed to create window");
 
-	let gl_ctx = window.gl_create_context().unwrap();
+	let gl_ctx = window.gl_create_context().expect("failed to create OpenGL context");
 
 	gl::load_with(|name| {
 		video.gl_get_proc_address(name) as *const std::os::raw::c_void
@@ -57,7 +57,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	ctx_init(WindowCtx {
 
-		events: sdl_ctx.event_pump().unwrap(),
+		events: sdl_ctx.event_pump().expect("failed to create event pump"),
 		window: window,
 		gl_ctx: gl_ctx,
 		sdl_ctx: sdl_ctx,

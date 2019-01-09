@@ -16,7 +16,18 @@ use crate::math::mat::Mat4;
 ctx!(GFX: GfxCtx);
 
 struct GfxCtx {
-	renderer_2d: Renderer2D,
+
+	mesh: Mesh,
+	program: Program,
+	empty_tex: Texture,
+	projection: Mat4,
+	transform: Mat4,
+	transform_stack: Vec<Mat4>,
+	tint: Color,
+	line_width: u8,
+	default_font: Font,
+// 	queue: HashMap<GLuint, DrawState>,
+
 }
 
 pub(crate) fn init() {
@@ -25,6 +36,7 @@ pub(crate) fn init() {
 
 		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+// 		gl::Enable(gl::DEPTH_TEST);
 		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
 	}
@@ -32,14 +44,14 @@ pub(crate) fn init() {
 	clear();
 	window::swap();
 
-	let vertices: Vec<GLfloat> = vec![
+	let verts: Vec<GLfloat> = vec![
 		0.0, 1.0,
 		1.0, 1.0,
 		1.0, 0.0,
 		0.0, 0.0,
 	];
 
-	let uv: Vec<GLfloat> = vec![
+	let uvs: Vec<GLfloat> = vec![
 		0.0, 1.0,
 		1.0, 1.0,
 		1.0, 0.0,
@@ -53,8 +65,8 @@ pub(crate) fn init() {
 
 	let mut mesh = Mesh::new();
 
-	mesh.make_buf(&vertices).attr(0, 2);
-	mesh.make_buf(&uv).attr(1, 2);
+	mesh.make_buf(&verts).attr(0, 2);
+	mesh.make_buf(&uvs).attr(1, 2);
 	mesh.make_index_buf(&indices);
 
 	let program = Program::new(
@@ -79,20 +91,16 @@ pub(crate) fn init() {
 
 	ctx_init(GfxCtx {
 
-		renderer_2d: Renderer2D {
-
-			mesh: mesh,
-			program: program,
-			empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
-			transform: Mat4::identity(),
-			projection: projection,
-			transform_stack: vec![],
-			tint: color!(1),
-			line_width: 1,
-			default_font: default_font,
-			filter: Filter::Nearest,
-
-		},
+		mesh: mesh,
+		program: program,
+		empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
+		transform: Mat4::identity(),
+		projection: projection,
+		transform_stack: vec![],
+		tint: color!(1),
+		line_width: 1,
+		default_font: default_font,
+// 		queue: HashMap::new(),
 
 	});
 
@@ -107,12 +115,11 @@ pub fn enabled() -> bool {
 pub fn reset() {
 
 	let gfx_mut = ctx_get_mut();
-	let renderer = &mut gfx_mut.renderer_2d;
 
-	renderer.transform_stack.clear();
-	renderer.transform = Mat4::identity();
-	renderer.line_width = 1;
-	renderer.tint = color!(1);
+	gfx_mut.transform_stack.clear();
+	gfx_mut.transform = Mat4::identity();
+	gfx_mut.line_width = 1;
+	gfx_mut.tint = color!(1);
 
 }
 
@@ -120,22 +127,70 @@ pub fn reset() {
 pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
-	let renderer = &gfx.renderer_2d;
+	let gfx_mut = ctx_get_mut();
 
-	tex.set_filter(renderer.filter);
 	tex.bind();
 	push();
 	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
 
-	renderer.program
-		.uniform_color("tint", renderer.tint)
+// 	let state = gfx_mut.queue.entry(tex.id).or_insert(DrawState {
+// 		verts: Vec::new(),
+// 		uvs: Vec::new(),
+// 		colors: Vec::new(),
+// 		indices: Vec::new(),
+// 		count: 0,
+// 	});
+
+// 	let count = state.count;
+
+// 	let mut verts: Vec<GLfloat> = Vec::with_capacity(4);
+// 	let mut pts = Vec::with_capacity(4);
+
+// 	pts.push(trans.forward(vec2!(0, 1)));
+// 	pts.push(trans.forward(vec2!(1, 1)));
+// 	pts.push(trans.forward(vec2!(1, 0)));
+// 	pts.push(trans.forward(vec2!(0, 0)));
+
+// 	for p in pts {
+// 		verts.push(p.x);
+// 		verts.push(p.y);
+// 		verts.push(gfx.z);
+// 	}
+
+// 	let mut uvs: Vec<GLfloat> = vec![
+// 		0.0, quad.h,
+// 		quad.w, quad.h,
+// 		quad.w, 0.0,
+// 		0.0, 0.0
+// 	];
+
+// 	let mut colors: Vec<GLfloat> = vec![
+// 		tint.r, tint.g, tint.b, tint.a,
+// 		tint.r, tint.g, tint.b, tint.a,
+// 		tint.r, tint.g, tint.b, tint.a,
+// 		tint.r, tint.g, tint.b, tint.a,
+// 	];
+
+// 	let mut indices: Vec<GLuint> = vec![
+// 		count * 4 + 0, count * 4 + 1, count * 4 + 3,
+// 		count * 4 + 1, count * 4 + 2, count * 4 + 3,
+// 	];
+
+// 	state.verts.append(&mut verts);
+// 	state.uvs.append(&mut uvs);
+// 	state.colors.append(&mut colors);
+// 	state.indices.append(&mut indices);
+// 	state.count += 1;
+
+	gfx.program
+		.uniform_color("tint", gfx.tint)
 		.uniform_rect("quad", quad)
-		.uniform_mat4("projection", renderer.projection.as_arr())
-		.uniform_mat4("transform", renderer.transform.as_arr())
+		.uniform_mat4("projection", gfx.projection.as_arr())
+		.uniform_mat4("transform", gfx.transform.as_arr())
 		.bind();
 
 	pop();
-	renderer.mesh.draw();
+	gfx.mesh.draw();
 	tex.unbind();
 
 }
@@ -149,8 +204,7 @@ pub fn render(canvas: &Canvas) {
 pub fn text(s: &str) {
 
 	let gfx = ctx_get();
-	let renderer = &gfx.renderer_2d;
-	let font = &renderer.default_font;
+	let font = &gfx.default_font;
 
 	for (i, ch) in s.chars().enumerate() {
 
@@ -171,11 +225,10 @@ pub fn text(s: &str) {
 pub fn rect(size: Vec2) {
 
 	let gfx = ctx_get();
-	let renderer = &gfx.renderer_2d;
 
 	push();
 	scale(size);
-	draw(&renderer.empty_tex, rect!(0, 0, 1, 1));
+	draw(&gfx.empty_tex, rect!(0, 0, 1, 1));
 	pop();
 
 }
@@ -190,7 +243,7 @@ pub fn line(p1: Vec2, p2: Vec2) {
 	push();
 	translate(p1);
 	rotate(rot);
-	rect(vec2!(len, gfx.renderer_2d.line_width));
+	rect(vec2!(len, gfx.line_width));
 	pop();
 
 }
@@ -212,22 +265,22 @@ pub fn poly(pts: Vec<Vec2>) {
 
 /// set global tint
 pub fn color(tint: Color) {
-	ctx_get_mut().renderer_2d.tint = tint;
+	ctx_get_mut().tint = tint;
 }
 
 /// set line width
 pub fn line_width(line_width: u8) {
-	ctx_get_mut().renderer_2d.line_width = line_width;
+	ctx_get_mut().line_width = line_width;
 }
 
 /// push transform matrix
 pub fn push() {
 
-	let g = ctx_get_mut();
-	let stack = &mut g.renderer_2d.transform_stack;
+	let gfx = ctx_get_mut();
+	let stack = &mut gfx.transform_stack;
 
 	if (stack.len() < 32) {
-		stack.push(g.renderer_2d.transform);
+		stack.push(gfx.transform);
 	} else {
 		panic!("cannot push anymore");
 	}
@@ -237,12 +290,12 @@ pub fn push() {
 /// pop transform matrix
 pub fn pop() {
 
-	let mut g = ctx_get_mut();
-	let stack = &mut g.renderer_2d.transform_stack;
+	let mut gfx = ctx_get_mut();
+	let stack = &mut gfx.transform_stack;
 
 	match stack.pop() {
 		Some(t) => {
-			g.renderer_2d.transform = t;
+			gfx.transform = t;
 		},
 		None => {
 			panic!("cannot pop anymore");
@@ -255,9 +308,8 @@ pub fn pop() {
 pub fn translate(pos: Vec2) {
 
 	let gfx = ctx_get_mut();
-	let r = &mut gfx.renderer_2d;
 
-	r.transform = r.transform.translate(pos.x, pos.y);
+	gfx.transform = gfx.transform.translate(pos.x, pos.y);
 
 }
 
@@ -265,9 +317,8 @@ pub fn translate(pos: Vec2) {
 pub fn rotate(rot: f32) {
 
 	let gfx = ctx_get_mut();
-	let r = &mut gfx.renderer_2d;
 
-	r.transform = r.transform.rotate(rot);
+	gfx.transform = gfx.transform.rotate(rot);
 
 }
 
@@ -275,9 +326,8 @@ pub fn rotate(rot: f32) {
 pub fn scale(s: Vec2) {
 
 	let gfx = ctx_get_mut();
-	let r = &mut gfx.renderer_2d;
 
-	r.transform = r.transform.scale(s.x, s.y);
+	gfx.transform = gfx.transform.scale(s.x, s.y);
 
 
 }
@@ -286,8 +336,7 @@ pub fn scale(s: Vec2) {
 pub fn warp(pt: Vec2) -> Vec2 {
 
 	let gfx = ctx_get();
-	let renderer = &gfx.renderer_2d;
-	let trans = renderer.transform;
+	let trans = gfx.transform;
 
 	return trans.forward(pt);
 
@@ -297,8 +346,7 @@ pub fn warp(pt: Vec2) -> Vec2 {
 pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 	let gfx = ctx_get();
-	let renderer = &gfx.renderer_2d;
-	let trans = renderer.transform;
+	let trans = gfx.transform;
 
 	return trans.inverse().forward(pt);
 
@@ -309,6 +357,7 @@ pub fn clear() {
 
 	unsafe {
 		gl::Clear(gl::COLOR_BUFFER_BIT);
+// 		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 	}
 
 }
@@ -321,11 +370,6 @@ pub fn draw_on(canvas: &Canvas) {
 /// stop drawing on a canvas
 pub fn stop_draw_on(canvas: &Canvas) {
 	canvas.unbind();
-}
-
-/// set texture mag/min filter
-pub fn filter(filter: Filter) {
-	ctx_get_mut().renderer_2d.filter = filter;
 }
 
 /// texture
@@ -373,7 +417,7 @@ impl Texture {
 	pub fn from_bytes(data: &[u8]) -> Self {
 
 		let img = image::load_from_memory(data)
-			.unwrap()
+			.expect("failed to load image")
 			.to_rgba();
 
 		let width = img.width();
@@ -398,28 +442,6 @@ impl Texture {
 	/// create texture from a file
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
-	}
-
-	fn set_filter(&self, filter: Filter) -> &Self {
-
-		self.bind();
-
-		unsafe {
-
-			let gl_filter = match filter {
-				Filter::Nearest => gl::NEAREST,
-				Filter::Linear => gl::LINEAR,
-			};
-
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl_filter as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl_filter as i32);
-
-		}
-
-		self.unbind();
-
-		return self;
-
 	}
 
 	fn data(&mut self, pixels: &[u8]) -> &Self {
@@ -595,21 +617,15 @@ impl Font {
 
 }
 
-// private structs
-struct Renderer2D {
+// struct DrawState {
 
-	mesh: Mesh,
-	program: Program,
-	empty_tex: Texture,
-	projection: Mat4,
-	transform: Mat4,
-	transform_stack: Vec<Mat4>,
-	tint: Color,
-	line_width: u8,
-	default_font: Font,
-	filter: Filter,
+// 	verts: Vec<GLfloat>,
+// 	uvs: Vec<GLfloat>,
+// 	colors: Vec<GLfloat>,
+// 	indices: Vec<GLuint>,
+// 	count: u32,
 
-}
+// }
 
 struct Buffer {
 	id: GLuint,
@@ -840,7 +856,7 @@ impl Program {
 	fn attr(&self, index: GLuint, name: &str) -> &Self {
 
 		unsafe {
-			gl::BindAttribLocation(self.id, index, CString::new(name).unwrap().as_ptr());
+			gl::BindAttribLocation(self.id, index, CString::new(name).expect("failed to parse cstring").as_ptr());
 		}
 
 		return self;
@@ -889,7 +905,7 @@ impl Program {
 
 		unsafe {
 			gl::Uniform4f(
-				gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr()),
+				gl::GetUniformLocation(self.id, CString::new(name).expect("failed to parse cstring").as_ptr()),
 				v.x,
 				v.y,
 				v.z,
@@ -905,7 +921,7 @@ impl Program {
 
 		unsafe {
 			gl::UniformMatrix4fv(
-				gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr()),
+				gl::GetUniformLocation(self.id, CString::new(name).expect("failed to parse cstring").as_ptr()),
 				1,
 				gl::FALSE,
 				&value[0][0]
@@ -924,7 +940,7 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 	unsafe {
 
 		let id: GLuint = gl::CreateShader(shader_type);
-		let src_cstr = CString::new(src).unwrap();
+		let src_cstr = CString::new(src).expect("failed to parse cstring");
 
 		gl::ShaderSource(id, 1, &src_cstr.as_ptr(), ptr::null());
 		gl::CompileShader(id);
@@ -949,7 +965,7 @@ fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
 			);
 
 			log.set_len(log_length as usize);
-			panic!("{}", String::from_utf8(log).unwrap());
+			panic!("{}", String::from_utf8(log).expect("failed to get error log"));
 
 		}
 
