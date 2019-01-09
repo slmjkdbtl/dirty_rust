@@ -43,7 +43,7 @@ fn main() {
 
 		gfx::push();
 		gfx::translate(vec2!(240, 240));
-		gfx::color(color!(1));
+		gfx::color(color!());
 
 		// draw texture
 		gfx::draw(&res::sprite("yo").tex, rect!(0, 0, 1, 1));

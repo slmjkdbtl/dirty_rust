@@ -21,13 +21,18 @@ struct GfxCtx {
 	program: Program,
 	empty_tex: Texture,
 	projection: Mat4,
-	transform: Mat4,
-	transform_stack: Vec<Mat4>,
-	tint: Color,
-	line_width: u8,
+	state_stack: Vec<State>,
 	default_font: Font,
+	state: State,
 // 	queue: HashMap<GLuint, DrawState>,
 
+}
+
+#[derive(Default, Clone, Copy)]
+struct State {
+	transform: Mat4,
+	tint: Color,
+	line_width: u8,
 }
 
 pub(crate) fn init() {
@@ -35,8 +40,8 @@ pub(crate) fn init() {
 	unsafe {
 
 		gl::Enable(gl::BLEND);
-		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 // 		gl::Enable(gl::DEPTH_TEST);
+		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
 	}
@@ -70,8 +75,8 @@ pub(crate) fn init() {
 	mesh.make_index_buf(&indices);
 
 	let program = Program::new(
-		include_str!("../shaders/quad.vert").to_owned(),
-		include_str!("../shaders/quad.frag").to_owned()
+		include_str!("../shaders/quad.vert"),
+		include_str!("../shaders/quad.frag"),
 	);
 
 	program
@@ -94,11 +99,9 @@ pub(crate) fn init() {
 		mesh: mesh,
 		program: program,
 		empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
-		transform: Mat4::identity(),
 		projection: projection,
-		transform_stack: vec![],
-		tint: color!(1),
-		line_width: 1,
+		state_stack: vec![],
+		state: State::default(),
 		default_font: default_font,
 // 		queue: HashMap::new(),
 
@@ -116,10 +119,8 @@ pub fn reset() {
 
 	let gfx_mut = ctx_get_mut();
 
-	gfx_mut.transform_stack.clear();
-	gfx_mut.transform = Mat4::identity();
-	gfx_mut.line_width = 1;
-	gfx_mut.tint = color!(1);
+	gfx_mut.state_stack.clear();
+	gfx_mut.state = State::default();
 
 }
 
@@ -183,10 +184,10 @@ pub fn draw(tex: &Texture, quad: Rect) {
 // 	state.count += 1;
 
 	gfx.program
-		.uniform_color("tint", gfx.tint)
+		.uniform_color("tint", gfx.state.tint)
 		.uniform_rect("quad", quad)
 		.uniform_mat4("projection", gfx.projection.as_arr())
-		.uniform_mat4("transform", gfx.transform.as_arr())
+		.uniform_mat4("transform", gfx.state.transform.as_arr())
 		.bind();
 
 	pop();
@@ -243,13 +244,13 @@ pub fn line(p1: Vec2, p2: Vec2) {
 	push();
 	translate(p1);
 	rotate(rot);
-	rect(vec2!(len, gfx.line_width));
+	rect(vec2!(len, gfx.state.line_width));
 	pop();
 
 }
 
 /// draw polygon with vertices
-pub fn poly(pts: Vec<Vec2>) {
+pub fn poly(pts: &[Vec2]) {
 
 	for (i, p) in pts.iter().enumerate() {
 
@@ -265,42 +266,35 @@ pub fn poly(pts: Vec<Vec2>) {
 
 /// set global tint
 pub fn color(tint: Color) {
-	ctx_get_mut().tint = tint;
+	ctx_get_mut().state.tint = tint;
 }
 
 /// set line width
 pub fn line_width(line_width: u8) {
-	ctx_get_mut().line_width = line_width;
+	ctx_get_mut().state.line_width = line_width;
 }
 
-/// push transform matrix
+/// push state
 pub fn push() {
 
 	let gfx = ctx_get_mut();
-	let stack = &mut gfx.transform_stack;
+	let stack = &mut gfx.state_stack;
 
-	if (stack.len() < 32) {
-		stack.push(gfx.transform);
+	if (stack.len() < 64) {
+		stack.push(gfx.state);
 	} else {
 		panic!("cannot push anymore");
 	}
 
 }
 
-/// pop transform matrix
+/// pop state
 pub fn pop() {
 
 	let mut gfx = ctx_get_mut();
-	let stack = &mut gfx.transform_stack;
+	let stack = &mut gfx.state_stack;
 
-	match stack.pop() {
-		Some(t) => {
-			gfx.transform = t;
-		},
-		None => {
-			panic!("cannot pop anymore");
-		}
-	}
+	gfx.state = stack.pop().expect("cannot pop anymore");
 
 }
 
@@ -309,7 +303,7 @@ pub fn translate(pos: Vec2) {
 
 	let gfx = ctx_get_mut();
 
-	gfx.transform = gfx.transform.translate(pos.x, pos.y);
+	gfx.state.transform = gfx.state.transform.translate(pos.x, pos.y);
 
 }
 
@@ -318,7 +312,7 @@ pub fn rotate(rot: f32) {
 
 	let gfx = ctx_get_mut();
 
-	gfx.transform = gfx.transform.rotate(rot);
+	gfx.state.transform = gfx.state.transform.rotate(rot);
 
 }
 
@@ -327,7 +321,7 @@ pub fn scale(s: Vec2) {
 
 	let gfx = ctx_get_mut();
 
-	gfx.transform = gfx.transform.scale(s.x, s.y);
+	gfx.state.transform = gfx.state.transform.scale(s.x, s.y);
 
 
 }
@@ -336,7 +330,7 @@ pub fn scale(s: Vec2) {
 pub fn warp(pt: Vec2) -> Vec2 {
 
 	let gfx = ctx_get();
-	let trans = gfx.transform;
+	let trans = gfx.state.transform;
 
 	return trans.forward(pt);
 
@@ -346,7 +340,7 @@ pub fn warp(pt: Vec2) -> Vec2 {
 pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 	let gfx = ctx_get();
-	let trans = gfx.transform;
+	let trans = gfx.state.transform;
 
 	return trans.inverse().forward(pt);
 
@@ -356,8 +350,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 pub fn clear() {
 
 	unsafe {
-		gl::Clear(gl::COLOR_BUFFER_BIT);
-// 		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 	}
 
 }
@@ -536,7 +529,7 @@ impl Canvas {
 				panic!("canvas init failed");
 			}
 
-			gfx::clear();
+			clear();
 			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 
 		}
@@ -667,7 +660,7 @@ impl Buffer {
 		return self;
 	}
 
-	fn data(&self, data: &Vec<GLfloat>) -> &Self {
+	fn data(&self, data: &[GLfloat]) -> &Self {
 
 		unsafe {
 
@@ -750,7 +743,7 @@ impl IndexBuffer {
 
 	}
 
-	fn data(&mut self, data: &Vec<GLuint>) -> &Self {
+	fn data(&mut self, data: &[GLuint]) -> &Self {
 
 		unsafe {
 
@@ -795,7 +788,7 @@ impl Mesh {
 
 	}
 
-	fn make_buf(&mut self, data: &Vec<GLfloat>) -> &Buffer {
+	fn make_buf(&mut self, data: &[GLfloat]) -> &Buffer {
 
 		let buf = Buffer::new();
 
@@ -806,7 +799,7 @@ impl Mesh {
 
 	}
 
-	fn make_index_buf(&mut self, data: &Vec<GLuint>) -> &IndexBuffer {
+	fn make_index_buf(&mut self, data: &[GLuint]) -> &IndexBuffer {
 
 		let mut buf = IndexBuffer::new();
 
@@ -834,7 +827,7 @@ struct Program {
 
 impl Program {
 
-	fn new(vs_src: String, fs_src: String) -> Self {
+	fn new(vs_src: &str, fs_src: &str) -> Self {
 
 		unsafe {
 
@@ -856,7 +849,7 @@ impl Program {
 	fn attr(&self, index: GLuint, name: &str) -> &Self {
 
 		unsafe {
-			gl::BindAttribLocation(self.id, index, CString::new(name).expect("failed to parse cstring").as_ptr());
+			gl::BindAttribLocation(self.id, index, cstr(name).as_ptr());
 		}
 
 		return self;
@@ -905,7 +898,7 @@ impl Program {
 
 		unsafe {
 			gl::Uniform4f(
-				gl::GetUniformLocation(self.id, CString::new(name).expect("failed to parse cstring").as_ptr()),
+				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
 				v.x,
 				v.y,
 				v.z,
@@ -921,7 +914,7 @@ impl Program {
 
 		unsafe {
 			gl::UniformMatrix4fv(
-				gl::GetUniformLocation(self.id, CString::new(name).expect("failed to parse cstring").as_ptr()),
+				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
 				1,
 				gl::FALSE,
 				&value[0][0]
@@ -934,13 +927,16 @@ impl Program {
 
 }
 
-// private functions
-fn compile_shader(shader_type: GLenum, src: String) -> GLuint {
+fn cstr(name: &str) -> CString {
+	return CString::new(name).expect("failed to parse cstring");
+}
+
+fn compile_shader(shader_type: GLenum, src: &str) -> GLuint {
 
 	unsafe {
 
 		let id: GLuint = gl::CreateShader(shader_type);
-		let src_cstr = CString::new(src).expect("failed to parse cstring");
+		let src_cstr = cstr(src);
 
 		gl::ShaderSource(id, 1, &src_cstr.as_ptr(), ptr::null());
 		gl::CompileShader(id);

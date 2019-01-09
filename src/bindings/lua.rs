@@ -69,7 +69,7 @@ fn bind(lua: &Lua) -> Result<()> {
 	bind_func!("gfx_reset", (): () -> gfx::reset());
 
 	bind_func!("res_init", (): () -> res::init());
-	bind_func!("res_load_sprites", (dir, names): (String, Vec<String>) -> res::load_sprites(&dir, &names.iter().map(|s| s.as_ref()).collect()));
+	bind_func!("res_load_sprites", (dir, names): (String, Vec<String>) -> res::load_sprites(&dir, &names));
 
 // 	bind_func!("gfx_draw", (tex, rect): (&gfx::Texture, Rect) -> {
 // 		return Ok(gfx::draw(&tex, rect));

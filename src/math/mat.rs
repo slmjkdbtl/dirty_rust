@@ -165,6 +165,14 @@ impl Mat4 {
 
 }
 
+impl Default for Mat4 {
+
+    fn default() -> Self {
+		return Self::identity();
+	}
+
+}
+
 impl ops::Mul for Mat4 {
 
 	type Output = Self;

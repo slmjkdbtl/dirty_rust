@@ -74,27 +74,28 @@ pub fn load_all_sprites(dir: &str) {
 		.map(|f| fs::basename(&f))
 		.collect();
 
-	load_sprites(dir, &files.iter().map(|s| s.as_ref()).collect());
+	load_sprites(dir, &files);
 
 }
 
 /// load all sounds from given directory
 pub fn load_all_sounds(dir: &str) {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.ogg", dir))
+	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
 		.into_iter()
 		.map(|f| fs::basename(&f))
 		.collect();
 
-	load_sounds(dir, &files.iter().map(|s| s.as_ref()).collect());
+	load_sounds(dir, &files);
 
 }
 
 /// load all sprites from given directory with given names
-pub fn load_sprites(dir: &str, names: &Vec<&str>) {
+pub fn load_sprites<T: AsRef<str>>(dir: &str, names: &[T]) {
 
 	for name in names {
 
+		let name = name.as_ref();
 		let img = format!("{}{}.png", dir, name);
 		let json = format!("{}{}.json", dir, name);
 
@@ -109,9 +110,10 @@ pub fn load_sprites(dir: &str, names: &Vec<&str>) {
 }
 
 /// load all sounds from given directory with given names
-pub fn load_sounds(dir: &str, names: &Vec<&str>) {
+pub fn load_sounds<T: AsRef<str>>(dir: &str, names: &[T]) {
 
 	for name in names {
+		let name = name.as_ref();
 		load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
 	}
 
