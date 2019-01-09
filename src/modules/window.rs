@@ -149,7 +149,7 @@ pub(crate) fn poll_events() {
 
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum ButtonState {
 	Up,
 	Pressed,
