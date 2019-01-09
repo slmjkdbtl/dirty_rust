@@ -18,13 +18,13 @@ fn get_res_dir() -> String {
 
 	return exe
 		.parent()
-		.unwrap()
+		.expect("failed to get parent dir")
 		.parent()
-		.unwrap()
+		.expect("failed to get parent dir")
 		.join("Resources")
 		.into_os_string()
 		.into_string()
-		.unwrap();
+		.expect("failed to convert pathbuf to string")
 
 }
 
@@ -39,7 +39,7 @@ fn get_res_dir() -> String {
 		.to_path_buf()
 		.into_os_string()
 		.into_string()
-		.unwrap();
+		.expect("failed to convert pathbuf to string")
 
 }
 
@@ -76,14 +76,14 @@ pub fn glob(path: &str) -> Vec<String> {
 	if let Ok(listings) = glob::glob(path) {
 		for item in listings {
 			if let Ok(entry) = item {
-				entries.push(entry.into_os_string().into_string().unwrap());
+				entries.push(entry.into_os_string().into_string().expect("failed to convert pathbuf to string"));
 			}
 		}
 	} else {
 		if let Ok(listings) = glob::glob(&format!("{}/{}", get_res_dir(), path)) {
 			for item in listings {
 				if let Ok(entry) = item {
-					entries.push(entry.into_os_string().into_string().unwrap());
+					entries.push(entry.into_os_string().into_string().expect("failed to convert pathbuf to string"));
 				}
 			}
 		} else {
@@ -130,7 +130,7 @@ pub fn basename(path: &str) -> String {
 
 	if let Ok(path) = validate_path(path) {
 		if let Some(name) = Path::new(&path).file_stem() {
-			return name.to_str().unwrap().to_owned();
+			return name.to_str().expect("failed to get basename").to_owned();
 		} else {
 			panic!("failed to read file \"{}\"", path);
 		}

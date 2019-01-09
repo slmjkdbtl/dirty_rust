@@ -52,7 +52,7 @@ impl Sound {
 	pub fn from_bytes(data: &[u8]) -> Self {
 
 		let cursor = Cursor::new(data.to_owned());
-		let source = Decoder::new(cursor).unwrap();
+		let source = Decoder::new(cursor).expect("failed to decode sound");
 
 		return Self {
 			buffer: source.buffered(),
