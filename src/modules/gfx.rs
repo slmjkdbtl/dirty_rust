@@ -36,6 +36,48 @@ struct State {
 	line_width: u8,
 }
 
+struct Vertex {
+	pos: Vec3,
+	uv: Vec2,
+	color: Color,
+}
+
+impl Vertex {
+
+	fn new(pos: Vec3, uv: Vec2, color: Color) -> Self {
+
+		return Self {
+			pos,
+			uv,
+			color,
+		};
+
+	}
+
+	fn to_data(verts: &[Self]) -> Vec<f32> {
+
+		let mut data = Vec::with_capacity(verts.len());
+
+		for v in verts {
+
+			data.push(v.pos.x);
+			data.push(v.pos.y);
+			data.push(v.pos.z);
+			data.push(v.uv.x);
+			data.push(v.uv.y);
+			data.push(v.color.r);
+			data.push(v.color.g);
+			data.push(v.color.b);
+			data.push(v.color.a);
+
+		}
+
+		return data;
+
+	}
+
+}
+
 pub(crate) fn init() {
 
 	unsafe {
@@ -50,18 +92,11 @@ pub(crate) fn init() {
 	clear();
 	window::swap();
 
-	let verts: Vec<GLfloat> = vec![
-		0.0, 1.0,
-		1.0, 1.0,
-		1.0, 0.0,
-		0.0, 0.0,
-	];
-
-	let uvs: Vec<GLfloat> = vec![
-		0.0, 1.0,
-		1.0, 1.0,
-		1.0, 0.0,
-		0.0, 0.0
+	let v = vec![
+		Vertex::new(vec3!(0, 1, 0), vec2!(0, 1), color!()),
+		Vertex::new(vec3!(1, 1, 0), vec2!(1, 1), color!()),
+		Vertex::new(vec3!(1, 0, 0), vec2!(1, 0), color!()),
+		Vertex::new(vec3!(0, 0, 0), vec2!(0, 0), color!()),
 	];
 
 	let indices: Vec<GLuint> = vec![
@@ -71,8 +106,7 @@ pub(crate) fn init() {
 
 	let mut mesh = Mesh::new();
 
-	mesh.make_buf(&verts).attr(0, 2);
-	mesh.make_buf(&uvs).attr(1, 2);
+	mesh.make_buf(&Vertex::to_data(&v)).attr(0, 3, 9, 0).attr(1, 2, 9, 3).attr(2, 4, 9, 5);
 	mesh.make_index_buf(&indices);
 
 	let program = Program::new(
@@ -83,6 +117,7 @@ pub(crate) fn init() {
 	program
 		.attr(0, "pos")
 		.attr(1, "uv")
+		.attr(2, "color")
 		.link();
 
 	let default_font = Font::new(
@@ -681,12 +716,21 @@ impl Buffer {
 
 	}
 
-	fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Self {
+	fn attr(&self, attr_index: GLuint, buf_size: GLint, stride: usize, offset: usize) -> &Self {
 
 		unsafe {
 
 			self.bind();
-			gl::VertexAttribPointer(attr_index, buf_size, gl::FLOAT, gl::FALSE, 0, ptr::null());
+
+			gl::VertexAttribPointer(
+				attr_index,
+				buf_size,
+				gl::FLOAT,
+				gl::FALSE,
+				(stride * mem::size_of::<f32>()) as i32,
+				(offset * mem::size_of::<f32>()) as *const c_void
+			);
+
 			gl::EnableVertexAttribArray(attr_index);
 			self.unbind();
 
