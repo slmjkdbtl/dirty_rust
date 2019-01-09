@@ -1,15 +1,27 @@
 # wengwengweng
 
-sudo: true
+sudo: false
 language: rust
+
 rust:
   - stable
   - beta
   - nightly
+
 os:
   - linux
   - osx
   - windows
+
+matrix:
+  allow_failures:
+    - rust: nightly
+
+addons:
+  apt:
+    packages:
+    - libasound2-dev
+
 script:
   - cargo test headless
 

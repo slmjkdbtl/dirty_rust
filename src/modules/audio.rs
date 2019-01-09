@@ -40,7 +40,7 @@ pub fn play(sound: &Sound) {
 	rodio::play_raw(&ctx_get().device, sound.buffer.clone().convert_samples());
 }
 
-/// sound
+/// a sound is meant to play just once
 pub struct Sound {
 	/// buffer
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
