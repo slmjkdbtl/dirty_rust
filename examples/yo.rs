@@ -76,9 +76,6 @@ fn main() {
 		gfx::text("yo♪");
 		gfx::pop();
 
-		println!("{}", app::fps());
-		println!("{}", gfx::draw_calls());
-
 // 		gfx::stop_draw_on(&canvas);
 // 		gfx::render(&canvas);
 

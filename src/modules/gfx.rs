@@ -13,9 +13,6 @@ use gl::types::*;
 use crate::*;
 use crate::math::mat::Mat4;
 
-const MAX_SPRITES: usize = 2048;
-const MAX_STATE_STACK: usize = 64;
-
 // context
 ctx!(GFX: GfxCtx);
 
@@ -28,27 +25,14 @@ struct GfxCtx {
 	state: State,
 	state_stack: Vec<State>,
 	default_font: Font,
-	current_tex: Option<Texture>,
-	vertex_queue: Vec<f32>,
-	draw_calls: usize,
 
 }
 
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 struct State {
 	transform: Mat4,
 	tint: Color,
 	line_width: u8,
-}
-
-impl Default for State {
-	fn default() -> Self {
-		return Self {
-			transform: Mat4::identity(),
-			tint: color!(),
-			line_width: 1,
-		}
-	}
 }
 
 pub(crate) fn init() {
@@ -64,20 +48,29 @@ pub(crate) fn init() {
 	clear();
 	window::swap();
 
+	let verts: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0,
+	];
+
+	let uvs: Vec<GLfloat> = vec![
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0
+	];
+
 	let indices: Vec<GLuint> = vec![
 		0, 1, 3,
 		1, 2, 3,
-	]
-		.iter()
-		.cycle()
-		.take(MAX_SPRITES * 6)
-		.enumerate()
-		.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
-		.collect();
+	];
 
 	let mut mesh = Mesh::new();
 
-	mesh.make_buf(MAX_SPRITES * 4).attr(0, 2, 8, 0).attr(1, 2, 8, 2).attr(2, 4, 8, 4);;
+	mesh.make_buf(&verts).attr(0, 2);
+	mesh.make_buf(&uvs).attr(1, 2);
 	mesh.make_index_buf(&indices);
 
 	let program = Program::new(
@@ -88,7 +81,6 @@ pub(crate) fn init() {
 	program
 		.attr(0, "pos")
 		.attr(1, "uv")
-		.attr(2, "color")
 		.link();
 
 	let default_font = Font::new(
@@ -110,9 +102,6 @@ pub(crate) fn init() {
 		state_stack: Vec::with_capacity(64),
 		state: State::default(),
 		default_font: default_font,
-		current_tex: None,
-		vertex_queue: Vec::with_capacity(1024),
-		draw_calls: 0,
 
 	});
 
@@ -133,79 +122,25 @@ pub fn reset() {
 
 }
 
-fn push_vertex(pos: Vec2, uv: Vec2, color: Color) {
-
-	let ctx_mut = ctx_get_mut();
-	let queue = &mut ctx_mut.vertex_queue;
-
-	queue.push(pos.x);
-	queue.push(pos.y);
-	queue.push(uv.x);
-	queue.push(uv.y);
-	queue.push(color.r);
-	queue.push(color.g);
-	queue.push(color.b);
-	queue.push(color.a);
-
-}
-
-pub(crate) fn flush() {
-
-	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
-
-	if let Some(tex) = gfx.current_tex {
-
-		tex.bind();
-		gfx.program
-			.uniform_mat4("projection", gfx.projection.as_arr())
-			.bind();
-		gfx.mesh.buffers[0].update(&gfx.vertex_queue, 0);
-		gfx.mesh.draw();
-		tex.unbind();
-		gfx_mut.vertex_queue.clear();
-		gfx_mut.draw_calls += 1;
-		gfx_mut.current_tex = None;
-
-	}
-
-}
-
-/// get draw calls
-pub fn draw_calls() -> usize {
-	return ctx_get().draw_calls;
-}
-
-pub(crate) fn update() {
-	ctx_get_mut().draw_calls = 0;
-}
-
 /// draw a texture with visible quad area
 pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
 
-	if let Some(current_tex) = gfx.current_tex {
-		if current_tex != *tex {
-			flush();
-			gfx_mut.current_tex = Some(*tex);
-		}
-	} else {
-		gfx_mut.current_tex = Some(*tex);
-	}
-
+	tex.bind();
 	push();
 	scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
 
-	let trans = gfx.state.transform;
-	let color = gfx.state.tint;
+	gfx.program
+		.uniform_color("tint", gfx.state.tint)
+		.uniform_rect("quad", quad)
+		.uniform_mat4("projection", gfx.projection.as_arr())
+		.uniform_mat4("transform", gfx.state.transform.as_arr())
+		.bind();
 
-	push_vertex(trans.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color);
-	push_vertex(trans.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color);
-	push_vertex(trans.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color);
-	push_vertex(trans.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color);
 	pop();
+	gfx.mesh.draw();
+	tex.unbind();
 
 }
 
@@ -363,7 +298,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 pub fn clear() {
 
 	unsafe {
-		gl::Clear(gl::COLOR_BUFFER_BIT);
+		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 	}
 
 }
@@ -379,7 +314,6 @@ pub fn stop_draw_on(canvas: &Canvas) {
 }
 
 /// texture
-#[derive(Clone, Copy, PartialEq)]
 pub struct Texture {
 
 	id: GLuint,
@@ -390,8 +324,8 @@ pub struct Texture {
 
 }
 
-/// texture scaling filter
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+/// texture scaling filter
 pub enum Filter {
 	/// nearest
 	Nearest,
@@ -640,29 +574,19 @@ struct Buffer {
 
 impl Buffer {
 
-	fn new(count: usize) -> Self {
-
-		let mut id: GLuint = 0;
+	fn new() -> Self {
 
 		unsafe {
 
+			let mut id: GLuint = 0;
+
 			gl::GenBuffers(1, &mut id);
-			gl::BindBuffer(gl::ARRAY_BUFFER, id);
 
-			gl::BufferData(
-				gl::ARRAY_BUFFER,
-				(count * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				ptr::null() as *const c_void,
-				gl::DYNAMIC_DRAW
-			);
-
-			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+			return Self {
+				id: id,
+			};
 
 		}
-
-		return Self {
-			id: id,
-		};
 
 	}
 
@@ -684,18 +608,18 @@ impl Buffer {
 		return self;
 	}
 
-	fn update(&self, data: &[GLfloat], offset: usize) -> &Self {
+	fn data(&self, data: &[GLfloat]) -> &Self {
 
 		unsafe {
 
 			self.bind();
 
-            gl::BufferSubData(
+			gl::BufferData(
 				gl::ARRAY_BUFFER,
-				(offset * mem::size_of::<GLfloat>()) as GLsizeiptr,
 				(data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
 				data.as_ptr() as *const c_void,
-            );
+				gl::STATIC_DRAW
+			);
 
 			self.unbind();
 
@@ -705,21 +629,12 @@ impl Buffer {
 
 	}
 
-	fn attr(&self, attr_index: GLuint, buf_size: GLint, stride: usize, offset: usize) -> &Self {
+	fn attr(&self, attr_index: GLuint, buf_size: GLint) -> &Self {
 
 		unsafe {
 
 			self.bind();
-
-			gl::VertexAttribPointer(
-				attr_index,
-				buf_size,
-				gl::FLOAT,
-				gl::FALSE,
-				(stride * mem::size_of::<f32>()) as i32,
-				(offset * mem::size_of::<f32>()) as *const c_void
-			);
-
+			gl::VertexAttribPointer(attr_index, buf_size, gl::FLOAT, gl::FALSE, 0, ptr::null());
 			gl::EnableVertexAttribArray(attr_index);
 			self.unbind();
 
@@ -821,10 +736,11 @@ impl Mesh {
 
 	}
 
-	fn make_buf(&mut self, count: usize) -> &Buffer {
+	fn make_buf(&mut self, data: &[GLfloat]) -> &Buffer {
 
-		let buf = Buffer::new(count);
+		let buf = Buffer::new();
 
+		buf.data(&data);
 		self.buffers.push(buf);
 
 		return &self.buffers[self.buffers.len() - 1];
@@ -845,7 +761,6 @@ impl Mesh {
 	fn draw(&self) {
 
 		unsafe {
-			self.buffers[0].bind();
 			self.index_buffer.bind();
 			gl::DrawElements(gl::TRIANGLES, self.index_buffer.size, gl::UNSIGNED_INT, ptr::null());
 		}
@@ -1003,4 +918,3 @@ fn compile_shader(shader_type: GLenum, src: &str) -> GLuint {
 	}
 
 }
-
