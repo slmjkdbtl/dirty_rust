@@ -1,7 +1,7 @@
 # wengwengweng
 
 run example="yo":
-	cargo run --example {{example}}
+	cargo run --release --example {{example}}
 
 doc crate:
 	cargo doc -p {{crate}} --no-deps --open

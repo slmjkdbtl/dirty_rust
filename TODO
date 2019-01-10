@@ -27,7 +27,6 @@
 - documenting
 
 == DOING
-- sprite batching
 - play audio with settings
 - frame buffer upside-down bug
 - mouse inputs

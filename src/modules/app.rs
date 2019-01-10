@@ -130,11 +130,6 @@ pub fn run(f: &mut FnMut()) {
 
 		f();
 
-		if gfx::enabled() {
-			gfx::flush();
-			gfx::update();
-		}
-
 		if window::enabled() {
 			window::swap();
 		}
