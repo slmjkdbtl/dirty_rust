@@ -153,6 +153,21 @@ pub fn push() {
 
 }
 
+/// pause a track
+pub fn pause(track: &Track) {
+	track.sink.pause();
+}
+
+/// resume a track
+pub fn resume(track: &Track) {
+	track.sink.play();
+}
+
+/// drop a track
+pub fn drop(track: Track) {
+	track.sink.detach();
+}
+
 /// pop state
 pub fn pop() {
 
