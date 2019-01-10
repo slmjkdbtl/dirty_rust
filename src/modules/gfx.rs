@@ -22,9 +22,9 @@ struct GfxCtx {
 	program: Program,
 	empty_tex: Texture,
 	projection: Mat4,
+	state: State,
 	state_stack: Vec<State>,
 	default_font: Font,
-	state: State,
 
 }
 
@@ -99,7 +99,7 @@ pub(crate) fn init() {
 		program: program,
 		empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
 		projection: projection,
-		state_stack: vec![],
+		state_stack: Vec::with_capacity(64),
 		state: State::default(),
 		default_font: default_font,
 

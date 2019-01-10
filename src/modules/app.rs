@@ -124,6 +124,10 @@ pub fn run(f: &mut FnMut()) {
 			gfx::reset();
 		}
 
+		if audio::enabled() {
+			audio::reset();
+		}
+
 		f();
 
 		if window::enabled() {

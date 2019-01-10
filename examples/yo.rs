@@ -17,7 +17,7 @@ fn main() {
 	res::load_sprites("examples/", &vec!["car"]);
 	res::load_sounds("examples/", &vec!["pop", "yo"]);
 
-	let music = audio::play(res::sound("yo"));
+	let music = audio::track(res::sound("yo"));
 
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
@@ -80,7 +80,8 @@ fn main() {
 // 		gfx::render(&canvas);
 
 		if window::key_pressed(Key::Space) {
-			audio::effect(&res::sound("pop").speed(math::rand() * 2.0).delay(1000));
+			audio::speed(math::rand() * 2.0);
+			audio::play(res::sound("pop"));
 		}
 
 		if window::key_pressed(Key::F) {

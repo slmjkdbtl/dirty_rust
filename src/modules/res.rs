@@ -12,7 +12,7 @@ ctx!(RES: ResCtx);
 
 struct ResCtx {
 	sprites: HashMap<String, SpriteData>,
-	sounds: HashMap<String, audio::SoundData>,
+	sounds: HashMap<String, audio::Sound>,
 }
 
 /// initialize res module
@@ -217,7 +217,7 @@ pub fn sprite(name: &str) -> &SpriteData {
 }
 
 /// get sound that is loaded with given name
-pub fn sound(name: &str) -> &audio::SoundData {
+pub fn sound(name: &str) -> &audio::Sound {
 	return &ctx_get().sounds.get(name).unwrap_or_else(|| panic!("failed to get sound {}", name));;
 }
 
