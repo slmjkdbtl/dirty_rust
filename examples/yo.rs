@@ -84,6 +84,14 @@ fn main() {
 			audio::play(res::sound("pop"));
 		}
 
+		if window::key_pressed(Key::J) {
+			audio::pause(&music);
+		}
+
+		if window::key_pressed(Key::K) {
+			audio::resume(&music);
+		}
+
 		if window::key_pressed(Key::F) {
 			window::set_fullscreen(!window::get_fullscreen())
 		}
