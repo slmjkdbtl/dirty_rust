@@ -130,13 +130,17 @@ pub fn run(f: &mut FnMut()) {
 
 		f();
 
+		if gfx::enabled() {
+			gfx::flush();
+		}
+
 		if window::enabled() {
 			window::swap();
 		}
 
 		let actual_dt = start_time.elapsed();
 		let actual_dt = actual_dt.as_secs() as f32 * 1000.0 + actual_dt.subsec_millis() as f32;
-		let expected_dt = 1000.0 / app.fps_cap as f32;
+		let expected_dt = 1000.0 / f32::from(app.fps_cap);
 
 		if expected_dt > actual_dt {
 			app_mut.dt = expected_dt as f32 / 1000.0;
