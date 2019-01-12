@@ -76,7 +76,7 @@ pub fn init() {
 
 				gfx::line_width(3);
 				gfx::color(color!(1, 1, 0, 1));
-// 				gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
+				gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
 
 				if window::key_pressed(Key::Escape) {
 					std::process::exit(1);

@@ -2,10 +2,6 @@
 
 //! Rendering
 
-use std::ptr;
-use std::mem;
-use std::ffi::CString;
-use std::ffi::c_void;
 use std::collections::HashMap;
 
 use gl::types::*;
@@ -149,7 +145,6 @@ pub(crate) fn flush() {
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
 		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, gfx.vertex_queue.len() / 4 * 6);
-		tex.unbind();
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
 
@@ -194,11 +189,6 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	push_vertex(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color);
 	push_vertex(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color);
 
-}
-
-/// draw canvas
-pub fn render(canvas: &Canvas) {
-	draw(&canvas.tex, rect!(0, 0, 1, 1));
 }
 
 /// draw text
@@ -348,21 +338,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 /// clear view
 pub fn clear() {
-
-	unsafe {
-		gl::Clear(gl::COLOR_BUFFER_BIT);
-	}
-
-}
-
-/// start drawing on a canvas
-pub fn draw_on(canvas: &Canvas) {
-	canvas.bind();
-}
-
-/// stop drawing on a canvas
-pub fn stop_draw_on(canvas: &Canvas) {
-	canvas.unbind();
+	ggl::clear();
 }
 
 /// texture
@@ -394,7 +370,7 @@ impl Texture {
 			width: width,
 			height: height,
 
-		}
+		};
 
 	}
 
@@ -457,8 +433,6 @@ impl Texture {
 
 		}
 
-		self.unbind();
-
 		return self;
 
 	}
@@ -467,88 +441,6 @@ impl Texture {
 
 		unsafe {
 			gl::BindTexture(gl::TEXTURE_2D, self.id);
-		}
-
-		return self;
-
-	}
-
-	fn unbind(&self) -> &Self {
-
-		unsafe {
-			gl::BindTexture(gl::TEXTURE_2D, 0);
-		}
-
-		return self;
-
-	}
-
-}
-
-/// frame buffer
-pub struct Canvas {
-
-	tex: Texture,
-	id: GLuint,
-
-}
-
-impl Canvas {
-
-	/// create a frame buffer from width and height
-	pub fn new(width: u32, height: u32) -> Self {
-
-		let mut id: GLuint = 0;
-		let mut rbo: GLuint = 0;
-		let tex = Texture::from_raw(&[], width, height);
-
-		unsafe {
-
-			gl::GenFramebuffers(1, &mut id);
-			gl::BindFramebuffer(gl::FRAMEBUFFER, id);
-			gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
-
-			gl::FramebufferTexture2D(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, tex.id, 0);
-
-			gl::GenRenderbuffers(1, &mut rbo);
-			gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
-			gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT16, width as GLint, height as GLint);
-			gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
-
-			gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
-
-			if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
-				panic!("canvas init failed");
-			}
-
-			clear();
-			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-
-		}
-
-		return Self {
-
-			id: id,
-			tex: tex,
-
-		}
-
-	}
-
-	fn bind(&self) -> &Self {
-
-		unsafe {
-			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
-		}
-
-		return self;
-
-	}
-
-	fn unbind(&self) -> &Self {
-
-		unsafe {
-			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 		}
 
 		return self;
