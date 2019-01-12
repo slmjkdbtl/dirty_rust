@@ -28,6 +28,7 @@
 
 == DOING
 - sprite batching
+- better opengl wrapper
 - play audio with settings
 - frame buffer upside-down bug
 - mouse inputs

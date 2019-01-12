@@ -41,41 +41,59 @@ fn main() {
 
 		gfx::clear();
 
+		for i in 0..8 {
+			for j in 0..6 {
+				gfx::push();
+				gfx::translate(vec2!(i * 80, j * 80));
+				gfx::rotate(app::time());
+				for _ in 0..12 {
+					gfx::draw(&tex, frames[index]);
+				}
+				gfx::pop();
+			}
+		}
+
+
 // 		gfx::draw_on(&canvas);
 // 		gfx::clear();
 
-		gfx::push();
-		gfx::translate(vec2!(196, 164));
-		gfx::scale(vec2!(2));
-		gfx::translate(vec2!(64));
-		gfx::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
-		gfx::translate(vec2!(-64));
+// 		gfx::push();
+// 		gfx::translate(vec2!(12));
+// 		gfx::scale(vec2!(2));
+// 		gfx::text(&format!("{}", app::fps()));
+// 		gfx::pop();
 
-		let pts: Vec<Vec2> = pts.iter()
-			.map(|&p| gfx::warp(p))
-			.collect();
+// 		gfx::push();
+// 		gfx::translate(vec2!(196, 164));
+// 		gfx::scale(vec2!(2));
+// 		gfx::translate(vec2!(64));
+// 		gfx::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
+// 		gfx::translate(vec2!(-64));
 
-		gfx::draw(&tex, frames[index]);
-		gfx::text(&format!("{}", app::fps()));
-		gfx::pop();
+// 		let pts: Vec<Vec2> = pts.iter()
+// 			.map(|&p| gfx::warp(p))
+// 			.collect();
 
-		gfx::push();
-		gfx::line_width(3);
-		gfx::color(color!(1, 1, 0, 1));
-		gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
-		gfx::pop();
+// 		gfx::draw(&tex, frames[index]);
+// 		gfx::pop();
 
-		gfx::push();
-		gfx::line_width(1);
-		gfx::color(color!(1, 0, 1, 1));
-		gfx::poly(&pts);
-		gfx::pop();
+// 		gfx::push();
+// 		gfx::line_width(3);
+// 		gfx::color(color!(1, 1, 0, 1));
+// 		gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
+// 		gfx::pop();
 
-		gfx::push();
-		gfx::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
-		gfx::scale(vec2!(3));
-		gfx::text("yo♪");
-		gfx::pop();
+// 		gfx::push();
+// 		gfx::line_width(1);
+// 		gfx::color(color!(1, 0, 1, 1));
+// 		gfx::poly(&pts);
+// 		gfx::pop();
+
+// 		gfx::push();
+// 		gfx::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
+// 		gfx::scale(vec2!(3));
+// 		gfx::text("yo♪");
+// 		gfx::pop();
 
 		println!("{}", app::fps());
 
