@@ -3,6 +3,7 @@
 //! Rendering
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use gl::types::*;
 
@@ -11,6 +12,8 @@ use crate::math::mat::Mat4;
 use crate::utils::gl as ggl;
 
 const MAX_DRAWS: usize = 65536;
+const MAX_VERTICES: usize = MAX_DRAWS * 4;
+const MAX_INDICES: usize = MAX_DRAWS * 6;
 const MAX_STATE_STACK: usize = 64;
 
 // context
@@ -64,19 +67,19 @@ pub(crate) fn init() {
 	let indices: Vec<GLuint> = vec![0, 1, 3, 1, 2, 3]
 		.iter()
 		.cycle()
-		.take(MAX_DRAWS * 6)
+		.take(MAX_INDICES)
 		.enumerate()
 		.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 		.collect();
 
-	let vbuf = ggl::VertexBuffer::new(MAX_DRAWS * 4, 8, ggl::BufferUsage::Dynamic);
+	let vbuf = ggl::VertexBuffer::new(MAX_VERTICES, 8, ggl::BufferUsage::Dynamic);
 
 	vbuf
 		.attr(0, 2, 0)
 		.attr(1, 2, 2)
 		.attr(2, 4, 4);
 
-	let ibuf = ggl::IndexBuffer::new(MAX_DRAWS * 6, ggl::BufferUsage::Static);
+	let ibuf = ggl::IndexBuffer::new(MAX_INDICES, ggl::BufferUsage::Static);
 
 	ibuf
 		.data(&indices, 0);
@@ -113,7 +116,7 @@ pub(crate) fn init() {
 		state: State::default(),
 		default_font: default_font,
 		current_tex: None,
-		vertex_queue: Vec::with_capacity(MAX_DRAWS * 4),
+		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 
 	});
 
@@ -139,10 +142,15 @@ pub(crate) fn flush() {
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
 
+	if gfx.vertex_queue.is_empty() {
+		return;
+	}
+
 	if let Some(tex) = gfx.current_tex {
 
 		tex.bind();
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
+		gfx.vbuf.clear();
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
 		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, gfx.vertex_queue.len() / 4 * 6);
 		gfx_mut.vertex_queue.clear();

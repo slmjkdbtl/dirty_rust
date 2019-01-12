@@ -5,8 +5,8 @@ use dirty::*;
 fn main() {
 
 	app::init();
-	window::init("yo", 640, 480);
 	audio::init();
+	window::init("yo", 640, 480);
 	res::init();
 
 	let (width, height) = window::size();
@@ -42,7 +42,6 @@ fn main() {
 
 		gfx::push();
 		gfx::translate(vec2!(12));
-		gfx::scale(vec2!(2));
 		gfx::text(&format!("{}", app::fps()));
 		gfx::pop();
 
@@ -58,7 +57,6 @@ fn main() {
 			.collect();
 
 		gfx::draw(&tex, frames[index]);
-		gfx::text(&format!("{}", app::fps()));
 		gfx::pop();
 
 		gfx::push();
@@ -78,8 +76,6 @@ fn main() {
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
 		gfx::pop();
-
-		println!("{}", app::fps());
 
 		if window::key_pressed(Key::Space) {
 			audio::speed(math::rand() * 2.0);
