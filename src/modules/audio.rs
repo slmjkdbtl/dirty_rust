@@ -12,32 +12,11 @@ use rodio::source::Buffered;
 
 use crate::*;
 
-const MAX_STATE_STACK: usize = 8;
-
 // context
 ctx!(AUDIO: AudioCtx);
 
 struct AudioCtx {
-
 	device: rodio::Device,
-	state: State,
-	state_stack: Vec<State>,
-
-}
-
-#[derive(Clone, Copy)]
-struct State {
-	speed: f32,
-	amplify: f32,
-}
-
-impl Default for State {
-	fn default() -> Self {
-		return Self {
-			speed: 1.0,
-			amplify: 1.0,
-		}
-	}
 }
 
 /// initialize audio module
@@ -48,11 +27,7 @@ pub fn init() {
 	}
 
 	ctx_init(AudioCtx {
-
 		device: rodio::default_output_device().expect("failed to get audio device"),
-		state: State::default(),
-		state_stack: Vec::with_capacity(MAX_STATE_STACK),
-
 	});
 
 }
@@ -64,15 +39,18 @@ pub fn enabled() -> bool {
 
 /// play a given sound once till end
 pub fn play(sound: &Sound) {
+	rodio::play_raw(&ctx_get().device, sound.buffer.clone().convert_samples());
+}
 
-	let ctx = ctx_get();
+/// play a given sound with effects once till end
+pub fn play_with_effect(sound: &Sound, effect: Effect) {
 
 	rodio::play_raw(
-		&ctx.device,
+		&ctx_get().device,
 		sound.buffer
 			.clone()
-			.speed(ctx.state.speed)
-			.amplify(ctx.state.amplify)
+			.speed(effect.speed)
+			.amplify(effect.amplify)
 			.convert_samples()
 	);
 
@@ -116,29 +94,12 @@ pub fn track(sound: &Sound) -> Track {
 	let ctx = ctx_get();
 	let sink = Sink::new(&ctx.device);
 
-	sink.append(
-		sound.buffer
-			.clone()
-			.speed(ctx.state.speed)
-			.amplify(ctx.state.amplify)
-	);
+	sink.append(sound.buffer.clone());
 
 	return Track {
 		sink: sink,
 	}
 
-}
-
-/// set global speed
-pub fn speed(s: f32) {
-	assert!(s > 0.0 && s < 2.0, "invalid speed");
-	ctx_get_mut().state.speed = s;
-}
-
-/// set global amplify
-pub fn amplify(s: f32) {
-	assert!(s >= 0.0 && s < 2.0, "invalid amplify");
-	ctx_get_mut().state.amplify = s;
 }
 
 /// pause a track
@@ -156,37 +117,49 @@ pub fn drop(track: Track) {
 	track.sink.detach();
 }
 
-/// push state
-pub fn push() {
+/// sound effects
+#[derive(Clone, Copy)]
+pub struct Effect {
+	speed: f32,
+	amplify: f32,
+}
 
-	let audio = ctx_get_mut();
-	let stack = &mut audio.state_stack;
+impl Effect {
 
-	if (stack.len() < MAX_STATE_STACK) {
-		stack.push(audio.state);
-	} else {
-		panic!("cannot push anymore");
+	/// set speed
+	pub fn speed(&self, s: f32) -> Self {
+		assert!(s > 0.0 && s <= 2.0, "invalid speed");
+		return Self {
+			speed: s,
+			amplify: self.amplify,
+		};
+	}
+
+	/// set speed
+	pub fn amplify(&self, a: f32) -> Self {
+		assert!(a >= 0.0 && a <= 2.0, "invalid amplify");
+		return Self {
+			speed: self.speed,
+			amplify: a,
+		};
 	}
 
 }
 
-/// pop state
-pub fn pop() {
-
-	let mut audio = ctx_get_mut();
-	let stack = &mut audio.state_stack;
-
-	audio.state = stack.pop().expect("cannot pop anymore");
-
+impl Default for Effect {
+	fn default() -> Self {
+		return Self {
+			speed: 1.0,
+			amplify: 1.0,
+		}
+	}
 }
 
-/// reset state
-pub fn reset() {
-
-	let gfx_mut = ctx_get_mut();
-
-	gfx_mut.state_stack.clear();
-	gfx_mut.state = State::default();
-
+/// return an empty effect
+pub fn effect() -> Effect {
+	return Effect {
+		speed: 1.0,
+		amplify: 1.0,
+	};
 }
 
