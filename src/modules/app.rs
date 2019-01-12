@@ -16,7 +16,6 @@ struct AppCtx {
 
 	dt: f32,
 	time: f32,
-	platform: String,
 	fps_cap: u8,
 
 }
@@ -92,7 +91,6 @@ pub fn init() {
 
 	ctx_init(AppCtx {
 
-		platform: sdl2::get_platform().to_owned(),
 		dt: 0.0,
 		time: 0.0,
 		fps_cap: 60,
@@ -182,26 +180,26 @@ pub fn quit() {
 
 /// check if current platform is MacOS
 pub fn is_macos() -> bool {
-	return ctx_get().platform == "Mac OS X";
+	return sdl2::get_platform() == "Mac OS X";
 }
 
 /// check if current platform is Windows
 pub fn is_windows() -> bool {
-	return ctx_get().platform == "Windows";
+	return sdl2::get_platform() == "Windows";
 }
 
 /// check if current platform is Linux
 pub fn is_linux() -> bool {
-	return ctx_get().platform == "Linux";
+	return sdl2::get_platform() == "Linux";
 }
 
 /// check if current platform is Android
 pub fn is_android() -> bool {
-	return ctx_get().platform == "Android";
+	return sdl2::get_platform() == "Android";
 }
 
 /// check if current platform is iOS
 pub fn is_ios() -> bool {
-	return ctx_get().platform == "iOS";
+	return sdl2::get_platform() == "iOS";
 }
 

@@ -9,42 +9,17 @@ use gl::types::*;
 
 use crate::*;
 
-macro_rules! wrap_enum {
-
-	($name:ident($type:ty): { $($member:ident => $dest:expr),+$(,)* }) => {
-
-		#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-		pub enum $name {
-			$($member,)+
-		}
-
-		impl From<$name> for $type {
-
-			fn from(usage: $name) -> $type {
-
-				match usage {
-					$($name::$member => $dest,)+
-				}
-
-			}
-
-		}
-
-	};
-
-}
-
-wrap_enum!(BufferUsage(GLenum): {
+bind_enum!(BufferUsage(GLenum) {
 	Static => gl::STATIC_DRAW,
 	Dynamic => gl::DYNAMIC_DRAW,
 });
 
-wrap_enum!(ShaderType(GLenum): {
+bind_enum!(ShaderType(GLenum) {
 	Vertex => gl::VERTEX_SHADER,
 	Fragment => gl::FRAGMENT_SHADER,
 });
 
-wrap_enum!(Filter(GLenum): {
+bind_enum!(Filter(GLenum) {
 	Nearest => gl::NEAREST,
 	Linear => gl::LINEAR,
 });
@@ -54,6 +29,7 @@ pub struct VertexBuffer {
 	id: GLuint,
 	size: usize,
 	stride: usize,
+	usage: BufferUsage,
 
 }
 
@@ -78,15 +54,31 @@ impl VertexBuffer {
 				usage.into(),
 			);
 
-			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-
 			return Self {
 				id: id,
 				size: size,
 				stride: stride,
+				usage: usage,
 			};
 
 		}
+
+	}
+
+	pub fn clear(&self) -> &Self {
+
+		unsafe {
+
+			gl::BufferData(
+				gl::ARRAY_BUFFER,
+				(self.size * mem::size_of::<GLfloat>()) as GLsizeiptr,
+				ptr::null() as *const GLvoid,
+				self.usage.into(),
+			);
+
+		}
+
+		return self;
 
 	}
 
