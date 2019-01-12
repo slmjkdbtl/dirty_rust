@@ -377,15 +377,6 @@ pub struct Texture {
 
 }
 
-/// texture scaling filter
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub enum Filter {
-	/// nearest
-	Nearest,
-	/// linear
-	Linear,
-}
-
 impl Texture {
 
 	/// create an empty texture with width and height
@@ -444,10 +435,10 @@ impl Texture {
 
 		unsafe {
 
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
 			gl::GenerateMipmap(gl::TEXTURE_2D);
 
 			gl::TexImage2D(
