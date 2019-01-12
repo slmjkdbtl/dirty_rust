@@ -11,11 +11,7 @@ use crate::*;
 
 macro_rules! wrap_enum {
 
-	($name:ident($type:ty): { $($member:ident => $dest:expr),+ }) => {
-		wrap_enum!($name($type): { $($member => $dest,)+ });
-	};
-
-	($name:ident($type:ty): { $($member:ident => $dest:expr,)+ }) => {
+	($name:ident($type:ty): { $($member:ident => $dest:expr),+$(,)* }) => {
 
 		#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 		pub enum $name {
@@ -59,12 +55,6 @@ pub struct VertexBuffer {
 	size: usize,
 	stride: usize,
 
-}
-
-macro_rules! ccc {
-	($one:ident, $two:ident) => {
-		$one::$two();
-	}
 }
 
 impl VertexBuffer {
@@ -357,6 +347,71 @@ impl Drop for Texture {
 
 }
 
+pub struct Framebuffer {
+	id: GLuint,
+}
+
+impl Framebuffer {
+
+	/// create a frame buffer from width and height
+	pub fn new() -> Self {
+
+		unsafe {
+
+			let mut id: GLuint = 0;
+
+			gl::GenFramebuffers(1, &mut id);
+
+			return Self {
+				id: id,
+			};
+
+		}
+
+	}
+
+	pub fn attach(
+		&mut self,
+		tex: &Texture) -> &Self {
+
+		self.bind();
+
+		unsafe {
+
+			gl::FramebufferTexture2D(
+				gl::FRAMEBUFFER,
+				gl::COLOR_ATTACHMENT0,
+				gl::TEXTURE_2D,
+				tex.id,
+				0,
+			);
+
+		}
+
+		return self;
+
+	}
+
+	fn bind(&self) -> &Self {
+
+		unsafe {
+			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
+		}
+
+		return self;
+
+	}
+
+}
+
+impl Drop for Framebuffer {
+	fn drop(&mut self) {
+		unsafe {
+			gl::DeleteFramebuffers(1, &self.id);
+		}
+	}
+}
+
 pub struct Program {
 	id: GLuint,
 }
@@ -464,6 +519,14 @@ impl Program {
 
 }
 
+impl Drop for Program {
+	fn drop(&mut self) {
+		unsafe {
+			gl::DeleteProgram(self.id);
+		}
+	}
+}
+
 fn cstr(name: &str) -> CString {
 	return CString::new(name).expect("failed to parse cstring");
 }
@@ -508,6 +571,12 @@ fn compile_shader(
 
 	}
 
+}
+
+pub fn clear() {
+	unsafe {
+		gl::Clear(gl::COLOR_BUFFER_BIT);
+	}
 }
 
 pub fn draw(
