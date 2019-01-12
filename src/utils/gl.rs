@@ -9,26 +9,49 @@ use gl::types::*;
 
 use crate::*;
 
-#[derive(Clone, Copy)]
-pub enum BufferUsage {
+macro_rules! wrap_enum {
 
-	Static,
-	Dynamic,
+	($name:ident($type:ty): { $($member:ident => $dest:expr),+ }) => {
+		wrap_enum!($name($type): { $($member => $dest,)+ });
+	};
 
-}
+	($name:ident($type:ty): { $($member:ident => $dest:expr,)+ }) => {
 
-impl From<BufferUsage> for GLenum {
-
-	fn from(usage: BufferUsage) -> GLenum {
-
-		match usage {
-			BufferUsage::Static => gl::STATIC_DRAW,
-			BufferUsage::Dynamic => gl::DYNAMIC_DRAW,
+		#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+		pub enum $name {
+			$($member,)+
 		}
 
-	}
+		impl From<$name> for $type {
+
+			fn from(usage: $name) -> $type {
+
+				match usage {
+					$($name::$member => $dest,)+
+				}
+
+			}
+
+		}
+
+	};
 
 }
+
+wrap_enum!(BufferUsage(GLenum): {
+	Static => gl::STATIC_DRAW,
+	Dynamic => gl::DYNAMIC_DRAW,
+});
+
+wrap_enum!(ShaderType(GLenum): {
+	Vertex => gl::VERTEX_SHADER,
+	Fragment => gl::FRAGMENT_SHADER,
+});
+
+wrap_enum!(Filter(GLenum): {
+	Nearest => gl::NEAREST,
+	Linear => gl::LINEAR,
+});
 
 pub struct VertexBuffer {
 
@@ -36,6 +59,12 @@ pub struct VertexBuffer {
 	size: usize,
 	stride: usize,
 
+}
+
+macro_rules! ccc {
+	($one:ident, $two:ident) => {
+		$one::$two();
+	}
 }
 
 impl VertexBuffer {
@@ -280,6 +309,12 @@ impl Texture {
 
 		unsafe {
 
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+			gl::GenerateMipmap(gl::TEXTURE_2D);
+
 			gl::TexSubImage2D(
 
 				gl::TEXTURE_2D,
@@ -334,8 +369,8 @@ impl Program {
 
 		unsafe {
 
-			let vs: GLuint = compile_shader(gl::VERTEX_SHADER, vs_src);
-			let fs: GLuint = compile_shader(gl::FRAGMENT_SHADER, fs_src);
+			let vs: GLuint = compile_shader(ShaderType::Vertex, vs_src);
+			let fs: GLuint = compile_shader(ShaderType::Fragment, fs_src);
 			let id: GLuint = gl::CreateProgram();
 
 			gl::AttachShader(id, vs);
@@ -434,12 +469,12 @@ fn cstr(name: &str) -> CString {
 }
 
 fn compile_shader(
-	shader_type: GLenum,
+	shader_type: ShaderType,
 	src: &str) -> GLuint {
 
 	unsafe {
 
-		let id: GLuint = gl::CreateShader(shader_type);
+		let id: GLuint = gl::CreateShader(shader_type.into());
 		let src_cstr = cstr(src);
 
 		gl::ShaderSource(id, 1, &src_cstr.as_ptr(), ptr::null());
