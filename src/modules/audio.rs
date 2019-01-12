@@ -12,6 +12,8 @@ use rodio::source::Buffered;
 
 use crate::*;
 
+const MAX_STATE_STACK: usize = 8;
+
 // context
 ctx!(AUDIO: AudioCtx);
 
@@ -49,7 +51,7 @@ pub fn init() {
 
 		device: rodio::default_output_device().expect("failed to get audio device"),
 		state: State::default(),
-		state_stack: Vec::with_capacity(4),
+		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 
 	});
 
@@ -139,20 +141,6 @@ pub fn amplify(s: f32) {
 	ctx_get_mut().state.amplify = s;
 }
 
-/// push state
-pub fn push() {
-
-	let gfx = ctx_get_mut();
-	let stack = &mut gfx.state_stack;
-
-	if (stack.len() < 64) {
-		stack.push(gfx.state);
-	} else {
-		panic!("cannot push anymore");
-	}
-
-}
-
 /// pause a track
 pub fn pause(track: &Track) {
 	track.sink.pause();
@@ -168,13 +156,27 @@ pub fn drop(track: Track) {
 	track.sink.detach();
 }
 
+/// push state
+pub fn push() {
+
+	let audio = ctx_get_mut();
+	let stack = &mut audio.state_stack;
+
+	if (stack.len() < MAX_STATE_STACK) {
+		stack.push(audio.state);
+	} else {
+		panic!("cannot push anymore");
+	}
+
+}
+
 /// pop state
 pub fn pop() {
 
-	let mut gfx = ctx_get_mut();
-	let stack = &mut gfx.state_stack;
+	let mut audio = ctx_get_mut();
+	let stack = &mut audio.state_stack;
 
-	gfx.state = stack.pop().expect("cannot pop anymore");
+	audio.state = stack.pop().expect("cannot pop anymore");
 
 }
 

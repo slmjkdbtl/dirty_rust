@@ -56,6 +56,7 @@ fn main() {
 			.collect();
 
 		gfx::draw(&tex, frames[index]);
+		gfx::text(&format!("{}", app::fps()));
 		gfx::pop();
 
 		gfx::push();
@@ -75,6 +76,8 @@ fn main() {
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
 		gfx::pop();
+
+		println!("{}", app::fps());
 
 // 		gfx::stop_draw_on(&canvas);
 // 		gfx::render(&canvas);
