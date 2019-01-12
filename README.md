@@ -70,8 +70,9 @@ more under `examples/`
 
 ### notes
 
-- this lib is more opinionated than idiomatic, upon initialization each module has its hidden `static` state that dies when program ends
+- api is more opinionated than idiomatic (partly because I want it to support some scripting languages)
+- upon initialization each module has its hidden `static` state that dies when program ends
 - `app::init()` also overrides the panic behavior (also display messages to screen if `window` is initiated)
 - currently using OpenGL 2.1 for better compatibility, might change to gfx-rs in the future
-- planning on supporting various scripting tools, currently doing lua and ketos, help wanted
+- there's no proper custom error handling now (e.g. if you use some of the file io wrapper functions in the `fs` module an error will directly go in the error screen)
 

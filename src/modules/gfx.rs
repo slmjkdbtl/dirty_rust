@@ -12,8 +12,9 @@ use gl::types::*;
 
 use crate::*;
 use crate::math::mat::Mat4;
+use crate::utils::gl as ggl;
 
-const MAX_SPRITES: usize = 2048;
+const MAX_DRAWS: usize = 65536;
 const MAX_STATE_STACK: usize = 64;
 
 // context
@@ -21,8 +22,9 @@ ctx!(GFX: GfxCtx);
 
 struct GfxCtx {
 
-	mesh: Mesh,
-	program: Program,
+	ibuf: ggl::IndexBuffer,
+	vbuf: ggl::VertexBuffer,
+	program: ggl::Program,
 	empty_tex: Texture,
 	projection: Mat4,
 	state: State,
@@ -30,7 +32,6 @@ struct GfxCtx {
 	default_font: Font,
 	current_tex: Option<Texture>,
 	vertex_queue: Vec<f32>,
-	draw_calls: usize,
 
 }
 
@@ -64,23 +65,27 @@ pub(crate) fn init() {
 	clear();
 	window::swap();
 
-	let indices: Vec<GLuint> = vec![
-		0, 1, 3,
-		1, 2, 3,
-	]
+	let indices: Vec<GLuint> = vec![0, 1, 3, 1, 2, 3]
 		.iter()
 		.cycle()
-		.take(MAX_SPRITES * 6)
+		.take(MAX_DRAWS * 6)
 		.enumerate()
 		.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 		.collect();
 
-	let mut mesh = Mesh::new();
+	let vbuf = ggl::VertexBuffer::new(MAX_DRAWS * 4, 8, ggl::BufferUsage::Dynamic);
 
-	mesh.make_buf(MAX_SPRITES * 4).attr(0, 2, 8, 0).attr(1, 2, 8, 2).attr(2, 4, 8, 4);;
-	mesh.make_index_buf(&indices);
+	vbuf
+		.attr(0, 2, 0)
+		.attr(1, 2, 2)
+		.attr(2, 4, 4);
 
-	let program = Program::new(
+	let ibuf = ggl::IndexBuffer::new(MAX_DRAWS * 6, ggl::BufferUsage::Static);
+
+	ibuf
+		.data(&indices, 0);
+
+	let program = ggl::Program::new(
 		include_str!("../shaders/quad.vert"),
 		include_str!("../shaders/quad.frag"),
 	);
@@ -103,7 +108,8 @@ pub(crate) fn init() {
 
 	ctx_init(GfxCtx {
 
-		mesh: mesh,
+		vbuf: vbuf,
+		ibuf: ibuf,
 		program: program,
 		empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
 		projection: projection,
@@ -111,8 +117,7 @@ pub(crate) fn init() {
 		state: State::default(),
 		default_font: default_font,
 		current_tex: None,
-		vertex_queue: Vec::with_capacity(1024),
-		draw_calls: 0,
+		vertex_queue: Vec::with_capacity(MAX_DRAWS * 4),
 
 	});
 
@@ -141,27 +146,15 @@ pub(crate) fn flush() {
 	if let Some(tex) = gfx.current_tex {
 
 		tex.bind();
-		gfx.program
-			.uniform_mat4("projection", gfx.projection.as_arr())
-			.bind();
-		gfx.mesh.buffers[0].update(&gfx.vertex_queue, 0);
-		gfx.mesh.draw();
+		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
+		gfx.vbuf.data(&gfx.vertex_queue, 0);
+		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, gfx.vertex_queue.len() / 4 * 6);
 		tex.unbind();
 		gfx_mut.vertex_queue.clear();
-		gfx_mut.draw_calls += 1;
 		gfx_mut.current_tex = None;
 
 	}
 
-}
-
-/// get draw calls
-pub fn draw_calls() -> usize {
-	return ctx_get().draw_calls;
-}
-
-pub(crate) fn update() {
-	ctx_get_mut().draw_calls = 0;
 }
 
 /// draw a texture with visible quad area
@@ -618,405 +611,3 @@ impl Font {
 
 }
 
-// struct DrawState {
-
-// 	verts: Vec<GLfloat>,
-// 	uvs: Vec<GLfloat>,
-// 	colors: Vec<GLfloat>,
-// 	indices: Vec<GLuint>,
-// 	count: u32,
-
-// }
-
-struct Buffer {
-	id: GLuint,
-	size: usize,
-}
-
-impl Buffer {
-
-	fn new(count: usize) -> Self {
-
-		let mut id: GLuint = 0;
-
-		unsafe {
-
-			gl::GenBuffers(1, &mut id);
-			gl::BindBuffer(gl::ARRAY_BUFFER, id);
-
-			gl::BufferData(
-				gl::ARRAY_BUFFER,
-				(count * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				ptr::null() as *const c_void,
-				gl::DYNAMIC_DRAW
-			);
-
-			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-
-		}
-
-		return Self {
-			id: id,
-			size: count,
-		};
-
-	}
-
-	fn clear(&self) -> &Self {
-
-		let mut id: GLuint = 0;
-
-		self.bind();
-
-		unsafe {
-
-			gl::BufferData(
-				gl::ARRAY_BUFFER,
-				(self.size * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				ptr::null() as *const c_void,
-				gl::DYNAMIC_DRAW
-			);
-
-		}
-
-		return self.unbind();
-
-	}
-
-	fn bind(&self) -> &Self {
-
-		unsafe {
-			gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
-		}
-
-		return self;
-	}
-
-	fn unbind(&self) -> &Self {
-
-		unsafe {
-			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-		}
-
-		return self;
-	}
-
-	fn update(&self, data: &[GLfloat], offset: usize) -> &Self {
-
-		unsafe {
-
-			self.bind();
-
-            gl::BufferSubData(
-				gl::ARRAY_BUFFER,
-				(offset * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				(data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				data.as_ptr() as *const c_void,
-            );
-
-			self.unbind();
-
-		}
-
-		return self;
-
-	}
-
-	fn attr(&self, attr_index: GLuint, buf_size: GLint, stride: usize, offset: usize) -> &Self {
-
-		unsafe {
-
-			self.bind();
-
-			gl::VertexAttribPointer(
-				attr_index,
-				buf_size,
-				gl::FLOAT,
-				gl::FALSE,
-				(stride * mem::size_of::<f32>()) as i32,
-				(offset * mem::size_of::<f32>()) as *const c_void
-			);
-
-			gl::EnableVertexAttribArray(attr_index);
-			self.unbind();
-
-		}
-
-		return self;
-
-	}
-
-}
-
-struct IndexBuffer {
-
-	id: GLuint,
-	size: GLint,
-
-}
-
-impl IndexBuffer {
-
-	fn new() -> Self {
-
-		unsafe {
-
-			let mut id: GLuint = 0;
-
-			gl::GenBuffers(1, &mut id);
-
-			return Self {
-				id: id,
-				size: 0,
-			};
-
-		}
-
-	}
-
-	fn bind(&self) -> &Self {
-
-		unsafe {
-			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
-		}
-
-		return self;
-	}
-
-	fn unbind(&self) -> &Self {
-
-		unsafe {
-			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-		}
-
-		return self;
-
-	}
-
-	fn data(&mut self, data: &[GLuint]) -> &Self {
-
-		unsafe {
-
-			self.size = data.len() as GLint;
-			self.bind();
-
-			gl::BufferData(
-				gl::ELEMENT_ARRAY_BUFFER,
-				(data.len() * mem::size_of::<GLuint>()) as GLsizeiptr,
-				data.as_ptr() as *const c_void,
-				gl::STATIC_DRAW
-			);
-
-			self.unbind();
-
-		}
-
-		return self;
-
-	}
-
-}
-
-struct Mesh {
-
-	buffers: Vec<Buffer>,
-	index_buffer: IndexBuffer,
-
-}
-
-impl Mesh {
-
-	fn new() -> Self {
-
-		return Self {
-			buffers: vec![],
-			index_buffer: IndexBuffer {
-				id: 0,
-				size: 0,
-			},
-		};
-
-	}
-
-	fn make_buf(&mut self, count: usize) -> &Buffer {
-
-		let buf = Buffer::new(count);
-
-		self.buffers.push(buf);
-
-		return &self.buffers[self.buffers.len() - 1];
-
-	}
-
-	fn make_index_buf(&mut self, data: &[GLuint]) -> &IndexBuffer {
-
-		let mut buf = IndexBuffer::new();
-
-		buf.data(&data);
-		self.index_buffer = buf;
-
-		return &self.index_buffer;
-
-	}
-
-	fn draw(&self) {
-
-		unsafe {
-			self.buffers[0].bind();
-			self.index_buffer.bind();
-			gl::DrawElements(gl::TRIANGLES, self.index_buffer.size, gl::UNSIGNED_INT, ptr::null());
-		}
-
-	}
-
-}
-
-struct Program {
-	id: GLuint,
-}
-
-impl Program {
-
-	fn new(vs_src: &str, fs_src: &str) -> Self {
-
-		unsafe {
-
-			let vs: GLuint = compile_shader(gl::VERTEX_SHADER, vs_src);
-			let fs: GLuint = compile_shader(gl::FRAGMENT_SHADER, fs_src);
-			let id: GLuint = gl::CreateProgram();
-
-			gl::AttachShader(id, vs);
-			gl::AttachShader(id, fs);
-
-			return Self {
-				id: id
-			};
-
-		}
-
-	}
-
-	fn attr(&self, index: GLuint, name: &str) -> &Self {
-
-		unsafe {
-			gl::BindAttribLocation(self.id, index, cstr(name).as_ptr());
-		}
-
-		return self;
-
-	}
-
-	fn bind(&self) -> &Self {
-
-		unsafe {
-			gl::UseProgram(self.id);
-		}
-
-		return self;
-
-	}
-
-	fn unbind(&self) -> &Self {
-
-		unsafe {
-			gl::UseProgram(0);
-		}
-
-		return self;
-
-	}
-
-	fn link(&self) -> &Self {
-
-		unsafe {
-			gl::LinkProgram(self.id);
-		}
-
-		return self;
-
-	}
-
-	fn uniform_color(&self, name: &str, c: Color) -> &Self {
-		return self.uniform_vec4(name, vec4!(c.r, c.g, c.b, c.a));
-	}
-
-	fn uniform_rect(&self, name: &str, r: Rect) -> &Self {
-		return self.uniform_vec4(name, vec4!(r.x, r.y, r.w, r.h));
-	}
-
-	fn uniform_vec4(&self, name: &str, v: Vec4) -> &Self {
-
-		unsafe {
-			gl::Uniform4f(
-				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
-				v.x,
-				v.y,
-				v.z,
-				v.w,
-			);
-		}
-
-		return self;
-
-	}
-
-	fn uniform_mat4(&self, name: &str, value: [[f32; 4]; 4]) -> &Self {
-
-		unsafe {
-			gl::UniformMatrix4fv(
-				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
-				1,
-				gl::FALSE,
-				&value[0][0]
-			);
-		}
-
-		return self;
-
-	}
-
-}
-
-fn cstr(name: &str) -> CString {
-	return CString::new(name).expect("failed to parse cstring");
-}
-
-fn compile_shader(shader_type: GLenum, src: &str) -> GLuint {
-
-	unsafe {
-
-		let id: GLuint = gl::CreateShader(shader_type);
-		let src_cstr = cstr(src);
-
-		gl::ShaderSource(id, 1, &src_cstr.as_ptr(), ptr::null());
-		gl::CompileShader(id);
-
-		let mut status: GLint = gl::FALSE as GLint;
-
-		gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut status);
-
-		if status != (gl::TRUE as GLint) {
-
-			let mut log_length: GLint = mem::uninitialized();
-
-			gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut log_length);
-
-			let mut log: Vec<u8> = Vec::with_capacity(log_length as usize);
-
-			gl::GetShaderInfoLog(
-				id,
-				log_length,
-				&mut log_length,
-				log.as_mut_ptr() as *mut GLchar
-			);
-
-			log.set_len(log_length as usize);
-			panic!("{}", String::from_utf8(log).expect("failed to get error log"));
-
-		}
-
-		return id;
-
-	}
-
-}
