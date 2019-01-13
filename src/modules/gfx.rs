@@ -149,7 +149,6 @@ pub(crate) fn flush() {
 	if let Some(tex) = &gfx.current_tex {
 
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
-		gfx.vbuf.clear();
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
 		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4 * 6);
 		gfx_mut.vertex_queue.clear();

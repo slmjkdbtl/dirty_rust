@@ -66,23 +66,6 @@ impl VertexBuffer {
 
 	}
 
-	pub fn clear(&self) -> &Self {
-
-		unsafe {
-
-			gl::BufferData(
-				gl::ARRAY_BUFFER,
-				(self.size * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				ptr::null() as *const GLvoid,
-				self.usage.into(),
-			);
-
-		}
-
-		return self;
-
-	}
-
 	pub fn data(
 		&self,
 		data: &[GLfloat],
@@ -260,6 +243,20 @@ impl Texture {
 			gl::GenTextures(1, &mut id);
 			gl::BindTexture(gl::TEXTURE_2D, id);
 
+			gl::TexImage2D(
+
+				gl::TEXTURE_2D,
+				0,
+				gl::RGBA8 as GLint,
+				width as GLint,
+				height as GLint,
+				0,
+				gl::RGBA,
+				gl::UNSIGNED_BYTE,
+				ptr::null(),
+
+			);
+
 			return Self {
 
 				id: id,
@@ -286,18 +283,16 @@ impl Texture {
 			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
 			gl::GenerateMipmap(gl::TEXTURE_2D);
 
-			gl::TexImage2D(
-
+			gl::TexSubImage2D(
 				gl::TEXTURE_2D,
 				0,
-				gl::RGBA8 as GLint,
+				0,
+				0,
 				self.width as GLint,
 				self.height as GLint,
-				0,
 				gl::RGBA,
 				gl::UNSIGNED_BYTE,
 				pixels.as_ptr() as *const GLvoid
-
 			);
 
 		}
