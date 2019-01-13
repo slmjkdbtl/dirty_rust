@@ -39,27 +39,23 @@ pub fn enabled() -> bool {
 
 /// play a given sound once till end
 pub fn play(sound: &Sound) {
-	rodio::play_raw(&ctx_get().device, sound.buffer.clone().convert_samples());
-}
-
-/// play a given sound with effects once till end
-pub fn play_with_effect(sound: &Sound, effect: Effect) {
 
 	rodio::play_raw(
 		&ctx_get().device,
 		sound.buffer
 			.clone()
-			.speed(effect.speed)
-			.amplify(effect.amplify)
+			.speed(sound.speed)
+			.amplify(sound.amplify)
 			.convert_samples()
 	);
 
 }
 
-/// a sound is meant to play just once
+/// base struct containing sound data and effects data
 pub struct Sound {
-	/// buffer
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
+	speed: f32,
+	amplify: f32,
 }
 
 impl Sound {
@@ -72,6 +68,8 @@ impl Sound {
 
 		return Self {
 			buffer: source.buffered(),
+			speed: 1.0,
+			amplify: 1.0,
 		};
 
 	}
@@ -79,6 +77,26 @@ impl Sound {
 	/// create a sound from file
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
+	}
+
+	/// return a new sound with speed effect
+	pub fn speed(&self, s: f32) -> Self {
+		assert!(s > 0.0 && s <= 2.0, "invalid speed");
+		return Self {
+			buffer: self.buffer.clone(),
+			speed: s,
+			amplify: self.amplify,
+		};
+	}
+
+	/// return a new sound with speed effect
+	pub fn amplify(&self, a: f32) -> Self {
+		assert!(a >= 0.0 && a <= 2.0, "invalid amplify");
+		return Self {
+			buffer: self.buffer.clone(),
+			speed: self.speed,
+			amplify: a,
+		};
 	}
 
 }
@@ -94,7 +112,12 @@ pub fn track(sound: &Sound) -> Track {
 	let ctx = ctx_get();
 	let sink = Sink::new(&ctx.device);
 
-	sink.append(sound.buffer.clone());
+	sink.append(
+		sound.buffer
+			.clone()
+			.speed(sound.speed)
+			.amplify(sound.amplify)
+	);
 
 	return Track {
 		sink: sink,
@@ -115,51 +138,5 @@ pub fn resume(track: &Track) {
 /// drop a track
 pub fn drop(track: Track) {
 	track.sink.detach();
-}
-
-/// sound effects
-#[derive(Clone, Copy)]
-pub struct Effect {
-	speed: f32,
-	amplify: f32,
-}
-
-impl Effect {
-
-	/// set speed
-	pub fn speed(&self, s: f32) -> Self {
-		assert!(s > 0.0 && s <= 2.0, "invalid speed");
-		return Self {
-			speed: s,
-			amplify: self.amplify,
-		};
-	}
-
-	/// set speed
-	pub fn amplify(&self, a: f32) -> Self {
-		assert!(a >= 0.0 && a <= 2.0, "invalid amplify");
-		return Self {
-			speed: self.speed,
-			amplify: a,
-		};
-	}
-
-}
-
-impl Default for Effect {
-	fn default() -> Self {
-		return Self {
-			speed: 1.0,
-			amplify: 1.0,
-		}
-	}
-}
-
-/// return an empty effect
-pub fn effect() -> Effect {
-	return Effect {
-		speed: 1.0,
-		amplify: 1.0,
-	};
 }
 
