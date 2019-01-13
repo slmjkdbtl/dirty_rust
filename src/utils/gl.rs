@@ -1,9 +1,10 @@
 // wengwengweng
 
+#![allow(dead_code)]
+
 use std::ptr;
 use std::mem;
 use std::ffi::CString;
-use std::ffi::c_void;
 
 use gl::types::*;
 
@@ -12,6 +13,7 @@ use crate::*;
 bind_enum!(BufferUsage(GLenum) {
 	Static => gl::STATIC_DRAW,
 	Dynamic => gl::DYNAMIC_DRAW,
+	Stream => gl::STREAM_DRAW,
 });
 
 bind_enum!(ShaderType(GLenum) {
@@ -63,6 +65,23 @@ impl VertexBuffer {
 			};
 
 		}
+
+	}
+
+	pub fn clear(&self) -> &Self {
+
+		unsafe {
+
+			gl::BufferData(
+				gl::ARRAY_BUFFER,
+				(self.size * mem::size_of::<GLfloat>()) as GLsizeiptr,
+				ptr::null() as *const GLvoid,
+				self.usage.into(),
+			);
+
+		}
+
+		return self;
 
 	}
 

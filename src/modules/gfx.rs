@@ -3,7 +3,6 @@
 //! Rendering
 
 use std::collections::HashMap;
-use std::rc::Rc;
 
 use gl::types::*;
 
@@ -149,6 +148,7 @@ pub(crate) fn flush() {
 	if let Some(tex) = &gfx.current_tex {
 
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
+		gfx.vbuf.clear();
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
 		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4 * 6);
 		gfx_mut.vertex_queue.clear();
@@ -165,13 +165,11 @@ pub fn draw(tex: &'static Texture, quad: Rect) {
 	let gfx_mut = ctx_get_mut();
 	let queue = &mut gfx_mut.vertex_queue;
 
-	if let Some(current_tex) = gfx.current_tex {
-		if *current_tex != *tex {
-			flush();
-			gfx_mut.current_tex = Some(tex);
-		}
-	} else {
-		gfx_mut.current_tex = Some(tex);
+	let wrapped_tex = Some(tex);
+
+	if gfx.current_tex != wrapped_tex {
+		flush();
+		gfx_mut.current_tex = wrapped_tex;
 	}
 
 	let mut push_vertex = |pos: Vec2, uv: Vec2, color: Color| {
@@ -392,7 +390,7 @@ impl Texture {
 	/// create texture from pixel data, width and height
 	pub fn from_raw(pixels: &[u8], width: u32, height: u32) -> Self {
 
-		let mut tex = Self::new(width, height);
+		let tex = Self::new(width, height);
 
 		tex.handle.data(pixels);
 
