@@ -13,7 +13,6 @@
 - bitmap font rendering
 - window configs / queries
 - 2d point game/screen transform
-- frame buffers
 - read from macos resources folder
 - error screen
 - allow windowless
@@ -25,18 +24,18 @@
 - cap framerate
 - custom panic
 - documenting
+- better opengl wrapper
+- sprite batching
+- audio effects
 
 == DOING
-- sprite batching
-- better opengl wrapper
-- play audio with settings
-- frame buffer upside-down bug
 - mouse inputs
 - lua bindings
 - ketos bindings
 
 == TO DO
 - custom shaders
+- frame buffers
 - 3d
 - ecs
 - collision detections

@@ -16,7 +16,7 @@ fn main() {
 	res::load_sprites("examples/", &vec!["car"]);
 	res::load_sounds("examples/", &vec!["pop", "yo"]);
 
-	let music = audio::track(res::sound("yo"));
+	let music = audio::track(res::sound("yo"), true);
 
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;

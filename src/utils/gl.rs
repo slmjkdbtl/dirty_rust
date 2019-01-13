@@ -24,6 +24,7 @@ bind_enum!(Filter(GLenum) {
 	Linear => gl::LINEAR,
 });
 
+#[derive(PartialEq)]
 pub struct VertexBuffer {
 
 	id: GLuint,
@@ -153,6 +154,7 @@ impl Drop for VertexBuffer {
 
 }
 
+#[derive(PartialEq)]
 pub struct IndexBuffer {
 
 	id: GLuint,
@@ -235,6 +237,7 @@ impl Drop for IndexBuffer {
 
 }
 
+#[derive(PartialEq)]
 pub struct Texture {
 
 	id: GLuint,
@@ -257,20 +260,6 @@ impl Texture {
 			gl::GenTextures(1, &mut id);
 			gl::BindTexture(gl::TEXTURE_2D, id);
 
-			gl::TexImage2D(
-
-				gl::TEXTURE_2D,
-				0,
-				gl::RGBA8 as GLint,
-				width as GLint,
-				height as GLint,
-				0,
-				gl::RGBA,
-				gl::UNSIGNED_BYTE,
-				ptr::null(),
-
-			);
-
 			return Self {
 
 				id: id,
@@ -291,13 +280,13 @@ impl Texture {
 
 		unsafe {
 
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
 			gl::GenerateMipmap(gl::TEXTURE_2D);
 
-			gl::TexSubImage2D(
+			gl::TexImage2D(
 
 				gl::TEXTURE_2D,
 				0,
@@ -339,6 +328,7 @@ impl Drop for Texture {
 
 }
 
+#[derive(PartialEq)]
 pub struct Framebuffer {
 	id: GLuint,
 }
@@ -404,6 +394,7 @@ impl Drop for Framebuffer {
 	}
 }
 
+#[derive(PartialEq)]
 pub struct Program {
 	id: GLuint,
 }
@@ -575,7 +566,7 @@ pub fn draw(
 	vbuf: &VertexBuffer,
 	ibuf: &IndexBuffer,
 	program: &Program,
-// 	tex: &Texture,
+	tex: &Texture,
 	count: usize) {
 
 	unsafe {
@@ -583,7 +574,7 @@ pub fn draw(
 		program.bind();
 		vbuf.bind();
 		ibuf.bind();
-// 		tex.bind();
+		tex.bind();
 
 		gl::DrawElements(
 			gl::TRIANGLES,
