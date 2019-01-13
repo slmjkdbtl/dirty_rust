@@ -40,22 +40,21 @@ pub fn enabled() -> bool {
 /// play a given sound once till end
 pub fn play(sound: &Sound) {
 
-	rodio::play_raw(
-		&ctx_get().device,
-		sound.buffer
-			.clone()
-			.speed(sound.speed)
-			.amplify(sound.amplify)
-			.convert_samples()
-	);
+	let s = sound.buffer.clone();
+	let s = s.speed(sound.speed);
+	let s = s.amplify(sound.amplify);
+
+	rodio::play_raw(&ctx_get().device, s.convert_samples());
 
 }
 
 /// base struct containing sound data and effects data
+#[derive(Clone)]
 pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
 	speed: f32,
 	amplify: f32,
+	reverb: (u64, f32),
 }
 
 impl Sound {
@@ -70,6 +69,7 @@ impl Sound {
 			buffer: source.buffered(),
 			speed: 1.0,
 			amplify: 1.0,
+			reverb: (0, 0.0),
 		};
 
 	}
@@ -82,21 +82,24 @@ impl Sound {
 	/// return a new sound with speed effect
 	pub fn speed(&self, s: f32) -> Self {
 		assert!(s > 0.0 && s <= 2.0, "invalid speed");
-		return Self {
-			buffer: self.buffer.clone(),
-			speed: s,
-			amplify: self.amplify,
-		};
+		let mut sound = self.clone();
+		sound.speed = s;
+		return sound;
 	}
 
 	/// return a new sound with speed effect
 	pub fn amplify(&self, a: f32) -> Self {
 		assert!(a >= 0.0 && a <= 2.0, "invalid amplify");
-		return Self {
-			buffer: self.buffer.clone(),
-			speed: self.speed,
-			amplify: a,
-		};
+		let mut sound = self.clone();
+		sound.amplify = a;
+		return sound;
+	}
+
+	/// return a new sound with reverb effect
+	pub fn reverb(&self, time: u64, amp: f32) -> Self {
+		let mut sound = self.clone();
+		sound.reverb = (time, amp);
+		return sound;
 	}
 
 }
@@ -107,17 +110,31 @@ pub struct Track {
 }
 
 /// play a sound and return a track
-pub fn track(sound: &Sound) -> Track {
+pub fn track(sound: &Sound, repeat: bool) -> Track {
 
 	let ctx = ctx_get();
 	let sink = Sink::new(&ctx.device);
 
-	sink.append(
-		sound.buffer
-			.clone()
-			.speed(sound.speed)
-			.amplify(sound.amplify)
-	);
+	if repeat {
+
+		sink.append(
+			sound.buffer
+				.clone()
+				.speed(sound.speed)
+				.amplify(sound.amplify)
+				.repeat_infinite()
+		);
+
+	} else {
+
+		sink.append(
+			sound.buffer
+				.clone()
+				.speed(sound.speed)
+				.amplify(sound.amplify)
+		);
+
+	}
 
 	return Track {
 		sink: sink,

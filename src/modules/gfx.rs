@@ -29,7 +29,7 @@ struct GfxCtx {
 	state: State,
 	state_stack: Vec<State>,
 	default_font: Font,
-	current_tex: Option<Texture>,
+	current_tex: Option<&'static Texture>,
 	vertex_queue: Vec<f32>,
 
 }
@@ -112,7 +112,7 @@ pub(crate) fn init() {
 		program: program,
 		empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
 		projection: projection,
-		state_stack: Vec::with_capacity(64),
+		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
 		default_font: default_font,
 		current_tex: None,
@@ -146,13 +146,12 @@ pub(crate) fn flush() {
 		return;
 	}
 
-	if let Some(tex) = gfx.current_tex {
+	if let Some(tex) = &gfx.current_tex {
 
-		tex.bind();
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
 		gfx.vbuf.clear();
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, gfx.vertex_queue.len() / 4 * 6);
+		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4 * 6);
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
 
@@ -161,19 +160,19 @@ pub(crate) fn flush() {
 }
 
 /// draw a texture with visible quad area
-pub fn draw(tex: &Texture, quad: Rect) {
+pub fn draw(tex: &'static Texture, quad: Rect) {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
 	let queue = &mut gfx_mut.vertex_queue;
 
 	if let Some(current_tex) = gfx.current_tex {
-		if current_tex != *tex {
+		if *current_tex != *tex {
 			flush();
-			gfx_mut.current_tex = Some(*tex);
+			gfx_mut.current_tex = Some(tex);
 		}
 	} else {
-		gfx_mut.current_tex = Some(*tex);
+		gfx_mut.current_tex = Some(tex);
 	}
 
 	let mut push_vertex = |pos: Vec2, uv: Vec2, color: Color| {
@@ -278,7 +277,7 @@ pub fn push() {
 	let gfx = ctx_get_mut();
 	let stack = &mut gfx.state_stack;
 
-	if (stack.len() < 64) {
+	if (stack.len() < MAX_STATE_STACK) {
 		stack.push(gfx.state);
 	} else {
 		panic!("cannot push anymore");
@@ -350,10 +349,10 @@ pub fn clear() {
 }
 
 /// texture
-#[derive(Clone, Copy, PartialEq)]
+#[derive(PartialEq)]
 pub struct Texture {
 
-	id: GLuint,
+	handle: ggl::Texture,
 	/// width
 	pub width: u32,
 	/// height
@@ -366,15 +365,9 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 
-		let mut id: GLuint = 0;
-
-		unsafe {
-			gl::GenTextures(1, &mut id);
-		}
-
 		return Self {
 
-			id: id,
+			handle: ggl::Texture::new(width, height),
 			width: width,
 			height: height,
 
@@ -402,7 +395,7 @@ impl Texture {
 
 		let mut tex = Self::new(width, height);
 
-		tex.data(pixels);
+		tex.handle.data(pixels);
 
 		return tex;
 
@@ -411,48 +404,6 @@ impl Texture {
 	/// create texture from a file
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
-	}
-
-	fn data(&mut self, pixels: &[u8]) -> &Self {
-
-		self.bind();
-
-		unsafe {
-
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
-			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
-			gl::GenerateMipmap(gl::TEXTURE_2D);
-
-			gl::TexImage2D(
-
-				gl::TEXTURE_2D,
-				0,
-				gl::RGBA8 as GLint,
-				self.width as GLint,
-				self.height as GLint,
-				0,
-				gl::RGBA,
-				gl::UNSIGNED_BYTE,
-				pixels.as_ptr() as *const GLvoid
-
-			);
-
-		}
-
-		return self;
-
-	}
-
-	fn bind(&self) -> &Self {
-
-		unsafe {
-			gl::BindTexture(gl::TEXTURE_2D, self.id);
-		}
-
-		return self;
-
 	}
 
 }
