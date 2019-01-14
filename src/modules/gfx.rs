@@ -4,11 +4,9 @@
 
 use std::collections::HashMap;
 
-use gl::types::*;
-
 use crate::*;
 use crate::math::mat::Mat4;
-use crate::utils::gl as ggl;
+use crate::utils::gl;
 
 const MAX_DRAWS: usize = 65536;
 const MAX_VERTICES: usize = MAX_DRAWS * 4;
@@ -20,9 +18,9 @@ ctx!(GFX: GfxCtx);
 
 struct GfxCtx {
 
-	ibuf: ggl::IndexBuffer,
-	vbuf: ggl::VertexBuffer,
-	program: ggl::Program,
+	ibuf: gl::IndexBuffer,
+	vbuf: gl::VertexBuffer,
+	program: gl::Program,
 	empty_tex: Texture,
 	projection: Mat4,
 	state: State,
@@ -52,18 +50,7 @@ impl Default for State {
 
 pub(crate) fn init() {
 
-	unsafe {
-
-		gl::Enable(gl::BLEND);
-		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-		gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-
-	}
-
-	clear();
-	window::swap();
-
-	let indices: Vec<GLuint> = vec![0, 1, 3, 1, 2, 3]
+	let indices: Vec<u32> = vec![0, 1, 3, 1, 2, 3]
 		.iter()
 		.cycle()
 		.take(MAX_INDICES)
@@ -71,19 +58,19 @@ pub(crate) fn init() {
 		.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 		.collect();
 
-	let vbuf = ggl::VertexBuffer::new(MAX_VERTICES, 8, ggl::BufferUsage::Dynamic);
+	let vbuf = gl::VertexBuffer::new(MAX_VERTICES, 8, gl::BufferUsage::Dynamic);
 
 	vbuf
 		.attr(0, 2, 0)
 		.attr(1, 2, 2)
 		.attr(2, 4, 4);
 
-	let ibuf = ggl::IndexBuffer::new(MAX_INDICES, ggl::BufferUsage::Static);
+	let ibuf = gl::IndexBuffer::new(MAX_INDICES, gl::BufferUsage::Static);
 
 	ibuf
 		.data(&indices, 0);
 
-	let program = ggl::Program::new(
+	let program = gl::Program::new(
 		include_str!("../shaders/quad.vert"),
 		include_str!("../shaders/quad.frag"),
 	);
@@ -103,6 +90,12 @@ pub(crate) fn init() {
 
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+
+	gl::enable(gl::Feature::Blend);
+	gl::blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
+	gl::clear_color(color!(0, 0, 0, 1));
+	clear();
+	window::swap();
 
 	ctx_init(GfxCtx {
 
@@ -150,7 +143,7 @@ pub(crate) fn flush() {
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
 		gfx.vbuf.clear();
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		ggl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4 * 6);
+		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4 * 6);
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
 
@@ -173,6 +166,11 @@ pub fn draw(tex: &'static Texture, quad: Rect) {
 	}
 
 	let mut push_vertex = |pos: Vec2, uv: Vec2, color: Color| {
+
+		if queue.len() >= MAX_VERTICES {
+			queue.clear();
+			panic!("reached maximum draw count");
+		}
 
 		queue.push(pos.x);
 		queue.push(pos.y);
@@ -342,14 +340,14 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 /// clear view
 pub fn clear() {
-	ggl::clear();
+	gl::clear(gl::Clear::Color);
 }
 
 /// texture
 #[derive(PartialEq)]
 pub struct Texture {
 
-	handle: ggl::Texture,
+	handle: gl::Texture,
 	/// width
 	pub width: u32,
 	/// height
@@ -364,7 +362,7 @@ impl Texture {
 
 		return Self {
 
-			handle: ggl::Texture::new(width, height),
+			handle: gl::Texture::new(width, height),
 			width: width,
 			height: height,
 

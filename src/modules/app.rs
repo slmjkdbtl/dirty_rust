@@ -120,6 +120,7 @@ pub fn run(f: &mut FnMut()) {
 
 		if gfx::enabled() {
 			gfx::reset();
+			gfx::clear();
 		}
 
 		f();

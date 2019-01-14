@@ -29,6 +29,7 @@
 - audio effects
 
 == DOING
+- gfx buffer data update bug
 - mouse inputs
 - lua bindings
 - ketos bindings

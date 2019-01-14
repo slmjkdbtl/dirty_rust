@@ -26,6 +26,26 @@ bind_enum!(Filter(GLenum) {
 	Linear => gl::LINEAR,
 });
 
+bind_enum!(Clear(GLenum) {
+	Color => gl::COLOR_BUFFER_BIT,
+	Depth => gl::DEPTH_BUFFER_BIT,
+	Stencil => gl::STENCIL_BUFFER_BIT,
+});
+
+bind_enum!(Feature(GLenum) {
+	Blend => gl::BLEND,
+	DepthTest => gl::DEPTH_TEST,
+	CullFace => gl::CULL_FACE,
+	Dither => gl::DITHER,
+});
+
+bind_enum!(BlendFac(GLenum) {
+	One => gl::ONE,
+	Zero => gl::ZERO,
+	SrcAlpha => gl::SRC_ALPHA,
+	OneMinusSrcAlpha => gl::ONE_MINUS_SRC_ALPHA,
+});
+
 #[derive(PartialEq)]
 pub struct VertexBuffer {
 
@@ -570,9 +590,33 @@ fn compile_shader(
 
 }
 
-pub fn clear() {
+pub fn enable(f: Feature) {
 	unsafe {
-		gl::Clear(gl::COLOR_BUFFER_BIT);
+		gl::Enable(f.into());
+	}
+}
+
+pub fn disable(f: Feature) {
+	unsafe {
+		gl::Disable(f.into());
+	}
+}
+
+pub fn blend_func(sfac: BlendFac, dfac: BlendFac) {
+	unsafe {
+		gl::BlendFunc(sfac.into(), dfac.into());
+	}
+}
+
+pub fn clear_color(c: Color) {
+	unsafe {
+		gl::ClearColor(c.r, c.g, c.b, c.a);
+	}
+}
+
+pub fn clear(c: Clear) {
+	unsafe {
+		gl::Clear(c.into());
 	}
 }
 
