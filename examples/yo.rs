@@ -38,8 +38,6 @@ fn main() {
 			index = 0;
 		}
 
-		gfx::clear();
-
 		gfx::push();
 		gfx::translate(vec2!(12));
 		gfx::text(&format!("{}", app::fps()));
