@@ -28,9 +28,6 @@ fn main() {
 	// main loop
 	app::run(&mut || {
 
-		// clear view
-		gfx::clear();
-
 		// transforms
 		gfx::push();
 		gfx::translate(vec2!(120, 120));

@@ -32,10 +32,10 @@ fn main() {
 
 	app::run(&mut || {
 
-		if index < 3 {
+		if index < anims["run"].to {
 			index += 1;
 		} else {
-			index = 0;
+			index = anims["run"].from;
 		}
 
 		gfx::push();
@@ -98,3 +98,4 @@ fn main() {
 	});
 
 }
+

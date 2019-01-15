@@ -46,9 +46,9 @@ pub enum AnimDir {
 pub struct Anim {
 
 	/// from frame
-	pub from: u32,
+	pub from: usize,
 	/// to frame
-	pub to: u32,
+	pub to: usize,
 	/// direction
 	pub dir: AnimDir,
 
@@ -179,8 +179,8 @@ pub fn load_spritesheet(name: &str, img: &[u8], json: &str) {
 			};
 
 			anims.insert(anim.name, Anim {
-				from: anim.from,
-				to: anim.to,
+				from: anim.from as usize,
+				to: anim.to as usize,
 				dir: dir,
 			});
 
