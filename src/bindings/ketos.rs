@@ -4,6 +4,8 @@
 
 use ketos::Interpreter;
 
+use crate::fs;
+
 /// run from ketos code
 pub fn run_code(code: &str) {
 
@@ -12,5 +14,10 @@ pub fn run_code(code: &str) {
 
 	interp.run_code(code, None).expect("failed to run code");
 
+}
+
+/// run from ketos file
+pub fn run(fname: &str) {
+	run_code(&fs::read_str(fname));
 }
 

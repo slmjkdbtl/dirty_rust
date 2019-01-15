@@ -164,6 +164,16 @@ impl VertexBuffer {
 
 	}
 
+	pub fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+		}
+
+		return self;
+
+	}
+
 }
 
 impl Drop for VertexBuffer {
@@ -247,6 +257,16 @@ impl IndexBuffer {
 
 	}
 
+	pub fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+		}
+
+		return self;
+
+	}
+
 }
 
 impl Drop for IndexBuffer {
@@ -286,7 +306,7 @@ impl Texture {
 
 				gl::TEXTURE_2D,
 				0,
-				gl::RGBA8 as GLint,
+				gl::RGBA as GLint,
 				width as GLint,
 				height as GLint,
 				0,
@@ -340,10 +360,35 @@ impl Texture {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	pub fn set_filter(&self, f: Filter) -> &Self {
+
+		self.bind();
+
+		let f: u32 = f.into();
+
+		unsafe {
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, f as GLint);
+			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, f as GLint);
+		}
+
+		return self;
+
+	}
+
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindTexture(gl::TEXTURE_2D, self.id);
+		}
+
+		return self;
+
+	}
+
+	fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::BindTexture(gl::TEXTURE_2D, 0);
 		}
 
 		return self;
@@ -402,6 +447,16 @@ impl Framebuffer {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
+		}
+
+		return self;
+
+	}
+
+	fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 		}
 
 		return self;
@@ -493,6 +548,16 @@ impl Program {
 
 		unsafe {
 			gl::UseProgram(self.id);
+		}
+
+		return self;
+
+	}
+
+	pub fn unbind(&self) -> &Self {
+
+		unsafe {
+			gl::UseProgram(0);
 		}
 
 		return self;
