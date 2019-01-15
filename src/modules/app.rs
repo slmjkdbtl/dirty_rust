@@ -9,6 +9,8 @@ use std::panic;
 
 use crate::*;
 
+const FPS_CAP: u8 = 60;
+
 // context
 ctx!(APP: AppCtx);
 
@@ -16,7 +18,6 @@ struct AppCtx {
 
 	dt: f32,
 	time: f32,
-	fps_cap: u8,
 
 }
 
@@ -93,7 +94,6 @@ pub fn init() {
 
 		dt: 0.0,
 		time: 0.0,
-		fps_cap: 60,
 
 	});
 
@@ -135,7 +135,7 @@ pub fn run(f: &mut FnMut()) {
 
 		let actual_dt = start_time.elapsed();
 		let actual_dt = actual_dt.as_secs() as f32 * 1000.0 + actual_dt.subsec_millis() as f32;
-		let expected_dt = 1000.0 / f32::from(app.fps_cap);
+		let expected_dt = 1000.0 / f32::from(FPS_CAP);
 
 		if expected_dt > actual_dt {
 			app_mut.dt = expected_dt as f32 / 1000.0;
@@ -148,11 +148,6 @@ pub fn run(f: &mut FnMut()) {
 
 	}
 
-}
-
-/// set the expected fps
-pub fn set_fps_cap(f: u8) {
-	ctx_get_mut().fps_cap = f;
 }
 
 /// get delta time between frames

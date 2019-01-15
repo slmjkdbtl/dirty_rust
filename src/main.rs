@@ -13,6 +13,7 @@
 
 #[macro_use]
 mod utils;
+mod backends;
 mod addons;
 mod bindings;
 mod modules;

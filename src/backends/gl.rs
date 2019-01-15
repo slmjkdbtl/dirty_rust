@@ -365,34 +365,21 @@ impl Drop for Texture {
 #[derive(PartialEq)]
 pub struct Framebuffer {
 	id: GLuint,
+	tex: Texture,
 }
 
 impl Framebuffer {
 
 	/// create a frame buffer from width and height
-	pub fn new() -> Self {
+	pub fn new(width: u32, height: u32) -> Self {
 
 		unsafe {
 
 			let mut id: GLuint = 0;
+			let tex = Texture::new(width, height);
 
 			gl::GenFramebuffers(1, &mut id);
-
-			return Self {
-				id: id,
-			};
-
-		}
-
-	}
-
-	pub fn attach(
-		&mut self,
-		tex: &Texture) -> &Self {
-
-		self.bind();
-
-		unsafe {
+			gl::BindFramebuffer(gl::FRAMEBUFFER, id);
 
 			gl::FramebufferTexture2D(
 				gl::FRAMEBUFFER,
@@ -402,9 +389,12 @@ impl Framebuffer {
 				0,
 			);
 
-		}
+			return Self {
+				id: id,
+				tex: tex,
+			};
 
-		return self;
+		}
 
 	}
 
@@ -415,6 +405,36 @@ impl Framebuffer {
 		}
 
 		return self;
+
+	}
+
+	pub fn capture(&self) -> Vec<u8> {
+
+		let size = (self.tex.width * self.tex.height * 4) as usize;
+
+		if size == 0 || self.id == 0 {
+			return Vec::new();
+		} else {
+
+			let mut data: Vec<u8> = Vec::with_capacity(size);
+
+			self.tex.bind();
+
+			unsafe {
+
+				gl::GetTexImage(
+					gl::TEXTURE_2D,
+					0,
+					gl::RGBA,
+					gl::UNSIGNED_BYTE,
+					data.as_mut_ptr() as *mut GLvoid,
+				);
+
+			}
+
+			return data;
+
+		}
 
 	}
 
