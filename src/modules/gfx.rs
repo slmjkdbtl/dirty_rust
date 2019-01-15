@@ -6,12 +6,17 @@ use std::collections::HashMap;
 
 use crate::*;
 use crate::math::mat::Mat4;
-use crate::utils::gl;
+use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;
 const MAX_VERTICES: usize = MAX_DRAWS * 4;
 const MAX_INDICES: usize = MAX_DRAWS * 6;
+const VERT_STRIDE: usize = 8;
+const INDEX_ARRAY: [u32; 6] = [0, 1, 3, 1, 2, 3];
 const MAX_STATE_STACK: usize = 64;
+const DEFAULT_FONT: &[u8] = include_bytes!("../res/CP437.png");
+const DEFAULT_VERT_SHADER: &str = include_str!("../shaders/quad.vert");
+const DEFAULT_FRAG_SHADER: &str = include_str!("../shaders/quad.frag");
 
 // context
 ctx!(GFX: GfxCtx);
@@ -50,7 +55,7 @@ impl Default for State {
 
 pub(crate) fn init() {
 
-	let indices: Vec<u32> = vec![0, 1, 3, 1, 2, 3]
+	let indices: Vec<u32> = INDEX_ARRAY
 		.iter()
 		.cycle()
 		.take(MAX_INDICES)
@@ -58,7 +63,7 @@ pub(crate) fn init() {
 		.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 		.collect();
 
-	let vbuf = gl::VertexBuffer::new(MAX_VERTICES, 8, gl::BufferUsage::Dynamic);
+	let vbuf = gl::VertexBuffer::new(MAX_VERTICES, VERT_STRIDE, gl::BufferUsage::Dynamic);
 
 	vbuf
 		.attr(0, 2, 0)
@@ -71,8 +76,8 @@ pub(crate) fn init() {
 		.data(&indices, 0);
 
 	let program = gl::Program::new(
-		include_str!("../shaders/quad.vert"),
-		include_str!("../shaders/quad.frag"),
+		DEFAULT_VERT_SHADER,
+		DEFAULT_FRAG_SHADER,
 	);
 
 	program
@@ -82,7 +87,7 @@ pub(crate) fn init() {
 		.link();
 
 	let default_font = Font::new(
-		Texture::from_bytes(include_bytes!("../misc/CP437.png")),
+		Texture::from_bytes(DEFAULT_FONT),
 		32,
 		8,
 		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,
@@ -90,12 +95,6 @@ pub(crate) fn init() {
 
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
-
-	gl::enable(gl::Feature::Blend);
-	gl::blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
-	gl::clear_color(color!(0, 0, 0, 1));
-	clear();
-	window::swap();
 
 	ctx_init(GfxCtx {
 
@@ -111,6 +110,12 @@ pub(crate) fn init() {
 		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 
 	});
+
+	gl::enable(gl::Feature::Blend);
+	gl::blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
+	gl::clear_color(color!(0, 0, 0, 1));
+	clear();
+	window::swap();
 
 }
 
