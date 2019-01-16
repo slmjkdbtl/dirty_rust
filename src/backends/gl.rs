@@ -230,8 +230,7 @@ impl IndexBuffer {
 
 		unsafe {
 
-			assert!(offset + data.len() <= self.size);
-
+			assert!(offset + data.len() <= self.size, "buffer data overflow");
 			self.bind();
 
 			gl::BufferSubData(

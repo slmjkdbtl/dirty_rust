@@ -72,5 +72,5 @@ more under `examples/`
 - `app::init()` also overrides the panic behavior (also display messages to screen if `window` is initiated)
 - currently using OpenGL 2.1 for better compatibility, might change to gfx-rs in the future
 - there's no proper custom error handling now (e.g. if you use some of the file io wrapper functions in the `fs` module an error will directly go in the error screen)
-- `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
+- on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
 
