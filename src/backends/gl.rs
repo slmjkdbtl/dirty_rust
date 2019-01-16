@@ -648,27 +648,11 @@ pub fn enable_blend() {
 
 }
 
-pub fn clear(color: Option<Color>, depth: Option<f32>, stencil: Option<i32>) {
+pub fn clear(c: Color) {
 
 	unsafe {
-
-		let mut flags = 0;
-
-		if let Some(c) = color {
-			flags |= gl::COLOR_BUFFER_BIT;
-			gl::ClearColor(c.r, c.g, c.b, c.a);
-		}
-
-		if let Some(d) = depth {
-			flags |= gl::DEPTH_BUFFER_BIT;
-		}
-
-		if let Some(s) = stencil {
-			flags |= gl::STENCIL_BUFFER_BIT;
-		}
-
-		gl::Clear(flags);
-
+		gl::ClearColor(c.r, c.g, c.b, c.a);
+		gl::Clear(gl::COLOR_BUFFER_BIT);
 	}
 
 }
