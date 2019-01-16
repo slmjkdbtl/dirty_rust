@@ -9,10 +9,10 @@ use crate::math::mat::Mat4;
 use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;
-const MAX_VERTICES: usize = MAX_DRAWS * 4;
-const MAX_INDICES: usize = MAX_DRAWS * 6;
 const VERT_STRIDE: usize = 8;
+const MAX_VERTICES: usize = MAX_DRAWS * VERT_STRIDE * 4;
 const INDEX_ARRAY: [u32; 6] = [0, 1, 3, 1, 2, 3];
+const MAX_INDICES: usize = MAX_DRAWS * 6;
 const MAX_STATE_STACK: usize = 64;
 const DEFAULT_FONT: &[u8] = include_bytes!("../res/CP437.png");
 const DEFAULT_VERT_SHADER: &str = include_str!("../shaders/quad.vert");
@@ -144,9 +144,8 @@ pub(crate) fn flush() {
 	if let Some(tex) = &gfx.current_tex {
 
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
-		gfx.vbuf.clear();
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4 * 6);
+		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4);
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
 

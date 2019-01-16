@@ -78,31 +78,35 @@ impl Sound {
 	/// return a new sound with given speed
 	pub fn speed(&self, s: f32) -> Self {
 		assert!(s > 0.0 && s <= 2.0, "invalid speed");
-		let mut sound = self.clone();
-		sound.speed = s;
-		return sound;
+		return Self {
+			speed: s,
+			.. self.clone()
+		}
 	}
 
 	/// return a new sound with given volume
-	pub fn volume(&self, a: f32) -> Self {
-		assert!(a >= 0.0 && a <= 2.0, "invalid volume");
-		let mut sound = self.clone();
-		sound.volume = a;
-		return sound;
+	pub fn volume(&self, v: f32) -> Self {
+		assert!(v >= 0.0 && v <= 2.0, "invalid volume");
+		return Self {
+			volume: v,
+			.. self.clone()
+		}
 	}
 
 	/// return a new sound that would repeat infinitely
 	pub fn repeat(&self) -> Self {
-		let mut sound = self.clone();
-		sound.repeat = true;
-		return sound;
+		return Self {
+			repeat: true,
+			.. self.clone()
+		}
 	}
 
 	/// return a new sound with given fadein time
 	pub fn fadein(&self, time: u64) -> Self {
-		let mut sound = self.clone();
-		sound.fadein = time;
-		return sound;
+		return Self {
+			fadein: time,
+			.. self.clone()
+		}
 	}
 
 	fn apply(&self) -> Box<dyn Source<Item = i16> + Send> {
