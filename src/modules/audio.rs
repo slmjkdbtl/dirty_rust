@@ -47,7 +47,7 @@ pub fn play(sound: &Sound) {
 pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
 	speed: f32,
-	amplify: f32,
+	volume: f32,
 	repeat: bool,
 	fadein: u64,
 }
@@ -63,7 +63,7 @@ impl Sound {
 		return Self {
 			buffer: source.buffered(),
 			speed: 1.0,
-			amplify: 1.0,
+			volume: 1.0,
 			repeat: false,
 			fadein: 0,
 		};
@@ -84,10 +84,10 @@ impl Sound {
 	}
 
 	/// return a new sound with speed effect
-	pub fn amplify(&self, a: f32) -> Self {
-		assert!(a >= 0.0 && a <= 2.0, "invalid amplify");
+	pub fn volume(&self, a: f32) -> Self {
+		assert!(a >= 0.0 && a <= 2.0, "invalid volume");
 		let mut sound = self.clone();
-		sound.amplify = a;
+		sound.volume = a;
 		return sound;
 	}
 
@@ -116,8 +116,8 @@ impl Sound {
 			s
 		};
 
-		let s: Box<S> = if self.amplify != 0.0 {
-			Box::new(s.amplify(self.amplify))
+		let s: Box<S> = if self.volume != 0.0 {
+			Box::new(s.amplify(self.volume))
 		} else {
 			s
 		};
