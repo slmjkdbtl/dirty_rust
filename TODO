@@ -27,6 +27,7 @@
 - better opengl wrapper
 - sprite batching
 - audio effects
+- better audio effect api
 
 == DOING
 - gfx buffer data update bug

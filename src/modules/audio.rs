@@ -91,14 +91,14 @@ impl Sound {
 		return sound;
 	}
 
-	/// return a new sound with reverb effect
+	/// return a new sound that would repeat infinitely
 	pub fn repeat(&self) -> Self {
 		let mut sound = self.clone();
 		sound.repeat = true;
 		return sound;
 	}
 
-	/// return a new sound with reverb effect
+	/// return a new sound with fadein effect
 	pub fn fadein(&self, time: u64) -> Self {
 		let mut sound = self.clone();
 		sound.fadein = time;
