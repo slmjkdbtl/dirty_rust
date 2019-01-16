@@ -245,8 +245,8 @@ impl Drop for IndexBuffer {
 pub struct Texture {
 
 	id: GLuint,
-	width: u32,
-	height: u32,
+	pub(crate) width: u32,
+	pub(crate) height: u32,
 
 }
 

@@ -194,7 +194,7 @@ pub fn draw(tex: &'static Texture, quad: Rect) {
 
 	};
 
-	let t = gfx.state.transform.scale(vec2!(tex.width as f32 * quad.w, tex.height as f32 * quad.h));
+	let t = gfx.state.transform.scale(vec2!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h));
 	let color = gfx.state.tint;
 
 	push_vertex(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color);
@@ -214,7 +214,7 @@ pub fn text(s: &str) {
 	for (i, ch) in s.chars().enumerate() {
 
 		push();
-		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width as f32, 0));
+		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width() as f32, 0));
 
 		if ch != ' ' {
 			draw(&font.tex, *font.map.get(&ch).unwrap_or_else(|| panic!("does not have char '{}'", ch)));
@@ -358,28 +358,16 @@ pub fn clear() {
 /// texture
 #[derive(PartialEq)]
 pub struct Texture {
-
 	handle: gl::Texture,
-	/// width
-	pub width: u32,
-	/// height
-	pub height: u32,
-
 }
 
 impl Texture {
 
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
-
 		return Self {
-
 			handle: gl::Texture::new(width, height),
-			width: width,
-			height: height,
-
 		};
-
 	}
 
 	/// create texture with raw data
@@ -413,6 +401,16 @@ impl Texture {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 
+	/// get texture width
+	pub fn width(&self) -> u32 {
+		return self.handle.width;
+	}
+
+	/// get texture height
+	pub fn height(&self) -> u32 {
+		return self.handle.height;
+	}
+
 }
 
 /// bitmap font
@@ -432,8 +430,8 @@ impl Font {
 		let mut map = HashMap::new();
 		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
 
-		assert_eq!(tex.width % cols as u32, 0, "font size not right");
-		assert_eq!(tex.height % rows as u32, 0, "font size not right");
+		assert_eq!(tex.width() % cols as u32, 0, "font size not right");
+		assert_eq!(tex.height() % rows as u32, 0, "font size not right");
 
 		for (i, ch) in chars.chars().enumerate() {
 
@@ -456,6 +454,22 @@ impl Font {
 
 		}
 
+	}
+
+}
+
+/// offscreen framebuffer
+pub struct Canvas {
+	handle: gl::Framebuffer,
+}
+
+impl Canvas {
+
+	/// create new canvas
+	pub fn new(width: u32, height: u32) -> Self {
+		return Self {
+			handle: gl::Framebuffer::new(width, height),
+		}
 	}
 
 }

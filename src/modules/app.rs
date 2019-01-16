@@ -170,28 +170,26 @@ pub fn quit() {
 	std::process::exit(0);
 }
 
-/// check if current platform is MacOS
-pub fn is_macos() -> bool {
-	return sdl2::get_platform() == "Mac OS X";
+#[allow(missing_docs)]
+#[derive(PartialEq, Clone, Copy)]
+pub enum Platform {
+	MacOS,
+	Windows,
+	Linux,
+	IOS,
+	Android,
+	Other,
 }
 
-/// check if current platform is Windows
-pub fn is_windows() -> bool {
-	return sdl2::get_platform() == "Windows";
-}
-
-/// check if current platform is Linux
-pub fn is_linux() -> bool {
-	return sdl2::get_platform() == "Linux";
-}
-
-/// check if current platform is Android
-pub fn is_android() -> bool {
-	return sdl2::get_platform() == "Android";
-}
-
-/// check if current platform is iOS
-pub fn is_ios() -> bool {
-	return sdl2::get_platform() == "iOS";
+/// get current platform
+pub fn platform() -> Platform {
+	return match sdl2::get_platform() {
+		"Mac OS X" => Platform::MacOS,
+		"Windows" => Platform::Windows,
+		"Linux" => Platform::Linux,
+		"iOS" => Platform::IOS,
+		"Android" => Platform::Android,
+		_ => Platform::Other,
+	}
 }
 

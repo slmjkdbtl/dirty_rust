@@ -25,9 +25,9 @@ fn main() {
 
 	let pts = vec![
 		vec2!(0, 0) + vec2!(-margin, -margin),
-		vec2!(tex.width / 4, 0) + vec2!(margin, -margin),
-		vec2!(tex.width / 4, tex.height) + vec2!(margin, margin),
-		vec2!(0, tex.height) + vec2!(-margin, margin),
+		vec2!(tex.width() / 4, 0) + vec2!(margin, -margin),
+		vec2!(tex.width() / 4, tex.height()) + vec2!(margin, margin),
+		vec2!(0, tex.height()) + vec2!(-margin, margin),
 	];
 
 	app::run(&mut || {
@@ -79,11 +79,11 @@ fn main() {
 			audio::play(&res::sound("pop").speed(math::rand() * 2.0));
 		}
 
-		if window::key_pressed(Key::J) {
+		if window::key_pressed(Key::Num1) {
 			audio::pause(&music);
 		}
 
-		if window::key_pressed(Key::K) {
+		if window::key_pressed(Key::Num2) {
 			audio::resume(&music);
 		}
 
