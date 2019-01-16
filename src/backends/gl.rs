@@ -68,23 +68,6 @@ impl VertexBuffer {
 
 	}
 
-	pub fn clear(&self) -> &Self {
-
-		unsafe {
-
-			gl::BufferData(
-				gl::ARRAY_BUFFER,
-				(self.size * mem::size_of::<GLfloat>()) as GLsizeiptr,
-				ptr::null() as *const GLvoid,
-				self.usage.into(),
-			);
-
-		}
-
-		return self;
-
-	}
-
 	pub fn data(
 		&self,
 		data: &[GLfloat],
