@@ -25,6 +25,7 @@ struct WindowCtx {
 	events: sdl2::EventPump,
 	key_states: HashMap<Scancode, ButtonState>,
 	mouse_states: HashMap<MouseButton, ButtonState>,
+	mouse_pos: Vec2,
 	size: (u32, u32),
 
 }
@@ -65,6 +66,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 		sdl_ctx: sdl_ctx,
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
+		mouse_pos: vec2!(),
 		size: (width, height),
 
 	});
@@ -84,6 +86,8 @@ pub(crate) fn poll_events() {
 	let window_mut = ctx_get_mut();
 	let keyboard_state = window.events.keyboard_state();
 	let mouse_state = window.events.mouse_state();
+
+	window_mut.mouse_pos = vec2!(mouse_state.x(), mouse_state.y());
 
 	for (code, state) in &mut window_mut.key_states {
 		match state {
@@ -230,6 +234,11 @@ pub fn mouse_down(b: MouseButton) -> bool {
 /// check if a mouse button was released this frame
 pub fn mouse_released(b: MouseButton) -> bool {
 	return check_mouse_state(b, ButtonState::Released);
+}
+
+/// get mouse position
+pub fn mouse_pos() -> Vec2 {
+	return ctx_get().mouse_pos;
 }
 
 pub(crate) fn swap() {
