@@ -39,13 +39,7 @@ pub fn enabled() -> bool {
 
 /// play a given sound once till end
 pub fn play(sound: &Sound) {
-
-	let s = sound.buffer.clone();
-	let s = s.speed(sound.speed);
-	let s = s.amplify(sound.amplify);
-
-	rodio::play_raw(&ctx_get().device, s.convert_samples());
-
+	rodio::play_raw(&ctx_get().device, sound.apply().convert_samples());
 }
 
 /// base struct containing sound data and effects data
@@ -54,7 +48,8 @@ pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
 	speed: f32,
 	amplify: f32,
-	reverb: (u64, f32),
+	repeat: bool,
+	fadein: u64,
 }
 
 impl Sound {
@@ -69,7 +64,8 @@ impl Sound {
 			buffer: source.buffered(),
 			speed: 1.0,
 			amplify: 1.0,
-			reverb: (0, 0.0),
+			repeat: false,
+			fadein: 0,
 		};
 
 	}
@@ -96,10 +92,50 @@ impl Sound {
 	}
 
 	/// return a new sound with reverb effect
-	pub fn reverb(&self, time: u64, amp: f32) -> Self {
+	pub fn repeat(&self) -> Self {
 		let mut sound = self.clone();
-		sound.reverb = (time, amp);
+		sound.repeat = true;
 		return sound;
+	}
+
+	/// return a new sound with reverb effect
+	pub fn fadein(&self, time: u64) -> Self {
+		let mut sound = self.clone();
+		sound.fadein = time;
+		return sound;
+	}
+
+	fn apply(&self) -> Box<dyn Source<Item = i16> + Send> {
+
+		type S = dyn Source<Item = i16> + Send;
+		let s = Box::new(self.buffer.clone());
+
+		let s: Box<S> = if self.speed != 0.0 {
+			Box::new(s.speed(self.speed))
+		} else {
+			s
+		};
+
+		let s: Box<S> = if self.amplify != 0.0 {
+			Box::new(s.amplify(self.amplify))
+		} else {
+			s
+		};
+
+		let s: Box<S> = if self.fadein != 0 {
+			Box::new(s.fade_in(Duration::from_millis(self.fadein)))
+		} else {
+			s
+		};
+
+		let s: Box<S> = if self.repeat {
+			Box::new(s.repeat_infinite())
+		} else {
+			s
+		};
+
+		return s;
+
 	}
 
 }
@@ -110,31 +146,12 @@ pub struct Track {
 }
 
 /// play a sound and return a track
-pub fn track(sound: &Sound, repeat: bool) -> Track {
+pub fn track(sound: &Sound) -> Track {
 
 	let ctx = ctx_get();
 	let sink = Sink::new(&ctx.device);
 
-	if repeat {
-
-		sink.append(
-			sound.buffer
-				.clone()
-				.speed(sound.speed)
-				.amplify(sound.amplify)
-				.repeat_infinite()
-		);
-
-	} else {
-
-		sink.append(
-			sound.buffer
-				.clone()
-				.speed(sound.speed)
-				.amplify(sound.amplify)
-		);
-
-	}
+	sink.append(sound.apply());
 
 	return Track {
 		sink: sink,
