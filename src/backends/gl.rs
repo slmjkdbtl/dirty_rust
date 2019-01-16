@@ -26,26 +26,6 @@ bind_enum!(Filter(GLenum) {
 	Linear => gl::LINEAR,
 });
 
-bind_enum!(Clear(GLenum) {
-	Color => gl::COLOR_BUFFER_BIT,
-	Depth => gl::DEPTH_BUFFER_BIT,
-	Stencil => gl::STENCIL_BUFFER_BIT,
-});
-
-bind_enum!(Feature(GLenum) {
-	Blend => gl::BLEND,
-	DepthTest => gl::DEPTH_TEST,
-	CullFace => gl::CULL_FACE,
-	Dither => gl::DITHER,
-});
-
-bind_enum!(BlendFac(GLenum) {
-	One => gl::ONE,
-	Zero => gl::ZERO,
-	SrcAlpha => gl::SRC_ALPHA,
-	OneMinusSrcAlpha => gl::ONE_MINUS_SRC_ALPHA,
-});
-
 #[derive(PartialEq)]
 pub struct VertexBuffer {
 
@@ -674,34 +654,40 @@ fn compile_shader(
 
 }
 
-pub fn enable(f: Feature) {
+pub fn enable_blend() {
+
 	unsafe {
-		gl::Enable(f.into());
+
+		gl::Enable(gl::BLEND);
+		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+
 	}
+
 }
 
-pub fn disable(f: Feature) {
-	unsafe {
-		gl::Disable(f.into());
-	}
-}
+pub fn clear(color: Option<Color>, depth: Option<f32>, stencil: Option<i32>) {
 
-pub fn blend_func(sfac: BlendFac, dfac: BlendFac) {
 	unsafe {
-		gl::BlendFunc(sfac.into(), dfac.into());
-	}
-}
 
-pub fn clear_color(c: Color) {
-	unsafe {
-		gl::ClearColor(c.r, c.g, c.b, c.a);
-	}
-}
+		let mut flags = 0;
 
-pub fn clear(c: Clear) {
-	unsafe {
-		gl::Clear(c.into());
+		if let Some(c) = color {
+			flags |= gl::COLOR_BUFFER_BIT;
+			gl::ClearColor(c.r, c.g, c.b, c.a);
+		}
+
+		if let Some(d) = depth {
+			flags |= gl::DEPTH_BUFFER_BIT;
+		}
+
+		if let Some(s) = stencil {
+			flags |= gl::STENCIL_BUFFER_BIT;
+		}
+
+		gl::Clear(flags);
+
 	}
+
 }
 
 pub fn draw(

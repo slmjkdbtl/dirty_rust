@@ -75,7 +75,7 @@ impl Sound {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 
-	/// return a new sound with speed effect
+	/// return a new sound with given speed
 	pub fn speed(&self, s: f32) -> Self {
 		assert!(s > 0.0 && s <= 2.0, "invalid speed");
 		let mut sound = self.clone();
@@ -83,7 +83,7 @@ impl Sound {
 		return sound;
 	}
 
-	/// return a new sound with speed effect
+	/// return a new sound with given volume
 	pub fn volume(&self, a: f32) -> Self {
 		assert!(a >= 0.0 && a <= 2.0, "invalid volume");
 		let mut sound = self.clone();
@@ -98,7 +98,7 @@ impl Sound {
 		return sound;
 	}
 
-	/// return a new sound with fadein effect
+	/// return a new sound with given fadein time
 	pub fn fadein(&self, time: u64) -> Self {
 		let mut sound = self.clone();
 		sound.fadein = time;
