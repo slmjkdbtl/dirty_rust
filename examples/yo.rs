@@ -57,11 +57,15 @@ fn main() {
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
-		gfx::push();
-		gfx::line_width(3);
-		gfx::color(color!(1, 1, 0, 1));
-		gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
-		gfx::pop();
+		if col::point_poly(window::mouse_pos(), &pts) {
+
+			gfx::push();
+			gfx::line_width(3);
+			gfx::color(color!(1, 1, 0, 1));
+			gfx::line(Vec2::rand() * vec2!(width, height), Vec2::rand() * vec2!(width, height));
+			gfx::pop();
+
+		}
 
 		gfx::push();
 		gfx::line_width(1);
