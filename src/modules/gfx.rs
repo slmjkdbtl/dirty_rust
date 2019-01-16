@@ -9,13 +9,14 @@ use crate::math::mat::Mat4;
 use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;
+
 const VERT_STRIDE: usize = 8;
-const VERT_COUNT: usize = 8;
+const VERT_COUNT: usize = 4;
 const MAX_VERTICES: usize = MAX_DRAWS * VERT_STRIDE * VERT_COUNT;
 
-const INDICE_COUNT: usize = 6;
-const INDEX_ARRAY: [u32; INDICE_COUNT] = [0, 1, 3, 1, 2, 3];
-const MAX_INDICES: usize = MAX_DRAWS * INDICE_COUNT;
+const INDEX_COUNT: usize = 6;
+const INDEX_ARRAY: [u32; INDEX_COUNT] = [0, 1, 3, 1, 2, 3];
+const MAX_INDICES: usize = MAX_DRAWS * INDEX_COUNT;
 
 const MAX_STATE_STACK: usize = 64;
 
@@ -152,7 +153,7 @@ pub(crate) fn flush() {
 
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.draw_count * INDICE_COUNT);
+		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.draw_count * INDEX_COUNT);
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
 		gfx_mut.draw_count = 0;
@@ -351,7 +352,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 /// clear view
 pub fn clear() {
-	gl::clear(Some(color!(0, 0, 0, 1)), None, None);
+	gl::clear(color!(0, 0, 0, 1));
 }
 
 /// texture
