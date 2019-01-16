@@ -111,9 +111,7 @@ pub(crate) fn init() {
 
 	});
 
-	gl::enable(gl::Feature::Blend);
-	gl::blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
-	gl::clear_color(color!(0, 0, 0, 1));
+	gl::enable_blend();
 	clear();
 	window::swap();
 
@@ -345,7 +343,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 /// clear view
 pub fn clear() {
-	gl::clear(gl::Clear::Color);
+	gl::clear(Some(color!(0, 0, 0, 1)), None, None);
 }
 
 /// texture
