@@ -32,15 +32,16 @@
 
 == DOING
 - mouse inputs
-- lua bindings
-- ketos bindings
+- frame buffers
+- vector methods
+- collision detections
 
 == TO DO
+- lua bindings
+- ketos bindings
 - custom shaders
-- frame buffers
 - 3d
 - ecs
-- collision detections
 - imgui
 - editor
 - particle system
@@ -48,5 +49,5 @@
 - vector swizzle fields
 - try gfx
 - web
-- font formatting
+- text formatting
 
