@@ -28,9 +28,9 @@
 - sprite batching
 - audio effects
 - better audio effect api
+- gfx buffer data update bug
 
 == DOING
-- gfx buffer data update bug
 - mouse inputs
 - lua bindings
 - ketos bindings

@@ -10,10 +10,15 @@ use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;
 const VERT_STRIDE: usize = 8;
-const MAX_VERTICES: usize = MAX_DRAWS * VERT_STRIDE * 4;
-const INDEX_ARRAY: [u32; 6] = [0, 1, 3, 1, 2, 3];
-const MAX_INDICES: usize = MAX_DRAWS * 6;
+const VERT_COUNT: usize = 8;
+const MAX_VERTICES: usize = MAX_DRAWS * VERT_STRIDE * VERT_COUNT;
+
+const INDICE_COUNT: usize = 6;
+const INDEX_ARRAY: [u32; INDICE_COUNT] = [0, 1, 3, 1, 2, 3];
+const MAX_INDICES: usize = MAX_DRAWS * INDICE_COUNT;
+
 const MAX_STATE_STACK: usize = 64;
+
 const DEFAULT_FONT: &[u8] = include_bytes!("../res/CP437.png");
 const DEFAULT_VERT_SHADER: &str = include_str!("../shaders/quad.vert");
 const DEFAULT_FRAG_SHADER: &str = include_str!("../shaders/quad.frag");
@@ -33,6 +38,7 @@ struct GfxCtx {
 	default_font: Font,
 	current_tex: Option<&'static Texture>,
 	vertex_queue: Vec<f32>,
+	draw_count: usize,
 
 }
 
@@ -108,6 +114,7 @@ pub(crate) fn init() {
 		default_font: default_font,
 		current_tex: None,
 		vertex_queue: Vec::with_capacity(MAX_VERTICES),
+		draw_count: 0,
 
 	});
 
@@ -145,9 +152,10 @@ pub(crate) fn flush() {
 
 		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.vertex_queue.len() / 4);
+		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.draw_count * INDICE_COUNT);
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
+		gfx_mut.draw_count = 0;
 
 	}
 
@@ -192,6 +200,7 @@ pub fn draw(tex: &'static Texture, quad: Rect) {
 	push_vertex(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color);
 	push_vertex(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color);
 	push_vertex(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color);
+	gfx_mut.draw_count += 1;
 
 }
 
