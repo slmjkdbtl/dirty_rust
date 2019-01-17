@@ -171,7 +171,6 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
 	let queue = &mut gfx_mut.vertex_queue;
-
 	let wrapped_tex = Some(tex.clone());
 
 	if gfx.current_tex != wrapped_tex {
@@ -355,7 +354,7 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 /// render a canvas
 pub fn render(c: &Canvas) {
-// 	draw(&c.handle.tex, rect!(0, 0, 1, 1));
+	draw(&c.tex, rect!(0, 0, 1, 1));
 }
 
 /// set active canvas
@@ -509,16 +508,27 @@ impl Font {
 /// offscreen framebuffer
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
+
 	handle: Rc<gl::Framebuffer>,
+	tex: Texture,
+
 }
 
 impl Canvas {
 
 	/// create new canvas
 	pub fn new(width: u32, height: u32) -> Self {
+
+		let handle = gl::Framebuffer::new();
+		let tex = Texture::new(width, height);
+
+		handle.attach(&*tex.handle);
+
 		return Self {
-			handle: Rc::new(gl::Framebuffer::new(width, height)),
+			handle: Rc::new(handle),
+			tex: tex,
 		}
+
 	}
 
 }
