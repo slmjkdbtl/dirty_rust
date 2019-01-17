@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! App Lifecycles, Time and Errors
+//! Lifecycles, Time and Errors
 
 use std::thread;
 use std::time::Instant;

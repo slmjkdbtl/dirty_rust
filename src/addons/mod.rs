@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! addons
+//! Additional Micro Helper Libraries
 
 pub mod col;
 pub mod ecs;

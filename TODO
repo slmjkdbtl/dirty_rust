@@ -41,6 +41,7 @@
 - lua bindings
 - ketos bindings
 - custom shaders
+- add error sound
 - 3d
 - ecs
 - imgui
@@ -48,7 +49,12 @@
 - particle system
 - async resource loading
 - vector swizzle fields
-- try gfx
-- web
+- try gfx-hal
 - text formatting
+- better vec gens
+
+== ADVENTURE
+- wasm
+- ios
+- android
 

@@ -255,8 +255,8 @@ impl Drop for IndexBuffer {
 pub struct Texture {
 
 	id: GLuint,
-	pub(crate) width: u32,
-	pub(crate) height: u32,
+	pub width: u32,
+	pub height: u32,
 
 }
 
@@ -373,6 +373,38 @@ impl Texture {
 
 	}
 
+	pub fn capture(&self) -> Vec<u8> {
+
+		let size = (self.width * self.height * 4) as usize;
+
+		if size == 0 || self.id == 0 {
+			return Vec::new();
+		} else {
+
+			let mut data: Vec<u8> = Vec::with_capacity(size);
+
+			self.bind();
+
+			unsafe {
+
+				gl::GetTexImage(
+					gl::TEXTURE_2D,
+					0,
+					gl::RGBA,
+					gl::UNSIGNED_BYTE,
+					data.as_mut_ptr() as *mut GLvoid,
+				);
+
+			}
+
+			self.unbind();
+
+			return data;
+
+		}
+
+	}
+
 }
 
 impl Drop for Texture {
@@ -389,22 +421,33 @@ impl Drop for Texture {
 pub struct Framebuffer {
 
 	id: GLuint,
-	pub(crate) tex: Texture,
 
 }
 
 impl Framebuffer {
 
 	/// create a frame buffer from width and height
-	pub fn new(width: u32, height: u32) -> Self {
+	pub fn new() -> Self {
 
 		unsafe {
 
 			let mut id: GLuint = 0;
-			let tex = Texture::new(width, height);
 
 			gl::GenFramebuffers(1, &mut id);
-			gl::BindFramebuffer(gl::FRAMEBUFFER, id);
+
+			return Self {
+				id: id,
+			};
+
+		}
+
+	}
+
+	pub fn attach(&self, tex: &Texture) -> &Self {
+
+		self.bind();
+
+		unsafe {
 
 			gl::FramebufferTexture2D(
 				gl::FRAMEBUFFER,
@@ -414,14 +457,11 @@ impl Framebuffer {
 				0,
 			);
 
-			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-
-			return Self {
-				id: id,
-				tex: tex,
-			};
-
 		}
+
+		self.unbind();
+
+		return self;
 
 	}
 
@@ -442,38 +482,6 @@ impl Framebuffer {
 		}
 
 		return self;
-
-	}
-
-	pub fn capture(&self) -> Vec<u8> {
-
-		let size = (self.tex.width * self.tex.height * 4) as usize;
-
-		if size == 0 || self.id == 0 {
-			return Vec::new();
-		} else {
-
-			let mut data: Vec<u8> = Vec::with_capacity(size);
-
-			self.tex.bind();
-
-			unsafe {
-
-				gl::GetTexImage(
-					gl::TEXTURE_2D,
-					0,
-					gl::RGBA,
-					gl::UNSIGNED_BYTE,
-					data.as_mut_ptr() as *mut GLvoid,
-				);
-
-			}
-
-			self.tex.unbind();
-
-			return data;
-
-		}
 
 	}
 
