@@ -19,15 +19,14 @@ fn main() {
 	app::init();
 	window::init("yo", 640, 480);
 	audio::init();
-	res::init();
 
 	// load resources
-	res::load_sprite("car", include_bytes!("car.png"));
-	res::load_sound("pop", include_bytes!("pop.ogg"));
-	res::load_sound("yo", include_bytes!("yo.ogg"));
+	let car = gfx::Texture::from_bytes(include_bytes!("car.png"));
+	let pop = audio::Sound::from_bytes(include_bytes!("pop.ogg"));
+	let yo = audio::Sound::from_bytes(include_bytes!("yo.ogg"));
 
 	// play music repeatedly
-	let music = audio::track(&res::sound("yo").fadein(1200).repeat());
+	let music = audio::track(&yo.fadein(1200).repeat());
 
 	// main loop
 	app::run(&mut || {
@@ -47,13 +46,13 @@ fn main() {
 		gfx::color(color!());
 
 		// draw texture
-		gfx::draw(&res::sprite("car").tex, rect!(0, 0, 1, 1));
+		gfx::draw(&car, rect!(0, 0, 1, 1));
 		gfx::pop();
 
 		// input
 		if window::key_released(Key::Space) {
 			// play audio with effect
-			audio::play(&res::sound("pop").speed(math::rand() * 2));
+			audio::play(&pop.speed(math::rand() * 2.0));
 		}
 
 		if window::key_pressed(Key::F) {

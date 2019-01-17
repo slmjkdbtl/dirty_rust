@@ -3,6 +3,7 @@
 //! Rendering
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::*;
 use crate::math::mat::Mat4;
@@ -37,7 +38,7 @@ struct GfxCtx {
 	state: State,
 	state_stack: Vec<State>,
 	default_font: Font,
-	current_tex: Option<&'static Texture>,
+	current_tex: Option<Texture>,
 	vertex_queue: Vec<f32>,
 	draw_count: usize,
 
@@ -163,13 +164,13 @@ pub(crate) fn flush() {
 }
 
 /// draw a texture with visible quad area
-pub fn draw(tex: &'static Texture, quad: Rect) {
+pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
 	let queue = &mut gfx_mut.vertex_queue;
 
-	let wrapped_tex = Some(tex);
+	let wrapped_tex = Some(tex.clone());
 
 	if gfx.current_tex != wrapped_tex {
 		flush();
@@ -373,9 +374,9 @@ pub fn clear() {
 }
 
 /// texture
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Texture {
-	handle: gl::Texture,
+	handle: Rc<gl::Texture>,
 }
 
 impl Texture {
@@ -383,7 +384,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: gl::Texture::new(width, height),
+			handle: Rc::new(gl::Texture::new(width, height)),
 		};
 	}
 
@@ -477,7 +478,7 @@ impl Font {
 
 /// offscreen framebuffer
 pub struct Canvas {
-	handle: gl::Framebuffer,
+	handle: Rc<gl::Framebuffer>,
 }
 
 impl Canvas {
@@ -485,7 +486,7 @@ impl Canvas {
 	/// create new canvas
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: gl::Framebuffer::new(width, height),
+			handle: Rc::new(gl::Framebuffer::new(width, height)),
 		}
 	}
 
