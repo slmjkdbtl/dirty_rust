@@ -35,6 +35,7 @@
 == DOING
 - mouse inputs
 - framebuffers
+- prettier README example
 
 == TO DO
 - lua bindings
