@@ -39,6 +39,7 @@ struct GfxCtx {
 	state_stack: Vec<State>,
 	default_font: Font,
 	current_tex: Option<Texture>,
+	current_canvas: Option<Canvas>,
 	vertex_queue: Vec<f32>,
 	draw_count: usize,
 
@@ -115,6 +116,7 @@ pub(crate) fn init() {
 		state: State::default(),
 		default_font: default_font,
 		current_tex: None,
+		current_canvas: None,
 		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		draw_count: 0,
 
@@ -358,14 +360,42 @@ pub fn render(c: &Canvas) {
 
 /// set active canvas
 pub fn drawon(c: &Canvas) {
-	flush();
-	c.handle.bind();
+
+	let gfx = ctx_get_mut();
+
+	if gfx.current_canvas.is_none() {
+
+		flush();
+		c.handle.bind();
+		gfx.current_canvas = Some(c.clone());
+
+	} else {
+
+		panic!("cannot draw on canvas while another canvas is active");
+
+	}
+
 }
 
 /// stop active canvas
 pub fn stop_drawon(c: &Canvas) {
-	flush();
-	c.handle.unbind();
+
+	let gfx = ctx_get_mut();
+
+	if let Some(current) = &gfx.current_canvas {
+
+		if current == c {
+			flush();
+			c.handle.unbind();
+			gfx.current_canvas = None;
+		} else {
+			panic!("this is not the active canvas");
+		}
+
+	} else {
+		panic!("no canvas active");
+	}
+
 }
 
 /// clear view
@@ -477,6 +507,7 @@ impl Font {
 }
 
 /// offscreen framebuffer
+#[derive(PartialEq, Clone)]
 pub struct Canvas {
 	handle: Rc<gl::Framebuffer>,
 }
