@@ -34,7 +34,7 @@ pub fn init() {
 
 /// check if audio module is initialized
 pub fn enabled() -> bool {
-	return ctx_is_ok();
+	return ctx_ok();
 }
 
 /// play a given sound once till end

@@ -27,7 +27,7 @@ pub fn init() {
 
 /// check if res is initialized
 pub fn enabled() -> bool {
-	return ctx_is_ok();
+	return ctx_ok();
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]

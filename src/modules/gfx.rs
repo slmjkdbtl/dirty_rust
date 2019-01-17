@@ -127,7 +127,7 @@ pub(crate) fn init() {
 
 /// check if gfx is initiated
 pub fn enabled() -> bool {
-	return ctx_is_ok();
+	return ctx_ok();
 }
 
 /// reset global transforms and style states

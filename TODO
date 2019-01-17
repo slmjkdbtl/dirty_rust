@@ -29,12 +29,12 @@
 - audio effects
 - better audio effect api
 - gfx buffer data update bug
+- collision detections
+- vector methods
 
 == DOING
 - mouse inputs
-- frame buffers
-- vector methods
-- collision detections
+- framebuffers
 
 == TO DO
 - lua bindings

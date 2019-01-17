@@ -101,7 +101,7 @@ pub fn init() {
 
 /// check if app is initiated
 pub fn enabled() -> bool {
-	return ctx_is_ok();
+	return ctx_ok();
 }
 
 /// start main loop, call the callback every frame

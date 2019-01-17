@@ -7,7 +7,7 @@ use crate::utils::paired_iter::paired;
 
 /// check collision between 2 rectangles
 pub fn rect_rect(r1: Rect, r2: Rect) -> bool {
-	return false;
+	return r1.x <= r2.x && r1.x + r1.w >= r2.x && r1.y <= r2.y && r1.y + r1.h >= r2.y;
 }
 
 /// check collision between 2 lines
@@ -36,13 +36,13 @@ pub fn line_poly(p1: Vec2, p2: Vec2, poly: &[Vec2]) -> bool {
 }
 
 /// check collision between 2 polygons
-pub fn poly_poly(v1: &[Vec2], v2: &[Vec2]) -> bool {
+pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 
-	assert!(v1.len() >= 3, "invalid polygon");
-	assert!(v2.len() >= 3, "invalid polygon");
+	assert!(poly1.len() >= 3, "invalid polygon");
+	assert!(poly2.len() >= 3, "invalid polygon");
 
-	for (p1, p2) in paired(v1) {
-		if line_poly(*p1, *p2, v2) {
+	for (p1, p2) in paired(poly1) {
+		if line_poly(*p1, *p2, poly2) {
 			return true;
 		}
 	}
@@ -74,7 +74,68 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 	assert!(p1.len() >= 3, "invalid polygon");
 	assert!(p2.len() >= 3, "invalid polygon");
 
-	return (false, vec2!());
+	let get_axis = |poly: &[Vec2]| {
+
+		let mut normals = Vec::with_capacity(poly.len());
+
+		for (p1, p2) in paired(poly) {
+			normals.push((*p1 - *p2).normal().normalize());
+		}
+
+		return normals;
+
+	};
+
+	let project = |poly: &[Vec2], axis: Vec2| {
+
+		let mut min = axis.dot(poly[1]);
+		let mut max = min;
+
+		for i in 1..poly.len() {
+
+			let proj = axis.dot(poly[i]);
+
+			if proj < min {
+				min = proj;
+			} else if proj > max {
+				max = proj;
+			}
+
+		}
+
+		return (min, max);
+
+	};
+
+	let mut axis = Vec::with_capacity(p1.len() + p2.len());
+
+	axis.extend(get_axis(p1));
+	axis.extend(get_axis(p2));
+
+	let mut mtv = vec2!(0);
+	let mut overlap = 99999999f32;
+
+	for a in axis {
+
+		let (s1min, s1max) = project(p1, a);
+		let (s2min, s2max) = project(p2, a);
+
+		if s1min > s2max || s2min > s1max {
+			return (false, vec2!());
+		}
+
+		let o = s2max - s1min;
+
+		if o < overlap {
+
+			overlap = o;
+			mtv = a * o;
+
+		}
+
+	}
+
+	return (true, mtv);
 
 }
 
