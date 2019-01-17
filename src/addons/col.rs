@@ -91,9 +91,9 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 		let mut min = axis.dot(poly[1]);
 		let mut max = min;
 
-		for i in 1..poly.len() {
+		for p in poly {
 
-			let proj = axis.dot(poly[i]);
+			let proj = axis.dot(*p);
 
 			if proj < min {
 				min = proj;
