@@ -14,13 +14,12 @@
 #[macro_use]
 mod utils;
 mod backends;
-mod addons;
 mod modules;
+pub mod addons;
 pub mod math;
 
 pub use crate::math::vec::*;
 pub use crate::modules::*;
-pub use crate::addons::*;
 
 pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::MouseButton as Mouse;
