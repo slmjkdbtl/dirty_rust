@@ -15,14 +15,12 @@
 mod utils;
 mod backends;
 mod addons;
-mod bindings;
 mod modules;
 pub mod math;
 
 pub use crate::math::vec::*;
 pub use crate::modules::*;
 pub use crate::addons::*;
-pub use crate::bindings::*;
 
 pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::MouseButton as Mouse;
