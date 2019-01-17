@@ -57,6 +57,8 @@ impl VertexBuffer {
 				usage.into(),
 			);
 
+			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
 			return Self {
 				id: id,
 				size: size,
@@ -73,9 +75,9 @@ impl VertexBuffer {
 		data: &[GLfloat],
 		offset: usize) -> &Self {
 
-		unsafe {
+		self.bind();
 
-			self.bind();
+		unsafe {
 
 			gl::BufferSubData(
 				gl::ARRAY_BUFFER,
@@ -85,6 +87,8 @@ impl VertexBuffer {
 			);
 
 		}
+
+		self.unbind();
 
 		return self;
 
@@ -96,9 +100,9 @@ impl VertexBuffer {
 		size: GLint,
 		offset: usize) -> &Self {
 
-		unsafe {
+		self.bind();
 
-			self.bind();
+		unsafe {
 
 			gl::VertexAttribPointer(
 				index,
@@ -112,6 +116,8 @@ impl VertexBuffer {
 			gl::EnableVertexAttribArray(index);
 
 		}
+
+		self.unbind();
 
 		return self;
 
@@ -177,6 +183,8 @@ impl IndexBuffer {
 				usage.into(),
 			);
 
+			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+
 			return Self {
 				id: id,
 				size: size,
@@ -191,10 +199,10 @@ impl IndexBuffer {
 		data: &[GLuint],
 		offset: usize) -> &Self {
 
-		unsafe {
+		assert!(offset + data.len() <= self.size, "buffer data overflow");
+		self.bind();
 
-			assert!(offset + data.len() <= self.size, "buffer data overflow");
-			self.bind();
+		unsafe {
 
 			gl::BufferSubData(
 				gl::ELEMENT_ARRAY_BUFFER,
@@ -203,9 +211,11 @@ impl IndexBuffer {
 				data.as_ptr() as *const GLvoid,
 			);
 
-			return self;
-
 		}
+
+		self.unbind();
+
+		return self;
 
 	}
 
@@ -278,6 +288,8 @@ impl Texture {
 
 			);
 
+			gl::BindTexture(gl::TEXTURE_2D, 0);
+
 			return Self {
 
 				id: id,
@@ -318,6 +330,8 @@ impl Texture {
 
 		}
 
+		self.unbind();
+
 		return self;
 
 	}
@@ -332,6 +346,8 @@ impl Texture {
 			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, f as GLint);
 			gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, f as GLint);
 		}
+
+		self.unbind();
 
 		return self;
 
@@ -371,8 +387,10 @@ impl Drop for Texture {
 
 #[derive(PartialEq)]
 pub struct Framebuffer {
+
 	id: GLuint,
-	tex: Texture,
+	pub(crate) tex: Texture,
+
 }
 
 impl Framebuffer {
@@ -396,6 +414,8 @@ impl Framebuffer {
 				0,
 			);
 
+			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
 			return Self {
 				id: id,
 				tex: tex,
@@ -405,7 +425,7 @@ impl Framebuffer {
 
 	}
 
-	fn bind(&self) -> &Self {
+	pub fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
@@ -415,7 +435,7 @@ impl Framebuffer {
 
 	}
 
-	fn unbind(&self) -> &Self {
+	pub fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
@@ -448,6 +468,8 @@ impl Framebuffer {
 				);
 
 			}
+
+			self.tex.unbind();
 
 			return data;
 
@@ -677,6 +699,10 @@ pub fn draw(
 			gl::UNSIGNED_INT,
 			ptr::null(),
 		);
+
+		vbuf.unbind();
+		ibuf.unbind();
+		tex.unbind();
 
 	}
 
