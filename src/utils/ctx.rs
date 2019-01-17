@@ -33,7 +33,7 @@ macro_rules! ctx {
 		}
 
 		#[allow(dead_code)]
-		fn ctx_is_ok() -> bool {
+		fn ctx_ok() -> bool {
 			unsafe {
 				return $state.is_some();
 			}

@@ -72,7 +72,7 @@ more under `examples/`
 
 ### notes & caveats
 
-- api is more opinionated than idiomatic (partly because I want it to support some scripting languages)
+- api is not very idiomadic
 - upon initialization each module has its hidden `static` state that dies when program ends
 - `app::init()` also overrides the panic behavior (also display messages to screen if `window` is initiated)
 - currently using OpenGL 2.1 for better compatibility, might change to gfx-rs in the future

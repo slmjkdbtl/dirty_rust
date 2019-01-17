@@ -77,7 +77,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 /// check if window is initiated
 pub fn enabled() -> bool {
-	return ctx_is_ok();
+	return ctx_ok();
 }
 
 pub(crate) fn poll_events() {

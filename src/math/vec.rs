@@ -159,3 +159,37 @@ gen_vec!(Vec4(vec4) -> (x, y, z, w): f32, (0, 0, 0, 0));
 gen_vec!(Color(color) -> (r, g, b, a): f32, (1, 1, 1, 1));
 gen_vec!(Rect(rect) -> (x, y, w, h): f32, (0, 0, 0, 0));
 
+impl Vec2 {
+
+	/// get a vector from given angle
+	pub fn from_angle(angle: f32) -> Self {
+		return vec2!(angle.cos(), angle.sin());
+	}
+
+	/// normalize vector
+	pub fn normalize(&self) -> Self {
+		return self.clone() / self.mag();
+	}
+
+	/// get vector normal
+	pub fn normal(&self) -> Self {
+		return vec2!(self.y, -self.x);
+	}
+
+	/// dot product of 2 vectors
+	pub fn dot(&self, other: Vec2) -> f32 {
+		return self.x * other.x + self.y * other.y;
+	}
+
+	/// get angle between 2 vectors
+	pub fn angle(&self, other: Vec2) -> f32 {
+		return (other.y - self.y).atan2(other.x - self.x);
+	}
+
+	/// get vector magnitude
+	pub fn mag(&self) -> f32 {
+		return (self.x * self.x + self.y * self.y).sqrt();
+	}
+
+}
+
