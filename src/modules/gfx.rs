@@ -350,6 +350,23 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 }
 
+/// render a canvas
+pub fn render(c: &Canvas) {
+// 	draw(&c.handle.tex, rect!(0, 0, 1, 1));
+}
+
+/// set active canvas
+pub fn drawon(c: &Canvas) {
+	flush();
+	c.handle.bind();
+}
+
+/// stop active canvas
+pub fn stop_drawon(c: &Canvas) {
+	flush();
+	c.handle.unbind();
+}
+
 /// clear view
 pub fn clear() {
 	gl::clear(color!(0, 0, 0, 1));

@@ -12,6 +12,7 @@ fn main() {
 	let (width, height) = window::size();
 	let mut index = 0;
 	let margin = 16;
+	let canvas = gfx::Canvas::new(width, height);
 
 	res::load_sprites("examples/", &vec!["car"]);
 	res::load_sounds("examples/", &vec!["pop", "yo"]);
