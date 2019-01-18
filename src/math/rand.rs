@@ -1,7 +1,7 @@
 // wengwengweng
 
-#[allow(missing_docs)]
 #[macro_export]
+#[allow(missing_docs)]
 macro_rules! rand {
 
 	() => {
