@@ -2,7 +2,7 @@
 
 macro_rules! bind_enum {
 
-	($name:ident($type:ty) { $($member:ident => $dest:expr),+$(,)* }) => {
+	($name:ident($type:ty) { $($member:ident => $dest:expr),+$(,)? }) => {
 
 		#[allow(missing_docs)]
 		#[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -36,15 +36,14 @@
 - mouse inputs
 - framebuffers
 - prettier README example
+- 3d
 
 == TO DO
-- lua bindings
-- ketos bindings
 - custom shaders
 - add error sound
-- 3d
 - ecs
 - imgui
+- better docs & examples
 - editor
 - particle system
 - async resource loading
@@ -52,6 +51,8 @@
 - try gfx-hal
 - text formatting
 - better vec gens
+- lua bindings
+- ketos bindings
 
 == ADVENTURE
 - wasm

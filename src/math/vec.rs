@@ -167,7 +167,7 @@ impl Vec2 {
 	}
 
 	/// normalize vector
-	pub fn normalize(&self) -> Self {
+	pub fn unit(&self) -> Self {
 		return self.clone() / self.mag();
 	}
 

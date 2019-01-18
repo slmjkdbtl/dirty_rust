@@ -673,6 +673,8 @@ pub fn enable_blend() {
 
 		gl::Enable(gl::BLEND);
 		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+		gl::Enable(gl::DEPTH_TEST);
+		gl::DepthFunc(gl::LEQUAL);
 
 	}
 
@@ -681,8 +683,10 @@ pub fn enable_blend() {
 pub fn clear(c: Color) {
 
 	unsafe {
+
 		gl::ClearColor(c.r, c.g, c.b, c.a);
-		gl::Clear(gl::COLOR_BUFFER_BIT);
+		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
 	}
 
 }
