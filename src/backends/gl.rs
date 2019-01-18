@@ -11,19 +11,58 @@ use gl::types::*;
 use crate::*;
 
 bind_enum!(BufferUsage(GLenum) {
+
 	Static => gl::STATIC_DRAW,
 	Dynamic => gl::DYNAMIC_DRAW,
 	Stream => gl::STREAM_DRAW,
+
 });
 
 bind_enum!(ShaderType(GLenum) {
+
 	Vertex => gl::VERTEX_SHADER,
 	Fragment => gl::FRAGMENT_SHADER,
+
 });
 
 bind_enum!(Filter(GLenum) {
+
 	Nearest => gl::NEAREST,
 	Linear => gl::LINEAR,
+
+});
+
+bind_enum!(DepthFunc(GLenum) {
+
+	Never => gl::NEVER,
+	Less => gl::LESS,
+	Equal => gl::EQUAL,
+	LessOrEqual => gl::LEQUAL,
+	Greater => gl::GREATER,
+	NotEqual => gl::NOTEQUAL,
+	GreaterOrEqual => gl::GEQUAL,
+	Always => gl::ALWAYS,
+
+});
+
+bind_enum!(BlendFac(GLenum) {
+
+	Zero => gl::ZERO,
+	One => gl::ONE,
+	SourceColor => gl::SRC_COLOR,
+	OneMinusSourceColor => gl::ONE_MINUS_SRC_COLOR,
+	DestinationColor => gl::DST_COLOR,
+	OneMinusDestinationColor => gl::ONE_MINUS_DST_COLOR,
+	SourceAlpha => gl::SRC_ALPHA,
+	OneMinusSourceAlpha => gl::ONE_MINUS_SRC_ALPHA,
+	DestinationAlpha => gl::DST_ALPHA,
+	OneMinusDestinationAlpha => gl::ONE_MINUS_DST_ALPHA,
+	SourceAlphaSaturate => gl::SRC_ALPHA_SATURATE,
+	ConstantColor => gl::CONSTANT_COLOR,
+	OneMinusConstantColor => gl::ONE_MINUS_CONSTANT_COLOR,
+	ConstantAlpha => gl::CONSTANT_ALPHA,
+	OneMinusConstantAlpha => gl::ONE_MINUS_CONSTANT_ALPHA,
+
 });
 
 #[derive(PartialEq)]
@@ -667,25 +706,58 @@ fn compile_shader(
 
 }
 
-pub fn enable_blend() {
+pub fn set_depth(d: DepthFunc) {
+
+	unsafe {
+
+		gl::Enable(gl::DEPTH_TEST);
+		gl::DepthFunc(d.into());
+
+	}
+}
+
+pub fn set_blend(sfac: BlendFac, dfac: BlendFac) {
 
 	unsafe {
 
 		gl::Enable(gl::BLEND);
-		gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-		gl::Enable(gl::DEPTH_TEST);
-		gl::DepthFunc(gl::LEQUAL);
+		gl::BlendFunc(sfac.into(), dfac.into());
 
 	}
 
 }
 
-pub fn clear(c: Color) {
+pub fn set_stencil() {
+	unsafe {
+		gl::Enable(gl::STENCIL_TEST);
+	}
+}
+
+pub fn clear_color(c: Color) {
+	unsafe {
+		gl::ClearColor(c.r, c.g, c.b, c.a);
+	}
+}
+
+pub fn clear(color: bool, depth: bool, stencil: bool) {
 
 	unsafe {
 
-		gl::ClearColor(c.r, c.g, c.b, c.a);
-		gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+		let mut flags: u32 = 0;
+
+		if color {
+			flags |= gl::COLOR_BUFFER_BIT;
+		}
+
+		if depth {
+			flags |= gl::DEPTH_BUFFER_BIT;
+		}
+
+		if stencil {
+			flags |= gl::STENCIL_BUFFER_BIT;
+		}
+
+		gl::Clear(flags);
 
 	}
 

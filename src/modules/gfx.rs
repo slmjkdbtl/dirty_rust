@@ -123,7 +123,9 @@ pub(crate) fn init() {
 
 	});
 
-	gl::enable_blend();
+	gl::set_blend(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha);
+	gl::set_depth(gl::DepthFunc::LessOrEqual);
+	gl::clear_color(color!(0, 0, 0, 1));
 	clear();
 	window::swap();
 
@@ -400,7 +402,7 @@ pub fn stop_drawon(c: &Canvas) {
 
 /// clear view
 pub fn clear() {
-	gl::clear(color!(0, 0, 0, 1));
+	gl::clear(true, true, false);
 }
 
 /// texture
