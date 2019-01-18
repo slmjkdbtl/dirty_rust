@@ -15,8 +15,8 @@ macro_rules! gen_vec {
 
 			($d:tt) => {
 
-				#[allow(missing_docs)]
 				#[macro_export]
+				#[allow(missing_docs)]
 				macro_rules! $sname {
 
 					() => {
@@ -58,13 +58,6 @@ macro_rules! gen_vec {
 			pub fn all(x: $type) -> Self {
 				return Self {
 					$($member: x),+
-				}
-			}
-
-			/// initialize with random values
-			pub fn rand() -> Self {
-				return Self {
-					$($member: rand!()),+
 				}
 			}
 
