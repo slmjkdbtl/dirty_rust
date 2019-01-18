@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Rendering
+//! 2D Rendering
 
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -43,23 +43,6 @@ struct GfxCtx {
 	vertex_queue: Vec<f32>,
 	draw_count: usize,
 
-}
-
-#[derive(Clone, Copy)]
-struct State {
-	transform: Mat4,
-	tint: Color,
-	line_width: u8,
-}
-
-impl Default for State {
-	fn default() -> Self {
-		return Self {
-			transform: Mat4::identity(),
-			tint: color!(),
-			line_width: 1,
-		}
-	}
 }
 
 pub(crate) fn init() {
@@ -133,6 +116,23 @@ pub(crate) fn init() {
 /// check if gfx is initiated
 pub fn enabled() -> bool {
 	return ctx_ok();
+}
+
+#[derive(Clone, Copy)]
+struct State {
+	transform: Mat4,
+	tint: Color,
+	line_width: u8,
+}
+
+impl Default for State {
+	fn default() -> Self {
+		return Self {
+			transform: Mat4::identity(),
+			tint: color!(),
+			line_width: 1,
+		}
+	}
 }
 
 /// reset global transforms and style states

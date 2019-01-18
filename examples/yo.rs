@@ -25,6 +25,7 @@ fn main() {
 	let tex = &sprite.tex;
 	let frames = &sprite.frames;
 	let anims = &sprite.anims;
+	let mut tint = color!(1);
 
 	let pts = vec![
 		vec2!(0, 0) + vec2!(-margin, -margin),
@@ -57,10 +58,13 @@ fn main() {
 			.map(|&p| gfx::warp(p))
 			.collect();
 
+		gfx::color(tint);
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
 		if col::point_poly(window::mouse_pos(), &pts) {
+
+			tint = color!(0, 1, 1, 1);
 
 			gfx::push();
 			gfx::line_width(3);
@@ -68,6 +72,8 @@ fn main() {
 			gfx::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 			gfx::pop();
 
+		} else {
+			tint = color!(1);
 		}
 
 		gfx::push();

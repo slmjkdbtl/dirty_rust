@@ -72,6 +72,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 	});
 
 	gfx::init();
+	g3d::init();
 
 }
 
