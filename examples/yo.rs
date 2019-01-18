@@ -83,7 +83,7 @@ fn main() {
 		gfx::pop();
 
 		if window::key_pressed(Key::Space) {
-			audio::play(&res::sound("pop").speed(math::rand() * 2.0));
+			audio::play(&res::sound("pop").speed(rand!(2)));
 		}
 
 		if window::key_pressed(Key::Num1) {

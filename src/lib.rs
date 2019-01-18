@@ -19,6 +19,7 @@ pub mod addons;
 pub mod math;
 
 pub use math::vec::*;
+pub use math::rand::*;
 pub use modules::*;
 
 pub use sdl2::keyboard::Scancode as Key;
