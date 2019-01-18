@@ -52,7 +52,7 @@ fn main() {
 		// input
 		if window::key_released(Key::Space) {
 			// play audio with effect
-			audio::play(&pop.speed(math::rand() * 2.0));
+			audio::play(&pop.speed(rand!(2)));
 		}
 
 		if window::key_pressed(Key::F) {

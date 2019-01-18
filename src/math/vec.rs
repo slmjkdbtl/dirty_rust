@@ -64,7 +64,7 @@ macro_rules! gen_vec {
 			/// initialize with random values
 			pub fn rand() -> Self {
 				return Self {
-					$($member: math::rand()),+
+					$($member: rand!()),+
 				}
 			}
 
@@ -190,6 +190,11 @@ impl Vec2 {
 	/// get vector magnitude
 	pub fn mag(&self) -> f32 {
 		return (self.x * self.x + self.y * self.y).sqrt();
+	}
+
+	/// get distance between another vector
+	pub fn dis(&self, other: Vec2) -> f32 {
+		return ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt();
 	}
 
 }

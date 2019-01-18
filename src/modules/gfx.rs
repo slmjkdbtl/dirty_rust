@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::io::Cursor;
 
 use crate::*;
 use crate::math::mat::Mat4;
