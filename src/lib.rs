@@ -18,8 +18,8 @@ mod modules;
 pub mod addons;
 pub mod math;
 
-pub use crate::math::vec::*;
-pub use crate::modules::*;
+pub use math::vec::*;
+pub use modules::*;
 
 pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::MouseButton as Mouse;

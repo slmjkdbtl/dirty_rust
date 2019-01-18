@@ -15,6 +15,7 @@ macro_rules! gen_vec {
 
 			($d:tt) => {
 
+				#[allow(missing_docs)]
 				#[macro_export]
 				macro_rules! $sname {
 
