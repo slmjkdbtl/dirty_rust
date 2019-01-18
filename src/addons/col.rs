@@ -79,7 +79,7 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 		let mut normals = Vec::with_capacity(poly.len());
 
 		for (p1, p2) in paired(poly) {
-			normals.push((*p1 - *p2).normal().normalize());
+			normals.push((*p1 - *p2).normal().unit());
 		}
 
 		return normals;
