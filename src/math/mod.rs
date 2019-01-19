@@ -32,3 +32,8 @@ pub fn smooth(from: f32, to: f32, amount: f32) -> f32 {
 
 }
 
+/// map a value to another range
+pub fn map(val: f32, a1: f32, a2: f32, b1: f32, b2: f32) -> f32 {
+	return clamp(b1 + (val - a1) / (a2 - a1) * (b2 - b1), b1.min(b2), b1.max(b2));
+}
+

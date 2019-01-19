@@ -1,7 +1,6 @@
 // wengwengweng
 
 #[macro_export]
-#[allow(missing_docs)]
 macro_rules! rand {
 
 	() => {
@@ -13,7 +12,7 @@ macro_rules! rand {
 	};
 
 	($from:expr, $to:expr) => {
-		$from as f32 + rand!() * ($to - $from) as f32
+		$from as f32 + rand!($to - $from)
 	};
 
 }

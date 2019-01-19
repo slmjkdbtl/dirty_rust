@@ -42,6 +42,8 @@ fn main() {
 			index = anims["run"].from;
 		}
 
+// 		gfx::drawon(&canvas);
+
 		gfx::push();
 		gfx::translate(vec2!(12));
 		gfx::text(&format!("{}", app::fps()));
@@ -61,6 +63,9 @@ fn main() {
 		gfx::color(tint);
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
+
+// 		gfx::stop_drawon(&canvas);
+// 		gfx::render(&canvas);
 
 		if col::point_poly(window::mouse_pos(), &pts) {
 

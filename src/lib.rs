@@ -3,14 +3,6 @@
 //! # DIRTY
 //! simple toolkit for creating game-like experiences
 
-#![allow(unused_parens)]
-#![deny(missing_docs)]
-
-#![deny(clippy::implicit_return)]
-#![allow(clippy::needless_return)]
-#![allow(clippy::redundant_field_names)]
-#![allow(clippy::collapsible_if)]
-
 #[macro_use]
 mod utils;
 mod backends;

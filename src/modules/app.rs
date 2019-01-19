@@ -40,53 +40,49 @@ pub fn init() {
 // 			location = format!("from '{}', line {}", loc.file(), loc.line());
 // 		}
 
-		if !enabled() {
-			return eprintln!("{}", log);
+		eprintln!("{}", log);
+
+		if !enabled() || !gfx::enabled() || !window::enabled() {
+			return;
 		}
 
-		if gfx::enabled() && window::enabled() {
+		let (width, height) = window::size();
 
-			let (width, height) = window::size();
+		run(&mut || {
 
-			run(&mut || {
+			let dy = (time() * 2.0).sin() * 4.0;
 
-				let dy = (time() * 2.0).sin() * 4.0;
+			gfx::clear();
 
-				gfx::clear();
+			gfx::push();
 
-				gfx::push();
+			gfx::translate(vec2!(64, 64.0 + dy));
 
-					gfx::translate(vec2!(64, 64.0 + dy));
+			gfx::push();
+			gfx::scale(vec2!(2.4));
+			gfx::text("ERROR ♪");
+			gfx::pop();
 
-					gfx::push();
-						gfx::scale(vec2!(2.4));
-						gfx::text("ERROR ♪");
-					gfx::pop();
+			gfx::translate(vec2!(0, 48));
 
-					gfx::translate(vec2!(0, 48));
+			gfx::push();
+			gfx::scale(vec2!(1.2));
+			gfx::text(&log);
+// 			gfx::translate(vec2!(0, 20));
+// 			gfx::text(&location);
+			gfx::pop();
 
-					gfx::push();
-						gfx::scale(vec2!(1.2));
-						gfx::text(&log);
-// 						gfx::translate(vec2!(0, 20));
-// 						gfx::text(&location);
-					gfx::pop();
+			gfx::pop();
 
-				gfx::pop();
+			gfx::line_width(3);
+			gfx::color(color!(1, 1, 0, 1));
+			gfx::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 
-				gfx::line_width(3);
-				gfx::color(color!(1, 1, 0, 1));
-				gfx::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
+			if window::key_pressed(Key::Escape) {
+				std::process::exit(1);
+			}
 
-				if window::key_pressed(Key::Escape) {
-					std::process::exit(1);
-				}
-
-			});
-
-		} else {
-			return eprintln!("{}", log);
-		}
+		});
 
 	}));
 
@@ -119,14 +115,13 @@ pub fn run(f: &mut FnMut()) {
 		}
 
 		if gfx::enabled() {
-			gfx::reset();
-			gfx::clear();
+			gfx::start();
 		}
 
 		f();
 
 		if gfx::enabled() {
-			gfx::flush();
+			gfx::finish();
 		}
 
 		if window::enabled() {
