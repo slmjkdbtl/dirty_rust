@@ -412,7 +412,7 @@ impl Texture {
 
 	}
 
-	pub fn capture(&self) -> Vec<u8> {
+	pub fn get_data(&self) -> Vec<u8> {
 
 		let size = (self.width * self.height * 4) as usize;
 
@@ -495,6 +495,8 @@ impl Framebuffer {
 				tex.id,
 				0,
 			);
+
+			gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
 
 		}
 

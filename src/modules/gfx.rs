@@ -404,6 +404,41 @@ pub fn clear() {
 	gl::clear(true, true, false);
 }
 
+/// save a canvas into a png file
+pub fn capture(canvas: &Canvas, fname: &str) {
+
+	let tex = &canvas.tex;
+	let buffer = tex.handle.get_data();
+
+	image::save_buffer(
+		fname,
+		&buffer,
+		tex.width(),
+		tex.height(),
+		image::ColorType::RGBA(8),
+	).expect("failed to save png");
+
+}
+
+pub(crate) fn start() {
+
+	reset();
+	clear();
+
+}
+
+pub(crate) fn finish() {
+
+	let gfx = ctx_get();
+
+	flush();
+
+	if gfx.current_canvas.is_some() {
+		panic!("unfinished canvas");
+	}
+
+}
+
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
