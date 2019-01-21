@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 mod trans;
 mod sprite;
+mod body;
 
 use trans::*;
 use sprite::*;
@@ -19,19 +20,19 @@ fn main() {
 	s.add(car(vec2!(20)));
 
 	for e in s.get(&comp_filter![Trans, Sprite]) {
-		dbg!(e.get::<Trans>());
+		// ...
 	}
 
 }
 
 fn car(pos: Vec2) -> Entity {
 
-	let trans = Trans::default()
+	let trans = Trans::new()
 		.pos(pos);
 
-	let sprite = Sprite::default();
+// 	let sprite = Sprite::default();
 
-	return entity![trans, sprite];
+	return entity![trans];
 
 }
 

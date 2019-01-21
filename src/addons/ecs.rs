@@ -210,9 +210,8 @@ pub fn scene() -> Scene {
 #[macro_export]
 macro_rules! comp {
 
-	($name:ident { $($member:ident: $type:ident ($default:expr)),*$(,)? }) => {
+	($name:ident { $($member:ident: $type:ty),*$(,)? }) => {
 
-		#[derive(Debug)]
 		pub struct $name {
 			$(
 				pub $member: $type
@@ -220,16 +219,6 @@ macro_rules! comp {
 		}
 
 		impl Comp for $name {}
-
-		impl Default for $name {
-			fn default() -> $name {
-				return $name {
-					$(
-						$member: $default
-					),*
-				};
-			}
-		}
 
 	};
 
