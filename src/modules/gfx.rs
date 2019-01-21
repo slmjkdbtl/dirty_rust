@@ -367,7 +367,7 @@ pub fn drawon(c: &Canvas) {
 	if gfx.current_canvas.is_none() {
 
 		flush();
-		c.handle.bind();
+		gl::set_framebuffer(&*c.handle);
 		gfx.current_canvas = Some(c.clone());
 
 	} else {
@@ -387,7 +387,7 @@ pub fn stop_drawon(c: &Canvas) {
 
 		if current == c {
 			flush();
-			c.handle.unbind();
+			gl::unset_framebuffer(&*c.handle);
 			gfx.current_canvas = None;
 		} else {
 			panic!("this is not the active canvas");
