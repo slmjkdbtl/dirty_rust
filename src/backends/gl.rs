@@ -162,7 +162,7 @@ impl VertexBuffer {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
@@ -172,7 +172,7 @@ impl VertexBuffer {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -258,7 +258,7 @@ impl IndexBuffer {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
@@ -268,7 +268,7 @@ impl IndexBuffer {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
@@ -506,7 +506,7 @@ impl Framebuffer {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
@@ -516,7 +516,7 @@ impl Framebuffer {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
@@ -577,7 +577,7 @@ impl Program {
 
 	}
 
-	pub fn bind(&self) -> &Self {
+	fn bind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(self.id);
@@ -587,7 +587,7 @@ impl Program {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(0);
@@ -763,6 +763,14 @@ pub fn clear(color: bool, depth: bool, stencil: bool) {
 
 	}
 
+}
+
+pub fn set_framebuffer(fb: &Framebuffer) {
+	fb.bind();
+}
+
+pub fn unset_framebuffer(fb: &Framebuffer) {
+	fb.unbind();
 }
 
 pub fn draw(
