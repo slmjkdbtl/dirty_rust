@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::any::TypeId;
 use std::any::Any;
+use std::fmt;
 
 use crate::*;
 
@@ -42,21 +43,33 @@ pub trait System {
 
 type CompFilter = HashSet<TypeId>;
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Id(&'static str, usize);
+
+impl Id {
+	fn new(id: usize) -> Self {
+		return Self(MODS[rand!(MODS.len()) as usize], id);
+	}
+}
+
+impl fmt::Display for Id {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		return write!(f, "{}{}", self.0, self.1);
+	}
+}
+
 #[macro_export]
-macro_rules! compfilter {
+macro_rules! comp_filter {
 
 	($($comp:ty),*) => {
 
 		{
 
-			use std::collections::HashSet;
-			use std::any::TypeId;
-
-			let mut set = HashSet::new();
+			let mut set = std::collections::HashSet::new();
 
 			$(
-				set.insert(TypeId::of::<$comp>());
-			),*
+				set.insert(std::any::TypeId::of::<$comp>());
+			)*
 
 			set
 
@@ -70,7 +83,7 @@ macro_rules! compfilter {
 pub struct Scene {
 
 	count: usize,
-	entities: HashMap<String, Entity>,
+	entities: HashMap<Id, Entity>,
 
 }
 
@@ -80,23 +93,22 @@ impl Scene {
 		return Self::default();
 	}
 
-	pub fn add(&mut self, e: Entity) {
+	pub fn add(&mut self, e: Entity) -> Id {
 
-		let id = format!("{}{}", MODS[rand!(MODS.len()) as usize], self.count);
-		let mut e = self.entities.insert(id.clone(), e).expect("failed to add entity");
+		let id = Id::new(self.count);
 
+		self.entities.insert(id, e);
 		self.count += rand!(9) as usize;
-		e.id = Some(id);
+
+		return id;
 
 	}
 
-	pub fn remove(&mut self, e: Entity) {
+	pub fn remove(&mut self, e: Id) {
 
-		let mut e = self.entities
-			.remove(&e.id.expect("invalid entity"))
+		self.entities
+			.remove(&e)
 			.expect("failed to remove entity");
-
-		e.id = None;
 
 	}
 
@@ -114,13 +126,27 @@ impl Scene {
 
 	}
 
+	pub fn run<S: System>(&self, system: S) {
+		// ...
+	}
+
+}
+
+#[macro_export]
+macro_rules! entity {
+	($($comp:expr),*) => {
+		{
+			let mut e = Entity::new();
+			$(
+				e.with($comp);
+			)*
+			e
+		}
+	}
 }
 
 pub struct Entity {
-
 	comps: HashMap<TypeId, Box<Any>>,
-	id: Option<String>,
-
 }
 
 impl Entity {
@@ -128,7 +154,6 @@ impl Entity {
 	pub fn new() -> Self {
 		return Self {
 			comps: HashMap::new(),
-			id: None,
 		};
 	}
 
@@ -178,26 +203,20 @@ impl Entity {
 
 }
 
-pub fn entity() -> Entity {
-	return Entity::new();
+pub fn scene() -> Scene {
+	return Scene::new();
 }
 
 #[macro_export]
 macro_rules! comp {
 
-	($name:ident { $($member:ident: $type:ident ($default:expr)),+$(,)? }) => {
+	($name:ident { $($member:ident: $type:ident ($default:expr)),*$(,)? }) => {
 
 		#[derive(Debug)]
 		pub struct $name {
 			$(
 				pub $member: $type
 			),*
-		}
-
-		impl $name {
-			pub fn new() -> Self {
-				return Self::default();
-			}
 		}
 
 		impl Comp for $name {}

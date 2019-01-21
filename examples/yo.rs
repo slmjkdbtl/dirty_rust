@@ -16,8 +16,8 @@ fn main() {
 	let margin = 16;
 	let canvas = gfx::Canvas::new(width, height);
 
-	res::load_sprites("examples/", &vec!["car"]);
-	res::load_sounds("examples/", &vec!["pop", "yo"]);
+	res::load_sprites("examples/assets/", &vec!["car"]);
+	res::load_sounds("examples/assets/", &vec!["pop", "yo"]);
 
 	let music = audio::track(&res::sound("yo").repeat());
 
