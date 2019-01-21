@@ -1,8 +1,6 @@
 // wengwengweng
 
-//! Vectors, Matrixes
-
-use core::ops;
+use std::ops;
 use std::fmt;
 
 use crate::*;
