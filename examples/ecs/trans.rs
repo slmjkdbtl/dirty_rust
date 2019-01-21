@@ -5,13 +5,17 @@ use dirty::addons::ecs::*;
 
 comp!(Trans {
 
-	pos: Vec2 (vec2!()),
-	rot: f32 (0.0),
-	scale: Vec2 (vec2!(1)),
+	pos: Vec2,
+	rot: f32,
+	scale: Vec2,
 
 });
 
 impl Trans {
+
+	pub fn new() -> Self {
+		return Self::default();
+	}
 
 	pub fn pos(self, pos: Vec2) -> Self {
 		return Self {
@@ -32,6 +36,18 @@ impl Trans {
 			rot: rot,
 			..self
 		}
+	}
+
+}
+
+impl Default for Trans {
+
+	fn default() -> Self {
+		return Self {
+			pos: vec2!(),
+			rot: 0.0,
+			scale: vec2!(1),
+		};
 	}
 
 }
