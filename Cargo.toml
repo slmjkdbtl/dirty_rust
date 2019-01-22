@@ -21,7 +21,6 @@ serde_json = "*"
 rand = "*"
 num = "*"
 aseprite = "*"
-rlua = "*"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"

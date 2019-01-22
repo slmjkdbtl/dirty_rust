@@ -49,6 +49,12 @@ fn main() {
 		gfx::text(&format!("{}", app::fps()));
 		gfx::pop();
 
+		for i in 0..1000000 {
+			let a = vec2!(123);
+		}
+
+		println!("{}", app::fps());
+
 		gfx::push();
 		gfx::translate(vec2!(196, 164));
 		gfx::scale(vec2!(2));

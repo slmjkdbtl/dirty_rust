@@ -34,7 +34,6 @@
 
 == DOING
 - ecs
-- lua bindings
 - mouse inputs
 - framebuffers
 - prettier README example
@@ -52,7 +51,6 @@
 - try gfx-hal
 - text formatting
 - better vec gens
-- ketos bindings
 
 == ADVENTURE
 - wasm
