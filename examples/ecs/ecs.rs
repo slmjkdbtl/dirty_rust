@@ -8,20 +8,28 @@ use std::collections::HashMap;
 mod trans;
 mod sprite;
 mod body;
+mod vel;
+mod move_system;
 
 use trans::*;
 use sprite::*;
+use body::*;
+use vel::*;
+use move_system::*;
 
 fn main() {
 
 	let mut s = scene();
 
-	s.add(car(vec2!(120)));
-	s.add(car(vec2!(20)));
+	let a = car(vec2!(123));
 
-	for e in s.get(&comp_filter![Trans, Sprite]) {
-		// ...
-	}
+	s.add(a);
+
+	s.run(MoveSystem);
+
+	s.update();
+	s.update();
+	s.update();
 
 }
 

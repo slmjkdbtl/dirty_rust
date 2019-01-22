@@ -34,14 +34,14 @@ const MODS: [&str; 17] = [
 
 pub trait Comp: Any {}
 
-pub trait System {
+pub trait System: Any {
 
-	fn accept(&self);
-	fn run(&self);
+	fn accept(&self) -> CompFilter;
+	fn update(&self, e: &mut Entity);
 
 }
 
-type CompFilter = HashSet<TypeId>;
+pub type CompFilter = HashSet<TypeId>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Id(&'static str, usize);
@@ -52,9 +52,15 @@ impl Id {
 	}
 }
 
-impl fmt::Display for Id {
+impl fmt::Debug for Id {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		return write!(f, "{}{}", self.0, self.1);
+	}
+}
+
+impl fmt::Display for Id {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		return write!(f, "{:?}", self.0);
 	}
 }
 
@@ -65,7 +71,7 @@ macro_rules! comp_filter {
 
 		{
 
-			let mut set = std::collections::HashSet::new();
+			let mut set = CompFilter::new();
 
 			$(
 				set.insert(std::any::TypeId::of::<$comp>());
@@ -84,6 +90,7 @@ pub struct Scene {
 
 	count: usize,
 	entities: HashMap<Id, Entity>,
+	systems: Vec<Box<System>>,
 
 }
 
@@ -126,8 +133,20 @@ impl Scene {
 
 	}
 
-	pub fn run<S: System>(&self, system: S) {
-		// ...
+	pub fn run<S: System>(&mut self, system: S) {
+		self.systems.push(Box::new(system));
+	}
+
+	pub fn update(&mut self) {
+
+		for s in &self.systems {
+			for (_, e) in &mut self.entities {
+				if e.has_all(&s.accept()) {
+					s.update(e);
+				}
+			}
+		}
+
 	}
 
 }
@@ -183,21 +202,20 @@ impl Entity {
 
 	}
 
-	pub fn get<C: Comp>(&self) -> &C {
+	pub fn get<C: Comp + Clone>(&self) -> C {
 
 		return self.comps
 			.get(&TypeId::of::<C>())
 			.map(|c| c.downcast_ref().unwrap())
+			.map(Clone::clone)
 			.expect("failed to get comp");
 
 	}
 
-	pub fn get_mut<C: Comp>(&mut self) -> &C {
+	pub fn set<C: Comp>(&mut self, comp: C) {
 
-		return self.comps
-			.get_mut(&TypeId::of::<C>())
-			.map(|c| c.downcast_ref().unwrap())
-			.expect("failed to get comp");
+		self.comps
+			.insert(TypeId::of::<C>(), Box::new(comp));
 
 	}
 
@@ -212,6 +230,7 @@ macro_rules! comp {
 
 	($name:ident { $($member:ident: $type:ty),*$(,)? }) => {
 
+		#[derive(Clone)]
 		pub struct $name {
 			$(
 				pub $member: $type
