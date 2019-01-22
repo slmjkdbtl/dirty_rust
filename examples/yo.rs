@@ -56,9 +56,7 @@ fn main() {
 		gfx::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
 		gfx::translate(vec2!(-64));
 
-		let pts: Vec<Vec2> = pts.iter()
-			.map(|&p| gfx::warp(p))
-			.collect();
+		let pts = gfx::multi_warp(&pts);
 
 		gfx::color(tint);
 		gfx::draw(&tex, frames[index]);

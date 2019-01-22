@@ -20,6 +20,7 @@ impl System for MoveSystem {
 		let v = e.get::<Vel>();
 
 		t.pos = t.pos + v.vel;
+		t.rot = t.rot + app::dt();
 		e.set::<Trans>(t);
 
 	}

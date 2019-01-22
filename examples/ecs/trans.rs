@@ -3,7 +3,7 @@
 use dirty::*;
 use dirty::addons::ecs::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Trans {
 
 	pub pos: Vec2,

@@ -71,10 +71,10 @@ more under `examples/`
 
 ### notes & caveats
 
-- api is not very idiomadic
+- api is more opinionated than idiomadic
 - upon initialization each module has its hidden `static` state that dies when program ends
 - `app::init()` also overrides the panic behavior (also display messages to screen if `window` is initiated)
 - currently using OpenGL 2.1 for better compatibility, but might change to gfx-hal in the future
-- there's no proper custom error handling now (e.g. if you use some of the file io wrapper functions in the `fs` module an error will directly go in the error screen)
+- currently no proper error handling (a lot of internal panics, but with pretty error screen)
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
 
