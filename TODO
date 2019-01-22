@@ -33,6 +33,8 @@
 - vector methods
 
 == DOING
+- ecs
+- lua bindings
 - mouse inputs
 - framebuffers
 - prettier README example
@@ -41,7 +43,6 @@
 == TO DO
 - custom shaders
 - add error sound
-- ecs
 - imgui
 - better docs & examples
 - editor
@@ -51,7 +52,6 @@
 - try gfx-hal
 - text formatting
 - better vec gens
-- lua bindings
 - ketos bindings
 
 == ADVENTURE

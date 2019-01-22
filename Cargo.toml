@@ -26,7 +26,3 @@ rlua = "*"
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"
 
-[[example]]
-name = "ecs"
-path = "examples/ecs/ecs.rs"
-

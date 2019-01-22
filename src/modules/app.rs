@@ -18,6 +18,7 @@ struct AppCtx {
 
 	dt: f32,
 	time: f32,
+	debug: bool,
 
 }
 
@@ -90,6 +91,7 @@ pub fn init() {
 
 		dt: 0.0,
 		time: 0.0,
+		debug: false,
 
 	});
 
@@ -160,31 +162,43 @@ pub fn time() -> f32 {
 	return ctx_get().time;
 }
 
+/// set debug mode
+pub fn set_debug(b: bool) {
+	ctx_get_mut().debug = b;
+}
+
+/// get debug mode
+pub fn debug() -> bool {
+	return ctx_get().debug;
+}
+
 /// quit with success code
 pub fn quit() {
 	std::process::exit(0);
 }
 
-#[allow(missing_docs)]
-#[derive(PartialEq, Clone, Copy)]
-pub enum Platform {
-	MacOS,
-	Windows,
-	Linux,
-	IOS,
-	Android,
-	Other,
+/// check if current platform is MacOS
+pub fn is_macos() -> bool {
+	return sdl2::get_platform() == "Mac OS X";
 }
 
-/// get current platform
-pub fn platform() -> Platform {
-	return match sdl2::get_platform() {
-		"Mac OS X" => Platform::MacOS,
-		"Windows" => Platform::Windows,
-		"Linux" => Platform::Linux,
-		"iOS" => Platform::IOS,
-		"Android" => Platform::Android,
-		_ => Platform::Other,
-	}
+/// check if current platform is Windows
+pub fn is_windows() -> bool {
+	return sdl2::get_platform() == "Windows";
+}
+
+/// check if current platform is Linux
+pub fn is_linux() -> bool {
+	return sdl2::get_platform() == "Linux";
+}
+
+/// check if current platform is Android
+pub fn is_android() -> bool {
+	return sdl2::get_platform() == "Android";
+}
+
+/// check if current platform is iOS
+pub fn is_ios() -> bool {
+	return sdl2::get_platform() == "iOS";
 }
 
