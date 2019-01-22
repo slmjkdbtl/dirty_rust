@@ -8,7 +8,6 @@
 #[macro_use]
 mod utils;
 mod backends;
-mod bindings;
 mod modules;
 pub mod addons;
 pub mod math;
@@ -16,7 +15,6 @@ pub mod math;
 pub use math::vec::*;
 pub use math::mat::*;
 pub use math::rand::*;
-pub use bindings::*;
 pub use modules::*;
 
 pub use sdl2::keyboard::Scancode as Key;
