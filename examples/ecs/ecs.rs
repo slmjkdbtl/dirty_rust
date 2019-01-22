@@ -38,7 +38,8 @@ fn car(pos: Vec2) -> Entity {
 	let trans = Trans::new()
 		.pos(pos);
 
-	let vel = Vel::new();
+	let vel = Vel::new()
+		.vel(vec2!(2, 2));
 
 // 	let sprite = Sprite::default();
 

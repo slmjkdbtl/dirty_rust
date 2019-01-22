@@ -36,8 +36,15 @@ pub trait Comp: Any {}
 
 pub trait System: Any {
 
-	fn accept(&self) -> CompFilter;
+	fn filter(&self) -> CompFilter;
 	fn update(&self, e: &mut Entity);
+
+}
+
+struct SystemData {
+
+	system: Box<System>,
+	filter: CompFilter,
 
 }
 
@@ -90,7 +97,7 @@ pub struct Scene {
 
 	count: usize,
 	entities: HashMap<Id, Entity>,
-	systems: Vec<Box<System>>,
+	systems: Vec<SystemData>,
 
 }
 
@@ -111,6 +118,14 @@ impl Scene {
 
 	}
 
+	pub fn get(&self, id: Id) -> Option<&Entity> {
+		return self.entities.get(&id);
+	}
+
+	pub fn get_mut(&mut self, id: Id) -> Option<&mut Entity> {
+		return self.entities.get_mut(&id);
+	}
+
 	pub fn remove(&mut self, e: Id) {
 
 		self.entities
@@ -119,30 +134,23 @@ impl Scene {
 
 	}
 
-	pub fn get(&self, filter: &CompFilter) -> Vec<&Entity> {
-
-		let mut list = Vec::new();
-
-		for (_, e) in &self.entities {
-			if e.has_all(filter) {
-				list.push(e);
-			}
-		}
-
-		return list;
-
-	}
-
 	pub fn run<S: System>(&mut self, system: S) {
-		self.systems.push(Box::new(system));
+
+		let filter = system.filter();
+
+		self.systems.push(SystemData {
+			system: Box::new(system),
+			filter: filter,
+		});
+
 	}
 
 	pub fn update(&mut self) {
 
 		for s in &self.systems {
 			for (_, e) in &mut self.entities {
-				if e.has_all(&s.accept()) {
-					s.update(e);
+				if e.has_all(&s.filter) {
+					s.system.update(e);
 				}
 			}
 		}
