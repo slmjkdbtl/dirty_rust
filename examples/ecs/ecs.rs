@@ -10,12 +10,14 @@ mod sprite;
 mod body;
 mod vel;
 mod move_system;
+mod render_system;
 
 use trans::*;
 use sprite::*;
 use body::*;
 use vel::*;
 use move_system::*;
+use render_system::*;
 
 fn main() {
 
@@ -26,6 +28,7 @@ fn main() {
 	s.add(a);
 
 	s.run(MoveSystem);
+	s.run(RenderSystem);
 
 	s.update();
 	s.update();
@@ -41,9 +44,9 @@ fn car(pos: Vec2) -> Entity {
 	let vel = Vel::new()
 		.vel(vec2!(2, 2));
 
-// 	let sprite = Sprite::default();
+	let sprite = Sprite::new(gfx::Texture::from_bytes(&fs::read_bytes("examples/assets/car.png")));
 
-	return entity![trans, vel];
+	return entity![trans, vel, sprite];
 
 }
 
