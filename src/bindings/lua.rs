@@ -5,8 +5,8 @@
 use rlua::Lua;
 use rlua::Function;
 use rlua::UserData;
-// use rlua::UserDataMethods;
-// use rlua::MetaMethod;
+use rlua::UserDataMethods;
+use rlua::MetaMethod;
 
 use crate::*;
 
@@ -35,7 +35,29 @@ pub fn run_code(code: &str) {
 
 		}
 
-		impl UserData for Vec2 {}
+		impl UserData for Vec2 {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method("mag", |_, v, ()| {
+					return Ok(Vec2::mag(&v));
+				});
+
+				methods.add_meta_function(MetaMethod::Add, |_, (p1, p2): (Vec2, Vec2)| {
+					return Ok(p1 + p2);
+				});
+
+				methods.add_meta_function(MetaMethod::Mul, |_, (p, s): (Vec2, f32)| {
+					return Ok(p * s);
+				});
+
+				methods.add_meta_function(MetaMethod::ToString, |_, (p): (Vec2)| {
+					return Ok(format!("{}", p));
+				});
+
+			}
+		}
+
 		impl UserData for Rect {}
 		impl UserData for Color {}
 		impl UserData for gfx::Texture {}
@@ -45,10 +67,18 @@ pub fn run_code(code: &str) {
 		bind_func!("rect", (x, y, w, h): (f32, f32, f32, f32) -> rect!(x, y, w, h));
 
 		bind_func!("app_init", (): () -> app::init());
+		bind_func!("app_enabled", (): () -> app::enabled());
 		bind_func!("app_quit", (): () -> app::quit());
 		bind_func!("app_time", (): () -> app::time());
 		bind_func!("app_dt", (): () -> app::dt());
 		bind_func!("app_fps", (): () -> app::fps());
+		bind_func!("app_set_debug", (b): (bool) -> app::set_debug(b));
+		bind_func!("app_debug", (): () -> app::debug());
+		bind_func!("app_is_macos", (): () -> app::is_macos());
+		bind_func!("app_is_windows", (): () -> app::is_windows());
+		bind_func!("app_is_linux", (): () -> app::is_linux());
+		bind_func!("app_is_ios", (): () -> app::is_ios());
+		bind_func!("app_is_android", (): () -> app::is_android());
 
 		bind_func!("app_run", (f): (Function) ->
 			app::run(&mut || {
@@ -68,6 +98,8 @@ pub fn run_code(code: &str) {
 		bind_func!("gfx_init", (): () -> gfx::init());
 		bind_func!("gfx_clear", (): () -> gfx::clear());
 		bind_func!("gfx_reset", (): () -> gfx::reset());
+
+		bind_func!("audio_init", (): () -> audio::init());
 
 		ctx.load(code).exec().expect("failed to run lua");
 
