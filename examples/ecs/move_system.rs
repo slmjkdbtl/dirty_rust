@@ -1,12 +1,12 @@
 // wengwengweng
 
-pub struct MoveSystem;
-
 use dirty::*;
 use dirty::addons::ecs::*;
 
 use crate::trans::*;
 use crate::vel::*;
+
+pub struct MoveSystem;
 
 impl System for MoveSystem {
 
