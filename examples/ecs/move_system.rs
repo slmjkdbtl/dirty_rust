@@ -19,6 +19,7 @@ impl System for MoveSystem {
 		let mut t = e.get::<Trans>();
 
 		t.pos = t.pos + vec2!(3);
+		dbg!();
 		e.set::<Trans>(t);
 
 	}
