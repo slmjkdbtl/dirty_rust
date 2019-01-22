@@ -3,13 +3,16 @@
 use dirty::*;
 use dirty::addons::ecs::*;
 
-comp!(Trans {
+#[derive(Clone, Debug)]
+pub struct Trans {
 
-	pos: Vec2,
-	rot: f32,
-	scale: Vec2,
+	pub pos: Vec2,
+	pub rot: f32,
+	pub scale: Vec2,
 
-});
+}
+
+impl Comp for Trans {}
 
 impl Trans {
 
