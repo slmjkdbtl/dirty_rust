@@ -344,6 +344,15 @@ pub fn warp(pt: Vec2) -> Vec2 {
 
 }
 
+/// warp multiple points
+pub fn multi_warp(pts: &[Vec2]) -> Vec<Vec2> {
+
+	 return pts.iter()
+		.map(|&p| warp(p))
+		.collect();
+
+}
+
 /// inverse warp a 2d point through current transformed matrix
 pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
@@ -352,6 +361,16 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 	return trans.inverse().forward(pt);
 
+}
+
+/// get the current transform matrix
+pub fn get_matrix() -> Mat4 {
+	return ctx_get().state.transform;
+}
+
+/// get the current transform matrix
+pub fn set_matrix(m: Mat4) {
+	ctx_get_mut().state.transform = m;
 }
 
 /// render a canvas
