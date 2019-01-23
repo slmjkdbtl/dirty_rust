@@ -12,8 +12,10 @@ pub struct Vel {
 
 impl Vel {
 
-	pub fn new() -> Self {
-		return Self::default();
+	pub fn new(pos: Vec2) -> Self {
+		return Self {
+			pos: pos,
+		};
 	}
 
 	pub fn pos(self, pos: Vec2) -> Self {

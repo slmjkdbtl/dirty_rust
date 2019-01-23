@@ -64,8 +64,8 @@ fn create_car(world: &mut World, pos: Vec2) {
 
 	world
 		.create_entity()
-		.with(Trans::default().pos(pos))
-		.with(Vel::default())
+		.with(Trans::new(pos, 0.0, vec2!(2)))
+		.with(Vel::new(vec2!()))
 		.with(Body::new(&s.get_verts()))
 		.with(s)
 		.build();

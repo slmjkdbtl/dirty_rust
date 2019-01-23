@@ -16,8 +16,12 @@ pub struct Trans {
 
 impl Trans {
 
-	pub fn new() -> Self {
-		return Self::default();
+	pub fn new(pos: Vec2, rot: f32, scale: Vec2) -> Self {
+		return Self {
+			pos: pos,
+			rot: rot,
+			scale: scale,
+		}
 	}
 
 	pub fn pos(self, pos: Vec2) -> Self {
