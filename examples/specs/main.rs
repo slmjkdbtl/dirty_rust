@@ -10,6 +10,7 @@ mod sprite;
 mod body;
 mod move_sys;
 mod render_sys;
+mod anim_sys;
 mod debug_sys;
 
 use trans::*;
@@ -18,6 +19,7 @@ use sprite::*;
 use body::*;
 use move_sys::*;
 use render_sys::*;
+use anim_sys::*;
 use debug_sys::*;
 
 fn main() {
@@ -27,6 +29,8 @@ fn main() {
 	window::init("yo", 640, 480);
 	res::init();
 
+	app::set_debug(true);
+
 	res::load_sprites("examples/assets/", &vec!["car"]);
 	res::load_sounds("examples/assets/", &vec!["pop", "yo"]);
 
@@ -34,6 +38,7 @@ fn main() {
 
 	let mut dispatcher = DispatcherBuilder::new()
 		.with(MoveSys, "move", &[])
+		.with(AnimSys, "anim", &[])
 		.with_thread_local(RenderSys)
 		.with_thread_local(DebugSys)
 		.build();
@@ -53,13 +58,15 @@ fn main() {
 
 fn create_car(world: &mut World, pos: Vec2) {
 
-	let s = Sprite::new("car");
+	let mut s = Sprite::new("car");
+
+	s.play("run");
 
 	world
 		.create_entity()
 		.with(Trans::default().pos(pos))
 		.with(Vel::default())
-		.with(Body::from_verts(&s.get_verts()))
+		.with(Body::new(&s.get_verts()))
 		.with(s)
 		.build();
 

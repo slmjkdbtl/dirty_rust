@@ -12,7 +12,6 @@ pub struct Body {
 
 	pub verts: Vec<Vec2>,
 	pub d_verts: Vec<Vec2>,
-	pub test: i32,
 
 }
 
@@ -21,19 +20,8 @@ impl Body {
 	pub fn new(verts: &[Vec2]) -> Self {
 
 		return Self {
-			verts: Vec::new(),
-			d_verts: Vec::new(),
-			test: 0,
-		};
-
-	}
-
-	pub fn from_verts(verts: &[Vec2]) -> Self {
-
-		return Self {
 			verts: verts.to_vec(),
 			d_verts: verts.to_vec(),
-			test: 0,
 		};
 
 	}

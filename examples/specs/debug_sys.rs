@@ -15,6 +15,10 @@ impl<'a> System<'a> for DebugSys {
 
 	fn run(&mut self, (body): Self::SystemData) {
 
+		if !app::debug() {
+			return;
+		}
+
 		for (b) in (&body).join() {
 
 			gfx::push();

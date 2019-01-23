@@ -33,13 +33,15 @@
 - vector methods
 
 == DOING
-- ecs
+- specs example
+- more accurate timestep
 - mouse inputs
 - framebuffers
 - prettier README example
 - 3d
 
 == TO DO
+- ecs
 - custom shaders
 - add error sound
 - imgui
