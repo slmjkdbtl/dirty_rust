@@ -45,6 +45,7 @@ struct SystemData {
 
 	system: Box<System>,
 	filter: CompFilter,
+	entities: Vec<Id>,
 
 }
 
@@ -137,10 +138,18 @@ impl Scene {
 	pub fn run<S: System>(&mut self, system: S) {
 
 		let filter = system.filter();
+		let mut list = Vec::new();
+
+		for (id, e) in &self.entities {
+			if e.has_all(&filter) {
+				list.push(*id);
+			}
+		}
 
 		self.systems.push(SystemData {
 			system: Box::new(system),
 			filter: filter,
+			entities: list,
 		});
 
 	}

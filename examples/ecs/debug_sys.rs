@@ -5,9 +5,9 @@ use dirty::addons::ecs::*;
 
 use crate::body::*;
 
-pub struct DebugSystem;
+pub struct DebugSys;
 
-impl System for DebugSystem {
+impl System for DebugSys {
 
 	fn filter(&self) -> CompFilter {
 		return comp_filter![Body];

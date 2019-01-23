@@ -4,23 +4,21 @@ use dirty::*;
 use dirty::addons::ecs::*;
 use dirty::addons::res;
 
-use std::collections::HashMap;
-
 mod trans;
 mod sprite;
 mod body;
 mod vel;
-mod move_system;
-mod render_system;
-mod debug_system;
+mod move_sys;
+mod render_sys;
+mod debug_sys;
 
 use trans::*;
 use sprite::*;
 use body::*;
 use vel::*;
-use move_system::*;
-use render_system::*;
-use debug_system::*;
+use move_sys::*;
+use render_sys::*;
+use debug_sys::*;
 
 fn main() {
 
@@ -39,9 +37,9 @@ fn main() {
 		s.add(car(vec2!(rand!(width), rand!(height))));
 	}
 
-	s.run(MoveSystem);
-	s.run(RenderSystem);
-	s.run(DebugSystem);
+	s.run(MoveSys);
+	s.run(RenderSys);
+	s.run(DebugSys);
 
 	app::run(&mut || {
 		s.update();
