@@ -6,9 +6,9 @@ use dirty::addons::ecs::*;
 use crate::trans::*;
 use crate::vel::*;
 
-pub struct MoveSystem;
+pub struct MoveSys;
 
-impl System for MoveSystem {
+impl System for MoveSys {
 
 	fn filter(&self) -> CompFilter {
 		return comp_filter![Trans, Vel];

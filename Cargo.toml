@@ -21,6 +21,8 @@ serde_json = "*"
 rand = "*"
 num = "*"
 aseprite = "*"
+specs = "*"
+specs-derive = "*"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"

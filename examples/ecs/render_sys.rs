@@ -7,9 +7,9 @@ use crate::trans::*;
 use crate::sprite::*;
 use crate::body::*;
 
-pub struct RenderSystem;
+pub struct RenderSys;
 
-impl System for RenderSystem {
+impl System for RenderSys {
 
 	fn filter(&self) -> CompFilter {
 		return comp_filter![Trans, Sprite];
