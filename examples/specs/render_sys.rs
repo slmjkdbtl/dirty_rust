@@ -32,7 +32,7 @@ impl<'a> System<'a> for RenderSys {
 				body.d_verts = gfx::multi_warp(&body.verts);
 			}
 
-			gfx::draw(&s.tex(), s.quad);
+			gfx::draw(&s.tex(), s.framelist[s.frame]);
 			gfx::pop();
 
 		}
