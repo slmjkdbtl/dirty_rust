@@ -38,10 +38,10 @@
 - mouse inputs
 - framebuffers
 - prettier README example
+- ecs
 - 3d
 
 == TO DO
-- ecs
 - custom shaders
 - add error sound
 - imgui
