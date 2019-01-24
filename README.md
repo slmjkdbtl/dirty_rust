@@ -67,7 +67,7 @@ fn main() {
 
 }
 ```
-more under `examples/`
+more under `examples/`, including an example usage with `specs` the ecs framework
 
 ### notes & caveats
 

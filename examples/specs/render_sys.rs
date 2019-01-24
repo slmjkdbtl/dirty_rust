@@ -25,7 +25,7 @@ impl<'a> System<'a> for RenderSys {
 			gfx::push();
 			gfx::translate(t.pos);
 			gfx::rotate(t.rot);
-			gfx::translate(s.offset());
+			gfx::translate(s.offset() * t.scale);
 			gfx::scale(t.scale);
 
 			if let Some(body) = body.get_mut(e) {

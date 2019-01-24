@@ -3,22 +3,21 @@
 use dirty::*;
 use dirty::addons::ecs::*;
 
-#[derive(Clone, Debug)]
 pub struct Vel {
-	pub vel: Vec2,
+	pub pos: Vec2,
 }
-
-impl Comp for Vel {}
 
 impl Vel {
 
-	pub fn new() -> Self {
-		return Self::default();
+	pub fn new(pos: Vec2) -> Self {
+		return Self {
+			pos: pos,
+		};
 	}
 
-	pub fn vel(self, vel: Vec2) -> Self {
+	pub fn pos(self, pos: Vec2) -> Self {
 		return Self {
-			vel: vel,
+			pos: pos,
 			..self
 		};
 	}
@@ -29,10 +28,11 @@ impl Default for Vel {
 
 	fn default() -> Self {
 		return Self {
-			vel: vec2!(),
+			pos: vec2!(),
 		};
 	}
 
 }
 
+impl Comp for Vel {}
 
