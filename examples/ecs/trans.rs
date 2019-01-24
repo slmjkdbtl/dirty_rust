@@ -3,13 +3,13 @@
 use dirty::*;
 use dirty::addons::ecs::*;
 
-pub struct Trans {
+comp!(Trans {
 
-	pub pos: Vec2,
-	pub rot: f32,
-	pub scale: Vec2,
+	pos: Vec2,
+	rot: f32,
+	scale: Vec2,
 
-}
+});
 
 impl Trans {
 
@@ -55,6 +55,4 @@ impl Default for Trans {
 	}
 
 }
-
-impl Comp for Trans {}
 

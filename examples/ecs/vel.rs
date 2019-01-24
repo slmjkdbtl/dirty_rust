@@ -3,9 +3,9 @@
 use dirty::*;
 use dirty::addons::ecs::*;
 
-pub struct Vel {
-	pub pos: Vec2,
-}
+comp!(Vel {
+	pos: Vec2,
+});
 
 impl Vel {
 
@@ -33,6 +33,4 @@ impl Default for Vel {
 	}
 
 }
-
-impl Comp for Vel {}
 

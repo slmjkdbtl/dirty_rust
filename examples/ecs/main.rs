@@ -73,6 +73,8 @@ fn anim(s: &mut Scene) {
 				s.timer += app::dt();
 			}
 
+			e.set::<Sprite>(s);
+
 		}
 
 	}
@@ -93,11 +95,15 @@ fn render(s: &mut Scene) {
 		gfx::scale(t.scale);
 
 		if e.has::<Body>() {
+
 			let mut body = e.get::<Body>();
+
 			body.d_verts = gfx::multi_warp(&body.verts);
+			e.set::<Body>(body);
+
 		}
 
-		gfx::draw(&s.tex(), s.framelist[s.frame]);
+		gfx::draw(&s.tex, s.framelist[s.frame]);
 		gfx::pop();
 
 	}
@@ -112,6 +118,7 @@ fn car(pos: Vec2) -> Entity {
 	let body = Body::new(&sprite.get_verts());
 
 	sprite.play("run");
+	sprite.speed = 0.0;
 
 	return entity![trans, sprite, vel, body];
 
