@@ -1,5 +1,27 @@
 # wengwengweng
 
+== DOING
+- specs example
+- more accurate timestep
+- mouse inputs
+- framebuffers
+- prettier README example
+- ecs
+- 3d
+
+== TO DO
+- custom shaders
+- add error sound
+- imgui
+- better docs & examples
+- editor
+- particle system
+- async resource loading
+- vector swizzle fields
+- try gfx-hal
+- text formatting
+- better vec gens
+
 == DONE
 - basic window creation
 - basic 2d rendering
@@ -31,28 +53,6 @@
 - gfx buffer data update bug
 - collision detections
 - vector methods
-
-== DOING
-- specs example
-- more accurate timestep
-- mouse inputs
-- framebuffers
-- prettier README example
-- ecs
-- 3d
-
-== TO DO
-- custom shaders
-- add error sound
-- imgui
-- better docs & examples
-- editor
-- particle system
-- async resource loading
-- vector swizzle fields
-- try gfx-hal
-- text formatting
-- better vec gens
 
 == ADVENTURE
 - wasm

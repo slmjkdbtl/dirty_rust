@@ -145,42 +145,9 @@ macro_rules! entity {
 	}
 }
 
-pub struct CompGuard<'a, T : Any> {
-
-	comp: Option<Box<T>>,
-	collection : &'a RefCell<HashMap<TypeId, Box<Any>>>,
-
-}
-impl <'a, T : Any> ops::Deref for CompGuard<'a, T> {
-
-	type Target = T;
-
-	fn deref(&self) -> &T {
-		return self.comp.as_ref().unwrap();
-	}
-
-}
-
-impl <'a, T : Any> ops::DerefMut for CompGuard<'a, T> {
-
-	fn deref_mut(&mut self) -> &mut T {
-		return self.comp.as_mut().unwrap();
-	}
-
-}
-impl<'a, T : Any> Drop for CompGuard<'a, T> {
-
-	fn drop(&mut self) {
-		self.comp.take().and_then(|component| {
-			self.collection.borrow_mut().insert(TypeId::of::<T>(), component)
-		});
-	}
-
-}
-
 pub struct Entity {
 
-	comps: RefCell<HashMap<TypeId, Box<Any>>>,
+	comps: HashMap<TypeId, Box<Any>>,
 	id: Option<Id>,
 
 }
@@ -189,7 +156,7 @@ impl Entity {
 
 	pub fn new() -> Self {
 		return Self {
-			comps: RefCell::new(HashMap::new()),
+			comps: HashMap::new(),
 			id: None,
 		};
 	}
@@ -199,19 +166,19 @@ impl Entity {
 		if self.has::<C>() {
 			panic!("cannot have duplicate comps");
 		} else {
-			self.comps.borrow_mut().insert(TypeId::of::<C>(), Box::new(comp));
+			self.comps.insert(TypeId::of::<C>(), Box::new(comp));
 		}
 
 	}
 
 	pub fn has<C: Comp>(&self) -> bool {
-		return self.comps.borrow().contains_key(&TypeId::of::<C>());
+		return self.comps.contains_key(&TypeId::of::<C>());
 	}
 
 	pub fn has_all(&self, comps: &CompFilter) -> bool {
 
 		for f in comps {
-			if !self.comps.borrow().contains_key(&f) {
+			if !self.comps.contains_key(&f) {
 				return false;
 			}
 		}
@@ -220,18 +187,20 @@ impl Entity {
 
 	}
 
-	pub fn get<C: Comp>(&self) -> CompGuard<C> {
+	pub fn get<C: Comp + Clone>(&self) -> C {
 
-		let c = self.comps
-			.borrow_mut()
-			.remove(&TypeId::of::<C>())
-			.map(|c| c.downcast().unwrap())
+		return self.comps
+			.get(&TypeId::of::<C>())
+			.map(|c| c.downcast_ref().unwrap())
+			.map(Clone::clone)
 			.expect("failed to get comp");
 
-		return CompGuard {
-			comp: Some(c),
-			collection: &self.comps,
-		};
+	}
+
+	pub fn set<C: Comp>(&mut self, comp: C) {
+
+		self.comps
+			.insert(TypeId::of::<C>(), Box::new(comp));
 
 	}
 
@@ -239,5 +208,23 @@ impl Entity {
 
 pub fn scene() -> Scene {
 	return Scene::new();
+}
+
+#[macro_export]
+macro_rules! comp {
+
+	($name:ident { $($member:ident: $type:ty),*$(,)? }) => {
+
+		#[derive(Clone)]
+		pub struct $name {
+			$(
+				pub $member: $type
+			),*
+		}
+
+		impl Comp for $name {}
+
+	};
+
 }
 

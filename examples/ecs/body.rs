@@ -3,12 +3,12 @@
 use dirty::*;
 use dirty::addons::ecs::*;
 
-pub struct Body {
+comp!(Body {
 
-	pub verts: Vec<Vec2>,
-	pub d_verts: Vec<Vec2>,
+	verts: Vec<Vec2>,
+	d_verts: Vec<Vec2>,
 
-}
+});
 
 impl Body {
 
@@ -22,6 +22,4 @@ impl Body {
 	}
 
 }
-
-impl Comp for Body {}
 
