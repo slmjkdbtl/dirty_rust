@@ -1,8 +1,6 @@
 // wengwengweng
 
-
 use dirty::*;
-use dirty::addons::res;
 use specs::*;
 use specs_derive::*;
 

@@ -23,16 +23,24 @@ impl<'a> System<'a> for RenderSys {
 		for (e, t, s) in (&ent, &trans, &sprite).join() {
 
 			gfx::push();
+			gfx::color(s.color);
 			gfx::translate(t.pos);
 			gfx::rotate(t.rot);
 			gfx::translate(s.offset() * t.scale);
 			gfx::scale(t.scale);
 
+			match s.flip {
+				Flip::X => gfx::scale(vec2!(-1, 1)),
+				Flip::Y => gfx::scale(vec2!(1, -1)),
+				Flip::XY => gfx::scale(vec2!(-1, -1)),
+				_ => {},
+			}
+
 			if let Some(body) = body.get_mut(e) {
 				body.d_verts = gfx::multi_warp(&body.verts);
 			}
 
-			gfx::draw(&s.tex(), s.framelist[s.frame]);
+			gfx::draw(&s.tex, s.framelist[s.frame]);
 			gfx::pop();
 
 		}

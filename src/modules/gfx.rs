@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::*;
 use crate::math::mat::Mat4;
@@ -140,7 +141,6 @@ pub fn reset() {
 
 	let gfx_mut = ctx_get_mut();
 
-	gfx_mut.state_stack.clear();
 	gfx_mut.state = State::default();
 
 }
@@ -439,18 +439,18 @@ pub fn capture(canvas: &Canvas, fname: &str) {
 
 }
 
-pub(crate) fn start() {
-
-	reset();
+pub(crate) fn begin() {
 	clear();
-
 }
 
-pub(crate) fn finish() {
+pub(crate) fn end() {
 
 	let gfx = ctx_get();
+	let gfx_mut = ctx_get_mut();
 
 	flush();
+	reset();
+	gfx_mut.state_stack.clear();
 
 	if gfx.current_canvas.is_some() {
 		panic!("unfinished canvas");
@@ -461,7 +461,7 @@ pub(crate) fn finish() {
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	handle: Rc<gl::Texture>,
+	handle: Arc<gl::Texture>,
 }
 
 impl Texture {
@@ -469,7 +469,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: Rc::new(gl::Texture::new(width, height)),
+			handle: Arc::new(gl::Texture::new(width, height)),
 		};
 	}
 
@@ -569,7 +569,7 @@ impl Font {
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	handle: Rc<gl::Framebuffer>,
+	handle: Arc<gl::Framebuffer>,
 	tex: Texture,
 
 }
@@ -585,7 +585,7 @@ impl Canvas {
 		handle.attach(&*tex.handle);
 
 		return Self {
-			handle: Rc::new(handle),
+			handle: Arc::new(handle),
 			tex: tex,
 		}
 
