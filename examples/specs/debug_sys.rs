@@ -22,6 +22,7 @@ impl<'a> System<'a> for DebugSys {
 		for (b) in (&body).join() {
 
 			gfx::push();
+			gfx::reset();
 			gfx::line_width(2);
 			gfx::color(color!(0, 1, 1, 1));
 			gfx::poly(&b.d_verts);

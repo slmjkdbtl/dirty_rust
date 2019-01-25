@@ -1,9 +1,10 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::addons::ecs::*;
+use specs::*;
+use specs_derive::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Player {
 
 	One,
@@ -11,12 +12,14 @@ pub enum Player {
 
 }
 
-comp!(Flower {
+#[derive(Component, Debug)]
+#[storage(VecStorage)]
+pub struct Flower {
 
-	player: Player,
-	color: Color,
+	pub player: Player,
+	pub color: Color,
 
-});
+}
 
 impl Flower {
 

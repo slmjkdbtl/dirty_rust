@@ -113,21 +113,13 @@ pub fn run(f: &mut FnMut()) {
 		let start_time = Instant::now();
 
 		if window::enabled() {
-			window::poll_events();
-		}
-
-		if gfx::enabled() {
-			gfx::start();
+			window::begin();
 		}
 
 		f();
 
-		if gfx::enabled() {
-			gfx::finish();
-		}
-
 		if window::enabled() {
-			window::swap();
+			window::end();
 		}
 
 		let actual_dt = start_time.elapsed();
