@@ -15,6 +15,7 @@ comp!(Sprite {
 	anims: HashMap<String, res::Anim>,
 	current_anim: Option<res::Anim>,
 	speed: f32,
+	color: Color,
 	timer: f32,
 
 });
@@ -36,6 +37,7 @@ impl Sprite {
 			speed: 0.1,
 			timer: 0.0,
 			tex: data.tex.clone(),
+			color: color!(1),
 
 		}
 
