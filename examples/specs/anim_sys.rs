@@ -13,9 +13,9 @@ impl<'a> System<'a> for AnimSys {
 		WriteStorage<'a, Sprite>
 	);
 
-	fn run(&mut self, (mut sprite): Self::SystemData) {
+	fn run(&mut self, (mut sprite_storage): Self::SystemData) {
 
-		for (s) in (&mut sprite).join() {
+		for (s) in (&mut sprite_storage).join() {
 
 			if let Some(anim) = s.current_anim {
 

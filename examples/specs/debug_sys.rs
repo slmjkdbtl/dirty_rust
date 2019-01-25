@@ -13,13 +13,13 @@ impl<'a> System<'a> for DebugSys {
 		ReadStorage<'a, Body>
 	);
 
-	fn run(&mut self, (body): Self::SystemData) {
+	fn run(&mut self, (body_storage): Self::SystemData) {
 
 		if !app::debug() {
 			return;
 		}
 
-		for (b) in (&body).join() {
+		for (b) in (&body_storage).join() {
 
 			gfx::push();
 			gfx::reset();

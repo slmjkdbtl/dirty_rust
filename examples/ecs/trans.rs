@@ -1,18 +1,15 @@
 // wengwengweng
 
 use dirty::*;
-use specs::*;
-use specs_derive::*;
+use dirty::addons::ecs::*;
 
-#[derive(Component, Debug, Clone)]
-#[storage(VecStorage)]
-pub struct Trans {
+comp!(Trans {
 
-	pub pos: Vec2,
-	pub rot: f32,
-	pub scale: Vec2,
+	pos: Vec2,
+	rot: f32,
+	scale: Vec2,
 
-}
+});
 
 impl Trans {
 
