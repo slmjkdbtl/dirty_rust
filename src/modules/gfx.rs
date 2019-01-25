@@ -93,7 +93,7 @@ pub(crate) fn init() {
 		vbuf: vbuf,
 		ibuf: ibuf,
 		program: program,
-		empty_tex: Texture::from_raw(&[255, 255, 255, 255], 1, 1),
+		empty_tex: Texture::from_color(color!(1), 1, 1),
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
@@ -502,6 +502,10 @@ impl Texture {
 	/// create texture from a file
 	pub fn from_file(fname: &str) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
+	}
+
+	pub fn from_color(c: Color, width: u32, height: u32) -> Self {
+		return Self::from_raw(&c.to_rgba(), width, height);
 	}
 
 	/// get texture width

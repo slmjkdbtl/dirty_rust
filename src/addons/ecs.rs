@@ -4,11 +4,11 @@
 
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::collections::BTreeMap;
 use std::any::TypeId;
 use std::any::Any;
-use std::cell::RefCell;
-use std::ops;
 use std::fmt;
+use std::cmp::Ordering;
 
 use crate::*;
 
@@ -41,8 +41,20 @@ pub type CompFilter = HashSet<TypeId>;
 pub struct Id(&'static str, usize);
 
 impl Id {
-	fn new(id: usize) -> Self {
+	pub fn new(id: usize) -> Self {
 		return Self(MODS[rand!(MODS.len()) as usize], id);
+	}
+}
+
+impl Ord for Id {
+	fn cmp(&self, other: &Id) -> Ordering {
+		return self.1.cmp(&other.1);
+	}
+}
+
+impl PartialOrd for Id {
+	fn partial_cmp(&self, other: &Id) -> Option<Ordering> {
+		return Some(self.1.cmp(&other.1));
 	}
 }
 
@@ -83,7 +95,7 @@ macro_rules! comp_filter {
 pub struct Scene {
 
 	count: usize,
-	entities: HashMap<Id, Entity>,
+	entities: BTreeMap<Id, Entity>,
 
 }
 
@@ -109,13 +121,17 @@ impl Scene {
 		return self.entities.get(&id);
 	}
 
-	pub fn get_all(&mut self, filter: CompFilter) -> Vec<&mut Entity> {
+	pub fn get_mut(&mut self, id: Id) -> Option<&mut Entity> {
+		return self.entities.get_mut(&id);
+	}
+
+	pub fn filter(&self, filter: CompFilter) -> Vec<Id> {
 
 		let mut list = Vec::new();
 
-		for (_, e) in &mut self.entities {
+		for (id, e) in &self.entities {
 			if e.has_all(&filter) {
-				list.push(e);
+				list.push(*id);
 			}
 		}
 
@@ -125,8 +141,7 @@ impl Scene {
 
 	pub fn remove(&mut self, e: Id) {
 
-		self.entities
-			.remove(&e);
+		self.entities.remove(&e);
 
 	}
 
@@ -148,7 +163,7 @@ macro_rules! entity {
 pub struct Entity {
 
 	comps: HashMap<TypeId, Box<Any>>,
-	id: Option<Id>,
+	pub id: Option<Id>,
 
 }
 
@@ -222,6 +237,14 @@ macro_rules! comp {
 			),*
 		}
 
+		impl Comp for $name {}
+
+	};
+
+	($name:ident) => {
+
+		#[derive(Clone)]
+		pub struct $name;
 		impl Comp for $name {}
 
 	};

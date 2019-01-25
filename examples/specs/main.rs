@@ -50,8 +50,10 @@ fn main() {
 	create_car(&mut world, vec2!(rand!(width), rand!(height)));
 
 	app::run(&mut || {
+
 		dispatcher.dispatch(&mut world.res);
 		world.maintain();
+
 	});
 
 }

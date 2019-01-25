@@ -190,3 +190,18 @@ impl Vec2 {
 
 }
 
+impl Color {
+
+	pub fn to_rgba(&self) -> [u8; 4] {
+
+		let r = (self.r * 255.0) as u8;
+		let g = (self.g * 255.0) as u8;
+		let b = (self.b * 255.0) as u8;
+		let a = (self.a * 255.0) as u8;
+
+		return [r, b, b, a];
+
+	}
+
+}
+
