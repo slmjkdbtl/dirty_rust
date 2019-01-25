@@ -17,6 +17,9 @@ comp!(Flower {
 	color: Color,
 	speed: f32,
 	rot_speed: f32,
+	energy: usize,
+	rate: usize,
+	active: bool,
 
 });
 
@@ -37,6 +40,9 @@ impl Flower {
 			color: color,
 			speed: 60.0,
 			rot_speed: 3.0,
+			energy: 0,
+			rate: 24,
+			active: false,
 
 		};
 

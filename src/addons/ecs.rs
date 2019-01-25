@@ -37,7 +37,7 @@ const MODS: [&str; 17] = [
 pub trait Comp: Any {}
 pub type CompFilter = HashSet<TypeId>;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Id(&'static str, usize);
 
 impl Id {
@@ -58,15 +58,9 @@ impl PartialOrd for Id {
 	}
 }
 
-impl fmt::Debug for Id {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		return write!(f, "{}{}", self.0, self.1);
-	}
-}
-
 impl fmt::Display for Id {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		return write!(f, "{:?}", self.0);
+		return write!(f, "{}{}", self.0, self.1);
 	}
 }
 
@@ -111,7 +105,7 @@ impl Scene {
 
 		e.id = Some(id);
 		self.entities.insert(id, e);
-		self.count += rand!(2, 9) as usize;
+		self.count += rand!(2, 7) as usize;
 
 		return id;
 
@@ -143,10 +137,6 @@ impl Scene {
 
 		self.entities.remove(&e);
 
-	}
-
-	pub fn size(&self) -> usize {
-		return self.entities.len();
 	}
 
 }
