@@ -111,7 +111,7 @@ impl Scene {
 
 		e.id = Some(id);
 		self.entities.insert(id, e);
-		self.count += rand!(9) as usize;
+		self.count += rand!(2, 9) as usize;
 
 		return id;
 
@@ -143,6 +143,10 @@ impl Scene {
 
 		self.entities.remove(&e);
 
+	}
+
+	pub fn size(&self) -> usize {
+		return self.entities.len();
 	}
 
 }

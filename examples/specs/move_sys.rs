@@ -15,8 +15,8 @@ impl<'a> System<'a> for MoveSys {
 		WriteStorage<'a, Trans>
 	);
 
-	fn run(&mut self, (vel, mut trans): Self::SystemData) {
-		for (vel, trans) in (&vel, &mut trans).join() {
+	fn run(&mut self, (vel_storage, mut trans_storage): Self::SystemData) {
+		for (vel, trans) in (&vel_storage, &mut trans_storage).join() {
 			trans.pos = trans.pos + vel.pos;
 		}
 	}

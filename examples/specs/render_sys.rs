@@ -18,29 +18,29 @@ impl<'a> System<'a> for RenderSys {
 		WriteStorage<'a, Body>,
 	);
 
-	fn run(&mut self, (ent, trans, sprite, mut body): Self::SystemData) {
+	fn run(&mut self, (entity_storage, trans_storage, sprite_storage, mut body_storage): Self::SystemData) {
 
-		for (e, t, s) in (&ent, &trans, &sprite).join() {
+		for (e, trans, sprite) in (&entity_storage, &trans_storage, &sprite_storage).join() {
 
 			gfx::push();
-			gfx::color(s.color);
-			gfx::translate(t.pos);
-			gfx::rotate(t.rot);
-			gfx::translate(s.offset() * t.scale);
-			gfx::scale(t.scale);
+			gfx::color(sprite.color);
+			gfx::translate(trans.pos);
+			gfx::rotate(trans.rot);
+			gfx::translate(sprite.offset() * trans.scale);
+			gfx::scale(trans.scale);
 
-			match s.flip {
+			match sprite.flip {
 				Flip::X => gfx::scale(vec2!(-1, 1)),
 				Flip::Y => gfx::scale(vec2!(1, -1)),
 				Flip::XY => gfx::scale(vec2!(-1, -1)),
 				_ => {},
 			}
 
-			if let Some(body) = body.get_mut(e) {
+			if let Some(body) = body_storage.get_mut(e) {
 				body.d_verts = gfx::multi_warp(&body.verts);
 			}
 
-			gfx::draw(&s.tex, s.framelist[s.frame]);
+			gfx::draw(&sprite.tex, sprite.framelist[sprite.frame]);
 			gfx::pop();
 
 		}
