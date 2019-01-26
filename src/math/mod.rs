@@ -1,10 +1,14 @@
 // wengwengweng
 
-//! Common Math Functions
+//! Common Math Functions & Structs
 
-pub(crate) mod vec;
-pub(crate) mod mat;
-pub(crate) mod rand;
+mod vec;
+mod mat;
+mod rand;
+
+pub use self::vec::*;
+pub use self::mat::*;
+pub use self::rand::*;
 
 /// clamp a number within range
 pub fn clamp(x: f32, min: f32, max: f32) -> f32 {

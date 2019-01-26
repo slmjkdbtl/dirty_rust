@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use aseprite::SpritesheetData;
 
 use crate::*;
+use crate::math::*;
 
 ctx!(RES: ResCtx);
 
