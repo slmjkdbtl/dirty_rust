@@ -21,27 +21,6 @@ impl Trans {
 		}
 	}
 
-	pub fn pos(self, pos: Vec2) -> Self {
-		return Self {
-			pos: pos,
-			..self
-		}
-	}
-
-	pub fn scale(self, scale: Vec2) -> Self {
-		return Self {
-			scale: scale,
-			..self
-		}
-	}
-
-	pub fn rot(self, rot: f32) -> Self {
-		return Self {
-			rot: rot,
-			..self
-		}
-	}
-
 }
 
 impl Default for Trans {

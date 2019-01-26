@@ -239,7 +239,7 @@ pub fn text(s: &str) {
 
 	for (i, ch) in s.chars().enumerate() {
 
-		let mut x = i as f32 * w;
+		let x = i as f32 * w;
 
 		if let Some(wrap) = gfx.state.text_wrap {
 
