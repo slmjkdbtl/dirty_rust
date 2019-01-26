@@ -35,11 +35,11 @@ pub fn init() {
 			log = s.clone();
 		}
 
-// 		let mut location = String::from("");
+		let mut location = String::from("");
 
-// 		if let Some(loc) = info.location() {
-// 			location = format!("from '{}', line {}", loc.file(), loc.line());
-// 		}
+		if let Some(loc) = info.location() {
+			location = format!("from '{}', line {}", loc.file(), loc.line());
+		}
 
 		eprintln!("{}", log);
 
@@ -69,9 +69,7 @@ pub fn init() {
 
 			gfx::push();
 			gfx::scale(vec2!(1.2));
-			gfx::text(&log);
-// 			gfx::translate(vec2!(0, 20));
-// 			gfx::text(&location);
+			gfx::text(&format!("{}\n{}", log, location));
 			gfx::pop();
 
 			gfx::pop();
