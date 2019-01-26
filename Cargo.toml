@@ -11,6 +11,7 @@ edition = "2018"
 
 [dependencies]
 gl = "*"
+metal-rs = "*"
 image = "*"
 tobj = "*"
 rodio = "*"
@@ -23,6 +24,7 @@ num = "*"
 aseprite = "*"
 specs = "*"
 specs-derive = "*"
+hlua = "*"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"

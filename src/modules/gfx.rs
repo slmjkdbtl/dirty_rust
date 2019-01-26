@@ -121,25 +121,36 @@ pub fn enabled() -> bool {
 
 #[derive(Clone, Copy)]
 struct State {
+
 	transform: Mat4,
 	tint: Color,
 	line_width: u8,
+	text_wrap: Option<u32>,
+
 }
 
 impl Default for State {
+
 	fn default() -> Self {
+
 		return Self {
+
 			transform: Mat4::identity(),
 			tint: color!(),
 			line_width: 1,
+			text_wrap: None,
+
 		}
+
 	}
+
 }
 
 /// reset global transforms and style states
 pub fn reset() {
 
 	let gfx_mut = ctx_get_mut();
+
 
 	gfx_mut.state = State::default();
 
@@ -214,14 +225,37 @@ pub fn text(s: &str) {
 
 	let gfx = ctx_get();
 	let font = &gfx.default_font;
+	let w = font.grid_size.x * font.tex.width() as f32;
+	let h = font.grid_size.y * font.tex.height() as f32;
 
 	for (i, ch) in s.chars().enumerate() {
 
+		let mut x = i as f32 * w;
+
+		if let Some(wrap) = gfx.state.text_wrap {
+
+			if x >= wrap as f32 {
+
+				push();
+				translate(vec2!(0, h));
+				text(&s[i..s.len()]);
+				pop();
+
+				return;
+
+			}
+
+		}
+
 		push();
-		translate(vec2!(i as f32 * font.grid_size.x * font.tex.width() as f32, 0));
+		translate(vec2!(x, 0.0));
 
 		if ch != ' ' {
-			draw(&font.tex, *font.map.get(&ch).unwrap_or_else(|| panic!("does not have char '{}'", ch)));
+
+			let quad = font.map.get(&ch).unwrap_or_else(|| panic!("font does not contain char '{}'", ch));
+
+			draw(&font.tex, *quad);
+
 		}
 
 		pop();
@@ -280,6 +314,11 @@ pub fn color(tint: Color) {
 /// set line width
 pub fn line_width(line_width: u8) {
 	ctx_get_mut().state.line_width = line_width;
+}
+
+/// set text wrap
+pub fn text_wrap(wrap: u32) {
+	ctx_get_mut().state.text_wrap = Some(wrap);
 }
 
 /// push state

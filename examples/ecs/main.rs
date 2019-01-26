@@ -32,37 +32,27 @@ fn main() {
 	res::load_sprites("examples/assets/", &vec!["core", "petal", "pixel"]);
 	res::load_sounds("examples/assets/", &vec!["pop", "yo"]);
 
-	let (width, height) = window::size();
-	let mut scene = scene();
+	let mut world = World::new();
 
-	let rand_in_view = |margin| {
-		return vec2!(rand!(margin, width - margin), rand!(margin, height - margin));
-	};
-
-	let one = scene.add(flower(Player::One, rand_in_view(24)));
-	let two = scene.add(flower(Player::Two, rand_in_view(24)));
-
-	for i in 0..4 {
-		scene.add(petal(one, i));
-		scene.add(petal(two, i));
-	}
+	create_flower(&mut world, Player::One);
+	create_flower(&mut world, Player::Two);
 
 	app::run(&mut || {
 
-		anim(&mut scene);
-		flower_input(&mut scene);
-		shoot(&mut scene);
-		transform(&mut scene);
-		powder_update(&mut scene);
-		petal_follow(&mut scene);
-		render(&mut scene);
-		debug(&mut scene);
+		anim(&mut world);
+		flower_input(&mut world);
+		shoot(&mut world);
+		transform(&mut world);
+		powder_update(&mut world);
+		petal_follow(&mut world);
+		render(&mut world);
+		debug(&mut world);
 
 	});
 
 }
 
-fn powder_update(s: &mut Scene) {
+fn powder_update(s: &mut World) {
 
 	for id in s.filter(comp_filter![Powder, Sprite, Trans]) {
 
@@ -94,7 +84,7 @@ fn powder_update(s: &mut Scene) {
 
 }
 
-fn transform(s: &mut Scene) {
+fn transform(s: &mut World) {
 
 	for id in s.filter(comp_filter![Trans, Vel]) {
 
@@ -110,7 +100,7 @@ fn transform(s: &mut Scene) {
 
 }
 
-fn shoot(s: &mut Scene) {
+fn shoot(s: &mut World) {
 
 	let mut queue = Vec::new();
 
@@ -135,7 +125,7 @@ fn shoot(s: &mut Scene) {
 
 }
 
-fn flower_input(s: &mut Scene) {
+fn flower_input(s: &mut World) {
 
 	for id in s.filter(comp_filter![Flower, Vel]) {
 
@@ -220,7 +210,7 @@ fn flower_input(s: &mut Scene) {
 
 }
 
-fn debug(s: &mut Scene) {
+fn debug(s: &mut World) {
 
 	if !app::debug() {
 		return;
@@ -242,7 +232,7 @@ fn debug(s: &mut Scene) {
 
 }
 
-fn petal_follow(s: &mut Scene) {
+fn petal_follow(s: &mut World) {
 
 	for id in s.filter(comp_filter![Petal, Trans]) {
 
@@ -265,7 +255,7 @@ fn petal_follow(s: &mut Scene) {
 
 }
 
-fn anim(s: &mut Scene) {
+fn anim(s: &mut World) {
 
 	for id in s.filter(comp_filter![Sprite, Trans]) {
 
@@ -289,7 +279,7 @@ fn anim(s: &mut Scene) {
 
 }
 
-fn render(s: &mut Scene) {
+fn render(s: &mut World) {
 
 	for id in s.filter(comp_filter![Sprite, Trans]) {
 
@@ -356,6 +346,24 @@ fn powder(flower: Id, pos: Vec2, dir: f32) -> Entity {
 	let powder = Powder::new(flower, dir);
 
 	return entity![sprite, trans, powder, vel];
+
+}
+
+fn rand_in_view(margin: u32) -> Vec2 {
+
+	let (width, height) = window::size();
+
+	return vec2!(rand!(margin, width - margin), rand!(margin, height - margin));
+
+}
+
+fn create_flower(s: &mut World, player: Player) {
+
+	let f = s.add(flower(player, rand_in_view(24)));
+
+	for i in 0..4 {
+		s.add(petal(f, i));
+	}
 
 }
 

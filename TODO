@@ -1,16 +1,20 @@
 # wengwengweng
 
 == DOING
+- ecs
 - specs example
+- ecs example
+- more generic app::run
 - more accurate timestep
 - mouse inputs
 - framebuffers
 - prettier README example
-- ecs
+- lua bindings
 - 3d
 
 == TO DO
 - custom shaders
+- metal backend
 - add error sound
 - imgui
 - better docs & examples
@@ -19,7 +23,6 @@
 - async resource loading
 - vector swizzle fields
 - try gfx-hal
-- text formatting
 - better vec gens
 
 == DONE
@@ -53,6 +56,7 @@
 - gfx buffer data update bug
 - collision detections
 - vector methods
+- text wrapping
 
 == ADVENTURE
 - wasm
