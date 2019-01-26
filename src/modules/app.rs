@@ -69,7 +69,7 @@ pub fn init() {
 
 			gfx::push();
 			gfx::scale(vec2!(1.2));
-			gfx::text(&format!("{}\n{}", log, location));
+			gfx::text(&format!("{}\n\n{}", log, location));
 			gfx::pop();
 
 			gfx::pop();

@@ -253,7 +253,11 @@ pub fn text(s: &str) {
 		translate(vec2!(x, 0.0));
 
 		if ch == '\n' {
+
+			pop();
+
 			return next_line(&s[(i + 1) .. s.len()]);
+
 		} else if ch != ' ' {
 
 			let quad = font.map.get(&ch).unwrap_or_else(|| panic!("font does not contain char '{}'", ch));
