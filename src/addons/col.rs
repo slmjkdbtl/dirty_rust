@@ -4,7 +4,22 @@
 
 use crate::*;
 use crate::math::*;
-use crate::utils::paired_iter::paired;
+
+fn pair<T, F: FnMut(&T, &T)>(list: &[T], mut f: F) {
+
+	for i in 0..list.len() {
+
+		let e1 = &list[i];
+
+		if let Some(e2) = list.get(i + 1) {
+			f(e1, e2);
+		} else {
+			f(e1, &list[0]);
+		}
+
+	}
+
+}
 
 /// check collision between 2 rectangles
 pub fn rect_rect(r1: Rect, r2: Rect) -> bool {
@@ -26,13 +41,16 @@ pub fn line_poly(p1: Vec2, p2: Vec2, poly: &[Vec2]) -> bool {
 
 	assert!(poly.len() >= 3, "invalid polygon");
 
-	for (p3, p4) in paired(poly) {
-		if line_line(p1, p2, *p3, *p4) {
-			return true;
-		}
-	}
+	let mut collided = false;
 
-	return false;
+	pair(poly, |p3, p4| {
+		if line_line(p1, p2, *p3, *p4) {
+			collided = true;
+			return;
+		}
+	});
+
+	return collided;
 
 }
 
@@ -42,13 +60,16 @@ pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 	assert!(poly1.len() >= 3, "invalid polygon");
 	assert!(poly2.len() >= 3, "invalid polygon");
 
-	for (p1, p2) in paired(poly1) {
-		if line_poly(*p1, *p2, poly2) {
-			return true;
-		}
-	}
+	let mut collided = false;
 
-	return false;
+	pair(poly1, |p1, p2| {
+		if line_poly(*p1, *p2, poly2) {
+			collided = true;
+			return;
+		}
+	});
+
+	return collided;
 
 }
 
@@ -59,11 +80,13 @@ pub fn point_poly(p: Vec2, poly: &[Vec2]) -> bool {
 
 	let mut has = false;
 
-	for (p1, p2) in paired(poly) {
+	pair(poly, |p1, p2| {
+
 		if ((p1.y > p.y && p2.y < p.y) || (p1.y < p.y && p2.y > p.y)) && (p.x < (p2.x - p1.x) * (p.y - p1.y) / (p2.y - p1.y) + p1.x) {
 			has = !has;
 		}
-	}
+
+	});
 
 	return has;
 
@@ -79,9 +102,9 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 		let mut normals = Vec::with_capacity(poly.len());
 
-		for (p1, p2) in paired(poly) {
+		pair(poly, |p1, p2| {
 			normals.push((*p1 - *p2).normal().unit());
-		}
+		});
 
 		return normals;
 
