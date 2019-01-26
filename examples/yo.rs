@@ -39,7 +39,7 @@ fn main() {
 	];
 
 	// main loop
-	app::run(&mut || {
+	app::run(|| {
 
 		if index < anims["run"].to {
 			index += 1;

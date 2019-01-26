@@ -21,7 +21,7 @@ fn main() {
 	audio::init();
 
 	// main loop
-	app::run(&mut || {
+	app::run(|| {
 
 		// transform
 		gfx::push();
@@ -52,4 +52,6 @@ more under `examples/`
 - currently using OpenGL 2.1 for better compatibility, but might change to gfx-hal in the future
 - currently no proper error handling (a lot of internal panics, but with pretty error screen)
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
+- api mostly inspired by love2d
+- planning on adding scripting support
 

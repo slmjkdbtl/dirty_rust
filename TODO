@@ -4,25 +4,23 @@
 - ecs
 - specs example
 - ecs example
-- more generic app::run
 - more accurate timestep
 - mouse inputs
 - framebuffers
-- prettier README example
-- lua bindings
-- 3d
 
 == TO DO
 - custom shaders
 - metal backend
 - add error sound
 - imgui
-- better docs & examples
 - editor
+- lua bindings
 - particle system
 - async resource loading
 - vector swizzle fields
 - try gfx-hal
+- use glutin when girls supports macos
+- 3d
 - better vec gens
 
 == DONE
@@ -57,6 +55,7 @@
 - collision detections
 - vector methods
 - text wrapping
+- prettier README example
 
 == ADVENTURE
 - wasm
