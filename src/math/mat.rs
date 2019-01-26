@@ -3,7 +3,6 @@
 use std::ops;
 
 use super::*;
-use crate::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mat4 {

@@ -18,15 +18,15 @@ macro_rules! gen_vec {
 				macro_rules! $sname {
 
 					() => {
-						math::$name::default();
+						crate::math::$name::default();
 					};
 
 					($v:expr) => {
-						math::$name::all($v as $type);
+						crate::math::$name::all($v as $type);
 					};
 
 					($d($v:expr),*) => {
-						math::$name::new($d($v as $type),*)
+						crate::math::$name::new($d($v as $type),*)
 					};
 
 				}

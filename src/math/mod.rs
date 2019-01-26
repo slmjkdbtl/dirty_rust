@@ -2,8 +2,10 @@
 
 //! Common Math Functions & Structs
 
+#[macro_use]
 mod vec;
 mod mat;
+#[macro_use]
 mod rand;
 
 pub use self::vec::*;
