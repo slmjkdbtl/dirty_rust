@@ -46,12 +46,10 @@ more under `examples/`
 
 ### notes & caveats
 
-- api is more opinionated than idiomadic
 - upon initialization each module has its hidden `static` state that dies when program ends
-- `app::init()` also overrides the panic behavior (also display messages to screen if `window` is initiated)
+- `app::init()` also overrides default panic behavior (also display messages to screen if `window` is initiated)
 - currently using OpenGL 2.1 for better compatibility, but might change to gfx-hal in the future
 - currently no proper error handling (a lot of internal panics, but with pretty error screen)
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
-- api mostly inspired by love2d
 - planning on adding scripting support
 
