@@ -228,6 +228,15 @@ pub fn text(s: &str) {
 	let w = font.grid_size.x * font.tex.width() as f32;
 	let h = font.grid_size.y * font.tex.height() as f32;
 
+	let next_line = |st: &str| {
+
+		push();
+		translate(vec2!(0, h));
+		text(st);
+		pop();
+
+	};
+
 	for (i, ch) in s.chars().enumerate() {
 
 		let mut x = i as f32 * w;
@@ -235,14 +244,7 @@ pub fn text(s: &str) {
 		if let Some(wrap) = gfx.state.text_wrap {
 
 			if x >= wrap as f32 {
-
-				push();
-				translate(vec2!(0, h));
-				text(&s[i..s.len()]);
-				pop();
-
-				return;
-
+				return next_line(&s[i..s.len()]);
 			}
 
 		}
@@ -250,7 +252,9 @@ pub fn text(s: &str) {
 		push();
 		translate(vec2!(x, 0.0));
 
-		if ch != ' ' {
+		if ch == '\n' {
+			return next_line(&s[(i + 1) .. s.len()]);
+		} else if ch != ' ' {
 
 			let quad = font.map.get(&ch).unwrap_or_else(|| panic!("font does not contain char '{}'", ch));
 
