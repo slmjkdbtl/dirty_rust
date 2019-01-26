@@ -3,7 +3,8 @@
 //! # DIRTY
 //! simple toolkit for creating game-like experiences
 
-#[allow(unused_parens)]
+#![allow(unused_parens)]
+#![allow(dead_code)]
 
 #[macro_use]
 mod utils;

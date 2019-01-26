@@ -199,7 +199,7 @@ impl Color {
 		let b = (self.b * 255.0) as u8;
 		let a = (self.a * 255.0) as u8;
 
-		return [r, b, b, a];
+		return [r, g, b, a];
 
 	}
 
