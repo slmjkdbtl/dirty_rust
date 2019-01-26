@@ -49,7 +49,7 @@ pub fn init() {
 
 		let (width, height) = window::size();
 
-		run(&mut || {
+		run(|| {
 
 			let dy = (time() * 2.0).sin() * 4.0;
 
@@ -102,7 +102,7 @@ pub fn enabled() -> bool {
 }
 
 /// start main loop, call the callback every frame
-pub fn run(f: &mut FnMut()) {
+pub fn run<F: FnMut()>(mut f: F) {
 
 	let app = ctx_get();
 	let app_mut = ctx_get_mut();
