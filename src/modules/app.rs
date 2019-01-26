@@ -56,6 +56,7 @@ pub fn init() {
 			gfx::clear();
 
 			gfx::push();
+			gfx::text_wrap(width - 240);
 
 			gfx::translate(vec2!(64, 64.0 + dy));
 

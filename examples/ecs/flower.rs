@@ -41,7 +41,7 @@ impl Flower {
 			speed: 60.0,
 			rot_speed: 3.0,
 			energy: 0,
-			rate: 24,
+			rate: 16,
 			active: false,
 
 		};

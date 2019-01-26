@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::any::TypeId;
 use std::any::Any;
 use std::fmt;
@@ -34,8 +35,13 @@ const MODS: [&str; 17] = [
 
 ];
 
+pub trait System {
+	fn update(&mut self, s: &mut World);
+}
+
 pub trait Comp: Any {}
 pub type CompFilter = HashSet<TypeId>;
+pub type EntitySet = BTreeSet<Id>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Id(&'static str, usize);
@@ -86,14 +92,15 @@ macro_rules! comp_filter {
 }
 
 #[derive(Default)]
-pub struct Scene {
+pub struct World {
 
 	count: usize,
 	entities: BTreeMap<Id, Entity>,
+	systems: Vec<Box<System>>,
 
 }
 
-impl Scene {
+impl World {
 
 	pub fn new() -> Self {
 		return Self::default();
@@ -119,13 +126,13 @@ impl Scene {
 		return self.entities.get_mut(&id);
 	}
 
-	pub fn filter(&self, filter: CompFilter) -> Vec<Id> {
+	pub fn filter(&self, filter: CompFilter) -> EntitySet {
 
-		let mut list = Vec::new();
+		let mut list = BTreeSet::new();
 
 		for (id, e) in &self.entities {
 			if e.has_all(&filter) {
-				list.push(*id);
+				list.insert(*id);
 			}
 		}
 
@@ -137,6 +144,16 @@ impl Scene {
 
 		self.entities.remove(&e);
 
+	}
+
+	pub fn run<S: System + 'static>(&mut self, system: S) {
+		self.systems.push(Box::new(system));
+	}
+
+	pub fn update(&mut self) {
+// 		for s in &mut self.systems {
+// 			s.update(self);
+// 		}
 	}
 
 }
@@ -213,10 +230,6 @@ impl Entity {
 
 	}
 
-}
-
-pub fn scene() -> Scene {
-	return Scene::new();
 }
 
 #[macro_export]
