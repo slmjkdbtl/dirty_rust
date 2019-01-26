@@ -12,6 +12,7 @@ use sdl2::video::FullscreenType;
 use sdl2::video::SwapInterval;
 
 use crate::*;
+use crate::math::*;
 
 // context
 ctx!(WINDOW: WindowCtx);

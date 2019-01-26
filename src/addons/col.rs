@@ -3,6 +3,7 @@
 //! General Collision Detection
 
 use crate::*;
+use crate::math::*;
 use crate::utils::paired_iter::paired;
 
 /// check collision between 2 rectangles

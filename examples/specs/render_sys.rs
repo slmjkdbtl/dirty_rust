@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use dirty::math::*;
 use specs::*;
 
 use crate::trans::*;

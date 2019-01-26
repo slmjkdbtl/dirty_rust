@@ -3,7 +3,7 @@
 //! 3D Rendering
 
 use crate::*;
-use crate::math::mat::Mat4;
+use crate::math::*;
 use crate::backends::gl;
 
 const MAX_STATE_STACK: usize = 64;

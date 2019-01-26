@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 
 use dirty::*;
+use dirty::math::*;
 use dirty::addons::res;
 use specs::*;
 use specs_derive::*;

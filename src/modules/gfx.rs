@@ -7,7 +7,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::*;
-use crate::math::mat::Mat4;
+use crate::math::*;
 use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;

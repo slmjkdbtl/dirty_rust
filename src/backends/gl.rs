@@ -9,6 +9,7 @@ use std::ffi::CString;
 use gl::types::*;
 
 use crate::*;
+use crate::math::*;
 
 bind_enum!(BufferUsage(GLenum) {
 

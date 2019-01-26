@@ -27,5 +27,5 @@ hlua = "*"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"
-metal-rs = "*"
+metal = "*"
 
