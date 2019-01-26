@@ -7,6 +7,7 @@ use dirty::addons::col;
 
 fn main() {
 
+	// init modules
 	app::init();
 	audio::init();
 	window::init("yo", 640, 480);
@@ -17,9 +18,11 @@ fn main() {
 	let margin = 16;
 	let canvas = gfx::Canvas::new(width, height);
 
+	// load resources
 	res::load_sprites("examples/assets/", &vec!["car"]);
 	res::load_sounds("examples/assets/", &vec!["pop", "yo"]);
 
+	// play a music repeatedly
 	let music = audio::track(&res::sound("yo").repeat());
 
 	let sprite = res::sprite("car");
@@ -35,6 +38,7 @@ fn main() {
 		vec2!(0, tex.height()) + vec2!(-margin, margin),
 	];
 
+	// main loop
 	app::run(&mut || {
 
 		if index < anims["run"].to {
@@ -92,8 +96,12 @@ fn main() {
 		gfx::text("yo♪");
 		gfx::pop();
 
+		// inputs
 		if window::key_pressed(Key::Space) {
+
+			// play a sound with effect
 			audio::play(&res::sound("pop").speed(rand!(2)));
+
 		}
 
 		if window::key_pressed(Key::Num1) {

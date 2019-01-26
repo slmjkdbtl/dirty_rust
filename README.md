@@ -15,50 +15,25 @@ use dirty::*;
 
 fn main() {
 
-	// initialize modules
+	// init
 	app::init();
 	window::init("yo", 640, 480);
 	audio::init();
 
-	// load resources
-	let car = gfx::Texture::from_bytes(include_bytes!("car.png"));
-	let pop = audio::Sound::from_bytes(include_bytes!("pop.ogg"));
-	let yo = audio::Sound::from_bytes(include_bytes!("yo.ogg"));
-
-	// play music repeatedly
-	let music = audio::track(&yo.fadein(1200).repeat());
-
 	// main loop
 	app::run(&mut || {
 
-		// transforms
+		// transform
 		gfx::push();
-		gfx::translate(vec2!(120, 120));
-		gfx::scale(vec2!(4));
-		gfx::color(color!(0, 0, 1, 1));
+		gfx::translate(vec2!(220, 120));
+		gfx::scale(vec2!(12));
+		gfx::color(color!(0, 1, 1, 1));
 
 		// draw text
 		gfx::text("yo");
 		gfx::pop();
 
-		gfx::push();
-		gfx::translate(vec2!(240, 240));
-		gfx::color(color!());
-
-		// draw texture
-		gfx::draw(&car, rect!(0, 0, 1, 1));
-		gfx::pop();
-
 		// input
-		if window::key_released(Key::Space) {
-			// play audio with effect
-			audio::play(&pop.speed(rand!(2)));
-		}
-
-		if window::key_pressed(Key::F) {
-			window::set_fullscreen(!window::get_fullscreen())
-		}
-
 		if window::key_pressed(Key::Escape) {
 			app::quit();
 		}
@@ -67,7 +42,7 @@ fn main() {
 
 }
 ```
-more under `examples/`, including an example usage with `specs` the ecs framework
+more under `examples/`
 
 ### notes & caveats
 
