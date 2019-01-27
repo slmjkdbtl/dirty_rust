@@ -11,7 +11,7 @@ impl System for PetalFollowSys {
 
 	fn update(&mut self, pool: &mut Pool) {
 
-		for id in pool.filter(&filter![Petal, Trans]) {
+		for id in pool.pick(&filter![Petal, Trans]) {
 
 			let e = pool.get(id).unwrap();
 			let petal = e.get::<Petal>();

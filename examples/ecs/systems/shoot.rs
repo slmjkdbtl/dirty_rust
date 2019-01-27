@@ -24,7 +24,7 @@ impl System for ShootSys {
 
 		let mut queue = Vec::new();
 
-		for id in pool.filter(&filter![Flower, Trans]) {
+		for id in pool.pick(&filter![Flower, Trans]) {
 
 			let e = pool.get_mut(id).unwrap();
 			let mut f = e.get::<Flower>();

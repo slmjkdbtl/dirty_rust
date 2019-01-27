@@ -11,7 +11,7 @@ impl System for PowderUpdateSys {
 
 	fn update(&mut self, pool: &mut Pool) {
 
-		for id in pool.filter(&filter![Powder, Sprite, Trans]) {
+		for id in pool.pick(&filter![Powder, Sprite, Trans]) {
 
 			let e = pool.get(id).unwrap();
 			let p = e.get::<Powder>();

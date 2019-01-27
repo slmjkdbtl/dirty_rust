@@ -9,6 +9,17 @@ git = "https://github.com/slmjkdbtl/DIRTY"
 ```
 not on crates.io yet due to duplicate crate name
 
+### modules
+- **app** Lifecycles, Time and Errors
+- **window** Window & Events
+- **gfx** 2D Rendering
+- **g3d** 3D Rendering
+- **audio** Sound loading & playback
+- **math** Common Math Functions & Structs
+- **fs** Common File Related Functions
+- **ecs** Simple ECS
+- **net** Networking
+
 ### example
 ```rust
 use dirty::*;
