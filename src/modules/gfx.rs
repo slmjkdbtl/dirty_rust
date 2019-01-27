@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use crate::*;
 use crate::math::*;
@@ -508,7 +507,7 @@ pub(crate) fn end() {
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	handle: Arc<gl::Texture>,
+	handle: Rc<gl::Texture>,
 }
 
 impl Texture {
@@ -516,7 +515,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: Arc::new(gl::Texture::new(width, height)),
+			handle: Rc::new(gl::Texture::new(width, height)),
 		};
 	}
 
@@ -616,7 +615,7 @@ impl Font {
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	handle: Arc<gl::Framebuffer>,
+	handle: Rc<gl::Framebuffer>,
 	tex: Texture,
 
 }
@@ -632,7 +631,7 @@ impl Canvas {
 		handle.attach(&*tex.handle);
 
 		return Self {
-			handle: Arc::new(handle),
+			handle: Rc::new(handle),
 			tex: tex,
 		}
 
