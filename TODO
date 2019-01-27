@@ -4,6 +4,7 @@
 - ecs
 - specs example
 - ecs example
+- macro for simple systems
 - more accurate timestep
 - mouse inputs
 - framebuffers
