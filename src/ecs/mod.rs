@@ -50,7 +50,7 @@ pub trait System {
 
 pub trait Comp: Any {}
 pub type Filter = HashSet<TypeId>;
-pub type EntitySet = BTreeSet<Id>;
+type EntitySet = BTreeSet<Id>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Id(&'static str, usize);
@@ -128,7 +128,7 @@ impl<'a> Pool<'a> {
 		self.entities.remove(&e);
 	}
 
-	pub fn filter(&self, filter: &Filter) -> EntitySet {
+	pub fn pick(&self, filter: &Filter) -> EntitySet {
 
 		let mut list = BTreeSet::new();
 
@@ -199,14 +199,18 @@ impl World {
 	pub fn update(&mut self) {
 
 		let mut pool = Pool {
+
 			count: &mut self.count,
 			entities: &mut self.entities,
+
 		};
 
 		for s in &mut self.systems {
 
-			for id in &pool.filter(&s.filter) {
-				s.system.each(pool.get_mut(*id).unwrap());
+			if s.filter.len() > 0 {
+				for id in &pool.pick(&s.filter) {
+					s.system.each(pool.get_mut(*id).expect("oh no"));
+				}
 			}
 
 			s.system.update(&mut pool);

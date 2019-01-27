@@ -6,10 +6,10 @@ use dirty::ecs::*;
 use dirty::addons::res;
 
 mod comps;
-mod sys;
+mod systems;
 
 use comps::*;
-use sys::*;
+use systems::*;
 
 fn main() {
 
@@ -37,7 +37,7 @@ fn main() {
 	world.run(RenderSys);
 	world.run(DebugSys);
 
-	app::run(&mut || {
+	app::run(|| {
 		world.update();
 	});
 
