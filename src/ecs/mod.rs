@@ -38,11 +38,18 @@ const MODS: [&str; 17] = [
 ];
 
 pub trait System {
-	fn update(&mut self);
+
+	fn filter(&self) -> Filter {
+		return filter![];
+	}
+
+	fn update(&mut self, pool: &mut Pool) {}
+	fn each(&mut self, e: &mut Entity) {}
+
 }
 
 pub trait Comp: Any {}
-pub type CompFilter = HashSet<TypeId>;
+pub type Filter = HashSet<TypeId>;
 pub type EntitySet = BTreeSet<Id>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -73,7 +80,11 @@ impl fmt::Display for Id {
 }
 
 #[macro_export]
-macro_rules! comp_filter {
+macro_rules! filter {
+
+	() => {
+		std::collections::HashSet::new()
+	};
 
 	($($comp:ty),*) => {
 
@@ -89,34 +100,45 @@ macro_rules! comp_filter {
 
 		}
 
-	}
+	};
 
 }
 
-#[derive(Default)]
-pub struct World {
+pub struct Pool<'a> {
 
-	count: usize,
-	entities: BTreeMap<Id, Entity>,
-	systems: Vec<Box<System>>,
+	entities: &'a mut BTreeMap<Id, Entity>,
+	count: &'a mut usize,
 
 }
 
-impl World {
+impl<'a> Pool<'a> {
 
-	pub fn new() -> Self {
-		return Self::default();
-	}
+	pub fn add(&mut self,e: Entity) -> Id {
 
-	pub fn add(&mut self, mut e: Entity) -> Id {
+		let id = Id::new(*self.count);
 
-		let id = Id::new(self.count);
-
-		e.id = Some(id);
 		self.entities.insert(id, e);
-		self.count += rand!(2, 7) as usize;
+		*self.count += rand!(2, 7) as usize;
 
 		return id;
+
+	}
+
+	pub fn remove(&mut self, e: Id) {
+		self.entities.remove(&e);
+	}
+
+	pub fn filter(&self, filter: &Filter) -> EntitySet {
+
+		let mut list = BTreeSet::new();
+
+		for (id, e) in self.entities.iter() {
+			if e.has_all(&filter) {
+				list.insert(*id);
+			}
+		}
+
+		return list;
 
 	}
 
@@ -128,34 +150,69 @@ impl World {
 		return self.entities.get_mut(&id);
 	}
 
-	pub fn filter(&self, filter: CompFilter) -> EntitySet {
+}
 
-		let mut list = BTreeSet::new();
+struct SystemData {
 
-		for (id, e) in &self.entities {
-			if e.has_all(&filter) {
-				list.insert(*id);
-			}
-		}
+	system: Box<System>,
+	filter: Filter,
 
-		return list;
+}
 
+#[derive(Default)]
+pub struct World {
+
+	count: usize,
+	entities: BTreeMap<Id, Entity>,
+	systems: Vec<SystemData>,
+
+}
+
+impl World {
+
+	pub fn new() -> Self {
+		return Self::default();
 	}
 
-	pub fn remove(&mut self, e: Id) {
+	pub fn add(&mut self, e: Entity) -> Id {
 
-		self.entities.remove(&e);
+		let id = Id::new(self.count);
+
+		self.entities.insert(id, e);
+		self.count += rand!(2, 7) as usize;
+
+		return id;
 
 	}
 
 	pub fn run<S: System + 'static>(&mut self, system: S) {
-		self.systems.push(Box::new(system));
+
+		self.systems.push(SystemData {
+
+			filter: system.filter(),
+			system: Box::new(system),
+
+		});
+
 	}
 
 	pub fn update(&mut self) {
+
+		let mut pool = Pool {
+			count: &mut self.count,
+			entities: &mut self.entities,
+		};
+
 		for s in &mut self.systems {
-			s.update();
+
+			for id in &pool.filter(&s.filter) {
+				s.system.each(pool.get_mut(*id).unwrap());
+			}
+
+			s.system.update(&mut pool);
+
 		}
+
 	}
 
 }
@@ -174,10 +231,7 @@ macro_rules! entity {
 }
 
 pub struct Entity {
-
 	comps: HashMap<TypeId, Box<Any>>,
-	pub id: Option<Id>,
-
 }
 
 impl Entity {
@@ -185,7 +239,6 @@ impl Entity {
 	pub fn new() -> Self {
 		return Self {
 			comps: HashMap::new(),
-			id: None,
 		};
 	}
 
@@ -203,7 +256,7 @@ impl Entity {
 		return self.comps.contains_key(&TypeId::of::<C>());
 	}
 
-	pub fn has_all(&self, comps: &CompFilter) -> bool {
+	pub fn has_all(&self, comps: &Filter) -> bool {
 
 		for f in comps {
 			if !self.comps.contains_key(&f) {

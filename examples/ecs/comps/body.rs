@@ -2,11 +2,10 @@
 
 use dirty::*;
 use dirty::math::*;
-use specs::*;
-use specs_derive::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
-#[derive(Component, Debug)]
-#[storage(VecStorage)]
+#[derive(Comp, Clone)]
 pub struct Body {
 
 	pub verts: Vec<Vec2>,
