@@ -53,6 +53,64 @@ fn main() {
 
 }
 ```
+with `ecs`:
+
+```rust
+use dirty::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
+
+#[derive(Comp, Clone)]
+struct Pos {
+	x: f32,
+	y: f32,
+}
+
+struct MoveSys;
+
+impl System for MoveSys {
+
+	fn filter(&self) -> Filter {
+		return filter![Pos];
+	}
+
+	fn each(&mut self, e: &mut Entity) {
+
+		let mut pos = e.get::<Pos>();
+
+		pos.x = pos.x + 1.0;
+		println!("pos: ({}, {})", pos.x, pos.y);
+		e.set::<Pos>(pos);
+
+	}
+
+}
+
+fn thing(x: f32, y: f32) -> Entity {
+	return entity![Pos { x, y }];
+}
+
+fn main() {
+
+	// init modules
+	app::init();
+
+	// create new world
+	let mut world = World::new();
+
+	// add entities
+	world.add(thing(0.0, 0.0));
+
+	// run systems
+	world.run(MoveSys);
+
+	// loop
+	for _ in 0..3 {
+		world.update();
+	}
+
+}
+```
 more under `examples/`
 
 ### notes & caveats
