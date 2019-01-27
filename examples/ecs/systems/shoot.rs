@@ -40,11 +40,10 @@ impl System for ShootSys {
 		}
 
 		for p in queue {
-			pool.add(p);
+			pool.push(p);
 		}
 
 	}
 
 }
-
 
