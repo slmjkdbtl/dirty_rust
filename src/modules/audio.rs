@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Sound loading & playback
+//! Sound Loading & playback
 
 use std::io::Cursor;
 use std::time::Duration;

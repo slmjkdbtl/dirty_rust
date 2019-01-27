@@ -113,7 +113,7 @@ pub struct Pool<'a> {
 
 impl<'a> Pool<'a> {
 
-	pub fn add(&mut self,e: Entity) -> Id {
+	pub fn push(&mut self,e: Entity) -> Id {
 
 		let id = Id::new(*self.count);
 
