@@ -12,6 +12,7 @@ mod backends;
 mod modules;
 pub mod addons;
 pub mod math;
+pub mod ecs;
 
 pub use modules::*;
 

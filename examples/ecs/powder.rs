@@ -2,15 +2,17 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::addons::ecs::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
-comp!(Powder {
+#[derive(Comp, Clone)]
+pub struct Powder {
 
-	flower: Id,
-	speed: f32,
-	dir: f32,
+	pub flower: Id,
+	pub speed: f32,
+	pub dir: f32,
 
-});
+}
 
 impl Powder {
 

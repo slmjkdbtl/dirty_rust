@@ -2,6 +2,8 @@
 
 //! Simple ECS
 
+pub use ecs_derive as derive;
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::BTreeMap;
@@ -36,7 +38,7 @@ const MODS: [&str; 17] = [
 ];
 
 pub trait System {
-	fn update(&mut self, s: &mut World);
+	fn update(&mut self);
 }
 
 pub trait Comp: Any {}
@@ -151,9 +153,9 @@ impl World {
 	}
 
 	pub fn update(&mut self) {
-// 		for s in &mut self.systems {
-// 			s.update(self);
-// 		}
+		for s in &mut self.systems {
+			s.update();
+		}
 	}
 
 }
@@ -229,32 +231,6 @@ impl Entity {
 			.insert(TypeId::of::<C>(), Box::new(comp));
 
 	}
-
-}
-
-#[macro_export]
-macro_rules! comp {
-
-	($name:ident { $($member:ident: $type:ty),*$(,)? }) => {
-
-		#[derive(Clone)]
-		pub struct $name {
-			$(
-				pub $member: $type
-			),*
-		}
-
-		impl Comp for $name {}
-
-	};
-
-	($name:ident) => {
-
-		#[derive(Clone)]
-		pub struct $name;
-		impl Comp for $name {}
-
-	};
 
 }
 

@@ -2,14 +2,16 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::addons::ecs::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
-comp!(Petal {
+#[derive(Comp, Clone)]
+pub struct Petal {
 
-	flower: Id,
-	index: u8
+	pub flower: Id,
+	pub index: u8
 
-});
+}
 
 impl Petal {
 

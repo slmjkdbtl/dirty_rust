@@ -2,8 +2,8 @@
 
 use dirty::*;
 use dirty::math::*;
+use dirty::ecs::*;
 use dirty::addons::res;
-use dirty::addons::ecs::*;
 
 mod trans;
 mod vel;
