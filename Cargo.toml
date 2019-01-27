@@ -2,12 +2,13 @@
 
 [package]
 name = "dirty"
+description = "dirty tool kit"
 version = "0.0.0"
 authors = ["t <voygagaga@outlook.com>"]
-description = "dirty tool kit"
 repository = "https://github.com/slmjkdbtl/DIRTY"
 license = "Zlib"
 edition = "2018"
+readme = "README.md"
 
 [dependencies]
 gl = "*"
@@ -24,6 +25,7 @@ aseprite = "*"
 specs = "*"
 specs-derive = "*"
 hlua = "*"
+ecs_derive = { path = "src/ecs/derive" }
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "*"

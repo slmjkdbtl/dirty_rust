@@ -4,22 +4,24 @@ use std::collections::HashMap;
 
 use dirty::*;
 use dirty::math::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 use dirty::addons::res;
-use dirty::addons::ecs::*;
 
-comp!(Sprite {
+#[derive(Comp, Clone)]
+pub struct Sprite {
 
-	tex: gfx::Texture,
-	frame: usize,
-	framelist: Vec<Rect>,
-	origin: Vec2,
-	anims: HashMap<String, res::Anim>,
-	current_anim: Option<res::Anim>,
-	speed: f32,
-	color: Color,
-	timer: f32,
+	pub tex: gfx::Texture,
+	pub frame: usize,
+	pub framelist: Vec<Rect>,
+	pub origin: Vec2,
+	pub anims: HashMap<String, res::Anim>,
+	pub current_anim: Option<res::Anim>,
+	pub speed: f32,
+	pub color: Color,
+	pub timer: f32,
 
-});
+}
 
 impl Sprite {
 

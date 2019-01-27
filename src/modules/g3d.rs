@@ -42,14 +42,12 @@ pub fn enabled() -> bool {
 #[derive(Clone, Copy)]
 struct State {
 	transform: Mat4,
-	tint: Color,
 }
 
 impl Default for State {
 	fn default() -> Self {
 		return Self {
 			transform: Mat4::identity(),
-			tint: color!(),
 		}
 	}
 }

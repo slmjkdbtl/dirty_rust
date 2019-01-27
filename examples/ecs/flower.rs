@@ -2,7 +2,8 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::addons::ecs::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
 #[derive(Clone)]
 pub enum Player {
@@ -12,17 +13,18 @@ pub enum Player {
 
 }
 
-comp!(Flower {
+#[derive(Comp, Clone)]
+pub struct Flower {
 
-	player: Player,
-	color: Color,
-	speed: f32,
-	rot_speed: f32,
-	energy: usize,
-	rate: usize,
-	active: bool,
+	pub player: Player,
+	pub color: Color,
+	pub speed: f32,
+	pub rot_speed: f32,
+	pub energy: usize,
+	pub rate: usize,
+	pub active: bool,
 
-});
+}
 
 impl Flower {
 

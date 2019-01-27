@@ -10,6 +10,7 @@ use std::panic;
 use crate::*;
 
 const FPS_CAP: u8 = 60;
+const EXPECTED_DT: f32 = 1000.0 / FPS_CAP as f32;
 
 // context
 ctx!(APP: AppCtx);
@@ -123,11 +124,10 @@ pub fn run<F: FnMut()>(mut f: F) {
 
 		let actual_dt = start_time.elapsed();
 		let actual_dt = actual_dt.as_secs() as f32 * 1000.0 + actual_dt.subsec_millis() as f32;
-		let expected_dt = 1000.0 / f32::from(FPS_CAP);
 
-		if expected_dt > actual_dt {
-			app_mut.dt = expected_dt as f32 / 1000.0;
-			thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
+		if EXPECTED_DT > actual_dt {
+			app_mut.dt = EXPECTED_DT as f32 / 1000.0;
+			thread::sleep(Duration::from_millis((EXPECTED_DT - actual_dt) as u64));
 		} else {
 			app_mut.dt = actual_dt as f32 / 1000.0;
 		}

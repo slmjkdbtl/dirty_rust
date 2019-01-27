@@ -2,14 +2,14 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::addons::ecs::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
-comp!(Body {
-
-	verts: Vec<Vec2>,
-	d_verts: Vec<Vec2>,
-
-});
+#[derive(Comp, Clone)]
+pub struct Body {
+	pub verts: Vec<Vec2>,
+	pub d_verts: Vec<Vec2>,
+}
 
 impl Body {
 

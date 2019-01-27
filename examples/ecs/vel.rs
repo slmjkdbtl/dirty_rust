@@ -2,15 +2,17 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::addons::ecs::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
-comp!(Vel {
+#[derive(Comp, Clone)]
+pub struct Vel {
 
-	pos: Vec2,
-	rot: f32,
-	scale: Vec2,
+	pub pos: Vec2,
+	pub rot: f32,
+	pub scale: Vec2,
 
-});
+}
 
 impl Vel {
 

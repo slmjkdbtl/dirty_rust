@@ -3,8 +3,6 @@
 use std::ops;
 use std::fmt;
 
-use crate::*;
-
 macro_rules! gen_vec {
 
 	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty, ($($default:expr),+)) => {
