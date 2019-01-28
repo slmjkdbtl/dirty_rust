@@ -10,32 +10,11 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::any::TypeId;
 use std::any::Any;
-use std::fmt;
-use std::cmp::Ordering;
 
 use crate::*;
+use crate::utils::id::*;
 
-const MODS: [&str; 17] = [
-
-	"super",
-	"cool",
-	"awesome",
-	"handsome",
-	"badass",
-	"hotdog",
-	"fallen",
-	"haunted",
-	"king",
-	"doomed",
-	"forbidden",
-	"unstoppable",
-	"flaming",
-	"unholy",
-	"infernal",
-	"dwarven",
-	"cursed",
-
-];
+pub use crate::utils::id::Id;
 
 pub trait System: Any {
 
@@ -51,33 +30,6 @@ pub trait System: Any {
 pub trait Comp: Any {}
 pub type Filter = HashSet<TypeId>;
 type EntitySet = BTreeSet<Id>;
-
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub struct Id(&'static str, usize);
-
-impl Id {
-	pub fn new(id: usize) -> Self {
-		return Self(MODS[rand!(MODS.len()) as usize], id);
-	}
-}
-
-impl Ord for Id {
-	fn cmp(&self, other: &Id) -> Ordering {
-		return self.1.cmp(&other.1);
-	}
-}
-
-impl PartialOrd for Id {
-	fn partial_cmp(&self, other: &Id) -> Option<Ordering> {
-		return Some(self.1.cmp(&other.1));
-	}
-}
-
-impl fmt::Display for Id {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		return write!(f, "{}{}", self.0, self.1);
-	}
-}
 
 #[macro_export]
 macro_rules! filter {
@@ -107,7 +59,7 @@ macro_rules! filter {
 pub struct Pool<'a> {
 
 	entities: &'a mut BTreeMap<Id, Entity>,
-	count: &'a mut usize,
+	id_generator: &'a mut IdGenerator,
 
 }
 
@@ -115,10 +67,9 @@ impl<'a> Pool<'a> {
 
 	pub fn push(&mut self,e: Entity) -> Id {
 
-		let id = Id::new(*self.count);
+		let id = self.id_generator.get();
 
 		self.entities.insert(id, e);
-		*self.count += rand!(2, 7) as usize;
 
 		return id;
 
@@ -162,7 +113,7 @@ struct SystemData {
 #[derive(Default)]
 pub struct World {
 
-	count: usize,
+	id_generator: IdGenerator,
 	entities: BTreeMap<Id, Entity>,
 	systems: Vec<SystemData>,
 
@@ -176,10 +127,9 @@ impl World {
 
 	pub fn add(&mut self, e: Entity) -> Id {
 
-		let id = Id::new(self.count);
+		let id = self.id_generator.get();
 
 		self.entities.insert(id, e);
-		self.count += rand!(2, 7) as usize;
 
 		return id;
 
@@ -200,7 +150,7 @@ impl World {
 
 		let mut pool = Pool {
 
-			count: &mut self.count,
+			id_generator: &mut self.id_generator,
 			entities: &mut self.entities,
 
 		};
@@ -221,7 +171,7 @@ impl World {
 
 		let mut pool = Pool {
 
-			count: &mut self.count,
+			id_generator: &mut self.id_generator,
 			entities: &mut self.entities,
 
 		};
