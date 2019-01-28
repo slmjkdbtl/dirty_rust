@@ -1,9 +1,13 @@
 // wengwengweng
 
 use std::any::Any;
+use std::collections::BTreeMap;
 
 use crate::*;
 use crate::math::*;
+use crate::addons::col;
+
+use crate::utils::id::*;
 
 const BAR_HEIGHT: u32 = 40;
 const CORNER: f32 = 1.4;
@@ -11,7 +15,9 @@ const CORNER: f32 = 1.4;
 ctx!(UI: UICtx);
 
 struct UICtx {
-	windows: Vec<Window>,
+	windows: BTreeMap<Id, Window>,
+	id_generator: IdGenerator,
+	active_window: Option<Id>,
 }
 
 pub trait Widget: Any {
@@ -23,7 +29,9 @@ pub trait Widget: Any {
 pub fn init() {
 
 	ctx_init(UICtx {
-		windows: Vec::new(),
+		windows: BTreeMap::new(),
+		id_generator: IdGenerator::new(),
+		active_window: None,
 	});
 
 }
@@ -31,7 +39,6 @@ pub fn init() {
 enum WindowState {
 	Idle,
 	Dragged(Vec2),
-	Active,
 }
 
 pub struct Window {
@@ -42,6 +49,7 @@ pub struct Window {
 	height: u32,
 	state: WindowState,
 	widgets: Vec<Box<Widget>>,
+	id: Option<Id>,
 
 }
 
@@ -57,6 +65,7 @@ impl Window {
 			height: height,
 			state: WindowState::Idle,
 			widgets: Vec::new(),
+			id: None,
 
 		};
 
@@ -75,7 +84,7 @@ pub fn draw() {
 	gfx::push();
 	gfx::reset();
 
-	for w in &mut ctx_mut.windows {
+	for (id, w) in &mut ctx_mut.windows {
 
 		update_window(w);
 		draw_window(w);
@@ -91,7 +100,20 @@ fn update_window(w: &mut Window) {
 	let mpos = window::mouse_pos();
 
 	if window::mouse_pressed(Mouse::Left) {
-		w.state = WindowState::Dragged(vec2!(24));
+
+		if col::point_rect(mpos, rect!(w.pos.x, w.pos.y, w.width, BAR_HEIGHT)) {
+
+			let ctx_mut = ctx_get_mut();
+			let id = w.id.expect("oh no");
+			let windows = &mut ctx_mut.windows;
+
+			w.state = WindowState::Dragged(mpos - w.pos);
+			ctx_mut.active_window = Some(id);
+// 			windows.remove(&id);
+// 			windows.insert(id, w);
+
+		}
+
 	}
 
 	if let WindowState::Dragged(pos) = w.state {
@@ -99,7 +121,7 @@ fn update_window(w: &mut Window) {
 		w.pos = mpos - pos;
 
 		if window::mouse_released(Mouse::Left) {
-			w.state = WindowState::Active;
+			w.state = WindowState::Idle;
 		}
 
 	}
@@ -107,6 +129,8 @@ fn update_window(w: &mut Window) {
 }
 
 fn draw_window(w: &Window) {
+
+	let ctx = ctx_get();
 
 	gfx::push();
 	gfx::translate(w.pos);
@@ -137,9 +161,14 @@ fn draw_window(w: &Window) {
 
 	gfx::push();
 
-	match w.state {
-		WindowState::Idle => gfx::color(color!(0.56, 0.76, 0.76, 1)),
-		WindowState::Dragged(_) | WindowState::Active => gfx::color(color!(1)),
+	if let Some(id) = ctx.active_window {
+		if id == w.id.expect("oh no") {
+			gfx::color(color!(1));
+		} else {
+			gfx::color(color!(0.56, 0.76, 0.76, 1));
+		}
+	} else {
+		gfx::color(color!(0.56, 0.76, 0.76, 1));
 	}
 
 	gfx::translate(vec2!(12, 5));
@@ -152,7 +181,15 @@ fn draw_window(w: &Window) {
 }
 
 pub fn add(w: Window) {
-	ctx_get_mut().windows.push(w);
+
+	let ctx_mut = ctx_get_mut();
+	let windows = &mut ctx_mut.windows;
+	let id = ctx_mut.id_generator.get();
+
+	windows.insert(id, w);
+	windows.get_mut(&id).expect("failed to add window").id = Some(id);
+	ctx_mut.active_window = Some(id);
+
 }
 
 struct Canvas {

@@ -73,7 +73,12 @@ pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 
 }
 
-/// check collision between a point and a polygon
+/// check if a point is side a rect
+pub fn point_rect(p: Vec2, rect: Rect) -> bool {
+	return p.x >= rect.x && p.x <= rect.x + rect.w && p.y >= rect.y && p.y <= rect.y + rect.h;
+}
+
+/// check if a point is side a polygon
 pub fn point_poly(p: Vec2, poly: &[Vec2]) -> bool {
 
 	assert!(poly.len() >= 3, "invalid polygon");
