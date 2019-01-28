@@ -111,7 +111,7 @@ fn draw_window(w: &Window) {
 
 }
 
-pub fn window(title: &str, width: u32, height: u32) {
+pub fn window<F: FnMut()>(title: &str, pos: Vec2, width: u32, height: u32, f: F) {
 
 	let ctx = ctx_get();
 	let ctx_mut = ctx_get_mut();
@@ -119,7 +119,7 @@ pub fn window(title: &str, width: u32, height: u32) {
 	ctx_mut.windows.push(Window {
 
 		title: String::from(title),
-		pos: vec2!(48),
+		pos: pos,
 		width: width,
 		height: height,
 		draw: Box::new(|| {}),

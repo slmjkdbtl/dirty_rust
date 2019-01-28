@@ -37,7 +37,7 @@ const MODS: [&str; 17] = [
 
 ];
 
-pub trait System {
+pub trait System: Any {
 
 	fn filter(&self) -> Filter {
 		return filter![];
@@ -185,7 +185,7 @@ impl World {
 
 	}
 
-	pub fn run<S: System + 'static>(&mut self, system: S) {
+	pub fn run<S: System>(&mut self, system: S) {
 
 		self.systems.push(SystemData {
 
@@ -193,6 +193,27 @@ impl World {
 			system: Box::new(system),
 
 		});
+
+	}
+
+	pub fn run_once<S: System>(&mut self, s: &mut S) {
+
+		let mut pool = Pool {
+
+			count: &mut self.count,
+			entities: &mut self.entities,
+
+		};
+
+		let filter = s.filter();
+
+		if filter.len() > 0 {
+			for id in &pool.pick(&filter) {
+				s.each(pool.get_mut(*id).expect("oh no"));
+			}
+		}
+
+		s.update(&mut pool);
 
 	}
 
