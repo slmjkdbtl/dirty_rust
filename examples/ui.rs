@@ -12,10 +12,18 @@ fn main() {
 
 	let (width, height) = window::size();
 
-	let test = ui::Window::new("window", vec2!(24, 24), 240, 320);
-	let game = ui::Window::new("game", vec2!(160, 180), 640, 480);
+	let mut log = ui::Window::new("log", vec2!(48, 48), 240, 320);
+	let mut game = ui::Window::new("game", vec2!(200, 160), 640, 480);
+	let mut text_box = ui::TextBox::new();
+	let canvas = ui::Canvas::new(&game);
 
-	ui::add(test);
+	text_box.write("yo");
+	text_box.write("hello");
+
+	log.add(text_box);
+	game.add(canvas);
+
+	ui::add(log);
 	ui::add(game);
 
 	app::run(|| {

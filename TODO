@@ -6,6 +6,7 @@
 - macro for simple systems
 - more accurate timestep
 - framebuffers
+- split core, ui, ecs, addons to workspaces
 
 == TO DO
 - custom shaders
