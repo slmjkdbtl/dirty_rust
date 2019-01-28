@@ -33,8 +33,25 @@ pub struct Window {
 	pos: Vec2,
 	width: u32,
 	height: u32,
-	draw: Box<FnMut()>,
 	state: WindowState,
+
+}
+
+impl Window {
+
+	pub fn new(title: &str, pos: Vec2, width: u32, height: u32) -> Self {
+
+		return Self {
+
+			title: String::from(title),
+			pos: pos,
+			width: width,
+			height: height,
+			state: WindowState::Idle,
+
+		};
+
+	}
 
 }
 
@@ -111,21 +128,7 @@ fn draw_window(w: &Window) {
 
 }
 
-pub fn window<F: FnMut()>(title: &str, pos: Vec2, width: u32, height: u32, f: F) {
-
-	let ctx = ctx_get();
-	let ctx_mut = ctx_get_mut();
-
-	ctx_mut.windows.push(Window {
-
-		title: String::from(title),
-		pos: pos,
-		width: width,
-		height: height,
-		draw: Box::new(|| {}),
-		state: WindowState::Idle,
-
-	});
-
+pub fn add(w: Window) {
+	ctx_get_mut().windows.push(w);
 }
 

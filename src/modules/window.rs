@@ -235,34 +235,25 @@ pub(crate) fn poll_events() {
 		}
 	}
 
+	for code in keyboard_state.pressed_scancodes() {
+		if !window.key_states.contains_key(&code) || window.key_states[&code] == ButtonState::Up {
+			window_mut.key_states.insert(code, ButtonState::Pressed);
+		}
+	}
+
+	for code in mouse_state.pressed_mouse_buttons() {
+		if !window.mouse_states.contains_key(&code) || window.mouse_states[&code] == ButtonState::Up {
+			window_mut.mouse_states.insert(code, ButtonState::Pressed);
+		}
+	}
+
 	for event in window_mut.events.poll_iter() {
-
 		match event {
-
 			Event::Quit {..} => {
 				app::quit();
 			},
-
-			Event::KeyDown { repeat: false, .. } => {
-				for code in keyboard_state.pressed_scancodes() {
-					if !window.key_states.contains_key(&code) || window.key_states[&code] == ButtonState::Up {
-						window_mut.key_states.insert(code, ButtonState::Pressed);
-					}
-				}
-			},
-
-			Event::MouseButtonDown { .. } => {
-				for code in mouse_state.pressed_mouse_buttons() {
-					if !window.mouse_states.contains_key(&code) || window.mouse_states[&code] == ButtonState::Up {
-						window_mut.mouse_states.insert(code, ButtonState::Pressed);
-					}
-				}
-			},
-
 			_ => {}
-
 		}
-
 	}
 
 }
