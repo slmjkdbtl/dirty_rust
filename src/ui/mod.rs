@@ -33,7 +33,6 @@ pub struct Window {
 	pos: Vec2,
 	width: u32,
 	height: u32,
-	canvas: gfx::Canvas,
 	draw: Box<FnMut()>,
 	state: WindowState,
 
@@ -123,7 +122,6 @@ pub fn window(title: &str, width: u32, height: u32) {
 		pos: vec2!(48),
 		width: width,
 		height: height,
-		canvas: gfx::Canvas::new(width, height),
 		draw: Box::new(|| {}),
 		state: WindowState::Idle,
 
