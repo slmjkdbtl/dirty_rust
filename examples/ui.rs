@@ -5,16 +5,20 @@ use dirty::*;
 fn main() {
 
 	app::init();
-	window::init("yo", 640, 480);
+	window::init("yo", 1280, 720);
+	ui::init();
+
+// 	window::set_fullscreen(true);
 
 	let (width, height) = window::size();
+
+	ui::window("window", 240, 320);
 
 	app::run(|| {
 
 		gfx::color(color!(0.6, 0.78, 0.78, 1));
 		gfx::rect(vec2!(width, height));
-		gfx::translate(vec2!(24));
-		ui::window("window", 240, 320);
+		ui::draw();
 
 	});
 
