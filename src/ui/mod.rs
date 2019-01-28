@@ -1,6 +1,7 @@
 // wengwengweng
 
-use std::any::Any;
+//! Simple UI
+
 use std::collections::BTreeMap;
 
 use crate::*;
@@ -9,7 +10,15 @@ use crate::addons::col;
 
 use crate::utils::id::*;
 
-const BAR_HEIGHT: u32 = 40;
+mod widget;
+mod canvas;
+mod text_box;
+
+pub use widget::*;
+pub use canvas::*;
+pub use text_box::*;
+
+const BAR_HEIGHT: u32 = 42;
 const CORNER: f32 = 1.4;
 
 ctx!(UI: UICtx);
@@ -20,12 +29,7 @@ struct UICtx {
 	active_window: Option<Id>,
 }
 
-pub trait Widget: Any {
-	fn update(&mut self) {}
-	fn draw(&self) {}
-}
-
-/// initialize res module
+/// initialize ui module
 pub fn init() {
 
 	ctx_init(UICtx {
@@ -41,6 +45,7 @@ enum WindowState {
 	Dragged(Vec2),
 }
 
+/// widget container
 pub struct Window {
 
 	title: String,
@@ -77,6 +82,7 @@ impl Window {
 
 }
 
+/// draw every window and widgets
 pub fn draw() {
 
 	let ctx_mut = ctx_get_mut();
@@ -105,11 +111,9 @@ fn update_window(w: &mut Window) {
 
 			let ctx_mut = ctx_get_mut();
 			let id = w.id.expect("oh no");
-			let windows = &mut ctx_mut.windows;
 
 			w.state = WindowState::Dragged(mpos - w.pos);
 			ctx_mut.active_window = Some(id);
-
 			add(remove(id).expect("oh no"));
 
 		}
@@ -126,6 +130,10 @@ fn update_window(w: &mut Window) {
 
 	}
 
+	for widget in &mut w.widgets {
+		widget.update();
+	}
+
 }
 
 fn draw_window(w: &Window) {
@@ -135,12 +143,15 @@ fn draw_window(w: &Window) {
 	gfx::push();
 	gfx::translate(w.pos);
 
+	// draw background
 	gfx::color(color!(0, 0.35, 0.35, 1));
 	gfx::rect(vec2!(w.width, w.height));
 
+	// draw headbar
 	gfx::color(color!(0, 0.51, 0.51, 1));
 	gfx::rect(vec2!(w.width, BAR_HEIGHT));
 
+	// draw outlines
 	gfx::line_width(3);
 	gfx::color(color!(0.02, 0.18, 0.18, 1));
 
@@ -159,6 +170,7 @@ fn draw_window(w: &Window) {
 
 	gfx::line(vec2!(0, BAR_HEIGHT), vec2!(w.width, BAR_HEIGHT));
 
+	// draw title
 	gfx::push();
 
 	if let Some(id) = ctx.active_window {
@@ -171,15 +183,35 @@ fn draw_window(w: &Window) {
 		gfx::color(color!(0.56, 0.76, 0.76, 1));
 	}
 
-	gfx::translate(vec2!(12, 5));
+	gfx::translate(vec2!(14, 5));
 	gfx::scale(vec2!(2));
 	gfx::text(&w.title);
+	gfx::pop();
+
+	// draw widgets
+	gfx::push();
+	gfx::translate(vec2!(0, BAR_HEIGHT));
+
+	for widget in &w.widgets {
+
+		gfx::push();
+
+		if let WidgetType::Normal = widget.get_type() {
+			gfx::translate(vec2!(14, 12));
+		}
+
+		widget.draw();
+		gfx::pop();
+
+	}
+
 	gfx::pop();
 
 	gfx::pop();
 
 }
 
+/// add a window
 pub fn add(w: Window) {
 
 	let ctx_mut = ctx_get_mut();
@@ -192,17 +224,8 @@ pub fn add(w: Window) {
 
 }
 
+/// remove a window
 pub fn remove(id: Id) -> Option<Window> {
 	return ctx_get_mut().windows.remove(&id);
-}
-
-struct Canvas {
-	handle: gfx::Canvas,
-}
-
-impl Widget for Canvas {
-	fn draw(&self) {
-		gfx::render(&self.handle);
-	}
 }
 
