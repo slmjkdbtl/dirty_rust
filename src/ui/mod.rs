@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::any::Any;
+
 use crate::*;
 use crate::math::*;
 
@@ -10,6 +12,11 @@ ctx!(UI: UICtx);
 
 struct UICtx {
 	windows: Vec<Window>,
+}
+
+pub trait Widget: Any {
+	fn update(&mut self) {}
+	fn draw(&self) {}
 }
 
 /// initialize res module
@@ -34,6 +41,7 @@ pub struct Window {
 	width: u32,
 	height: u32,
 	state: WindowState,
+	widgets: Vec<Box<Widget>>,
 
 }
 
@@ -48,9 +56,14 @@ impl Window {
 			width: width,
 			height: height,
 			state: WindowState::Idle,
+			widgets: Vec::new(),
 
 		};
 
+	}
+
+	pub fn add<W: Widget>(&mut self, w: W) {
+		self.widgets.push(Box::new(w));
 	}
 
 }
@@ -77,8 +90,18 @@ fn update_window(w: &mut Window) {
 
 	let mpos = window::mouse_pos();
 
+	if window::mouse_pressed(Mouse::Left) {
+		w.state = WindowState::Dragged(vec2!(24));
+	}
+
 	if let WindowState::Dragged(pos) = w.state {
+
 		w.pos = mpos - pos;
+
+		if window::mouse_released(Mouse::Left) {
+			w.state = WindowState::Active;
+		}
+
 	}
 
 }
@@ -130,5 +153,15 @@ fn draw_window(w: &Window) {
 
 pub fn add(w: Window) {
 	ctx_get_mut().windows.push(w);
+}
+
+struct Canvas {
+	handle: gfx::Canvas,
+}
+
+impl Widget for Canvas {
+	fn draw(&self) {
+		gfx::render(&self.handle);
+	}
 }
 
