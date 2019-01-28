@@ -21,9 +21,12 @@ const MAX_INDICES: usize = MAX_DRAWS * INDEX_COUNT;
 
 const MAX_STATE_STACK: usize = 64;
 
-const DEFAULT_FONT: &[u8] = include_bytes!("../res/CP437.png");
 const DEFAULT_VERT_SHADER: &str = include_str!("../shaders/quad.vert");
 const DEFAULT_FRAG_SHADER: &str = include_str!("../shaders/quad.frag");
+const DEFAULT_FONT: &[u8] = include_bytes!("../res/CP437.png");
+const DEFAULT_FONT_COLS: usize = 32;
+const DEFAULT_FONT_ROWS: usize = 8;
+const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
 
 // context
 ctx!(GFX: GfxCtx);
@@ -80,9 +83,9 @@ pub(crate) fn init() {
 
 	let default_font = Font::new(
 		Texture::from_bytes(DEFAULT_FONT),
-		32,
-		8,
-		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,
+		DEFAULT_FONT_COLS,
+		DEFAULT_FONT_ROWS,
+		DEFAULT_FONT_CHARS,
 	);
 
 	let (width, height) = window::size();

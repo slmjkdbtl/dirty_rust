@@ -234,6 +234,7 @@ macro_rules! entity {
 	}
 }
 
+#[derive(Default)]
 pub struct Entity {
 	comps: HashMap<TypeId, Box<Any>>,
 }
@@ -241,9 +242,7 @@ pub struct Entity {
 impl Entity {
 
 	pub fn new() -> Self {
-		return Self {
-			comps: HashMap::new(),
-		};
+		return Self::default();
 	}
 
 	pub fn with<C: Comp>(&mut self, comp: C) {
