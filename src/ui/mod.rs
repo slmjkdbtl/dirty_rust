@@ -109,8 +109,8 @@ fn update_window(w: &mut Window) {
 
 			w.state = WindowState::Dragged(mpos - w.pos);
 			ctx_mut.active_window = Some(id);
-// 			windows.remove(&id);
-// 			windows.insert(id, w);
+
+			add(remove(id).expect("oh no"));
 
 		}
 
@@ -190,6 +190,10 @@ pub fn add(w: Window) {
 	windows.get_mut(&id).expect("failed to add window").id = Some(id);
 	ctx_mut.active_window = Some(id);
 
+}
+
+pub fn remove(id: Id) -> Option<Window> {
+	return ctx_get_mut().windows.remove(&id);
 }
 
 struct Canvas {
