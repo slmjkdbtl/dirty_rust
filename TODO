@@ -1,18 +1,16 @@
 # wengwengweng
 
 == DOING
-- ecs
 - ecs example
+- ui
 - macro for simple systems
 - more accurate timestep
-- mouse inputs
 - framebuffers
 
 == TO DO
 - custom shaders
 - metal backend
 - add error sound
-- imgui
 - editor
 - lua bindings
 - particle system
@@ -56,6 +54,8 @@
 - vector methods
 - text wrapping
 - prettier README example
+- mouse inputs
+- ecs
 
 == ADVENTURE
 - wasm

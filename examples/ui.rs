@@ -12,7 +12,9 @@ fn main() {
 
 	let (width, height) = window::size();
 
-	ui::window("window", vec2!(24, 24), 240, 320, || {});
+	let test = ui::Window::new("window", vec2!(24, 24), 240, 320);
+
+	ui::add(test);
 
 	app::run(|| {
 
