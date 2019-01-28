@@ -90,7 +90,7 @@ pub fn draw() {
 	gfx::push();
 	gfx::reset();
 
-	for (id, w) in &mut ctx_mut.windows {
+	for (_, w) in &mut ctx_mut.windows {
 
 		update_window(w);
 		draw_window(w);
@@ -122,10 +122,15 @@ fn update_window(w: &mut Window) {
 
 	if let WindowState::Dragged(pos) = w.state {
 
-		w.pos = mpos - pos;
+		let mut still_dragged = true;
 
 		if window::mouse_released(Mouse::Left) {
+			still_dragged = false;
 			w.state = WindowState::Idle;
+		}
+
+		if still_dragged {
+			w.pos = mpos - pos;
 		}
 
 	}
