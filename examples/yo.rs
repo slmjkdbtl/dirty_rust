@@ -68,9 +68,6 @@ fn main() {
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
-		gfx::stop_drawon(&canvas);
-		gfx::render(&canvas);
-
 		if col::point_poly(window::mouse_pos(), &pts) {
 
 			tint = color!(0, 1, 1, 1);
@@ -97,11 +94,16 @@ fn main() {
 		gfx::text("yo♪");
 		gfx::pop();
 
+		gfx::stop_drawon(&canvas);
+		gfx::color(color!(0, 0, 1, 1));
+		gfx::render(&canvas);
+
 		// inputs
 		if window::key_pressed(Key::Space) {
 
 			// play a sound with effect
 			audio::play(&res::sound("pop").speed(rand!(2)));
+			gfx::capture(&canvas, "test.png");
 
 		}
 
