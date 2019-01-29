@@ -2,6 +2,9 @@
 
 //! Simple UI
 
+// Style heavily inspired by MEKA (http://www.smspower.org/meka/), thanks for making awesome
+// tools ocornut
+
 use std::collections::BTreeMap;
 
 use crate::*;
