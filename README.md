@@ -120,7 +120,7 @@ more under `examples/`
 - currently no proper error handling (a lot of internal panics, but with pretty error screen)
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
 - planning on adding scripting support
-- ui style is heavily inspired by [MEKA](http://www.smspower.org/meka/), thanks for keep making awesome tools ocornut
+- ui style is a tribute to [MEKA](http://www.smspower.org/meka/), thanks for keep making awesome tools ocornut
 
 ### faq
 - Why should I just this over ggez or amethyst?
