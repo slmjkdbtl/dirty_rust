@@ -14,7 +14,7 @@
 - add error sound
 - ui lazy redraw
 - ui custom theme
-- ui prevent clicking through
+- ui input manager
 - keep aspect ratio in fullscreen
 - editor
 - lua bindings

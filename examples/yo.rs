@@ -47,8 +47,8 @@ fn main() {
 			index = anims["run"].from;
 		}
 
-// 		gfx::drawon(&canvas);
-// 		gfx::clear();
+		gfx::drawon(&canvas);
+		gfx::clear();
 
 		gfx::push();
 		gfx::translate(vec2!(12));
@@ -94,8 +94,8 @@ fn main() {
 		gfx::text("yo♪");
 		gfx::pop();
 
-// 		gfx::stop_drawon(&canvas);
-// 		gfx::render(&canvas);
+		gfx::stop_drawon(&canvas);
+		gfx::render(&canvas);
 
 		// inputs
 		if window::key_pressed(Key::Space) {
