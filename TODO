@@ -1,9 +1,9 @@
 # wengwengweng
 
 == DOING
-- framebuffers not rendering
 - ui
 - ecs example
+- framebuffer upside down
 - macro for simple systems
 - more accurate timestep
 - split core, ui, ecs, addons to workspaces
@@ -63,6 +63,7 @@
 - mouse inputs
 - ecs
 - ui custom theme
+- framebuffers not rendering
 
 == ADVENTURE
 - wasm

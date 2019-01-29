@@ -515,15 +515,15 @@ impl Framebuffer {
 
 		unsafe {
 
+			gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
+
 			gl::FramebufferTexture2D(
 				gl::FRAMEBUFFER,
 				gl::COLOR_ATTACHMENT0,
 				gl::TEXTURE_2D,
 				tex.id,
-				0,
+				0
 			);
-
-			gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
 
 		}
 
