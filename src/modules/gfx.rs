@@ -149,7 +149,6 @@ pub fn reset() {
 
 	let gfx_mut = ctx_get_mut();
 
-
 	gfx_mut.state = State::default();
 
 }
@@ -220,13 +219,8 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 /// render a canvas
 pub fn render(c: &Canvas) {
-	push();
-// 	translate(t.pos);
-// 	rotate(t.rot);
-	translate(vec2!(c.width, c.height) * 0.5);
-	scale(vec2!(1, -1));
 	draw(&c.tex, rect!(0, 0, 1, 1));
-	pop();
+
 }
 
 /// draw text
@@ -433,6 +427,9 @@ pub fn set_matrix(m: Mat4) {
 pub fn drawon(c: &Canvas) {
 
 	let gfx = ctx_get_mut();
+	let (width, height) = window::size();
+
+	gfx.projection = Mat4::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
 
 	if gfx.current_canvas.is_none() {
 
@@ -456,9 +453,14 @@ pub fn stop_drawon(c: &Canvas) {
 	if let Some(current) = &gfx.current_canvas {
 
 		if current == c {
+
+			let (width, height) = window::size();
+
+			gfx.projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 			flush();
 			gl::unset_framebuffer(&*c.handle);
 			gfx.current_canvas = None;
+
 		} else {
 			panic!("this is not the active canvas");
 		}
