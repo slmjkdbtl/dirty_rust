@@ -220,7 +220,13 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 /// render a canvas
 pub fn render(c: &Canvas) {
+	push();
+// 	translate(t.pos);
+// 	rotate(t.rot);
+	translate(vec2!(c.width, c.height) * 0.5);
+	scale(vec2!(1, -1));
 	draw(&c.tex, rect!(0, 0, 1, 1));
+	pop();
 }
 
 /// draw text
