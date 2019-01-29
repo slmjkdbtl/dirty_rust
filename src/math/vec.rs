@@ -190,6 +190,16 @@ impl Vec2 {
 
 impl Color {
 
+	pub fn from_hex(hex: u32, opacity: f32) -> Self {
+
+		let r = (hex >> 16) as f32 / 255.0;
+		let g = ((hex >> 8) & 0xff) as f32 / 255.0;
+		let b = (hex & 0xff) as f32 / 255.0;
+
+		return color!(r, g, b, opacity);
+
+	}
+
 	pub fn to_rgba(&self) -> [u8; 4] {
 
 		let r = (self.r * 255.0) as u8;

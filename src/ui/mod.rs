@@ -14,12 +14,14 @@ mod widget;
 mod canvas;
 mod button;
 mod text_box;
+mod theme;
 mod utils;
 
 pub use widget::*;
 pub use canvas::*;
 pub use button::*;
 pub use text_box::*;
+pub use theme::*;
 
 const BAR_HEIGHT: u32 = 42;
 const CORNER: f32 = 1.4;
@@ -31,7 +33,9 @@ struct UICtx {
 	windows: BTreeMap<Id, Window>,
 	id_generator: IdGenerator,
 	active_window: Option<Id>,
+	dragging_window: Option<Id>,
 	buffer: gfx::Canvas,
+	theme: Theme,
 
 }
 
@@ -45,10 +49,16 @@ pub fn init() {
 		windows: BTreeMap::new(),
 		id_generator: IdGenerator::new(),
 		active_window: None,
+		dragging_window: None,
 		buffer: gfx::Canvas::new(width, height),
+		theme: Theme::default(),
 
 	});
 
+}
+
+pub fn set_theme(t: Theme) {
+	ctx_get_mut().theme = t;
 }
 
 enum WindowState {
@@ -103,11 +113,12 @@ pub fn draw() {
 	gfx::push();
 	gfx::reset();
 
-	for (_, w) in &mut ctx_mut.windows {
-
+	for (_, w) in ctx_mut.windows.iter_mut().rev() {
 		update_window(w);
-		draw_window(w);
+	}
 
+	for (_, w) in &ctx_mut.windows {
+		draw_window(w);
 	}
 
 	gfx::pop();
@@ -116,34 +127,47 @@ pub fn draw() {
 
 fn update_window(w: &mut Window) {
 
+	let ctx = ctx_get();
 	let mpos = window::mouse_pos();
 
-	if window::mouse_pressed(Mouse::Left) {
+	if ctx.dragging_window.is_none() {
 
-		if col::point_rect(mpos, rect!(w.pos.x, w.pos.y, w.width, BAR_HEIGHT)) {
+		if window::mouse_pressed(Mouse::Left) {
 
-			let ctx_mut = ctx_get_mut();
-			let id = w.id.expect("oh no");
+			if col::point_rect(mpos, rect!(w.pos.x, w.pos.y, w.width, BAR_HEIGHT)) {
 
-			w.state = WindowState::Dragged(mpos - w.pos);
-			ctx_mut.active_window = Some(id);
-			add(remove(id).expect("oh no"));
+				let ctx_mut = ctx_get_mut();
+				let id = w.id.expect("oh no");
+
+				w.state = WindowState::Dragged(mpos - w.pos);
+				ctx_mut.active_window = Some(id);
+				ctx_mut.dragging_window = Some(id);
+				add(remove(id).expect("oh no"));
+
+			}
 
 		}
 
-	}
+	} else {
 
-	if let WindowState::Dragged(pos) = w.state {
+		if let WindowState::Dragged(pos) = w.state {
 
-		let mut still_dragged = true;
+			let mut still_dragged = true;
 
-		if window::mouse_released(Mouse::Left) {
-			still_dragged = false;
-			w.state = WindowState::Idle;
-		}
+			if window::mouse_released(Mouse::Left) {
 
-		if still_dragged {
-			w.pos = mpos - pos;
+				let ctx_mut = ctx_get_mut();
+
+				still_dragged = false;
+				ctx_mut.dragging_window = None;
+				w.state = WindowState::Idle;
+
+			}
+
+			if still_dragged {
+				w.pos = mpos - pos;
+			}
+
 		}
 
 	}
@@ -157,22 +181,24 @@ fn update_window(w: &mut Window) {
 fn draw_window(w: &Window) {
 
 	let ctx = ctx_get();
+	let theme = &ctx.theme;
 
+// 	gfx::drawon(&w.buffer);
 	gfx::push();
 
 		gfx::translate(w.pos);
 
 		// draw background
-		gfx::color(color!(0, 0.35, 0.35, 1));
+		gfx::color(theme.back);
 		gfx::rect(vec2!(w.width, w.height));
 
 		// draw headbar
-		gfx::color(color!(0, 0.51, 0.51, 1));
+		gfx::color(theme.bar);
 		gfx::rect(vec2!(w.width, BAR_HEIGHT));
 
 		// draw outlines
 		gfx::line_width(3);
-		gfx::color(color!(0.02, 0.18, 0.18, 1));
+		gfx::color(theme.line);
 		gfx::poly(&utils::rounded_rect(w.width, w.height, CORNER));
 		gfx::line(vec2!(0, BAR_HEIGHT), vec2!(w.width, BAR_HEIGHT));
 
@@ -181,12 +207,12 @@ fn draw_window(w: &Window) {
 
 			if let Some(id) = ctx.active_window {
 				if id == w.id.expect("oh no") {
-					gfx::color(color!(1));
+					gfx::color(theme.text_active);
 				} else {
-					gfx::color(color!(0.56, 0.76, 0.76, 1));
+					gfx::color(theme.text_passive);
 				}
 			} else {
-				gfx::color(color!(0.56, 0.76, 0.76, 1));
+				gfx::color(theme.text_passive);
 			}
 
 			gfx::translate(vec2!(14, 5));
@@ -199,6 +225,7 @@ fn draw_window(w: &Window) {
 		gfx::push();
 
 			gfx::translate(vec2!(0, BAR_HEIGHT));
+			gfx::translate(vec2!(2, 3));
 
 			for widget in &w.widgets {
 				widget.draw();
@@ -207,6 +234,8 @@ fn draw_window(w: &Window) {
 		gfx::pop();
 
 	gfx::pop();
+// 	gfx::stop_drawon(&w.buffer);
+// 	gfx::render(&w.buffer);
 
 }
 

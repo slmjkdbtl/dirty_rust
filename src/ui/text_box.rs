@@ -26,8 +26,11 @@ impl Widget for TextBox {
 
 	fn draw(&self) {
 
+		let theme = ctx_get().theme;
+
 		gfx::push();
 		gfx::translate(vec2!(14, 12));
+		gfx::color(theme.text_passive);
 
 		for l in &self.lines {
 			gfx::text(&l);
@@ -39,6 +42,4 @@ impl Widget for TextBox {
 	}
 
 }
-
-
 

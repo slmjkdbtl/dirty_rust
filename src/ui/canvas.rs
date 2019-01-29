@@ -1,7 +1,6 @@
 // wengwengweng
 
 use super::*;
-use crate::*;
 
 /// canvas for drawing custom stuff
 pub struct Canvas {
@@ -14,6 +13,10 @@ impl Canvas {
 		return Self {
 			handle: gfx::Canvas::new(w, h),
 		};
+	}
+
+	pub fn from_window(w: &Window) -> Self {
+		return Self::new(w.width - 4, w.height - BAR_HEIGHT - 5);
 	}
 
 	pub fn set<F: FnMut()>(&self, mut f: F) {
