@@ -19,21 +19,21 @@ macro_rules! ctx {
 		}
 
 		#[allow(dead_code)]
-		fn ctx_get() -> &'static $type {
+		pub(self) fn ctx_get() -> &'static $type {
 			unsafe {
 				return $state.as_ref().expect(&format!("{} not initialized", stringify!($state).to_lowercase()));
 			}
 		}
 
 		#[allow(dead_code)]
-		fn ctx_get_mut() -> &'static mut $type {
+		pub(self) fn ctx_get_mut() -> &'static mut $type {
 			unsafe {
 				return $state.as_mut().expect(&format!("{} not initialized", stringify!($state).to_lowercase()));
 			}
 		}
 
 		#[allow(dead_code)]
-		fn ctx_ok() -> bool {
+		pub(self) fn ctx_ok() -> bool {
 			unsafe {
 				return $state.is_some();
 			}

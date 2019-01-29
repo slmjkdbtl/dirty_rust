@@ -58,8 +58,6 @@ pub fn init(title: &str, width: u32, height: u32) {
 		video.gl_get_proc_address(name) as *const std::os::raw::c_void
 	});
 
-	video.gl_set_swap_interval(SwapInterval::VSync).expect("vsync failed");
-
 	ctx_init(WindowCtx {
 
 		events: sdl_ctx.event_pump().expect("failed to create event pump"),

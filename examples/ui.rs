@@ -14,7 +14,7 @@ fn main() {
 
 	let mut log = ui::Window::new("log", vec2!(48, 48), 240, 320);
 	let mut game = ui::Window::new("game", vec2!(200, 160), 640, 480);
-	let canvas = ui::Canvas::new(640, 436);
+	let canvas = ui::Canvas::from_window(&game);
 	let mut text_box = ui::TextBox::new();
 
 	canvas.set(|| {

@@ -12,6 +12,9 @@
 - custom shaders
 - metal backend
 - add error sound
+- ui lazy redraw
+- ui custom theme
+- ui prevent clicking through
 - keep aspect ratio in fullscreen
 - editor
 - lua bindings
