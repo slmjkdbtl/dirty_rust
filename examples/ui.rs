@@ -14,8 +14,17 @@ fn main() {
 
 	let mut log = ui::Window::new("log", vec2!(48, 48), 240, 320);
 	let mut game = ui::Window::new("game", vec2!(200, 160), 640, 480);
+	let canvas = ui::Canvas::new(640, 436);
 	let mut text_box = ui::TextBox::new();
-	let canvas = ui::Canvas::new(&game);
+
+	canvas.set(|| {
+
+		gfx::push();
+		gfx::color(color!(1));
+		gfx::rect(vec2!(100));
+		gfx::pop();
+
+	});
 
 	text_box.write("yo");
 	text_box.write("hello");

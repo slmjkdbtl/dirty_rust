@@ -447,7 +447,7 @@ impl Texture {
 			return Vec::new();
 		} else {
 
-			let mut data: Vec<u8> = Vec::with_capacity(size);
+			let mut pixels = vec![0.0 as u8; (self.width * self.height * 4) as usize];
 
 			self.bind();
 
@@ -458,14 +458,14 @@ impl Texture {
 					0,
 					gl::RGBA,
 					gl::UNSIGNED_BYTE,
-					data.as_mut_ptr() as *mut GLvoid,
+					pixels.as_mut_ptr() as *mut GLvoid,
 				);
 
 			}
 
 			self.unbind();
 
-			return data;
+			return pixels;
 
 		}
 

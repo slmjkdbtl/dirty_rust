@@ -47,7 +47,8 @@ fn main() {
 			index = anims["run"].from;
 		}
 
-// 		gfx::drawon(&canvas);
+		gfx::drawon(&canvas);
+		gfx::clear();
 
 		gfx::push();
 		gfx::translate(vec2!(12));
@@ -67,8 +68,8 @@ fn main() {
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
-// 		gfx::stop_drawon(&canvas);
-// 		gfx::render(&canvas);
+		gfx::stop_drawon(&canvas);
+		gfx::render(&canvas);
 
 		if col::point_poly(window::mouse_pos(), &pts) {
 

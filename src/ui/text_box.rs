@@ -27,6 +27,7 @@ impl Widget for TextBox {
 	fn draw(&self) {
 
 		gfx::push();
+		gfx::translate(vec2!(14, 12));
 
 		for l in &self.lines {
 			gfx::text(&l);
@@ -35,10 +36,6 @@ impl Widget for TextBox {
 
 		gfx::pop();
 
-	}
-
-	fn get_type(&self) -> WidgetType {
-		return WidgetType::Normal;
 	}
 
 }

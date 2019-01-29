@@ -12,10 +12,13 @@ use crate::utils::id::*;
 
 mod widget;
 mod canvas;
+mod button;
 mod text_box;
+mod utils;
 
 pub use widget::*;
 pub use canvas::*;
+pub use button::*;
 pub use text_box::*;
 
 const BAR_HEIGHT: u32 = 42;
@@ -24,18 +27,26 @@ const CORNER: f32 = 1.4;
 ctx!(UI: UICtx);
 
 struct UICtx {
+
 	windows: BTreeMap<Id, Window>,
 	id_generator: IdGenerator,
 	active_window: Option<Id>,
+	buffer: gfx::Canvas,
+
 }
 
 /// initialize ui module
 pub fn init() {
 
+	let (width, height) = window::size();
+
 	ctx_init(UICtx {
+
 		windows: BTreeMap::new(),
 		id_generator: IdGenerator::new(),
 		active_window: None,
+		buffer: gfx::Canvas::new(width, height),
+
 	});
 
 }
@@ -55,6 +66,7 @@ pub struct Window {
 	state: WindowState,
 	widgets: Vec<Box<Widget>>,
 	id: Option<Id>,
+	buffer: gfx::Canvas,
 
 }
 
@@ -71,6 +83,7 @@ impl Window {
 			state: WindowState::Idle,
 			widgets: Vec::new(),
 			id: None,
+			buffer: gfx::Canvas::new(width, height),
 
 		};
 
@@ -146,71 +159,52 @@ fn draw_window(w: &Window) {
 	let ctx = ctx_get();
 
 	gfx::push();
-	gfx::translate(w.pos);
 
-	// draw background
-	gfx::color(color!(0, 0.35, 0.35, 1));
-	gfx::rect(vec2!(w.width, w.height));
+		gfx::translate(w.pos);
 
-	// draw headbar
-	gfx::color(color!(0, 0.51, 0.51, 1));
-	gfx::rect(vec2!(w.width, BAR_HEIGHT));
+		// draw background
+		gfx::color(color!(0, 0.35, 0.35, 1));
+		gfx::rect(vec2!(w.width, w.height));
 
-	// draw outlines
-	gfx::line_width(3);
-	gfx::color(color!(0.02, 0.18, 0.18, 1));
+		// draw headbar
+		gfx::color(color!(0, 0.51, 0.51, 1));
+		gfx::rect(vec2!(w.width, BAR_HEIGHT));
 
-	let pts = [
-		vec2!(0.0 + CORNER, 0.0 - CORNER),
-		vec2!(w.width as f32 - CORNER, 0.0 - CORNER),
-		vec2!(w.width as f32 + CORNER, 0.0 + CORNER),
-		vec2!(w.width as f32 + CORNER, w.height as f32 - CORNER),
-		vec2!(w.width as f32 - CORNER, w.height as f32 + CORNER),
-		vec2!(0.0 + CORNER, w.height as f32 + CORNER),
-		vec2!(0.0 - CORNER, w.height as f32 - CORNER),
-		vec2!(0.0 - CORNER, 0.0 + CORNER),
-	];
+		// draw outlines
+		gfx::line_width(3);
+		gfx::color(color!(0.02, 0.18, 0.18, 1));
+		gfx::poly(&utils::rounded_rect(w.width, w.height, CORNER));
+		gfx::line(vec2!(0, BAR_HEIGHT), vec2!(w.width, BAR_HEIGHT));
 
-	gfx::poly(&pts);
-
-	gfx::line(vec2!(0, BAR_HEIGHT), vec2!(w.width, BAR_HEIGHT));
-
-	// draw title
-	gfx::push();
-
-	if let Some(id) = ctx.active_window {
-		if id == w.id.expect("oh no") {
-			gfx::color(color!(1));
-		} else {
-			gfx::color(color!(0.56, 0.76, 0.76, 1));
-		}
-	} else {
-		gfx::color(color!(0.56, 0.76, 0.76, 1));
-	}
-
-	gfx::translate(vec2!(14, 5));
-	gfx::scale(vec2!(2));
-	gfx::text(&w.title);
-	gfx::pop();
-
-	// draw widgets
-	gfx::push();
-	gfx::translate(vec2!(0, BAR_HEIGHT));
-
-	for widget in &w.widgets {
-
+		// draw title
 		gfx::push();
 
-		if let WidgetType::Normal = widget.get_type() {
-			gfx::translate(vec2!(14, 12));
-		}
+			if let Some(id) = ctx.active_window {
+				if id == w.id.expect("oh no") {
+					gfx::color(color!(1));
+				} else {
+					gfx::color(color!(0.56, 0.76, 0.76, 1));
+				}
+			} else {
+				gfx::color(color!(0.56, 0.76, 0.76, 1));
+			}
 
-		widget.draw();
+			gfx::translate(vec2!(14, 5));
+			gfx::scale(vec2!(2));
+			gfx::text(&w.title);
+
 		gfx::pop();
 
-	}
+		// draw widgets
+		gfx::push();
 
-	gfx::pop();
+			gfx::translate(vec2!(0, BAR_HEIGHT));
+
+			for widget in &w.widgets {
+				widget.draw();
+			}
+
+		gfx::pop();
 
 	gfx::pop();
 
