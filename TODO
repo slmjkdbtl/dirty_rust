@@ -21,8 +21,10 @@
 - particle system
 - async resource loading
 - vector swizzle fields
+- ui proc macro generate window based on struct
 - try gfx-hal
 - use glutin when girls supports macos
+- ecs support reverse entity iter
 - 3d
 - more customizable vec gens
 
