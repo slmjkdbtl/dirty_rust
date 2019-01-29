@@ -1,11 +1,11 @@
 # wengwengweng
 
 == DOING
-- ecs example
+- framebuffers
 - ui
+- ecs example
 - macro for simple systems
 - more accurate timestep
-- framebuffers
 - split core, ui, ecs, addons to workspaces
 
 == TO DO
@@ -20,7 +20,7 @@
 - try gfx-hal
 - use glutin when girls supports macos
 - 3d
-- better vec gens
+- more customizable vec gens
 
 == DONE
 - basic window creation
