@@ -1,7 +1,7 @@
 # wengwengweng
 
 == DOING
-- framebuffers
+- framebuffers not rendering
 - ui
 - ecs example
 - macro for simple systems
@@ -12,6 +12,7 @@
 - custom shaders
 - metal backend
 - add error sound
+- keep aspect ratio in fullscreen
 - editor
 - lua bindings
 - particle system

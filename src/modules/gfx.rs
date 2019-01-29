@@ -222,6 +222,11 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 }
 
+/// render a canvas
+pub fn render(c: &Canvas) {
+	draw(&c.tex, rect!(0, 0, 1, 1));
+}
+
 /// draw text
 pub fn text(s: &str) {
 
@@ -420,11 +425,6 @@ pub fn get_matrix() -> Mat4 {
 /// get the current transform matrix
 pub fn set_matrix(m: Mat4) {
 	ctx_get_mut().state.transform = m;
-}
-
-/// render a canvas
-pub fn render(c: &Canvas) {
-	draw(&c.tex, rect!(0, 0, 1, 1));
 }
 
 /// set active canvas

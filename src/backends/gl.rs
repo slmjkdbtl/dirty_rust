@@ -527,6 +527,7 @@ impl Framebuffer {
 
 		}
 
+		clear(true, true, true);
 		self.unbind();
 
 		return self;
