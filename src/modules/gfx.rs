@@ -21,12 +21,8 @@ const MAX_INDICES: usize = MAX_DRAWS * INDEX_COUNT;
 
 const MAX_STATE_STACK: usize = 64;
 
-const DEFAULT_VERT_SHADER: &str = include_str!("../shaders/quad.vert");
-const DEFAULT_FRAG_SHADER: &str = include_str!("../shaders/quad.frag");
-const DEFAULT_FONT: &[u8] = include_bytes!("../res/CP437.png");
-const DEFAULT_FONT_COLS: usize = 32;
-const DEFAULT_FONT_ROWS: usize = 8;
-const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
+include!("../res/default_shader.rs");
+include!("../res/default_font.rs");
 
 // context
 ctx!(GFX: GfxCtx);
@@ -45,10 +41,13 @@ struct GfxCtx {
 	current_canvas: Option<Canvas>,
 	vertex_queue: Vec<f32>,
 	draw_count: usize,
+	ibuf_test: gl::IndexBuffer,
+	vbuf_test: gl::VertexBuffer,
+	program_test: gl::Program,
 
 }
 
-pub(crate) fn init() {
+pub(super) fn init() {
 
 	let indices: Vec<u32> = INDEX_ARRAY
 		.iter()
@@ -91,6 +90,40 @@ pub(crate) fn init() {
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
+	let verts_test = [
+		0.0, 1.0, 0.0, 1.0,
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 0.0
+	];
+
+	let indices_test: [u32; 6] = [
+		0, 1, 3,
+		1, 2, 3,
+	];
+
+	let vbuf_test = gl::VertexBuffer::new(16, 4, gl::BufferUsage::Static);
+	vbuf_test.data(&verts_test, 0);
+
+	vbuf_test
+		.attr(3, 2, 0)
+		.attr(4, 2, 2);
+
+	let ibuf_test = gl::IndexBuffer::new(6, gl::BufferUsage::Static);
+
+	ibuf_test
+		.data(&indices_test, 0);
+
+	let program_test = gl::Program::new(
+		include_str!("../res/test.vert"),
+		include_str!("../res/test.frag"),
+	);
+
+	program_test
+		.attr(3, "pos")
+		.attr(4, "uv")
+		.link();
+
 	ctx_init(GfxCtx {
 
 		vbuf: vbuf,
@@ -105,6 +138,9 @@ pub(crate) fn init() {
 		current_canvas: None,
 		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		draw_count: 0,
+		vbuf_test: vbuf_test,
+		ibuf_test: ibuf_test,
+		program_test: program_test,
 
 	});
 
@@ -158,7 +194,7 @@ pub fn reset() {
 
 }
 
-pub(crate) fn flush() {
+pub(super) fn flush() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
@@ -183,48 +219,60 @@ pub(crate) fn flush() {
 /// draw a texture with visible quad area
 pub fn draw(tex: &Texture, quad: Rect) {
 
-	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
-	let queue = &mut gfx_mut.vertex_queue;
-	let wrapped_tex = Some(tex.clone());
+// 	let gfx = ctx_get();
+// 	let gfx_mut = ctx_get_mut();
+// 	let queue = &mut gfx_mut.vertex_queue;
+// 	let wrapped_tex = Some(tex.clone());
 
-	if gfx.current_tex != wrapped_tex {
-		flush();
-		gfx_mut.current_tex = wrapped_tex;
-	}
+// 	if gfx.current_tex != wrapped_tex {
+// 		flush();
+// 		gfx_mut.current_tex = wrapped_tex;
+// 	}
 
-	let mut push_vertex = |pos: Vec2, uv: Vec2, color: Color| {
+// 	let mut push_vertex = |pos: Vec2, uv: Vec2, color: Color| {
 
-		if queue.len() >= MAX_VERTICES {
-			queue.clear();
-			panic!("reached maximum draw count");
-		}
+// 		if queue.len() >= MAX_VERTICES {
+// 			queue.clear();
+// 			panic!("reached maximum draw count");
+// 		}
 
-		queue.push(pos.x);
-		queue.push(pos.y);
-		queue.push(uv.x);
-		queue.push(uv.y);
-		queue.push(color.r);
-		queue.push(color.g);
-		queue.push(color.b);
-		queue.push(color.a);
+// 		queue.push(pos.x);
+// 		queue.push(pos.y);
+// 		queue.push(uv.x);
+// 		queue.push(uv.y);
+// 		queue.push(color.r);
+// 		queue.push(color.g);
+// 		queue.push(color.b);
+// 		queue.push(color.a);
 
-	};
+// 	};
 
-	let t = gfx.state.transform.scale(vec2!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h));
-	let color = gfx.state.tint;
+// 	let t = gfx.state.transform.scale(vec2!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h));
+// 	let color = gfx.state.tint;
 
-	push_vertex(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color);
-	push_vertex(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color);
-	push_vertex(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color);
-	push_vertex(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color);
-	gfx_mut.draw_count += 1;
+// 	push_vertex(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color);
+// 	push_vertex(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color);
+// 	push_vertex(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color);
+// 	push_vertex(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color);
+// 	gfx_mut.draw_count += 1;
+
+	let ctx = ctx_get();
+
+	push();
+	scale(vec2!(tex.width() as f32 * 1.0, tex.height() as f32 * 1.0));
+	ctx.program_test
+		.uniform_color("tint", color!(1))
+		.uniform_rect("quad", rect!(0, 0, 1, 1))
+		.uniform_mat4("projection", ctx.projection.as_arr())
+		.uniform_mat4("transform", ctx.state.transform.as_arr());
+	gl::draw(&ctx.vbuf_test, &ctx.ibuf_test, &ctx.program_test, &tex.handle, 6);
+	pop();
 
 }
 
 /// render a canvas
 pub fn render(c: &Canvas) {
-	draw(&c.tex, rect!(0, 0, 1, 1));
+
 }
 
 /// draw text
@@ -488,11 +536,11 @@ pub fn capture(canvas: &Canvas, fname: &str) {
 
 }
 
-pub(crate) fn begin() {
+pub(super) fn begin() {
 	clear();
 }
 
-pub(crate) fn end() {
+pub(super) fn end() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();

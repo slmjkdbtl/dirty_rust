@@ -190,7 +190,7 @@ pub fn mouse_pos() -> Vec2 {
 	return ctx_get().mouse_pos;
 }
 
-pub(crate) fn poll_events() {
+pub(super) fn poll_events() {
 
 	let window = ctx_get();
 	let window_mut = ctx_get_mut();
@@ -256,7 +256,7 @@ pub(crate) fn poll_events() {
 
 }
 
-pub(crate) fn begin() {
+pub(super) fn begin() {
 
 	match ctx_get().scale {
 		Scale::X1 => {},
@@ -270,12 +270,12 @@ pub(crate) fn begin() {
 
 }
 
-pub(crate) fn end() {
+pub(super) fn end() {
 	gfx::end();
 	swap();
 }
 
-pub(crate) fn swap() {
+pub(super) fn swap() {
 	ctx_get().window.gl_swap_window();
 }
 
