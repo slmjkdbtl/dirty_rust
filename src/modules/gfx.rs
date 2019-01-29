@@ -41,6 +41,8 @@ struct GfxCtx {
 	current_canvas: Option<Canvas>,
 	vertex_queue: Vec<f32>,
 	draw_count: usize,
+	width: u32,
+	height: u32,
 
 }
 
@@ -101,6 +103,8 @@ pub(super) fn init() {
 		current_canvas: None,
 		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		draw_count: 0,
+		width: width,
+		height: height,
 
 	});
 
@@ -427,13 +431,11 @@ pub fn set_matrix(m: Mat4) {
 pub fn drawon(c: &Canvas) {
 
 	let gfx = ctx_get_mut();
-	let (width, height) = window::size();
-
-	gfx.projection = Mat4::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
 
 	if gfx.current_canvas.is_none() {
 
 		flush();
+		gfx.projection = Mat4::ortho(0.0, (gfx.width as f32), 0.0, (gfx.height as f32), -1.0, 1.0);
 		gl::set_framebuffer(&*c.handle);
 		gfx.current_canvas = Some(c.clone());
 
@@ -454,10 +456,8 @@ pub fn stop_drawon(c: &Canvas) {
 
 		if current == c {
 
-			let (width, height) = window::size();
-
-			gfx.projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 			flush();
+			gfx.projection = Mat4::ortho(0.0, (gfx.width as f32), (gfx.height as f32), 0.0, -1.0, 1.0);
 			gl::unset_framebuffer(&*c.handle);
 			gfx.current_canvas = None;
 
