@@ -46,10 +46,26 @@ pub fn play(sound: &Sound) {
 #[derive(Clone)]
 pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
+	effect: Effect,
+}
+
+#[derive(Clone, Copy)]
+struct Effect {
 	speed: f32,
 	volume: f32,
 	repeat: bool,
 	fadein: u64,
+}
+
+impl Default for Effect {
+	fn default() -> Self {
+		return Self {
+			speed: 1.0,
+			volume: 1.0,
+			repeat: false,
+			fadein: 0,
+		};
+	}
 }
 
 impl Sound {
@@ -62,10 +78,7 @@ impl Sound {
 
 		return Self {
 			buffer: source.buffered(),
-			speed: 1.0,
-			volume: 1.0,
-			repeat: false,
-			fadein: 0,
+			effect: Effect::default(),
 		};
 
 	}
@@ -79,8 +92,11 @@ impl Sound {
 	pub fn speed(&self, s: f32) -> Self {
 		assert!(s > 0.0 && s <= 2.0, "invalid speed");
 		return Self {
-			speed: s,
-			.. self.clone()
+			effect: Effect {
+				speed: s,
+				.. self.effect
+			},
+			buffer: self.buffer.clone(),
 		}
 	}
 
@@ -88,24 +104,33 @@ impl Sound {
 	pub fn volume(&self, v: f32) -> Self {
 		assert!(v >= 0.0 && v <= 2.0, "invalid volume");
 		return Self {
-			volume: v,
-			.. self.clone()
+			effect: Effect {
+				volume: v,
+				.. self.effect
+			},
+			buffer: self.buffer.clone(),
 		}
 	}
 
 	/// return a new sound that would repeat infinitely
 	pub fn repeat(&self) -> Self {
 		return Self {
-			repeat: true,
-			.. self.clone()
+			effect: Effect {
+				repeat: true,
+				.. self.effect
+			},
+			buffer: self.buffer.clone(),
 		}
 	}
 
 	/// return a new sound with given fadein time
 	pub fn fadein(&self, time: u64) -> Self {
 		return Self {
-			fadein: time,
-			.. self.clone()
+			effect: Effect {
+				fadein: time,
+				.. self.effect
+			},
+			buffer: self.buffer.clone(),
 		}
 	}
 
@@ -113,26 +138,27 @@ impl Sound {
 
 		type S = dyn Source<Item = i16> + Send;
 		let s = Box::new(self.buffer.clone());
+		let effect = self.effect;
 
-		let s: Box<S> = if self.speed != 0.0 {
-			Box::new(s.speed(self.speed))
+		let s: Box<S> = if effect.speed != 0.0 {
+			Box::new(s.speed(effect.speed))
 		} else {
 			s
 		};
 
-		let s: Box<S> = if self.volume != 0.0 {
-			Box::new(s.amplify(self.volume))
+		let s: Box<S> = if effect.volume != 0.0 {
+			Box::new(s.amplify(effect.volume))
 		} else {
 			s
 		};
 
-		let s: Box<S> = if self.fadein != 0 {
-			Box::new(s.fade_in(Duration::from_millis(self.fadein)))
+		let s: Box<S> = if effect.fadein != 0 {
+			Box::new(s.fade_in(Duration::from_millis(effect.fadein)))
 		} else {
 			s
 		};
 
-		let s: Box<S> = if self.repeat {
+		let s: Box<S> = if effect.repeat {
 			Box::new(s.repeat_infinite())
 		} else {
 			s
