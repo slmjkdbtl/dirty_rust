@@ -8,8 +8,6 @@ fn main() {
 	window::init("yo", 1280, 720);
 	ui::init();
 
-// 	window::set_fullscreen(true);
-
 	let (width, height) = window::size();
 
 	let mut log = ui::Window::new("log", vec2!(48, 48), 240, 320);

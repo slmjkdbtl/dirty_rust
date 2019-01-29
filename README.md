@@ -1,5 +1,5 @@
 # DIRTY
-simple toolkit for creating game-like experiences
+personal toolkit for creating game-like experiences
 
 ### usage
 add to `Cargo.toml`
@@ -119,4 +119,12 @@ more under `examples/`
 - currently no proper error handling (a lot of internal panics, but with pretty error screen)
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
 - planning on adding scripting support
+
+### faq
+- Why should I just this over ggez or amethyst?
+> You should not. This is my personal toolkit, not intented to compete or relate to any other libs.
+- Is it fast?
+> Fast enough, not crazy fast. 2D sprite batching is done by default, no other notable performance tricks.
+- Pineapple on pizza?
+> Yes.
 
