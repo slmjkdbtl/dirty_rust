@@ -1,4 +1,6 @@
-# DIRTY
+![icon](icon.png)
+
+## DIRTY
 personal toolkit for creating game-like experiences
 
 ### usage
