@@ -25,6 +25,8 @@ fn main() {
 	// play a music repeatedly
 	let music = audio::track(&res::sound("yo").repeat());
 
+	let shader = gfx::Shader::from_code(include_str!("assets/noise.frag"));
+
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
 	let frames = &sprite.frames;

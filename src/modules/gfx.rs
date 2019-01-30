@@ -31,7 +31,8 @@ struct GfxCtx {
 
 	ibuf: gl::IndexBuffer,
 	vbuf: gl::VertexBuffer,
-	program: gl::Program,
+	default_shader: Shader,
+	current_shader: Option<Shader>,
 	empty_tex: Texture,
 	projection: Mat4,
 	state: State,
@@ -41,8 +42,6 @@ struct GfxCtx {
 	current_canvas: Option<Canvas>,
 	vertex_queue: Vec<f32>,
 	draw_count: usize,
-	width: u32,
-	height: u32,
 
 }
 
@@ -68,17 +67,9 @@ pub(super) fn init() {
 	ibuf
 		.data(&indices, 0);
 
-	let program = gl::Program::new(
-		DEFAULT_VERT_SHADER,
-		DEFAULT_FRAG_SHADER,
-	);
+	let default_shader = Shader::from_code(DEFAULT_FRAG_SHADER);
 
-	program
-		.attr(0, "pos")
-		.attr(1, "uv")
-		.attr(2, "color")
-		.link()
-		.bind();
+	default_shader.bind();
 
 	let default_font = Font::new(
 		Texture::from_bytes(DEFAULT_FONT),
@@ -94,7 +85,8 @@ pub(super) fn init() {
 
 		vbuf: vbuf,
 		ibuf: ibuf,
-		program: program,
+		default_shader: default_shader.clone(),
+		current_shader: Some(default_shader),
 		empty_tex: Texture::from_color(color!(1), 1, 1),
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
@@ -104,8 +96,6 @@ pub(super) fn init() {
 		current_canvas: None,
 		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		draw_count: 0,
-		width: width,
-		height: height,
 
 	});
 
@@ -169,9 +159,11 @@ pub(super) fn flush() {
 
 	if let Some(tex) = &gfx.current_tex {
 
-		gfx.program.uniform_mat4("projection", gfx.projection.as_arr());
+		let shader = gfx.current_shader.as_ref().expect("no shader attached");
+
+		shader.send_mat4("projection", gfx.projection);
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		gl::draw(&gfx.vbuf, &gfx.ibuf, &gfx.program, &tex.handle, gfx.draw_count * INDEX_COUNT);
+		gl::draw(&gfx.vbuf, &gfx.ibuf, &shader.program, &tex.handle, gfx.draw_count * INDEX_COUNT);
 		gfx_mut.vertex_queue.clear();
 		gfx_mut.current_tex = None;
 		gfx_mut.draw_count = 0;
@@ -434,19 +426,14 @@ pub fn set_matrix(m: Mat4) {
 pub fn drawon(c: &Canvas) {
 
 	let gfx = ctx_get_mut();
+	let (width, height) = window::size();
 
-	if gfx.current_canvas.is_none() {
+	assert!(gfx.current_canvas.is_none(), "cannot draw on canvas while another canvas is active");
 
-		flush();
-		gfx.projection = Mat4::ortho(0.0, (gfx.width as f32), 0.0, (gfx.height as f32), -1.0, 1.0);
-		gl::set_framebuffer(&*c.handle);
-		gfx.current_canvas = Some(c.clone());
-
-	} else {
-
-		panic!("cannot draw on canvas while another canvas is active");
-
-	}
+	flush();
+	gfx.projection = Mat4::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
+	gl::set_framebuffer(&*c.handle);
+	gfx.current_canvas = Some(c.clone());
 
 }
 
@@ -454,19 +441,16 @@ pub fn drawon(c: &Canvas) {
 pub fn stop_drawon(c: &Canvas) {
 
 	let gfx = ctx_get_mut();
+	let (width, height) = window::size();
 
 	if let Some(current) = &gfx.current_canvas {
 
-		if current == c {
+		assert!(current == c, "this is not the active canvas");
 
-			flush();
-			gfx.projection = Mat4::ortho(0.0, (gfx.width as f32), (gfx.height as f32), 0.0, -1.0, 1.0);
-			gl::unset_framebuffer(&*c.handle);
-			gfx.current_canvas = None;
-
-		} else {
-			panic!("this is not the active canvas");
-		}
+		flush();
+		gfx.projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+		gl::unset_framebuffer(&*c.handle);
+		gfx.current_canvas = None;
 
 	} else {
 		panic!("no canvas active");
@@ -593,8 +577,8 @@ impl Font {
 		let mut map = HashMap::new();
 		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
 
-		assert_eq!(tex.width() % cols as u32, 0, "font size not right");
-		assert_eq!(tex.height() % rows as u32, 0, "font size not right");
+		assert!(tex.width() % cols as u32 == 0, "font size not right");
+		assert!(tex.height() % rows as u32 == 0, "font size not right");
 
 		for (i, ch) in chars.chars().enumerate() {
 
@@ -650,6 +634,100 @@ impl Canvas {
 			height: height,
 		}
 
+	}
+
+}
+
+pub fn effect(s: &Shader) {
+
+	let gfx_mut = ctx_get_mut();
+
+	flush();
+	gfx_mut.current_shader = Some(s.clone());
+
+}
+
+pub fn stop_effect(s: &Shader) {
+
+	let gfx = ctx_get_mut();
+	let (width, height) = window::size();
+
+	if let Some(current) = &gfx.current_shader {
+
+		assert!(current == s, "this is not the active shader effect");
+
+		flush();
+		effect(&ctx_get().default_shader);
+
+	} else {
+		panic!("no active shader effect active");
+	}
+
+}
+
+/// shader effect
+#[derive(PartialEq, Clone)]
+pub struct Shader {
+	program: Rc<gl::Program>,
+}
+
+impl Shader {
+
+	pub fn from_code(code: &str) -> Self {
+
+		let program = gl::Program::new(
+			DEFAULT_VERT_SHADER,
+			code,
+		);
+
+		program
+			.attr(0, "pos")
+			.attr(1, "uv")
+			.attr(2, "color")
+			.link();
+
+		return Self {
+			program: Rc::new(program),
+		};
+
+	}
+
+	pub fn from_file(fname: &str) -> Self {
+		return Self::from_code(&fs::read_str(fname));
+	}
+
+	pub fn send_color(&self, name: &str, c: Color) -> &Self {
+		self.program.uniform_color(name, c);
+		return self;
+	}
+
+	pub fn send_rect(&self, name: &str, r: Rect) -> &Self {
+		self.program.uniform_rect(name, r);
+		return self;
+	}
+
+	pub fn send_vec2(&self, name: &str, v: Vec2) -> &Self {
+		self.program.uniform_vec2(name, v);
+		return self;
+	}
+
+	pub fn send_vec3(&self, name: &str, v: Vec3) -> &Self {
+		self.program.uniform_vec3(name, v);
+		return self;
+	}
+
+	pub fn send_vec4(&self, name: &str, v: Vec4) -> &Self {
+		self.program.uniform_vec4(name, v);
+		return self;
+	}
+
+	pub fn send_mat4(&self, name: &str, v: Mat4) -> &Self {
+		self.program.uniform_mat4(name, v.as_arr());
+		return self;
+	}
+
+	fn bind(&self) {
+		self.program.bind();
 	}
 
 }

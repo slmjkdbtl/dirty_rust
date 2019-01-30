@@ -643,6 +643,41 @@ impl Program {
 		return self.uniform_vec4(name, vec4!(r.x, r.y, r.w, r.h));
 	}
 
+	pub fn uniform_vec2(
+		&self,
+		name: &str,
+		v: Vec2) -> &Self {
+
+		unsafe {
+			gl::Uniform2f(
+				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
+				v.x,
+				v.y,
+			);
+		}
+
+		return self;
+
+	}
+
+	pub fn uniform_vec3(
+		&self,
+		name: &str,
+		v: Vec3) -> &Self {
+
+		unsafe {
+			gl::Uniform3f(
+				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
+				v.x,
+				v.y,
+				v.z,
+			);
+		}
+
+		return self;
+
+	}
+
 	pub fn uniform_vec4(
 		&self,
 		name: &str,

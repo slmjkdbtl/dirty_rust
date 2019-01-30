@@ -155,6 +155,10 @@ pub fn size() -> (u32, u32) {
 
 }
 
+// pub fn pressed_keys() -> Vec<Scancode> {
+	// ...
+// }
+
 /// check if a key was pressed this frame
 pub fn key_pressed(k: Scancode) -> bool {
 	return check_key_state(k, ButtonState::Pressed);
