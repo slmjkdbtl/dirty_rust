@@ -31,16 +31,17 @@ struct GfxCtx {
 
 	ibuf: gl::IndexBuffer,
 	vbuf: gl::VertexBuffer,
-	default_shader: Shader,
-	current_shader: Option<Shader>,
-	empty_tex: Texture,
+	vertex_queue: Vec<f32>,
 	projection: Mat4,
 	state: State,
 	state_stack: Vec<State>,
+	default_shader: Shader,
+	current_shader: Shader,
 	default_font: Font,
+	current_font: Font,
+	empty_tex: Texture,
 	current_tex: Option<Texture>,
 	current_canvas: Option<Canvas>,
-	vertex_queue: Vec<f32>,
 	draw_count: usize,
 
 }
@@ -85,16 +86,17 @@ pub(super) fn init() {
 
 		vbuf: vbuf,
 		ibuf: ibuf,
-		default_shader: default_shader.clone(),
-		current_shader: Some(default_shader),
-		empty_tex: Texture::from_color(color!(1), 1, 1),
+		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
-		default_font: default_font,
+		default_shader: default_shader.clone(),
+		current_shader: default_shader,
+		default_font: default_font.clone(),
+		current_font: default_font,
+		empty_tex: Texture::from_color(color!(1), 1, 1),
 		current_tex: None,
 		current_canvas: None,
-		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		draw_count: 0,
 
 	});
@@ -159,7 +161,7 @@ pub(super) fn flush() {
 
 	if let Some(tex) = &gfx.current_tex {
 
-		let shader = gfx.current_shader.as_ref().expect("no shader attached");
+		let shader = &gfx.current_shader;
 
 		shader.send_mat4("projection", gfx.projection);
 		gfx.vbuf.data(&gfx.vertex_queue, 0);
@@ -561,6 +563,7 @@ impl Texture {
 }
 
 /// bitmap font
+#[derive(PartialEq, Clone)]
 pub struct Font {
 
 	tex: Texture,
@@ -643,25 +646,17 @@ pub fn effect(s: &Shader) {
 	let gfx_mut = ctx_get_mut();
 
 	flush();
-	gfx_mut.current_shader = Some(s.clone());
+	gfx_mut.current_shader = s.clone();
 
 }
 
 pub fn stop_effect(s: &Shader) {
 
 	let gfx = ctx_get_mut();
-	let (width, height) = window::size();
 
-	if let Some(current) = &gfx.current_shader {
-
-		assert!(current == s, "this is not the active shader effect");
-
-		flush();
-		effect(&ctx_get().default_shader);
-
-	} else {
-		panic!("no active shader effect active");
-	}
+	assert!(gfx.current_shader == *s, "this is not the active shader effect");
+	flush();
+	effect(&ctx_get().default_shader);
 
 }
 
