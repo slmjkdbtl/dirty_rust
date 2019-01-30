@@ -20,6 +20,7 @@ struct AppCtx {
 	dt: f32,
 	time: f32,
 	debug: bool,
+	started: bool,
 
 }
 
@@ -92,6 +93,7 @@ pub fn init() {
 		dt: 0.0,
 		time: 0.0,
 		debug: false,
+		started: false,
 
 	});
 
@@ -107,6 +109,8 @@ pub fn run<F: FnMut()>(mut f: F) {
 
 	let app = ctx_get();
 	let app_mut = ctx_get_mut();
+
+	app_mut.started = true;
 
 	loop {
 
