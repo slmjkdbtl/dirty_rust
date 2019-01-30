@@ -77,7 +77,8 @@ pub(super) fn init() {
 		.attr(0, "pos")
 		.attr(1, "uv")
 		.attr(2, "color")
-		.link();
+		.link()
+		.bind();
 
 	let default_font = Font::new(
 		Texture::from_bytes(DEFAULT_FONT),
@@ -88,13 +89,14 @@ pub(super) fn init() {
 
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	let empty_tex = Texture::from_color(color!(1), 1, 1);
 
 	ctx_init(GfxCtx {
 
 		vbuf: vbuf,
 		ibuf: ibuf,
 		program: program,
-		empty_tex: Texture::from_color(color!(1), 1, 1),
+		empty_tex: empty_tex.clone(),
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
@@ -157,7 +159,7 @@ pub fn reset() {
 
 }
 
-pub(super) fn flush() {
+pub(crate) fn flush() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
@@ -188,7 +190,9 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let wrapped_tex = Some(tex.clone());
 
 	if gfx.current_tex != wrapped_tex {
-		flush();
+		if gfx.current_tex.is_some() {
+			flush();
+		}
 		gfx_mut.current_tex = wrapped_tex;
 	}
 
@@ -496,7 +500,7 @@ pub(super) fn begin() {
 	clear();
 }
 
-pub(super) fn end() {
+pub fn end() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();

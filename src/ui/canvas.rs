@@ -32,6 +32,7 @@ impl Canvas {
 impl Widget for Canvas {
 
 	fn draw(&self) {
+		gfx::color(color!(1));
 		gfx::render(&self.handle);
 	}
 

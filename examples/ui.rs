@@ -18,7 +18,7 @@ fn main() {
 	canvas.set(|| {
 
 		gfx::push();
-		gfx::color(color!(1));
+		gfx::color(color!(0, 0, 1, 1));
 		gfx::rect(vec2!(100));
 		gfx::pop();
 
