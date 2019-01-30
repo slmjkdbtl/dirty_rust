@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Simple Lua Bindings
+
 use hlua::Lua;
 
 use crate::*;
