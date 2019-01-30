@@ -3,7 +3,6 @@
 == DOING
 - ui
 - ecs example
-- framebuffer upside down
 - macro for simple systems
 - more accurate timestep
 - split core, ui, ecs, addons to workspaces
@@ -64,6 +63,7 @@
 - ecs
 - ui custom theme
 - framebuffers not rendering
+- framebuffer upside down
 
 == ADVENTURE
 - wasm

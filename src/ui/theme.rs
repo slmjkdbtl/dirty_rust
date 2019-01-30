@@ -2,6 +2,7 @@
 
 use crate::math::*;
 
+/// define styles
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
 

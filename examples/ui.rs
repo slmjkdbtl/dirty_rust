@@ -34,11 +34,7 @@ fn main() {
 	ui::add(game);
 
 	app::run(|| {
-
-		gfx::color(color!(0.6, 0.78, 0.78, 1));
-		gfx::rect(vec2!(width, height));
 		ui::draw();
-
 	});
 
 }

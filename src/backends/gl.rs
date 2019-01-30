@@ -615,7 +615,7 @@ impl Program {
 
 	}
 
-	pub fn unbind(&self) -> &Self {
+	fn unbind(&self) -> &Self {
 
 		unsafe {
 			gl::UseProgram(0);
