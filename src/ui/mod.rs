@@ -3,7 +3,7 @@
 //! Simple UI
 
 // A tribute to MEKA (http://www.smspower.org/meka/), thanks for making awesome
-// tools ocornut
+// tools
 
 use std::collections::BTreeMap;
 
