@@ -89,14 +89,13 @@ pub(super) fn init() {
 
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
-	let empty_tex = Texture::from_color(color!(1), 1, 1);
 
 	ctx_init(GfxCtx {
 
 		vbuf: vbuf,
 		ibuf: ibuf,
 		program: program,
-		empty_tex: empty_tex.clone(),
+		empty_tex: Texture::from_color(color!(1), 1, 1),
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
@@ -159,7 +158,7 @@ pub fn reset() {
 
 }
 
-pub(crate) fn flush() {
+pub(super) fn flush() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
@@ -500,7 +499,7 @@ pub(super) fn begin() {
 	clear();
 }
 
-pub fn end() {
+pub(super) fn end() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();

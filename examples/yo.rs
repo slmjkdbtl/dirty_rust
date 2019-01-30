@@ -102,7 +102,6 @@ fn main() {
 
 			// play a sound with effect
 			audio::play(&res::sound("pop").speed(rand!(2)));
-			gfx::capture(&canvas, "test.png");
 
 		}
 
