@@ -37,8 +37,8 @@ struct UICtx {
 	id_generator: IdGenerator,
 	active_window: Option<Id>,
 	dragging_window: Option<Id>,
-	buffer: gfx::Canvas,
 	theme: Theme,
+	background_buffer: gfx::Canvas,
 
 }
 
@@ -53,13 +53,19 @@ pub fn init() {
 		id_generator: IdGenerator::new(),
 		active_window: None,
 		dragging_window: None,
-		buffer: gfx::Canvas::new(width, height),
+		background_buffer: gfx::Canvas::new(width, height),
 		theme: Theme::default(),
 
 	});
 
+	set_background(|| {
+		gfx::color(color!(0.6, 0.78, 0.78, 1));
+		gfx::rect(vec2!(width, height));
+	});
+
 }
 
+/// set current theme
 pub fn set_theme(t: Theme) {
 	ctx_get_mut().theme = t;
 }
@@ -111,10 +117,14 @@ impl Window {
 /// draw every window and widgets
 pub fn draw() {
 
+	let (width, height) = window::size();
+	let ctx = ctx_get();
 	let ctx_mut = ctx_get_mut();
 
 	gfx::push();
 	gfx::reset();
+
+	gfx::render(&ctx.background_buffer);
 
 	for (_, w) in ctx_mut.windows.iter_mut().rev() {
 		update_window(w);
@@ -178,6 +188,16 @@ fn update_window(w: &mut Window) {
 	for widget in &mut w.widgets {
 		widget.update();
 	}
+
+}
+
+pub fn set_background<F: FnMut()>(mut f: F) {
+
+	let ui = ctx_get();
+
+	gfx::drawon(&ui.background_buffer);
+	f();
+	gfx::stop_drawon(&ui.background_buffer);
 
 }
 
