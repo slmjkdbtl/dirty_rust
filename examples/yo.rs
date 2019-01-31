@@ -49,11 +49,6 @@ fn main() {
 			index = anims["run"].from;
 		}
 
-		gfx::drawon(&canvas);
-		gfx::clear();
-
-		gfx::effect(&shader);
-
 		gfx::push();
 		gfx::translate(vec2!(12));
 		gfx::text(&format!("{}", app::fps()));
@@ -72,7 +67,6 @@ fn main() {
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
-		gfx::stop_effect(&shader);
 		if col::point_poly(window::mouse_pos(), &pts) {
 
 			tint = color!(0, 1, 1, 1);
@@ -98,9 +92,6 @@ fn main() {
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
 		gfx::pop();
-
-		gfx::stop_drawon(&canvas);
-		gfx::render(&canvas);
 
 		// inputs
 		if window::key_pressed(Key::Space) {
