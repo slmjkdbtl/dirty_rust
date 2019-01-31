@@ -30,13 +30,13 @@ struct GfxCtx {
 	empty_tex: Texture,
 	current_tex: Option<Texture>,
 	current_canvas: Option<Canvas>,
-	renderer: Renderer,
+	batch: Batch,
 
 }
 
 pub(super) fn init() {
 
-	let renderer = Renderer::new::<QuadVerts>(MAX_DRAWS);
+	let batch = Batch::new::<QuadVerts>(MAX_DRAWS);
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	default_shader.bind();
@@ -63,7 +63,7 @@ pub(super) fn init() {
 		empty_tex: Texture::from_color(color!(1), 1, 1),
 		current_tex: None,
 		current_canvas: None,
-		renderer: renderer,
+		batch: batch,
 
 	});
 
@@ -80,7 +80,7 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
-struct Renderer {
+struct Batch {
 
 	queue: Vec<f32>,
 	max: usize,
@@ -93,13 +93,13 @@ struct Renderer {
 
 }
 
-impl Renderer {
+impl Batch {
 
 	fn new<V: Vertex + 'static>(max: usize) -> Self {
 
 		let index = V::index();
-		let vert_count = V::count();
-		let vert_stride = V::stride();
+		let vert_count = V::COUNT;
+		let vert_stride = V::STRIDE;
 		let max_vertices = max * vert_stride * vert_count;
 		let max_indices = max * index.len();
 		let queue: Vec<f32> = Vec::with_capacity(max_vertices);
@@ -177,10 +177,10 @@ impl Renderer {
 
 trait Vertex {
 
+	const STRIDE: usize;
+	const COUNT: usize;
 	fn push(&self, queue: &mut Vec<f32>);
 	fn attr() -> Vec<gl::VertexAttr>;
-	fn stride() -> usize;
-	fn count() -> usize;
 	fn index() -> Vec<u32>;
 
 }
@@ -200,6 +200,9 @@ impl QuadVerts {
 }
 
 impl Vertex for QuadVerts {
+
+	const STRIDE: usize = 8;
+	const COUNT: usize = 4;
 
 	fn push(&self, queue: &mut Vec<f32>){
 
@@ -222,14 +225,6 @@ impl Vertex for QuadVerts {
 			gl::VertexAttr::new(2, 4, 4),
 		];
 
-	}
-
-	fn stride() -> usize {
-		return 8;
-	}
-
-	fn count() -> usize {
-		return 4;
 	}
 
 	fn index() -> Vec<u32> {
@@ -284,7 +279,7 @@ pub(super) fn flush() {
 		let shader = &gfx.current_shader;
 
 		shader.send_mat4("projection", gfx.projection);
-		gfx_mut.renderer.flush(&shader.program, &tex.handle);
+		gfx_mut.batch.flush(&shader.program, &tex.handle);
 		gfx_mut.current_tex = None;
 
 	}
@@ -297,7 +292,7 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
 	let wrapped_tex = Some(tex.clone());
-	let renderer = &mut gfx_mut.renderer;
+	let batch = &mut gfx_mut.batch;
 
 	if gfx.current_tex != wrapped_tex {
 		if gfx.current_tex.is_some() {
@@ -309,10 +304,10 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let t = gfx.state.transform.scale(vec2!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h));
 	let color = gfx.state.tint;
 
-	renderer.push(QuadVerts::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
-	renderer.push(QuadVerts::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
-	renderer.push(QuadVerts::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
-	renderer.push(QuadVerts::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
+	batch.push(QuadVerts::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
+	batch.push(QuadVerts::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
+	batch.push(QuadVerts::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
+	batch.push(QuadVerts::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
 
 }
 
