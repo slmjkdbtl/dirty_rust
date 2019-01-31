@@ -635,12 +635,35 @@ impl Program {
 
 	}
 
-	pub fn uniform_color(&self, name: &str, c: Color) -> &Self {
+	pub fn uniform_color(
+		&self,
+		name: &str,
+		c: Color) -> &Self {
+
 		return self.uniform_vec4(name, vec4!(c.r, c.g, c.b, c.a));
+
 	}
 
-	pub fn uniform_rect(&self, name: &str, r: Rect) -> &Self {
+	pub fn uniform_rect(
+		&self,
+		name: &str,
+		r: Rect) -> &Self {
+
 		return self.uniform_vec4(name, vec4!(r.x, r.y, r.w, r.h));
+
+	}
+
+	pub fn uniform_float(
+		&self,
+		name: &str,
+		f: f32) -> &Self {
+
+		unsafe {
+			gl::Uniform1f(gl::GetUniformLocation(self.id, cstr(name).as_ptr()), f);
+		}
+
+		return self;
+
 	}
 
 	pub fn uniform_vec2(

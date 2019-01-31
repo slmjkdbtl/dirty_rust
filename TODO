@@ -3,7 +3,6 @@
 == DOING
 - ui
 - ecs example
-- custom shaders
 - macro for simple systems
 - more accurate timestep
 - split core, ui, ecs, addons to workspaces
@@ -62,8 +61,10 @@
 - mouse inputs
 - ecs
 - ui custom theme
-- framebuffers not rendering
+- framebuffer not rendering
 - framebuffer upside down
+- custom shaders
+- reduce custom shader boilerplate
 
 == ADVENTURE
 - wasm
