@@ -17,6 +17,7 @@ fn main() {
 	let mut index = 0;
 	let margin = 16;
 	let canvas = gfx::Canvas::new(width, height);
+	let shader = gfx::Shader::from_code_frag(include_str!("assets/noise.frag"));
 
 	// load resources
 	res::load_sprites("examples/assets/", &vec!["car"]);
@@ -24,8 +25,6 @@ fn main() {
 
 	// play a music repeatedly
 	let music = audio::track(&res::sound("yo").repeat());
-
-	let shader = gfx::Shader::from_code_frag(include_str!("assets/noise.frag"));
 
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
@@ -48,11 +47,6 @@ fn main() {
 		} else {
 			index = anims["run"].from;
 		}
-
-		gfx::push();
-		gfx::translate(vec2!(12));
-		gfx::text(&format!("{}", app::fps()));
-		gfx::pop();
 
 		gfx::push();
 		gfx::translate(vec2!(196, 164));
@@ -91,6 +85,11 @@ fn main() {
 		gfx::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
 		gfx::scale(vec2!(3));
 		gfx::text("yo♪");
+		gfx::pop();
+
+		gfx::push();
+		gfx::translate(vec2!(12));
+		gfx::text(&format!("{}", app::fps()));
 		gfx::pop();
 
 		// inputs
