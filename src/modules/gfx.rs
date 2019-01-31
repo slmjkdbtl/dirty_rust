@@ -11,15 +11,6 @@ use crate::math::*;
 use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;
-
-const VERT_STRIDE: usize = 8;
-const VERT_COUNT: usize = 4;
-const MAX_VERTICES: usize = MAX_DRAWS * VERT_STRIDE * VERT_COUNT;
-
-const INDEX_COUNT: usize = 6;
-const INDEX_ARRAY: [u32; INDEX_COUNT] = [0, 1, 3, 1, 2, 3];
-const MAX_INDICES: usize = MAX_DRAWS * INDEX_COUNT;
-
 const MAX_STATE_STACK: usize = 64;
 
 include!("../res/resources.rs");
@@ -45,7 +36,7 @@ struct GfxCtx {
 
 pub(super) fn init() {
 
-	let renderer = Renderer::new::<QuadVerts>(MAX_DRAWS, &INDEX_ARRAY);
+	let renderer = Renderer::new::<QuadVerts>(MAX_DRAWS);
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	default_shader.bind();
@@ -104,8 +95,9 @@ struct Renderer {
 
 impl Renderer {
 
-	fn new<V: Vertex + 'static>(max: usize, index: &[u32]) -> Self {
+	fn new<V: Vertex + 'static>(max: usize) -> Self {
 
+		let index = V::index();
 		let vert_count = V::count();
 		let vert_stride = V::stride();
 		let max_vertices = max * vert_stride * vert_count;
@@ -125,9 +117,11 @@ impl Renderer {
 		ibuf
 			.data(&indices, 0);
 
-		let mut vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
+		let vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
 
-		V::attr(&mut vbuf);
+		for attr in V::attr() {
+			vbuf.attr(attr);
+		}
 
 		return Self {
 
@@ -182,10 +176,13 @@ impl Renderer {
 }
 
 trait Vertex {
+
 	fn push(&self, queue: &mut Vec<f32>);
-	fn attr(buf: &mut gl::VertexBuffer);
+	fn attr() -> Vec<gl::VertexAttr>;
 	fn stride() -> usize;
 	fn count() -> usize;
+	fn index() -> Vec<u32>;
+
 }
 
 struct QuadVerts {
@@ -217,12 +214,13 @@ impl Vertex for QuadVerts {
 
 	}
 
-	fn attr(buf: &mut gl::VertexBuffer) {
+	fn attr() -> Vec<gl::VertexAttr> {
 
-		buf
-			.attr(0, 2, 0)
-			.attr(1, 2, 2)
-			.attr(2, 4, 4);
+		return vec![
+			gl::VertexAttr::new(0, 2, 0),
+			gl::VertexAttr::new(1, 2, 2),
+			gl::VertexAttr::new(2, 4, 4),
+		];
 
 	}
 
@@ -232,6 +230,10 @@ impl Vertex for QuadVerts {
 
 	fn count() -> usize {
 		return 4;
+	}
+
+	fn index() -> Vec<u32> {
+		return vec![0, 1, 3, 1, 2, 3];
 	}
 
 }
