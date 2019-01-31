@@ -3,6 +3,7 @@
 //! 2D Rendering
 
 use std::collections::HashMap;
+use std::any::TypeId;
 use std::rc::Rc;
 
 use crate::*;
@@ -21,17 +22,13 @@ const MAX_INDICES: usize = MAX_DRAWS * INDEX_COUNT;
 
 const MAX_STATE_STACK: usize = 64;
 
-include!("../res/default_shader.rs");
-include!("../res/default_font.rs");
+include!("../res/resources.rs");
 
 // context
 ctx!(GFX: GfxCtx);
 
 struct GfxCtx {
 
-	ibuf: gl::IndexBuffer,
-	vbuf: gl::VertexBuffer,
-	vertex_queue: Vec<f32>,
 	projection: Mat4,
 	state: State,
 	state_stack: Vec<State>,
@@ -42,33 +39,14 @@ struct GfxCtx {
 	empty_tex: Texture,
 	current_tex: Option<Texture>,
 	current_canvas: Option<Canvas>,
-	draw_count: usize,
+	renderer: Renderer,
 
 }
 
 pub(super) fn init() {
 
-	let indices: Vec<u32> = INDEX_ARRAY
-		.iter()
-		.cycle()
-		.take(MAX_INDICES)
-		.enumerate()
-		.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
-		.collect();
-
-	let vbuf = gl::VertexBuffer::new(MAX_VERTICES, VERT_STRIDE, gl::BufferUsage::Dynamic);
-
-	vbuf
-		.attr(0, 2, 0)
-		.attr(1, 2, 2)
-		.attr(2, 4, 4);
-
-	let ibuf = gl::IndexBuffer::new(MAX_INDICES, gl::BufferUsage::Static);
-
-	ibuf
-		.data(&indices, 0);
-
-	let default_shader = Shader::from_code(QUAD_VERT_DEFAULT, QUAD_FRAG_DEFAULT);
+	let renderer = Renderer::new::<QuadVerts>(MAX_DRAWS, &INDEX_ARRAY);
+	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	default_shader.bind();
 
@@ -84,9 +62,6 @@ pub(super) fn init() {
 
 	ctx_init(GfxCtx {
 
-		vbuf: vbuf,
-		ibuf: ibuf,
-		vertex_queue: Vec::with_capacity(MAX_VERTICES),
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
@@ -97,7 +72,7 @@ pub(super) fn init() {
 		empty_tex: Texture::from_color(color!(1), 1, 1),
 		current_tex: None,
 		current_canvas: None,
-		draw_count: 0,
+		renderer: renderer,
 
 	});
 
@@ -112,6 +87,153 @@ pub(super) fn init() {
 /// check if gfx is initiated
 pub fn enabled() -> bool {
 	return ctx_ok();
+}
+
+struct Renderer {
+
+	queue: Vec<f32>,
+	max: usize,
+	ibuf: gl::IndexBuffer,
+	vbuf: gl::VertexBuffer,
+	vertex_type: TypeId,
+	vert_stride: usize,
+	vert_count: usize,
+	index_count: usize,
+
+}
+
+impl Renderer {
+
+	fn new<V: Vertex + 'static>(max: usize, index: &[u32]) -> Self {
+
+		let vert_count = V::count();
+		let vert_stride = V::stride();
+		let max_vertices = max * vert_stride * vert_count;
+		let max_indices = max * index.len();
+		let queue: Vec<f32> = Vec::with_capacity(max_vertices);
+
+		let indices: Vec<u32> = index
+			.iter()
+			.cycle()
+			.take(max_indices)
+			.enumerate()
+			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
+			.collect();
+
+		let ibuf = gl::IndexBuffer::new(max_indices, gl::BufferUsage::Static);
+
+		ibuf
+			.data(&indices, 0);
+
+		let mut vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
+
+		V::attr(&mut vbuf);
+
+		return Self {
+
+			queue: queue,
+			max: max,
+			ibuf: ibuf,
+			vbuf: vbuf,
+			vertex_type: TypeId::of::<V>(),
+			index_count: index.len(),
+			vert_stride: vert_stride,
+			vert_count: vert_count,
+
+		};
+
+	}
+
+	fn push<V: Vertex + 'static>(&mut self, v: V) {
+
+		if TypeId::of::<V>() != self.vertex_type {
+			panic!("invalid vertex");
+		}
+
+		if self.queue.len() >= self.queue.capacity() {
+			self.queue.clear();
+			panic!("reached maximum draw count");
+		}
+
+		v.push(&mut self.queue);
+
+	}
+
+	fn flush(&mut self, program: &gl::Program, tex: &gl::Texture) {
+
+		if self.queue.is_empty() {
+			return;
+		}
+
+		self.vbuf.data(&self.queue, 0);
+
+		gl::draw(
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			&tex,
+			self.queue.len() / self.vert_stride / self.vert_count * self.index_count
+		);
+
+		self.queue.clear();
+
+	}
+
+}
+
+trait Vertex {
+	fn push(&self, queue: &mut Vec<f32>);
+	fn attr(buf: &mut gl::VertexBuffer);
+	fn stride() -> usize;
+	fn count() -> usize;
+}
+
+struct QuadVerts {
+
+	pos: Vec2,
+	uv: Vec2,
+	color: Color,
+
+}
+
+impl QuadVerts {
+	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
+		return Self { pos, uv, color };
+	}
+}
+
+impl Vertex for QuadVerts {
+
+	fn push(&self, queue: &mut Vec<f32>){
+
+		queue.push(self.pos.x);
+		queue.push(self.pos.y);
+		queue.push(self.uv.x);
+		queue.push(self.uv.y);
+		queue.push(self.color.r);
+		queue.push(self.color.g);
+		queue.push(self.color.b);
+		queue.push(self.color.a);
+
+	}
+
+	fn attr(buf: &mut gl::VertexBuffer) {
+
+		buf
+			.attr(0, 2, 0)
+			.attr(1, 2, 2)
+			.attr(2, 4, 4);
+
+	}
+
+	fn stride() -> usize {
+		return 8;
+	}
+
+	fn count() -> usize {
+		return 4;
+	}
+
 }
 
 #[derive(Clone, Copy)]
@@ -155,20 +277,13 @@ pub(super) fn flush() {
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
 
-	if gfx.vertex_queue.is_empty() {
-		return;
-	}
-
 	if let Some(tex) = &gfx.current_tex {
 
 		let shader = &gfx.current_shader;
 
 		shader.send_mat4("projection", gfx.projection);
-		gfx.vbuf.data(&gfx.vertex_queue, 0);
-		gl::draw(&gfx.vbuf, &gfx.ibuf, &shader.program, &tex.handle, gfx.draw_count * INDEX_COUNT);
-		gfx_mut.vertex_queue.clear();
+		gfx_mut.renderer.flush(&shader.program, &tex.handle);
 		gfx_mut.current_tex = None;
-		gfx_mut.draw_count = 0;
 
 	}
 
@@ -179,8 +294,8 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
-	let queue = &mut gfx_mut.vertex_queue;
 	let wrapped_tex = Some(tex.clone());
+	let renderer = &mut gfx_mut.renderer;
 
 	if gfx.current_tex != wrapped_tex {
 		if gfx.current_tex.is_some() {
@@ -189,32 +304,13 @@ pub fn draw(tex: &Texture, quad: Rect) {
 		gfx_mut.current_tex = wrapped_tex;
 	}
 
-	let mut push_vertex = |pos: Vec2, uv: Vec2, color: Color| {
-
-		if queue.len() >= MAX_VERTICES {
-			queue.clear();
-			panic!("reached maximum draw count");
-		}
-
-		queue.push(pos.x);
-		queue.push(pos.y);
-		queue.push(uv.x);
-		queue.push(uv.y);
-		queue.push(color.r);
-		queue.push(color.g);
-		queue.push(color.b);
-		queue.push(color.a);
-
-	};
-
 	let t = gfx.state.transform.scale(vec2!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h));
 	let color = gfx.state.tint;
 
-	push_vertex(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color);
-	push_vertex(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color);
-	push_vertex(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color);
-	push_vertex(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color);
-	gfx_mut.draw_count += 1;
+	renderer.push(QuadVerts::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
+	renderer.push(QuadVerts::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
+	renderer.push(QuadVerts::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
+	renderer.push(QuadVerts::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
 
 }
 
@@ -670,8 +766,8 @@ impl Shader {
 
 	pub fn from_code(vert: &str, frag: &str) -> Self {
 
-		let vert = QUAD_VERT_TEMPLATE.replace("###REPLACE###", vert);
-		let frag = QUAD_FRAG_TEMPLATE.replace("###REPLACE###", frag);
+		let vert = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
+		let frag = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
 
 		let program = gl::Program::new(&vert, &frag);
 
@@ -688,11 +784,11 @@ impl Shader {
 	}
 
 	pub fn from_code_vert(vert: &str) -> Self {
-		return Self::from_code(vert, QUAD_FRAG_DEFAULT);
+		return Self::from_code(vert, DEFAULT_2D_FRAG);
 	}
 
 	pub fn from_code_frag(frag: &str) -> Self {
-		return Self::from_code(QUAD_VERT_DEFAULT, frag);
+		return Self::from_code(DEFAULT_2D_VERT, frag);
 	}
 
 	pub fn from_file(vertf: &str, fragf: &str) -> Self {
@@ -700,11 +796,11 @@ impl Shader {
 	}
 
 	pub fn from_file_vert(vertf: &str) -> Self {
-		return Self::from_code(&fs::read_str(vertf), QUAD_FRAG_DEFAULT);
+		return Self::from_code(&fs::read_str(vertf), DEFAULT_2D_FRAG);
 	}
 
 	pub fn from_file_frag(fragf: &str) -> Self {
-		return Self::from_code(QUAD_VERT_DEFAULT, &fs::read_str(fragf));
+		return Self::from_code(DEFAULT_2D_VERT, &fs::read_str(fragf));
 	}
 
 	pub fn send_float(&self, name: &str, f: f32) -> &Self {

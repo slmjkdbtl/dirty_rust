@@ -66,6 +66,7 @@
 - framebuffer upside down
 - custom shaders
 - reduce custom shader boilerplate
+- abstract batch drawing
 
 == ADVENTURE
 - wasm
