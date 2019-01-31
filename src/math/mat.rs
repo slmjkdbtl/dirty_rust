@@ -26,7 +26,7 @@ impl Mat4 {
 
 	pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Self {
 
-		let mut m = Mat4::identity();
+		let mut m = Self::identity();
 
 		m.m[0][0] = 2.0 / (right - left);
 		m.m[1][1] = 2.0 / (top - bottom);
@@ -40,37 +40,41 @@ impl Mat4 {
 
 	}
 
-	pub fn translate(self, pos: Vec2) -> Self {
+	pub fn perspective() -> Self {
+		return Self::identity();
+	}
 
-		let mut m = Mat4::identity();
+	pub fn translate(self, pos: Vec3) -> Self {
+
+		let mut m = Self::identity();
 
 		m.m[3][0] = pos.x;
 		m.m[3][1] = pos.y;
+		m.m[3][2] = pos.z;
 
 		return self * m;
 
 	}
 
-	pub fn scale(self, scale: Vec2) -> Self {
+	pub fn scale(self, scale: Vec3) -> Self {
 
-		let mut m = Mat4::identity();
+		let mut m = Self::identity();
 
 		m.m[0][0] = scale.x;
 		m.m[1][1] = scale.y;
+		m.m[2][2] = scale.z;
 
 		return self * m;
 
 	}
 
-	pub fn rotate(self, rot: f32) -> Self {
+	pub fn rotate(self, rot: f32, axis: Vec3) -> Self {
 
-		let mut m = Mat4::identity();
-
+		let mut m = Self::identity();
 		let c = rot.cos();
 		let s = rot.sin();
 		let cv = 1.0 - c;
-
-		let axis = vec3!(0, 0, 1);
+		let axis = axis.unit();
 
 		m.m[0][0] = (axis.x * axis.x * cv) + c;
 		m.m[0][1] = (axis.x * axis.y * cv) + (axis.z * s);
@@ -90,7 +94,7 @@ impl Mat4 {
 
 	pub fn inverse(&self) -> Self {
 
-		let mut nm = Mat4::identity();
+		let mut nm = Self::identity();
 
 		let f00 = self.m[2][2] * self.m[3][3] - self.m[3][2] * self.m[2][3];
 		let f01 = self.m[2][1] * self.m[3][3] - self.m[3][1] * self.m[2][3];
