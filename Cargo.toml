@@ -11,23 +11,20 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-gl = "*"
-image = "*"
-tobj = "*"
-rodio = "*"
-sdl2 = { version = "*", features = ["static-link", "bundled"] }
-glob = "*"
-serde = { version = "*", features = ["derive"] }
-serde_json = "*"
-rand = "*"
-num = "*"
-aseprite = "*"
-specs = "*"
-specs-derive = "*"
-hlua = "*"
+gl = "0.11.0"
+image = "0.21.0"
+tobj = "0.1.6"
+rodio = "0.8.1"
+sdl2 = { version = "0.32.1", features = ["static-link", "bundled"] }
+glob = "0.2.11"
+serde = { version = "1.0.85", features = ["derive"] }
+serde_json = "1.0.37"
+rand = "0.6.5"
+hlua = "0.4.1"
+aseprite = "0.1.3"
 ecs_derive = { path = "src/ecs/derive" }
 
 [target.'cfg(target_os="macos")'.dependencies]
-core-foundation = "*"
-metal = "*"
+core-foundation = "0.6.3"
+metal = "0.14.0"
 
