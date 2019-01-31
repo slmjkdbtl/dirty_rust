@@ -688,23 +688,23 @@ impl Shader {
 	}
 
 	pub fn from_code_vert(vert: &str) -> Self {
-		return Self::from_code(vert, QUAD_VERT_DEFAULT);
+		return Self::from_code(vert, QUAD_FRAG_DEFAULT);
 	}
 
 	pub fn from_code_frag(frag: &str) -> Self {
-		return Self::from_code(QUAD_FRAG_DEFAULT, frag);
+		return Self::from_code(QUAD_VERT_DEFAULT, frag);
 	}
 
 	pub fn from_file(vertf: &str, fragf: &str) -> Self {
 		return Self::from_code(&fs::read_str(vertf), &fs::read_str(fragf));
 	}
 
-	pub fn from_file_frag(fragf: &str) -> Self {
-		return Self::from_code(QUAD_VERT_DEFAULT, &fs::read_str(fragf));
-	}
-
 	pub fn from_file_vert(vertf: &str) -> Self {
 		return Self::from_code(&fs::read_str(vertf), QUAD_FRAG_DEFAULT);
+	}
+
+	pub fn from_file_frag(fragf: &str) -> Self {
+		return Self::from_code(QUAD_VERT_DEFAULT, &fs::read_str(fragf));
 	}
 
 	pub fn send_float(&self, name: &str, f: f32) -> &Self {
