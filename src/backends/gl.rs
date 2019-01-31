@@ -93,6 +93,21 @@ bind_enum!(BlendFac(GLenum) {
 });
 
 #[derive(PartialEq)]
+pub struct VertexAttr {
+
+	index: GLuint,
+	size: GLint,
+	offset: usize,
+
+}
+
+impl VertexAttr {
+	pub fn new(index: GLuint, size: GLint, offset: usize) -> Self {
+		return Self { index, size, offset };
+	}
+}
+
+#[derive(PartialEq)]
 pub struct VertexBuffer {
 
 	id: GLuint,
@@ -162,24 +177,22 @@ impl VertexBuffer {
 
 	pub fn attr(
 		&self,
-		index: GLuint,
-		size: GLint,
-		offset: usize) -> &Self {
+		attr: VertexAttr) -> &Self {
 
 		self.bind();
 
 		unsafe {
 
 			gl::VertexAttribPointer(
-				index,
-				size,
+				attr.index,
+				attr.size,
 				gl::FLOAT,
 				gl::FALSE,
 				(self.stride * mem::size_of::<GLfloat>()) as GLsizei,
-				(offset * mem::size_of::<GLfloat>()) as *const GLvoid
+				(attr.offset * mem::size_of::<GLfloat>()) as *const GLvoid
 			);
 
-			gl::EnableVertexAttribArray(index);
+			gl::EnableVertexAttribArray(attr.index);
 
 		}
 
