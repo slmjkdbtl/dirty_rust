@@ -28,15 +28,14 @@ struct GfxCtx {
 	default_font: Font,
 	current_font: Font,
 	empty_tex: Texture,
-	current_tex: Option<Texture>,
 	current_canvas: Option<Canvas>,
-	batch: Batch,
+	renderer: BatchRenderer,
 
 }
 
 pub(super) fn init() {
 
-	let batch = Batch::new::<QuadVerts>(MAX_DRAWS);
+	let renderer = BatchRenderer::new::<QuadVerts>(MAX_DRAWS);
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	default_shader.bind();
@@ -61,9 +60,8 @@ pub(super) fn init() {
 		default_font: default_font.clone(),
 		current_font: default_font,
 		empty_tex: Texture::from_color(color!(1), 1, 1),
-		current_tex: None,
 		current_canvas: None,
-		batch: batch,
+		renderer: renderer,
 
 	});
 
@@ -80,7 +78,7 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
-struct Batch {
+struct BatchRenderer {
 
 	queue: Vec<f32>,
 	max: usize,
@@ -90,12 +88,13 @@ struct Batch {
 	vert_stride: usize,
 	vert_count: usize,
 	index_count: usize,
+	current_tex: Option<Texture>,
 
 }
 
-impl Batch {
+impl BatchRenderer {
 
-	fn new<V: Vertex + 'static>(max: usize) -> Self {
+	fn new<V: VertexLayout + 'static>(max: usize) -> Self {
 
 		let index = V::index();
 		let vert_count = V::COUNT;
@@ -133,12 +132,13 @@ impl Batch {
 			index_count: index.len(),
 			vert_stride: vert_stride,
 			vert_count: vert_count,
+			current_tex: None,
 
 		};
 
 	}
 
-	fn push<V: Vertex + 'static>(&mut self, v: V) {
+	fn push<V: VertexLayout + 'static>(&mut self, v: V) {
 
 		if TypeId::of::<V>() != self.vertex_type {
 			panic!("invalid vertex");
@@ -153,33 +153,52 @@ impl Batch {
 
 	}
 
-	fn flush(&mut self, program: &gl::Program, tex: &gl::Texture) {
+	fn update_tex(&mut self, tex: &Texture) {
+
+		let wrapped_tex = Some(tex.clone());
+
+		if self.current_tex != wrapped_tex {
+			if self.current_tex.is_some() {
+				flush();
+			}
+			self.current_tex = wrapped_tex;
+		}
+
+	}
+
+	fn flush(&mut self, program: &gl::Program) {
 
 		if self.queue.is_empty() {
 			return;
 		}
 
-		self.vbuf.data(&self.queue, 0);
+		if let Some(tex) = &self.current_tex {
 
-		gl::draw(
-			&self.vbuf,
-			&self.ibuf,
-			&program,
-			&tex,
-			self.queue.len() / self.vert_stride / self.vert_count * self.index_count
-		);
+			self.vbuf.data(&self.queue, 0);
 
-		self.queue.clear();
+			gl::draw(
+				&self.vbuf,
+				&self.ibuf,
+				&program,
+				&tex.handle,
+				self.queue.len() / self.vert_stride / self.vert_count * self.index_count
+			);
+
+			self.queue.clear();
+			self.current_tex = None;
+
+		}
 
 	}
 
 }
 
-trait Vertex {
+trait VertexLayout {
 
 	const STRIDE: usize;
 	const COUNT: usize;
 	fn push(&self, queue: &mut Vec<f32>);
+	// wait for https://github.com/rust-lang/rust/issues/42863 to use const arrays
 	fn attr() -> Vec<gl::VertexAttr>;
 	fn index() -> Vec<u32>;
 
@@ -199,7 +218,7 @@ impl QuadVerts {
 	}
 }
 
-impl Vertex for QuadVerts {
+impl VertexLayout for QuadVerts {
 
 	const STRIDE: usize = 8;
 	const COUNT: usize = 4;
@@ -273,16 +292,10 @@ pub(super) fn flush() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
+	let shader = &gfx.current_shader;
 
-	if let Some(tex) = &gfx.current_tex {
-
-		let shader = &gfx.current_shader;
-
-		shader.send_mat4("projection", gfx.projection);
-		gfx_mut.batch.flush(&shader.program, &tex.handle);
-		gfx_mut.current_tex = None;
-
-	}
+	shader.send_mat4("projection", gfx.projection);
+	gfx_mut.renderer.flush(&shader.program);
 
 }
 
@@ -291,23 +304,15 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
-	let wrapped_tex = Some(tex.clone());
-	let batch = &mut gfx_mut.batch;
-
-	if gfx.current_tex != wrapped_tex {
-		if gfx.current_tex.is_some() {
-			flush();
-		}
-		gfx_mut.current_tex = wrapped_tex;
-	}
-
-	let t = gfx.state.transform.scale(vec2!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h));
+	let renderer = &mut gfx_mut.renderer;
+	let t = gfx.state.transform.scale(vec3!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h, 1.0));
 	let color = gfx.state.tint;
 
-	batch.push(QuadVerts::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
-	batch.push(QuadVerts::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
-	batch.push(QuadVerts::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
-	batch.push(QuadVerts::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
+	renderer.update_tex(tex);
+	renderer.push(QuadVerts::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
+	renderer.push(QuadVerts::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
+	renderer.push(QuadVerts::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
+	renderer.push(QuadVerts::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
 
 }
 
@@ -455,7 +460,7 @@ pub fn translate(pos: Vec2) {
 
 	let state = &mut ctx_get_mut().state;
 
-	state.transform = state.transform.translate(pos);
+	state.transform = state.transform.translate(vec3!(pos.x, pos.y, 0.0));
 
 }
 
@@ -464,7 +469,7 @@ pub fn rotate(rot: f32) {
 
 	let state = &mut ctx_get_mut().state;
 
-	state.transform = state.transform.rotate(rot);
+	state.transform = state.transform.rotate(rot, vec3!(0, 0, 1));
 
 }
 
@@ -473,8 +478,7 @@ pub fn scale(s: Vec2) {
 
 	let state = &mut ctx_get_mut().state;
 
-	state.transform = state.transform.scale(s);
-
+	state.transform = state.transform.scale(vec3!(s.x, s.y, 1.0));
 
 }
 

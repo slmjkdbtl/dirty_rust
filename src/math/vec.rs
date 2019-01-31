@@ -156,6 +156,11 @@ impl Vec2 {
 		return vec2!(angle.cos(), angle.sin());
 	}
 
+	/// get vector magnitude
+	pub fn mag(&self) -> f32 {
+		return (self.x * self.x + self.y * self.y).sqrt();
+	}
+
 	/// normalize vector
 	pub fn unit(&self) -> Self {
 		return self.clone() / self.mag();
@@ -176,14 +181,23 @@ impl Vec2 {
 		return (other.y - self.y).atan2(other.x - self.x);
 	}
 
-	/// get vector magnitude
-	pub fn mag(&self) -> f32 {
-		return (self.x * self.x + self.y * self.y).sqrt();
-	}
-
 	/// get distance between another vector
 	pub fn dis(&self, other: Vec2) -> f32 {
 		return ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt();
+	}
+
+}
+
+impl Vec3 {
+
+	/// get vector magnitude
+	pub fn mag(&self) -> f32 {
+		return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+	}
+
+	/// normalize vector
+	pub fn unit(&self) -> Self {
+		return self.clone() / self.mag();
 	}
 
 }
