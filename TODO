@@ -4,6 +4,7 @@
 - ui
 - ecs example
 - macro for simple systems
+- game controllers
 - more accurate timestep
 - split core, ui, ecs, addons to workspaces
 

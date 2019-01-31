@@ -25,7 +25,7 @@ fn main() {
 	// play a music repeatedly
 	let music = audio::track(&res::sound("yo").repeat());
 
-// 	let shader = gfx::Shader::from_code(include_str!("assets/noise.frag"));
+	let shader = gfx::Shader::from_code_frag(include_str!("assets/noise.frag"));
 
 	let sprite = res::sprite("car");
 	let tex = &sprite.tex;
@@ -52,6 +52,8 @@ fn main() {
 		gfx::drawon(&canvas);
 		gfx::clear();
 
+		gfx::effect(&shader);
+
 		gfx::push();
 		gfx::translate(vec2!(12));
 		gfx::text(&format!("{}", app::fps()));
@@ -70,6 +72,7 @@ fn main() {
 		gfx::draw(&tex, frames[index]);
 		gfx::pop();
 
+		gfx::stop_effect(&shader);
 		if col::point_poly(window::mouse_pos(), &pts) {
 
 			tint = color!(0, 1, 1, 1);
