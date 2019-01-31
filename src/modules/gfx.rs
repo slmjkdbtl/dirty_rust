@@ -68,7 +68,7 @@ pub(super) fn init() {
 	ibuf
 		.data(&indices, 0);
 
-	let default_shader = Shader::from_code(DEFAULT_FRAG_SHADER);
+	let default_shader = Shader::from_code(QUAD_VERT_DEFAULT, QUAD_FRAG_DEFAULT);
 
 	default_shader.bind();
 
@@ -668,15 +668,15 @@ pub struct Shader {
 
 impl Shader {
 
-	pub fn from_code(code: &str) -> Self {
+	pub fn from_code(vert: &str, frag: &str) -> Self {
 
-		let program = gl::Program::new(
-			DEFAULT_VERT_SHADER,
-			code,
-		);
+		let vert = QUAD_VERT_TEMPLATE.replace("###REPLACE###", vert);
+		let frag = QUAD_FRAG_TEMPLATE.replace("###REPLACE###", frag);
+
+		let program = gl::Program::new(&vert, &frag);
 
 		program
-			.attr(0, "pos")
+			.attr(0, "vert")
 			.attr(1, "uv")
 			.attr(2, "color")
 			.link();
@@ -687,17 +687,28 @@ impl Shader {
 
 	}
 
-	pub fn from_file(fname: &str) -> Self {
-		return Self::from_code(&fs::read_str(fname));
+	pub fn from_code_vert(vert: &str) -> Self {
+		return Self::from_code(vert, QUAD_VERT_DEFAULT);
 	}
 
-	pub fn send_color(&self, name: &str, c: Color) -> &Self {
-		self.program.uniform_color(name, c);
-		return self;
+	pub fn from_code_frag(frag: &str) -> Self {
+		return Self::from_code(QUAD_FRAG_DEFAULT, frag);
 	}
 
-	pub fn send_rect(&self, name: &str, r: Rect) -> &Self {
-		self.program.uniform_rect(name, r);
+	pub fn from_file(vertf: &str, fragf: &str) -> Self {
+		return Self::from_code(&fs::read_str(vertf), &fs::read_str(fragf));
+	}
+
+	pub fn from_file_frag(fragf: &str) -> Self {
+		return Self::from_code(QUAD_VERT_DEFAULT, &fs::read_str(fragf));
+	}
+
+	pub fn from_file_vert(vertf: &str) -> Self {
+		return Self::from_code(&fs::read_str(vertf), QUAD_FRAG_DEFAULT);
+	}
+
+	pub fn send_float(&self, name: &str, f: f32) -> &Self {
+		self.program.uniform_float(name, f);
 		return self;
 	}
 
@@ -718,6 +729,16 @@ impl Shader {
 
 	pub fn send_mat4(&self, name: &str, v: Mat4) -> &Self {
 		self.program.uniform_mat4(name, v.as_arr());
+		return self;
+	}
+
+	pub fn send_color(&self, name: &str, c: Color) -> &Self {
+		self.program.uniform_color(name, c);
+		return self;
+	}
+
+	pub fn send_rect(&self, name: &str, r: Rect) -> &Self {
+		self.program.uniform_rect(name, r);
 		return self;
 	}
 
