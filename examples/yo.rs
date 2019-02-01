@@ -39,13 +39,15 @@ fn main() {
 	];
 
 	gfx::drawon(&canvas);
-	g3d::cube();
 	gfx::stop_drawon(&canvas);
 
 	// main loop
 	app::run(|| {
 
-		gfx::render(&canvas);
+// 		gfx::render(&canvas);
+// 		g3d::rotate(app::time(), app::time(), app::time());
+// 		g3d::scale(vec3!(120));
+// 		g3d::cube();
 
 		if index < anims["run"].to {
 			index += 1;

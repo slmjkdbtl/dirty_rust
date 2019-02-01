@@ -24,7 +24,6 @@ struct GfxCtx {
 	state: State,
 	state_stack: Vec<State>,
 	default_shader: Shader,
-	current_shader: Shader,
 	default_font: Font,
 	current_font: Font,
 	empty_tex: Texture,
@@ -35,8 +34,8 @@ struct GfxCtx {
 
 pub(super) fn init() {
 
-	let renderer = BatchRenderer::new::<QuadVert>(MAX_DRAWS);
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
+	let renderer = BatchRenderer::new::<QuadVert>(MAX_DRAWS, default_shader.clone());
 
 	default_shader.bind();
 
@@ -56,7 +55,6 @@ pub(super) fn init() {
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
 		default_shader: default_shader.clone(),
-		current_shader: default_shader,
 		default_font: default_font.clone(),
 		current_font: default_font,
 		empty_tex: Texture::from_color(color!(1), 1, 1),
@@ -65,6 +63,7 @@ pub(super) fn init() {
 
 	});
 
+	g3d::init();
 	gl::set_blend(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha);
 	gl::set_depth(gl::DepthFunc::LessOrEqual);
 	gl::clear_color(color!(0, 0, 0, 1));
@@ -89,12 +88,13 @@ struct BatchRenderer {
 	vert_count: usize,
 	index_count: usize,
 	current_tex: Option<Texture>,
+	shader: Shader,
 
 }
 
 impl BatchRenderer {
 
-	fn new<V: VertexLayout + 'static>(max: usize) -> Self {
+	fn new<V: VertexLayout + 'static>(max: usize, shader: Shader) -> Self {
 
 		let index = V::index();
 		let vert_count = V::COUNT;
@@ -133,6 +133,7 @@ impl BatchRenderer {
 			vert_stride: vert_stride,
 			vert_count: vert_count,
 			current_tex: None,
+			shader: shader,
 
 		};
 
@@ -166,7 +167,14 @@ impl BatchRenderer {
 
 	}
 
-	fn flush(&mut self, program: &gl::Program) {
+	fn set_shader(&mut self, s: &Shader) {
+
+		self.flush();
+		self.shader = s.clone();
+
+	}
+
+	fn flush(&mut self) {
 
 		if self.queue.is_empty() {
 			return;
@@ -179,7 +187,7 @@ impl BatchRenderer {
 			gl::draw(
 				&self.vbuf,
 				&self.ibuf,
-				&program,
+				&self.shader.program,
 				&tex.handle,
 				self.queue.len() / self.vert_stride / self.vert_count * self.index_count
 			);
@@ -281,21 +289,17 @@ impl Default for State {
 
 /// reset global transforms and style states
 pub fn reset() {
-
-	let gfx_mut = ctx_get_mut();
-
-	gfx_mut.state = State::default();
-
+	ctx_get_mut().state = State::default();
 }
 
 pub(super) fn flush() {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
-	let shader = &gfx.current_shader;
+	let renderer = &mut gfx_mut.renderer;
 
-	shader.send_mat4("projection", gfx.projection);
-	gfx_mut.renderer.flush(&shader.program);
+	renderer.shader.send_mat4("projection", gfx.projection);
+	gfx_mut.renderer.flush();
 
 }
 
@@ -469,7 +473,7 @@ pub fn rotate(rot: f32) {
 
 	let state = &mut ctx_get_mut().state;
 
-	state.transform = state.transform.rotate(rot, vec3!(0, 0, 1));
+	state.transform = state.transform.rotate(rot, Dir::Z);
 
 }
 
@@ -578,6 +582,10 @@ pub fn capture(canvas: &Canvas, fname: &str) {
 
 }
 
+pub(super) fn clear_stack() {
+	ctx_get_mut().state_stack.clear();
+}
+
 pub(super) fn begin() {
 	clear();
 }
@@ -585,11 +593,12 @@ pub(super) fn begin() {
 pub(super) fn end() {
 
 	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
 
 	flush();
 	reset();
-	gfx_mut.state_stack.clear();
+	clear_stack();
+	g3d::reset();
+	g3d::clear_stack();
 
 	if gfx.current_canvas.is_some() {
 		panic!("unfinished canvas");
@@ -742,18 +751,17 @@ pub fn effect(s: &Shader) {
 
 	let gfx_mut = ctx_get_mut();
 
-	flush();
-	gfx_mut.current_shader = s.clone();
+	gfx_mut.renderer.set_shader(s);
 
 }
 
 pub fn stop_effect(s: &Shader) {
 
-	let gfx = ctx_get_mut();
+	let gfx_mut = ctx_get_mut();
+	let renderer = &mut gfx_mut.renderer;
 
-	assert!(gfx.current_shader == *s, "this is not the active shader effect");
-	flush();
-	effect(&ctx_get().default_shader);
+	assert!(renderer.shader == *s, "this is not the active shader effect");
+	gfx_mut.renderer.set_shader(&gfx_mut.default_shader);
 
 }
 
