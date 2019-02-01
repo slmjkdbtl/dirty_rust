@@ -13,7 +13,7 @@ pub enum Dir {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Mat4 {
-	m: [[f32; 4]; 4],
+	pub(super) m: [[f32; 4]; 4],
 }
 
 impl Mat4 {
@@ -28,39 +28,6 @@ impl Mat4 {
 				[0.0, 0.0, 0.0, 1.0],
 			]
 		};
-
-	}
-
-	pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
-
-		let mut m = Self::identity();
-		let f_depth = far - near;
-		let o_depth = 1.0 / f_depth;
-
-		m.m[1][1] = 1.0 / (0.5 * fov).tan();
-		m.m[0][0] = m.m[1][1] / aspect;
-		m.m[2][2] = far * o_depth;
-		m.m[3][2] = (-far * near) * o_depth;
-		m.m[2][3] = 1.0;
-		m.m[3][3] = 0.0;
-
-		return m;
-
-	}
-
-	pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Self {
-
-		let mut m = Self::identity();
-
-		m.m[0][0] = 2.0 / (right - left);
-		m.m[1][1] = 2.0 / (top - bottom);
-		m.m[2][2] = 2.0 / (near - far);
-
-		m.m[3][0] = (left + right) / (left - right);
-		m.m[3][1] = (bottom + top) / (bottom - top);
-		m.m[3][2] = (far + near) / (near - far);
-
-		return m;
 
 	}
 

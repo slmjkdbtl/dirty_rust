@@ -8,6 +8,8 @@ use crate::backends::gl;
 
 const MAX_STATE_STACK: usize = 64;
 
+include!("../res/resources.rs");
+
 // context
 ctx!(G3D: G3dCtx);
 
@@ -26,18 +28,18 @@ struct G3dCtx {
 pub(super) fn init() {
 
 	let (width, height) = window::size();
-	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	let projection = math::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
 
 	let verts = [
 		// verts          // color
-		-0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
-		 0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
-		 0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-		-0.5,  0.5,  0.5, 1.0, 1.0, 1.0,
-		-0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-		 0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
-		 0.5,  0.5, -0.5, 0.0, 0.0, 1.0,
-		-0.5,  0.5, -0.5, 1.0, 1.0, 1.0
+		-0.5, -0.5,  0.5, 1.0, 0.0, 0.0, 1.0,
+		 0.5, -0.5,  0.5, 0.0, 1.0, 0.0, 1.0,
+		 0.5,  0.5,  0.5, 0.0, 0.0, 1.0, 1.0,
+		-0.5,  0.5,  0.5, 1.0, 1.0, 1.0, 1.0,
+		-0.5, -0.5, -0.5, 1.0, 0.0, 0.0, 1.0,
+		 0.5, -0.5, -0.5, 0.0, 1.0, 0.0, 1.0,
+		 0.5,  0.5, -0.5, 0.0, 0.0, 1.0, 1.0,
+		-0.5,  0.5, -0.5, 1.0, 1.0, 1.0, 1.0,
 	];
 
 	let index = [
@@ -61,20 +63,20 @@ pub(super) fn init() {
 		6, 7, 3
 	];
 
-	let vbuf = gl::VertexBuffer::new(verts.len(), 6, gl::BufferUsage::Static);
+	let vbuf = gl::VertexBuffer::new(verts.len(), 7, gl::BufferUsage::Static);
 
 	vbuf
 		.data(&verts, 0);
 
 	vbuf.attr(gl::VertexAttr::new(3, 3, 0));
-	vbuf.attr(gl::VertexAttr::new(4, 3, 3));
+	vbuf.attr(gl::VertexAttr::new(4, 4, 3));
 
 	let ibuf = gl::IndexBuffer::new(index.len(), gl::BufferUsage::Static);
 
 	ibuf
 		.data(&index, 0);
 
-	let program = gl::Program::new(include_str!("../res/3d.vert"), include_str!("../res/3d.frag"));
+	let program = gl::Program::new(TEMPLATE_3D_VERT, TEMPLATE_3D_FRAG);
 
 	program
 		.attr(3, "vert")
@@ -187,10 +189,12 @@ pub fn cube() {
 
 	let gfx = ctx_get();
 	let model = gfx.state.transform;
+	let view = Mat4::identity();
 	let (width, height) = window::size();
-	let projection = Mat4::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
+	let projection = gfx.projection;
 
 	gfx.program.uniform_mat4("model", model.as_arr());
+	gfx.program.uniform_mat4("view", view.as_arr());
 	gfx.program.uniform_mat4("projection", projection.as_arr());
 
 	gl::draw(

@@ -43,3 +43,38 @@ pub fn map(val: f32, a1: f32, a2: f32, b1: f32, b2: f32) -> f32 {
 	return clamp(b1 + (val - a1) / (a2 - a1) * (b2 - b1), b1.min(b2), b1.max(b2));
 }
 
+/// generate orthographic matrix
+pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {
+
+	let mut m = Mat4::identity();
+
+	m.m[0][0] = 2.0 / (right - left);
+	m.m[1][1] = 2.0 / (top - bottom);
+	m.m[2][2] = 2.0 / (near - far);
+
+	m.m[3][0] = (left + right) / (left - right);
+	m.m[3][1] = (bottom + top) / (bottom - top);
+	m.m[3][2] = (far + near) / (near - far);
+
+	return m;
+
+}
+
+/// generate perspective matrix
+pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
+
+	let mut m = Mat4::identity();
+	let f_depth = far - near;
+	let o_depth = 1.0 / f_depth;
+
+	m.m[1][1] = 1.0 / (0.5 * fov).tan();
+	m.m[0][0] = m.m[1][1] / aspect;
+	m.m[2][2] = far * o_depth;
+	m.m[3][2] = (-far * near) * o_depth;
+	m.m[2][3] = 1.0;
+	m.m[3][3] = 0.0;
+
+	return m;
+
+}
+
