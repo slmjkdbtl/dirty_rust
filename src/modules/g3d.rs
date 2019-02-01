@@ -16,6 +16,10 @@ struct G3dCtx {
 	projection: Mat4,
 	state: State,
 	state_stack: Vec<State>,
+	vbuf: gl::VertexBuffer,
+	ibuf: gl::IndexBuffer,
+	program: gl::Program,
+	empty_tex: gfx::Texture,
 
 }
 
@@ -24,11 +28,69 @@ pub(super) fn init() {
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
+	let verts = [
+		-0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
+		 0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
+		 0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+		-0.5,  0.5,  0.5, 1.0, 1.0, 1.0,
+		// back
+		-0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
+		 0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
+		 0.5,  0.5, -0.5, 0.0, 0.0, 1.0,
+		-0.5,  0.5, -0.5, 1.0, 1.0, 1.0
+	];
+
+	let index = [
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// right
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// left
+		4, 0, 3,
+		3, 7, 4,
+		// bottom
+		4, 5, 1,
+		1, 0, 4,
+		// top
+		3, 2, 6,
+		6, 7, 3
+	];
+
+	let vbuf = gl::VertexBuffer::new(verts.len(), 6, gl::BufferUsage::Static);
+
+	vbuf
+		.data(&verts, 0);
+
+	vbuf.attr(gl::VertexAttr::new(3, 3, 0));
+	vbuf.attr(gl::VertexAttr::new(4, 3, 3));
+
+	let ibuf = gl::IndexBuffer::new(index.len(), gl::BufferUsage::Static);
+
+	ibuf
+		.data(&index, 0);
+
+	let program = gl::Program::new(include_str!("../res/3d.vert"), include_str!("../res/3d.frag"));
+
+	program
+		.attr(3, "vert")
+		.attr(4, "color")
+		.link();
+	program.bind();
+
 	ctx_init(G3dCtx {
 
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
+		vbuf: vbuf,
+		ibuf: ibuf,
+		program: program,
+		empty_tex: gfx::Texture::from_color(color!(1), 1, 1),
 
 	});
 
@@ -83,6 +145,28 @@ pub fn pop() {
 	let stack = &mut g3d.state_stack;
 
 	g3d.state = stack.pop().expect("cannot pop anymore");
+
+}
+
+pub fn cube() {
+
+	let gfx = ctx_get();
+	let model = Mat4::identity()
+		.rotate(app::time(), vec3!(1, 0.5, 0.3))
+		.scale(vec3!(120));
+	let (width, height) = window::size();
+	let projection = Mat4::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
+
+	gfx.program.uniform_mat4("model", model.as_arr());
+	gfx.program.uniform_mat4("projection", projection.as_arr());
+
+	gl::draw(
+		&gfx.vbuf,
+		&gfx.ibuf,
+		&gfx.program,
+		&gfx.empty_tex.handle,
+		36,
+	);
 
 }
 

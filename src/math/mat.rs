@@ -24,6 +24,23 @@ impl Mat4 {
 
 	}
 
+	pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
+
+		let mut m = Self::identity();
+		let f_depth = far - near;
+		let o_depth = 1.0 / f_depth;
+
+		m.m[1][1] = 1.0 / (0.5 * fov).tan();
+		m.m[0][0] = m.m[1][1] / aspect;
+		m.m[2][2] = far * o_depth;
+		m.m[3][2] = (-far * near) * o_depth;
+		m.m[2][3] = 1.0;
+		m.m[3][3] = 0.0;
+
+		return m;
+
+	}
+
 	pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Self {
 
 		let mut m = Self::identity();
@@ -38,10 +55,6 @@ impl Mat4 {
 
 		return m;
 
-	}
-
-	pub fn perspective() -> Self {
-		return Self::identity();
 	}
 
 	pub fn translate(self, pos: Vec3) -> Self {
@@ -171,7 +184,7 @@ impl Mat4 {
 
 impl Default for Mat4 {
 
-    fn default() -> Self {
+	fn default() -> Self {
 		return Self::identity();
 	}
 

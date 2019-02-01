@@ -7,9 +7,7 @@ attribute vec4 color;
 varying vec2 coord;
 varying vec4 tint;
 
-uniform mat4 transform;
 uniform mat4 projection;
-uniform vec4 quad;
 
 ###REPLACE###
 
