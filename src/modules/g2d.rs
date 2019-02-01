@@ -16,9 +16,9 @@ const MAX_STATE_STACK: usize = 64;
 include!("../res/resources.rs");
 
 // context
-ctx!(GFX: GfxCtx);
+ctx!(G2D: G2dCtx);
 
-struct GfxCtx {
+struct G2dCtx {
 
 	projection: Mat4,
 	state: State,
@@ -48,7 +48,7 @@ pub(super) fn init() {
 	let (width, height) = window::size();
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
-	ctx_init(GfxCtx {
+	ctx_init(G2dCtx {
 
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
@@ -665,5 +665,4 @@ impl Shader {
 	}
 
 }
-
 
