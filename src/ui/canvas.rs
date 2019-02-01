@@ -21,12 +21,12 @@ impl Canvas {
 
 	pub fn set<F: FnMut()>(&self, mut f: F) {
 
-		gfx::push();
-		gfx::reset();
+		g2d::push();
+		g2d::reset();
 		gfx::drawon(&self.handle);
 		f();
 		gfx::stop_drawon(&self.handle);
-		gfx::pop();
+		g2d::pop();
 
 	}
 
@@ -35,7 +35,7 @@ impl Canvas {
 impl Widget for Canvas {
 
 	fn draw(&self) {
-		gfx::color(color!(1));
+		g2d::color(color!(1));
 		gfx::render(&self.handle);
 	}
 

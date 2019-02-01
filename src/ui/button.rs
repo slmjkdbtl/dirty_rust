@@ -26,7 +26,7 @@ impl Button {
 impl Widget for Button {
 
 	fn draw(&self) {
-// 		gfx::poly(&utils::rounded_rect(BUTTON_WIDTH, BUTTON_HEIGHT, CORNER));
+// 		g2d::poly(&utils::rounded_rect(BUTTON_WIDTH, BUTTON_HEIGHT, CORNER));
 	}
 
 }

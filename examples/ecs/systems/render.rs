@@ -17,24 +17,24 @@ impl System for RenderSys {
 		let t = e.get::<Trans>();
 		let s = e.get::<Sprite>();
 
-		gfx::push();
-		gfx::color(s.color);
-		gfx::translate(t.pos);
-		gfx::rotate(t.rot);
-		gfx::translate(s.offset() * t.scale);
-		gfx::scale(t.scale);
+		g2d::push();
+		g2d::color(s.color);
+		g2d::translate(t.pos);
+		g2d::rotate(t.rot);
+		g2d::translate(s.offset() * t.scale);
+		g2d::scale(t.scale);
 
 		if e.has::<Body>() {
 
 			let mut body = e.get::<Body>();
 
-			body.d_verts = gfx::multi_warp(&body.verts);
+			body.d_verts = g2d::multi_warp(&body.verts);
 			e.set::<Body>(body);
 
 		}
 
-		gfx::draw(&s.tex, s.framelist[s.frame]);
-		gfx::pop();
+		g2d::draw(&s.tex, s.framelist[s.frame]);
+		g2d::pop();
 
 	}
 

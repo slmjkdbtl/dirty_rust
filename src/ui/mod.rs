@@ -59,8 +59,8 @@ pub fn init() {
 	});
 
 	set_background(|| {
-		gfx::color(color!(0.6, 0.78, 0.78, 1));
-		gfx::rect(vec2!(width, height));
+		g2d::color(color!(0.6, 0.78, 0.78, 1));
+		g2d::rect(vec2!(width, height));
 	});
 
 }
@@ -121,8 +121,8 @@ pub fn draw() {
 	let ctx = ctx_get();
 	let ctx_mut = ctx_get_mut();
 
-	gfx::push();
-	gfx::reset();
+	g2d::push();
+	g2d::reset();
 
 	gfx::render(&ctx.background_buffer);
 
@@ -134,7 +134,7 @@ pub fn draw() {
 		draw_window(w);
 	}
 
-	gfx::pop();
+	g2d::pop();
 
 }
 
@@ -207,56 +207,56 @@ fn draw_window(w: &Window) {
 	let theme = &ctx.theme;
 
 // 	gfx::drawon(&w.buffer);
-	gfx::push();
+	g2d::push();
 
-		gfx::translate(w.pos);
+		g2d::translate(w.pos);
 
 		// draw background
-		gfx::color(theme.back);
-		gfx::rect(vec2!(w.width, w.height));
+		g2d::color(theme.back);
+		g2d::rect(vec2!(w.width, w.height));
 
 		// draw headbar
-		gfx::color(theme.bar);
-		gfx::rect(vec2!(w.width, BAR_HEIGHT));
+		g2d::color(theme.bar);
+		g2d::rect(vec2!(w.width, BAR_HEIGHT));
 
 		// draw outlines
-		gfx::line_width(3);
-		gfx::color(theme.line);
-		gfx::poly(&utils::rounded_rect(w.width, w.height, CORNER));
-		gfx::line(vec2!(0, BAR_HEIGHT), vec2!(w.width, BAR_HEIGHT));
+		g2d::line_width(3);
+		g2d::color(theme.line);
+		g2d::poly(&utils::rounded_rect(w.width, w.height, CORNER));
+		g2d::line(vec2!(0, BAR_HEIGHT), vec2!(w.width, BAR_HEIGHT));
 
 		// draw title
-		gfx::push();
+		g2d::push();
 
 			if let Some(id) = ctx.active_window {
 				if id == w.id.expect("oh no") {
-					gfx::color(theme.text_active);
+					g2d::color(theme.text_active);
 				} else {
-					gfx::color(theme.text_passive);
+					g2d::color(theme.text_passive);
 				}
 			} else {
-				gfx::color(theme.text_passive);
+				g2d::color(theme.text_passive);
 			}
 
-			gfx::translate(vec2!(14, 5));
-			gfx::scale(vec2!(2));
-			gfx::text(&w.title);
+			g2d::translate(vec2!(14, 5));
+			g2d::scale(vec2!(2));
+			g2d::text(&w.title);
 
-		gfx::pop();
+		g2d::pop();
 
 		// draw widgets
-		gfx::push();
+		g2d::push();
 
-			gfx::translate(vec2!(0, BAR_HEIGHT));
-			gfx::translate(vec2!(2, 3));
+			g2d::translate(vec2!(0, BAR_HEIGHT));
+			g2d::translate(vec2!(2, 3));
 
 			for widget in &w.widgets {
 				widget.draw();
 			}
 
-		gfx::pop();
+		g2d::pop();
 
-	gfx::pop();
+	g2d::pop();
 // 	gfx::stop_drawon(&w.buffer);
 // 	gfx::render(&w.buffer);
 

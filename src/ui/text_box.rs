@@ -28,16 +28,16 @@ impl Widget for TextBox {
 
 		let theme = ctx_get().theme;
 
-		gfx::push();
-		gfx::translate(vec2!(14, 12));
-		gfx::color(theme.text_passive);
+		g2d::push();
+		g2d::translate(vec2!(14, 12));
+		g2d::color(theme.text_passive);
 
 		for l in &self.lines {
-			gfx::text(&l);
-			gfx::translate(vec2!(0, 16));
+			g2d::text(&l);
+			g2d::translate(vec2!(0, 16));
 		}
 
-		gfx::pop();
+		g2d::pop();
 
 	}
 
