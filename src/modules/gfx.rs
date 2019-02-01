@@ -35,7 +35,7 @@ struct GfxCtx {
 
 pub(super) fn init() {
 
-	let renderer = BatchRenderer::new::<QuadVerts>(MAX_DRAWS);
+	let renderer = BatchRenderer::new::<QuadVert>(MAX_DRAWS);
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	default_shader.bind();
@@ -204,7 +204,7 @@ trait VertexLayout {
 
 }
 
-struct QuadVerts {
+struct QuadVert {
 
 	pos: Vec2,
 	uv: Vec2,
@@ -212,13 +212,13 @@ struct QuadVerts {
 
 }
 
-impl QuadVerts {
+impl QuadVert {
 	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
 		return Self { pos, uv, color };
 	}
 }
 
-impl VertexLayout for QuadVerts {
+impl VertexLayout for QuadVert {
 
 	const STRIDE: usize = 8;
 	const COUNT: usize = 4;
@@ -309,10 +309,10 @@ pub fn draw(tex: &Texture, quad: Rect) {
 	let color = gfx.state.tint;
 
 	renderer.update_tex(tex);
-	renderer.push(QuadVerts::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
-	renderer.push(QuadVerts::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
-	renderer.push(QuadVerts::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
-	renderer.push(QuadVerts::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
+	renderer.push(QuadVert::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
+	renderer.push(QuadVert::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
+	renderer.push(QuadVert::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
+	renderer.push(QuadVert::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
 
 }
 
@@ -600,7 +600,7 @@ pub(super) fn end() {
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	handle: Rc<gl::Texture>,
+	pub(super) handle: Rc<gl::Texture>,
 }
 
 impl Texture {

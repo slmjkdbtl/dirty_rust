@@ -38,8 +38,14 @@ fn main() {
 		vec2!(0, tex.height()) + vec2!(-margin, margin),
 	];
 
+	gfx::drawon(&canvas);
+	g3d::cube();
+	gfx::stop_drawon(&canvas);
+
 	// main loop
 	app::run(|| {
+
+		gfx::render(&canvas);
 
 		if index < anims["run"].to {
 			index += 1;
