@@ -97,7 +97,7 @@ pub fn run_code(code: &str) {
 		bind_func!("window_get_relative", (): () -> window::get_relative());
 
 		bind_func!("gfx_clear", (): () -> gfx::clear());
-		bind_func!("gfx_reset", (): () -> gfx::reset());
+		bind_func!("gfx_reset", (): () -> g2d::reset());
 
 		bind_func!("audio_init", (): () -> audio::init());
 
