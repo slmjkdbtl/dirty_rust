@@ -185,12 +185,12 @@ pub fn scale(s: Vec3) {
 
 }
 
+/// draw a cube
 pub fn cube() {
 
 	let gfx = ctx_get();
 	let model = gfx.state.transform;
 	let view = Mat4::identity();
-	let (width, height) = window::size();
 	let projection = gfx.projection;
 
 	gfx.program.uniform_mat4("model", model.as_arr());
