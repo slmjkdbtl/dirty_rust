@@ -44,7 +44,7 @@ pub(super) fn init() {
 	);
 
 	let (width, height) = window::size();
-	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	let projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 	ctx_init(G2dCtx {
 
@@ -297,7 +297,7 @@ pub(super) fn flip_projection() {
 	let g2d_mut = ctx_get_mut();
 	let (width, height) = window::size();
 
-	g2d_mut.projection = Mat4::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
+	g2d_mut.projection = math::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
 
 }
 
@@ -306,7 +306,7 @@ pub(super) fn unflip_projection() {
 	let g2d_mut = ctx_get_mut();
 	let (width, height) = window::size();
 
-	g2d_mut.projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
+	g2d_mut.projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 }
 
