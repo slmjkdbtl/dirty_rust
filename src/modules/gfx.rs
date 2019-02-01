@@ -1,15 +1,12 @@
 // wengwengweng
 
-//! 2D Rendering
+//! Rendering
 
 use std::rc::Rc;
 
 use crate::*;
 use crate::math::*;
 use crate::backends::gl;
-
-const MAX_DRAWS: usize = 65536;
-const MAX_STATE_STACK: usize = 64;
 
 include!("../res/resources.rs");
 
