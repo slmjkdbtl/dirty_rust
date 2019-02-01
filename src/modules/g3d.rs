@@ -81,8 +81,6 @@ pub(super) fn init() {
 		.attr(4, "color")
 		.link();
 
-	program.bind();
-
 	ctx_init(G3dCtx {
 
 		projection: projection,
