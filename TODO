@@ -68,6 +68,7 @@
 - custom shaders
 - reduce custom shader boilerplate
 - abstract batch drawing
+- seperate gfx, g2d and g3d
 
 == ADVENTURE
 - wasm

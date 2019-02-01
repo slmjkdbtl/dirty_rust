@@ -20,12 +20,12 @@ impl System for DebugSys {
 
 		let b = e.get::<Body>();
 
-		gfx::push();
-		gfx::reset();
-		gfx::line_width(1);
-		gfx::color(color!(0, 1, 1, 1));
-		gfx::poly(&b.d_verts);
-		gfx::pop();
+		g2d::push();
+		g2d::reset();
+		g2d::line_width(1);
+		g2d::color(color!(0, 1, 1, 1));
+		g2d::poly(&b.d_verts);
+		g2d::pop();
 
 	}
 

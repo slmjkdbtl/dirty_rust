@@ -263,9 +263,9 @@ pub(super) fn begin() {
 
 	match ctx_get().scale {
 		Scale::X1 => {},
-		Scale::X2 => gfx::scale(vec2!(2)),
-		Scale::X4 => gfx::scale(vec2!(4)),
-		Scale::X8 => gfx::scale(vec2!(8)),
+		Scale::X2 => g2d::scale(vec2!(2)),
+		Scale::X4 => g2d::scale(vec2!(4)),
+		Scale::X8 => g2d::scale(vec2!(8)),
 	};
 
 	poll_events();

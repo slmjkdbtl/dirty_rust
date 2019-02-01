@@ -16,7 +16,7 @@ fn main() {
 	let mut index = 0;
 	let margin = 16;
 	let canvas = gfx::Canvas::new(width, height);
-	let shader = gfx::Shader::from_code_frag(include_str!("assets/noise.frag"));
+	let shader = g2d::Shader::from_code_frag(include_str!("assets/noise.frag"));
 
 	// load resources
 	res::load_sprites("examples/assets/", &vec!["car"]);
@@ -38,13 +38,9 @@ fn main() {
 		vec2!(0, tex.height()) + vec2!(-margin, margin),
 	];
 
-	gfx::drawon(&canvas);
-	gfx::stop_drawon(&canvas);
-
 	// main loop
 	app::run(|| {
 
-// 		gfx::render(&canvas);
 // 		g3d::rotate(app::time(), app::time(), app::time());
 // 		g3d::scale(vec3!(120));
 // 		g3d::cube();
@@ -55,49 +51,49 @@ fn main() {
 			index = anims["run"].from;
 		}
 
-		gfx::push();
-		gfx::translate(vec2!(196, 164));
-		gfx::scale(vec2!(2));
-		gfx::translate(vec2!(64));
-		gfx::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
-		gfx::translate(vec2!(-64));
+		g2d::push();
+		g2d::translate(vec2!(196, 164));
+		g2d::scale(vec2!(2));
+		g2d::translate(vec2!(64));
+		g2d::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
+		g2d::translate(vec2!(-64));
 
-		let pts = gfx::multi_warp(&pts);
+		let pts = g2d::multi_warp(&pts);
 
-		gfx::color(tint);
-		gfx::draw(&tex, frames[index]);
-		gfx::pop();
+		g2d::color(tint);
+		g2d::draw(&tex, frames[index]);
+		g2d::pop();
 
 		if col::point_poly(window::mouse_pos(), &pts) {
 
 			tint = color!(0, 1, 1, 1);
 
-			gfx::push();
-			gfx::line_width(3);
-			gfx::color(color!(1, 1, 0, 1));
-			gfx::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
-			gfx::pop();
+			g2d::push();
+			g2d::line_width(3);
+			g2d::color(color!(1, 1, 0, 1));
+			g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
+			g2d::pop();
 
 		} else {
 			tint = color!(1);
 		}
 
-		gfx::push();
-		gfx::line_width(1);
-		gfx::color(color!(1, 0, 1, 1));
-		gfx::poly(&pts);
-		gfx::pop();
+		g2d::push();
+		g2d::line_width(1);
+		g2d::color(color!(1, 0, 1, 1));
+		g2d::poly(&pts);
+		g2d::pop();
 
-		gfx::push();
-		gfx::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
-		gfx::scale(vec2!(3));
-		gfx::text("yo♪");
-		gfx::pop();
+		g2d::push();
+		g2d::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
+		g2d::scale(vec2!(3));
+		g2d::text("yo♪");
+		g2d::pop();
 
-		gfx::push();
-		gfx::translate(vec2!(12));
-		gfx::text(&format!("{}", app::fps()));
-		gfx::pop();
+		g2d::push();
+		g2d::translate(vec2!(12));
+		g2d::text(&format!("{}", app::fps()));
+		g2d::pop();
 
 		// inputs
 		if window::key_pressed(Key::Space) {

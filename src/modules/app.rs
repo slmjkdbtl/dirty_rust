@@ -55,30 +55,28 @@ pub fn init() {
 
 			let dy = (time() * 2.0).sin() * 4.0;
 
-			gfx::clear();
+			g2d::push();
+			g2d::text_wrap(width - 240);
 
-			gfx::push();
-			gfx::text_wrap(width - 240);
+			g2d::translate(vec2!(64, 64.0 + dy));
 
-			gfx::translate(vec2!(64, 64.0 + dy));
+			g2d::push();
+			g2d::scale(vec2!(2.4));
+			g2d::text("ERROR ♪");
+			g2d::pop();
 
-			gfx::push();
-			gfx::scale(vec2!(2.4));
-			gfx::text("ERROR ♪");
-			gfx::pop();
+			g2d::translate(vec2!(0, 48));
 
-			gfx::translate(vec2!(0, 48));
+			g2d::push();
+			g2d::scale(vec2!(1.2));
+			g2d::text(&format!("{}\n\n{}", log, location));
+			g2d::pop();
 
-			gfx::push();
-			gfx::scale(vec2!(1.2));
-			gfx::text(&format!("{}\n\n{}", log, location));
-			gfx::pop();
+			g2d::pop();
 
-			gfx::pop();
-
-			gfx::line_width(3);
-			gfx::color(color!(1, 1, 0, 1));
-			gfx::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
+			g2d::line_width(3);
+			g2d::color(color!(1, 1, 0, 1));
+			g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 
 			if window::key_pressed(Key::Escape) {
 				std::process::exit(1);
