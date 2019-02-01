@@ -38,12 +38,6 @@ fn main() {
 		vec2!(0, tex.height()) + vec2!(-margin, margin),
 	];
 
-	gfx::drawon(&canvas);
-	g2d::text("!23");
-	gfx::stop_drawon(&canvas);
-
-	gfx::capture(&canvas, "test.png");
-
 	// main loop
 	app::run(|| {
 

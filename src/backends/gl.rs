@@ -597,8 +597,6 @@ impl Program {
 			gl::AttachShader(id, vs);
 			gl::AttachShader(id, fs);
 
-			dbg!(id);
-
 			return Self {
 				id: id
 			};
