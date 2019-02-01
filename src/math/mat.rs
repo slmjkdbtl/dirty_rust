@@ -4,7 +4,14 @@ use std::ops;
 
 use super::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Dir {
+	X,
+	Y,
+	Z,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Mat4 {
 	m: [[f32; 4]; 4],
 }
@@ -81,13 +88,18 @@ impl Mat4 {
 
 	}
 
-	pub fn rotate(self, rot: f32, axis: Vec3) -> Self {
+	pub fn rotate(self, rot: f32, dir: Dir) -> Self {
 
 		let mut m = Self::identity();
 		let c = rot.cos();
 		let s = rot.sin();
 		let cv = 1.0 - c;
-		let axis = axis.unit();
+
+		let axis = match dir {
+			Dir::X => vec3!(1, 0, 0),
+			Dir::Y => vec3!(0, 1, 0),
+			Dir::Z => vec3!(0, 0, 1),
+		};
 
 		m.m[0][0] = (axis.x * axis.x * cv) + c;
 		m.m[0][1] = (axis.x * axis.y * cv) + (axis.z * s);

@@ -1,8 +1,10 @@
 # wengwengweng
 
 == DOING
+- 3d
 - ui
 - ecs example
+- shader switching bug
 - macro for simple systems
 - game controllers
 - more accurate timestep
@@ -23,7 +25,6 @@
 - try gfx-hal
 - use glutin when girls supports macos
 - ecs support reverse entity iter
-- 3d
 - more customizable vec gens
 
 == DONE

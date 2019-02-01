@@ -29,11 +29,11 @@ pub(super) fn init() {
 	let projection = Mat4::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 	let verts = [
+		// verts          // color
 		-0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
 		 0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
 		 0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
 		-0.5,  0.5,  0.5, 1.0, 1.0, 1.0,
-		// back
 		-0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
 		 0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
 		 0.5,  0.5, -0.5, 0.0, 0.0, 1.0,
@@ -80,6 +80,7 @@ pub(super) fn init() {
 		.attr(3, "vert")
 		.attr(4, "color")
 		.link();
+
 	program.bind();
 
 	ctx_init(G3dCtx {
@@ -116,12 +117,11 @@ impl Default for State {
 
 /// reset global transforms
 pub fn reset() {
+	ctx_get_mut().state = State::default();
+}
 
-	let g3d_mut = ctx_get_mut();
-
-	g3d_mut.state_stack.clear();
-	g3d_mut.state = State::default();
-
+pub(super) fn clear_stack() {
+	ctx_get_mut().state_stack.clear();
 }
 
 /// push state
@@ -148,12 +148,47 @@ pub fn pop() {
 
 }
 
+/// global translate
+pub fn translate(pos: Vec3) {
+
+	let state = &mut ctx_get_mut().state;
+
+	state.transform = state.transform.translate(pos);
+
+}
+
+/// global rotate
+pub fn rotate(x: f32, y: f32, z: f32) {
+
+	let state = &mut ctx_get_mut().state;
+
+	if x != 0.0 {
+		state.transform = state.transform.rotate(x, Dir::X);
+	}
+
+	if y != 0.0 {
+		state.transform = state.transform.rotate(y, Dir::Y);
+	}
+
+	if z != 0.0 {
+		state.transform = state.transform.rotate(z, Dir::Z);
+	}
+
+}
+
+/// global scale
+pub fn scale(s: Vec3) {
+
+	let state = &mut ctx_get_mut().state;
+
+	state.transform = state.transform.scale(s);
+
+}
+
 pub fn cube() {
 
 	let gfx = ctx_get();
-	let model = Mat4::identity()
-		.rotate(app::time(), vec3!(1, 0.5, 0.3))
-		.scale(vec3!(120));
+	let model = gfx.state.transform;
 	let (width, height) = window::size();
 	let projection = Mat4::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
 
