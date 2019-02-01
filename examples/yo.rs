@@ -38,12 +38,18 @@ fn main() {
 		vec2!(0, tex.height()) + vec2!(-margin, margin),
 	];
 
+	gfx::drawon(&canvas);
+	g2d::text("!23");
+	gfx::stop_drawon(&canvas);
+
+	gfx::capture(&canvas, "test.png");
+
 	// main loop
 	app::run(|| {
 
-// 		g3d::rotate(app::time(), app::time(), app::time());
-// 		g3d::scale(vec3!(120));
-// 		g3d::cube();
+		g3d::rotate(app::time(), app::time(), app::time());
+		g3d::scale(vec3!(120));
+		g3d::cube();
 
 		if index < anims["run"].to {
 			index += 1;
@@ -79,7 +85,7 @@ fn main() {
 		}
 
 		g2d::push();
-		g2d::line_width(1);
+		g2d::line_width(2);
 		g2d::color(color!(1, 0, 1, 1));
 		g2d::poly(&pts);
 		g2d::pop();

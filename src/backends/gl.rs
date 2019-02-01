@@ -597,6 +597,8 @@ impl Program {
 			gl::AttachShader(id, vs);
 			gl::AttachShader(id, fs);
 
+			dbg!(id);
+
 			return Self {
 				id: id
 			};
@@ -671,9 +673,13 @@ impl Program {
 		name: &str,
 		f: f32) -> &Self {
 
+		self.bind();
+
 		unsafe {
 			gl::Uniform1f(gl::GetUniformLocation(self.id, cstr(name).as_ptr()), f);
 		}
+
+		self.unbind();
 
 		return self;
 
@@ -684,6 +690,8 @@ impl Program {
 		name: &str,
 		v: Vec2) -> &Self {
 
+		self.bind();
+
 		unsafe {
 			gl::Uniform2f(
 				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
@@ -691,6 +699,8 @@ impl Program {
 				v.y,
 			);
 		}
+
+		self.unbind();
 
 		return self;
 
@@ -701,6 +711,8 @@ impl Program {
 		name: &str,
 		v: Vec3) -> &Self {
 
+		self.bind();
+
 		unsafe {
 			gl::Uniform3f(
 				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
@@ -710,6 +722,8 @@ impl Program {
 			);
 		}
 
+		self.unbind();
+
 		return self;
 
 	}
@@ -718,6 +732,8 @@ impl Program {
 		&self,
 		name: &str,
 		v: Vec4) -> &Self {
+
+		self.bind();
 
 		unsafe {
 			gl::Uniform4f(
@@ -729,6 +745,8 @@ impl Program {
 			);
 		}
 
+		self.unbind();
+
 		return self;
 
 	}
@@ -738,6 +756,8 @@ impl Program {
 		name: &str,
 		value: [[f32; 4]; 4]) -> &Self {
 
+		self.bind();
+
 		unsafe {
 			gl::UniformMatrix4fv(
 				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
@@ -746,6 +766,8 @@ impl Program {
 				&value[0][0]
 			);
 		}
+
+		self.unbind();
 
 		return self;
 
@@ -896,6 +918,7 @@ pub fn draw(
 		vbuf.unbind();
 		ibuf.unbind();
 		tex.unbind();
+		program.unbind();
 
 	}
 

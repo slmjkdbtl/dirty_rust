@@ -36,8 +36,6 @@ pub(super) fn init() {
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 	let renderer = BatchRenderer::new::<QuadVert>(MAX_DRAWS, default_shader.clone());
 
-	default_shader.bind();
-
 	let default_font = Font::new(
 		gfx::Texture::from_bytes(DEFAULT_FONT),
 		DEFAULT_FONT_COLS,

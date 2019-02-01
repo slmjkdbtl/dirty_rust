@@ -4,7 +4,6 @@
 - 3d
 - ui
 - ecs example
-- shader switching bug
 - macro for simple systems
 - game controllers
 - more accurate timestep
@@ -69,6 +68,7 @@
 - reduce custom shader boilerplate
 - abstract batch drawing
 - seperate gfx, g2d and g3d
+- shader switching bug
 
 == ADVENTURE
 - wasm
