@@ -30,6 +30,7 @@ fn main() {
 	let frames = &sprite.frames;
 	let anims = &sprite.anims;
 	let mut tint = color!(1);
+	let mut hovering = false;
 
 	let pts = vec![
 		vec2!(0, 0) + vec2!(-margin, -margin),
@@ -41,9 +42,13 @@ fn main() {
 	// main loop
 	app::run(|| {
 
-		g3d::rotate(app::time(), app::time(), app::time());
-		g3d::scale(vec3!(120));
-		g3d::cube();
+		if hovering {
+
+			g3d::rotate(app::time(), app::time(), app::time());
+			g3d::scale(vec3!(120));
+			g3d::cube();
+
+		}
 
 		if index < anims["run"].to {
 			index += 1;
@@ -60,13 +65,21 @@ fn main() {
 
 		let pts = g2d::multi_warp(&pts);
 
-		g2d::color(tint);
+		if hovering {
+			g2d::color(color!(0, 1, 1, 1));
+		} else {
+			g2d::color(color!(1));
+		}
 		g2d::draw(&tex, frames[index]);
 		g2d::pop();
 
 		if col::point_poly(window::mouse_pos(), &pts) {
+			hovering = true;
+		} else {
+			hovering = false;
+		}
 
-			tint = color!(0, 1, 1, 1);
+		if hovering {
 
 			g2d::push();
 			g2d::line_width(3);
@@ -74,8 +87,6 @@ fn main() {
 			g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 			g2d::pop();
 
-		} else {
-			tint = color!(1);
 		}
 
 		g2d::push();
