@@ -708,9 +708,5 @@ impl Shader {
 		return self;
 	}
 
-	fn bind(&self) {
-		self.program.bind();
-	}
-
 }
 
