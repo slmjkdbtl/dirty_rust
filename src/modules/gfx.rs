@@ -3,6 +3,7 @@
 //! Rendering
 
 use std::rc::Rc;
+use std::any::TypeId;
 
 use crate::*;
 use crate::math::*;
@@ -36,6 +37,118 @@ pub(super) fn init() {
 /// check if gfx is initiated
 pub fn enabled() -> bool {
 	return ctx_ok();
+}
+
+pub(super) struct BatchRenderer {
+
+	queue: Vec<f32>,
+	max: usize,
+	ibuf: gl::IndexBuffer,
+	vbuf: gl::VertexBuffer,
+	mesh_type: TypeId,
+	vert_stride: usize,
+	vert_count: usize,
+	index_count: usize,
+
+}
+
+impl BatchRenderer {
+
+	pub fn new<M: Mesh + 'static>(max: usize) -> Self {
+
+		let index = M::index();
+		let vert_count = M::COUNT;
+		let vert_stride = M::Vertex::STRIDE;
+		let max_vertices = max * vert_stride * vert_count;
+		let max_indices = max * index.len();
+		let queue: Vec<f32> = Vec::with_capacity(max_vertices);
+
+		let indices: Vec<u32> = index
+			.iter()
+			.cycle()
+			.take(max_indices)
+			.enumerate()
+			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
+			.collect();
+
+		let ibuf = gl::IndexBuffer::new(max_indices, gl::BufferUsage::Static);
+
+		ibuf
+			.data(&indices, 0);
+
+		let vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
+
+		for attr in M::Vertex::attr() {
+			vbuf.attr(attr);
+		}
+
+		return Self {
+
+			queue: queue,
+			max: max,
+			ibuf: ibuf,
+			vbuf: vbuf,
+			mesh_type: TypeId::of::<M>(),
+			index_count: index.len(),
+			vert_stride: vert_stride,
+			vert_count: vert_count,
+
+		};
+
+	}
+
+	pub fn push<M: Mesh + 'static>(&mut self, mesh: M) {
+
+		if TypeId::of::<M>() != self.mesh_type {
+			panic!("invalid vertex");
+		}
+
+		if self.queue.len() >= self.queue.capacity() {
+			self.queue.clear();
+			panic!("reached maximum draw count");
+		}
+
+		mesh.push(&mut self.queue);
+
+	}
+
+	pub fn flush(&mut self, tex: &gl::Texture, program: &gl::Program) {
+
+		if self.queue.is_empty() {
+			return;
+		}
+
+		self.vbuf.data(&self.queue, 0);
+
+		gl::draw(
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			&tex,
+			self.queue.len() / self.vert_stride / self.vert_count * self.index_count
+		);
+
+		self.queue.clear();
+
+	}
+
+}
+
+pub(super) trait Mesh {
+
+	type Vertex: VertexLayout;
+	const COUNT: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn index() -> Vec<u32>;
+
+}
+
+pub(super) trait VertexLayout {
+
+	const STRIDE: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn attr() -> Vec<gl::VertexAttr>;
+
 }
 
 /// render a canvas
