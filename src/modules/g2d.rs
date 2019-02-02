@@ -34,7 +34,7 @@ struct G2dCtx {
 pub(super) fn init() {
 
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
-	let renderer = BatchRenderer::new::<QuadVert>(MAX_DRAWS, default_shader.clone());
+	let renderer = BatchRenderer::new::<QuadMesh>(MAX_DRAWS, default_shader.clone());
 
 	let default_font = Font::new(
 		gfx::Texture::from_bytes(DEFAULT_FONT),
@@ -72,22 +72,22 @@ struct BatchRenderer {
 	max: usize,
 	ibuf: gl::IndexBuffer,
 	vbuf: gl::VertexBuffer,
-	vertex_type: TypeId,
+	mesh_type: TypeId,
 	vert_stride: usize,
 	vert_count: usize,
 	index_count: usize,
 	current_tex: Option<gfx::Texture>,
-	shader: Shader,
+	current_shader: Shader,
 
 }
 
 impl BatchRenderer {
 
-	fn new<V: VertexLayout + 'static>(max: usize, shader: Shader) -> Self {
+	fn new<M: Mesh + 'static>(max: usize, shader: Shader) -> Self {
 
-		let index = V::index();
-		let vert_count = V::COUNT;
-		let vert_stride = V::STRIDE;
+		let index = M::index();
+		let vert_count = M::COUNT;
+		let vert_stride = M::Vertex::STRIDE;
 		let max_vertices = max * vert_stride * vert_count;
 		let max_indices = max * index.len();
 		let queue: Vec<f32> = Vec::with_capacity(max_vertices);
@@ -107,7 +107,7 @@ impl BatchRenderer {
 
 		let vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
 
-		for attr in V::attr() {
+		for attr in M::Vertex::attr() {
 			vbuf.attr(attr);
 		}
 
@@ -117,20 +117,20 @@ impl BatchRenderer {
 			max: max,
 			ibuf: ibuf,
 			vbuf: vbuf,
-			vertex_type: TypeId::of::<V>(),
+			mesh_type: TypeId::of::<M>(),
 			index_count: index.len(),
 			vert_stride: vert_stride,
 			vert_count: vert_count,
 			current_tex: None,
-			shader: shader,
+			current_shader: shader,
 
 		};
 
 	}
 
-	fn push<V: VertexLayout + 'static>(&mut self, v: V) {
+	fn push<M: Mesh + 'static>(&mut self, mesh: M) {
 
-		if TypeId::of::<V>() != self.vertex_type {
+		if TypeId::of::<M>() != self.mesh_type {
 			panic!("invalid vertex");
 		}
 
@@ -139,7 +139,7 @@ impl BatchRenderer {
 			panic!("reached maximum draw count");
 		}
 
-		v.push(&mut self.queue);
+		mesh.push(&mut self.queue);
 
 	}
 
@@ -159,7 +159,7 @@ impl BatchRenderer {
 	fn set_shader(&mut self, s: &Shader) {
 
 		self.flush();
-		self.shader = s.clone();
+		self.current_shader = s.clone();
 
 	}
 
@@ -176,7 +176,7 @@ impl BatchRenderer {
 			gl::draw(
 				&self.vbuf,
 				&self.ibuf,
-				&self.shader.program,
+				&self.current_shader.program,
 				&tex.handle,
 				self.queue.len() / self.vert_stride / self.vert_count * self.index_count
 			);
@@ -190,14 +190,62 @@ impl BatchRenderer {
 
 }
 
+trait Mesh {
+
+	type Vertex: VertexLayout;
+	const COUNT: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn index() -> Vec<u32>;
+
+}
+
+struct QuadMesh {
+
+	transform: Mat4,
+	quad: Rect,
+	color: Color,
+
+}
+
+impl QuadMesh {
+	fn new(t: Mat4, q: Rect, c: Color) -> Self {
+		return Self {
+			transform: t,
+			quad: q,
+			color: c,
+		};
+	}
+}
+
+impl Mesh for QuadMesh {
+
+	type Vertex = QuadVert;
+	const COUNT: usize = 4;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+
+		let t = &self.transform;
+		let q = &self.quad;
+		let c = &self.color;
+
+		Self::Vertex::new(t.forward(vec2!(0, 1)), vec2!(q.x, q.y + q.h), *c).push(queue);
+		Self::Vertex::new(t.forward(vec2!(1, 1)), vec2!(q.x + q.w, q.y + q.h), *c).push(queue);
+		Self::Vertex::new(t.forward(vec2!(1, 0)), vec2!(q.x + q.w, q.y), *c).push(queue);
+		Self::Vertex::new(t.forward(vec2!(0, 0)), vec2!(q.x, q.y), *c).push(queue);
+
+	}
+
+	fn index() -> Vec<u32> {
+		return vec![0, 1, 3, 1, 2, 3];
+	}
+
+}
+
 trait VertexLayout {
 
 	const STRIDE: usize;
-	const COUNT: usize;
 	fn push(&self, queue: &mut Vec<f32>);
-	// wait for https://github.com/rust-lang/rust/issues/42863 to use const arrays
 	fn attr() -> Vec<gl::VertexAttr>;
-	fn index() -> Vec<u32>;
 
 }
 
@@ -218,7 +266,6 @@ impl QuadVert {
 impl VertexLayout for QuadVert {
 
 	const STRIDE: usize = 8;
-	const COUNT: usize = 4;
 
 	fn push(&self, queue: &mut Vec<f32>){
 
@@ -241,10 +288,6 @@ impl VertexLayout for QuadVert {
 			gl::VertexAttr::new(2, 4, 4),
 		];
 
-	}
-
-	fn index() -> Vec<u32> {
-		return vec![0, 1, 3, 1, 2, 3];
 	}
 
 }
@@ -287,7 +330,7 @@ pub(super) fn flush() {
 	let gfx_mut = ctx_get_mut();
 	let renderer = &mut gfx_mut.renderer;
 
-	renderer.shader.send_mat4("projection", gfx.projection);
+	renderer.current_shader.send_mat4("projection", gfx.projection);
 	gfx_mut.renderer.flush();
 
 }
@@ -320,10 +363,7 @@ pub fn draw(tex: &gfx::Texture, quad: Rect) {
 	let color = gfx.state.tint;
 
 	renderer.update_tex(tex);
-	renderer.push(QuadVert::new(t.forward(vec2!(0, 1)), vec2!(quad.x, quad.y + quad.h), color));
-	renderer.push(QuadVert::new(t.forward(vec2!(1, 1)), vec2!(quad.x + quad.w, quad.y + quad.h), color));
-	renderer.push(QuadVert::new(t.forward(vec2!(1, 0)), vec2!(quad.x + quad.w, quad.y), color));
-	renderer.push(QuadVert::new(t.forward(vec2!(0, 0)), vec2!(quad.x, quad.y), color));
+	renderer.push(QuadMesh::new(t, quad, color));
 
 }
 
@@ -404,6 +444,16 @@ pub fn line(p1: Vec2, p2: Vec2) {
 	rect(vec2!(len, gfx.state.line_width));
 	pop();
 
+}
+
+pub fn effect(s: &Shader) {
+	flush();
+	ctx_get_mut().renderer.set_shader(s);
+}
+
+pub fn effect_default() {
+	flush();
+	ctx_get_mut().renderer.set_shader(&ctx_get().default_shader);
 }
 
 /// draw polygon with vertices

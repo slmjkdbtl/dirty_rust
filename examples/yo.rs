@@ -70,6 +70,7 @@ fn main() {
 		} else {
 			g2d::color(color!(1));
 		}
+
 		g2d::draw(&tex, frames[index]);
 		g2d::pop();
 
@@ -102,7 +103,12 @@ fn main() {
 		g2d::pop();
 
 		g2d::push();
-		g2d::translate(vec2!(12));
+		g2d::translate(vec2!(16, 452));
+		g2d::text("hover mouse over the car");
+		g2d::pop();
+
+		g2d::push();
+		g2d::translate(vec2!(16));
 		g2d::text(&format!("{}", app::fps()));
 		g2d::pop();
 
