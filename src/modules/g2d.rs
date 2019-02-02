@@ -23,11 +23,11 @@ struct G2dCtx {
 	projection: Mat4,
 	state: State,
 	state_stack: Vec<State>,
-	default_shader: Shader,
 	default_font: Font,
 	current_font: Font,
 	empty_tex: Texture,
 	current_tex: Option<Texture>,
+	default_shader: Shader,
 	current_shader: Shader,
 	renderer: BatchRenderer,
 
@@ -518,7 +518,6 @@ impl Shader {
 
 		let vert = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
 		let frag = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
-
 		let program = gl::Program::new(&vert, &frag);
 
 		program

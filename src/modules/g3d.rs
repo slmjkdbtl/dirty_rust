@@ -2,6 +2,8 @@
 
 //! 3D Rendering
 
+use std::rc::Rc;
+
 use crate::*;
 use crate::math::*;
 use crate::gfx::*;
@@ -21,7 +23,8 @@ struct G3dCtx {
 	state_stack: Vec<State>,
 	vbuf: gl::VertexBuffer,
 	ibuf: gl::IndexBuffer,
-	program: gl::Program,
+	default_shader: Shader,
+	current_shader: Shader,
 	empty_tex: Texture,
 
 }
@@ -77,12 +80,7 @@ pub(super) fn init() {
 	ibuf
 		.data(&index, 0);
 
-	let program = gl::Program::new(TEMPLATE_3D_VERT, TEMPLATE_3D_FRAG);
-
-	program
-		.attr(3, "vert")
-		.attr(4, "color")
-		.link();
+	let default_shader = Shader::from_code(DEFAULT_3D_VERT, DEFAULT_3D_FRAG);
 
 	ctx_init(G3dCtx {
 
@@ -91,7 +89,8 @@ pub(super) fn init() {
 		state: State::default(),
 		vbuf: vbuf,
 		ibuf: ibuf,
-		program: program,
+		default_shader: default_shader.clone(),
+		current_shader: default_shader.clone(),
 		empty_tex: Texture::from_color(color!(1), 1, 1),
 
 	});
@@ -194,17 +193,99 @@ pub fn cube() {
 	let view = Mat4::identity();
 	let projection = gfx.projection;
 
-	gfx.program.uniform_mat4("model", model.as_arr());
-	gfx.program.uniform_mat4("view", view.as_arr());
-	gfx.program.uniform_mat4("projection", projection.as_arr());
+	gfx.current_shader.send_mat4("model", model);
+	gfx.current_shader.send_mat4("view", view);
+	gfx.current_shader.send_mat4("projection", projection);
 
 	gl::draw(
 		&gfx.vbuf,
 		&gfx.ibuf,
-		&gfx.program,
+		&gfx.current_shader.program,
 		&gfx.empty_tex.handle,
 		36,
 	);
+
+}
+
+/// shader effect
+#[derive(PartialEq, Clone)]
+pub struct Shader {
+	program: Rc<gl::Program>,
+}
+
+impl Shader {
+
+	pub fn from_code(vert: &str, frag: &str) -> Self {
+
+		let vert = TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
+		let frag = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
+		let program = gl::Program::new(&vert, &frag);
+
+		program
+			.attr(3, "vert")
+			.attr(4, "color")
+			.link();
+
+		return Self {
+			program: Rc::new(program),
+		};
+
+	}
+
+	pub fn from_code_vert(vert: &str) -> Self {
+		return Self::from_code(vert, DEFAULT_3D_FRAG);
+	}
+
+	pub fn from_code_frag(frag: &str) -> Self {
+		return Self::from_code(DEFAULT_3D_VERT, frag);
+	}
+
+	pub fn from_file(vertf: &str, fragf: &str) -> Self {
+		return Self::from_code(&fs::read_str(vertf), &fs::read_str(fragf));
+	}
+
+	pub fn from_file_vert(vertf: &str) -> Self {
+		return Self::from_code(&fs::read_str(vertf), DEFAULT_3D_FRAG);
+	}
+
+	pub fn from_file_frag(fragf: &str) -> Self {
+		return Self::from_code(DEFAULT_3D_VERT, &fs::read_str(fragf));
+	}
+
+	pub fn send_float(&self, name: &str, f: f32) -> &Self {
+		self.program.uniform_float(name, f);
+		return self;
+	}
+
+	pub fn send_vec2(&self, name: &str, v: Vec2) -> &Self {
+		self.program.uniform_vec2(name, v);
+		return self;
+	}
+
+	pub fn send_vec3(&self, name: &str, v: Vec3) -> &Self {
+		self.program.uniform_vec3(name, v);
+		return self;
+	}
+
+	pub fn send_vec4(&self, name: &str, v: Vec4) -> &Self {
+		self.program.uniform_vec4(name, v);
+		return self;
+	}
+
+	pub fn send_mat4(&self, name: &str, v: Mat4) -> &Self {
+		self.program.uniform_mat4(name, v.as_arr());
+		return self;
+	}
+
+	pub fn send_color(&self, name: &str, c: Color) -> &Self {
+		self.program.uniform_color(name, c);
+		return self;
+	}
+
+	pub fn send_rect(&self, name: &str, r: Rect) -> &Self {
+		self.program.uniform_rect(name, r);
+		return self;
+	}
 
 }
 
