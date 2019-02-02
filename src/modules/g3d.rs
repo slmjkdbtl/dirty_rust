@@ -21,11 +21,10 @@ struct G3dCtx {
 	projection: Mat4,
 	state: State,
 	state_stack: Vec<State>,
-	vbuf: gl::VertexBuffer,
-	ibuf: gl::IndexBuffer,
 	default_shader: Shader,
 	current_shader: Shader,
 	empty_tex: Texture,
+	renderer: Renderer,
 
 }
 
@@ -34,52 +33,7 @@ pub(super) fn init() {
 	let (width, height) = window::size();
 	let projection = math::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
 
-	let verts = [
-		// verts          // color
-		-0.5, -0.5,  0.5, 1.0, 0.0, 0.0, 1.0,
-		 0.5, -0.5,  0.5, 0.0, 1.0, 0.0, 1.0,
-		 0.5,  0.5,  0.5, 0.0, 0.0, 1.0, 1.0,
-		-0.5,  0.5,  0.5, 1.0, 1.0, 1.0, 1.0,
-		-0.5, -0.5, -0.5, 1.0, 0.0, 0.0, 1.0,
-		 0.5, -0.5, -0.5, 0.0, 1.0, 0.0, 1.0,
-		 0.5,  0.5, -0.5, 0.0, 0.0, 1.0, 1.0,
-		-0.5,  0.5, -0.5, 1.0, 1.0, 1.0, 1.0,
-	];
-
-	let index = [
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-	];
-
-	let vbuf = gl::VertexBuffer::new(verts.len(), 7, gl::BufferUsage::Static);
-
-	vbuf
-		.data(&verts, 0);
-
-	vbuf.attr(gl::VertexAttr::new(3, 3, 0));
-	vbuf.attr(gl::VertexAttr::new(4, 4, 3));
-
-	let ibuf = gl::IndexBuffer::new(index.len(), gl::BufferUsage::Static);
-
-	ibuf
-		.data(&index, 0);
-
+	let renderer = Renderer::new(CubeMesh);
 	let default_shader = Shader::from_code(DEFAULT_3D_VERT, DEFAULT_3D_FRAG);
 
 	ctx_init(G3dCtx {
@@ -87,13 +41,91 @@ pub(super) fn init() {
 		projection: projection,
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
-		vbuf: vbuf,
-		ibuf: ibuf,
 		default_shader: default_shader.clone(),
 		current_shader: default_shader.clone(),
 		empty_tex: Texture::from_color(color!(1), 1, 1),
+		renderer: renderer,
 
 	});
+
+}
+
+struct CubeMesh;
+
+impl Mesh for CubeMesh {
+
+	type Vertex = CubeVert;
+	const COUNT: usize = 8;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+
+		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), color!(1, 1, 1, 1)).push(queue);
+
+	}
+
+	fn index() -> Vec<u32> {
+		return vec![
+			0, 1, 2,
+			2, 3, 0,
+			1, 5, 6,
+			6, 2, 1,
+			7, 6, 5,
+			5, 4, 7,
+			4, 0, 3,
+			3, 7, 4,
+			4, 5, 1,
+			1, 0, 4,
+			3, 2, 6,
+			6, 7, 3,
+		];
+	}
+
+}
+
+struct CubeVert {
+
+	pos: Vec3,
+	color: Color,
+
+}
+
+impl CubeVert {
+	fn new(pos: Vec3, color: Color) -> Self {
+		return Self { pos, color };
+	}
+}
+
+impl VertexLayout for CubeVert {
+
+	const STRIDE: usize = 7;
+
+	fn push(&self, queue: &mut Vec<f32>){
+
+		queue.push(self.pos.x);
+		queue.push(self.pos.y);
+		queue.push(self.pos.z);
+		queue.push(self.color.r);
+		queue.push(self.color.g);
+		queue.push(self.color.b);
+		queue.push(self.color.a);
+
+	}
+
+	fn attr() -> Vec<gl::VertexAttr> {
+
+		return vec![
+			gl::VertexAttr::new(3, 3, 0),
+			gl::VertexAttr::new(4, 4, 3),
+		];
+
+	}
 
 }
 
@@ -196,14 +228,7 @@ pub fn cube() {
 	gfx.current_shader.send_mat4("model", model);
 	gfx.current_shader.send_mat4("view", view);
 	gfx.current_shader.send_mat4("projection", projection);
-
-	gl::draw(
-		&gfx.vbuf,
-		&gfx.ibuf,
-		&gfx.current_shader.program,
-		&gfx.empty_tex.handle,
-		36,
-	);
+	gfx.renderer.draw(&gfx.empty_tex.handle, &gfx.current_shader.program);
 
 }
 
