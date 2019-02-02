@@ -39,6 +39,59 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
+pub(super) struct Renderer {
+
+	ibuf: gl::IndexBuffer,
+	vbuf: gl::VertexBuffer,
+	index_count: usize,
+
+}
+
+impl Renderer {
+
+	pub fn new<M: Mesh>(mesh: M) -> Self {
+
+		let mut verts = vec![];
+		let mut index = M::index();
+
+		mesh.push(&mut verts);
+
+		let vbuf = gl::VertexBuffer::new(verts.len(), 7, gl::BufferUsage::Static);
+
+		vbuf
+			.data(&verts, 0);
+
+		for attr in M::Vertex::attr() {
+			vbuf.attr(attr);
+		}
+
+		let ibuf = gl::IndexBuffer::new(index.len(), gl::BufferUsage::Static);
+
+		ibuf
+			.data(&index, 0);
+
+		return Self {
+			vbuf: vbuf,
+			ibuf: ibuf,
+			index_count: index.len(),
+		}
+
+	}
+
+	pub fn draw(&self, tex: &gl::Texture, program: &gl::Program) {
+
+		gl::draw(
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			&tex,
+			self.index_count,
+		);
+
+	}
+
+}
+
 pub(super) struct BatchRenderer {
 
 	queue: Vec<f32>,

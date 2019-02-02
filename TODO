@@ -6,6 +6,7 @@
 - ecs example
 - macro for simple systems
 - game controllers
+- better gfx window resizing behavior
 - more accurate timestep
 - split core, ui, ecs, addons to workspaces
 
