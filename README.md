@@ -38,14 +38,14 @@ fn main() {
 	app::run(|| {
 
 		// transform
-		gfx::push();
-		gfx::translate(vec2!(220, 120));
-		gfx::scale(vec2!(12));
-		gfx::color(color!(0, 1, 1, 1));
+		g2d::push();
+		g2d::translate(vec2!(220, 120));
+		g2d::scale(vec2!(12));
+		g2d::color(color!(0, 1, 1, 1));
 
 		// draw text
-		gfx::text("yo");
-		gfx::pop();
+		g2d::text("yo");
+		g2d::pop();
 
 		// input
 		if window::key_pressed(Key::Escape) {
