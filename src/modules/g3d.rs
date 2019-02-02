@@ -4,6 +4,7 @@
 
 use crate::*;
 use crate::math::*;
+use crate::gfx::*;
 use crate::backends::gl;
 
 const MAX_STATE_STACK: usize = 64;
@@ -21,7 +22,7 @@ struct G3dCtx {
 	vbuf: gl::VertexBuffer,
 	ibuf: gl::IndexBuffer,
 	program: gl::Program,
-	empty_tex: gfx::Texture,
+	empty_tex: Texture,
 
 }
 
@@ -91,7 +92,7 @@ pub(super) fn init() {
 		vbuf: vbuf,
 		ibuf: ibuf,
 		program: program,
-		empty_tex: gfx::Texture::from_color(color!(1), 1, 1),
+		empty_tex: Texture::from_color(color!(1), 1, 1),
 
 	});
 

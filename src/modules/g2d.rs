@@ -3,11 +3,11 @@
 //! 2D Rendering
 
 use std::collections::HashMap;
-use std::any::TypeId;
 use std::rc::Rc;
 
 use crate::*;
 use crate::math::*;
+use crate::gfx::*;
 use crate::backends::gl;
 
 const MAX_DRAWS: usize = 65536;
@@ -26,18 +26,21 @@ struct G2dCtx {
 	default_shader: Shader,
 	default_font: Font,
 	current_font: Font,
-	empty_tex: gfx::Texture,
+	empty_tex: Texture,
+	current_tex: Option<Texture>,
+	current_shader: Shader,
 	renderer: BatchRenderer,
 
 }
 
 pub(super) fn init() {
 
+	let renderer = BatchRenderer::new::<QuadMesh>(MAX_DRAWS);
+
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
-	let renderer = BatchRenderer::new::<QuadMesh>(MAX_DRAWS, default_shader.clone());
 
 	let default_font = Font::new(
-		gfx::Texture::from_bytes(DEFAULT_FONT),
+		Texture::from_bytes(DEFAULT_FONT),
 		DEFAULT_FONT_COLS,
 		DEFAULT_FONT_ROWS,
 		DEFAULT_FONT_CHARS,
@@ -54,8 +57,10 @@ pub(super) fn init() {
 		default_shader: default_shader.clone(),
 		default_font: default_font.clone(),
 		current_font: default_font,
-		empty_tex: gfx::Texture::from_color(color!(1), 1, 1),
+		empty_tex: Texture::from_color(color!(1), 1, 1),
 		renderer: renderer,
+		current_tex: None,
+		current_shader: default_shader,
 
 	});
 
@@ -64,139 +69,6 @@ pub(super) fn init() {
 /// check if gfx is initiated
 pub fn enabled() -> bool {
 	return ctx_ok();
-}
-
-struct BatchRenderer {
-
-	queue: Vec<f32>,
-	max: usize,
-	ibuf: gl::IndexBuffer,
-	vbuf: gl::VertexBuffer,
-	mesh_type: TypeId,
-	vert_stride: usize,
-	vert_count: usize,
-	index_count: usize,
-	current_tex: Option<gfx::Texture>,
-	current_shader: Shader,
-
-}
-
-impl BatchRenderer {
-
-	fn new<M: Mesh + 'static>(max: usize, shader: Shader) -> Self {
-
-		let index = M::index();
-		let vert_count = M::COUNT;
-		let vert_stride = M::Vertex::STRIDE;
-		let max_vertices = max * vert_stride * vert_count;
-		let max_indices = max * index.len();
-		let queue: Vec<f32> = Vec::with_capacity(max_vertices);
-
-		let indices: Vec<u32> = index
-			.iter()
-			.cycle()
-			.take(max_indices)
-			.enumerate()
-			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
-			.collect();
-
-		let ibuf = gl::IndexBuffer::new(max_indices, gl::BufferUsage::Static);
-
-		ibuf
-			.data(&indices, 0);
-
-		let vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
-
-		for attr in M::Vertex::attr() {
-			vbuf.attr(attr);
-		}
-
-		return Self {
-
-			queue: queue,
-			max: max,
-			ibuf: ibuf,
-			vbuf: vbuf,
-			mesh_type: TypeId::of::<M>(),
-			index_count: index.len(),
-			vert_stride: vert_stride,
-			vert_count: vert_count,
-			current_tex: None,
-			current_shader: shader,
-
-		};
-
-	}
-
-	fn push<M: Mesh + 'static>(&mut self, mesh: M) {
-
-		if TypeId::of::<M>() != self.mesh_type {
-			panic!("invalid vertex");
-		}
-
-		if self.queue.len() >= self.queue.capacity() {
-			self.queue.clear();
-			panic!("reached maximum draw count");
-		}
-
-		mesh.push(&mut self.queue);
-
-	}
-
-	fn update_tex(&mut self, tex: &gfx::Texture) {
-
-		let wrapped_tex = Some(tex.clone());
-
-		if self.current_tex != wrapped_tex {
-			if self.current_tex.is_some() {
-				flush();
-			}
-			self.current_tex = wrapped_tex;
-		}
-
-	}
-
-	fn set_shader(&mut self, s: &Shader) {
-
-		self.flush();
-		self.current_shader = s.clone();
-
-	}
-
-	fn flush(&mut self) {
-
-		if self.queue.is_empty() {
-			return;
-		}
-
-		if let Some(tex) = &self.current_tex {
-
-			self.vbuf.data(&self.queue, 0);
-
-			gl::draw(
-				&self.vbuf,
-				&self.ibuf,
-				&self.current_shader.program,
-				&tex.handle,
-				self.queue.len() / self.vert_stride / self.vert_count * self.index_count
-			);
-
-			self.queue.clear();
-			self.current_tex = None;
-
-		}
-
-	}
-
-}
-
-trait Mesh {
-
-	type Vertex: VertexLayout;
-	const COUNT: usize;
-	fn push(&self, queue: &mut Vec<f32>);
-	fn index() -> Vec<u32>;
-
 }
 
 struct QuadMesh {
@@ -238,14 +110,6 @@ impl Mesh for QuadMesh {
 	fn index() -> Vec<u32> {
 		return vec![0, 1, 3, 1, 2, 3];
 	}
-
-}
-
-trait VertexLayout {
-
-	const STRIDE: usize;
-	fn push(&self, queue: &mut Vec<f32>);
-	fn attr() -> Vec<gl::VertexAttr>;
 
 }
 
@@ -330,8 +194,14 @@ pub(super) fn flush() {
 	let gfx_mut = ctx_get_mut();
 	let renderer = &mut gfx_mut.renderer;
 
-	renderer.current_shader.send_mat4("projection", gfx.projection);
-	gfx_mut.renderer.flush();
+	if let Some(tex) = &gfx.current_tex {
+
+		gfx.current_shader.send_mat4("projection", gfx.projection);
+		renderer.flush(&*tex.handle, &gfx.current_shader.program);
+		gfx_mut.current_tex = None;
+
+	}
+
 
 }
 
@@ -354,7 +224,7 @@ pub(super) fn unflip_projection() {
 }
 
 /// draw a texture with visible quad area
-pub fn draw(tex: &gfx::Texture, quad: Rect) {
+pub fn draw(tex: &Texture, quad: Rect) {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
@@ -362,7 +232,15 @@ pub fn draw(tex: &gfx::Texture, quad: Rect) {
 	let t = gfx.state.transform.scale(vec3!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h, 1.0));
 	let color = gfx.state.tint;
 
-	renderer.update_tex(tex);
+	let wrapped_tex = Some(tex.clone());
+
+	if gfx.current_tex != wrapped_tex {
+		if gfx.current_tex.is_some() {
+			flush();
+		}
+		gfx_mut.current_tex = wrapped_tex;
+	}
+
 	renderer.push(QuadMesh::new(t, quad, color));
 
 }
@@ -446,14 +324,16 @@ pub fn line(p1: Vec2, p2: Vec2) {
 
 }
 
+/// apply a shader effect
 pub fn effect(s: &Shader) {
 	flush();
-	ctx_get_mut().renderer.set_shader(s);
+	ctx_get_mut().current_shader = s.clone();
 }
 
-pub fn effect_default() {
+/// stop shader effects and use default shader
+pub fn stop_effect() {
 	flush();
-	ctx_get_mut().renderer.set_shader(&ctx_get().default_shader);
+	ctx_get_mut().current_shader = ctx_get().default_shader.clone();
 }
 
 /// draw polygon with vertices
@@ -584,7 +464,7 @@ pub(super) fn clear_stack() {
 #[derive(PartialEq, Clone)]
 pub struct Font {
 
-	tex: gfx::Texture,
+	tex: Texture,
 	map: HashMap<char, Rect>,
 	grid_size: Vec2,
 
@@ -593,7 +473,7 @@ pub struct Font {
 impl Font {
 
 	/// creat a bitmap font from a texture, and grid of characters
-	pub fn new(tex: gfx::Texture, cols: usize, rows: usize, chars: &str) -> Self {
+	pub fn new(tex: Texture, cols: usize, rows: usize, chars: &str) -> Self {
 
 		let mut map = HashMap::new();
 		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
