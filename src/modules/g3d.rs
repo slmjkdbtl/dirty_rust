@@ -54,19 +54,19 @@ struct CubeMesh;
 
 impl Mesh for CubeMesh {
 
-	type Vertex = CubeVert;
+	type Vertex = Vertex3D;
 	const COUNT: usize = 8;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 
-		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), color!(1, 1, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)).push(queue);
 
 	}
 
@@ -89,28 +89,31 @@ impl Mesh for CubeMesh {
 
 }
 
-struct CubeVert {
+struct Vertex3D {
 
 	pos: Vec3,
+	uv: Vec2,
 	color: Color,
 
 }
 
-impl CubeVert {
-	fn new(pos: Vec3, color: Color) -> Self {
-		return Self { pos, color };
+impl Vertex3D {
+	fn new(pos: Vec3, uv: Vec2, color: Color) -> Self {
+		return Self { pos, uv, color };
 	}
 }
 
-impl VertexLayout for CubeVert {
+impl VertexLayout for Vertex3D {
 
-	const STRIDE: usize = 7;
+	const STRIDE: usize = 9;
 
 	fn push(&self, queue: &mut Vec<f32>){
 
 		queue.push(self.pos.x);
 		queue.push(self.pos.y);
 		queue.push(self.pos.z);
+		queue.push(self.uv.x);
+		queue.push(self.uv.y);
 		queue.push(self.color.r);
 		queue.push(self.color.g);
 		queue.push(self.color.b);
@@ -122,7 +125,8 @@ impl VertexLayout for CubeVert {
 
 		return vec![
 			gl::VertexAttr::new(3, 3, 0),
-			gl::VertexAttr::new(4, 4, 3),
+			gl::VertexAttr::new(4, 2, 3),
+			gl::VertexAttr::new(5, 4, 5),
 		];
 
 	}
@@ -248,7 +252,8 @@ impl Shader {
 
 		program
 			.attr(3, "vert")
-			.attr(4, "color")
+			.attr(4, "uv")
+			.attr(5, "color")
 			.link();
 
 		return Self {

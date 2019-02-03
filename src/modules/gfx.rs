@@ -52,11 +52,11 @@ impl Renderer {
 	pub fn new<M: Mesh>(mesh: M) -> Self {
 
 		let mut verts = vec![];
-		let mut index = M::index();
+		let index = M::index();
 
 		mesh.push(&mut verts);
 
-		let vbuf = gl::VertexBuffer::new(verts.len(), 7, gl::BufferUsage::Static);
+		let vbuf = gl::VertexBuffer::new(verts.len(), M::Vertex::STRIDE, gl::BufferUsage::Static);
 
 		vbuf
 			.data(&verts, 0);

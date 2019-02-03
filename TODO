@@ -4,6 +4,7 @@
 - 3d
 - ui
 - ecs example
+- rework renderer abstraction
 - macro for simple systems
 - game controllers
 - better gfx window resizing behavior

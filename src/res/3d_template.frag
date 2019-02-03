@@ -1,5 +1,6 @@
 // wengwengweng
 
+varying vec2 coord;
 varying vec4 tint;
 
 ###REPLACE###

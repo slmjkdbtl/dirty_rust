@@ -29,7 +29,6 @@ fn main() {
 	let tex = &sprite.tex;
 	let frames = &sprite.frames;
 	let anims = &sprite.anims;
-	let mut tint = color!(1);
 	let mut hovering = false;
 
 	let pts = vec![
