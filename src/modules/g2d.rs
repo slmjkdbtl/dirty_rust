@@ -5,6 +5,8 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use gl_derive::Vertex;
+
 use crate::*;
 use crate::math::*;
 use crate::gfx::*;
@@ -113,47 +115,24 @@ impl Mesh for QuadMesh {
 
 }
 
+#[derive(Vertex)]
 struct QuadVert {
-
-	pos: Vec2,
-	uv: Vec2,
-	color: Color,
-
+	#[bind(0)]
+	pos: [f32; 2],
+	#[bind(1)]
+	uv: [f32; 2],
+	#[bind(2)]
+	color: [f32; 4],
 }
 
 impl QuadVert {
-	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
-		return Self { pos, uv, color };
+	fn new(pos: Vec2, uv: Vec2, c: Color) -> Self {
+		return Self {
+			pos: [pos.x, pos.y],
+			uv: [uv.x, uv.y],
+			color: [c.r, c.g, c.b, c.a],
+		};
 	}
-}
-
-impl VertexLayout for QuadVert {
-
-	const STRIDE: usize = 8;
-
-	fn push(&self, queue: &mut Vec<f32>){
-
-		queue.push(self.pos.x);
-		queue.push(self.pos.y);
-		queue.push(self.uv.x);
-		queue.push(self.uv.y);
-		queue.push(self.color.r);
-		queue.push(self.color.g);
-		queue.push(self.color.b);
-		queue.push(self.color.a);
-
-	}
-
-	fn attr() -> Vec<gl::VertexAttr> {
-
-		return vec![
-			gl::VertexAttr::new(0, 2, 0),
-			gl::VertexAttr::new(1, 2, 2),
-			gl::VertexAttr::new(2, 4, 4),
-		];
-
-	}
-
 }
 
 #[derive(Clone, Copy)]
