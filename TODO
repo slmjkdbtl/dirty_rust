@@ -71,6 +71,7 @@
 - abstract batch drawing
 - seperate gfx, g2d and g3d
 - shader switching bug
+- vertex proc macro
 
 == ADVENTURE
 - wasm

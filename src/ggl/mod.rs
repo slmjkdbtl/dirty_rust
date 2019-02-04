@@ -92,6 +92,14 @@ bind_enum!(BlendFac(GLenum) {
 
 });
 
+pub trait VertexLayout {
+
+	const STRIDE: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn attr() -> Vec<VertexAttr>;
+
+}
+
 #[derive(PartialEq)]
 pub struct VertexAttr {
 

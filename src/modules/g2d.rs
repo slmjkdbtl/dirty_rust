@@ -10,7 +10,8 @@ use gl_derive::Vertex;
 use crate::*;
 use crate::math::*;
 use crate::gfx::*;
-use crate::backends::gl;
+use crate::ggl;
+use crate::ggl::VertexLayout;
 
 const MAX_DRAWS: usize = 65536;
 const MAX_STATE_STACK: usize = 64;
@@ -93,7 +94,7 @@ impl QuadMesh {
 
 impl Mesh for QuadMesh {
 
-	type Vertex = QuadVert;
+	type Vertex = Vertex2D;
 	const COUNT: usize = 4;
 
 	fn push(&self, queue: &mut Vec<f32>) {
@@ -116,7 +117,7 @@ impl Mesh for QuadMesh {
 }
 
 #[derive(Vertex)]
-struct QuadVert {
+struct Vertex2D {
 	#[bind(0)]
 	pos: [f32; 2],
 	#[bind(1)]
@@ -125,7 +126,7 @@ struct QuadVert {
 	color: [f32; 4],
 }
 
-impl QuadVert {
+impl Vertex2D {
 	fn new(pos: Vec2, uv: Vec2, c: Color) -> Self {
 		return Self {
 			pos: [pos.x, pos.y],
@@ -488,7 +489,7 @@ impl Font {
 /// shader effect
 #[derive(PartialEq, Clone)]
 pub struct Shader {
-	program: Rc<gl::Program>,
+	program: Rc<ggl::Program>,
 }
 
 impl Shader {
@@ -497,7 +498,7 @@ impl Shader {
 
 		let vert = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
 		let frag = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
-		let program = gl::Program::new(&vert, &frag);
+		let program = ggl::Program::new(&vert, &frag);
 
 		program
 			.attr(0, "vert")
