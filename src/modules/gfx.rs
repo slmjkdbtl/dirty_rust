@@ -7,7 +7,8 @@ use std::any::TypeId;
 
 use crate::*;
 use crate::math::*;
-use crate::backends::gl;
+use crate::ggl;
+use crate::ggl::VertexLayout;
 
 include!("../res/resources.rs");
 
@@ -26,9 +27,9 @@ pub(super) fn init() {
 
 	g3d::init();
 	g2d::init();
-	gl::set_blend(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha);
-	gl::set_depth(gl::DepthFunc::LessOrEqual);
-	gl::clear_color(color!(0, 0, 0, 1));
+	ggl::set_blend(ggl::BlendFac::SourceAlpha, ggl::BlendFac::OneMinusSourceAlpha);
+	ggl::set_depth(ggl::DepthFunc::LessOrEqual);
+	ggl::clear_color(color!(0, 0, 0, 1));
 	clear();
 	window::swap();
 
@@ -41,8 +42,8 @@ pub fn enabled() -> bool {
 
 pub(super) struct Renderer {
 
-	ibuf: gl::IndexBuffer,
-	vbuf: gl::VertexBuffer,
+	ibuf: ggl::IndexBuffer,
+	vbuf: ggl::VertexBuffer,
 	index_count: usize,
 
 }
@@ -56,7 +57,7 @@ impl Renderer {
 
 		mesh.push(&mut verts);
 
-		let vbuf = gl::VertexBuffer::new(verts.len(), M::Vertex::STRIDE, gl::BufferUsage::Static);
+		let vbuf = ggl::VertexBuffer::new(verts.len(), M::Vertex::STRIDE, ggl::BufferUsage::Static);
 
 		vbuf
 			.data(&verts, 0);
@@ -65,7 +66,7 @@ impl Renderer {
 			vbuf.attr(attr);
 		}
 
-		let ibuf = gl::IndexBuffer::new(index.len(), gl::BufferUsage::Static);
+		let ibuf = ggl::IndexBuffer::new(index.len(), ggl::BufferUsage::Static);
 
 		ibuf
 			.data(&index, 0);
@@ -78,9 +79,9 @@ impl Renderer {
 
 	}
 
-	pub fn draw(&self, tex: &gl::Texture, program: &gl::Program) {
+	pub fn draw(&self, tex: &ggl::Texture, program: &ggl::Program) {
 
-		gl::draw(
+		ggl::draw(
 			&self.vbuf,
 			&self.ibuf,
 			&program,
@@ -96,8 +97,8 @@ pub(super) struct BatchRenderer {
 
 	queue: Vec<f32>,
 	max: usize,
-	ibuf: gl::IndexBuffer,
-	vbuf: gl::VertexBuffer,
+	ibuf: ggl::IndexBuffer,
+	vbuf: ggl::VertexBuffer,
 	mesh_type: TypeId,
 	vert_stride: usize,
 	vert_count: usize,
@@ -124,12 +125,12 @@ impl BatchRenderer {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 			.collect();
 
-		let ibuf = gl::IndexBuffer::new(max_indices, gl::BufferUsage::Static);
+		let ibuf = ggl::IndexBuffer::new(max_indices, ggl::BufferUsage::Static);
 
 		ibuf
 			.data(&indices, 0);
 
-		let vbuf = gl::VertexBuffer::new(max_vertices, vert_stride, gl::BufferUsage::Dynamic);
+		let vbuf = ggl::VertexBuffer::new(max_vertices, vert_stride, ggl::BufferUsage::Dynamic);
 
 		for attr in M::Vertex::attr() {
 			vbuf.attr(attr);
@@ -165,7 +166,7 @@ impl BatchRenderer {
 
 	}
 
-	pub fn flush(&mut self, tex: &gl::Texture, program: &gl::Program) {
+	pub fn flush(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
 
 		if self.queue.is_empty() {
 			return;
@@ -173,7 +174,7 @@ impl BatchRenderer {
 
 		self.vbuf.data(&self.queue, 0);
 
-		gl::draw(
+		ggl::draw(
 			&self.vbuf,
 			&self.ibuf,
 			&program,
@@ -189,18 +190,10 @@ impl BatchRenderer {
 
 pub(super) trait Mesh {
 
-	type Vertex: VertexLayout;
+	type Vertex: ggl::VertexLayout;
 	const COUNT: usize;
 	fn push(&self, queue: &mut Vec<f32>);
 	fn index() -> Vec<u32>;
-
-}
-
-pub(super) trait VertexLayout {
-
-	const STRIDE: usize;
-	fn push(&self, queue: &mut Vec<f32>);
-	fn attr() -> Vec<gl::VertexAttr>;
 
 }
 
@@ -218,7 +211,7 @@ pub fn drawon(c: &Canvas) {
 
 	g2d::flush();
 	g2d::flip_projection();
-	gl::set_framebuffer(&*c.handle);
+	ggl::set_framebuffer(&*c.handle);
 	gfx.current_canvas = Some(c.clone());
 
 }
@@ -234,7 +227,7 @@ pub fn stop_drawon(c: &Canvas) {
 
 		g2d::flush();
 		g2d::unflip_projection();
-		gl::unset_framebuffer(&*c.handle);
+		ggl::unset_framebuffer(&*c.handle);
 		gfx.current_canvas = None;
 
 	} else {
@@ -245,7 +238,7 @@ pub fn stop_drawon(c: &Canvas) {
 
 /// clear view
 pub fn clear() {
-	gl::clear(true, true, false);
+	ggl::clear(true, true, false);
 }
 
 /// save a canvas into a png file
@@ -287,7 +280,7 @@ pub(super) fn end() {
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	pub(super) handle: Rc<gl::Texture>,
+	pub(super) handle: Rc<ggl::Texture>,
 }
 
 impl Texture {
@@ -295,7 +288,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: Rc::new(gl::Texture::new(width, height)),
+			handle: Rc::new(ggl::Texture::new(width, height)),
 		};
 	}
 
@@ -350,7 +343,7 @@ impl Texture {
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	handle: Rc<gl::Framebuffer>,
+	handle: Rc<ggl::Framebuffer>,
 	tex: Texture,
 	width: u32,
 	height: u32,
@@ -362,7 +355,7 @@ impl Canvas {
 	/// create new canvas
 	pub fn new(width: u32, height: u32) -> Self {
 
-		let handle = gl::Framebuffer::new();
+		let handle = ggl::Framebuffer::new();
 		let pixels = vec![0.0 as u8; (width * height * 4) as usize];
 		let tex = Texture::from_raw(&pixels, width, height);
 

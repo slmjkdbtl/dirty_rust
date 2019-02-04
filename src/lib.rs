@@ -8,7 +8,7 @@
 
 #[macro_use]
 mod utils;
-mod backends;
+mod ggl;
 mod modules;
 pub mod addons;
 pub mod math;

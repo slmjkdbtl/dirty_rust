@@ -24,7 +24,7 @@ pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 	let expanded = quote! {
 
-		impl #impl_generics VertexLayout for #name #ty_generics #where_clause {
+		impl #impl_generics ggl::VertexLayout for #name #ty_generics #where_clause {
 
 			const STRIDE: usize = #stride;
 
@@ -32,13 +32,10 @@ pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 				#push_block
 			}
 
-			fn attr() -> Vec<gl::VertexAttr> {
+			fn attr() -> Vec<ggl::VertexAttr> {
 
 				return vec![
 					#attr_block
-// 					gl::VertexAttr::new(0, 2, 0),
-// 					gl::VertexAttr::new(1, 2, 2),
-// 					gl::VertexAttr::new(2, 4, 4),
 				];
 
 			}
@@ -89,6 +86,12 @@ fn get_data(data: &Data) -> (TokenStream, TokenStream, TokenStream) {
 
 						if let syn::Type::Array(arr) = &f.ty {
 
+							let elem = &arr.elem;
+
+							if quote!(#elem).to_string() != "f32" {
+								panic!("only accept f32");
+							}
+
 							if let syn::Expr::Lit(lit) = &arr.len {
 
 								if let syn::Lit::Int(int) = &lit.lit {
@@ -96,7 +99,7 @@ fn get_data(data: &Data) -> (TokenStream, TokenStream, TokenStream) {
 									let len = int.value();
 
 									attr_recurse.push(quote_spanned! {f.span() =>
-										gl::VertexAttr::new(#index as u32, #len as i32, #stride),
+										ggl::VertexAttr::new(#index as u32, #len as i32, #stride),
 									});
 
 									stride += len as usize;

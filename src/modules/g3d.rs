@@ -4,10 +4,13 @@
 
 use std::rc::Rc;
 
+use gl_derive::Vertex;
+
 use crate::*;
 use crate::math::*;
 use crate::gfx::*;
-use crate::backends::gl;
+use crate::ggl;
+use crate::ggl::VertexLayout;
 
 const MAX_STATE_STACK: usize = 64;
 
@@ -89,48 +92,26 @@ impl Mesh for CubeMesh {
 
 }
 
+#[derive(Vertex)]
 struct Vertex3D {
 
-	pos: Vec3,
-	uv: Vec2,
-	color: Color,
+	#[bind(3)]
+	pos: [f32; 3],
+	#[bind(4)]
+	uv: [f32; 2],
+	#[bind(5)]
+	color: [f32; 4],
 
 }
 
 impl Vertex3D {
-	fn new(pos: Vec3, uv: Vec2, color: Color) -> Self {
-		return Self { pos, uv, color };
+	fn new(pos: Vec3, uv: Vec2, c: Color) -> Self {
+		return Self {
+			pos: [pos.x, pos.y, pos.z],
+			uv: [uv.x, uv.y],
+			color: [c.r, c.g, c.b, c.a],
+		};
 	}
-}
-
-impl VertexLayout for Vertex3D {
-
-	const STRIDE: usize = 9;
-
-	fn push(&self, queue: &mut Vec<f32>){
-
-		queue.push(self.pos.x);
-		queue.push(self.pos.y);
-		queue.push(self.pos.z);
-		queue.push(self.uv.x);
-		queue.push(self.uv.y);
-		queue.push(self.color.r);
-		queue.push(self.color.g);
-		queue.push(self.color.b);
-		queue.push(self.color.a);
-
-	}
-
-	fn attr() -> Vec<gl::VertexAttr> {
-
-		return vec![
-			gl::VertexAttr::new(3, 3, 0),
-			gl::VertexAttr::new(4, 2, 3),
-			gl::VertexAttr::new(5, 4, 5),
-		];
-
-	}
-
 }
 
 /// check if g3d is initiated
@@ -239,7 +220,7 @@ pub fn cube() {
 /// shader effect
 #[derive(PartialEq, Clone)]
 pub struct Shader {
-	program: Rc<gl::Program>,
+	program: Rc<ggl::Program>,
 }
 
 impl Shader {
@@ -248,7 +229,7 @@ impl Shader {
 
 		let vert = TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
 		let frag = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
-		let program = gl::Program::new(&vert, &frag);
+		let program = ggl::Program::new(&vert, &frag);
 
 		program
 			.attr(3, "vert")
