@@ -28,6 +28,7 @@ struct G3dCtx {
 	current_shader: Shader,
 	empty_tex: Texture,
 	renderer: Renderer,
+// 	cube_mesh: ggl::Mesh,
 
 }
 
@@ -39,6 +40,36 @@ pub(super) fn init() {
 	let renderer = Renderer::new(CubeMesh);
 	let default_shader = Shader::from_code(DEFAULT_3D_VERT, DEFAULT_3D_FRAG);
 
+	let cube_verts = [
+
+		Vertex3D::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)),
+		Vertex3D::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)),
+		Vertex3D::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)),
+		Vertex3D::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)),
+		Vertex3D::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)),
+
+	];
+
+	let cube_indices = [
+		0, 1, 2,
+		2, 3, 0,
+		1, 5, 6,
+		6, 2, 1,
+		7, 6, 5,
+		5, 4, 7,
+		4, 0, 3,
+		3, 7, 4,
+		4, 5, 1,
+		1, 0, 4,
+		3, 2, 6,
+		6, 7, 3,
+	];
+
+// 	let cube_mesh = ggl::Mesh::new(&cube_verts, &cube_indices);
+
 	ctx_init(G3dCtx {
 
 		projection: projection,
@@ -48,6 +79,7 @@ pub(super) fn init() {
 		current_shader: default_shader.clone(),
 		empty_tex: Texture::from_color(color!(1), 1, 1),
 		renderer: renderer,
+// 		cube_mesh: cube_mesh,
 
 	});
 
@@ -94,14 +126,9 @@ impl Mesh for CubeMesh {
 
 #[derive(Vertex)]
 struct Vertex3D {
-
-	#[bind(3)]
 	pos: [f32; 3],
-	#[bind(4)]
 	uv: [f32; 2],
-	#[bind(5)]
 	color: [f32; 4],
-
 }
 
 impl Vertex3D {
@@ -230,12 +257,6 @@ impl Shader {
 		let vert = TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
 		let frag = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
 		let program = ggl::Program::new(&vert, &frag);
-
-		program
-			.attr(3, "vert")
-			.attr(4, "uv")
-			.attr(5, "color")
-			.link();
 
 		return Self {
 			program: Rc::new(program),

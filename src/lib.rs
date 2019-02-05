@@ -6,6 +6,8 @@
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
+#![deny(clippy::implicit_return)]
+
 #[macro_use]
 mod utils;
 mod ggl;

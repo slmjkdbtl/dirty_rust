@@ -92,6 +92,45 @@ bind_enum!(BlendFac(GLenum) {
 
 });
 
+pub struct Mesh {
+
+	vbuf: VertexBuffer,
+	ibuf: IndexBuffer,
+	count: usize,
+
+}
+
+impl Mesh {
+
+	pub fn new<V: VertexLayout>(verts: &[V], indices: &[u32]) -> Self {
+
+		let vbuf = VertexBuffer::new::<V>(verts.len(), BufferUsage::Static);
+		let ibuf = IndexBuffer::new(indices.len(), BufferUsage::Static);
+		let mut queue = Vec::new();
+
+		for v in verts {
+			v.push(&mut queue);
+		}
+
+		vbuf.data(&queue, 0);
+		ibuf.data(indices, 0);
+
+		return Self {
+
+			vbuf: vbuf,
+			ibuf: ibuf,
+			count: indices.len(),
+
+		};
+
+	}
+
+	pub fn draw(&self, tex: &Texture, program: &Program) {
+// 		draw(&self.vbuf, &self.ibuf, program, tex, self.count);
+	}
+
+}
+
 pub trait VertexLayout {
 
 	const STRIDE: usize;
@@ -103,15 +142,19 @@ pub trait VertexLayout {
 #[derive(PartialEq)]
 pub struct VertexAttr {
 
-	index: GLuint,
+	name: String,
 	size: GLint,
 	offset: usize,
 
 }
 
 impl VertexAttr {
-	pub fn new(index: GLuint, size: GLint, offset: usize) -> Self {
-		return Self { index, size, offset };
+	pub fn new(name: &str, size: GLint, offset: usize) -> Self {
+		return Self {
+			name: name.to_owned(),
+			size: size,
+			offset: offset,
+		};
 	}
 }
 
@@ -127,14 +170,14 @@ pub struct VertexBuffer {
 
 impl VertexBuffer {
 
-	pub fn new(
+	pub fn new<V: VertexLayout>(
 		size: usize,
-		stride: usize,
 		usage: BufferUsage) -> Self {
 
 		unsafe {
 
 			let mut id: GLuint = 0;
+			let stride = V::STRIDE;
 
 			gl::GenBuffers(1, &mut id);
 			gl::BindBuffer(gl::ARRAY_BUFFER, id);
@@ -174,33 +217,6 @@ impl VertexBuffer {
 				(data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
 				data.as_ptr() as *const GLvoid,
 			);
-
-		}
-
-		self.unbind();
-
-		return self;
-
-	}
-
-	pub fn attr(
-		&self,
-		attr: VertexAttr) -> &Self {
-
-		self.bind();
-
-		unsafe {
-
-			gl::VertexAttribPointer(
-				attr.index,
-				attr.size,
-				gl::FLOAT,
-				gl::FALSE,
-				(self.stride * mem::size_of::<GLfloat>()) as GLsizei,
-				(attr.offset * mem::size_of::<GLfloat>()) as *const GLvoid
-			);
-
-			gl::EnableVertexAttribArray(attr.index);
 
 		}
 
@@ -604,25 +620,13 @@ impl Program {
 
 			gl::AttachShader(id, vs);
 			gl::AttachShader(id, fs);
+			gl::LinkProgram(id);
 
 			return Self {
 				id: id
 			};
 
 		}
-
-	}
-
-	pub fn attr(
-		&self,
-		index: GLuint,
-		name: &str) -> &Self {
-
-		unsafe {
-			gl::BindAttribLocation(self.id, index, cstr(name).as_ptr());
-		}
-
-		return self;
 
 	}
 
@@ -640,16 +644,6 @@ impl Program {
 
 		unsafe {
 			gl::UseProgram(0);
-		}
-
-		return self;
-
-	}
-
-	pub fn link(&self) -> &Self {
-
-		unsafe {
-			gl::LinkProgram(self.id);
 		}
 
 		return self;
@@ -900,7 +894,7 @@ pub fn unset_framebuffer(fb: &Framebuffer) {
 	fb.unbind();
 }
 
-pub fn draw(
+pub fn draw<V: VertexLayout>(
 	vbuf: &VertexBuffer,
 	ibuf: &IndexBuffer,
 	program: &Program,
@@ -913,6 +907,23 @@ pub fn draw(
 		vbuf.bind();
 		ibuf.bind();
 		tex.bind();
+
+		for attr in V::attr() {
+
+			let index = gl::GetAttribLocation(program.id, cstr(&attr.name).as_ptr()) as u32;
+
+			gl::VertexAttribPointer(
+				index,
+				attr.size,
+				gl::FLOAT,
+				gl::FALSE,
+				(V::STRIDE * mem::size_of::<GLfloat>()) as GLsizei,
+				(attr.offset * mem::size_of::<GLfloat>()) as *const GLvoid
+			);
+
+			gl::EnableVertexAttribArray(index);
+
+		}
 
 		gl::DrawElements(
 			gl::TRIANGLES,

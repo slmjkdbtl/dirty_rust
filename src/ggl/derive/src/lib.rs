@@ -12,7 +12,7 @@ use syn::DeriveInput;
 use syn::Data;
 use syn::Fields;
 
-#[proc_macro_derive(Vertex, attributes(bind))]
+#[proc_macro_derive(Vertex)]
 pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 	let input: DeriveInput = syn::parse(tokens).unwrap();
@@ -64,25 +64,7 @@ fn get_data(data: &Data) -> (TokenStream, TokenStream, TokenStream) {
 
 					for f in &fields.named {
 
-						let mut index = None;
 						let name = &f.ident;
-
-						for attr in f.attrs.iter() {
-
-							for p in attr.path.segments.iter() {
-
-								if p.ident == "bind" {
-
-									let tts = &attr.tts;
-									index = Some(tts);
-
-								}
-
-							}
-
-						}
-
-						let index = index.expect("must bind index");
 
 						if let syn::Type::Array(arr) = &f.ty {
 
@@ -97,9 +79,10 @@ fn get_data(data: &Data) -> (TokenStream, TokenStream, TokenStream) {
 								if let syn::Lit::Int(int) = &lit.lit {
 
 									let len = int.value();
+									let name = quote!(#name).to_string();
 
 									attr_recurse.push(quote_spanned! {f.span() =>
-										ggl::VertexAttr::new(#index as u32, #len as i32, #stride),
+										ggl::VertexAttr::new(#name, #len as i32, #stride),
 									});
 
 									stride += len as usize;
