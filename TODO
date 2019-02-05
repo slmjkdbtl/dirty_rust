@@ -4,7 +4,6 @@
 - 3d
 - ui
 - ecs example
-- rework renderer abstraction
 - macro for simple systems
 - game controllers
 - better gfx window resizing behavior
@@ -72,6 +71,7 @@
 - seperate gfx, g2d and g3d
 - shader switching bug
 - vertex proc macro
+- rework renderer abstraction
 
 == ADVENTURE
 - wasm

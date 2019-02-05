@@ -11,7 +11,6 @@ use crate::*;
 use crate::math::*;
 use crate::gfx::*;
 use crate::ggl;
-use crate::ggl::VertexLayout;
 
 const MAX_DRAWS: usize = 65536;
 const MAX_STATE_STACK: usize = 64;
@@ -98,6 +97,8 @@ impl ggl::Shape for QuadShape {
 	const COUNT: usize = 4;
 
 	fn push(&self, queue: &mut Vec<f32>) {
+
+		use crate::ggl::VertexLayout;
 
 		let t = &self.transform;
 		let q = &self.quad;

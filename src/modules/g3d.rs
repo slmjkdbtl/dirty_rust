@@ -10,7 +10,6 @@ use crate::*;
 use crate::math::*;
 use crate::gfx::*;
 use crate::ggl;
-use crate::ggl::VertexLayout;
 
 const MAX_STATE_STACK: usize = 64;
 
