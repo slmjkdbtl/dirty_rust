@@ -117,7 +117,6 @@ impl Window {
 /// draw every window and widgets
 pub fn draw() {
 
-	let (width, height) = window::size();
 	let ctx = ctx_get();
 	let ctx_mut = ctx_get_mut();
 
