@@ -9,9 +9,6 @@ use std::any::TypeId;
 
 use gl::types::*;
 
-use crate::*;
-use crate::math::*;
-
 macro_rules! bind_enum {
 
 	($name:ident($type:ty) { $($member:ident => $dest:expr),+$(,)? }) => {
@@ -137,8 +134,8 @@ pub struct BatchedMesh {
 
 	queue: Vec<f32>,
 	max: usize,
-	ibuf: ggl::IndexBuffer,
-	vbuf: ggl::VertexBuffer,
+	ibuf: IndexBuffer,
+	vbuf: VertexBuffer,
 	mesh_type: TypeId,
 	vert_stride: usize,
 	vert_count: usize,
@@ -165,11 +162,11 @@ impl BatchedMesh {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 			.collect();
 
-		let ibuf = ggl::IndexBuffer::new(max_indices, ggl::BufferUsage::Static);
+		let ibuf = IndexBuffer::new(max_indices, BufferUsage::Static);
 
 		ibuf.data(&indices_batch, 0);
 
-		let vbuf = ggl::VertexBuffer::new::<M::Vertex>(max_vertices, ggl::BufferUsage::Dynamic);
+		let vbuf = VertexBuffer::new::<M::Vertex>(max_vertices, BufferUsage::Dynamic);
 
 		return Self {
 
@@ -201,7 +198,7 @@ impl BatchedMesh {
 
 	}
 
-	pub fn flush(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
+	pub fn flush(&mut self, tex: &Texture, program: &Program) {
 
 		if self.queue.is_empty() {
 			return;
@@ -209,7 +206,7 @@ impl BatchedMesh {
 
 		self.vbuf.data(&self.queue, 0);
 
-		ggl::draw(
+		draw(
 			&self.vbuf,
 			&self.ibuf,
 			&program,
@@ -753,25 +750,7 @@ impl Program {
 
 	}
 
-	pub fn uniform_color(
-		&self,
-		name: &str,
-		c: Color) -> &Self {
-
-		return self.uniform_vec4(name, vec4!(c.r, c.g, c.b, c.a));
-
-	}
-
-	pub fn uniform_rect(
-		&self,
-		name: &str,
-		r: Rect) -> &Self {
-
-		return self.uniform_vec4(name, vec4!(r.x, r.y, r.w, r.h));
-
-	}
-
-	pub fn uniform_float(
+	pub fn uniform_f1(
 		&self,
 		name: &str,
 		f: f32) -> &Self {
@@ -788,18 +767,19 @@ impl Program {
 
 	}
 
-	pub fn uniform_vec2(
+	pub fn uniform_f2(
 		&self,
 		name: &str,
-		v: Vec2) -> &Self {
+		f1: f32,
+		f2: f32) -> &Self {
 
 		self.bind();
 
 		unsafe {
 			gl::Uniform2f(
 				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
-				v.x,
-				v.y,
+				f1,
+				f2,
 			);
 		}
 
@@ -809,19 +789,21 @@ impl Program {
 
 	}
 
-	pub fn uniform_vec3(
+	pub fn uniform_f3(
 		&self,
 		name: &str,
-		v: Vec3) -> &Self {
+		f1: f32,
+		f2: f32,
+		f3: f32) -> &Self {
 
 		self.bind();
 
 		unsafe {
 			gl::Uniform3f(
 				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
-				v.x,
-				v.y,
-				v.z,
+				f1,
+				f2,
+				f3,
 			);
 		}
 
@@ -831,20 +813,23 @@ impl Program {
 
 	}
 
-	pub fn uniform_vec4(
+	pub fn uniform_f4(
 		&self,
 		name: &str,
-		v: Vec4) -> &Self {
+		f1: f32,
+		f2: f32,
+		f3: f32,
+		f4: f32) -> &Self {
 
 		self.bind();
 
 		unsafe {
 			gl::Uniform4f(
 				gl::GetUniformLocation(self.id, cstr(name).as_ptr()),
-				v.x,
-				v.y,
-				v.z,
-				v.w,
+				f1,
+				f2,
+				f3,
+				f4,
 			);
 		}
 
@@ -959,9 +944,9 @@ pub fn set_stencil() {
 	}
 }
 
-pub fn clear_color(c: Color) {
+pub fn clear_color(r: f32, g: f32, b: f32, a: f32) {
 	unsafe {
-		gl::ClearColor(c.r, c.g, c.b, c.a);
+		gl::ClearColor(r, g, b, a);
 	}
 }
 
