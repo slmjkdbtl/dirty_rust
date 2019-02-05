@@ -225,7 +225,7 @@ impl BatchedMesh {
 
 pub trait Shape {
 
-	type Vertex: ggl::VertexLayout;
+	type Vertex: VertexLayout;
 	const COUNT: usize;
 	fn push(&self, queue: &mut Vec<f32>);
 	fn indices() -> Vec<u32>;

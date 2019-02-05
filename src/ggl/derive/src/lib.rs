@@ -18,13 +18,12 @@ pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let input: DeriveInput = syn::parse(tokens).unwrap();
 	let name = &input.ident;
 	let data = &input.data;
-	let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
 	let (stride, push_block, attr_block) = get_data(data);
 
 	let expanded = quote! {
 
-		impl #impl_generics ggl::VertexLayout for #name #ty_generics #where_clause {
+		impl ggl::VertexLayout for #name {
 
 			const STRIDE: usize = #stride;
 
