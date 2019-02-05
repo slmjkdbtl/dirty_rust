@@ -32,13 +32,13 @@ struct G2dCtx {
 	current_tex: Option<Texture>,
 	default_shader: Shader,
 	current_shader: Shader,
-	renderer: BatchRenderer,
+	renderer: ggl::BatchedMesh,
 
 }
 
 pub(super) fn init() {
 
-	let renderer = BatchRenderer::new::<QuadMesh>(MAX_DRAWS);
+	let renderer = ggl::BatchedMesh::new::<QuadShape>(MAX_DRAWS);
 
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
@@ -74,7 +74,7 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
-struct QuadMesh {
+struct QuadShape {
 
 	transform: Mat4,
 	quad: Rect,
@@ -82,7 +82,7 @@ struct QuadMesh {
 
 }
 
-impl QuadMesh {
+impl QuadShape {
 	fn new(t: Mat4, q: Rect, c: Color) -> Self {
 		return Self {
 			transform: t,
@@ -92,7 +92,7 @@ impl QuadMesh {
 	}
 }
 
-impl Mesh for QuadMesh {
+impl ggl::Shape for QuadShape {
 
 	type Vertex = Vertex2D;
 	const COUNT: usize = 4;
@@ -110,7 +110,7 @@ impl Mesh for QuadMesh {
 
 	}
 
-	fn index() -> Vec<u32> {
+	fn indices() -> Vec<u32> {
 		return vec![0, 1, 3, 1, 2, 3];
 	}
 
@@ -218,7 +218,7 @@ pub fn draw(tex: &Texture, quad: Rect) {
 		gfx_mut.current_tex = wrapped_tex;
 	}
 
-	renderer.push(QuadMesh::new(t, quad, color));
+	renderer.push(QuadShape::new(t, quad, color));
 
 }
 

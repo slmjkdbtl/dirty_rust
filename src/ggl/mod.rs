@@ -5,6 +5,7 @@
 use std::ptr;
 use std::mem;
 use std::ffi::CString;
+use std::any::TypeId;
 
 use gl::types::*;
 
@@ -129,6 +130,105 @@ impl Mesh {
 	pub fn draw(&self, tex: &Texture, program: &Program) {
 		draw(&self.vbuf, &self.ibuf, program, tex, self.count);
 	}
+
+}
+
+pub struct BatchedMesh {
+
+	queue: Vec<f32>,
+	max: usize,
+	ibuf: ggl::IndexBuffer,
+	vbuf: ggl::VertexBuffer,
+	mesh_type: TypeId,
+	vert_stride: usize,
+	vert_count: usize,
+	index_count: usize,
+
+}
+
+impl BatchedMesh {
+
+	pub fn new<M: Shape + 'static>(max: usize) -> Self {
+
+		let indices = M::indices();
+		let vert_count = M::COUNT;
+		let vert_stride = M::Vertex::STRIDE;
+		let max_vertices = max * vert_stride * vert_count;
+		let max_indices = max * indices.len();
+		let queue: Vec<f32> = Vec::with_capacity(max_vertices);
+
+		let indices_batch: Vec<u32> = indices
+			.iter()
+			.cycle()
+			.take(max_indices)
+			.enumerate()
+			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
+			.collect();
+
+		let ibuf = ggl::IndexBuffer::new(max_indices, ggl::BufferUsage::Static);
+
+		ibuf.data(&indices_batch, 0);
+
+		let vbuf = ggl::VertexBuffer::new::<M::Vertex>(max_vertices, ggl::BufferUsage::Dynamic);
+
+		return Self {
+
+			queue: queue,
+			max: max,
+			ibuf: ibuf,
+			vbuf: vbuf,
+			mesh_type: TypeId::of::<M>(),
+			index_count: indices.len(),
+			vert_stride: vert_stride,
+			vert_count: vert_count,
+
+		};
+
+	}
+
+	pub fn push<M: Shape + 'static>(&mut self, mesh: M) {
+
+		if TypeId::of::<M>() != self.mesh_type {
+			panic!("invalid vertex");
+		}
+
+		if self.queue.len() >= self.queue.capacity() {
+			self.queue.clear();
+			panic!("reached maximum draw count");
+		}
+
+		mesh.push(&mut self.queue);
+
+	}
+
+	pub fn flush(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
+
+		if self.queue.is_empty() {
+			return;
+		}
+
+		self.vbuf.data(&self.queue, 0);
+
+		ggl::draw(
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			&tex,
+			self.queue.len() / self.vert_stride / self.vert_count * self.index_count
+		);
+
+		self.queue.clear();
+
+	}
+
+}
+
+pub trait Shape {
+
+	type Vertex: ggl::VertexLayout;
+	const COUNT: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn indices() -> Vec<u32>;
 
 }
 

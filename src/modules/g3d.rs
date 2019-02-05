@@ -82,45 +82,6 @@ pub(super) fn init() {
 
 }
 
-struct CubeMesh;
-
-impl Mesh for CubeMesh {
-
-	type Vertex = Vertex3D;
-	const COUNT: usize = 8;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-
-		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)).push(queue);
-
-	}
-
-	fn index() -> Vec<u32> {
-		return vec![
-			0, 1, 2,
-			2, 3, 0,
-			1, 5, 6,
-			6, 2, 1,
-			7, 6, 5,
-			5, 4, 7,
-			4, 0, 3,
-			3, 7, 4,
-			4, 5, 1,
-			1, 0, 4,
-			3, 2, 6,
-			6, 7, 3,
-		];
-	}
-
-}
-
 #[derive(Vertex)]
 struct Vertex3D {
 	pos: [f32; 3],
