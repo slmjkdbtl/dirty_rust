@@ -25,7 +25,7 @@ pub(super) fn init() {
 		current_canvas: None,
 	});
 
-// 	g3d::init();
+	g3d::init();
 	g2d::init();
 	ggl::set_blend(ggl::BlendFac::SourceAlpha, ggl::BlendFac::OneMinusSourceAlpha);
 	ggl::set_depth(ggl::DepthFunc::LessOrEqual);
@@ -38,55 +38,6 @@ pub(super) fn init() {
 /// check if gfx is initiated
 pub fn enabled() -> bool {
 	return ctx_ok();
-}
-
-pub(super) struct Renderer {
-
-	ibuf: ggl::IndexBuffer,
-	vbuf: ggl::VertexBuffer,
-	index_count: usize,
-
-}
-
-impl Renderer {
-
-	pub fn new<M: Mesh>(mesh: M) -> Self {
-
-		let mut verts = vec![];
-		let index = M::index();
-
-		mesh.push(&mut verts);
-
-		let vbuf = ggl::VertexBuffer::new::<M::Vertex>(verts.len(), ggl::BufferUsage::Static);
-
-		vbuf
-			.data(&verts, 0);
-
-		let ibuf = ggl::IndexBuffer::new(index.len(), ggl::BufferUsage::Static);
-
-		ibuf
-			.data(&index, 0);
-
-		return Self {
-			vbuf: vbuf,
-			ibuf: ibuf,
-			index_count: index.len(),
-		}
-
-	}
-
-	pub fn draw(&self, tex: &ggl::Texture, program: &ggl::Program) {
-
-// 		ggl::draw(
-// 			&self.vbuf,
-// 			&self.ibuf,
-// 			&program,
-// 			&tex,
-// 			self.index_count,
-// 		);
-
-	}
-
 }
 
 pub(super) struct BatchRenderer {
@@ -158,7 +109,7 @@ impl BatchRenderer {
 
 	}
 
-	pub fn flush<V: ggl::VertexLayout>(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
+	pub fn flush(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
 
 		if self.queue.is_empty() {
 			return;
@@ -166,7 +117,7 @@ impl BatchRenderer {
 
 		self.vbuf.data(&self.queue, 0);
 
-		ggl::draw::<V>(
+		ggl::draw(
 			&self.vbuf,
 			&self.ibuf,
 			&program,
@@ -260,8 +211,8 @@ pub(super) fn end() {
 	g2d::flush();
 	g2d::reset();
 	g2d::clear_stack();
-// 	g3d::reset();
-// 	g3d::clear_stack();
+	g3d::reset();
+	g3d::clear_stack();
 
 	if gfx.current_canvas.is_some() {
 		panic!("unfinished canvas");

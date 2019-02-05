@@ -104,13 +104,14 @@ impl Mesh {
 
 	pub fn new<V: VertexLayout>(verts: &[V], indices: &[u32]) -> Self {
 
-		let vbuf = VertexBuffer::new::<V>(verts.len(), BufferUsage::Static);
-		let ibuf = IndexBuffer::new(indices.len(), BufferUsage::Static);
 		let mut queue = Vec::new();
 
 		for v in verts {
 			v.push(&mut queue);
 		}
+
+		let vbuf = VertexBuffer::new::<V>(queue.len(), BufferUsage::Static);
+		let ibuf = IndexBuffer::new(indices.len(), BufferUsage::Static);
 
 		vbuf.data(&queue, 0);
 		ibuf.data(indices, 0);
@@ -126,7 +127,7 @@ impl Mesh {
 	}
 
 	pub fn draw(&self, tex: &Texture, program: &Program) {
-// 		draw(&self.vbuf, &self.ibuf, program, tex, self.count);
+		draw(&self.vbuf, &self.ibuf, program, tex, self.count);
 	}
 
 }
@@ -135,7 +136,7 @@ pub trait VertexLayout {
 
 	const STRIDE: usize;
 	fn push(&self, queue: &mut Vec<f32>);
-	fn attr() -> Vec<VertexAttr>;
+	fn attrs() -> Vec<VertexAttr>;
 
 }
 
@@ -164,6 +165,7 @@ pub struct VertexBuffer {
 	id: GLuint,
 	size: usize,
 	stride: usize,
+	attrs: Vec<VertexAttr>,
 	usage: BufferUsage,
 
 }
@@ -196,6 +198,7 @@ impl VertexBuffer {
 				size: size,
 				stride: stride,
 				usage: usage,
+				attrs: V::attrs(),
 			};
 
 		}
@@ -894,7 +897,7 @@ pub fn unset_framebuffer(fb: &Framebuffer) {
 	fb.unbind();
 }
 
-pub fn draw<V: VertexLayout>(
+pub fn draw(
 	vbuf: &VertexBuffer,
 	ibuf: &IndexBuffer,
 	program: &Program,
@@ -908,7 +911,7 @@ pub fn draw<V: VertexLayout>(
 		ibuf.bind();
 		tex.bind();
 
-		for attr in V::attr() {
+		for attr in &vbuf.attrs {
 
 			let index = gl::GetAttribLocation(program.id, cstr(&attr.name).as_ptr()) as u32;
 
@@ -917,7 +920,7 @@ pub fn draw<V: VertexLayout>(
 				attr.size,
 				gl::FLOAT,
 				gl::FALSE,
-				(V::STRIDE * mem::size_of::<GLfloat>()) as GLsizei,
+				(vbuf.stride * mem::size_of::<GLfloat>()) as GLsizei,
 				(attr.offset * mem::size_of::<GLfloat>()) as *const GLvoid
 			);
 

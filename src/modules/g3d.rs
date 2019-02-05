@@ -27,8 +27,7 @@ struct G3dCtx {
 	default_shader: Shader,
 	current_shader: Shader,
 	empty_tex: Texture,
-	renderer: Renderer,
-// 	cube_mesh: ggl::Mesh,
+	cube_mesh: ggl::Mesh,
 
 }
 
@@ -37,7 +36,6 @@ pub(super) fn init() {
 	let (width, height) = window::size();
 	let projection = math::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
 
-	let renderer = Renderer::new(CubeMesh);
 	let default_shader = Shader::from_code(DEFAULT_3D_VERT, DEFAULT_3D_FRAG);
 
 	let cube_verts = [
@@ -68,7 +66,7 @@ pub(super) fn init() {
 		6, 7, 3,
 	];
 
-// 	let cube_mesh = ggl::Mesh::new(&cube_verts, &cube_indices);
+	let cube_mesh = ggl::Mesh::new(&cube_verts, &cube_indices);
 
 	ctx_init(G3dCtx {
 
@@ -78,8 +76,7 @@ pub(super) fn init() {
 		default_shader: default_shader.clone(),
 		current_shader: default_shader.clone(),
 		empty_tex: Texture::from_color(color!(1), 1, 1),
-		renderer: renderer,
-// 		cube_mesh: cube_mesh,
+		cube_mesh: cube_mesh,
 
 	});
 
@@ -240,7 +237,7 @@ pub fn cube() {
 	gfx.current_shader.send_mat4("model", model);
 	gfx.current_shader.send_mat4("view", view);
 	gfx.current_shader.send_mat4("projection", projection);
-	gfx.renderer.draw(&gfx.empty_tex.handle, &gfx.current_shader.program);
+	gfx.cube_mesh.draw(&gfx.empty_tex.handle, &gfx.current_shader.program);
 
 }
 
