@@ -2,6 +2,7 @@
 
 pub mod app;
 pub mod window;
+#[macro_use]
 pub mod gfx;
 pub mod g2d;
 pub mod g3d;
