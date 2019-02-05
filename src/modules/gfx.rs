@@ -25,7 +25,7 @@ pub(super) fn init() {
 		current_canvas: None,
 	});
 
-	g3d::init();
+// 	g3d::init();
 	g2d::init();
 	ggl::set_blend(ggl::BlendFac::SourceAlpha, ggl::BlendFac::OneMinusSourceAlpha);
 	ggl::set_depth(ggl::DepthFunc::LessOrEqual);
@@ -57,14 +57,10 @@ impl Renderer {
 
 		mesh.push(&mut verts);
 
-		let vbuf = ggl::VertexBuffer::new(verts.len(), M::Vertex::STRIDE, ggl::BufferUsage::Static);
+		let vbuf = ggl::VertexBuffer::new::<M::Vertex>(verts.len(), ggl::BufferUsage::Static);
 
 		vbuf
 			.data(&verts, 0);
-
-		for attr in M::Vertex::attr() {
-			vbuf.attr(attr);
-		}
 
 		let ibuf = ggl::IndexBuffer::new(index.len(), ggl::BufferUsage::Static);
 
@@ -81,13 +77,13 @@ impl Renderer {
 
 	pub fn draw(&self, tex: &ggl::Texture, program: &ggl::Program) {
 
-		ggl::draw(
-			&self.vbuf,
-			&self.ibuf,
-			&program,
-			&tex,
-			self.index_count,
-		);
+// 		ggl::draw(
+// 			&self.vbuf,
+// 			&self.ibuf,
+// 			&program,
+// 			&tex,
+// 			self.index_count,
+// 		);
 
 	}
 
@@ -130,11 +126,7 @@ impl BatchRenderer {
 		ibuf
 			.data(&indices, 0);
 
-		let vbuf = ggl::VertexBuffer::new(max_vertices, vert_stride, ggl::BufferUsage::Dynamic);
-
-		for attr in M::Vertex::attr() {
-			vbuf.attr(attr);
-		}
+		let vbuf = ggl::VertexBuffer::new::<M::Vertex>(max_vertices, ggl::BufferUsage::Dynamic);
 
 		return Self {
 
@@ -166,7 +158,7 @@ impl BatchRenderer {
 
 	}
 
-	pub fn flush(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
+	pub fn flush<V: ggl::VertexLayout>(&mut self, tex: &ggl::Texture, program: &ggl::Program) {
 
 		if self.queue.is_empty() {
 			return;
@@ -174,7 +166,7 @@ impl BatchRenderer {
 
 		self.vbuf.data(&self.queue, 0);
 
-		ggl::draw(
+		ggl::draw::<V>(
 			&self.vbuf,
 			&self.ibuf,
 			&program,
@@ -268,8 +260,8 @@ pub(super) fn end() {
 	g2d::flush();
 	g2d::reset();
 	g2d::clear_stack();
-	g3d::reset();
-	g3d::clear_stack();
+// 	g3d::reset();
+// 	g3d::clear_stack();
 
 	if gfx.current_canvas.is_some() {
 		panic!("unfinished canvas");

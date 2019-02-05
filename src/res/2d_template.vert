@@ -1,6 +1,6 @@
 // wengwengweng
 
-attribute vec2 vert;
+attribute vec2 pos;
 attribute vec2 uv;
 attribute vec4 color;
 
@@ -15,6 +15,6 @@ void main() {
 
 	tint = color;
 	coord = uv;
-	gl_Position = pos(projection, vec4(vert, 1.0, 1.0));
+	gl_Position = vert(projection, vec4(pos, 1.0, 1.0));
 
 }

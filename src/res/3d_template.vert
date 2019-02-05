@@ -1,6 +1,6 @@
 // wengwengweng
 
-attribute vec3 vert;
+attribute vec3 pos;
 attribute vec2 uv;
 attribute vec4 color;
 
@@ -16,6 +16,6 @@ uniform mat4 projection;
 void main() {
 	coord = uv;
 	tint = color;
-	gl_Position = pos(projection, view, model, vec4(vert, 1.0));
+	gl_Position = vert(projection, view, model, vec4(pos, 1.0));
 }
 

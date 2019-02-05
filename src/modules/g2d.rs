@@ -118,11 +118,8 @@ impl Mesh for QuadMesh {
 
 #[derive(Vertex)]
 struct Vertex2D {
-	#[bind(0)]
 	pos: [f32; 2],
-	#[bind(1)]
 	uv: [f32; 2],
-	#[bind(2)]
 	color: [f32; 4],
 }
 
@@ -177,7 +174,7 @@ pub(super) fn flush() {
 	if let Some(tex) = &gfx.current_tex {
 
 		gfx.current_shader.send_mat4("projection", gfx.projection);
-		renderer.flush(&*tex.handle, &gfx.current_shader.program);
+		renderer.flush::<Vertex2D>(&*tex.handle, &gfx.current_shader.program);
 		gfx_mut.current_tex = None;
 
 	}
@@ -499,12 +496,6 @@ impl Shader {
 		let vert = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
 		let frag = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
 		let program = ggl::Program::new(&vert, &frag);
-
-		program
-			.attr(0, "vert")
-			.attr(1, "uv")
-			.attr(2, "color")
-			.link();
 
 		return Self {
 			program: Rc::new(program),
