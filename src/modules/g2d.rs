@@ -38,7 +38,6 @@ struct G2dCtx {
 pub(super) fn init() {
 
 	let renderer = ggl::BatchedMesh::new::<QuadShape>(MAX_DRAWS);
-
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	let default_font = Font::new(
@@ -227,7 +226,7 @@ pub fn draw(tex: &Texture, quad: Rect) {
 pub fn text(s: &str) {
 
 	let gfx = ctx_get();
-	let font = &gfx.default_font;
+	let font = &gfx.current_font;
 	let w = font.grid_size.x * font.tex.width() as f32;
 	let h = font.grid_size.y * font.tex.height() as f32;
 
@@ -303,15 +302,25 @@ pub fn line(p1: Vec2, p2: Vec2) {
 }
 
 /// apply a shader effect
-pub fn effect(s: &Shader) {
+pub fn set_effect(s: &Shader) {
 	flush();
 	ctx_get_mut().current_shader = s.clone();
 }
 
 /// stop shader effects and use default shader
-pub fn stop_effect() {
+pub fn set_effect_default() {
 	flush();
 	ctx_get_mut().current_shader = ctx_get().default_shader.clone();
+}
+
+/// apply a custom font
+pub fn set_font(f: &Font) {
+	ctx_get_mut().current_font = f.clone();
+}
+
+/// use default font
+pub fn set_font_default() {
+	ctx_get_mut().current_font = ctx_get().default_font.clone();
 }
 
 /// draw polygon with vertices

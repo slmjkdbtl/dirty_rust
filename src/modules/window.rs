@@ -9,7 +9,6 @@ use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 use sdl2::video::Window;
 use sdl2::video::FullscreenType;
-use sdl2::video::SwapInterval;
 
 use crate::*;
 use crate::math::*;
