@@ -33,11 +33,9 @@ pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 			}
 
 			fn attrs() -> Vec<ggl::VertexAttr> {
-
 				return vec![
 					#attr_block
 				];
-
 			}
 
 		}
