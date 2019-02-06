@@ -126,11 +126,3 @@ more under `examples/`
 - planning on adding scripting support
 - ui style is a tribute to [MEKA](http://www.smspower.org/meka/), thanks for keep making awesome tools
 
-### faq
-- Why should I just this over ggez or amethyst?
-> You should not. This is my personal toolkit, not intented to compete or relate to any other libs.
-- Is it fast?
-> Fast enough, not crazy fast. Batch drawing is done by default, no other notable performance tricks.
-- Pineapple on pizza?
-> Yes.
-

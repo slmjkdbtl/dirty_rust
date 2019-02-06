@@ -4,7 +4,7 @@
 
 use std::rc::Rc;
 
-use gl_derive::Vertex;
+use ggl_derive::Vertex;
 
 use crate::*;
 use crate::math::*;

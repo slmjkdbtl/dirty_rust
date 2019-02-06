@@ -23,7 +23,7 @@ rlua = "0.16.2"
 rand = "0.6.5"
 aseprite = "0.1.3"
 ecs_derive = { path = "src/ecs/derive" }
-gl_derive = { path = "src/ggl/derive" }
+ggl_derive = { path = "src/ggl/derive" }
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "0.6.3"
