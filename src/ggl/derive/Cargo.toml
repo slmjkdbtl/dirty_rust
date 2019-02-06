@@ -1,7 +1,7 @@
 # wengwengweng
 
 [package]
-name = "gl_derive"
+name = "ggl_derive"
 version = "0.0.0"
 authors = ["t <voygagaga@outlook.com>"]
 edition = "2018"

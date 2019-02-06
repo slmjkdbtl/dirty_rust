@@ -44,7 +44,6 @@ fn main() {
 		if hovering {
 
 			g3d::rotate(app::time(), app::time(), app::time());
-			g3d::scale(vec3!(120));
 			g3d::cube();
 
 		}
