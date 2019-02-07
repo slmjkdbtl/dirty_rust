@@ -307,6 +307,7 @@ impl VertexBuffer {
 		data: &[GLfloat],
 		offset: usize) -> &Self {
 
+		assert!(offset + data.len() <= self.size, "buffer data overflow");
 		self.bind();
 
 		unsafe {

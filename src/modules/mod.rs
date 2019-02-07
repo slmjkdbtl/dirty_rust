@@ -9,4 +9,5 @@ pub mod g3d;
 pub mod audio;
 pub mod net;
 pub mod fs;
+pub mod pref;
 
