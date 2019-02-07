@@ -7,8 +7,10 @@
 - macro for simple systems
 - game controllers
 - better gfx window resizing behavior
+- proc macro for shader uniform
 - more accurate timestep
 - split core, ui, ecs, addons to workspaces
+- data saving
 
 == TO DO
 - metal backend

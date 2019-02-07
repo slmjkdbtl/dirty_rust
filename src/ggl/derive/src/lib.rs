@@ -13,7 +13,7 @@ use syn::Data;
 use syn::Fields;
 
 #[proc_macro_derive(Vertex)]
-pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn vertex_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 	let input: DeriveInput = syn::parse(tokens).unwrap();
 	let name = &input.ident;
