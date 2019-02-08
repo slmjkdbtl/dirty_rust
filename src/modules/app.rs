@@ -7,8 +7,6 @@ use std::time::Instant;
 use std::time::Duration;
 use std::panic;
 use std::panic::PanicInfo;
-use std::marker::Send;
-use std::marker::Sync;
 
 use crate::*;
 
@@ -72,7 +70,7 @@ pub fn init() {
 
 			g2d::push();
 			g2d::scale(vec2!(1.2));
-			g2d::text(&format!("{}\n\n{}", log, location));
+			g2d::text(&format!("{}", log));
 			g2d::pop();
 
 			g2d::pop();

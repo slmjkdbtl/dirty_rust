@@ -11,4 +11,5 @@ pub mod net;
 pub mod fs;
 pub mod pref;
 pub mod col;
+pub mod res;
 
