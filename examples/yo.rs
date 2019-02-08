@@ -2,7 +2,6 @@
 
 use dirty::*;
 use dirty::addons::res;
-use dirty::addons::col;
 
 fn main() {
 

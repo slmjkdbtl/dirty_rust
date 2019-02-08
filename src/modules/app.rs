@@ -6,6 +6,9 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 use std::panic;
+use std::panic::PanicInfo;
+use std::marker::Send;
+use std::marker::Sync;
 
 use crate::*;
 
@@ -27,7 +30,7 @@ struct AppCtx {
 /// init app
 pub fn init() {
 
-	panic::set_hook(Box::new(|info| {
+	on_err(|info: &PanicInfo| {
 
 		let mut log = String::from("nonono");
 
@@ -84,7 +87,7 @@ pub fn init() {
 
 		});
 
-	}));
+	});
 
 	ctx_init(AppCtx {
 
@@ -138,6 +141,11 @@ pub fn run<F: FnMut()>(mut f: F) {
 
 	}
 
+}
+
+/// custom error handler
+pub fn on_err<F: 'static + Fn(&PanicInfo) + Send + Sync>(f: F) {
+	panic::set_hook(Box::new(f));
 }
 
 /// get delta time between frames

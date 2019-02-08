@@ -10,4 +10,5 @@ pub mod audio;
 pub mod net;
 pub mod fs;
 pub mod pref;
+pub mod col;
 
