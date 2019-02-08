@@ -68,7 +68,7 @@ fn validate_path(path: &str) -> Result<String, ()> {
 
 }
 
-/// get a Vec of all filenames under given directory
+/// get a list of all filenames under given directory
 pub fn glob(path: &str) -> Vec<String> {
 
 	let mut entries: Vec<String> = Vec::new();
