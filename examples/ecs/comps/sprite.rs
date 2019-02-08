@@ -6,7 +6,6 @@ use dirty::*;
 use dirty::math::*;
 use dirty::ecs::*;
 use dirty::ecs::derive::*;
-use dirty::addons::res;
 
 #[derive(Comp, Clone)]
 pub struct Sprite {
@@ -27,19 +26,20 @@ impl Sprite {
 
 	pub fn new(name: &str) -> Self {
 
-		let data = res::sprite(name);
-		let frames = data.frames.clone();
+		let tex = res::texture(name).expect(&format!("failed to get texture, {}", name));
+		let default_data = res::SpriteData::default();
+		let data = res::spritedata(name).unwrap_or(&default_data);
 
 		return Self {
 
-			framelist: frames,
+			framelist: data.frames.clone(),
 			frame: 0,
 			origin: vec2!(0.5),
 			anims: data.anims.clone(),
 			current_anim: None,
 			speed: 0.1,
 			timer: 0.0,
-			tex: data.tex.clone(),
+			tex: tex.clone(),
 			color: color!(1),
 
 		}

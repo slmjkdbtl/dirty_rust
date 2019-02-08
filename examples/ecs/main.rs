@@ -3,7 +3,6 @@
 use dirty::*;
 use dirty::math::*;
 use dirty::ecs::*;
-use dirty::addons::res;
 
 mod comps;
 mod systems;
@@ -20,8 +19,8 @@ fn main() {
 
 // 	app::set_debug(true);
 	window::scale(window::Scale::X4);
-	res::load_sprites("examples/assets/", &vec!["core", "petal", "pixel"]);
-	res::load_sounds("examples/assets/", &vec!["pop", "yo"]);
+	res::load_textures_under("examples/assets/", &vec!["core", "petal", "pixel"]);
+	res::load_sounds_under("examples/assets/", &vec!["pop", "yo"]);
 
 	let mut world = World::new();
 

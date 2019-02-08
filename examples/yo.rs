@@ -1,7 +1,6 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::addons::res;
 
 fn main() {
 
@@ -18,16 +17,18 @@ fn main() {
 	let shader = g2d::Shader::from_code_frag(include_str!("assets/noise.frag"));
 
 	// load resources
-	res::load_sprites("examples/assets/", &vec!["car"]);
-	res::load_sounds("examples/assets/", &vec!["pop", "yo"]);
+	res::load_textures_under("examples/assets/", &vec!["car"]);
+	res::load_spritedata_under("examples/assets/", &vec!["car"]);
+	res::load_sounds_under("examples/assets/", &vec!["pop", "yo"]);
 
 	// play a music repeatedly
-	let music = audio::track(&res::sound("yo").repeat());
+	let pop_sound = res::sound("pop").unwrap();
+	let music = audio::track(&res::sound("yo").unwrap().repeat());
 
-	let sprite = res::sprite("car");
-	let tex = &sprite.tex;
-	let frames = &sprite.frames;
-	let anims = &sprite.anims;
+	let data = res::spritedata("car").unwrap();
+	let tex = res::texture("car").unwrap();
+	let frames = &data.frames;
+	let anims = &data.anims;
 	let mut hovering = false;
 
 	let pts = vec![
@@ -113,7 +114,7 @@ fn main() {
 		if window::key_pressed(Key::Space) {
 
 			// play a sound with effect
-			audio::play(&res::sound("pop").speed(rand!(2)));
+			audio::play(&pop_sound.speed(rand!(2)));
 
 		}
 
