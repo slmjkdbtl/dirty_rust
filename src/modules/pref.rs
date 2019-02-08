@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Save & Load User Data
+
 use serde::ser::Serialize;
 use serde::de::Deserialize;
 
@@ -26,20 +28,24 @@ pub fn init(org: &str, name: &str) {
 
 }
 
-pub fn write_json<D: Serialize>(fname: &str, data: D) {
+/// save json data
+pub fn save<D: Serialize>(fname: &str, data: D) {
 
 	let dir = &ctx_get().dir;
 	let path = format!("{}{}", dir, fname);
-	let serialized = serde_json::to_string(&data).expect("failed to serialize json");
+	let string = serde_json::to_string(&data).expect("failed to serialize json");
+
+	std::fs::write(&path, string).expect(&format!("failed to write {}", path));
 
 }
 
-pub fn get_json<'a, D: Deserialize<'a>>(fname: &str) -> D {
+/// get json data
+pub fn get<D: for<'a> Deserialize<'a>>(fname: &str) -> D {
 
 	let dir = &ctx_get().dir;
 	let path = format!("{}{}", dir, fname);
 	let content = fs::read_str(&path);
-	let data: D = serde_json::from_str("").expect("failed to parse json");
+	let data: D = serde_json::from_str(&content).expect("failed to parse json");
 
 	return data;
 
