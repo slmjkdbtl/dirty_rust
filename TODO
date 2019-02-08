@@ -9,10 +9,10 @@
 - better gfx window resizing behavior
 - proc macro for shader uniform
 - more accurate timestep
+- error handling
 - split core, ui, ecs, addons to workspaces
-- data saving
 
-== TO DO
+== TODO
 - metal backend
 - add error sound
 - ui lazy redraw
@@ -75,9 +75,12 @@
 - shader switching bug
 - vertex proc macro
 - rework renderer abstraction
+- data saving
 
 == ADVENTURE
 - wasm
 - ios
 - android
+
+== GIVEUP
 
