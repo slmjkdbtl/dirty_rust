@@ -80,11 +80,23 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
+#[derive(Clone, Copy)]
 pub enum Scale {
 	X1,
 	X2,
 	X4,
 	X8,
+}
+
+impl From<Scale> for i32 {
+	fn from(s: Scale) -> Self {
+		return match s {
+			Scale::X1 => 1,
+			Scale::X2 => 2,
+			Scale::X4 => 4,
+			Scale::X8 => 8,
+		};
+	}
 }
 
 /// scale entire viewport
@@ -189,7 +201,12 @@ pub fn mouse_released(b: MouseButton) -> bool {
 
 /// get mouse position
 pub fn mouse_pos() -> Vec2 {
-	return ctx_get().mouse_pos;
+
+	let window = ctx_get();
+	let s: i32 = window.scale.into();
+
+	return window.mouse_pos / s;
+
 }
 
 pub(super) fn poll_events() {
