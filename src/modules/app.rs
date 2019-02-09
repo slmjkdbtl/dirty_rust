@@ -28,23 +28,7 @@ struct AppCtx {
 /// init app
 pub fn init() {
 
-	on_err(|info: &PanicInfo| {
-
-		let mut log = String::from("nonono");
-
-		if let Some(s) = info.payload().downcast_ref::<&str>() {
-			log = (*s).to_owned();
-		} else if let Some(s) = info.payload().downcast_ref::<String>() {
-			log = s.clone();
-		}
-
-		let mut location = String::from("");
-
-		if let Some(loc) = info.location() {
-			location = format!("from '{}', line {}", loc.file(), loc.line());
-		}
-
-		eprintln!("{}", log);
+	on_err(|info: ErrorInfo| {
 
 		if !enabled() || !gfx::enabled() || !window::enabled() {
 			return;
@@ -70,7 +54,11 @@ pub fn init() {
 
 			g2d::push();
 			g2d::scale(vec2!(1.2));
-			g2d::text(&format!("{}", log));
+
+			if let Some(message) = &info.message {
+				g2d::text(&format!("{}", message));
+			}
+
 			g2d::pop();
 
 			g2d::pop();
@@ -141,9 +129,62 @@ pub fn run<F: FnMut()>(mut f: F) {
 
 }
 
+pub struct ErrorInfo {
+	message: Option<String>,
+	location: Option<ErrorLocation>,
+}
+
+pub struct ErrorLocation {
+	file: String,
+	line: u32,
+}
+
 /// custom error handler
-pub fn on_err<F: 'static + Fn(&PanicInfo) + Send + Sync>(f: F) {
-	panic::set_hook(Box::new(f));
+pub fn on_err<F: 'static + Fn(ErrorInfo) + Send + Sync>(f: F) {
+
+	panic::set_hook(Box::new(move |info: &PanicInfo| {
+
+		let mut message = None;
+
+		if let Some(s) = info.payload().downcast_ref::<&str>() {
+
+			let log = (*s).to_owned();
+
+			eprintln!("{}", log);
+			message = Some(log);
+
+		} else if let Some(s) = info.payload().downcast_ref::<String>() {
+
+			let log = s.clone();
+
+			eprintln!("{}", log);
+			message = Some(log);
+
+		}
+
+		let mut location = None;
+
+		if let Some(loc) = info.location() {
+
+			let file = loc.file();
+			let line = loc.line();
+
+			eprintln!("from '{}', line {}", file, line);
+
+			location = Some(ErrorLocation {
+				file: file.to_owned(),
+				line: line,
+			});
+
+		}
+
+		f(ErrorInfo {
+			message: message,
+			location: location,
+		});
+
+	}));
+
 }
 
 /// get delta time between frames

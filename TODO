@@ -8,9 +8,10 @@
 - game controllers
 - better gfx window resizing behavior
 - proc macro for shader uniform
+- better shader uniform handling
 - more accurate timestep
 - error handling
-- split core, ui, ecs, addons to workspaces
+- random seeds
 
 == TODO
 - metal backend
@@ -24,7 +25,7 @@
 - async resource loading
 - vector swizzle fields
 - ttf font rendering
-- ui proc macro generate window based on struct
+- ui proc macro generate window
 - try gfx-hal
 - use glutin when girls supports macos
 - ecs support reverse entity iter
