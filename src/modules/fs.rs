@@ -59,7 +59,7 @@ fn validate_path(path: &str) -> Result<String, err::Error> {
 		if Path::new(&with_res).exists() {
 			return Ok(with_res);
 		} else {
-			return Err(err::Error::FileRead(path.to_owned()));
+			return Err(err::Error::FileSystem(path.to_owned()));
 		}
 
 	} else {
@@ -71,7 +71,7 @@ fn validate_path(path: &str) -> Result<String, err::Error> {
 }
 
 /// get a list of all filenames under given directory
-pub fn glob(path: &str) -> Vec<String> {
+pub fn glob(path: &str) -> Result<Vec<String>, err::Error> {
 
 	let mut entries: Vec<String> = Vec::new();
 
@@ -89,11 +89,11 @@ pub fn glob(path: &str) -> Vec<String> {
 				}
 			}
 		} else {
-			panic!("failed to read dir \"{}\"", path);
+			return Err(err::Error::FileSystem(path.to_owned()));
 		}
 	}
 
-	return entries;
+	return Ok(entries);
 
 }
 
@@ -105,7 +105,7 @@ pub fn read_bytes(path: &str) -> Result<Vec<u8>, err::Error> {
 	if let Ok(content) = fs::read(&path) {
 		return Ok(content);
 	} else {
-		return Err(err::Error::FileRead(path));
+		return Err(err::Error::FileSystem(path));
 	}
 
 }
@@ -118,7 +118,7 @@ pub fn read_str(path: &str) -> Result<String, err::Error> {
 	if let Ok(content) = fs::read_to_string(&path) {
 		return Ok(content);
 	} else {
-		return Err(err::Error::FileRead(path));
+		return Err(err::Error::FileSystem(path));
 	}
 
 }
@@ -131,7 +131,7 @@ pub fn basename(path: &str) -> Result<String, err::Error> {
 	if let Some(name) = Path::new(&path).file_stem() {
 		return Ok(name.to_str().expect("failed to get basename").to_owned());
 	} else {
-		return Err(err::Error::FileRead(path));
+		return Err(err::Error::FileSystem(path));
 	}
 
 }

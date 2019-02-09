@@ -81,10 +81,10 @@ impl Default for SpriteData {
 /// load all sprites from given directory
 pub fn load_all_textures_under(dir: &str) -> Result<(), err::Error> {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))?
 		.into_iter()
-		.map(|f| fs::basename(&f).ok().unwrap())
-		.collect();
+		.map(|f| fs::basename(&f))
+		.collect::<Result<_, _>>()?;
 
 	return Ok(load_textures_under(dir, &files)?);
 
@@ -93,10 +93,10 @@ pub fn load_all_textures_under(dir: &str) -> Result<(), err::Error> {
 /// load all sounds from given directory
 pub fn load_all_sounds_under(dir: &str) -> Result<(), err::Error> {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))?
 		.into_iter()
-		.map(|f| fs::basename(&f).ok().unwrap())
-		.collect();
+		.map(|f| fs::basename(&f))
+		.collect::<Result<_, _>>()?;
 
 	return Ok(load_sounds_under(dir, &files)?);
 
@@ -105,10 +105,10 @@ pub fn load_all_sounds_under(dir: &str) -> Result<(), err::Error> {
 /// load all spritedata from given directory
 pub fn load_all_spritedata_under(dir: &str) -> Result<(), err::Error> {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.json", dir))
+	let files: Vec<String> = fs::glob(&format!("{}*.json", dir))?
 		.into_iter()
-		.map(|f| fs::basename(&f).ok().unwrap())
-		.collect();
+		.map(|f| fs::basename(&f))
+		.collect::<Result<_, _>>()?;
 
 	return Ok(load_spritedata_under(dir, &files)?);
 
