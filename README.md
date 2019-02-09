@@ -13,7 +13,7 @@ not on crates.io yet due to duplicate crate name
 
 ### modules
 - **app** Lifecycles, Time and Errors
-- **window** Window & Events
+- **window** Window & Input
 - **gfx** General Rendering
 - **g2d** 2D Rendering
 - **g3d** 3D Rendering
@@ -22,7 +22,7 @@ not on crates.io yet due to duplicate crate name
 - **fs** Common File Related Functions
 - **ecs** Simple ECS
 - **res** Resource Loading
-- **pref** User Data Saving
+- **pref** Save & Load User Data
 - **col** Minimal Collision Detection
 - **ui** Simple UI
 

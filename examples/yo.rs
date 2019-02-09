@@ -41,11 +41,12 @@ fn main() {
 	// main loop
 	app::run(|| {
 
-		if hovering {
+		gfx::drawon(&canvas);
+		gfx::clear();
 
+		if hovering {
 			g3d::rotate(app::time(), app::time(), app::time());
 			g3d::cube();
-
 		}
 
 		if index < anims["run"].to {
@@ -109,6 +110,11 @@ fn main() {
 		g2d::translate(vec2!(16));
 		g2d::text(&format!("{}", app::fps()));
 		g2d::pop();
+
+		gfx::stop_drawon(&canvas);
+// 		g2d::set_effect(&shader);
+		gfx::render(&canvas);
+// 		g2d::set_effect_default();
 
 		// inputs
 		if window::key_pressed(Key::Space) {
