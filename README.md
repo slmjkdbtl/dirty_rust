@@ -16,15 +16,18 @@ not on crates.io yet due to duplicate crate name
 - **window** Window & Input
 - **gfx** General Rendering
 - **g2d** 2D Rendering
-- **g3d** 3D Rendering
+- **g3d** 3D Rendering (*)
 - **audio** Sound Loading & playback
 - **math** Common Math Functions & Structs
 - **fs** Common File Related Functions
 - **ecs** Simple ECS
 - **res** Resource Loading
 - **pref** Save & Load User Data
-- **col** Minimal Collision Detection
-- **ui** Simple UI
+- **net** Simple Networking Wrapper (*)
+- **col** Common Simple Collision Detection Functions
+- **ui** Simple UI (*)
+
+(* means not ready for use yet)
 
 ### example
 ```rust
@@ -122,6 +125,7 @@ more under `examples/`
 ### notes & caveats
 
 - `app::init()` also overrides default panic behavior (also display messages to screen if `window` is initiated)
+- module contexts are handled internally
 - currently using OpenGL 2.1 for better compatibility, but might change to gfx-hal in the future
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
 - ui style is a tribute to [MEKA](http://www.smspower.org/meka/), thanks for keep making awesome tools
