@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Window & Events
+//! Window & Input
 
 use std::collections::HashMap;
 

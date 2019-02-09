@@ -5,6 +5,8 @@
 use std::fs;
 use std::path::Path;
 
+use crate::err;
+
 #[cfg(target_os = "macos")]
 fn get_res_dir() -> String {
 
@@ -48,7 +50,7 @@ pub fn exists(path: &str) -> bool {
 	return validate_path(path).is_ok();
 }
 
-fn validate_path(path: &str) -> Result<String, ()> {
+fn validate_path(path: &str) -> Result<String, err::Error> {
 
 	if !Path::new(path).exists() {
 
@@ -57,7 +59,7 @@ fn validate_path(path: &str) -> Result<String, ()> {
 		if Path::new(&with_res).exists() {
 			return Ok(with_res);
 		} else {
-			return Err(());
+			return Err(err::Error::FileRead(path.to_owned()));
 		}
 
 	} else {
@@ -96,46 +98,40 @@ pub fn glob(path: &str) -> Vec<String> {
 }
 
 /// get bytes read from given file
-pub fn read_bytes(path: &str) -> Vec<u8> {
+pub fn read_bytes(path: &str) -> Result<Vec<u8>, err::Error> {
 
-	if let Ok(path) = validate_path(path) {
-		if let Ok(content) = fs::read(&path) {
-			return content;
-		} else {
-			panic!("failed to read file \"{}\"", path);
-		}
+	let path = validate_path(path)?;
+
+	if let Ok(content) = fs::read(&path) {
+		return Ok(content);
 	} else {
-		panic!("failed to read file \"{}\"", path);
+		return Err(err::Error::FileRead(path));
 	}
 
 }
 
 /// get string read from given file
-pub fn read_str(path: &str) -> String {
+pub fn read_str(path: &str) -> Result<String, err::Error> {
 
-	if let Ok(path) = validate_path(path) {
-		if let Ok(content) = fs::read_to_string(&path) {
-			return content;
-		} else {
-			panic!("failed to read file \"{}\"", path);
-		}
+	let path = validate_path(path)?;
+
+	if let Ok(content) = fs::read_to_string(&path) {
+		return Ok(content);
 	} else {
-		panic!("failed to read file \"{}\"", path);
+		return Err(err::Error::FileRead(path));
 	}
 
 }
 
 /// get the basename of given file
-pub fn basename(path: &str) -> String {
+pub fn basename(path: &str) -> Result<String, err::Error> {
 
-	if let Ok(path) = validate_path(path) {
-		if let Some(name) = Path::new(&path).file_stem() {
-			return name.to_str().expect("failed to get basename").to_owned();
-		} else {
-			panic!("failed to read file \"{}\"", path);
-		}
+	let path = validate_path(path)?;
+
+	if let Some(name) = Path::new(&path).file_stem() {
+		return Ok(name.to_str().expect("failed to get basename").to_owned());
 	} else {
-		panic!("failed to read file \"{}\"", path);
+		return Err(err::Error::FileRead(path));
 	}
 
 }
