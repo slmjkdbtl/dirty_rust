@@ -223,9 +223,9 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 /// draw text
 pub fn text(s: &str) {
-
+//
 	let gfx = ctx_get();
-	let font = &gfx.current_font;
+	let font = &gfx.default_font;
 	let w = font.grid_size.x * font.tex.width() as f32;
 	let h = font.grid_size.y * font.tex.height() as f32;
 
@@ -238,19 +238,20 @@ pub fn text(s: &str) {
 
 	};
 
-	push();
-
 	for (i, ch) in s.chars().enumerate() {
+
+		let x = i as f32 * w;
 
 		if let Some(wrap) = gfx.state.text_wrap {
 
-			if i as u32 * w as u32 >= wrap {
+			if x >= wrap as f32 {
 				return next_line(&s[i..s.len()]);
 			}
 
 		}
 
-		translate(vec2!(w, 0.0));
+		push();
+		translate(vec2!(x, 0.0));
 
 		if ch == '\n' {
 
@@ -266,9 +267,9 @@ pub fn text(s: &str) {
 
 		}
 
-	}
+		pop();
 
-	pop();
+	}
 
 }
 
