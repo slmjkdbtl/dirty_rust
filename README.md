@@ -12,6 +12,9 @@ git = "https://github.com/slmjkdbtl/DIRTY"
 not on crates.io yet due to duplicate crate name
 
 ### modules
+
+core:
+
 - **app** Lifecycles, Time and Errors
 - **window** Window & Input
 - **gfx** General Rendering
@@ -20,11 +23,14 @@ not on crates.io yet due to duplicate crate name
 - **audio** Sound Loading & playback
 - **math** Common Math Functions & Types
 - **fs** Common File Related Functions
+
+micro helper libs:
+
 - **ecs** Simple ECS
-- **res** Resource Loading
+- **res** Resource Loading & Storing
 - **pref** Save & Load User Data
-- **net** Simple Networking Wrapper (*TODO*)
 - **col** Common Collision Detection
+- **net** Simple Networking Wrapper (*TODO*)
 - **ui** Simple UI (*TODO*)
 
 ### example
