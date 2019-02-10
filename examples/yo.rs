@@ -115,7 +115,7 @@ fn main() {
 
 		gfx::stop_drawon(&canvas);
 // 		g2d::set_effect(&shader);
-		gfx::render(&canvas);
+		g2d::render(&canvas);
 // 		g2d::set_effect_default();
 
 		// inputs

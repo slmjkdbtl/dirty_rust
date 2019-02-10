@@ -221,6 +221,11 @@ pub fn draw(tex: &Texture, quad: Rect) {
 
 }
 
+/// render a canvas
+pub fn render(c: &Canvas) {
+	g2d::draw(&c.tex, rect!(0, 0, 1, 1));
+}
+
 /// draw text
 pub fn text(s: &str) {
 //

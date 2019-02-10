@@ -38,11 +38,6 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
-/// render a canvas
-pub fn render(c: &Canvas) {
-	g2d::draw(&c.tex, rect!(0, 0, 1, 1));
-}
-
 /// set active canvas
 pub fn drawon(c: &Canvas) {
 
@@ -184,10 +179,10 @@ impl Texture {
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	handle: Rc<ggl::Framebuffer>,
-	tex: Texture,
-	width: u32,
-	height: u32,
+	pub(super) handle: Rc<ggl::Framebuffer>,
+	pub tex: Texture,
+	pub width: u32,
+	pub height: u32,
 
 }
 
