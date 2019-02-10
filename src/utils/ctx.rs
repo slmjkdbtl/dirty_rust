@@ -6,6 +6,7 @@ macro_rules! ctx {
 
 		#[allow(unused_variables)]
 		static mut $state: Option<$type> = None;
+		static CTX_NAME: &str = stringify!($state);
 
 		#[allow(dead_code)]
 		fn ctx_init(c: $type) {
@@ -13,7 +14,7 @@ macro_rules! ctx {
 				if $state.is_none() {
 					$state = Some(c);
 				} else {
-					panic!("cannot initialize {} twice", stringify!($state).to_lowercase());
+					panic!("cannot initialize {} twice", CTX_NAME);
 				}
 			}
 		}
@@ -21,14 +22,14 @@ macro_rules! ctx {
 		#[allow(dead_code)]
 		pub(self) fn ctx_get() -> &'static $type {
 			unsafe {
-				return $state.as_ref().expect(&format!("{} not initialized", stringify!($state).to_lowercase()));
+				return $state.as_ref().expect(&format!("{} not initialized", CTX_NAME));
 			}
 		}
 
 		#[allow(dead_code)]
 		pub(self) fn ctx_get_mut() -> &'static mut $type {
 			unsafe {
-				return $state.as_mut().expect(&format!("{} not initialized", stringify!($state).to_lowercase()));
+				return $state.as_mut().expect(&format!("{} not initialized", CTX_NAME));
 			}
 		}
 
