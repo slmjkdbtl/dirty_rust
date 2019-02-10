@@ -393,6 +393,25 @@ pub fn rotate(rot: f32) {
 
 }
 
+/// global 3d rotation
+pub fn rotate3d(x: f32, y: f32, z: f32) {
+
+	let state = &mut ctx_get_mut().state;
+
+	if x != 0.0 {
+		state.transform = state.transform.rotate(x, Dir::X);
+	}
+
+	if y != 0.0 {
+		state.transform = state.transform.rotate(y, Dir::Y);
+	}
+
+	if z != 0.0 {
+		state.transform = state.transform.rotate(z, Dir::Z);
+	}
+
+}
+
 /// global scale
 pub fn scale(s: Vec2) {
 
