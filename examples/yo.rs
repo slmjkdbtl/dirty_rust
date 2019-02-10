@@ -84,9 +84,7 @@ fn main() {
 			g2d::push();
 			g2d::line_width(3);
 			g2d::color(color!(1, 1, 0, 1));
-			for _ in 0..6000 {
-				g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
-			}
+			g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 			g2d::pop();
 
 		}
