@@ -41,11 +41,13 @@ fn main() {
 	// main loop
 	app::run(|| {
 
+		let time = app::time();
+
 		gfx::drawon(&canvas);
 		gfx::clear();
 
 		if hovering {
-			g3d::rotate(app::time(), app::time(), app::time());
+			g3d::rotate(time, time, time);
 			g3d::cube();
 		}
 
@@ -59,7 +61,7 @@ fn main() {
 		g2d::translate(vec2!(196, 164));
 		g2d::scale(vec2!(2));
 		g2d::translate(vec2!(64));
-		g2d::rotate(((app::time() * 2.0).sin() * 8.0).to_radians());
+		g2d::rotate(((time * 2.0).sin() * 8.0).to_radians());
 		g2d::translate(vec2!(-64));
 
 		let pts = g2d::multi_warp(&pts);
@@ -96,7 +98,7 @@ fn main() {
 		g2d::pop();
 
 		g2d::push();
-		g2d::translate(vec2!(64, 64.0 + (app::time() * 2.0).sin() * 4.0));
+		g2d::translate(vec2!(64, 64.0 + (time * 2.0).sin() * 4.0));
 		g2d::scale(vec2!(3));
 		g2d::text("yo♪");
 		g2d::pop();

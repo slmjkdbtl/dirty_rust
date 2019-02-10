@@ -7,6 +7,7 @@
 - macro for simple systems
 - game controllers
 - better gfx window resizing behavior
+- improve folder structures
 - proc macro for shader uniform
 - better shader uniform handling
 - more accurate timestep
