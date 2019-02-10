@@ -71,15 +71,9 @@ fn validate_path(path: &str) -> Option<String> {
 /// get a list of all filenames under given directory
 pub fn glob(path: &str) -> Vec<String> {
 
-	let listings;
-
-	if let Ok(entries) = glob::glob(path) {
-		listings = entries;
-	} else if let Ok(entries) = glob::glob(&format!("{}/{}", get_res_dir(), path)) {
-		listings = entries;
-	} else {
-		panic!("failed to read dir \"{}\"", path);
-	}
+	let listings = glob::glob(path)
+		.or(glob::glob(&format!("{}/{}", get_res_dir(), path)))
+		.expect(&format!("failed to read dir \"{}\"", path));
 
 	return listings
 		.map(|s| s.expect("failed to glob"))
@@ -93,12 +87,10 @@ pub fn glob(path: &str) -> Vec<String> {
 /// get bytes read from given file
 pub fn read_bytes(path: &str) -> Vec<u8> {
 
-	if let Some(path) = validate_path(path) {
-		if let Ok(content) = fs::read(&path) {
-			return content;
-		} else {
-			panic!("failed to read file \"{}\"", path);
-		}
+	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path));
+
+	if let Ok(content) = fs::read(&path) {
+		return content;
 	} else {
 		panic!("failed to read file \"{}\"", path);
 	}
@@ -108,12 +100,10 @@ pub fn read_bytes(path: &str) -> Vec<u8> {
 /// get string read from given file
 pub fn read_str(path: &str) -> String {
 
-	if let Some(path) = validate_path(path) {
-		if let Ok(content) = fs::read_to_string(&path) {
-			return content;
-		} else {
-			panic!("failed to read file \"{}\"", path);
-		}
+	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path));
+
+	if let Ok(content) = fs::read_to_string(&path) {
+		return content;
 	} else {
 		panic!("failed to read file \"{}\"", path);
 	}
@@ -123,12 +113,10 @@ pub fn read_str(path: &str) -> String {
 /// get the basename of given file
 pub fn basename(path: &str) -> String {
 
-	if let Some(path) = validate_path(path) {
-		if let Some(name) = Path::new(&path).file_stem() {
-			return name.to_str().expect("failed to get basename").to_owned();
-		} else {
-			panic!("failed to read file \"{}\"", path);
-		}
+	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path));
+
+	if let Some(name) = Path::new(&path).file_stem() {
+		return name.to_str().expect("failed to get basename").to_owned();
 	} else {
 		panic!("failed to read file \"{}\"", path);
 	}
