@@ -1,18 +1,10 @@
 # wengwengweng
 
 == DOING
-- 3d
 - ui
+- fix 3d transformations
 - ecs example
-- macro for simple systems
-- game controllers
-- better gfx window resizing behavior
 - improve folder structures
-- proc macro for shader uniform
-- better shader uniform handling
-- more accurate timestep
-- error handling
-- random seeds
 
 == TODO
 - metal backend
@@ -31,6 +23,14 @@
 - use glutin when girls supports macos
 - ecs support reverse entity iter
 - more customizable vec gens
+- random seeds
+- macro for simple systems
+- game controllers
+- better gfx window resizing behavior
+- proc macro for shader uniform
+- better shader uniform handling
+- more accurate timestep
+- proper error handling
 
 == DONE
 - basic window creation
