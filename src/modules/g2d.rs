@@ -179,7 +179,6 @@ pub(super) fn flush() {
 
 	}
 
-
 }
 
 pub(super) fn flip_projection() {
@@ -239,20 +238,19 @@ pub fn text(s: &str) {
 
 	};
 
-	for (i, ch) in s.chars().enumerate() {
+	push();
 
-		let x = i as f32 * w;
+	for (i, ch) in s.chars().enumerate() {
 
 		if let Some(wrap) = gfx.state.text_wrap {
 
-			if x >= wrap as f32 {
+			if i as u32 * w as u32 >= wrap {
 				return next_line(&s[i..s.len()]);
 			}
 
 		}
 
-		push();
-		translate(vec2!(x, 0.0));
+		translate(vec2!(w, 0.0));
 
 		if ch == '\n' {
 
@@ -268,9 +266,9 @@ pub fn text(s: &str) {
 
 		}
 
-		pop();
-
 	}
+
+	pop();
 
 }
 
