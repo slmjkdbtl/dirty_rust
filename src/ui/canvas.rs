@@ -36,7 +36,7 @@ impl Widget for Canvas {
 
 	fn draw(&self) {
 		g2d::color(color!(1));
-		gfx::render(&self.handle);
+		g2d::render(&self.handle);
 	}
 
 }

@@ -122,7 +122,7 @@ pub fn draw() {
 	g2d::push();
 	g2d::reset();
 
-	gfx::render(&ctx.background_buffer);
+	g2d::render(&ctx.background_buffer);
 
 	for (_, w) in ctx_mut.windows.iter_mut().rev() {
 		update_window(w);
