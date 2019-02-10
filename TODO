@@ -1,7 +1,6 @@
 # wengwengweng
 
 == DOING
-- ui
 - fix 3d transformations
 - ecs example
 - improve folder structures
@@ -31,6 +30,9 @@
 - better shader uniform handling
 - more accurate timestep
 - proper error handling
+- improve res design
+- ui
+- profiling
 
 == DONE
 - basic window creation
