@@ -16,18 +16,16 @@ not on crates.io yet due to duplicate crate name
 - **window** Window & Input
 - **gfx** General Rendering
 - **g2d** 2D Rendering
-- **g3d** 3D Rendering (*)
+- **g3d** 3D Rendering (*TODO*)
 - **audio** Sound Loading & playback
-- **math** Common Math Functions & Structs
+- **math** Common Math Functions & Types
 - **fs** Common File Related Functions
 - **ecs** Simple ECS
 - **res** Resource Loading
 - **pref** Save & Load User Data
-- **net** Simple Networking Wrapper (*)
-- **col** Common Simple Collision Detection Functions
-- **ui** Simple UI (*)
-
-(* means not ready for use yet)
+- **net** Simple Networking Wrapper (*TODO*)
+- **col** Common Collision Detection
+- **ui** Simple UI (*TODO*)
 
 ### example
 ```rust

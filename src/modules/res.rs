@@ -79,74 +79,68 @@ impl Default for SpriteData {
 }
 
 /// load all sprites from given directory
-pub fn load_all_textures_under(dir: &str) -> Result<(), err::Error> {
+pub fn load_all_textures_under(dir: &str) {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))?
+	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
 		.into_iter()
 		.map(|f| fs::basename(&f))
-		.collect::<Result<_, _>>()?;
+		.collect();
 
-	return Ok(load_textures_under(dir, &files)?);
+	return load_textures_under(dir, &files);
 
 }
 
 /// load all sounds from given directory
-pub fn load_all_sounds_under(dir: &str) -> Result<(), err::Error> {
+pub fn load_all_sounds_under(dir: &str) {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))?
+	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
 		.into_iter()
 		.map(|f| fs::basename(&f))
-		.collect::<Result<_, _>>()?;
+		.collect();
 
-	return Ok(load_sounds_under(dir, &files)?);
+	return load_sounds_under(dir, &files);
 
 }
 
 /// load all spritedata from given directory
-pub fn load_all_spritedata_under(dir: &str) -> Result<(), err::Error> {
+pub fn load_all_spritedata_under(dir: &str) {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.json", dir))?
+	let files: Vec<String> = fs::glob(&format!("{}*.json", dir))
 		.into_iter()
 		.map(|f| fs::basename(&f))
-		.collect::<Result<_, _>>()?;
+		.collect();
 
-	return Ok(load_spritedata_under(dir, &files)?);
+	return load_spritedata_under(dir, &files);
 
 }
 
 /// load all textures from given directory with given names
-pub fn load_textures_under<T: AsRef<str>>(dir: &str, names: &[T]) -> Result<(), err::Error> {
+pub fn load_textures_under<T: AsRef<str>>(dir: &str, names: &[T]) {
 
 	for name in names {
 		let name = name.as_ref();
-		load_texture(name, &fs::read_bytes(&format!("{}{}.png", dir, name))?);
+		load_texture(name, &fs::read_bytes(&format!("{}{}.png", dir, name)));
 	}
-
-	return Ok(());
 
 }
 
 /// load all sounds from given directory with given names
-pub fn load_sounds_under<T: AsRef<str>>(dir: &str, names: &[T]) -> Result<(), err::Error> {
+pub fn load_sounds_under<T: AsRef<str>>(dir: &str, names: &[T]) {
 
 	for name in names {
 		let name = name.as_ref();
-		load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name))?);
+		load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
 	}
-
-	return Ok(());
 
 }
 
 /// load all sprite data from given directory with given names
-pub fn load_spritedata_under<T: AsRef<str>>(dir: &str, names: &[T]) -> Result<(), err::Error> {
+pub fn load_spritedata_under<T: AsRef<str>>(dir: &str, names: &[T]) {
 
 	for name in names {
 		let name = name.as_ref();
-		load_spritedata(name, &fs::read_str(&format!("{}{}.json", dir, name))?);
+		load_spritedata(name, &fs::read_str(&format!("{}{}.json", dir, name)));
 	}
-
-	return Ok(());
 
 }
 

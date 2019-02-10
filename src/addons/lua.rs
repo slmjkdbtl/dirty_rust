@@ -108,7 +108,7 @@ pub fn run_code(code: &str) {
 }
 
 /// run from lua file
-pub fn run(fname: &str) -> Result<(), err::Error> {
-	return Ok(run_code(&fs::read_str(fname)?));
+pub fn run(fname: &str) {
+	return run_code(&fs::read_str(fname));
 }
 

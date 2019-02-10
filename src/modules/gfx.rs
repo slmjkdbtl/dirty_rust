@@ -160,8 +160,8 @@ impl Texture {
 	}
 
 	/// create texture from a file
-	pub fn from_file(fname: &str) -> Result<Self, err::Error> {
-		return Ok(Self::from_bytes(&fs::read_bytes(fname)?));
+	pub fn from_file(fname: &str) -> Self {
+		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 
 	pub fn from_color(c: Color, width: u32, height: u32) -> Self {
@@ -245,16 +245,16 @@ macro_rules! gen_templated_shader {
 				return Self::from_code($vert_default, frag);
 			}
 
-			pub fn from_file(vertf: &str, fragf: &str) -> Result<Self, err::Error> {
-				return Ok(Self::from_code(&fs::read_str(vertf)?, &fs::read_str(fragf)?));
+			pub fn from_file(vertf: &str, fragf: &str) -> Self {
+				return Self::from_code(&fs::read_str(vertf), &fs::read_str(fragf));
 			}
 
-			pub fn from_file_vert(vertf: &str) -> Result<Self, err::Error> {
-				return Ok(Self::from_code(&fs::read_str(vertf)?, $frag_default));
+			pub fn from_file_vert(vertf: &str) -> Self {
+				return Self::from_code(&fs::read_str(vertf), $frag_default);
 			}
 
-			pub fn from_file_frag(fragf: &str) -> Result<Self, err::Error> {
-				return Ok(Self::from_code($vert_default, &fs::read_str(fragf)?));
+			pub fn from_file_frag(fragf: &str) -> Self {
+				return Self::from_code($vert_default, &fs::read_str(fragf));
 			}
 
 			pub fn send_float(&self, name: &str, f: f32) -> &Self {
