@@ -45,24 +45,24 @@ fn get_res_dir() -> String {
 
 /// check if given file exists
 pub fn exists(path: &str) -> bool {
-	return validate_path(path).is_ok();
+	return validate_path(path).is_some();
 }
 
-fn validate_path(path: &str) -> Result<String, ()> {
+fn validate_path(path: &str) -> Option<String> {
 
 	if !Path::new(path).exists() {
 
 		let with_res = format!("{}/{}", get_res_dir(), path);
 
 		if Path::new(&with_res).exists() {
-			return Ok(with_res);
+			return Some(with_res);
 		} else {
-			return Err(());
+			return None;
 		}
 
 	} else {
 
-		return Ok(path.to_owned());
+		return Some(path.to_owned());
 
 	}
 
@@ -71,34 +71,29 @@ fn validate_path(path: &str) -> Result<String, ()> {
 /// get a list of all filenames under given directory
 pub fn glob(path: &str) -> Vec<String> {
 
-	let mut entries: Vec<String> = Vec::new();
+	let listings;
 
-	if let Ok(listings) = glob::glob(path) {
-		for item in listings {
-			if let Ok(entry) = item {
-				entries.push(entry.into_os_string().into_string().expect("failed to convert pathbuf to string"));
-			}
-		}
+	if let Ok(entries) = glob::glob(path) {
+		listings = entries;
+	} else if let Ok(entries) = glob::glob(&format!("{}/{}", get_res_dir(), path)) {
+		listings = entries;
 	} else {
-		if let Ok(listings) = glob::glob(&format!("{}/{}", get_res_dir(), path)) {
-			for item in listings {
-				if let Ok(entry) = item {
-					entries.push(entry.into_os_string().into_string().expect("failed to convert pathbuf to string"));
-				}
-			}
-		} else {
-			panic!("failed to read dir \"{}\"", path);
-		}
+		panic!("failed to read dir \"{}\"", path);
 	}
 
-	return entries;
+	return listings
+		.map(|s| s.expect("failed to glob"))
+		.map(|s| s.into_os_string())
+		.map(|s| s.into_string())
+		.map(|s| s.expect("failed to glob"))
+		.collect::<Vec<String>>();
 
 }
 
 /// get bytes read from given file
 pub fn read_bytes(path: &str) -> Vec<u8> {
 
-	if let Ok(path) = validate_path(path) {
+	if let Some(path) = validate_path(path) {
 		if let Ok(content) = fs::read(&path) {
 			return content;
 		} else {
@@ -113,7 +108,7 @@ pub fn read_bytes(path: &str) -> Vec<u8> {
 /// get string read from given file
 pub fn read_str(path: &str) -> String {
 
-	if let Ok(path) = validate_path(path) {
+	if let Some(path) = validate_path(path) {
 		if let Ok(content) = fs::read_to_string(&path) {
 			return content;
 		} else {
@@ -128,7 +123,7 @@ pub fn read_str(path: &str) -> String {
 /// get the basename of given file
 pub fn basename(path: &str) -> String {
 
-	if let Ok(path) = validate_path(path) {
+	if let Some(path) = validate_path(path) {
 		if let Some(name) = Path::new(&path).file_stem() {
 			return name.to_str().expect("failed to get basename").to_owned();
 		} else {
