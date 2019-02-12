@@ -13,7 +13,6 @@ use systems::*;
 fn main() {
 
 	app::init();
-	audio::init();
 	window::init("yo", 640, 480);
 	res::init();
 

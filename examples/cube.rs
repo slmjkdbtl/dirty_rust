@@ -6,7 +6,6 @@ fn main() {
 
 	// init modules
 	app::init();
-	audio::init();
 	window::init("yo", 640, 480);
 
 	// main loop
