@@ -12,34 +12,13 @@ use rodio::source::Buffered;
 
 use crate::*;
 
-// context
-ctx!(AUDIO: AudioCtx);
-
-struct AudioCtx {
-	device: rodio::Device,
-}
-
-/// initialize audio module
-pub fn init() {
-
-	if !app::enabled() {
-		panic!("can't init audio without app");
-	}
-
-	ctx_init(AudioCtx {
-		device: rodio::default_output_device().expect("failed to get audio device"),
-	});
-
-}
-
-/// check if audio module is initialized
-pub fn enabled() -> bool {
-	return ctx_ok();
+fn get_device() -> rodio::Device {
+	return rodio::default_output_device().expect("failed to get audio device");
 }
 
 /// play a given sound once till end
 pub fn play(sound: &Sound) {
-	rodio::play_raw(&ctx_get().device, sound.apply().convert_samples());
+	rodio::play_raw(&get_device(), sound.apply().convert_samples());
 }
 
 /// base struct containing sound data and effects data
@@ -178,8 +157,7 @@ pub struct Track {
 /// play a sound and return a track
 pub fn track(sound: &Sound) -> Track {
 
-	let ctx = ctx_get();
-	let sink = Sink::new(&ctx.device);
+	let sink = Sink::new(&get_device());
 
 	sink.append(sound.apply());
 

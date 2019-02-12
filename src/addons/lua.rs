@@ -99,8 +99,6 @@ pub fn run_code(code: &str) {
 		bind_func!("gfx_clear", (): () -> gfx::clear());
 		bind_func!("gfx_reset", (): () -> g2d::reset());
 
-		bind_func!("audio_init", (): () -> audio::init());
-
 		ctx.load(code).exec().expect("failed to run lua");
 
 	});

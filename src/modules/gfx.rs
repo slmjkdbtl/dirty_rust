@@ -15,12 +15,18 @@ ctx!(GFX: GfxCtx);
 
 struct GfxCtx {
 	current_canvas: Option<Canvas>,
+	canvas_2d: Canvas,
+	canvas_3d: Canvas,
 }
 
 pub(super) fn init() {
 
+	let (w, h) = window::size();
+
 	ctx_init(GfxCtx {
 		current_canvas: None,
+		canvas_2d: Canvas::new(w, h),
+		canvas_3d: Canvas::new(w, h),
 	});
 
 	g3d::init();
@@ -106,6 +112,9 @@ pub(super) fn end() {
 	g2d::clear_stack();
 	g3d::reset();
 	g3d::clear_stack();
+
+	g2d::render(&gfx.canvas_2d);
+	g2d::render(&gfx.canvas_3d);
 
 	if gfx.current_canvas.is_some() {
 		panic!("unfinished canvas");

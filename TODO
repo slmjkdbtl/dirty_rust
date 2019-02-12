@@ -3,6 +3,7 @@
 == DOING
 - fix 3d transformations
 - ecs example
+- allow nested canvas
 - improve folder structures
 
 == TODO
