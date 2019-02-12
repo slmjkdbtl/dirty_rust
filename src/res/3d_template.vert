@@ -10,12 +10,13 @@ varying vec4 tint;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform float time;
 
 ###REPLACE###
 
 void main() {
 	coord = uv;
 	tint = color;
-	gl_Position = vert(projection, view, model, vec4(pos, 1.0));
+	gl_Position = vert(projection, view, model, vec4(pos, 1.0), time);
 }
 
