@@ -174,6 +174,7 @@ pub(super) fn flush() {
 	if let Some(tex) = &gfx.current_tex {
 
 		gfx.current_shader.send_mat4("projection", gfx.projection);
+		gfx.current_shader.send_float("time", app::time());
 		renderer.flush(&*tex.handle, &gfx.current_shader.program);
 		gfx_mut.current_tex = None;
 

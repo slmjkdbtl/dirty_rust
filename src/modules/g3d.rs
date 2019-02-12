@@ -197,6 +197,7 @@ pub fn cube() {
 	gfx.current_shader.send_mat4("model", model);
 	gfx.current_shader.send_mat4("view", view);
 	gfx.current_shader.send_mat4("projection", projection);
+	gfx.current_shader.send_float("time", app::time());
 	gfx.cube_mesh.draw(&gfx.empty_tex.handle, &gfx.current_shader.program);
 
 }
