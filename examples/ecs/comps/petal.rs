@@ -1,7 +1,7 @@
 // wengwengweng
 
-use dirty::ecs::*;
-use dirty::ecs::derive::*;
+use sock::ecs::*;
+use sock::ecs::derive::*;
 
 #[derive(Comp, Clone)]
 pub struct Petal {

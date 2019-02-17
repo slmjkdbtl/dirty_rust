@@ -17,7 +17,7 @@ pub fn comp_derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	}
 
 	return proc_macro::TokenStream::from(quote! {
-		impl dirty::ecs::Comp for #name {}
+		impl sock::ecs::Comp for #name {}
 	});
 
 }

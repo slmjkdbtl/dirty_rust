@@ -168,6 +168,7 @@ impl Texture {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 
+	/// create texture from a color block
 	pub fn from_color(c: Color, width: u32, height: u32) -> Self {
 		return Self::from_raw(&c.to_rgba(), width, height);
 	}
