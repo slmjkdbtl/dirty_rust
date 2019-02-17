@@ -1,8 +1,8 @@
 // wengwengweng
 
-use sock::*;
-use sock::math::*;
-use sock::ecs::*;
+use dirty::*;
+use dirty::math::*;
+use dirty::ecs::*;
 
 mod comps;
 mod systems;

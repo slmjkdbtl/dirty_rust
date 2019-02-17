@@ -1,7 +1,7 @@
 // wengwengweng
 
-use sock::*;
-use sock::ecs::*;
+use dirty::*;
+use dirty::ecs::*;
 use crate::comps::*;
 
 pub struct RenderSys;

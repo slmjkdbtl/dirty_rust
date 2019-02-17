@@ -1,7 +1,7 @@
 // wengwengweng
 
-use sock::ecs::*;
-use sock::ecs::derive::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
 #[derive(Comp, Clone)]
 pub struct Powder {
