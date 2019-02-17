@@ -1,9 +1,9 @@
 // wengwengweng
 
-use sock::*;
-use sock::math::*;
-use sock::ecs::*;
-use sock::ecs::derive::*;
+use dirty::*;
+use dirty::math::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
 #[derive(Clone)]
 pub enum Player {

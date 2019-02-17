@@ -1,8 +1,8 @@
 // wengwengweng
 
-use sock::*;
-use sock::math::*;
-use sock::ecs::*;
+use dirty::*;
+use dirty::math::*;
+use dirty::ecs::*;
 use crate::comps::*;
 
 pub struct PowderUpdateSys;

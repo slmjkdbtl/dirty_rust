@@ -1,6 +1,6 @@
 // wengwengweng
 
-use sock::*;
+use dirty::*;
 
 fn main() {
 

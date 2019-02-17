@@ -1,13 +1,15 @@
 ![icon](icon.png)
 
-## SOCK
+## DIRTY
 personal toolkit for creating game-like experiences
 
 ### usage
 add to `Cargo.toml`
 ```toml
-sock = "0.1.0"
+[dependencies.dirty]
+git = "https://github.com/slmjkdbtl/DIRTY"
 ```
+not on crates.io yet due to duplicate crate name
 
 ### modules
 
@@ -33,7 +35,7 @@ micro helper libs:
 
 ### example
 ```rust
-use sock::*;
+use dirty::*;
 
 fn main() {
 
@@ -67,9 +69,9 @@ fn main() {
 with `ecs`:
 
 ```rust
-use sock::*;
-use sock::ecs::*;
-use sock::ecs::derive::*;
+use dirty::*;
+use dirty::ecs::*;
+use dirty::ecs::derive::*;
 
 #[derive(Comp, Clone)]
 struct Pos {
