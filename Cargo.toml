@@ -1,11 +1,11 @@
 # wengwengweng
 
 [package]
-name = "dirty"
-description = "dirty tool kit"
-version = "0.0.0"
+name = "sock"
+description = "sock tool kit"
+version = "0.1.0"
 authors = ["t <voygagaga@outlook.com>"]
-repository = "https://github.com/slmjkdbtl/DIRTY"
+repository = "https://github.com/slmjkdbtl/SOCK"
 license = "Zlib"
 edition = "2018"
 readme = "README.md"

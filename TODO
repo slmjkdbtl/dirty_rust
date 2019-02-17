@@ -1,12 +1,12 @@
 # wengwengweng
 
-== DOING
+doing:
 - fix 3d transformations
 - ecs example
 - allow nested canvas
 - improve folder structures
 
-== TODO
+todo:
 - metal backend
 - add error sound
 - ui lazy redraw
@@ -34,8 +34,9 @@
 - improve res design
 - ui
 - profiling
+- amulet style sprite string
 
-== DONE
+done:
 - basic window creation
 - basic 2d rendering
 - 2d global transforms
@@ -82,10 +83,8 @@
 - rework renderer abstraction
 - data saving
 
-== ADVENTURE
+adventure:
 - wasm
 - ios
 - android
-
-== GIVEUP
 

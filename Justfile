@@ -9,6 +9,6 @@ doc crate:
 loc:
 	tokei
 
-outdated:
+checkdep:
 	cargo outdated --depth 1
 

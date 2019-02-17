@@ -1,8 +1,8 @@
 // wengwengweng
 
-use dirty::*;
-use dirty::math::*;
-use dirty::ecs::*;
+use sock::*;
+use sock::math::*;
+use sock::ecs::*;
 use crate::comps::*;
 
 pub struct PetalFollowSys;

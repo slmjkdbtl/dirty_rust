@@ -1,9 +1,9 @@
 // wengwengweng
 
-use dirty::*;
-use dirty::math::*;
-use dirty::ecs::*;
-use dirty::ecs::derive::*;
+use sock::*;
+use sock::math::*;
+use sock::ecs::*;
+use sock::ecs::derive::*;
 
 #[derive(Comp, Clone)]
 pub struct Body {

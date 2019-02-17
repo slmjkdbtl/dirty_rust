@@ -1,7 +1,7 @@
 // wengwengweng
 
-use dirty::*;
-use dirty::ecs::*;
+use sock::*;
+use sock::ecs::*;
 use crate::comps::*;
 
 pub struct DebugSys;
