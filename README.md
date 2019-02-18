@@ -33,6 +33,12 @@ micro helper libs:
 - **net** Simple Networking Wrapper (*TODO*)
 - **ui** Simple UI (*TODO*)
 
+### doc
+clone the repo and run
+```bash
+cargo doc -p dirty --no-deps --open
+```
+
 ### example
 ```rust
 use dirty::*;
