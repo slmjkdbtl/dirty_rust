@@ -134,3 +134,6 @@ more under `examples/`
 - on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
 - ui style is a tribute to [MEKA](http://www.smspower.org/meka/), thanks for keep making awesome tools
 
+### fun fact
+`DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
+
