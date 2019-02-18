@@ -19,7 +19,6 @@ todo:
 - vector swizzle fields
 - ttf font rendering
 - ui proc macro generate window
-- try gfx-hal
 - use glutin when girls supports macos
 - ecs support reverse entity iter
 - more customizable vec gens
@@ -35,6 +34,7 @@ todo:
 - ui
 - profiling
 - amulet style sprite string
+- try rendy
 
 done:
 - basic window creation

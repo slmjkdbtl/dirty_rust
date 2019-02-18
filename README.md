@@ -130,9 +130,7 @@ more under `examples/`
 
 - `app::init()` also overrides default panic behavior (also display messages to screen if `window` is initiated)
 - module contexts are handled internally
-- currently using OpenGL 2.1 for better compatibility, but might support multiple backends in the future
-- on Windows, `audio::init()` must be called before `window::init()`, for some reason it crashes if tried to get audio device after SDL initialization
-- ui style is a tribute to [MEKA](http://www.smspower.org/meka/), thanks for keep making awesome tools
+- currently using OpenGL 2.1 for better compatibility, but might use rendy in the future
 
 ### fun fact
 `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
