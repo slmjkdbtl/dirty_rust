@@ -30,11 +30,11 @@ todo:
 - better shader uniform handling
 - more accurate timestep
 - proper error handling
-- improve res design
 - ui
 - profiling
 - amulet style sprite string
 - try rendy
+- make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
 
 done:
 - basic window creation
