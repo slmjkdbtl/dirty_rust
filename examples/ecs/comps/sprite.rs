@@ -5,9 +5,8 @@ use std::collections::HashMap;
 use dirty::*;
 use dirty::math::*;
 use dirty::ecs::*;
-use dirty::ecs::derive::*;
 
-#[derive(Comp, Clone)]
+#[derive(Clone)]
 pub struct Sprite {
 
 	pub tex: gfx::Texture,

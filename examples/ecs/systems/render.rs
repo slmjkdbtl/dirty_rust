@@ -3,17 +3,19 @@
 use dirty::*;
 use dirty::ecs::*;
 use crate::comps::*;
+use crate::resources::*;
 
-pub struct RenderSys;
+pub fn render(pool: &mut Pool) {
 
-impl System for RenderSys {
+	let cam = pool.get_res::<Camera>().unwrap();
 
-	fn filter(&self) -> Filter {
-		return filter![Sprite, Trans];
-	}
+	g2d::push();
+	g2d::translate(cam.pos);
+	g2d::scale(cam.scale);
 
-	fn each(&mut self, e: &mut Entity) {
+	for id in pool.pick(&filter![Sprite, Trans]) {
 
+		let e = pool.get_mut(id).unwrap();
 		let t = e.get::<Trans>();
 		let s = e.get::<Sprite>();
 
@@ -37,6 +39,8 @@ impl System for RenderSys {
 		g2d::pop();
 
 	}
+
+	g2d::pop();
 
 }
 

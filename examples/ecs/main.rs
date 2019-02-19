@@ -30,17 +30,17 @@ fn main() {
 
 	world.share(Camera::new());
 
-	world.run(AnimSys);
-	world.run(TransformSys);
-	world.run(ShootSys);
-	world.run(PowderUpdateSys);
-	world.run(FlowerInputSys);
-	world.run(PetalFollowSys);
-	world.run(RenderSys);
-	world.run(DebugSys);
-
 	app::run(|| {
-		world.update();
+
+		world.run(anim);
+		world.run(transform);
+		world.run(flower_input);
+		world.run(powder_update);
+		world.run(petal_follow);
+		world.run(shoot);
+		world.run(render);
+		world.run(debug);
+
 	});
 
 }

@@ -4,16 +4,11 @@ use dirty::*;
 use dirty::ecs::*;
 use crate::comps::*;
 
-pub struct AnimSys;
+pub fn anim(pool: &mut Pool) {
 
-impl System for AnimSys {
+	for id in pool.pick(&filter![Sprite]) {
 
-	fn filter(&self) -> Filter {
-		return filter![Sprite];
-	}
-
-	fn each(&mut self, e: &mut Entity) {
-
+		let e = pool.get_mut(id).unwrap();
 		let mut s = e.get::<Sprite>();
 
 		if s.current_anim.is_some() {
@@ -32,7 +27,4 @@ impl System for AnimSys {
 	}
 
 }
-
-
-
 

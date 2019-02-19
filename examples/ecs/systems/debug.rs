@@ -4,20 +4,15 @@ use dirty::*;
 use dirty::ecs::*;
 use crate::comps::*;
 
-pub struct DebugSys;
+pub fn debug(pool: &mut Pool) {
 
-impl System for DebugSys {
-
-	fn filter(&self) -> Filter {
-		return filter![Body];
-	}
-
-	fn each(&mut self, e: &mut Entity) {
+	for id in pool.pick(&filter![Body]) {
 
 		if !app::debug() {
 			return;
 		}
 
+		let e = pool.get(id).unwrap();
 		let b = e.get::<Body>();
 
 		g2d::push();
@@ -30,5 +25,4 @@ impl System for DebugSys {
 	}
 
 }
-
 

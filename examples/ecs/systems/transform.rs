@@ -4,16 +4,11 @@ use dirty::*;
 use dirty::ecs::*;
 use crate::comps::*;
 
-pub struct TransformSys;
+pub fn transform(pool: &mut Pool) {
 
-impl System for TransformSys {
+	for id in pool.pick(&filter![Trans, Vel]) {
 
-	fn filter(&self) -> Filter {
-		return filter![Trans, Vel];
-	}
-
-	fn each(&mut self, e: &mut Entity) {
-
+		let e = pool.get_mut(id).unwrap();
 		let mut t = e.get::<Trans>();
 		let v = e.get::<Vel>();
 

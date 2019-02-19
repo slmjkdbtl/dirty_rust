@@ -1,9 +1,8 @@
 // wengwengweng
 
 use dirty::ecs::*;
-use dirty::ecs::derive::*;
 
-#[derive(Comp, Clone)]
+#[derive(Clone)]
 pub struct Petal {
 
 	pub flower: Id,

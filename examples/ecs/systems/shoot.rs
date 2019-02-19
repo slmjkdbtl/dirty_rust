@@ -17,33 +17,27 @@ fn powder(flower: Id, pos: Vec2, dir: f32) -> Entity {
 
 }
 
-pub struct ShootSys;
+pub fn shoot(pool: &mut Pool) {
 
-impl System for ShootSys {
+	let mut bullet = None;
 
-	fn update(&mut self, pool: &mut Pool) {
+	for id in pool.pick(&filter![Flower, Trans]) {
 
-		let mut bullet = None;
+		let e = pool.get_mut(id).unwrap();
+		let mut f = e.get::<Flower>();
+		let t = e.get::<Trans>();
 
-		for id in pool.pick(&filter![Flower, Trans]) {
-
-			let e = pool.get_mut(id).unwrap();
-			let mut f = e.get::<Flower>();
-			let t = e.get::<Trans>();
-
-			if f.energy >= f.rate {
-				bullet = Some(powder(id, t.pos + Vec2::from_angle(t.rot) * 8, t.rot));
-				f.energy = 0;
-			}
-
-			e.set::<Flower>(f);
-
+		if f.energy >= f.rate {
+			bullet = Some(powder(id, t.pos + Vec2::from_angle(t.rot) * 8, t.rot));
+			f.energy = 0;
 		}
 
-		if let Some(powder) = bullet {
-			pool.push(powder);
-		}
+		e.set::<Flower>(f);
 
+	}
+
+	if let Some(powder) = bullet {
+		pool.push(powder);
 	}
 
 }
