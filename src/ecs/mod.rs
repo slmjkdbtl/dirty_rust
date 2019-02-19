@@ -28,6 +28,7 @@ pub trait System: Any {
 }
 
 pub trait Comp: Any {}
+pub trait Resource: Any {}
 pub type Filter = HashSet<TypeId>;
 type EntitySet = BTreeSet<Id>;
 
@@ -60,6 +61,7 @@ pub struct Pool<'a> {
 
 	entities: &'a mut BTreeMap<Id, Entity>,
 	id_generator: &'a mut IdGenerator,
+	resources: &'a mut HashMap<TypeId, Box<Any>>,
 
 }
 
@@ -101,6 +103,18 @@ impl<'a> Pool<'a> {
 		return self.entities.get_mut(&id);
 	}
 
+	pub fn get_res<R: Resource>(&self) -> Option<&R> {
+		return self.resources
+			.get(&TypeId::of::<R>())
+			.map(|c| c.downcast_ref().unwrap());
+	}
+
+	pub fn get_res_mut<R: Resource>(&mut self) -> Option<&mut R> {
+		return self.resources
+			.get_mut(&TypeId::of::<R>())
+			.map(|c| c.downcast_mut().unwrap());
+	}
+
 }
 
 struct SystemData {
@@ -116,6 +130,7 @@ pub struct World {
 	id_generator: IdGenerator,
 	entities: BTreeMap<Id, Entity>,
 	systems: Vec<SystemData>,
+	resources: HashMap<TypeId, Box<Any>>,
 
 }
 
@@ -135,6 +150,10 @@ impl World {
 
 	}
 
+	pub fn share<R: Resource>(&mut self, resource: R) {
+		self.resources.insert(TypeId::of::<R>(), Box::new(resource));
+	}
+
 	pub fn run<S: System>(&mut self, system: S) {
 
 		self.systems.push(SystemData {
@@ -146,33 +165,13 @@ impl World {
 
 	}
 
-	pub fn run_once<S: System>(&mut self, s: &mut S) {
-
-		let mut pool = Pool {
-
-			id_generator: &mut self.id_generator,
-			entities: &mut self.entities,
-
-		};
-
-		let filter = s.filter();
-
-		if filter.len() > 0 {
-			for id in &pool.pick(&filter) {
-				s.each(pool.get_mut(*id).expect("oh no"));
-			}
-		}
-
-		s.update(&mut pool);
-
-	}
-
 	pub fn update(&mut self) {
 
 		let mut pool = Pool {
 
 			id_generator: &mut self.id_generator,
 			entities: &mut self.entities,
+			resources: &mut self.resources,
 
 		};
 

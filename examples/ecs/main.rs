@@ -6,9 +6,11 @@ use dirty::ecs::*;
 
 mod comps;
 mod systems;
+mod resources;
 
 use comps::*;
 use systems::*;
+use resources::*;
 
 fn main() {
 
@@ -25,6 +27,8 @@ fn main() {
 
 	create_flower(&mut world, Player::One);
 	create_flower(&mut world, Player::Two);
+
+	world.share(Camera::new());
 
 	world.run(AnimSys);
 	world.run(TransformSys);

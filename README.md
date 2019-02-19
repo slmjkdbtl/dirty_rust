@@ -26,7 +26,7 @@ core:
 
 micro helper libs:
 
-- **ecs** Simple ECS
+- **ecs** Simple ECS (you should probably use specs)
 - **res** Resource Loading & Storing
 - **pref** Save & Load User Data
 - **col** Common Collision Detection
@@ -124,9 +124,9 @@ fn main() {
 	world.run(MoveSys);
 
 	// loop
-	for _ in 0..3 {
+	app::run(|| {
 		world.update();
-	}
+	});
 
 }
 ```
