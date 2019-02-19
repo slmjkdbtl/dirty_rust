@@ -4,6 +4,7 @@ use dirty::*;
 use dirty::math::*;
 use dirty::ecs::*;
 use crate::comps::*;
+use crate::resources::*;
 
 fn powder(flower: Id, pos: Vec2, dir: f32) -> Entity {
 
@@ -22,7 +23,7 @@ impl System for ShootSys {
 
 	fn update(&mut self, pool: &mut Pool) {
 
-		let mut queue = Vec::new();
+		let mut bullet = None;
 
 		for id in pool.pick(&filter![Flower, Trans]) {
 
@@ -31,7 +32,7 @@ impl System for ShootSys {
 			let t = e.get::<Trans>();
 
 			if f.energy >= f.rate {
-				queue.push(powder(id, t.pos + Vec2::from_angle(t.rot) * 8, t.rot));
+				bullet = Some(powder(id, t.pos + Vec2::from_angle(t.rot) * 8, t.rot));
 				f.energy = 0;
 			}
 
@@ -39,8 +40,8 @@ impl System for ShootSys {
 
 		}
 
-		for p in queue {
-			pool.push(p);
+		if let Some(powder) = bullet {
+			pool.push(powder);
 		}
 
 	}

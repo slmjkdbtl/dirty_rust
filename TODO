@@ -82,6 +82,7 @@ done:
 - vertex proc macro
 - rework renderer abstraction
 - data saving
+- add resources to ecs world
 
 adventure:
 - wasm
