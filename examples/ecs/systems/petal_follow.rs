@@ -5,38 +5,26 @@ use dirty::math::*;
 use dirty::ecs::*;
 use crate::comps::*;
 
-pub struct PetalFollowSys;
+pub fn petal_follow(pool: &mut Pool) {
 
-impl System for PetalFollowSys {
+	for id in pool.pick(&filter![Petal, Trans]) {
 
-	fn update(&mut self, pool: &mut Pool) {
+		let e = pool.get(id).unwrap();
+		let petal = e.get::<Petal>();
+		let mut trans = e.get::<Trans>();
 
-		for id in pool.pick(&filter![Petal, Trans]) {
+		if let Some(flower) = pool.get(petal.flower) {
 
-			let e = pool.get(id).unwrap();
-			let petal = e.get::<Petal>();
-			let mut trans = e.get::<Trans>();
+			let f_trans = flower.get::<Trans>();
+			let ang = petal.index as f32 * 90f32;
 
-			if let Some(flower) = pool.get(petal.flower) {
-
-				let f_trans = flower.get::<Trans>();
-				let ang = petal.index as f32 * 90f32;
-
-				trans.pos = f_trans.pos + Vec2::from_angle((ang - 90.0).to_radians()) * 1.2;
-				trans.rot = f_trans.rot + ang.to_radians();
-				pool.get_mut(id).unwrap().set::<Trans>(trans);
-
-			}
+			trans.pos = f_trans.pos + Vec2::from_angle((ang - 90.0).to_radians()) * 1.2;
+			trans.rot = f_trans.rot + ang.to_radians();
+			pool.get_mut(id).unwrap().set::<Trans>(trans);
 
 		}
 
 	}
 
 }
-
-
-
-
-
-
 

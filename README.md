@@ -77,24 +77,20 @@ with `ecs`:
 ```rust
 use dirty::*;
 use dirty::ecs::*;
-use dirty::ecs::derive::*;
 
-#[derive(Comp, Clone)]
+// define component
+#[derive(Clone)]
 struct Pos {
 	x: f32,
 	y: f32,
 }
 
-struct MoveSys;
+// define behavior
+fn movement(pool: &mut Pool) {
 
-impl System for MoveSys {
+	for id in pool.pick(&filter![Pos]) {
 
-	fn filter(&self) -> Filter {
-		return filter![Pos];
-	}
-
-	fn each(&mut self, e: &mut Entity) {
-
+		let e = pool.get_mut(id).unwrap();
 		let mut pos = e.get::<Pos>();
 
 		pos.x = pos.x + 1.0;
@@ -120,12 +116,10 @@ fn main() {
 	// add entities
 	world.add(thing(0.0, 0.0));
 
-	// run systems
-	world.run(MoveSys);
-
 	// loop
 	app::run(|| {
-		world.update();
+		// run system
+		world.run(movement);
 	});
 
 }

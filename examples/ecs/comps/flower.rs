@@ -3,7 +3,6 @@
 use dirty::*;
 use dirty::math::*;
 use dirty::ecs::*;
-use dirty::ecs::derive::*;
 
 #[derive(Clone)]
 pub enum Player {
@@ -13,7 +12,7 @@ pub enum Player {
 
 }
 
-#[derive(Comp, Clone)]
+#[derive(Clone)]
 pub struct Flower {
 
 	pub player: Player,

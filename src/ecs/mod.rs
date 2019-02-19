@@ -2,8 +2,6 @@
 
 //! Simple ECS
 
-pub use ecs_derive as derive;
-
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::BTreeMap;
@@ -11,24 +9,10 @@ use std::collections::BTreeSet;
 use std::any::TypeId;
 use std::any::Any;
 
-use crate::*;
 use crate::utils::id::*;
 
 pub use crate::utils::id::Id;
 
-pub trait System: Any {
-
-	fn filter(&self) -> Filter {
-		return filter![];
-	}
-
-	fn update(&mut self, pool: &mut Pool) {}
-	fn each(&mut self, e: &mut Entity) {}
-
-}
-
-pub trait Comp: Any {}
-pub trait Resource: Any {}
 pub type Filter = HashSet<TypeId>;
 type EntitySet = BTreeSet<Id>;
 
@@ -103,24 +87,17 @@ impl<'a> Pool<'a> {
 		return self.entities.get_mut(&id);
 	}
 
-	pub fn get_res<R: Resource>(&self) -> Option<&R> {
+	pub fn get_res<R: Any>(&self) -> Option<&R> {
 		return self.resources
 			.get(&TypeId::of::<R>())
 			.map(|c| c.downcast_ref().unwrap());
 	}
 
-	pub fn get_res_mut<R: Resource>(&mut self) -> Option<&mut R> {
+	pub fn get_res_mut<R: Any>(&mut self) -> Option<&mut R> {
 		return self.resources
 			.get_mut(&TypeId::of::<R>())
 			.map(|c| c.downcast_mut().unwrap());
 	}
-
-}
-
-struct SystemData {
-
-	system: Box<System>,
-	filter: Filter,
 
 }
 
@@ -129,7 +106,6 @@ pub struct World {
 
 	id_generator: IdGenerator,
 	entities: BTreeMap<Id, Entity>,
-	systems: Vec<SystemData>,
 	resources: HashMap<TypeId, Box<Any>>,
 
 }
@@ -150,22 +126,11 @@ impl World {
 
 	}
 
-	pub fn share<R: Resource>(&mut self, resource: R) {
+	pub fn share<R: Any>(&mut self, resource: R) {
 		self.resources.insert(TypeId::of::<R>(), Box::new(resource));
 	}
 
-	pub fn run<S: System>(&mut self, system: S) {
-
-		self.systems.push(SystemData {
-
-			filter: system.filter(),
-			system: Box::new(system),
-
-		});
-
-	}
-
-	pub fn update(&mut self) {
+	pub fn run<F: Fn(&mut Pool)>(&mut self, system: F) {
 
 		let mut pool = Pool {
 
@@ -175,17 +140,7 @@ impl World {
 
 		};
 
-		for s in &mut self.systems {
-
-			if s.filter.len() > 0 {
-				for id in &pool.pick(&s.filter) {
-					s.system.each(pool.get_mut(*id).expect("oh no"));
-				}
-			}
-
-			s.system.update(&mut pool);
-
-		}
+		system(&mut pool);
 
 	}
 
@@ -215,7 +170,7 @@ impl Entity {
 		return Self::default();
 	}
 
-	pub fn with<C: Comp>(&mut self, comp: C) {
+	pub fn with<C: Any>(&mut self, comp: C) {
 
 		if self.has::<C>() {
 			panic!("cannot have duplicate comps");
@@ -225,7 +180,7 @@ impl Entity {
 
 	}
 
-	pub fn has<C: Comp>(&self) -> bool {
+	pub fn has<C: Any>(&self) -> bool {
 		return self.comps.contains_key(&TypeId::of::<C>());
 	}
 
@@ -241,7 +196,7 @@ impl Entity {
 
 	}
 
-	pub fn get<C: Comp + Clone>(&self) -> C {
+	pub fn get<C: Any + Clone>(&self) -> C {
 
 		return self.comps
 			.get(&TypeId::of::<C>())
@@ -251,7 +206,7 @@ impl Entity {
 
 	}
 
-	pub fn set<C: Comp>(&mut self, comp: C) {
+	pub fn set<C: Any>(&mut self, comp: C) {
 
 		self.comps
 			.insert(TypeId::of::<C>(), Box::new(comp));

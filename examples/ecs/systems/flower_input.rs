@@ -4,16 +4,11 @@ use dirty::*;
 use dirty::ecs::*;
 use crate::comps::*;
 
-pub struct FlowerInputSys;
+pub fn flower_input(pool: &mut Pool) {
 
-impl System for FlowerInputSys {
+	for id in pool.pick(&filter![Flower, Vel]) {
 
-	fn filter(&self) -> Filter {
-		return filter![Flower, Vel];
-	}
-
-	fn each(&mut self, e: &mut Entity) {
-
+		let e = pool.get_mut(id).unwrap();
 		let mut f = e.get::<Flower>();
 		let mut v = e.get::<Vel>();
 

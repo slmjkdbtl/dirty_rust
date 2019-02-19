@@ -5,35 +5,29 @@ use dirty::math::*;
 use dirty::ecs::*;
 use crate::comps::*;
 
-pub struct PowderUpdateSys;
+pub fn powder_update(pool: &mut Pool) {
 
-impl System for PowderUpdateSys {
+	for id in pool.pick(&filter![Powder, Sprite, Trans]) {
 
-	fn update(&mut self, pool: &mut Pool) {
+		let e = pool.get(id).unwrap();
+		let p = e.get::<Powder>();
 
-		for id in pool.pick(&filter![Powder, Sprite, Trans]) {
+		if let Some(flower) = pool.get(p.flower) {
 
-			let e = pool.get(id).unwrap();
-			let p = e.get::<Powder>();
+			let f = flower.get::<Flower>();
+			let fv = flower.get::<Vel>();
 
-			if let Some(flower) = pool.get(p.flower) {
+			if f.active {
 
-				let f = flower.get::<Flower>();
-				let fv = flower.get::<Vel>();
+				let e = pool.get_mut(id).unwrap();
+				let mut sprite = e.get::<Sprite>();
+				let mut t = e.get::<Trans>();
 
-				if f.active {
+				sprite.color = color!(rand!(2) as i32, rand!(2) as i32, rand!(2) as i32, 1);
+				t.pos = t.pos + Vec2::from_angle(p.dir) * p.speed * app::dt() + fv.pos * app::dt();
 
-					let e = pool.get_mut(id).unwrap();
-					let mut sprite = e.get::<Sprite>();
-					let mut t = e.get::<Trans>();
-
-					sprite.color = color!(rand!(2) as i32, rand!(2) as i32, rand!(2) as i32, 1);
-					t.pos = t.pos + Vec2::from_angle(p.dir) * p.speed * app::dt() + fv.pos * app::dt();
-
-					e.set::<Sprite>(sprite);
-					e.set::<Trans>(t);
-
-				}
+				e.set::<Sprite>(sprite);
+				e.set::<Trans>(t);
 
 			}
 
@@ -42,6 +36,4 @@ impl System for PowderUpdateSys {
 	}
 
 }
-
-
 

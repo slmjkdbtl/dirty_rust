@@ -3,9 +3,8 @@
 use dirty::*;
 use dirty::math::*;
 use dirty::ecs::*;
-use dirty::ecs::derive::*;
 
-#[derive(Comp, Clone)]
+#[derive(Clone)]
 pub struct Body {
 
 	pub verts: Vec<Vec2>,
