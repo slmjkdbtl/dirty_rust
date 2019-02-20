@@ -6,7 +6,7 @@ use crate::comps::*;
 
 pub fn flower_input(pool: &mut Pool) {
 
-	for id in pool.pick(&filter![Flower, Vel]) {
+	for id in pool.pick(&comps![Flower, Vel]) {
 
 		let e = pool.get_mut(id).unwrap();
 		let mut f = e.get::<Flower>();

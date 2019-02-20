@@ -1,12 +1,12 @@
 # wengwengweng
 
-doing:
+== DOING
 - fix 3d transformations
 - ecs example
 - allow nested canvas
 - improve folder structures
 
-todo:
+== TODO
 - metal backend
 - add error sound
 - ui lazy redraw
@@ -37,7 +37,7 @@ todo:
 - make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
 - ecs attribute macro to help system filtering components
 
-done:
+== DONE
 - basic window creation
 - basic 2d rendering
 - 2d global transforms
@@ -85,7 +85,7 @@ done:
 - data saving
 - add resources to ecs world
 
-adventure:
+== ADVENTURE
 - wasm
 - ios
 - android

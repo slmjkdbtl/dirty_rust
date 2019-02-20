@@ -7,7 +7,7 @@ use crate::comps::*;
 
 pub fn petal_follow(pool: &mut Pool) {
 
-	for id in pool.pick(&filter![Petal, Trans]) {
+	for id in pool.pick(&comps![Petal, Trans]) {
 
 		let e = pool.get(id).unwrap();
 		let petal = e.get::<Petal>();

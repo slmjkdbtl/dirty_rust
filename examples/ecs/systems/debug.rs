@@ -6,7 +6,7 @@ use crate::comps::*;
 
 pub fn debug(pool: &mut Pool) {
 
-	for id in pool.pick(&filter![Body]) {
+	for id in pool.pick(&comps![Body]) {
 
 		if !app::debug() {
 			return;

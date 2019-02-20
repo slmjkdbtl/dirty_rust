@@ -6,7 +6,7 @@ use crate::comps::*;
 
 pub fn anim(pool: &mut Pool) {
 
-	for id in pool.pick(&filter![Sprite]) {
+	for id in pool.pick(&comps![Sprite]) {
 
 		let e = pool.get_mut(id).unwrap();
 		let mut s = e.get::<Sprite>();

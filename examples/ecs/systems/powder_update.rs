@@ -7,7 +7,7 @@ use crate::comps::*;
 
 pub fn powder_update(pool: &mut Pool) {
 
-	for id in pool.pick(&filter![Powder, Sprite, Trans]) {
+	for id in pool.pick(&comps![Powder, Sprite, Trans]) {
 
 		let e = pool.get(id).unwrap();
 		let p = e.get::<Powder>();
