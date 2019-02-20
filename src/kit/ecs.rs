@@ -13,11 +13,11 @@ use crate::utils::id::*;
 
 pub use crate::utils::id::Id;
 
-pub type Filter = HashSet<TypeId>;
+pub type CompFilter = HashSet<TypeId>;
 type EntitySet = BTreeSet<Id>;
 
 #[macro_export]
-macro_rules! filter {
+macro_rules! comps {
 
 	() => {
 		std::collections::HashSet::new()
@@ -65,13 +65,22 @@ impl<'a> Pool<'a> {
 		self.entities.remove(&e);
 	}
 
-	pub fn pick(&self, filter: &Filter) -> EntitySet {
+	pub fn update<C: Any>(&mut self, id: Id, c: C) {
 
-		let mut list = BTreeSet::new();
+		self.entities
+			.get_mut(&id)
+			.unwrap()
+			.set::<C>(c);
+
+	}
+
+	pub fn pick(&self, filter: &CompFilter) -> Vec<Id> {
+
+		let mut list = Vec::new();
 
 		for (id, e) in self.entities.iter() {
 			if e.has_all(&filter) {
-				list.insert(*id);
+				list.push(*id);
 			}
 		}
 
@@ -190,7 +199,7 @@ impl Entity {
 		return self.comps.contains_key(&TypeId::of::<C>());
 	}
 
-	pub fn has_all(&self, comps: &Filter) -> bool {
+	pub fn has_all(&self, comps: &CompFilter) -> bool {
 
 		for f in comps {
 			if !self.comps.contains_key(&f) {
@@ -216,6 +225,24 @@ impl Entity {
 
 		self.comps
 			.insert(TypeId::of::<C>(), Box::new(comp));
+
+	}
+
+	pub fn borrow<C: Any>(&self) -> &C {
+
+		return self.comps
+			.get(&TypeId::of::<C>())
+			.map(|c| c.downcast_ref().unwrap())
+			.expect("failed to get comp");
+
+	}
+
+	pub fn borrow_mut<C: Any>(&mut self) -> &mut C {
+
+		return self.comps
+			.get_mut(&TypeId::of::<C>())
+			.map(|c| c.downcast_mut().unwrap())
+			.expect("failed to get comp");
 
 	}
 

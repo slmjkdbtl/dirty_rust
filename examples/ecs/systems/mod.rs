@@ -24,4 +24,5 @@ export!(shoot);
 export!(petal_follow);
 export!(powder_update);
 export!(flower_input);
+export!(collision);
 

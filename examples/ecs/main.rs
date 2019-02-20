@@ -18,7 +18,7 @@ fn main() {
 	window::init("yo", 640, 480);
 	res::init();
 
-// 	app::set_debug(true);
+	app::set_debug(true);
 	window::scale(window::Scale::X4);
 	res::load_textures_under("examples/assets/", &vec!["core", "petal", "pixel"]);
 	res::load_sounds_under("examples/assets/", &vec!["pop", "yo"]);
@@ -34,6 +34,7 @@ fn main() {
 
 		world.run(anim);
 		world.run(transform);
+		world.run(collision);
 		world.run(flower_input);
 		world.run(powder_update);
 		world.run(petal_follow);

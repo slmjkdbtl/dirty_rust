@@ -13,7 +13,7 @@ pub fn render(pool: &mut Pool) {
 	g2d::translate(cam.pos);
 	g2d::scale(cam.scale);
 
-	for id in pool.pick(&filter![Sprite, Trans]) {
+	for id in pool.pick(&comps![Sprite, Trans]) {
 
 		let e = pool.get_mut(id).unwrap();
 		let t = e.get::<Trans>();

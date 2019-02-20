@@ -21,7 +21,7 @@ pub fn shoot(pool: &mut Pool) {
 
 	let mut bullet = None;
 
-	for id in pool.pick(&filter![Flower, Trans]) {
+	for id in pool.pick(&comps![Flower, Trans]) {
 
 		let e = pool.get_mut(id).unwrap();
 		let mut f = e.get::<Flower>();
