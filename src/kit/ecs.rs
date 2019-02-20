@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Simple ECS
+//! Simple Ecs
 
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -128,6 +128,12 @@ impl World {
 
 	pub fn share<R: Any>(&mut self, resource: R) {
 		self.resources.insert(TypeId::of::<R>(), Box::new(resource));
+	}
+
+	pub fn get_res<R: Any>(&self) -> Option<&R> {
+		return self.resources
+			.get(&TypeId::of::<R>())
+			.map(|c| c.downcast_ref().unwrap());
 	}
 
 	pub fn run<F: Fn(&mut Pool)>(&mut self, system: F) {

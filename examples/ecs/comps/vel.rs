@@ -2,7 +2,7 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::ecs::*;
+use dirty::kit::*;
 
 #[derive(Clone)]
 pub struct Vel {

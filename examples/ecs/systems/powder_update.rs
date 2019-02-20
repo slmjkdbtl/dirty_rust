@@ -2,7 +2,7 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::ecs::*;
+use dirty::kit::*;
 use crate::comps::*;
 
 pub fn powder_update(pool: &mut Pool) {

@@ -2,7 +2,7 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::ecs::*;
+use dirty::kit::*;
 
 pub struct Camera {
 	pub pos: Vec2,

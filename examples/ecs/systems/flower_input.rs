@@ -1,7 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::ecs::*;
+use dirty::kit::*;
 use crate::comps::*;
 
 pub fn flower_input(pool: &mut Pool) {

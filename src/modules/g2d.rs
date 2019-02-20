@@ -9,7 +9,6 @@ use ggl_derive::Vertex;
 
 use crate::*;
 use crate::math::*;
-use crate::gfx::*;
 use crate::ggl;
 
 const MAX_DRAWS: usize = 65536;
@@ -27,8 +26,8 @@ struct G2dCtx {
 	state_stack: Vec<State>,
 	default_font: Font,
 	current_font: Font,
-	empty_tex: Texture,
-	current_tex: Option<Texture>,
+	empty_tex: gfx::Texture,
+	current_tex: Option<gfx::Texture>,
 	default_shader: Shader,
 	current_shader: Shader,
 	renderer: ggl::BatchedMesh,
@@ -41,7 +40,7 @@ pub(super) fn init() {
 	let default_shader = Shader::from_code(DEFAULT_2D_VERT, DEFAULT_2D_FRAG);
 
 	let default_font = Font::new(
-		Texture::from_bytes(DEFAULT_FONT),
+		gfx::Texture::from_bytes(DEFAULT_FONT),
 		DEFAULT_FONT_COLS,
 		DEFAULT_FONT_ROWS,
 		DEFAULT_FONT_CHARS,
@@ -58,7 +57,7 @@ pub(super) fn init() {
 		default_shader: default_shader.clone(),
 		default_font: default_font.clone(),
 		current_font: default_font,
-		empty_tex: Texture::from_color(color!(1), 1, 1),
+		empty_tex: gfx::Texture::from_color(color!(1), 1, 1),
 		renderer: renderer,
 		current_tex: None,
 		current_shader: default_shader,
@@ -201,7 +200,7 @@ pub(super) fn unflip_projection() {
 }
 
 /// draw a texture with visible quad area
-pub fn draw(tex: &Texture, quad: Rect) {
+pub fn draw(tex: &gfx::Texture, quad: Rect) {
 
 	let gfx = ctx_get();
 	let gfx_mut = ctx_get_mut();
@@ -223,7 +222,7 @@ pub fn draw(tex: &Texture, quad: Rect) {
 }
 
 /// render a canvas
-pub fn render(c: &Canvas) {
+pub fn render(c: &gfx::Canvas) {
 	draw(&c.tex, rect!(0, 0, 1, 1));
 }
 
@@ -475,7 +474,7 @@ pub(super) fn clear_stack() {
 #[derive(PartialEq, Clone)]
 pub struct Font {
 
-	tex: Texture,
+	tex: gfx::Texture,
 	map: HashMap<char, Rect>,
 	grid_size: Vec2,
 
@@ -484,7 +483,7 @@ pub struct Font {
 impl Font {
 
 	/// creat a bitmap font from a texture, and grid of characters
-	pub fn new(tex: Texture, cols: usize, rows: usize, chars: &str) -> Self {
+	pub fn new(tex: gfx::Texture, cols: usize, rows: usize, chars: &str) -> Self {
 
 		let mut map = HashMap::new();
 		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
