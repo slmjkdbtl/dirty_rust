@@ -1,6 +1,6 @@
 // wengwengweng
 
-use dirty::ecs::*;
+use dirty::kit::*;
 
 #[derive(Clone)]
 pub struct Petal {
