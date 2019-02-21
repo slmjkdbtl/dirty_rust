@@ -121,10 +121,6 @@ pub fn reset() {
 	ctx_get_mut().state = State::default();
 }
 
-pub(super) fn clear_stack() {
-	ctx_get_mut().state_stack.clear();
-}
-
 /// push state
 pub fn push() {
 
@@ -199,6 +195,15 @@ pub fn cube() {
 	gfx.current_shader.send_mat4("projection", projection);
 	gfx.current_shader.send_float("time", app::time());
 	gfx.cube_mesh.draw(&gfx.empty_tex.handle, &gfx.current_shader.program);
+
+}
+
+pub(super) fn begin() {}
+
+pub(super) fn end() {
+
+	g3d::reset();
+	ctx_get_mut().state_stack.clear();
 
 }
 

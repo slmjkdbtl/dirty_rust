@@ -10,7 +10,7 @@ use std::panic::PanicInfo;
 
 use crate::*;
 
-const FPS_CAP: u8 = 60;
+const FPS_CAP: u32 = 60;
 const EXPECTED_DT: f32 = 1000.0 / FPS_CAP as f32;
 
 // context
