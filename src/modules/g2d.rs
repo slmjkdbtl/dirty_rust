@@ -31,6 +31,8 @@ struct G2dCtx {
 	default_shader: Shader,
 	current_shader: Shader,
 	renderer: ggl::BatchedMesh,
+	draw_calls: usize,
+	draw_calls_last: usize,
 
 }
 
@@ -61,6 +63,8 @@ pub(super) fn init() {
 		renderer: renderer,
 		current_tex: None,
 		current_shader: default_shader,
+		draw_calls: 0,
+		draw_calls_last: 0,
 
 	});
 
@@ -175,9 +179,28 @@ pub(super) fn flush() {
 		gfx.current_shader.send_mat4("projection", gfx.projection);
 		gfx.current_shader.send_float("time", app::time());
 		renderer.flush(&*tex.handle, &gfx.current_shader.program);
+		gfx_mut.draw_calls += 1;
 		gfx_mut.current_tex = None;
 
 	}
+
+}
+
+pub fn draw_calls() -> usize {
+	return ctx_get().draw_calls_last;
+}
+
+pub(super) fn begin() {}
+
+pub(super) fn end() {
+
+	let ctx = ctx_get_mut();
+
+	flush();
+	reset();
+	ctx.draw_calls_last = ctx.draw_calls;
+	ctx.draw_calls = 0;
+	ctx.state_stack.clear();
 
 }
 
@@ -464,10 +487,6 @@ pub fn get_matrix() -> Mat4 {
 /// get the current transform matrix
 pub fn set_matrix(m: Mat4) {
 	ctx_get_mut().state.transform = m;
-}
-
-pub(super) fn clear_stack() {
-	ctx_get_mut().state_stack.clear();
 }
 
 /// bitmap font

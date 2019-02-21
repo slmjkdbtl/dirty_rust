@@ -41,6 +41,7 @@ fn main() {
 		world.run(shoot);
 		world.run(render);
 		world.run(debug);
+		g2d::text(&format!("{}\n{}", app::fps(), g2d::draw_calls()));
 
 	});
 

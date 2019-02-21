@@ -2,7 +2,7 @@
 
 //! General Rendering
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::*;
 use crate::math::*;
@@ -96,18 +96,19 @@ pub fn capture(canvas: &Canvas, fname: &str) {
 }
 
 pub(super) fn begin() {
+
 	clear();
+	g2d::begin();
+	g3d::begin();
+
 }
 
 pub(super) fn end() {
 
 	let gfx = ctx_get();
 
-	g2d::flush();
-	g2d::reset();
-	g2d::clear_stack();
-	g3d::reset();
-	g3d::clear_stack();
+	g2d::end();
+	g3d::end();
 
 	if gfx.current_canvas.is_some() {
 		panic!("unfinished canvas");
@@ -118,7 +119,7 @@ pub(super) fn end() {
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	pub(super) handle: Rc<ggl::Texture>,
+	pub(super) handle: Arc<ggl::Texture>,
 }
 
 impl Texture {
@@ -126,7 +127,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: Rc::new(ggl::Texture::new(width, height)),
+			handle: Arc::new(ggl::Texture::new(width, height)),
 		};
 	}
 
@@ -182,7 +183,7 @@ impl Texture {
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	pub(super) handle: Rc<ggl::Framebuffer>,
+	pub(super) handle: Arc<ggl::Framebuffer>,
 	pub tex: Texture,
 	pub width: u32,
 	pub height: u32,
@@ -201,7 +202,7 @@ impl Canvas {
 		handle.attach(&*tex.handle);
 
 		return Self {
-			handle: Rc::new(handle),
+			handle: Arc::new(handle),
 			tex: tex,
 			width: width,
 			height: height,
@@ -215,10 +216,12 @@ macro_rules! gen_templated_shader {
 
 	($name:ident, $vert_template:expr, $frag_template:expr, $vert_default:expr, $frag_default:expr) => {
 
+		use std::sync::Arc;
+
 		/// shader effect
 		#[derive(PartialEq, Clone)]
 		pub struct $name {
-			program: Rc<ggl::Program>,
+			program: Arc<ggl::Program>,
 		}
 
 		impl Shader {
@@ -230,7 +233,7 @@ macro_rules! gen_templated_shader {
 				let program = ggl::Program::new(&vert, &frag);
 
 				return Self {
-					program: Rc::new(program),
+					program: Arc::new(program),
 				};
 
 			}

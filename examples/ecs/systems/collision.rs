@@ -18,18 +18,18 @@ pub fn collision(pool: &mut Pool) {
 
 		for j in i..bodies.len() {
 
-			let id2 = bodies[j];
-			let e2 = pool.get(id2).unwrap();
-			let mut b2 = e2.get::<Body>();
-			let (collided, delta) = col::sat(&b1.d_verts, &b2.d_verts);
+// 			let id2 = bodies[j];
+// 			let e2 = pool.get(id2).unwrap();
+// 			let mut b2 = e2.get::<Body>();
+// 			let (collided, delta) = col::sat(&b1.d_verts, &b2.d_verts);
 
-			if collided {
+// 			if collided {
 
-				b1.col.insert(id2, delta);
-				b2.col.insert(id1, delta * -1);
-				pool.update::<Body>(id2, b2);
+// 				b1.col.insert(id2, delta);
+// 				b2.col.insert(id1, delta * -1);
+// 				pool.update::<Body>(id2, b2);
 
-			}
+// 			}
 
 		}
 

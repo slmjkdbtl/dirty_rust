@@ -19,7 +19,7 @@ fn powder(flower: Id, pos: Vec2, dir: f32) -> Entity {
 
 pub fn shoot(pool: &mut Pool) {
 
-	let mut bullet = None;
+	let mut bullets = vec![];
 
 	for id in pool.pick(&comps![Flower, Trans]) {
 
@@ -28,7 +28,7 @@ pub fn shoot(pool: &mut Pool) {
 		let t = e.get::<Trans>();
 
 		if f.energy >= f.rate {
-			bullet = Some(powder(id, t.pos + Vec2::from_angle(t.rot) * 8, t.rot));
+			bullets.push(powder(id, t.pos + Vec2::from_angle(t.rot) * 8, t.rot));
 			f.energy = 0;
 		}
 
@@ -36,8 +36,8 @@ pub fn shoot(pool: &mut Pool) {
 
 	}
 
-	if let Some(powder) = bullet {
-		pool.push(powder);
+	for b in bullets {
+		pool.push(b);
 	}
 
 }

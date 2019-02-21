@@ -102,12 +102,6 @@ impl<'a> Pool<'a> {
 			.map(|c| c.downcast_ref().unwrap());
 	}
 
-	pub fn get_res_mut<R: Any>(&mut self) -> Option<&mut R> {
-		return self.resources
-			.get_mut(&TypeId::of::<R>())
-			.map(|c| c.downcast_mut().unwrap());
-	}
-
 }
 
 #[derive(Default)]
@@ -225,24 +219,6 @@ impl Entity {
 
 		self.comps
 			.insert(TypeId::of::<C>(), Box::new(comp));
-
-	}
-
-	pub fn borrow<C: Any>(&self) -> &C {
-
-		return self.comps
-			.get(&TypeId::of::<C>())
-			.map(|c| c.downcast_ref().unwrap())
-			.expect("failed to get comp");
-
-	}
-
-	pub fn borrow_mut<C: Any>(&mut self) -> &mut C {
-
-		return self.comps
-			.get_mut(&TypeId::of::<C>())
-			.map(|c| c.downcast_mut().unwrap())
-			.expect("failed to get comp");
 
 	}
 
