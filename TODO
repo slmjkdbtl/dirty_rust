@@ -1,6 +1,7 @@
 # wengwengweng
 
 == DOING
+- use glutin when girls supports macos
 - fix 3d transformations
 - ecs example
 - allow nested canvas
@@ -19,7 +20,6 @@
 - vector swizzle fields
 - ttf font rendering
 - ui proc macro generate window
-- use glutin when girls supports macos
 - ecs support reverse entity iter
 - more customizable vec gens
 - random seeds
