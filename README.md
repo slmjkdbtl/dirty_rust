@@ -26,12 +26,9 @@ core:
 
 micro helper libs:
 
-- **ecs** Simple ECS (you should probably use specs)
 - **res** Resource Loading & Storing
 - **pref** Save & Load User Data
 - **col** Common Collision Detection
-- **net** Simple Networking Wrapper (*TODO*)
-- **ui** Simple UI (*TODO*)
 
 ### doc
 clone the repo and run
@@ -68,58 +65,6 @@ fn main() {
 			app::quit();
 		}
 
-	});
-
-}
-```
-with `ecs`:
-
-```rust
-use dirty::*;
-use dirty::ecs::*;
-
-// define component
-#[derive(Clone)]
-struct Pos {
-	x: f32,
-	y: f32,
-}
-
-// define behavior
-fn movement(pool: &mut Pool) {
-
-	for id in pool.pick(&filter![Pos]) {
-
-		let e = pool.get_mut(id).unwrap();
-		let mut pos = e.get::<Pos>();
-
-		pos.x = pos.x + 1.0;
-		println!("pos: ({}, {})", pos.x, pos.y);
-		e.set::<Pos>(pos);
-
-	}
-
-}
-
-fn thing(x: f32, y: f32) -> Entity {
-	return entity![Pos { x, y }];
-}
-
-fn main() {
-
-	// init modules
-	app::init();
-
-	// create new world
-	let mut world = World::new();
-
-	// add entities
-	world.add(thing(0.0, 0.0));
-
-	// loop
-	app::run(|| {
-		// run system
-		world.run(movement);
 	});
 
 }

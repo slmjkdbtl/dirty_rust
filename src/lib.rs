@@ -14,7 +14,6 @@ mod ggl;
 mod modules;
 pub mod addons;
 pub mod math;
-pub mod ui;
 
 pub use modules::*;
 
