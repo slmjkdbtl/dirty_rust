@@ -7,7 +7,6 @@ pub mod gfx;
 pub mod g2d;
 pub mod g3d;
 pub mod audio;
-pub mod net;
 pub mod fs;
 pub mod pref;
 pub mod col;

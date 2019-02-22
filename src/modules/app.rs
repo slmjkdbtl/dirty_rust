@@ -40,6 +40,7 @@ pub fn init() {
 
 			let dy = (time() * 2.0).sin() * 4.0;
 
+			g2d::reset();
 			g2d::push();
 			g2d::text_wrap(width - 240);
 
@@ -145,21 +146,17 @@ pub fn on_err<F: 'static + Fn(ErrorInfo) + Send + Sync>(f: F) {
 	panic::set_hook(Box::new(move |info: &PanicInfo| {
 
 		let mut message = None;
+		let mut log = None;
 
 		if let Some(s) = info.payload().downcast_ref::<&str>() {
-
-			let log = (*s).to_owned();
-
-			eprintln!("{}", log);
-			message = Some(log);
-
+			log = Some((*s).to_owned());
 		} else if let Some(s) = info.payload().downcast_ref::<String>() {
+			log = Some(s.clone());
+		}
 
-			let log = s.clone();
-
+		if let Some(log) = log {
 			eprintln!("{}", log);
 			message = Some(log);
-
 		}
 
 		let mut location = None;
