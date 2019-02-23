@@ -219,17 +219,26 @@ pub fn load_sound(
 }
 
 /// get the sprite data that is loaded with given name
-pub fn spritedata(name: &str) -> Option<&SpriteData> {
-	return ctx_get().spritedata.get(name);
+pub fn spritedata(name: &str) -> &SpriteData {
+	return ctx_get()
+		.spritedata
+		.get(name)
+		.unwrap_or_else(|| panic!("failed to get sprite data {}", name));
 }
 
 /// get the texture that is loaded with given name
-pub fn texture(name: &str) -> Option<&gfx::Texture> {
-	return ctx_get().textures.get(name);
+pub fn texture(name: &str) -> &gfx::Texture {
+	return ctx_get()
+		.textures
+		.get(name)
+		.unwrap_or_else(|| panic!("failed to get texture {}", name));
 }
 
 /// get the sound that is loaded with given name
-pub fn sound(name: &str) -> Option<&audio::Sound> {
-	return ctx_get().sounds.get(name);
+pub fn sound(name: &str) -> &audio::Sound {
+	return ctx_get()
+		.sounds
+		.get(name)
+		.unwrap_or_else(|| panic!("failed to get sound {}", name));
 }
 
