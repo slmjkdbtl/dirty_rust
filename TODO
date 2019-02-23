@@ -36,6 +36,7 @@
 - try rendy
 - make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
 - ecs attribute macro to help system filtering components
+- ecs allow multiple mutable reference to comps
 
 == DONE
 - basic window creation

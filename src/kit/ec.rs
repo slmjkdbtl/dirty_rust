@@ -84,24 +84,6 @@ impl Entity {
 
 	}
 
-	pub fn borrow<C: Any>(&self) -> &C {
-
-		return self.comps
-			.get(&TypeId::of::<C>())
-			.map(|c| c.downcast_ref().unwrap())
-			.expect("failed to get comp");
-
-	}
-
-	pub fn borrow_mut<C: Any>(&mut self) -> &C {
-
-		return self.comps
-			.get_mut(&TypeId::of::<C>())
-			.map(|c| c.downcast_mut().unwrap())
-			.expect("failed to get comp");
-
-	}
-
 	pub fn get<C: Any + Clone>(&self) -> C {
 
 		return self.comps
