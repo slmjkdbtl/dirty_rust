@@ -30,6 +30,14 @@ pub fn init() {
 
 	on_err(|info: ErrorInfo| {
 
+		if let Some(message) = &info.message {
+			eprintln!("{}", message);
+		}
+
+		if let Some(location) = &info.location {
+			eprintln!("from '{}', line {}", location.file, location.line);
+		}
+
 		if !enabled() || !gfx::enabled() || !window::enabled() {
 			return;
 		}
@@ -146,17 +154,11 @@ pub fn on_err<F: 'static + Fn(ErrorInfo) + Send + Sync>(f: F) {
 	panic::set_hook(Box::new(move |info: &PanicInfo| {
 
 		let mut message = None;
-		let mut log = None;
 
 		if let Some(s) = info.payload().downcast_ref::<&str>() {
-			log = Some((*s).to_owned());
+			message = Some((*s).to_owned());
 		} else if let Some(s) = info.payload().downcast_ref::<String>() {
-			log = Some(s.clone());
-		}
-
-		if let Some(log) = log {
-			eprintln!("{}", log);
-			message = Some(log);
+			message = Some(s.clone());
 		}
 
 		let mut location = None;
@@ -165,8 +167,6 @@ pub fn on_err<F: 'static + Fn(ErrorInfo) + Send + Sync>(f: F) {
 
 			let file = loc.file();
 			let line = loc.line();
-
-			eprintln!("from '{}', line {}", file, line);
 
 			location = Some(ErrorLocation {
 				file: file.to_owned(),

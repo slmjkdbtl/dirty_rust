@@ -12,7 +12,7 @@
 mod utils;
 mod ggl;
 mod modules;
-pub mod addons;
+pub mod kit;
 pub mod math;
 
 pub use modules::*;
