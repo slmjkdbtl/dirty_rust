@@ -44,8 +44,8 @@ fn main() {
 
 	// init
 	app::init();
-	window::init("yo", 640, 480);
 	audio::init();
+	window::init("yo", 640, 480);
 
 	// main loop
 	app::run(|| {
