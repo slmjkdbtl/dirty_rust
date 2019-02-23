@@ -6,6 +6,7 @@ fn main() {
 
 	// init modules
 	app::init();
+	audio::init();
 	window::init("yo", 640, 480);
 	res::init();
 
@@ -21,11 +22,11 @@ fn main() {
 	res::load_sounds_under("examples/assets/", &vec!["pop", "yo"]);
 
 	// play a music repeatedly
-	let pop_sound = res::sound("pop").unwrap();
-	let music = audio::track(&res::sound("yo").unwrap().repeat());
+	let pop_sound = res::sound("pop");
+	let music = audio::track(&res::sound("yo").repeat());
 
-	let data = res::spritedata("car").unwrap();
-	let tex = res::texture("car").unwrap();
+	let data = res::spritedata("car");
+	let tex = res::texture("car");
 	let frames = &data.frames;
 	let anims = &data.anims;
 	let mut hovering = false;
