@@ -9,7 +9,6 @@
 
 == TODO
 - metal backend
-- add error sound
 - ui lazy redraw
 - ui input manager
 - keep aspect ratio in fullscreen
@@ -37,6 +36,7 @@
 - make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
 - ecs attribute macro to help system filtering components
 - ecs allow multiple mutable reference to comps
+- try sokol-rs
 
 == DONE
 - basic window creation
