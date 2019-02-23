@@ -69,7 +69,6 @@ fn main() {
 
 }
 ```
-more under `examples/`
 
 ### notes & caveats
 
