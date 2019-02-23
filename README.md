@@ -28,6 +28,7 @@ micro helper libs:
 
 - **res** Resource Loading & Storing
 - **pref** Save & Load User Data
+- **kit** Some Functions & Data Structures for Games
 - **col** Common Collision Detection
 
 ### doc
