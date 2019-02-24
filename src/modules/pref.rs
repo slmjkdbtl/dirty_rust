@@ -39,16 +39,6 @@ pub fn save<D: Serialize>(fname: &str, data: D) {
 
 }
 
-/// check if a data file exists
-pub fn exists(fname: &str) -> bool {
-
-	let dir = &ctx_get().dir;
-	let path = format!("{}{}", dir, fname);
-
-	return fs::exists(&path);
-
-}
-
 /// get json data
 pub fn get<D: for<'a> Deserialize<'a>>(fname: &str) -> D {
 
@@ -58,6 +48,16 @@ pub fn get<D: for<'a> Deserialize<'a>>(fname: &str) -> D {
 	let data: D = serde_json::from_str(&content).expect("failed to parse json");
 
 	return data;
+
+}
+
+/// check if a data file exists
+pub fn exists(fname: &str) -> bool {
+
+	let dir = &ctx_get().dir;
+	let path = format!("{}{}", dir, fname);
+
+	return fs::exists(&path);
 
 }
 

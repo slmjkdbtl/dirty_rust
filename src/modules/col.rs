@@ -27,7 +27,10 @@ pub fn rect_rect(r1: Rect, r2: Rect) -> bool {
 }
 
 /// check collision between 2 lines
-pub fn line_line(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2) -> bool {
+pub fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
+
+	let (p1, p2) = l1;
+	let (p3, p4) = l1;
 
 	let a = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
 	let b = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
@@ -37,14 +40,14 @@ pub fn line_line(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2) -> bool {
 }
 
 /// check collision between a line and a polygon
-pub fn line_poly(p1: Vec2, p2: Vec2, poly: &[Vec2]) -> bool {
+pub fn line_poly(line: (Vec2, Vec2), poly: &[Vec2]) -> bool {
 
 	assert!(poly.len() >= 3, "invalid polygon");
 
 	let mut collided = false;
 
 	pair(poly, |p3, p4| {
-		if line_line(p1, p2, *p3, *p4) {
+		if line_line(line, (*p3, *p4)) {
 			collided = true;
 			return;
 		}
@@ -63,7 +66,7 @@ pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 	let mut collided = false;
 
 	pair(poly1, |p1, p2| {
-		if line_poly(*p1, *p2, poly2) {
+		if line_poly((*p1, *p2), poly2) {
 			collided = true;
 			return;
 		}
@@ -166,5 +169,9 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 	return (true, mtv);
 
+}
+
+pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
+	unimplemented!();
 }
 
