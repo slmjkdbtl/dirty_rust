@@ -979,8 +979,10 @@ pub fn set_framebuffer(fb: &Framebuffer) {
 	fb.bind();
 }
 
-pub fn unset_framebuffer(fb: &Framebuffer) {
-	fb.unbind();
+pub fn clear_framebuffer() {
+	unsafe {
+		gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+	}
 }
 
 pub fn draw(

@@ -65,7 +65,7 @@ pub fn stop_drawon(c: &Canvas) {
 
 		g2d::flush();
 		g2d::unflip_projection();
-		ggl::unset_framebuffer(&*c.handle);
+		ggl::clear_framebuffer();
 		gfx.current_canvas = None;
 
 	} else {
@@ -111,6 +111,7 @@ pub(super) fn end() {
 	g3d::end();
 
 	if gfx.current_canvas.is_some() {
+		ggl::clear_framebuffer();
 		panic!("unfinished canvas");
 	}
 
