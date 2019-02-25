@@ -4,11 +4,8 @@
 
 use std::collections::HashMap;
 
-use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
-use sdl2::video::Window;
-use sdl2::video::FullscreenType;
 
 use crate::*;
 use crate::math::*;
@@ -19,7 +16,7 @@ ctx!(WINDOW: WindowCtx);
 struct WindowCtx {
 
 	sdl_ctx: sdl2::Sdl,
-	window: Window,
+	window: sdl2::video::Window,
 	#[allow(dead_code)]
 	gl_ctx: sdl2::video::GLContext,
 	events: sdl2::EventPump,
@@ -121,6 +118,8 @@ enum ButtonState {
 /// set window fullscreen state
 pub fn set_fullscreen(b: bool) {
 
+	use sdl2::video::FullscreenType;
+
 	let app_mut = ctx_get_mut();
 
 	if b {
@@ -133,6 +132,7 @@ pub fn set_fullscreen(b: bool) {
 
 /// get window fullscreen state
 pub fn get_fullscreen() -> bool {
+	use sdl2::video::FullscreenType;
 	return ctx_get().window.fullscreen_state() == FullscreenType::Desktop;
 }
 
@@ -171,9 +171,17 @@ pub fn size() -> (u32, u32) {
 
 }
 
-// pub fn pressed_keys() -> Vec<Scancode> {
-	// ...
-// }
+/// get list of pressed keys
+pub fn pressed_keys() -> Vec<Scancode> {
+
+	let window = ctx_get();
+
+	return window.key_states
+		.keys()
+		.map(|k| *k)
+		.collect();
+
+}
 
 /// check if a key was pressed this frame
 pub fn key_pressed(k: Scancode) -> bool {
@@ -226,6 +234,8 @@ pub fn mouse_delta() -> Vec2 {
 }
 
 pub(super) fn poll_events() {
+
+	use sdl2::event::Event;
 
 	let window = ctx_get();
 	let window_mut = ctx_get_mut();
