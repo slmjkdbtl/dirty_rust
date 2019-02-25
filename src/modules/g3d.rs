@@ -237,13 +237,8 @@ pub fn cam(eye: Vec3) {
 	ctx_get_mut().cam.set_pos(eye);
 }
 
-/// get camera pos
-pub fn get_cam() -> Vec3 {
-	return ctx_get().cam.pos;
-}
-
 /// get camera front
-pub fn get_front() -> Vec3 {
+pub fn front() -> Vec3 {
 	return ctx_get().cam.front;
 }
 

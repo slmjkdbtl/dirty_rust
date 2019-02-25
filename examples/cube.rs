@@ -42,6 +42,11 @@ fn main() {
 			}
 		}
 
+		g2d::push();
+		g2d::translate(vec2!(16));
+		g2d::text(&format!("{}", app::fps()));
+		g2d::pop();
+
 		let md = window::mouse_delta();
 
 		rx -= md.x * rot_speed;
@@ -56,19 +61,19 @@ fn main() {
 		}
 
 		if window::key_down(Key::A) {
-			pos = pos + g3d::get_front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
+			pos = pos + g3d::front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
 		}
 
 		if window::key_down(Key::D) {
-			pos = pos - g3d::get_front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
+			pos = pos - g3d::front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
 		}
 
 		if window::key_down(Key::W) {
-			pos = pos + g3d::get_front() * dt * move_speed;
+			pos = pos + g3d::front() * dt * move_speed;
 		}
 
 		if window::key_down(Key::S) {
-			pos = pos - g3d::get_front() * dt * move_speed;
+			pos = pos - g3d::front() * dt * move_speed;
 		}
 
 		if window::key_pressed(Key::F) {
