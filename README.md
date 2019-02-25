@@ -61,7 +61,7 @@ fn main() {
 		g2d::pop();
 
 		// input
-		if window::key_pressed(Key::Escape) {
+		if input::key_pressed(Key::Escape) {
 			app::quit();
 		}
 
