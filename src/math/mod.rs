@@ -78,3 +78,30 @@ pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 
 }
 
+pub fn lookat(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
+
+	let z = (center - eye).unit();
+	let x = up.cross(z).unit();
+	let y = z.cross(x);
+	let mut m = Mat4::identity();
+
+	m.m[0][0] = x.x;
+	m.m[0][1] = y.x;
+	m.m[0][2] = z.x;
+
+	m.m[1][0] = x.y;
+	m.m[1][1] = y.y;
+	m.m[1][2] = z.y;
+
+	m.m[2][0] = x.z;
+	m.m[2][1] = y.z;
+	m.m[2][2] = z.z;
+
+	m.m[3][0] = -x.dot(eye);
+	m.m[3][1] = -y.dot(eye);
+	m.m[3][2] = -z.dot(eye);
+
+	return m;
+
+}
+

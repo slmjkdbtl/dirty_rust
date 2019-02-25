@@ -172,17 +172,17 @@ impl Vec2 {
 	}
 
 	/// dot product of 2 vectors
-	pub fn dot(&self, other: Vec2) -> f32 {
+	pub fn dot(&self, other: Self) -> f32 {
 		return self.x * other.x + self.y * other.y;
 	}
 
 	/// get angle between 2 vectors
-	pub fn angle(&self, other: Vec2) -> f32 {
+	pub fn angle(&self, other: Self) -> f32 {
 		return (other.y - self.y).atan2(other.x - self.x);
 	}
 
 	/// get distance between another vector
-	pub fn dis(&self, other: Vec2) -> f32 {
+	pub fn dis(&self, other: Self) -> f32 {
 		return ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt();
 	}
 
@@ -198,6 +198,20 @@ impl Vec3 {
 	/// normalize vector
 	pub fn unit(&self) -> Self {
 		return self.clone() / self.mag();
+	}
+
+	/// dot product of 2 vectors
+	pub fn dot(&self, other: Self) -> f32 {
+		return self.x * other.x + self.y * other.y + self.z * other.z;
+	}
+
+	/// cross product
+	pub fn cross(&self, other: Self) -> Self {
+		return vec3!(
+			(self.y * other.z) - (self.z * other.y),
+			(self.z * other.x) - (self.x * other.z),
+			(self.x * other.y) - (self.y * other.x)
+        );
 	}
 
 }

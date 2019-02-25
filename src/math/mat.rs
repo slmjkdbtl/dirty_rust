@@ -18,6 +18,12 @@ pub struct Mat4 {
 
 impl Mat4 {
 
+	pub fn new(m: [[f32; 4]; 4]) -> Self {
+		return Self {
+			m: m,
+		};
+	}
+
 	pub fn identity() -> Self {
 
 		return Self {
