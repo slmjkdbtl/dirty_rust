@@ -60,7 +60,7 @@ pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) 
 
 }
 
-/// generate perspective matrix
+/// construct perspective matrix
 pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 
 	let mut m = Mat4::identity();
@@ -78,6 +78,7 @@ pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 
 }
 
+/// construct lookat matrix
 pub fn lookat(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
 
 	let z = (center - eye).unit();
