@@ -175,9 +175,11 @@ pub fn size() -> (u32, u32) {
 pub fn pressed_keys() -> Vec<Scancode> {
 
 	let window = ctx_get();
+	let states = &window.key_states;
 
-	return window.key_states
+	return states
 		.keys()
+		.filter(|&k| states[k] == ButtonState::Down )
 		.map(|k| *k)
 		.collect();
 
