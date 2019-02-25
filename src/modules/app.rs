@@ -76,7 +76,7 @@ pub fn init() {
 			g2d::color(color!(1, 1, 0, 1));
 			g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 
-			if window::key_pressed(Key::Escape) {
+			if input::key_pressed(Key::Escape) {
 				std::process::exit(1);
 			}
 
