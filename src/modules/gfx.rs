@@ -2,7 +2,7 @@
 
 //! General Rendering
 
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::*;
 use crate::math::*;
@@ -120,7 +120,7 @@ pub(super) fn end() {
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	pub(super) handle: Arc<ggl::Texture>,
+	pub(super) handle: Rc<ggl::Texture>,
 }
 
 impl Texture {
@@ -128,7 +128,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: Arc::new(ggl::Texture::new(width, height)),
+			handle: Rc::new(ggl::Texture::new(width, height)),
 		};
 	}
 
@@ -180,11 +180,28 @@ impl Texture {
 
 }
 
+/// mesh
+#[derive(Clone)]
+pub struct Mesh {
+	vbuf: Rc<ggl::VertexBuffer>,
+	ibuf: Rc<ggl::IndexBuffer>,
+	texture: Rc<ggl::Texture>,
+}
+
+impl Mesh {
+	pub fn new(vertices: Vec<f32>, indices: Vec<f32>) -> Self {
+		unimplemented!();
+	}
+	pub fn from_obj() -> Self {
+		unimplemented!();
+	}
+}
+
 /// offscreen framebuffer
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	pub(super) handle: Arc<ggl::Framebuffer>,
+	pub(super) handle: Rc<ggl::Framebuffer>,
 	pub tex: Texture,
 	pub width: u32,
 	pub height: u32,
@@ -203,7 +220,7 @@ impl Canvas {
 		handle.attach(&*tex.handle);
 
 		return Self {
-			handle: Arc::new(handle),
+			handle: Rc::new(handle),
 			tex: tex,
 			width: width,
 			height: height,
@@ -217,12 +234,12 @@ macro_rules! gen_templated_shader {
 
 	($name:ident, $vert_template:expr, $frag_template:expr, $vert_default:expr, $frag_default:expr) => {
 
-		use std::sync::Arc;
+		use std::rc::Rc;
 
 		/// shader effect
 		#[derive(PartialEq, Clone)]
 		pub struct $name {
-			program: Arc<ggl::Program>,
+			program: Rc<ggl::Program>,
 		}
 
 		impl Shader {
@@ -234,7 +251,7 @@ macro_rules! gen_templated_shader {
 				let program = ggl::Program::new(&vert, &frag);
 
 				return Self {
-					program: Arc::new(program),
+					program: Rc::new(program),
 				};
 
 			}

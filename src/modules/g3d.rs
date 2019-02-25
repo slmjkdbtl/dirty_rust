@@ -38,14 +38,14 @@ pub(super) fn init() {
 
 	let cube_verts = [
 
-		Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)),
-		Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)),
-		Vertex::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)),
-		Vertex::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)),
-		Vertex::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)),
-		Vertex::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)),
-		Vertex::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)),
-		Vertex::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)),
+		Vertex3D::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)),
+		Vertex3D::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)),
+		Vertex3D::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)),
+		Vertex3D::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)),
+		Vertex3D::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)),
 
 	];
 
@@ -81,6 +81,7 @@ pub(super) fn init() {
 
 }
 
+#[derive(Clone)]
 struct Cam {
 	front: Vec3,
 	pos: Vec3,
@@ -122,13 +123,13 @@ impl Cam {
 }
 
 #[derive(Vertex)]
-struct Vertex {
+struct Vertex3D {
 	pos: [f32; 3],
 	uv: [f32; 2],
 	color: [f32; 4],
 }
 
-impl Vertex {
+impl Vertex3D {
 	fn new(pos: Vec3, uv: Vec2, c: Color) -> Self {
 		return Self {
 			pos: [pos.x, pos.y, pos.z],

@@ -3,6 +3,15 @@
 use std::ops;
 use std::fmt;
 
+use derive_more::Add;
+use derive_more::Sub;
+use derive_more::Mul;
+use derive_more::Div;
+use derive_more::AddAssign;
+use derive_more::SubAssign;
+use derive_more::MulAssign;
+use derive_more::DivAssign;
+
 macro_rules! gen_vec {
 
 	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty, ($($default:expr),+)) => {
@@ -34,7 +43,7 @@ macro_rules! gen_vec {
 		}
 
 		#[allow(missing_docs)]
-		#[derive(Debug, Copy, Clone, PartialEq)]
+		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign)]
 		pub struct $name {
 			$(
 			pub $member: $type
@@ -71,71 +80,9 @@ macro_rules! gen_vec {
 			}
 		}
 
-		impl ops::Add for $name {
-			type Output = $name;
-			fn add(self, other: $name) -> $name {
-				return $name {
-					$($member: self.$member + other.$member,)+
-				}
-			}
-		}
-
-		impl ops::Sub for $name {
-			type Output = $name;
-			fn sub(self, other: $name) -> $name {
-				return $name {
-					$($member: self.$member - other.$member,)+
-				}
-			}
-		}
-
-		impl ops::Mul<$name> for $name {
-			type Output = $name;
-			fn mul(self, other: $name) -> $name {
-				return $name {
-					$($member: self.$member * other.$member,)+
-				}
-			}
-		}
-
-		impl ops::Mul<f32> for $name {
-			type Output = $name;
-			fn mul(self, other: f32) -> $name {
-				return $name {
-					$($member: self.$member * other,)+
-				}
-			}
-		}
-
-		impl ops::Mul<i32> for $name {
-			type Output = $name;
-			fn mul(self, other: i32) -> $name {
-				return self * (other as f32);
-			}
-		}
-
-		impl ops::Div<$name> for $name {
-			type Output = $name;
-			fn div(self, other: $name) -> $name {
-				return $name {
-					$($member: self.$member / other.$member,)+
-				}
-			}
-		}
-
-		impl ops::Div<f32> for $name {
-			type Output = $name;
-			fn div(self, other: f32) -> $name {
-				return $name {
-					$($member: self.$member / other,)+
-				}
-			}
-		}
-
-		impl ops::Div<i32> for $name {
-			type Output = $name;
-			fn div(self, other: i32) -> $name {
-				return self / (other as f32);
+		impl fmt::Debug for $name {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				return write!(f, "{}", self);
 			}
 		}
 

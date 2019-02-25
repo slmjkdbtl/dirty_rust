@@ -221,7 +221,7 @@ pub fn mouse_pos() -> Vec2 {
 	let window = ctx_get();
 	let s: i32 = window.scale.into();
 
-	return window.mouse_pos / s;
+	return window.mouse_pos / s as f32;
 
 }
 
@@ -231,7 +231,7 @@ pub fn mouse_delta() -> Vec2 {
 	let window = ctx_get();
 	let s: i32 = window.scale.into();
 
-	return window.mouse_delta / s;
+	return window.mouse_delta / s as f32;
 
 }
 
@@ -329,28 +329,18 @@ pub(super) fn swap() {
 }
 
 fn check_key_state(code: Scancode, state: ButtonState) -> bool {
-
-	match ctx_get().key_states.get(&code) {
-		Some(s) => {
-			return *s == state;
-		}
-		None => {
-			return false;
-		}
+	if let Some(s) = ctx_get().key_states.get(&code) {
+		return s == &state;
+	} else {
+		return false;
 	}
-
 }
 
 fn check_mouse_state(code: MouseButton, state: ButtonState) -> bool {
-
-	match ctx_get().mouse_states.get(&code) {
-		Some(s) => {
-			return *s == state;
-		}
-		None => {
-			return false;
-		}
+	if let Some(s) = ctx_get().mouse_states.get(&code) {
+		return s == &state;
+	} else {
+		return false;
 	}
-
 }
 
