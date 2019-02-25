@@ -12,9 +12,9 @@ fn main() {
 
 	window::set_relative(true);
 
-	let mut pos = vec3!(0, 0, 3);
-	let mut rx: f32 = -88.0;
-	let mut ry: f32 = 0.0;
+	let mut pos = vec3!(-1.6, 0, 4.8);
+	let mut rx: f32 = -64.0;
+	let mut ry: f32 = 9.0;
 
 	let move_speed = 4;
 	let rot_speed = 0.2;
@@ -27,21 +27,32 @@ fn main() {
 
 		g3d::cam(pos);
 		g3d::look(rx.to_radians(), ry.to_radians());
-		g3d::rotate(vec3!(0, 2, 0));
-// 		g3d::rotate(vec3!(time));
-		g3d::cube();
+
+		for x in -3..3 {
+			for y in -3..3 {
+				for z in -3..3 {
+
+					g3d::push();
+					g3d::translate(vec3!(x, y, z));
+					g3d::rotate(vec3!(app::time()));
+					g3d::cube();
+					g3d::pop();
+
+				}
+			}
+		}
 
 		let md = window::mouse_delta();
 
 		rx -= md.x * rot_speed;
 		ry -= md.y * rot_speed;
 
-		if ry > 24.0 {
-			ry = 24.0;
+		if ry > 48.0 {
+			ry = 48.0;
 		}
 
-		if ry < -24.0 {
-			ry = -24.0;
+		if ry < -48.0 {
+			ry = -48.0;
 		}
 
 		if window::key_down(Key::A) {
@@ -71,5 +82,4 @@ fn main() {
 	});
 
 }
-
 
