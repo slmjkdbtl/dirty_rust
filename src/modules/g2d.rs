@@ -3,7 +3,6 @@
 //! 2D Rendering
 
 use std::collections::HashMap;
-use std::rc::Rc;
 
 use ggl_derive::Vertex;
 
