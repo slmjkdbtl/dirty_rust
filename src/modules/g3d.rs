@@ -69,7 +69,7 @@ pub(super) fn init() {
 	ctx_init(G3dCtx {
 
 		projection: projection,
-		cam: Cam::new(vec3!(0), vec3!(0), vec3!(0, 1, 0)),
+		cam: Cam::new(vec3!(), 0.0, 0.0),
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
 		default_shader: default_shader.clone(),
@@ -82,23 +82,41 @@ pub(super) fn init() {
 }
 
 struct Cam {
-	eye: Vec3,
-	center: Vec3,
-	up: Vec3,
+	front: Vec3,
+	pos: Vec3,
 }
 
 impl Cam {
 
-	pub fn new(eye: Vec3, center: Vec3, up: Vec3) -> Self {
-		return Self {
-			eye: eye,
-			center: center,
-			up: up,
+	fn new(pos: Vec3, yaw: f32, pitch: f32) -> Self {
+
+		let mut c = Self {
+			front: vec3!(),
+			pos: vec3!(),
 		};
+
+		c.set_pos(pos);
+		c.set_angle(yaw, pitch);
+
+		return c;
+
 	}
 
-	pub fn as_mat(&self) -> Mat4 {
-		return math::lookat(self.eye, self.center, self.up);
+	fn as_mat(&self) -> Mat4 {
+		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+	}
+
+	fn set_pos(&mut self, pos: Vec3) {
+		self.pos = pos;
+	}
+
+	fn set_angle(&mut self, yaw: f32, pitch: f32) {
+
+		self.front.x = pitch.cos() * yaw.cos();
+		self.front.y = pitch.sin();
+		self.front.z = pitch.cos() * yaw.sin();
+		self.front = self.front.unit();
+
 	}
 
 }
@@ -209,24 +227,24 @@ pub fn flag() {
 	// ...
 }
 
-/// set camera eye
+/// set camera angle
+pub fn look(yaw: f32, pitch: f32) {
+	ctx_get_mut().cam.set_angle(yaw, pitch);
+}
+
+/// set camera pos
 pub fn cam(eye: Vec3) {
-	ctx_get_mut().cam.eye = eye;
+	ctx_get_mut().cam.set_pos(eye);
 }
 
-/// get camera eye
+/// get camera pos
 pub fn get_cam() -> Vec3 {
-	return ctx_get().cam.eye;
+	return ctx_get().cam.pos;
 }
 
-/// set camera position
-pub fn lookat(pos: Vec3) {
-	ctx_get_mut().cam.center = pos;
-}
-
-/// get camera position
-pub fn get_lookat() -> Vec3 {
-	return ctx_get().cam.center;
+/// get camera front
+pub fn get_front() -> Vec3 {
+	return ctx_get().cam.front;
 }
 
 /// draw a cube

@@ -13,9 +13,11 @@ fn main() {
 	window::set_relative(true);
 
 	let mut pos = vec3!(0, 0, 3);
-	let mut front = vec3!(0, 0, -1);
 	let mut rx: f32 = -88.0;
 	let mut ry: f32 = 0.0;
+
+	let move_speed = 4;
+	let rot_speed = 0.2;
 
 	// main loop
 	app::run(|| {
@@ -24,44 +26,38 @@ fn main() {
 		let dt = app::dt();
 
 		g3d::cam(pos);
-		g3d::lookat(pos + front);
+		g3d::look(rx.to_radians(), ry.to_radians());
 		g3d::rotate(vec3!(0, 2, 0));
 // 		g3d::rotate(vec3!(time));
 		g3d::cube();
 
 		let md = window::mouse_delta();
-		println!("{}", md);
 
-		rx -= md.x * 0.5;
-		ry -= md.y * 0.5;
+		rx -= md.x * rot_speed;
+		ry -= md.y * rot_speed;
 
-		if ry > 89.0 {
-			ry = 89.0;
+		if ry > 24.0 {
+			ry = 24.0;
 		}
 
-		if ry < -89.0 {
-			ry = -89.0;
+		if ry < -24.0 {
+			ry = -24.0;
 		}
-
-		front.x = ry.to_radians().cos() * rx.to_radians().cos();
-		front.y = ry.to_radians().sin();
-		front.z = ry.to_radians().cos() * rx.to_radians().sin();
-		front = front.unit();
 
 		if window::key_down(Key::A) {
-			pos = pos + front.cross(vec3!(0, 1, 0)).unit() * dt * 6;
+			pos = pos + g3d::get_front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
 		}
 
 		if window::key_down(Key::D) {
-			pos = pos - front.cross(vec3!(0, 1, 0)).unit() * dt * 6;
+			pos = pos - g3d::get_front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
 		}
 
 		if window::key_down(Key::W) {
-			pos = pos + front * dt * 6;
+			pos = pos + g3d::get_front() * dt * move_speed;
 		}
 
 		if window::key_down(Key::S) {
-			pos = pos - front * dt * 6;
+			pos = pos - g3d::get_front() * dt * move_speed;
 		}
 
 		if window::key_pressed(Key::F) {
