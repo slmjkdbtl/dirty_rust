@@ -11,6 +11,8 @@ use derive_more::AddAssign;
 use derive_more::SubAssign;
 use derive_more::MulAssign;
 use derive_more::DivAssign;
+use derive_more::From;
+use derive_more::Into;
 
 macro_rules! gen_vec {
 
@@ -43,7 +45,7 @@ macro_rules! gen_vec {
 		}
 
 		#[allow(missing_docs)]
-		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign)]
+		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
 		pub struct $name {
 			$(
 			pub $member: $type
@@ -147,7 +149,7 @@ impl Vec3 {
 		return self.clone() / self.mag();
 	}
 
-	/// dot product of 2 vectors
+	/// dot product
 	pub fn dot(&self, other: Self) -> f32 {
 		return self.x * other.x + self.y * other.y + self.z * other.z;
 	}

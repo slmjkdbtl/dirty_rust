@@ -76,7 +76,7 @@ fn main() {
 		g2d::draw(&tex, frames[index]);
 		g2d::pop();
 
-		if col::point_poly(window::mouse_pos(), &pts) {
+		if col::point_poly(input::mouse_pos(), &pts) {
 			hovering = true;
 		} else {
 			hovering = false;
@@ -120,26 +120,26 @@ fn main() {
 // 		g2d::set_effect_default();
 
 		// inputs
-		if window::key_pressed(Key::Space) {
+		if input::key_pressed(Key::Space) {
 
 			// play a sound with effect
 			audio::play(&pop_sound.speed(rand!(2)));
 
 		}
 
-		if window::key_pressed(Key::Num1) {
+		if input::key_pressed(Key::Num1) {
 			audio::pause(&music);
 		}
 
-		if window::key_pressed(Key::Num2) {
+		if input::key_pressed(Key::Num2) {
 			audio::resume(&music);
 		}
 
-		if window::key_pressed(Key::F) {
+		if input::key_pressed(Key::F) {
 			window::set_fullscreen(!window::get_fullscreen())
 		}
 
-		if window::key_pressed(Key::Escape) {
+		if input::key_pressed(Key::Escape) {
 			app::quit();
 		}
 

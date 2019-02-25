@@ -2,6 +2,7 @@
 
 pub mod app;
 pub mod window;
+pub mod input;
 #[macro_use]
 pub mod gfx;
 pub mod g2d;

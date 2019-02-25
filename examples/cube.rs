@@ -47,41 +47,45 @@ fn main() {
 		g2d::text(&format!("{}", app::fps()));
 		g2d::pop();
 
-		let md = window::mouse_delta();
+		if window::get_relative() {
 
-		rx -= md.x * rot_speed;
-		ry -= md.y * rot_speed;
+			let md = input::mouse_delta();
 
-		if ry > 48.0 {
-			ry = 48.0;
+			rx -= md.x * rot_speed;
+			ry -= md.y * rot_speed;
+
+			if ry > 48.0 {
+				ry = 48.0;
+			}
+
+			if ry < -48.0 {
+				ry = -48.0;
+			}
+
 		}
 
-		if ry < -48.0 {
-			ry = -48.0;
-		}
-
-		if window::key_down(Key::A) {
+		if input::key_down(Key::A) {
 			pos = pos + g3d::front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
 		}
 
-		if window::key_down(Key::D) {
+		if input::key_down(Key::D) {
 			pos = pos - g3d::front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
 		}
 
-		if window::key_down(Key::W) {
+		if input::key_down(Key::W) {
 			pos = pos + g3d::front() * dt * move_speed;
 		}
 
-		if window::key_down(Key::S) {
+		if input::key_down(Key::S) {
 			pos = pos - g3d::front() * dt * move_speed;
 		}
 
-		if window::key_pressed(Key::F) {
+		if input::key_pressed(Key::F) {
 			window::set_fullscreen(!window::get_fullscreen())
 		}
 
-		if window::key_pressed(Key::Escape) {
-			app::quit();
+		if input::key_pressed(Key::Escape) {
+			window::set_relative(!window::get_relative());
 		}
 
 	});
