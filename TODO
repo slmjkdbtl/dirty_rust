@@ -2,40 +2,27 @@
 
 == DOING
 - use glutin when girls supports macos
-- fix 3d transformations
-- ecs example
 - allow nested canvas
-- improve folder structures
 
 == TODO
 - metal backend
-- ui lazy redraw
-- ui input manager
-- keep aspect ratio in fullscreen
-- editor
 - lua bindings
 - particle system
 - async resource loading
 - vector swizzle fields
 - ttf font rendering
-- ui proc macro generate window
-- ecs support reverse entity iter
 - more customizable vec gens
 - random seeds
 - macro for simple systems
 - game controllers
 - better gfx window resizing behavior
-- proc macro for shader uniform
 - better shader uniform handling
 - more accurate timestep
 - proper error handling
-- ui
 - profiling
 - amulet style sprite string
 - try rendy
 - make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
-- ecs attribute macro to help system filtering components
-- ecs allow multiple mutable reference to comps
 - try sokol-rs
 
 == DONE
@@ -85,4 +72,6 @@
 - rework renderer abstraction
 - data saving
 - add resources to ecs world
+- fix 3d transformations
+- improve folder structures
 

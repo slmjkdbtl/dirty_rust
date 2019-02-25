@@ -25,6 +25,7 @@ struct WindowCtx {
 	events: sdl2::EventPump,
 	key_states: HashMap<Scancode, ButtonState>,
 	mouse_states: HashMap<MouseButton, ButtonState>,
+	mouse_delta: Vec2,
 	mouse_pos: Vec2,
 	size: (u32, u32),
 	scale: Scale,
@@ -57,15 +58,20 @@ pub fn init(title: &str, width: u32, height: u32) {
 		video.gl_get_proc_address(name) as *const std::os::raw::c_void
 	});
 
+	let events = sdl_ctx.event_pump().expect("failed to create event pump");
+	let mouse_state = events.mouse_state();
+	let mpos = vec2!(mouse_state.x(), mouse_state.y());
+
 	ctx_init(WindowCtx {
 
-		events: sdl_ctx.event_pump().expect("failed to create event pump"),
+		events: events,
 		window: window,
 		gl_ctx: gl_ctx,
 		sdl_ctx: sdl_ctx,
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
-		mouse_pos: vec2!(),
+		mouse_delta: vec2!(),
+		mouse_pos: mpos,
 		size: (width, height),
 		scale: Scale::X1,
 
@@ -209,13 +215,25 @@ pub fn mouse_pos() -> Vec2 {
 
 }
 
+/// get mouse delta position
+pub fn mouse_delta() -> Vec2 {
+
+	let window = ctx_get();
+	let s: i32 = window.scale.into();
+
+	return window.mouse_delta / s;
+
+}
+
 pub(super) fn poll_events() {
 
 	let window = ctx_get();
 	let window_mut = ctx_get_mut();
 	let keyboard_state = window.events.keyboard_state();
 	let mouse_state = window.events.mouse_state();
+	let rmouse_state = window.events.relative_mouse_state();
 
+	window_mut.mouse_delta = vec2!(rmouse_state.x(), rmouse_state.y());
 	window_mut.mouse_pos = vec2!(mouse_state.x(), mouse_state.y());
 
 	for (code, state) in &mut window_mut.key_states {

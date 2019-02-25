@@ -2,8 +2,6 @@
 
 //! 3D Rendering
 
-use std::rc::Rc;
-
 use ggl_derive::Vertex;
 
 use crate::*;
@@ -21,6 +19,7 @@ ctx!(G3D: G3dCtx);
 struct G3dCtx {
 
 	projection: Mat4,
+	cam: Cam,
 	state: State,
 	state_stack: Vec<State>,
 	default_shader: Shader,
@@ -39,14 +38,14 @@ pub(super) fn init() {
 
 	let cube_verts = [
 
-		Vertex3D::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)),
-		Vertex3D::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)),
-		Vertex3D::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)),
-		Vertex3D::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)),
-		Vertex3D::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)),
-		Vertex3D::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)),
-		Vertex3D::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)),
-		Vertex3D::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)),
+		Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), color!(1, 0, 0, 1)),
+		Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), color!(0, 1, 0, 1)),
+		Vertex::new(vec3!(0.5, 0.5, 0.5), vec2!(), color!(0, 0, 1, 1)),
+		Vertex::new(vec3!(-0.5, 0.5, 0.5), vec2!(), color!(1, 1, 1, 1)),
+		Vertex::new(vec3!(-0.5, -0.5, -0.5), vec2!(), color!(1, 0, 0, 1)),
+		Vertex::new(vec3!(0.5, -0.5, -0.5), vec2!(), color!(0, 1, 0, 1)),
+		Vertex::new(vec3!(0.5, 0.5, -0.5), vec2!(), color!(0, 0, 1, 1)),
+		Vertex::new(vec3!(-0.5, 0.5, -0.5), vec2!(), color!(1, 1, 1, 1)),
 
 	];
 
@@ -70,6 +69,7 @@ pub(super) fn init() {
 	ctx_init(G3dCtx {
 
 		projection: projection,
+		cam: Cam::new(vec3!(0), vec3!(0), vec3!(0, 1, 0)),
 		state_stack: Vec::with_capacity(MAX_STATE_STACK),
 		state: State::default(),
 		default_shader: default_shader.clone(),
@@ -81,14 +81,36 @@ pub(super) fn init() {
 
 }
 
+struct Cam {
+	eye: Vec3,
+	center: Vec3,
+	up: Vec3,
+}
+
+impl Cam {
+
+	pub fn new(eye: Vec3, center: Vec3, up: Vec3) -> Self {
+		return Self {
+			eye: eye,
+			center: center,
+			up: up,
+		};
+	}
+
+	pub fn as_mat(&self) -> Mat4 {
+		return math::lookat(self.eye, self.center, self.up);
+	}
+
+}
+
 #[derive(Vertex)]
-struct Vertex3D {
+struct Vertex {
 	pos: [f32; 3],
 	uv: [f32; 2],
 	color: [f32; 4],
 }
 
-impl Vertex3D {
+impl Vertex {
 	fn new(pos: Vec3, uv: Vec2, c: Color) -> Self {
 		return Self {
 			pos: [pos.x, pos.y, pos.z],
@@ -155,20 +177,20 @@ pub fn translate(pos: Vec3) {
 }
 
 /// global rotate
-pub fn rotate(x: f32, y: f32, z: f32) {
+pub fn rotate(r: Vec3) {
 
 	let state = &mut ctx_get_mut().state;
 
-	if x != 0.0 {
-		state.transform = state.transform.rotate(x, Dir::X);
+	if r.x != 0.0 {
+		state.transform = state.transform.rotate(r.x, Dir::X);
 	}
 
-	if y != 0.0 {
-		state.transform = state.transform.rotate(y, Dir::Y);
+	if r.y != 0.0 {
+		state.transform = state.transform.rotate(r.y, Dir::Y);
 	}
 
-	if z != 0.0 {
-		state.transform = state.transform.rotate(z, Dir::Z);
+	if r.z != 0.0 {
+		state.transform = state.transform.rotate(r.z, Dir::Z);
 	}
 
 }
@@ -182,12 +204,37 @@ pub fn scale(s: Vec3) {
 
 }
 
+/// draw a 2d texture in 3d space
+pub fn flag() {
+	// ...
+}
+
+/// set camera eye
+pub fn cam(eye: Vec3) {
+	ctx_get_mut().cam.eye = eye;
+}
+
+/// get camera eye
+pub fn get_cam() -> Vec3 {
+	return ctx_get().cam.eye;
+}
+
+/// set camera position
+pub fn lookat(pos: Vec3) {
+	ctx_get_mut().cam.center = pos;
+}
+
+/// get camera position
+pub fn get_lookat() -> Vec3 {
+	return ctx_get().cam.center;
+}
+
 /// draw a cube
 pub fn cube() {
 
 	let gfx = ctx_get();
 	let model = gfx.state.transform;
-	let view = Mat4::identity();
+	let view = gfx.cam.as_mat();
 	let projection = gfx.projection;
 
 	gfx.current_shader.send_mat4("model", model);

@@ -42,12 +42,13 @@ fn main() {
 	app::run(|| {
 
 		let time = app::time();
+		let dt = app::dt();
 
 		gfx::drawon(&canvas);
 		gfx::clear();
 
 		if hovering {
-			g3d::rotate(time, time, time);
+			g3d::rotate(vec3!(time));
 			g3d::cube();
 		}
 
