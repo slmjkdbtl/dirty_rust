@@ -205,6 +205,7 @@ pub(super) fn end() {
 	ctx.state_stack.clear();
 	set_shader_default();
 	set_font_default();
+	unflip_projection();
 
 }
 
@@ -250,6 +251,13 @@ pub fn draw(tex: &gfx::Texture, quad: Rect) {
 
 /// render a canvas
 pub fn render(c: &gfx::Canvas) {
+
+	if let Some(current_canvas) = gfx::current_canvas() {
+		if (c == current_canvas) {
+			panic!("cannot render active canvas");
+		}
+	}
+
 	draw(&c.tex, rect!(0, 0, 1, 1));
 }
 

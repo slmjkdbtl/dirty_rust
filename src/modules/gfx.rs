@@ -40,37 +40,31 @@ pub fn enabled() -> bool {
 	return ctx_ok();
 }
 
+pub(crate) fn current_canvas() -> &'static Option<Canvas> {
+	return &ctx_get().current_canvas;
+}
+
 /// set active canvas
 pub fn drawon(c: &Canvas) {
 
-	let gfx = ctx_get_mut();
+	let gfx_mut = ctx_get_mut();
 
-	assert!(gfx.current_canvas.is_none(), "cannot draw on canvas while another canvas is active");
-
+	gfx_mut.current_canvas = Some(c.clone());
 	g2d::flush();
 	g2d::flip_projection();
 	ggl::set_framebuffer(&*c.handle);
-	gfx.current_canvas = Some(c.clone());
 
 }
 
 /// stop active canvas
-pub fn stop_drawon(c: &Canvas) {
+pub fn stop_drawon() {
 
-	let gfx = ctx_get_mut();
+	let gfx_mut = ctx_get_mut();
 
-	if let Some(current) = &gfx.current_canvas {
-
-		assert!(current == c, "this is not the active canvas");
-
-		g2d::flush();
-		g2d::unflip_projection();
-		ggl::clear_framebuffer();
-		gfx.current_canvas = None;
-
-	} else {
-		panic!("no canvas active");
-	}
+	gfx_mut.current_canvas = None;
+	g2d::flush();
+	g2d::unflip_projection();
+	ggl::clear_framebuffer();
 
 }
 
@@ -109,11 +103,7 @@ pub(super) fn end() {
 
 	g2d::end();
 	g3d::end();
-
-	if gfx.current_canvas.is_some() {
-		ggl::clear_framebuffer();
-		panic!("unfinished canvas");
-	}
+	ggl::clear_framebuffer();
 
 }
 
