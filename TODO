@@ -1,7 +1,7 @@
 # wengwengweng
 
 == DOING
-- use glutin when girls supports macos
+- game controllers
 - allow nested canvas
 
 == TODO
@@ -14,7 +14,6 @@
 - more customizable vec gens
 - random seeds
 - macro for simple systems
-- game controllers
 - better gfx window resizing behavior
 - better shader uniform handling
 - more accurate timestep
@@ -24,6 +23,7 @@
 - try rendy
 - make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
 - try sokol-rs
+- lua binding with luster
 
 == DONE
 - basic window creation

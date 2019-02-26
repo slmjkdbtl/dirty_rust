@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use gilrs::Gilrs;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 
