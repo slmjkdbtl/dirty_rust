@@ -155,22 +155,12 @@ pub fn mouse_released(b: MouseButton) -> bool {
 
 /// get mouse position
 pub fn mouse_pos() -> Vec2 {
-
-	let window = ctx_get();
-	let s: i32 = window::get_scale().into();
-
-	return window.mouse_pos / s as f32;
-
+	return ctx_get().mouse_pos;
 }
 
 /// get mouse delta position
 pub fn mouse_delta() -> Vec2 {
-
-	let window = ctx_get();
-	let s: i32 = window::get_scale().into();
-
-	return window.mouse_delta / s as f32;
-
+	return ctx_get().mouse_delta;
 }
 
 fn check_key_state(code: Scancode, state: ButtonState) -> bool {

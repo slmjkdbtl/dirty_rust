@@ -175,7 +175,10 @@ pub(super) fn flush() {
 
 	if let Some(tex) = &gfx.current_tex {
 
+		let (w, h) = window::size();
+
 		gfx.current_shader.send_mat4("projection", gfx.projection);
+		gfx.current_shader.send_vec2("size", vec2!(w, h));
 		gfx.current_shader.send_float("time", app::time());
 		renderer.flush(&*tex.handle, &gfx.current_shader.program);
 		gfx_mut.draw_calls += 1;
@@ -328,13 +331,13 @@ pub fn line(p1: Vec2, p2: Vec2) {
 }
 
 /// apply a shader effect
-pub fn set_effect(s: &Shader) {
+pub fn set_shader(s: &Shader) {
 	flush();
 	ctx_get_mut().current_shader = s.clone();
 }
 
 /// stop shader effects and use default shader
-pub fn set_effect_default() {
+pub fn set_shader_default() {
 	flush();
 	ctx_get_mut().current_shader = ctx_get().default_shader.clone();
 }
