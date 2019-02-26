@@ -203,6 +203,8 @@ pub(super) fn end() {
 	ctx.draw_calls_last = ctx.draw_calls;
 	ctx.draw_calls = 0;
 	ctx.state_stack.clear();
+	set_shader_default();
+	set_font_default();
 
 }
 

@@ -8,7 +8,11 @@ vec4 frag(
 	vec4 color,
 	float time) {
 
-	return vec4(t_coord.x, t_coord.y, 0, 1);
+	if (length(t_coord - vec2(0.5)) <= 0.5) {
+		return vec4(t_coord.x, t_coord.y, 1, 1);
+	}
+
+	return vec4(0);
 
 }
 
