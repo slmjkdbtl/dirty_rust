@@ -263,7 +263,7 @@ pub(super) fn begin() {}
 
 pub(super) fn end() {
 
-	g3d::reset();
+	reset();
 	ctx_get_mut().state_stack.clear();
 
 }
