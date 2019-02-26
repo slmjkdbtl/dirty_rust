@@ -7,17 +7,19 @@ fn main() {
 	// init modules
 	app::init();
 	audio::init();
-	window::init("yo", 640, 480);
+	window::init("cube", 640, 480);
 	res::init();
 
 	window::set_relative(true);
 
-	let mut pos = vec3!(-1.6, 0, 4.8);
-	let mut rx: f32 = -64.0;
-	let mut ry: f32 = 9.0;
+	let mut pos = vec3!(9, 9, 9);
+	let mut rx: f32 = -135.0;
+	let mut ry: f32 = -35.0;
 
 	let move_speed = 4.0;
 	let rot_speed = 0.2;
+
+	let size = 3;
 
 	// main loop
 	app::run(|| {
@@ -28,9 +30,9 @@ fn main() {
 		g3d::cam(pos);
 		g3d::look(rx.to_radians(), ry.to_radians());
 
-		for x in -3..3 {
-			for y in -3..3 {
-				for z in -3..3 {
+		for x in -size..size {
+			for y in -size..size {
+				for z in -size..size {
 
 					g3d::push();
 					g3d::translate(vec3!(x, y, z));

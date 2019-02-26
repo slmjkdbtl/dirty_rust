@@ -8,7 +8,7 @@ vec4 frag(
 	vec4 color,
 	float time) {
 
-	return texture2D(tex, t_coord) * color;
+	return vec4(t_coord.x, t_coord.y, 0, 1);
 
 }
 

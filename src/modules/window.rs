@@ -15,7 +15,6 @@ pub(super) struct WindowCtx {
 	#[allow(dead_code)]
 	gl_ctx: sdl2::video::GLContext,
 	size: (u32, u32),
-	scale: Scale,
 
 }
 
@@ -53,7 +52,6 @@ pub fn init(title: &str, width: u32, height: u32) {
 		gl_ctx: gl_ctx,
 		sdl_ctx: sdl_ctx,
 		size: (width, height),
-		scale: Scale::X1,
 
 	});
 
@@ -65,35 +63,6 @@ pub fn init(title: &str, width: u32, height: u32) {
 /// check if window is initiated
 pub fn enabled() -> bool {
 	return ctx_ok();
-}
-
-#[derive(Clone, Copy)]
-pub enum Scale {
-	X1,
-	X2,
-	X4,
-	X8,
-}
-
-impl From<Scale> for i32 {
-	fn from(s: Scale) -> Self {
-		return match s {
-			Scale::X1 => 1,
-			Scale::X2 => 2,
-			Scale::X4 => 4,
-			Scale::X8 => 8,
-		};
-	}
-}
-
-/// scale entire viewport
-pub fn scale(s: Scale) {
-	ctx_get_mut().scale = s;
-}
-
-/// get global scale
-pub fn get_scale() -> Scale {
-	return ctx_get_mut().scale;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -147,31 +116,12 @@ pub fn get_relative() -> bool {
 
 /// get view size
 pub fn size() -> (u32, u32) {
-
-	let window = ctx_get();
-	let (w, h) = window.size;
-
-	return match window.scale {
-		Scale::X1 => (w / 1, h / 1),
-		Scale::X2 => (w / 2, h / 2),
-		Scale::X4 => (w / 4, h / 4),
-		Scale::X8 => (w / 8, h / 8),
-	};
-
+	return ctx_get().size;
 }
 
 pub(super) fn begin() {
-
-	match ctx_get().scale {
-		Scale::X1 => {},
-		Scale::X2 => g2d::scale(vec2!(2)),
-		Scale::X4 => g2d::scale(vec2!(4)),
-		Scale::X8 => g2d::scale(vec2!(8)),
-	};
-
 	input::poll();
 	gfx::begin();
-
 }
 
 pub(super) fn end() {

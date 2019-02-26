@@ -5,10 +5,11 @@ varying vec4 tint;
 
 uniform sampler2D tex;
 uniform float time;
+uniform vec2 size;
 
 ###REPLACE###
 
 void main() {
-	gl_FragColor = effect(tex, coord, gl_FragCoord.xy, tint, time);
+	gl_FragColor = frag(tex, coord, gl_FragCoord.xy / size, size, tint, time);
 }
 

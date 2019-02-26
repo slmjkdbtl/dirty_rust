@@ -115,9 +115,9 @@ fn main() {
 		g2d::pop();
 
 		gfx::stop_drawon(&canvas);
-// 		g2d::set_effect(&shader);
+// 		g2d::set_shader(&shader);
 		g2d::render(&canvas);
-// 		g2d::set_effect_default();
+// 		g2d::set_shader_default();
 
 		// inputs
 		if input::key_pressed(Key::Space) {
