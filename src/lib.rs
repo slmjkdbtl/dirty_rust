@@ -17,6 +17,3 @@ pub mod lua;
 
 pub use modules::*;
 
-pub use sdl2::keyboard::Scancode as Key;
-pub use sdl2::mouse::MouseButton as Mouse;
-

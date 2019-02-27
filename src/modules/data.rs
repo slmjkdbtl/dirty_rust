@@ -2,34 +2,32 @@
 
 //! Save & Load User Data
 
-use serde::ser::Serialize;
-use serde::de::Deserialize;
+use serde::ser;
+use serde::de;
+pub use serde::Serialize;
+pub use serde::Deserialize;
 
 use crate::*;
 
-ctx!(PREF: PrefCtx);
+ctx!(DATA: DataCtx);
 
-struct PrefCtx {
+struct DataCtx {
 	dir: String,
 }
 
 /// initialize pref
 pub fn init(org: &str, name: &str) {
 
-	if !app::enabled() {
-		panic!("can't init data without app");
-	}
-
 	let dir = sdl2::filesystem::pref_path(&org, &name).expect("failed to get pref dir");
 
-	ctx_init(PrefCtx {
+	ctx_init(DataCtx {
 		dir: dir,
 	});
 
 }
 
 /// save json data
-pub fn save<D: Serialize>(fname: &str, data: D) {
+pub fn save<D: ser::Serialize>(fname: &str, data: D) {
 
 	let dir = &ctx_get().dir;
 	let path = format!("{}{}", dir, fname);
@@ -40,7 +38,7 @@ pub fn save<D: Serialize>(fname: &str, data: D) {
 }
 
 /// get json data
-pub fn get<D: for<'a> Deserialize<'a>>(fname: &str) -> D {
+pub fn get<D: for<'a> de::Deserialize<'a>>(fname: &str) -> D {
 
 	let dir = &ctx_get().dir;
 	let path = format!("{}{}", dir, fname);

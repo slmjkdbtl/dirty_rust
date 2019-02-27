@@ -27,8 +27,9 @@ core:
 
 micro helper libs:
 
-- **res** Resource Loading & Storing
-- **pref** Save & Load User Data
+- **lua** run dirty with lua (*TODO*)
+- **res** Resource Loading & Management
+- **data** Save & Load User Data
 - **col** Common Collision Detection
 
 ### doc
@@ -70,6 +71,18 @@ fn main() {
 
 }
 ```
+
+### cli
+to run `frog.lua`
+```sh
+$ dirty frog.lua
+```
+(looks for `main.lua` if no argument)
+to export
+```sh
+$ dirty export
+```
+(entry has to be `main.lua` when exported)
 
 ### notes & caveats
 
