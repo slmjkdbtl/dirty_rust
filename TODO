@@ -24,6 +24,7 @@
 - make an example game about Dangerous Ichthyopolist Reincarnates Tropical Yeti
 - try sokol-rs
 - lua binding with luster
+- programmatic exporting
 
 == DONE
 - basic window creation

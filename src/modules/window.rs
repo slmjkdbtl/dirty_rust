@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Window & Input
+//! Window Creation & Config
 
 use crate::*;
 use crate::math::*;
