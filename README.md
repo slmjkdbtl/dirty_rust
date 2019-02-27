@@ -16,13 +16,14 @@ not on crates.io yet due to duplicate crate name
 core:
 
 - **app** Lifecycles, Time and Errors
-- **window** Window & Input
+- **window** Window Creation & Config
+- **input** Input Management
 - **gfx** General Rendering
 - **g2d** 2D Rendering
 - **g3d** 3D Rendering (*TODO*)
 - **audio** Sound Loading & playback
 - **math** Common Math Functions & Types
-- **fs** Common File Related Functions
+- **fs** Common File System Functions
 
 micro helper libs:
 

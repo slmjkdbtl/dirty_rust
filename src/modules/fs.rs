@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Common File Related Functions
+//! Common File System Functions
 
 use std::fs;
 use std::path::Path;

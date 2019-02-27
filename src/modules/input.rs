@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Input Manager
+
 use std::collections::HashMap;
 
 use gilrs::Gilrs;
