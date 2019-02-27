@@ -12,5 +12,4 @@ pub mod fs;
 pub mod pref;
 pub mod col;
 pub mod res;
-pub mod lua;
 

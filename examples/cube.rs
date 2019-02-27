@@ -16,7 +16,7 @@ fn main() {
 	let mut rx: f32 = -135.0;
 	let mut ry: f32 = -35.0;
 
-	let move_speed = 4.0;
+	let move_speed = 6.0;
 	let rot_speed = 0.2;
 
 	let size = 3;
