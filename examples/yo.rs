@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use input::Key;
 
 fn main() {
 

@@ -5,8 +5,8 @@
 use std::collections::HashMap;
 
 use gilrs::Gilrs;
-use sdl2::keyboard::Scancode;
-use sdl2::mouse::MouseButton;
+pub use sdl2::keyboard::Scancode as Key;
+pub use sdl2::mouse::MouseButton as Mouse;
 
 use crate::*;
 use crate::math::*;
@@ -17,8 +17,8 @@ ctx!(INPUT: InputCtx);
 struct InputCtx {
 
 	events: sdl2::EventPump,
-	key_states: HashMap<Scancode, ButtonState>,
-	mouse_states: HashMap<MouseButton, ButtonState>,
+	key_states: HashMap<Key, ButtonState>,
+	mouse_states: HashMap<Mouse, ButtonState>,
 	mouse_delta: Vec2,
 	mouse_pos: Vec2,
 
@@ -113,7 +113,7 @@ pub(super) fn poll() {
 }
 
 /// get list of pressed keys
-pub fn pressed_keys() -> Vec<Scancode> {
+pub fn pressed_keys() -> Vec<Key> {
 
 	let window = ctx_get();
 	let states = &window.key_states;
@@ -127,32 +127,32 @@ pub fn pressed_keys() -> Vec<Scancode> {
 }
 
 /// check if a key was pressed this frame
-pub fn key_pressed(k: Scancode) -> bool {
+pub fn key_pressed(k: Key) -> bool {
 	return check_key_state(k, ButtonState::Pressed);
 }
 
 /// check if a key is holding down
-pub fn key_down(k: Scancode) -> bool {
+pub fn key_down(k: Key) -> bool {
 	return check_key_state(k, ButtonState::Down);
 }
 
 /// check if a key was released this frame
-pub fn key_released(k: Scancode) -> bool {
+pub fn key_released(k: Key) -> bool {
 	return check_key_state(k, ButtonState::Released);
 }
 
 /// check if a mouse button was pressed this frame
-pub fn mouse_pressed(b: MouseButton) -> bool {
+pub fn mouse_pressed(b: Mouse) -> bool {
 	return check_mouse_state(b, ButtonState::Pressed);
 }
 
 /// check if a mouse button is holding down
-pub fn mouse_down(b: MouseButton) -> bool {
+pub fn mouse_down(b: Mouse) -> bool {
 	return check_mouse_state(b, ButtonState::Down);
 }
 
 /// check if a mouse button was released this frame
-pub fn mouse_released(b: MouseButton) -> bool {
+pub fn mouse_released(b: Mouse) -> bool {
 	return check_mouse_state(b, ButtonState::Released);
 }
 
@@ -166,7 +166,7 @@ pub fn mouse_delta() -> Vec2 {
 	return ctx_get().mouse_delta;
 }
 
-fn check_key_state(code: Scancode, state: ButtonState) -> bool {
+fn check_key_state(code: Key, state: ButtonState) -> bool {
 	if let Some(s) = ctx_get().key_states.get(&code) {
 		return s == &state;
 	} else {
@@ -174,7 +174,7 @@ fn check_key_state(code: Scancode, state: ButtonState) -> bool {
 	}
 }
 
-fn check_mouse_state(code: MouseButton, state: ButtonState) -> bool {
+fn check_mouse_state(code: Mouse, state: ButtonState) -> bool {
 	if let Some(s) = ctx_get().mouse_states.get(&code) {
 		return s == &state;
 	} else {

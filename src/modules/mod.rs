@@ -9,7 +9,7 @@ pub mod g2d;
 pub mod g3d;
 pub mod audio;
 pub mod fs;
-pub mod pref;
+pub mod data;
 pub mod col;
 pub mod res;
 
