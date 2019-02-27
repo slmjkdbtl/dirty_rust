@@ -114,7 +114,7 @@ fn main() {
 		g2d::text(&format!("{}", app::fps()));
 		g2d::pop();
 
-		gfx::stop_drawon(&canvas);
+		gfx::stop_drawon();
 // 		g2d::set_shader(&shader);
 		g2d::render(&canvas);
 // 		g2d::set_shader_default();

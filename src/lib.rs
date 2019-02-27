@@ -13,6 +13,7 @@ mod utils;
 mod ggl;
 mod modules;
 pub mod math;
+pub mod lua;
 
 pub use modules::*;
 
