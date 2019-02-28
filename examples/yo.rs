@@ -77,7 +77,7 @@ fn main() {
 		g2d::draw(&tex, frames[index]);
 		g2d::pop();
 
-		if col::point_poly(input::mouse_pos(), &pts) {
+		if col::point_poly(input::mouse_pos().into(), &pts) {
 			hovering = true;
 		} else {
 			hovering = false;
