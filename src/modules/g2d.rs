@@ -302,9 +302,9 @@ pub fn text(s: &str) {
 
 		} else if ch != ' ' {
 
-			let quad = font.map.get(&ch).unwrap_or_else(|| panic!("font does not contain char '{}'", ch));
-
-			draw(&font.tex, *quad);
+			if let Some(quad) = font.map.get(&ch) {
+				draw(&font.tex, *quad);
+			}
 
 		}
 
