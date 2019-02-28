@@ -193,13 +193,10 @@ pub fn draw_calls() -> usize {
 	return ctx_get().draw_calls_last;
 }
 
-pub(super) fn begin() {}
-
-pub(super) fn end() {
+pub(super) fn begin() {
 
 	let ctx = ctx_mut();
 
-	flush();
 	reset();
 	ctx.draw_calls_last = ctx.draw_calls;
 	ctx.draw_calls = 0;
@@ -208,6 +205,10 @@ pub(super) fn end() {
 	set_font_default();
 	unflip_projection();
 
+}
+
+pub(super) fn end() {
+	flush();
 }
 
 pub(super) fn flip_projection() {
