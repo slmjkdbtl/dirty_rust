@@ -14,6 +14,20 @@ use derive_more::DivAssign;
 use derive_more::From;
 use derive_more::Into;
 
+macro_rules! nested_macro {
+
+	($($body:tt)*) => {
+
+		macro_rules! __nested_macro {
+			$($body)*
+		}
+
+		__nested_macro!($);
+
+	};
+
+}
+
 macro_rules! gen_vec {
 
 	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty, ($($default:expr),+)) => {

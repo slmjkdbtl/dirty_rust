@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 
 use aseprite::SpritesheetData;
+use gctx::ctx;
 
 use crate::*;
 use crate::math::*;
@@ -149,7 +150,7 @@ pub fn load_spritedata(
 	name: &str,
 	json: &str) {
 
-	let res_mut = ctx_get_mut();
+	let res_mut = ctx_mut();
 
 	let mut frames = vec![];
 	let mut anims = HashMap::new();
@@ -201,7 +202,7 @@ pub fn load_texture(
 	name: &str,
 	data: &[u8]) {
 
-	let res_mut = ctx_get_mut();
+	let res_mut = ctx_mut();
 
 	res_mut.textures.insert(name.to_owned(), gfx::Texture::from_bytes(data));
 
@@ -212,7 +213,7 @@ pub fn load_sound(
 	name: &str,
 	data: &[u8]) {
 
-	let res_mut = ctx_get_mut();
+	let res_mut = ctx_mut();
 
 	res_mut.sounds.insert(name.to_owned(), audio::Sound::from_bytes(data));
 

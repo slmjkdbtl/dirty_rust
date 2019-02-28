@@ -2,6 +2,8 @@
 
 //! Window Creation & Config
 
+use gctx::ctx;
+
 use crate::*;
 use crate::math::*;
 
@@ -78,7 +80,7 @@ pub fn set_fullscreen(b: bool) {
 
 	use sdl2::video::FullscreenType;
 
-	let app_mut = ctx_get_mut();
+	let app_mut = ctx_mut();
 
 	if b {
 		app_mut.window.set_fullscreen(FullscreenType::Desktop).expect("fullscreen failed");
@@ -96,17 +98,17 @@ pub fn get_fullscreen() -> bool {
 
 /// show cursor
 pub fn show_cursor() {
-	ctx_get_mut().sdl_ctx.mouse().show_cursor(true);
+	ctx_mut().sdl_ctx.mouse().show_cursor(true);
 }
 
 /// hide cursor
 pub fn hide_cursor() {
-	ctx_get_mut().sdl_ctx.mouse().show_cursor(false);
+	ctx_mut().sdl_ctx.mouse().show_cursor(false);
 }
 
 /// set mouse relative state
 pub fn set_relative(b: bool) {
-	ctx_get_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
+	ctx_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
 }
 
 /// get mouse relative state
