@@ -3,8 +3,8 @@
 run example="yo":
 	cargo run --release --example {{example}}
 
-doc crate:
-	cargo doc -p {{crate}} --no-deps --open
+doc:
+	cargo doc --no-deps --open
 
 loc:
 	tokei

@@ -6,9 +6,7 @@ fn main() {
 
 	// init modules
 	app::init();
-	audio::init();
 	window::init("shader", 640, 480);
-	res::init();
 
 	let (w, h) = window::size();
 

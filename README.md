@@ -24,10 +24,11 @@ core:
 - **audio** Sound Loading & playback
 - **math** Common Math Functions & Types
 - **fs** Common File System Functions
+- **net** Networking (*TODO*)
 
 micro helper libs:
 
-- **lua** run dirty with lua (*TODO*)
+- **lua** Run Lua (*TODO*)
 - **res** Resource Loading & Management
 - **data** Save & Load User Data
 - **col** Common Collision Detection
