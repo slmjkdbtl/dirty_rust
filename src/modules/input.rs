@@ -79,7 +79,7 @@ impl MouseDelta {
 			y: x,
 		};
 	}
-	fn is_none(&self) -> bool {
+	pub fn is_none(&self) -> bool {
 		return self.x == 0 && self.y == 0;
 	}
 }
@@ -103,7 +103,7 @@ impl ScrollDelta {
 			y: x,
 		};
 	}
-	fn is_none(&self) -> bool {
+	pub fn is_none(&self) -> bool {
 		return self.x == 0 && self.y == 0;
 	}
 }
