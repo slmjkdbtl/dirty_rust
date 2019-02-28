@@ -260,14 +260,14 @@ pub fn cube() {
 
 }
 
-pub(super) fn begin() {}
-
-pub(super) fn end() {
+pub(super) fn begin() {
 
 	reset();
 	ctx_mut().state_stack.clear();
 
 }
+
+pub(super) fn end() {}
 
 gen_templated_shader!(Shader, TEMPLATE_3D_VERT, TEMPLATE_3D_FRAG, DEFAULT_3D_VERT, DEFAULT_3D_FRAG);
 
