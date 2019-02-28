@@ -13,4 +13,5 @@ pub mod fs;
 pub mod data;
 pub mod col;
 pub mod res;
+pub mod lua;
 
