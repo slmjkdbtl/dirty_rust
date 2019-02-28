@@ -20,9 +20,9 @@ struct InputCtx {
 	events: sdl2::EventPump,
 	key_states: HashMap<Key, ButtonState>,
 	mouse_states: HashMap<Mouse, ButtonState>,
-	mouse_delta: MousePos,
 	mouse_pos: MousePos,
-	scroll_delta: ScrollDis,
+	mouse_delta: MouseDelta,
+	scroll_delta: ScrollDelta,
 
 }
 
@@ -39,9 +39,9 @@ pub(super) fn init(e: sdl2::EventPump) {
 		events: e,
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
-		mouse_delta: MousePos { x: 0, y: 0 },
-		mouse_pos: MousePos { x: 0, y: 0 },
-		scroll_delta: ScrollDis { x: 0, y: 0 },
+		mouse_pos: MousePos::new(0, 0),
+		mouse_delta: MouseDelta::new(0, 0),
+		scroll_delta: ScrollDelta::new(0, 0),
 	});
 }
 
@@ -51,6 +51,15 @@ pub struct MousePos {
 	y: i32,
 }
 
+impl MousePos {
+	fn new(x: i32, y: i32) -> Self {
+		return Self {
+			x: x,
+			y: x,
+		};
+	}
+}
+
 impl From<MousePos> for Vec2 {
 	fn from(mpos: MousePos) -> Self {
 		return vec2!(mpos.x, mpos.y);
@@ -58,9 +67,51 @@ impl From<MousePos> for Vec2 {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct ScrollDis {
+pub struct MouseDelta {
 	x: i32,
 	y: i32,
+}
+
+impl MouseDelta {
+	fn new(x: i32, y: i32) -> Self {
+		return Self {
+			x: x,
+			y: x,
+		};
+	}
+	fn is_none(&self) -> bool {
+		return self.x == 0 && self.y == 0;
+	}
+}
+
+impl From<MouseDelta> for Vec2 {
+	fn from(mpos: MouseDelta) -> Self {
+		return vec2!(mpos.x, mpos.y);
+	}
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct ScrollDelta {
+	x: i32,
+	y: i32,
+}
+
+impl ScrollDelta {
+	fn new(x: i32, y: i32) -> Self {
+		return Self {
+			x: x,
+			y: x,
+		};
+	}
+	fn is_none(&self) -> bool {
+		return self.x == 0 && self.y == 0;
+	}
+}
+
+impl From<ScrollDelta> for Vec2 {
+	fn from(sdis: ScrollDelta) -> Self {
+		return vec2!(sdis.x, sdis.y);
+	}
 }
 
 pub(super) fn poll() {
@@ -73,8 +124,8 @@ pub(super) fn poll() {
 	let mouse_state = input.events.mouse_state();
 	let rmouse_state = input.events.relative_mouse_state();
 
-	input_mut.mouse_delta = MousePos { x: rmouse_state.x(), y: rmouse_state.y() };
-	input_mut.mouse_pos = MousePos { x: mouse_state.x(), y: mouse_state.y() };
+	input_mut.mouse_pos = MousePos::new(mouse_state.x(), mouse_state.y());
+	input_mut.mouse_delta = MouseDelta::new(rmouse_state.x(), rmouse_state.y());
 
 	for (code, state) in &mut input_mut.key_states {
 		match state {
@@ -128,7 +179,7 @@ pub(super) fn poll() {
 				app::quit();
 			},
 			Event::MouseWheel {x, y, direction, ..} => {
-				input_mut.scroll_delta = ScrollDis {x: x, y: y};
+				input_mut.scroll_delta = ScrollDelta::new(x, y);
 			},
 			_ => {}
 		}
@@ -137,7 +188,7 @@ pub(super) fn poll() {
 }
 
 /// get how much scrolled since last frame
-pub fn scroll_delta() -> ScrollDis {
+pub fn scroll_delta() -> ScrollDelta {
 	return ctx_get().scroll_delta;
 }
 
@@ -205,7 +256,7 @@ pub fn mouse_pos() -> MousePos {
 }
 
 /// get mouse delta position
-pub fn mouse_delta() -> MousePos {
+pub fn mouse_delta() -> MouseDelta {
 	return ctx_get().mouse_delta;
 }
 
