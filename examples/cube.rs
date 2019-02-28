@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use dirty::math::*;
 use input::Key;
 
 fn main() {
@@ -52,7 +53,7 @@ fn main() {
 
 		if window::get_relative() {
 
-			let md = input::mouse_delta();
+			let md: Vec2 = input::mouse_delta().into();
 
 			rx -= md.x * rot_speed;
 			ry -= md.y * rot_speed;

@@ -20,9 +20,9 @@ struct InputCtx {
 	events: sdl2::EventPump,
 	key_states: HashMap<Key, ButtonState>,
 	mouse_states: HashMap<Mouse, ButtonState>,
-	mouse_delta: Vec2,
-	mouse_pos: Vec2,
-	scroll_delta: (i32, i32),
+	mouse_delta: MousePos,
+	mouse_pos: MousePos,
+	scroll_delta: ScrollDis,
 
 }
 
@@ -39,10 +39,28 @@ pub(super) fn init(e: sdl2::EventPump) {
 		events: e,
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
-		mouse_delta: vec2!(),
-		mouse_pos: vec2!(),
-		scroll_delta: (0, 0),
+		mouse_delta: MousePos { x: 0, y: 0 },
+		mouse_pos: MousePos { x: 0, y: 0 },
+		scroll_delta: ScrollDis { x: 0, y: 0 },
 	});
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct MousePos {
+	x: i32,
+	y: i32,
+}
+
+impl From<MousePos> for Vec2 {
+	fn from(mpos: MousePos) -> Self {
+		return vec2!(mpos.x, mpos.y);
+	}
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct ScrollDis {
+	x: i32,
+	y: i32,
 }
 
 pub(super) fn poll() {
@@ -55,8 +73,8 @@ pub(super) fn poll() {
 	let mouse_state = input.events.mouse_state();
 	let rmouse_state = input.events.relative_mouse_state();
 
-	input_mut.mouse_delta = vec2!(rmouse_state.x(), rmouse_state.y());
-	input_mut.mouse_pos = vec2!(mouse_state.x(), mouse_state.y());
+	input_mut.mouse_delta = MousePos { x: rmouse_state.x(), y: rmouse_state.y() };
+	input_mut.mouse_pos = MousePos { x: mouse_state.x(), y: mouse_state.y() };
 
 	for (code, state) in &mut input_mut.key_states {
 		match state {
@@ -110,7 +128,7 @@ pub(super) fn poll() {
 				app::quit();
 			},
 			Event::MouseWheel {x, y, direction, ..} => {
-				input_mut.scroll_delta = (x, y);
+				input_mut.scroll_delta = ScrollDis {x: x, y: y};
 			},
 			_ => {}
 		}
@@ -119,7 +137,7 @@ pub(super) fn poll() {
 }
 
 /// get how much scrolled since last frame
-pub fn scroll_delta() -> (i32, i32) {
+pub fn scroll_delta() -> ScrollDis {
 	return ctx_get().scroll_delta;
 }
 
@@ -182,12 +200,12 @@ pub fn mouse_released(b: Mouse) -> bool {
 }
 
 /// get mouse position
-pub fn mouse_pos() -> Vec2 {
+pub fn mouse_pos() -> MousePos {
 	return ctx_get().mouse_pos;
 }
 
 /// get mouse delta position
-pub fn mouse_delta() -> Vec2 {
+pub fn mouse_delta() -> MousePos {
 	return ctx_get().mouse_delta;
 }
 
