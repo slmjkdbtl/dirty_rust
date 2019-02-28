@@ -8,12 +8,9 @@
 
 #![deny(clippy::implicit_return)]
 
-#[macro_use]
-mod utils;
 mod ggl;
 mod modules;
 pub mod math;
-pub mod lua;
 
 pub use modules::*;
 

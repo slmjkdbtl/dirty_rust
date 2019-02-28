@@ -4,6 +4,8 @@
 
 use std::rc::Rc;
 
+use gctx::ctx;
+
 use crate::*;
 use crate::math::*;
 use crate::ggl;
@@ -47,7 +49,7 @@ pub(crate) fn current_canvas() -> &'static Option<Canvas> {
 /// set active canvas
 pub fn drawon(c: &Canvas) {
 
-	let gfx_mut = ctx_get_mut();
+	let gfx_mut = ctx_mut();
 
 	gfx_mut.current_canvas = Some(c.clone());
 	g2d::flush();
@@ -59,7 +61,7 @@ pub fn drawon(c: &Canvas) {
 /// stop active canvas
 pub fn stop_drawon() {
 
-	let gfx_mut = ctx_get_mut();
+	let gfx_mut = ctx_mut();
 
 	gfx_mut.current_canvas = None;
 	g2d::flush();

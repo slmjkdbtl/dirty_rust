@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 
+use gctx::ctx;
 use ggl_derive::Vertex;
 
 use crate::*;
@@ -164,13 +165,13 @@ impl Default for State {
 
 /// reset global transforms and style states
 pub fn reset() {
-	ctx_get_mut().state = State::default();
+	ctx_mut().state = State::default();
 }
 
 pub(super) fn flush() {
 
 	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
+	let gfx_mut = ctx_mut();
 	let renderer = &mut gfx_mut.renderer;
 
 	if let Some(tex) = &gfx.current_tex {
@@ -196,7 +197,7 @@ pub(super) fn begin() {}
 
 pub(super) fn end() {
 
-	let ctx = ctx_get_mut();
+	let ctx = ctx_mut();
 
 	flush();
 	reset();
@@ -211,7 +212,7 @@ pub(super) fn end() {
 
 pub(super) fn flip_projection() {
 
-	let g2d_mut = ctx_get_mut();
+	let g2d_mut = ctx_mut();
 	let (width, height) = window::size();
 
 	g2d_mut.projection = math::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
@@ -220,7 +221,7 @@ pub(super) fn flip_projection() {
 
 pub(super) fn unflip_projection() {
 
-	let g2d_mut = ctx_get_mut();
+	let g2d_mut = ctx_mut();
 	let (width, height) = window::size();
 
 	g2d_mut.projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
@@ -231,7 +232,7 @@ pub(super) fn unflip_projection() {
 pub fn draw(tex: &gfx::Texture, quad: Rect) {
 
 	let gfx = ctx_get();
-	let gfx_mut = ctx_get_mut();
+	let gfx_mut = ctx_mut();
 	let renderer = &mut gfx_mut.renderer;
 	let t = gfx.state.transform.scale(vec3!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h, 1.0));
 	let color = gfx.state.tint;
@@ -343,23 +344,23 @@ pub fn line(p1: Vec2, p2: Vec2) {
 /// apply a shader effect
 pub fn set_shader(s: &Shader) {
 	flush();
-	ctx_get_mut().current_shader = s.clone();
+	ctx_mut().current_shader = s.clone();
 }
 
 /// stop shader effects and use default shader
 pub fn set_shader_default() {
 	flush();
-	ctx_get_mut().current_shader = ctx_get().default_shader.clone();
+	ctx_mut().current_shader = ctx_get().default_shader.clone();
 }
 
 /// apply a custom font
 pub fn set_font(f: &Font) {
-	ctx_get_mut().current_font = f.clone();
+	ctx_mut().current_font = f.clone();
 }
 
 /// use default font
 pub fn set_font_default() {
-	ctx_get_mut().current_font = ctx_get().default_font.clone();
+	ctx_mut().current_font = ctx_get().default_font.clone();
 }
 
 /// draw polygon with vertices
@@ -379,23 +380,23 @@ pub fn poly(pts: &[Vec2]) {
 
 /// set global tint
 pub fn color(tint: Color) {
-	ctx_get_mut().state.tint = tint;
+	ctx_mut().state.tint = tint;
 }
 
 /// set line width
 pub fn line_width(line_width: u8) {
-	ctx_get_mut().state.line_width = line_width;
+	ctx_mut().state.line_width = line_width;
 }
 
 /// set text wrap
 pub fn text_wrap(wrap: u32) {
-	ctx_get_mut().state.text_wrap = Some(wrap);
+	ctx_mut().state.text_wrap = Some(wrap);
 }
 
 /// push state
 pub fn push() {
 
-	let gfx = ctx_get_mut();
+	let gfx = ctx_mut();
 	let stack = &mut gfx.state_stack;
 
 	if (stack.len() < MAX_STATE_STACK) {
@@ -409,7 +410,7 @@ pub fn push() {
 /// pop state
 pub fn pop() {
 
-	let mut gfx = ctx_get_mut();
+	let mut gfx = ctx_mut();
 	let stack = &mut gfx.state_stack;
 
 	gfx.state = stack.pop().expect("cannot pop anymore");
@@ -419,7 +420,7 @@ pub fn pop() {
 /// global translate
 pub fn translate(pos: Vec2) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	state.transform = state.transform.translate(vec3!(pos.x, pos.y, 0.0));
 
@@ -428,7 +429,7 @@ pub fn translate(pos: Vec2) {
 /// global rotate
 pub fn rotate(rot: f32) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	state.transform = state.transform.rotate(rot, Dir::Z);
 
@@ -437,7 +438,7 @@ pub fn rotate(rot: f32) {
 /// global 3d rotation
 pub fn rotate3d(x: f32, y: f32, z: f32) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	if x != 0.0 {
 		state.transform = state.transform.rotate(x, Dir::X);
@@ -456,7 +457,7 @@ pub fn rotate3d(x: f32, y: f32, z: f32) {
 /// global scale
 pub fn scale(s: Vec2) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	state.transform = state.transform.scale(vec3!(s.x, s.y, 1.0));
 
@@ -498,7 +499,7 @@ pub fn get_matrix() -> Mat4 {
 
 /// get the current transform matrix
 pub fn set_matrix(m: Mat4) {
-	ctx_get_mut().state.transform = m;
+	ctx_mut().state.transform = m;
 }
 
 /// bitmap font

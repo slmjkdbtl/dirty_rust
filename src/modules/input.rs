@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use gilrs::Gilrs;
 pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::MouseButton as Mouse;
+use gctx::ctx;
 
 use crate::*;
 use crate::math::*;
@@ -47,7 +48,7 @@ pub(super) fn poll() {
 	use sdl2::event::Event;
 
 	let input = ctx_get();
-	let input_mut = ctx_get_mut();
+	let input_mut = ctx_mut();
 	let keyboard_state = input.events.keyboard_state();
 	let mouse_state = input.events.mouse_state();
 	let rmouse_state = input.events.relative_mouse_state();

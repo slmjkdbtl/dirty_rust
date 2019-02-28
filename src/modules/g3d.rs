@@ -3,6 +3,7 @@
 //! 3D Rendering
 
 use ggl_derive::Vertex;
+use gctx::ctx;
 
 use crate::*;
 use crate::math::*;
@@ -159,13 +160,13 @@ impl Default for State {
 
 /// reset global transforms
 pub fn reset() {
-	ctx_get_mut().state = State::default();
+	ctx_mut().state = State::default();
 }
 
 /// push state
 pub fn push() {
 
-	let g3d = ctx_get_mut();
+	let g3d = ctx_mut();
 	let stack = &mut g3d.state_stack;
 
 	if (stack.len() < MAX_STATE_STACK) {
@@ -179,7 +180,7 @@ pub fn push() {
 /// pop state
 pub fn pop() {
 
-	let mut g3d = ctx_get_mut();
+	let mut g3d = ctx_mut();
 	let stack = &mut g3d.state_stack;
 
 	g3d.state = stack.pop().expect("cannot pop anymore");
@@ -189,7 +190,7 @@ pub fn pop() {
 /// global translate
 pub fn translate(pos: Vec3) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	state.transform = state.transform.translate(pos);
 
@@ -198,7 +199,7 @@ pub fn translate(pos: Vec3) {
 /// global rotate
 pub fn rotate(r: Vec3) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	if r.x != 0.0 {
 		state.transform = state.transform.rotate(r.x, Dir::X);
@@ -217,7 +218,7 @@ pub fn rotate(r: Vec3) {
 /// global scale
 pub fn scale(s: Vec3) {
 
-	let state = &mut ctx_get_mut().state;
+	let state = &mut ctx_mut().state;
 
 	state.transform = state.transform.scale(s);
 
@@ -230,12 +231,12 @@ pub fn flag() {
 
 /// set camera angle
 pub fn look(yaw: f32, pitch: f32) {
-	ctx_get_mut().cam.set_angle(yaw, pitch);
+	ctx_mut().cam.set_angle(yaw, pitch);
 }
 
 /// set camera pos
 pub fn cam(eye: Vec3) {
-	ctx_get_mut().cam.set_pos(eye);
+	ctx_mut().cam.set_pos(eye);
 }
 
 /// get camera front
@@ -264,7 +265,7 @@ pub(super) fn begin() {}
 pub(super) fn end() {
 
 	reset();
-	ctx_get_mut().state_stack.clear();
+	ctx_mut().state_stack.clear();
 
 }
 

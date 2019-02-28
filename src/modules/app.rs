@@ -8,6 +8,8 @@ use std::time::Duration;
 use std::panic;
 use std::panic::PanicInfo;
 
+use gctx::ctx;
+
 use crate::*;
 use input::Key;
 
@@ -105,7 +107,7 @@ pub fn enabled() -> bool {
 pub fn run<F: FnMut()>(mut f: F) {
 
 	let app = ctx_get();
-	let app_mut = ctx_get_mut();
+	let app_mut = ctx_mut();
 
 	app_mut.started = true;
 
@@ -202,7 +204,7 @@ pub fn time() -> f32 {
 
 /// set debug mode
 pub fn set_debug(b: bool) {
-	ctx_get_mut().debug = b;
+	ctx_mut().debug = b;
 }
 
 /// get debug mode
