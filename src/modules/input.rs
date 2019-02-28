@@ -145,29 +145,9 @@ pub fn key_pressed(k: Key) -> bool {
 	return check_key_state(k, ButtonState::Pressed);
 }
 
-/// check if multiple keys were pressed this frame
-pub fn key_pressed_mult(keys: &[Key]) -> bool {
-	for k in keys {
-		if !key_pressed(*k) {
-			return false;
-		}
-	}
-	return true;
-}
-
 /// check if a key is holding down
 pub fn key_down(k: Key) -> bool {
 	return check_key_state(k, ButtonState::Down);
-}
-
-/// check if multiple keys were down this frame
-pub fn key_down_mult(keys: &[Key]) -> bool {
-	for k in keys {
-		if !key_down(*k) {
-			return false;
-		}
-	}
-	return true;
 }
 
 /// check if a key was released this frame
