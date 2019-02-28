@@ -25,13 +25,9 @@ fn main() {
 		if fs::exists("main.lua") {
 			lua::run("main.lua");
 		} else {
-			no();
+			panic!("no");
 		}
 	}
 
-}
-
-fn no() {
-	panic!("no");
 }
 
