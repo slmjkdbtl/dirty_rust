@@ -22,6 +22,7 @@ struct InputCtx {
 	mouse_states: HashMap<Mouse, ButtonState>,
 	mouse_delta: Vec2,
 	mouse_pos: Vec2,
+	scroll_delta: (i32, i32),
 
 }
 
@@ -40,6 +41,7 @@ pub(super) fn init(e: sdl2::EventPump) {
 		mouse_states: HashMap::new(),
 		mouse_delta: vec2!(),
 		mouse_pos: vec2!(),
+		scroll_delta: (0, 0),
 	});
 }
 
@@ -107,10 +109,18 @@ pub(super) fn poll() {
 			Event::Quit {..} => {
 				app::quit();
 			},
+			Event::MouseWheel {x, y, direction, ..} => {
+				input_mut.scroll_delta = (x, y);
+			},
 			_ => {}
 		}
 	}
 
+}
+
+/// get how much scrolled since last frame
+pub fn scroll_delta() -> (i32, i32) {
+	return ctx_get().scroll_delta;
 }
 
 /// get list of pressed keys
