@@ -10,8 +10,6 @@ use crate::math::*;
 use crate::gfx::*;
 use crate::ggl;
 
-const MAX_STATE_STACK: usize = 64;
-
 include!("../res/resources.rs");
 
 // context
@@ -71,7 +69,7 @@ pub(super) fn init() {
 
 		projection: projection,
 		cam: Cam::new(vec3!(), 0.0, 0.0),
-		state_stack: Vec::with_capacity(MAX_STATE_STACK),
+		state_stack: Vec::with_capacity(64),
 		state: State::default(),
 		default_shader: default_shader.clone(),
 		current_shader: default_shader.clone(),
@@ -169,18 +167,14 @@ pub fn push() {
 	let g3d = ctx_mut();
 	let stack = &mut g3d.state_stack;
 
-	if (stack.len() < MAX_STATE_STACK) {
-		stack.push(g3d.state);
-	} else {
-		panic!("cannot push anymore");
-	}
+	stack.push(g3d.state);
 
 }
 
 /// pop state
 pub fn pop() {
 
-	let mut g3d = ctx_mut();
+	let g3d = ctx_mut();
 	let stack = &mut g3d.state_stack;
 
 	g3d.state = stack.pop().expect("cannot pop anymore");
