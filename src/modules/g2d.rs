@@ -12,7 +12,6 @@ use crate::math::*;
 use crate::ggl;
 
 const MAX_DRAWS: usize = 65536;
-const MAX_STATE_STACK: usize = 64;
 
 include!("../res/resources.rs");
 
@@ -54,7 +53,7 @@ pub(super) fn init() {
 	ctx_init(G2dCtx {
 
 		projection: projection,
-		state_stack: Vec::with_capacity(MAX_STATE_STACK),
+		state_stack: Vec::with_capacity(64),
 		state: State::default(),
 		default_shader: default_shader.clone(),
 		default_font: default_font.clone(),
@@ -400,18 +399,14 @@ pub fn push() {
 	let gfx = ctx_mut();
 	let stack = &mut gfx.state_stack;
 
-	if (stack.len() < MAX_STATE_STACK) {
-		stack.push(gfx.state);
-	} else {
-		panic!("cannot push anymore");
-	}
+	stack.push(gfx.state);
 
 }
 
 /// pop state
 pub fn pop() {
 
-	let mut gfx = ctx_mut();
+	let gfx = ctx_mut();
 	let stack = &mut gfx.state_stack;
 
 	gfx.state = stack.pop().expect("cannot pop anymore");
