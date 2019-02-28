@@ -55,7 +55,7 @@ impl MousePos {
 	fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
-			y: x,
+			y: y,
 		};
 	}
 }
@@ -76,7 +76,7 @@ impl MouseDelta {
 	fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
-			y: x,
+			y: y,
 		};
 	}
 	pub fn is_none(&self) -> bool {
@@ -100,7 +100,7 @@ impl ScrollDelta {
 	fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
-			y: x,
+			y: y,
 		};
 	}
 	pub fn is_none(&self) -> bool {
