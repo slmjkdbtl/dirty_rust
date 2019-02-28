@@ -11,7 +11,7 @@ fn main() {
 	let (w, h) = window::size();
 
 	let canvas = gfx::Canvas::new(320, 320);
-	let shader = g2d::Shader::from_code_frag(include_str!("assets/test.frag"));
+	let shader = g2d::Shader::from_code_frag(include_str!("res/test.frag"));
 
 	// main loop
 	app::run(|| {

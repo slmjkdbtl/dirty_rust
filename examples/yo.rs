@@ -15,12 +15,12 @@ fn main() {
 	let mut index = 0;
 	let margin = 16;
 	let canvas = gfx::Canvas::new(width, height);
-	let shader = g2d::Shader::from_code_frag(include_str!("assets/noise.frag"));
+	let shader = g2d::Shader::from_code_frag(include_str!("res/noise.frag"));
 
 	// load resources
-	res::load_textures_under("examples/assets/", &vec!["car"]);
-	res::load_spritedata_under("examples/assets/", &vec!["car"]);
-	res::load_sounds_under("examples/assets/", &vec!["pop", "yo"]);
+	res::load_textures_under("examples/res/", &vec!["car"]);
+	res::load_spritedata_under("examples/res/", &vec!["car"]);
+	res::load_sounds_under("examples/res/", &vec!["pop", "yo"]);
 
 	// play a music repeatedly
 	let pop_sound = res::sound("pop");

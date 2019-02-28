@@ -25,6 +25,7 @@
 - try sokol-rs
 - lua binding with luster
 - programmatic exporting
+- scroll input
 
 == DONE
 - basic window creation
