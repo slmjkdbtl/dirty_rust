@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use gilrs::Gilrs;
 pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::MouseButton as Mouse;
+pub use sdl2::mouse::MouseWheelDirection as ScrollDir;
 use gctx::ctx;
 
 use crate::*;
@@ -21,8 +22,8 @@ struct InputCtx {
 	key_states: HashMap<Key, ButtonState>,
 	mouse_states: HashMap<Mouse, ButtonState>,
 	mouse_pos: MousePos,
-	mouse_delta: MouseDelta,
-	scroll_delta: ScrollDelta,
+	mouse_delta: Option<MouseDelta>,
+	scroll_delta: Option<ScrollDelta>,
 
 }
 
@@ -40,8 +41,8 @@ pub(super) fn init(e: sdl2::EventPump) {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		mouse_pos: MousePos::new(0, 0),
-		mouse_delta: MouseDelta::new(0, 0),
-		scroll_delta: ScrollDelta::new(0, 0),
+		mouse_delta: None,
+		scroll_delta: None,
 	});
 }
 
@@ -94,18 +95,19 @@ impl From<MouseDelta> for Vec2 {
 pub struct ScrollDelta {
 	x: i32,
 	y: i32,
+	dir: ScrollDir,
 }
 
 impl ScrollDelta {
-	fn new(x: i32, y: i32) -> Self {
+
+	fn new(x: i32, y: i32, dir: ScrollDir) -> Self {
 		return Self {
 			x: x,
 			y: y,
+			dir: dir,
 		};
 	}
-	pub fn is_none(&self) -> bool {
-		return self.x == 0 && self.y == 0;
-	}
+
 }
 
 impl From<ScrollDelta> for Vec2 {
@@ -125,7 +127,12 @@ pub(super) fn poll() {
 	let rmouse_state = input.events.relative_mouse_state();
 
 	input_mut.mouse_pos = MousePos::new(mouse_state.x(), mouse_state.y());
-	input_mut.mouse_delta = MouseDelta::new(rmouse_state.x(), rmouse_state.y());
+
+	if rmouse_state.x() != 0 || rmouse_state.y() != 0 {
+		input_mut.mouse_delta = Some(MouseDelta::new(rmouse_state.x(), rmouse_state.y()));
+	} else {
+		input_mut.mouse_delta = None;
+	}
 
 	for (code, state) in &mut input_mut.key_states {
 		match state {
@@ -174,22 +181,19 @@ pub(super) fn poll() {
 	}
 
 	for event in input_mut.events.poll_iter() {
-		match event {
-			Event::Quit {..} => {
-				app::quit();
-			},
-			Event::MouseWheel {x, y, direction, ..} => {
-				input_mut.scroll_delta = ScrollDelta::new(x, y);
-			},
-			_ => {}
+
+		if let Event::MouseWheel {x, y, direction, ..} = event {
+			input_mut.scroll_delta = Some(ScrollDelta::new(x, y, direction));
+		} else {
+			input_mut.scroll_delta = None;
 		}
+
+		if let Event::Quit {..} = event {
+			app::quit();
+		}
+
 	}
 
-}
-
-/// get how much scrolled since last frame
-pub fn scroll_delta() -> ScrollDelta {
-	return ctx_get().scroll_delta;
 }
 
 /// get list of pressed keys
@@ -255,9 +259,14 @@ pub fn mouse_pos() -> MousePos {
 	return ctx_get().mouse_pos;
 }
 
-/// get mouse delta position
-pub fn mouse_delta() -> MouseDelta {
+/// get mouse delta since last frame
+pub fn mouse_delta() -> Option<MouseDelta> {
 	return ctx_get().mouse_delta;
+}
+
+/// get scroll delta since last frame
+pub fn scroll_delta() -> Option<ScrollDelta> {
+	return ctx_get().scroll_delta;
 }
 
 fn check_key_state(code: Key, state: ButtonState) -> bool {
