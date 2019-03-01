@@ -126,7 +126,7 @@ pub fn run<F: FnMut()>(mut f: F) {
 		}
 
 		let actual_dt = start_time.elapsed();
-		let actual_dt = actual_dt.as_secs() as f32 * 1000.0 + actual_dt.subsec_millis() as f32;
+		let actual_dt = actual_dt.as_millis() as f32;
 
 		if EXPECTED_DT > actual_dt {
 			app_mut.dt = EXPECTED_DT as f32 / 1000.0;
