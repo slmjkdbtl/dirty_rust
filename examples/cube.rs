@@ -49,7 +49,7 @@ fn main() {
 		g2d::pop();
 
 		if let Some(scroll) = input::scroll_delta() {
-			dbg!(scroll);
+			// ...
 		}
 
 		if window::get_relative() {

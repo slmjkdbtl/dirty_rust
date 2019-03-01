@@ -10,7 +10,7 @@ loc:
 	tokei
 
 checkdep:
-	cargo outdated --depth 1
+	cargo outdated --root-deps-only
 
 test-windows example="yo":
 	cargo build --release --target x86_64-pc-windows-gnu --example {{example}}
