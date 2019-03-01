@@ -24,7 +24,7 @@ struct InputCtx {
 	mouse_pos: MousePos,
 	mouse_delta: Option<MouseDelta>,
 	scroll_delta: Option<ScrollDelta>,
-	text_input: Option<String>,
+	text_input: Option<TextInput>,
 
 }
 
@@ -46,6 +46,13 @@ pub(super) fn init(e: sdl2::EventPump) {
 		scroll_delta: None,
 		text_input: None,
 	});
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum TextInput {
+	Char(char),
+	Backspace,
+	Return,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -197,10 +204,24 @@ pub(super) fn poll() {
 			app::quit();
 		}
 
+		if let Event::KeyDown {scancode, ..} = event {
+
+			if let Some(scancode) = scancode {
+
+				if let Key::Backspace = scancode {
+					input_mut.text_input = Some(TextInput::Backspace);
+				} else if let Key::Return = scancode {
+					input_mut.text_input = Some(TextInput::Return);
+				}
+
+			}
+
+		}
 
 		if let Event::TextInput {text, ..} = event {
 			if !text.is_empty() {
-				input_mut.text_input = Some(text);
+				let ch: char = text.chars().next().unwrap();
+				input_mut.text_input = Some(TextInput::Char(ch));
 			}
 		}
 
@@ -209,7 +230,7 @@ pub(super) fn poll() {
 }
 
 /// get text input
-pub fn text_input() -> Option<String> {
+pub fn text_input() -> Option<TextInput> {
 	return ctx_get().text_input.clone();
 }
 
