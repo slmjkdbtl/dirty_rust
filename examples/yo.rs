@@ -10,6 +10,7 @@ fn main() {
 	audio::init();
 	window::init("yo", 640, 480);
 	res::init();
+	window::set_relative(true);
 
 	let (width, height) = window::size();
 	let mut index = 0;
@@ -41,6 +42,10 @@ fn main() {
 
 	// main loop
 	app::run(|| {
+
+		if let Some(scroll) = input::scroll_delta() {
+			dbg!(scroll);
+		}
 
 		let time = app::time();
 		let dt = app::dt();

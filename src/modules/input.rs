@@ -182,10 +182,12 @@ pub(super) fn poll() {
 
 	for event in input_mut.events.poll_iter() {
 
+		input_mut.scroll_delta = None;
+
 		if let Event::MouseWheel {x, y, direction, ..} = event {
-			input_mut.scroll_delta = Some(ScrollDelta::new(x, y, direction));
-		} else {
-			input_mut.scroll_delta = None;
+			if x != 0 || y != 0 {
+				input_mut.scroll_delta = Some(ScrollDelta::new(x, y, direction));
+			}
 		}
 
 		if let Event::Quit {..} = event {

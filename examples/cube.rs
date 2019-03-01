@@ -8,10 +8,7 @@ fn main() {
 
 	// init modules
 	app::init();
-	audio::init();
 	window::init("cube", 640, 480);
-	res::init();
-
 	window::set_relative(true);
 
 	let mut pos = vec3!(9, 9, 9);
@@ -50,6 +47,10 @@ fn main() {
 		g2d::translate(vec2!(16));
 		g2d::text(&format!("{}", app::fps()));
 		g2d::pop();
+
+		if let Some(scroll) = input::scroll_delta() {
+			dbg!(scroll);
+		}
 
 		if window::get_relative() {
 
