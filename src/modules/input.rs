@@ -24,6 +24,7 @@ struct InputCtx {
 	mouse_pos: MousePos,
 	mouse_delta: Option<MouseDelta>,
 	scroll_delta: Option<ScrollDelta>,
+	text_input: Option<String>,
 
 }
 
@@ -43,6 +44,7 @@ pub(super) fn init(e: sdl2::EventPump) {
 		mouse_pos: MousePos::new(0, 0),
 		mouse_delta: None,
 		scroll_delta: None,
+		text_input: None,
 	});
 }
 
@@ -181,6 +183,7 @@ pub(super) fn poll() {
 	}
 
 	input_mut.scroll_delta = None;
+	input_mut.text_input = None;
 
 	for event in input_mut.events.poll_iter() {
 
@@ -194,8 +197,20 @@ pub(super) fn poll() {
 			app::quit();
 		}
 
+
+		if let Event::TextInput {text, ..} = event {
+			if !text.is_empty() {
+				input_mut.text_input = Some(text);
+			}
+		}
+
 	}
 
+}
+
+/// get text input
+pub fn text_input() -> Option<String> {
+	return ctx_get().text_input.clone();
 }
 
 /// get list of pressed keys
