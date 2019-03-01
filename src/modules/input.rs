@@ -48,8 +48,8 @@ pub(super) fn init(e: sdl2::EventPump) {
 
 #[derive(Clone, Copy, Debug)]
 pub struct MousePos {
-	x: i32,
-	y: i32,
+	pub x: i32,
+	pub y: i32,
 }
 
 impl MousePos {
@@ -69,8 +69,8 @@ impl From<MousePos> for Vec2 {
 
 #[derive(Clone, Copy, Debug)]
 pub struct MouseDelta {
-	x: i32,
-	y: i32,
+	pub x: i32,
+	pub y: i32,
 }
 
 impl MouseDelta {
@@ -93,9 +93,9 @@ impl From<MouseDelta> for Vec2 {
 
 #[derive(Clone, Copy, Debug)]
 pub struct ScrollDelta {
-	x: i32,
-	y: i32,
-	dir: ScrollDir,
+	pub x: i32,
+	pub y: i32,
+	pub dir: ScrollDir,
 }
 
 impl ScrollDelta {
