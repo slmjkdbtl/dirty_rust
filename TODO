@@ -26,6 +26,7 @@
 - lua binding with luster
 - programmatic exporting
 - scroll input
+- remove ggl_derive
 
 == DONE
 - basic window creation
