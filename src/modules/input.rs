@@ -180,9 +180,9 @@ pub(super) fn poll() {
 		}
 	}
 
-	for event in input_mut.events.poll_iter() {
+	input_mut.scroll_delta = None;
 
-		input_mut.scroll_delta = None;
+	for event in input_mut.events.poll_iter() {
 
 		if let Event::MouseWheel {x, y, direction, ..} = event {
 			if x != 0 || y != 0 {
