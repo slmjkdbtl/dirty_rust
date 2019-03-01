@@ -53,17 +53,21 @@ fn main() {
 
 		if window::get_relative() {
 
-			let md: Vec2 = input::mouse_delta().into();
+			if let Some(delta) = input::mouse_delta() {
 
-			rx -= md.x * rot_speed;
-			ry -= md.y * rot_speed;
+				let md: Vec2 = delta.into();
 
-			if ry > 48.0 {
-				ry = 48.0;
-			}
+				rx -= md.x * rot_speed;
+				ry -= md.y * rot_speed;
 
-			if ry < -48.0 {
-				ry = -48.0;
+				if ry > 48.0 {
+					ry = 48.0;
+				}
+
+				if ry < -48.0 {
+					ry = -48.0;
+				}
+
 			}
 
 		}

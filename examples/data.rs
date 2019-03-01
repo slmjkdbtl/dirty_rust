@@ -25,9 +25,14 @@ fn main() {
 	data::save("data.json", &d);
 
 	// get data from file
-	let d: Duck = data::get("data.json");
+	let mut d: Duck = data::get("data.json");
 
-	dbg!(d);
+	dbg!(&d);
+
+	// change data
+	d.size = 100000;
+	data::save("data.json", &d);
+	dbg!(&d);
 
 }
 
