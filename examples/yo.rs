@@ -128,6 +128,10 @@ fn main() {
 
 		}
 
+		if let Some(ch) = input::text_input() {
+			dbg!(ch);
+		}
+
 		if input::key_pressed(Key::Num1) {
 			audio::pause(&music);
 		}
