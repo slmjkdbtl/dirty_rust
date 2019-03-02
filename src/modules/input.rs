@@ -53,6 +53,7 @@ pub enum TextInput {
 	Char(char),
 	Backspace,
 	Return,
+	Tab,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -206,12 +207,14 @@ pub(super) fn poll() {
 
 		if let Event::KeyDown {scancode, ..} = event {
 
-			if let Some(scancode) = scancode {
+			if let Some(code) = scancode {
 
-				if let Key::Backspace = scancode {
+				if let Key::Backspace = code {
 					input_mut.text_input = Some(TextInput::Backspace);
-				} else if let Key::Return = scancode {
+				} else if let Key::Return = code {
 					input_mut.text_input = Some(TextInput::Return);
+				} else if let Key::Tab = code {
+					input_mut.text_input = Some(TextInput::Tab);
 				}
 
 			}
