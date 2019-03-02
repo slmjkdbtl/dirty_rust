@@ -266,7 +266,7 @@ pub fn render(c: &gfx::Canvas) {
 pub fn text(s: &str) {
 
 	let gfx = ctx_get();
-	let font = &gfx.default_font;
+	let font = &gfx.current_font;
 	let w = font.quad_size.x * font.tex.width() as f32;
 	let h = font.quad_size.y * font.tex.height() as f32;
 
