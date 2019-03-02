@@ -36,6 +36,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	let window = video.window(title, width, height)
 		.opengl()
+		.allow_highdpi()
 		.resizable()
 		.build()
 		.expect("failed to create window");
