@@ -12,13 +12,13 @@ const TEMPLATE_3D_FRAG: &str = include_str!("3d_template.frag");
 const DEFAULT_3D_VERT: &str = include_str!("3d_default.vert");
 const DEFAULT_3D_FRAG: &str = include_str!("3d_default.frag");
 
-// const DEFAULT_FONT: &[u8] = include_bytes!("CP437.png");
-// const DEFAULT_FONT_COLS: usize = 32;
-// const DEFAULT_FONT_ROWS: usize = 8;
-// const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
+const DEFAULT_FONT: &[u8] = include_bytes!("CP437.png");
+const DEFAULT_FONT_COLS: usize = 32;
+const DEFAULT_FONT_ROWS: usize = 8;
+const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
 
-const DEFAULT_FONT: &[u8] = include_bytes!("proggy.png");
-const DEFAULT_FONT_COLS: usize = 95;
-const DEFAULT_FONT_ROWS: usize = 1;
-const DEFAULT_FONT_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
+// const DEFAULT_FONT: &[u8] = include_bytes!("proggy.png");
+// const DEFAULT_FONT_COLS: usize = 95;
+// const DEFAULT_FONT_ROWS: usize = 1;
+// const DEFAULT_FONT_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
 
