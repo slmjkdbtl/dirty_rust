@@ -498,13 +498,13 @@ pub fn set_matrix(m: Mat4) {
 	ctx_mut().state.transform = m;
 }
 
-/// get current font size
-pub fn font_width(text: &str) -> u32 {
+/// get current text width for string
+pub fn text_width(text: &str) -> u32 {
 	return ctx_get().current_font.glyph_size.x * text.len() as u32;
 }
 
-/// get current font size
-pub fn font_height() -> u32 {
+/// get current text height
+pub fn text_height() -> u32 {
 	return ctx_get().current_font.glyph_size.y;
 }
 
