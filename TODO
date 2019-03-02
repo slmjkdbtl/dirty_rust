@@ -2,7 +2,6 @@
 
 == DOING
 - game controllers
-- allow nested canvas
 
 == TODO
 - metal backend
@@ -27,6 +26,7 @@
 - programmatic exporting
 - scroll input
 - remove ggl_derive
+- fix framebuffer writing is scaled in high dpi
 
 == DONE
 - basic window creation
@@ -79,4 +79,7 @@
 - improve folder structures
 - basic 3d
 - move input to input mod
+- fix blurry texture
+- allow nested canvas
+- strong text input api
 
