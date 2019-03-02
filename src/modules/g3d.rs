@@ -30,7 +30,7 @@ struct G3dCtx {
 
 pub(super) fn init() {
 
-	let (width, height) = window::size();
+	let (width, height) = window::size().into();
 	let projection = math::perspective(45f32.to_radians(), width as f32 / height as f32, 0.1, 100.0);
 
 	let default_shader = Shader::from_code(DEFAULT_3D_VERT, DEFAULT_3D_FRAG);

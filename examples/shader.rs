@@ -8,7 +8,7 @@ fn main() {
 	app::init();
 	window::init("shader", 640, 480);
 
-	let (w, h) = window::size();
+	let (w, h) = window::size().into();
 
 	let canvas = gfx::Canvas::new(320, 320);
 	let shader = g2d::Shader::from_code_frag(include_str!("res/test.frag"));

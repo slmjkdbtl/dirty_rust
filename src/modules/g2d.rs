@@ -47,7 +47,7 @@ pub(super) fn init() {
 		DEFAULT_FONT_CHARS,
 	);
 
-	let (width, height) = window::size();
+	let (width, height) = window::size().into();
 	let projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
 	ctx_init(G2dCtx {
@@ -175,7 +175,7 @@ pub(super) fn flush() {
 
 	if let Some(tex) = &gfx.current_tex {
 
-		let (w, h) = window::size();
+		let (w, h) = window::size().into();
 
 		gfx.current_shader.send_mat4("projection", gfx.projection);
 		gfx.current_shader.send_vec2("size", vec2!(w, h));
@@ -213,7 +213,7 @@ pub(super) fn end() {
 pub(super) fn flip_projection() {
 
 	let g2d_mut = ctx_mut();
-	let (width, height) = window::size();
+	let (width, height) = window::size().into();
 
 	g2d_mut.projection = math::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
 
@@ -222,7 +222,7 @@ pub(super) fn flip_projection() {
 pub(super) fn unflip_projection() {
 
 	let g2d_mut = ctx_mut();
-	let (width, height) = window::size();
+	let (width, height) = window::size().into();
 
 	g2d_mut.projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
@@ -267,8 +267,8 @@ pub fn text(s: &str) {
 
 	let gfx = ctx_get();
 	let font = &gfx.default_font;
-	let w = font.grid_size.x * font.tex.width() as f32;
-	let h = font.grid_size.y * font.tex.height() as f32;
+	let w = font.quad_size.x * font.tex.width() as f32;
+	let h = font.quad_size.y * font.tex.height() as f32;
 
 	let next_line = |st: &str| {
 
@@ -498,13 +498,24 @@ pub fn set_matrix(m: Mat4) {
 	ctx_mut().state.transform = m;
 }
 
+/// get current font size
+pub fn font_width(text: &str) -> u32 {
+	return ctx_get().current_font.glyph_size.x * text.len() as u32;
+}
+
+/// get current font size
+pub fn font_height() -> u32 {
+	return ctx_get().current_font.glyph_size.y;
+}
+
 /// bitmap font
 #[derive(PartialEq, Clone)]
 pub struct Font {
 
 	tex: gfx::Texture,
 	map: HashMap<char, Rect>,
-	grid_size: Vec2,
+	quad_size: Vec2,
+	glyph_size: Size,
 
 }
 
@@ -514,19 +525,23 @@ impl Font {
 	pub fn new(tex: gfx::Texture, cols: usize, rows: usize, chars: &str) -> Self {
 
 		let mut map = HashMap::new();
-		let grid_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
+		let quad_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
+		let tw = tex.width();
+		let th = tex.height();
 
-		assert!(tex.width() % cols as u32 == 0, "font size not right");
-		assert!(tex.height() % rows as u32 == 0, "font size not right");
+		assert!(tw % cols as u32 == 0, "font size not right");
+		assert!(th % rows as u32 == 0, "font size not right");
+
+		let size = Size::new(tw / cols as u32, th / rows as u32);
 
 		for (i, ch) in chars.chars().enumerate() {
 
 			map.insert(ch, rect!(
 
-				(i % cols) as f32 * grid_size.x,
-				(i / cols) as f32 * grid_size.y,
-				grid_size.x,
-				grid_size.y
+				(i % cols) as f32 * quad_size.x,
+				(i / cols) as f32 * quad_size.y,
+				quad_size.x,
+				quad_size.y
 
 			));
 
@@ -536,7 +551,8 @@ impl Font {
 
 			tex: tex,
 			map: map,
-			grid_size: grid_size,
+			quad_size: quad_size,
+			glyph_size: size,
 
 		}
 
