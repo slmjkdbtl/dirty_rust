@@ -45,7 +45,7 @@ pub fn init() {
 			return;
 		}
 
-		let (width, height) = window::size();
+		let (width, height) = window::size().into();
 
 		run(|| {
 

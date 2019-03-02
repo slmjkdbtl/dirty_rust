@@ -11,7 +11,7 @@ fn main() {
 	window::init("yo", 640, 480);
 
 	let tex = gfx::Texture::from_bytes(include_bytes!("res/icon.png"));
-	let (w, h) = window::size();
+	let (w, h) = window::size().into();
 	let mut started = false;
 	let mut done = false;
 	let mut count = 0;

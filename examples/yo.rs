@@ -11,7 +11,7 @@ fn main() {
 	window::init("yo", 640, 480);
 	res::init();
 
-	let (width, height) = window::size();
+	let (width, height) = window::size().into();
 	let mut index = 0;
 	let margin = 16;
 	let canvas = gfx::Canvas::new(width, height);

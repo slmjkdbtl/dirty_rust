@@ -16,7 +16,7 @@ pub(super) struct WindowCtx {
 	window: sdl2::video::Window,
 	#[allow(dead_code)]
 	gl_ctx: sdl2::video::GLContext,
-	size: (u32, u32),
+	size: Size,
 
 }
 
@@ -54,7 +54,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 		window: window,
 		gl_ctx: gl_ctx,
 		sdl_ctx: sdl_ctx,
-		size: (width, height),
+		size: size!(width, height),
 
 	});
 
@@ -118,7 +118,7 @@ pub fn get_relative() -> bool {
 }
 
 /// get view size
-pub fn size() -> (u32, u32) {
+pub fn size() -> Size {
 	return ctx_get().size;
 }
 

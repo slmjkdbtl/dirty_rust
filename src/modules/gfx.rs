@@ -21,8 +21,6 @@ struct GfxCtx {
 
 pub(super) fn init() {
 
-	let (w, h) = window::size();
-
 	ctx_init(GfxCtx {
 		current_canvas: None,
 	});
