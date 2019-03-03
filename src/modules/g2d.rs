@@ -299,12 +299,16 @@ pub fn text(s: &str) {
 
 			translate(vec2!(text_width("    "), 0));
 
-		} else if ch != ' ' {
+		} else {
 
 			translate(vec2!(w, 0));
 
-			if let Some(quad) = font.map.get(&ch) {
-				draw(&font.tex, *quad);
+			if ch != ' ' {
+
+				if let Some(quad) = font.map.get(&ch) {
+					draw(&font.tex, *quad);
+				}
+
 			}
 
 		}

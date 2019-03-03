@@ -27,6 +27,7 @@
 - scroll input
 - remove ggl_derive
 - fix framebuffer writing is scaled in high dpi
+- fix multiline text with \n
 
 == DONE
 - basic window creation
