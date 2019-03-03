@@ -509,7 +509,20 @@ pub fn set_matrix(m: Mat4) {
 
 /// get current text width for string
 pub fn text_width(text: &str) -> u32 {
-	return ctx_get().current_font.glyph_size.x * text.len() as u32;
+
+	let size = ctx_get().current_font.glyph_size.x;
+	let mut w = 0;
+
+	for ch in text.chars() {
+		if ch == '\t' {
+			w += 4 * size;
+		} else {
+			w += size;
+		}
+	}
+
+	return w;
+
 }
 
 /// get current text height
