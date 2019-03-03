@@ -503,19 +503,14 @@ pub fn set_matrix(m: Mat4) {
 	ctx_mut().state.transform = m;
 }
 
-/// get current text width for string
-pub fn text_width(text: &str) -> u32 {
-
-	let size = ctx_get().current_font.glyph_size.x;
-	let mut w = 0;
-
-	return w * size;
-
+/// get current font width for string
+pub fn font_width() -> u32 {
+	return ctx_get().current_font.grid_size.x;
 }
 
 /// get current text height
-pub fn text_height() -> u32 {
-	return ctx_get().current_font.glyph_size.y;
+pub fn font_height() -> u32 {
+	return ctx_get().current_font.grid_size.y;
 }
 
 /// bitmap font
@@ -525,7 +520,7 @@ pub struct Font {
 	tex: gfx::Texture,
 	map: HashMap<char, Rect>,
 	quad_size: Vec2,
-	glyph_size: Size,
+	grid_size: Size,
 
 }
 
@@ -562,7 +557,7 @@ impl Font {
 			tex: tex,
 			map: map,
 			quad_size: quad_size,
-			glyph_size: size,
+			grid_size: size,
 
 		}
 
