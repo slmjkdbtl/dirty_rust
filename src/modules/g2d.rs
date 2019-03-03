@@ -279,6 +279,8 @@ pub fn text(s: &str) {
 
 	};
 
+	push();
+
 	for (i, ch) in s.chars().enumerate() {
 
 		let x = i as f32 * w;
@@ -292,6 +294,8 @@ pub fn text(s: &str) {
 		}
 
 		if ch == '\n' {
+
+			pop();
 
 			return next_line(&s[(i + 1) .. s.len()]);
 
@@ -314,6 +318,8 @@ pub fn text(s: &str) {
 		}
 
 	}
+
+	pop();
 
 }
 
