@@ -299,10 +299,6 @@ pub fn text(s: &str) {
 
 			return next_line(&s[(i + 1) .. s.len()]);
 
-		} else if ch == '\t' {
-
-			translate(vec2!(text_width("    "), 0));
-
 		} else {
 
 			if ch != ' ' {
@@ -513,15 +509,7 @@ pub fn text_width(text: &str) -> u32 {
 	let size = ctx_get().current_font.glyph_size.x;
 	let mut w = 0;
 
-	for ch in text.chars() {
-		if ch == '\t' {
-			w += 4 * size;
-		} else {
-			w += size;
-		}
-	}
-
-	return w;
+	return w * size;
 
 }
 
