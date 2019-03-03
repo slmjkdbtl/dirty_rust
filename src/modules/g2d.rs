@@ -305,8 +305,6 @@ pub fn text(s: &str) {
 
 		} else {
 
-			translate(vec2!(w, 0));
-
 			if ch != ' ' {
 
 				if let Some(quad) = font.map.get(&ch) {
@@ -314,6 +312,8 @@ pub fn text(s: &str) {
 				}
 
 			}
+
+			translate(vec2!(w, 0));
 
 		}
 
