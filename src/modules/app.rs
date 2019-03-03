@@ -13,9 +13,6 @@ use gctx::ctx;
 use crate::*;
 use input::Key;
 
-const FPS_CAP: u32 = 60;
-const EXPECTED_DT: f32 = 1000.0 / FPS_CAP as f32;
-
 // context
 ctx!(APP: AppCtx);
 
@@ -25,6 +22,7 @@ struct AppCtx {
 	time: f32,
 	debug: bool,
 	started: bool,
+	fps_cap: u32,
 
 }
 
@@ -93,6 +91,7 @@ pub fn init() {
 		time: 0.0,
 		debug: false,
 		started: false,
+		fps_cap: 60,
 
 	});
 
@@ -127,10 +126,11 @@ pub fn run<F: FnMut()>(mut f: F) {
 
 		let actual_dt = start_time.elapsed();
 		let actual_dt = actual_dt.as_millis() as f32;
+		let expected_dt = 1000.0 / app.fps_cap as f32;
 
-		if EXPECTED_DT > actual_dt {
-			app_mut.dt = EXPECTED_DT as f32 / 1000.0;
-			thread::sleep(Duration::from_millis((EXPECTED_DT - actual_dt) as u64));
+		if expected_dt > actual_dt {
+			app_mut.dt = expected_dt as f32 / 1000.0;
+			thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
 		} else {
 			app_mut.dt = actual_dt as f32 / 1000.0;
 		}
@@ -185,6 +185,11 @@ pub fn on_err<F: 'static + Fn(ErrorInfo) + Send + Sync>(f: F) {
 
 	}));
 
+}
+
+/// set fps cap
+pub fn cap_fps(cap: u32) {
+	ctx_mut().fps_cap = cap;
 }
 
 /// get delta time between frames
