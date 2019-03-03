@@ -291,12 +291,7 @@ pub fn text(s: &str) {
 
 		}
 
-		push();
-		translate(vec2!(x, 0.0));
-
 		if ch == '\n' {
-
-			pop();
 
 			return next_line(&s[(i + 1) .. s.len()]);
 
@@ -306,13 +301,13 @@ pub fn text(s: &str) {
 
 		} else if ch != ' ' {
 
+			translate(vec2!(w, 0));
+
 			if let Some(quad) = font.map.get(&ch) {
 				draw(&font.tex, *quad);
 			}
 
 		}
-
-		pop();
 
 	}
 

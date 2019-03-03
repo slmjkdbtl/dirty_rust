@@ -107,7 +107,7 @@ fn main() {
 
 		g2d::push();
 		g2d::translate(vec2!(16, 452));
-		g2d::text("hover mouse over the car");
+		g2d::text("hover mouse over the c\n\tar");
 		g2d::pop();
 
 		g2d::push();
