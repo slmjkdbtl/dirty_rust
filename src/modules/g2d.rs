@@ -300,6 +300,10 @@ pub fn text(s: &str) {
 
 			return next_line(&s[(i + 1) .. s.len()]);
 
+		} else if ch == '\t' {
+
+			translate(vec2!(text_width("    "), 0));
+
 		} else if ch != ' ' {
 
 			if let Some(quad) = font.map.get(&ch) {
