@@ -13,7 +13,7 @@ pub use self::mat::*;
 pub use self::rand::*;
 
 /// clamp a number within range
-pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
+pub fn clamp<N: PartialOrd>(x: N, min: N, max: N) -> N {
 	if x < min {
 		return min;
 	} else if x > max {
