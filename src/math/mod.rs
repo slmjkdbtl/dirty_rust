@@ -14,6 +14,11 @@ pub use self::rand::*;
 
 /// clamp a number within range
 pub fn clamp<N: PartialOrd>(x: N, min: N, max: N) -> N {
+
+	if min > max {
+		return clamp(x, max, min);
+	}
+
 	if x < min {
 		return min;
 	} else if x > max {
@@ -21,6 +26,7 @@ pub fn clamp<N: PartialOrd>(x: N, min: N, max: N) -> N {
 	} else {
 		return x;
 	}
+
 }
 
 /// linear interpolation
