@@ -52,7 +52,7 @@ fn main() {
 		} else {
 
 			g2d::translate(vec2!(48));
-			g2d::scale(vec2!(24));
+			g2d::scale(vec2!(6));
 			g2d::text(&format!("{}", count));
 			println!("{}", count);
 
