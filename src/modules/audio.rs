@@ -9,7 +9,7 @@ use rodio::Source;
 use rodio::Decoder;
 use rodio::Sink;
 use rodio::source::Buffered;
-use gctx::ctx;
+use gctx::*;
 
 use crate::*;
 
@@ -27,7 +27,7 @@ pub fn init() {
 		panic!("can't init audio without app");
 	}
 
-	ctx_init(AudioCtx {
+	ctx_init!(AUDIO, AudioCtx {
 		device: rodio::default_output_device().expect("failed to get audio device"),
 	});
 
@@ -35,12 +35,12 @@ pub fn init() {
 
 /// check if audio module is initialized
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(AUDIO);
 }
 
 /// play a given sound once till end
 pub fn play(sound: &Sound) {
-	rodio::play_raw(&ctx_get().device, sound.apply().convert_samples());
+	rodio::play_raw(&ctx_get!(AUDIO).device, sound.apply().convert_samples());
 }
 
 /// base struct containing sound data and effects data
@@ -179,7 +179,7 @@ pub struct Track {
 /// play a sound and return a track
 pub fn track(sound: &Sound) -> Track {
 
-	let ctx = ctx_get();
+	let ctx = ctx_get!(AUDIO);
 	let sink = Sink::new(&ctx.device);
 
 	sink.append(sound.apply());

@@ -2,13 +2,15 @@
 
 //! Input Manager
 
-use std::collections::HashMap;
-
-use gilrs::Gilrs;
 pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::MouseButton as Mouse;
 pub use sdl2::mouse::MouseWheelDirection as ScrollDir;
-use gctx::ctx;
+
+use std::collections::HashMap;
+
+use gilrs::Gilrs;
+use sdl2::keyboard::Keycode as KeyCode;
+use gctx::*;
 
 use crate::*;
 use crate::math::*;
@@ -37,7 +39,7 @@ enum ButtonState {
 }
 
 pub(super) fn init(e: sdl2::EventPump) {
-	ctx_init(InputCtx {
+	ctx_init!(INPUT, InputCtx {
 		events: e,
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
@@ -130,12 +132,26 @@ impl From<ScrollDelta> for Vec2 {
 	}
 }
 
+// fn keycode_to_char(code: KeyCode) -> Option<char> {
+
+// 	return match code {
+// 		KeyCode::A => Some('a'),
+// 		KeyCode::B => Some('b'),
+// 		KeyCode::C => Some('c'),
+// 		KeyCode::D => Some('d'),
+// 		KeyCode::E => Some('e'),
+// 		KeyCode::F => Some('f'),
+// 		_ => None,
+// 	};
+
+// }
+
 pub(super) fn poll() {
 
 	use sdl2::event::Event;
 
-	let input = ctx_get();
-	let input_mut = ctx_mut();
+	let input = ctx_get!(INPUT);
+	let input_mut = ctx_mut!(INPUT);
 	let keyboard_state = input.events.keyboard_state();
 	let mouse_state = input.events.mouse_state();
 	let rmouse_state = input.events.relative_mouse_state();
@@ -228,6 +244,11 @@ pub(super) fn poll() {
 
 		}
 
+// 		if let Event::KeyDown { keycode, repeat, .. } = event {
+// 			if let Some(keycode) = keycode {
+// 			}
+// 		}
+
 		if let Event::TextInput {text, ..} = event {
 			if !text.is_empty() {
 				let ch: char = text.chars().next().unwrap();
@@ -241,13 +262,13 @@ pub(super) fn poll() {
 
 /// get text input
 pub fn text_input() -> Option<TextInput> {
-	return ctx_get().text_input.clone();
+	return ctx_get!(INPUT).text_input.clone();
 }
 
 /// get list of pressed keys
 pub fn pressed_keys() -> Vec<Key> {
 
-	let window = ctx_get();
+	let window = ctx_get!(INPUT);
 	let states = &window.key_states;
 
 	return states
@@ -261,7 +282,7 @@ pub fn pressed_keys() -> Vec<Key> {
 /// get list of down keys
 pub fn down_keys() -> Vec<Key> {
 
-	let window = ctx_get();
+	let window = ctx_get!(INPUT);
 	let states = &window.key_states;
 
 	return states
@@ -304,21 +325,21 @@ pub fn mouse_released(b: Mouse) -> bool {
 
 /// get mouse position
 pub fn mouse_pos() -> MousePos {
-	return ctx_get().mouse_pos;
+	return ctx_get!(INPUT).mouse_pos;
 }
 
 /// get mouse delta since last frame
 pub fn mouse_delta() -> Option<MouseDelta> {
-	return ctx_get().mouse_delta;
+	return ctx_get!(INPUT).mouse_delta;
 }
 
 /// get scroll delta since last frame
 pub fn scroll_delta() -> Option<ScrollDelta> {
-	return ctx_get().scroll_delta;
+	return ctx_get!(INPUT).scroll_delta;
 }
 
 fn check_key_state(code: Key, state: ButtonState) -> bool {
-	if let Some(s) = ctx_get().key_states.get(&code) {
+	if let Some(s) = ctx_get!(INPUT).key_states.get(&code) {
 		return s == &state;
 	} else {
 		return false;
@@ -326,7 +347,7 @@ fn check_key_state(code: Key, state: ButtonState) -> bool {
 }
 
 fn check_mouse_state(code: Mouse, state: ButtonState) -> bool {
-	if let Some(s) = ctx_get().mouse_states.get(&code) {
+	if let Some(s) = ctx_get!(INPUT).mouse_states.get(&code) {
 		return s == &state;
 	} else {
 		return false;

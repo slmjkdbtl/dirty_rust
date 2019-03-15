@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use gctx::ctx;
+use gctx::*;
 use ggl_derive::Vertex;
 
 use crate::*;
@@ -50,7 +50,7 @@ pub(super) fn init() {
 	let (width, height) = window::size().into();
 	let projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
-	ctx_init(G2dCtx {
+	ctx_init!(G2D, G2dCtx {
 
 		projection: projection,
 		state_stack: Vec::with_capacity(64),
@@ -71,7 +71,7 @@ pub(super) fn init() {
 
 /// check if gfx is initiated
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(G2D);
 }
 
 struct QuadShape {
@@ -164,13 +164,13 @@ impl Default for State {
 
 /// reset global transforms and style states
 pub fn reset() {
-	ctx_mut().state = State::default();
+	ctx_mut!(G2D).state = State::default();
 }
 
 pub(super) fn flush() {
 
-	let gfx = ctx_get();
-	let gfx_mut = ctx_mut();
+	let gfx = ctx_get!(G2D);
+	let gfx_mut = ctx_mut!(G2D);
 	let renderer = &mut gfx_mut.renderer;
 
 	if let Some(tex) = &gfx.current_tex {
@@ -189,12 +189,12 @@ pub(super) fn flush() {
 }
 
 pub fn draw_calls() -> usize {
-	return ctx_get().draw_calls_last;
+	return ctx_get!(G2D).draw_calls_last;
 }
 
 pub(super) fn begin() {
 
-	let ctx = ctx_mut();
+	let ctx = ctx_mut!(G2D);
 
 	reset();
 	ctx.draw_calls_last = ctx.draw_calls;
@@ -212,7 +212,7 @@ pub(super) fn end() {
 
 pub(super) fn flip_projection() {
 
-	let g2d_mut = ctx_mut();
+	let g2d_mut = ctx_mut!(G2D);
 	let (width, height) = window::size().into();
 
 	g2d_mut.projection = math::ortho(0.0, (width as f32), 0.0, (height as f32), -1.0, 1.0);
@@ -221,7 +221,7 @@ pub(super) fn flip_projection() {
 
 pub(super) fn unflip_projection() {
 
-	let g2d_mut = ctx_mut();
+	let g2d_mut = ctx_mut!(G2D);
 	let (width, height) = window::size().into();
 
 	g2d_mut.projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
@@ -231,8 +231,8 @@ pub(super) fn unflip_projection() {
 /// draw a texture with visible quad area
 pub fn draw(tex: &gfx::Texture, quad: Rect) {
 
-	let gfx = ctx_get();
-	let gfx_mut = ctx_mut();
+	let gfx = ctx_get!(G2D);
+	let gfx_mut = ctx_mut!(G2D);
 	let renderer = &mut gfx_mut.renderer;
 	let t = gfx.state.transform.scale(vec3!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h, 1.0));
 	let color = gfx.state.tint;
@@ -265,7 +265,7 @@ pub fn render(c: &gfx::Canvas) {
 /// draw text
 pub fn text(s: &str) {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(G2D);
 	let font = &gfx.current_font;
 	let w = font.quad_size.x * font.tex.width() as f32;
 	let h = font.quad_size.y * font.tex.height() as f32;
@@ -322,7 +322,7 @@ pub fn text(s: &str) {
 /// draw rectangle with size
 pub fn rect(size: Vec2) {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(G2D);
 
 	push();
 	scale(size);
@@ -334,7 +334,7 @@ pub fn rect(size: Vec2) {
 /// draw line
 pub fn line(p1: Vec2, p2: Vec2) {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(G2D);
 	let len = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt();
 	let rot = (p2.y - p1.y).atan2(p2.x - p1.x);
 
@@ -349,23 +349,23 @@ pub fn line(p1: Vec2, p2: Vec2) {
 /// apply a shader effect
 pub fn set_shader(s: &Shader) {
 	flush();
-	ctx_mut().current_shader = s.clone();
+	ctx_mut!(G2D).current_shader = s.clone();
 }
 
 /// stop shader effects and use default shader
 pub fn set_shader_default() {
 	flush();
-	ctx_mut().current_shader = ctx_get().default_shader.clone();
+	ctx_mut!(G2D).current_shader = ctx_get!(G2D).default_shader.clone();
 }
 
 /// apply a custom font
 pub fn set_font(f: &Font) {
-	ctx_mut().current_font = f.clone();
+	ctx_mut!(G2D).current_font = f.clone();
 }
 
 /// use default font
 pub fn set_font_default() {
-	ctx_mut().current_font = ctx_get().default_font.clone();
+	ctx_mut!(G2D).current_font = ctx_get!(G2D).default_font.clone();
 }
 
 /// draw polygon with vertices
@@ -385,23 +385,23 @@ pub fn poly(pts: &[Vec2]) {
 
 /// set global tint
 pub fn color(tint: Color) {
-	ctx_mut().state.tint = tint;
+	ctx_mut!(G2D).state.tint = tint;
 }
 
 /// set line width
 pub fn line_width(line_width: u8) {
-	ctx_mut().state.line_width = line_width;
+	ctx_mut!(G2D).state.line_width = line_width;
 }
 
 /// set text wrap
 pub fn text_wrap(wrap: u32) {
-	ctx_mut().state.text_wrap = Some(wrap);
+	ctx_mut!(G2D).state.text_wrap = Some(wrap);
 }
 
 /// push state
 pub fn push() {
 
-	let gfx = ctx_mut();
+	let gfx = ctx_mut!(G2D);
 	let stack = &mut gfx.state_stack;
 
 	stack.push(gfx.state);
@@ -411,7 +411,7 @@ pub fn push() {
 /// pop state
 pub fn pop() {
 
-	let gfx = ctx_mut();
+	let gfx = ctx_mut!(G2D);
 	let stack = &mut gfx.state_stack;
 
 	gfx.state = stack.pop().expect("cannot pop anymore");
@@ -421,7 +421,7 @@ pub fn pop() {
 /// global translate
 pub fn translate(pos: Vec2) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G2D).state;
 
 	state.transform = state.transform.translate(vec3!(pos.x, pos.y, 0.0));
 
@@ -430,7 +430,7 @@ pub fn translate(pos: Vec2) {
 /// global rotate
 pub fn rotate(rot: f32) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G2D).state;
 
 	state.transform = state.transform.rotate(rot, Dir::Z);
 
@@ -439,7 +439,7 @@ pub fn rotate(rot: f32) {
 /// global 3d rotation
 pub fn rotate3d(x: f32, y: f32, z: f32) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G2D).state;
 
 	if x != 0.0 {
 		state.transform = state.transform.rotate(x, Dir::X);
@@ -458,7 +458,7 @@ pub fn rotate3d(x: f32, y: f32, z: f32) {
 /// global scale
 pub fn scale(s: Vec2) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G2D).state;
 
 	state.transform = state.transform.scale(vec3!(s.x, s.y, 1.0));
 
@@ -467,7 +467,7 @@ pub fn scale(s: Vec2) {
 /// warp a 2d point through current transformed matrix
 pub fn warp(pt: Vec2) -> Vec2 {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(G2D);
 	let trans = gfx.state.transform;
 
 	return trans.forward(pt);
@@ -486,7 +486,7 @@ pub fn multi_warp(pts: &[Vec2]) -> Vec<Vec2> {
 /// inverse warp a 2d point through current transformed matrix
 pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(G2D);
 	let trans = gfx.state.transform;
 
 	return trans.inverse().forward(pt);
@@ -495,22 +495,22 @@ pub fn inverse_warp(pt: Vec2) -> Vec2 {
 
 /// get the current transform matrix
 pub fn get_matrix() -> Mat4 {
-	return ctx_get().state.transform;
+	return ctx_get!(G2D).state.transform;
 }
 
 /// get the current transform matrix
 pub fn set_matrix(m: Mat4) {
-	ctx_mut().state.transform = m;
+	ctx_mut!(G2D).state.transform = m;
 }
 
 /// get current font width for string
 pub fn font_width() -> u32 {
-	return ctx_get().current_font.grid_size.x;
+	return ctx_get!(G2D).current_font.grid_size.x;
 }
 
 /// get current text height
 pub fn font_height() -> u32 {
-	return ctx_get().current_font.grid_size.y;
+	return ctx_get!(G2D).current_font.grid_size.y;
 }
 
 /// bitmap font

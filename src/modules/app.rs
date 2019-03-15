@@ -8,7 +8,7 @@ use std::time::Duration;
 use std::panic;
 use std::panic::PanicInfo;
 
-use gctx::ctx;
+use gctx::*;
 
 use crate::*;
 use input::Key;
@@ -85,7 +85,7 @@ pub fn init() {
 
 	});
 
-	ctx_init(AppCtx {
+	ctx_init!(APP, AppCtx {
 
 		dt: 0.0,
 		time: 0.0,
@@ -99,14 +99,14 @@ pub fn init() {
 
 /// check if app is initiated
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(APP);
 }
 
 /// start main loop, call the callback every frame
 pub fn run<F: FnMut()>(mut f: F) {
 
-	let app = ctx_get();
-	let app_mut = ctx_mut();
+	let app = ctx_get!(APP);
+	let app_mut = ctx_mut!(APP);
 
 	app_mut.started = true;
 
@@ -189,32 +189,32 @@ pub fn on_err<F: 'static + Fn(ErrorInfo) + Send + Sync>(f: F) {
 
 /// set fps cap
 pub fn cap_fps(cap: u32) {
-	ctx_mut().fps_cap = cap;
+	ctx_mut!(APP).fps_cap = cap;
 }
 
 /// get delta time between frames
 pub fn dt() -> f32 {
-	return ctx_get().dt;
+	return ctx_get!(APP).dt;
 }
 
 /// get current framerate
 pub fn fps() -> u32 {
-	return (1.0 / ctx_get().dt) as u32;
+	return (1.0 / ctx_get!(APP).dt) as u32;
 }
 
 /// get actual time since running
 pub fn time() -> f32 {
-	return ctx_get().time;
+	return ctx_get!(APP).time;
 }
 
 /// set debug mode
 pub fn set_debug(b: bool) {
-	ctx_mut().debug = b;
+	ctx_mut!(APP).debug = b;
 }
 
 /// get debug mode
 pub fn debug() -> bool {
-	return ctx_get().debug;
+	return ctx_get!(APP).debug;
 }
 
 /// quit with success code

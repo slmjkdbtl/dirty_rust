@@ -2,7 +2,7 @@
 
 //! Window Creation & Config
 
-use gctx::ctx;
+use gctx::*;
 
 use crate::*;
 use crate::math::*;
@@ -49,7 +49,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 	let events = sdl_ctx.event_pump().expect("failed to create event pump");
 
-	ctx_init(WindowCtx {
+	ctx_init!(WINDOW, WindowCtx {
 
 		window: window,
 		gl_ctx: gl_ctx,
@@ -65,7 +65,7 @@ pub fn init(title: &str, width: u32, height: u32) {
 
 /// check if window is initiated
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(WINDOW);
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -81,7 +81,7 @@ pub fn set_fullscreen(b: bool) {
 
 	use sdl2::video::FullscreenType;
 
-	let app_mut = ctx_mut();
+	let app_mut = ctx_mut!(WINDOW);
 
 	if b {
 		app_mut.window.set_fullscreen(FullscreenType::Desktop).expect("fullscreen failed");
@@ -94,32 +94,32 @@ pub fn set_fullscreen(b: bool) {
 /// get window fullscreen state
 pub fn get_fullscreen() -> bool {
 	use sdl2::video::FullscreenType;
-	return ctx_get().window.fullscreen_state() == FullscreenType::Desktop;
+	return ctx_get!(WINDOW).window.fullscreen_state() == FullscreenType::Desktop;
 }
 
 /// show cursor
 pub fn show_cursor() {
-	ctx_mut().sdl_ctx.mouse().show_cursor(true);
+	ctx_mut!(WINDOW).sdl_ctx.mouse().show_cursor(true);
 }
 
 /// hide cursor
 pub fn hide_cursor() {
-	ctx_mut().sdl_ctx.mouse().show_cursor(false);
+	ctx_mut!(WINDOW).sdl_ctx.mouse().show_cursor(false);
 }
 
 /// set mouse relative state
 pub fn set_relative(b: bool) {
-	ctx_mut().sdl_ctx.mouse().set_relative_mouse_mode(b);
+	ctx_mut!(WINDOW).sdl_ctx.mouse().set_relative_mouse_mode(b);
 }
 
 /// get mouse relative state
 pub fn get_relative() -> bool {
-	return ctx_get().sdl_ctx.mouse().relative_mouse_mode();
+	return ctx_get!(WINDOW).sdl_ctx.mouse().relative_mouse_mode();
 }
 
 /// get view size
 pub fn size() -> Size {
-	return ctx_get().size;
+	return ctx_get!(WINDOW).size;
 }
 
 pub(super) fn begin() {
@@ -133,6 +133,6 @@ pub(super) fn end() {
 }
 
 pub(super) fn swap() {
-	ctx_get().window.gl_swap_window();
+	ctx_get!(WINDOW).window.gl_swap_window();
 }
 
