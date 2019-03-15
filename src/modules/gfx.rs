@@ -4,7 +4,7 @@
 
 use std::rc::Rc;
 
-use gctx::ctx;
+use gctx::*;
 
 use crate::*;
 use crate::math::*;
@@ -21,7 +21,7 @@ struct GfxCtx {
 
 pub(super) fn init() {
 
-	ctx_init(GfxCtx {
+	ctx_init!(GFX, GfxCtx {
 		current_canvas: None,
 	});
 
@@ -37,17 +37,17 @@ pub(super) fn init() {
 
 /// check if gfx is initiated
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(GFX);
 }
 
 pub(crate) fn current_canvas() -> &'static Option<Canvas> {
-	return &ctx_get().current_canvas;
+	return &ctx_get!(GFX).current_canvas;
 }
 
 /// set active canvas
 pub fn drawon(c: &Canvas) {
 
-	let gfx_mut = ctx_mut();
+	let gfx_mut = ctx_mut!(GFX);
 
 	gfx_mut.current_canvas = Some(c.clone());
 	g2d::flush();
@@ -59,7 +59,7 @@ pub fn drawon(c: &Canvas) {
 /// stop active canvas
 pub fn stop_drawon() {
 
-	let gfx_mut = ctx_mut();
+	let gfx_mut = ctx_mut!(GFX);
 
 	gfx_mut.current_canvas = None;
 	g2d::flush();
@@ -99,7 +99,7 @@ pub(super) fn begin() {
 
 pub(super) fn end() {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(GFX);
 
 	g2d::end();
 	g3d::end();

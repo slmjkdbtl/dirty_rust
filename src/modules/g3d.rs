@@ -3,7 +3,7 @@
 //! 3D Rendering
 
 use ggl_derive::Vertex;
-use gctx::ctx;
+use gctx::*;
 
 use crate::*;
 use crate::math::*;
@@ -65,7 +65,7 @@ pub(super) fn init() {
 
 	let cube_mesh = ggl::Mesh::new(&cube_verts, &cube_indices);
 
-	ctx_init(G3dCtx {
+	ctx_init!(G3D, G3dCtx {
 
 		projection: projection,
 		cam: Cam::new(vec3!(), 0.0, 0.0),
@@ -140,7 +140,7 @@ impl Vertex3D {
 
 /// check if g3d is initiated
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(G3D);
 }
 
 #[derive(Clone, Copy)]
@@ -158,13 +158,13 @@ impl Default for State {
 
 /// reset global transforms
 pub fn reset() {
-	ctx_mut().state = State::default();
+	ctx_mut!(G3D).state = State::default();
 }
 
 /// push state
 pub fn push() {
 
-	let g3d = ctx_mut();
+	let g3d = ctx_mut!(G3D);
 	let stack = &mut g3d.state_stack;
 
 	stack.push(g3d.state);
@@ -174,7 +174,7 @@ pub fn push() {
 /// pop state
 pub fn pop() {
 
-	let g3d = ctx_mut();
+	let g3d = ctx_mut!(G3D);
 	let stack = &mut g3d.state_stack;
 
 	g3d.state = stack.pop().expect("cannot pop anymore");
@@ -184,7 +184,7 @@ pub fn pop() {
 /// global translate
 pub fn translate(pos: Vec3) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G3D).state;
 
 	state.transform = state.transform.translate(pos);
 
@@ -193,7 +193,7 @@ pub fn translate(pos: Vec3) {
 /// global rotate
 pub fn rotate(r: Vec3) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G3D).state;
 
 	if r.x != 0.0 {
 		state.transform = state.transform.rotate(r.x, Dir::X);
@@ -212,7 +212,7 @@ pub fn rotate(r: Vec3) {
 /// global scale
 pub fn scale(s: Vec3) {
 
-	let state = &mut ctx_mut().state;
+	let state = &mut ctx_mut!(G3D).state;
 
 	state.transform = state.transform.scale(s);
 
@@ -225,23 +225,23 @@ pub fn flag() {
 
 /// set camera angle
 pub fn look(yaw: f32, pitch: f32) {
-	ctx_mut().cam.set_angle(yaw, pitch);
+	ctx_mut!(G3D).cam.set_angle(yaw, pitch);
 }
 
 /// set camera pos
 pub fn cam(eye: Vec3) {
-	ctx_mut().cam.set_pos(eye);
+	ctx_mut!(G3D).cam.set_pos(eye);
 }
 
 /// get camera front
 pub fn front() -> Vec3 {
-	return ctx_get().cam.front;
+	return ctx_get!(G3D).cam.front;
 }
 
 /// draw a cube
 pub fn cube() {
 
-	let gfx = ctx_get();
+	let gfx = ctx_get!(G3D);
 	let model = gfx.state.transform;
 	let view = gfx.cam.as_mat();
 	let projection = gfx.projection;
@@ -257,7 +257,7 @@ pub fn cube() {
 pub(super) fn begin() {
 
 	reset();
-	ctx_mut().state_stack.clear();
+	ctx_mut!(G3D).state_stack.clear();
 
 }
 

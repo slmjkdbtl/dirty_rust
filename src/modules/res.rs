@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use aseprite::SpritesheetData;
-use gctx::ctx;
+use gctx::*;
 
 use crate::*;
 use crate::math::*;
@@ -23,7 +23,7 @@ struct ResCtx {
 /// initialize res module
 pub fn init() {
 
-	ctx_init(ResCtx {
+	ctx_init!(RES, ResCtx {
 		textures: HashMap::new(),
 		sounds: HashMap::new(),
 		spritedata: HashMap::new(),
@@ -33,7 +33,7 @@ pub fn init() {
 
 /// check if res is initialized
 pub fn enabled() -> bool {
-	return ctx_ok();
+	return ctx_ok!(RES);
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -150,7 +150,7 @@ pub fn load_spritedata(
 	name: &str,
 	json: &str) {
 
-	let res_mut = ctx_mut();
+	let res_mut = ctx_mut!(RES);
 
 	let mut frames = vec![];
 	let mut anims = HashMap::new();
@@ -202,7 +202,7 @@ pub fn load_texture(
 	name: &str,
 	data: &[u8]) {
 
-	let res_mut = ctx_mut();
+	let res_mut = ctx_mut!(RES);
 
 	res_mut.textures.insert(name.to_owned(), gfx::Texture::from_bytes(data));
 
@@ -213,7 +213,7 @@ pub fn load_sound(
 	name: &str,
 	data: &[u8]) {
 
-	let res_mut = ctx_mut();
+	let res_mut = ctx_mut!(RES);
 
 	res_mut.sounds.insert(name.to_owned(), audio::Sound::from_bytes(data));
 
@@ -221,7 +221,7 @@ pub fn load_sound(
 
 /// get the sprite data that is loaded with given name
 pub fn spritedata(name: &str) -> &SpriteData {
-	return ctx_get()
+	return ctx_get!(RES)
 		.spritedata
 		.get(name)
 		.unwrap_or_else(|| panic!("failed to get sprite data {}", name));
@@ -229,7 +229,7 @@ pub fn spritedata(name: &str) -> &SpriteData {
 
 /// get the texture that is loaded with given name
 pub fn texture(name: &str) -> &gfx::Texture {
-	return ctx_get()
+	return ctx_get!(RES)
 		.textures
 		.get(name)
 		.unwrap_or_else(|| panic!("failed to get texture {}", name));
@@ -237,7 +237,7 @@ pub fn texture(name: &str) -> &gfx::Texture {
 
 /// get the sound that is loaded with given name
 pub fn sound(name: &str) -> &audio::Sound {
-	return ctx_get()
+	return ctx_get!(RES)
 		.sounds
 		.get(name)
 		.unwrap_or_else(|| panic!("failed to get sound {}", name));
