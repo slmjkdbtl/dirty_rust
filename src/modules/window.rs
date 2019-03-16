@@ -478,24 +478,6 @@ impl Window {
 
 }
 
-macro_rules! expose {
-	($state:ident, $fn:ident($($argn:ident: $argt:ty),*) -> $return:ty) => {
-		pub fn $fn($($argn: $argt),*) -> $return {
-			return ctx_get!($state).$fn($($argn),*);
-		}
-	};
-	($state:ident(a), $fn:ident($($argn:ident: $argt:ty),*) -> $return:ty) => {
-		pub fn $fn($($argn: $argt),*) -> $return {
-			return ctx_mut!($state).$fn($($argn),*);
-		}
-	};
-	($state:ident, $fn:ident($($argn:ident: $argt:ty),*)) => {
-		pub fn $fn($($argn: $argt),*) {
-			return ctx_get!($state).$fn($($argn),*);
-		}
-	}
-}
-
 pub fn init(title: &str, width: u32, height: u32) {
 	ctx_init!(WINDOW, Window::new(title, width, height));
 	gfx::init();
@@ -531,8 +513,8 @@ expose!(WINDOW, mouse_released(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_pos() -> MousePos);
 expose!(WINDOW, mouse_delta() -> Option<MouseDelta>);
 expose!(WINDOW, scroll_delta() -> Option<ScrollDelta>);
-expose!(WINDOW(a), set_fullscreen(b: bool));
+expose!(WINDOW(mut), set_fullscreen(b: bool));
 expose!(WINDOW, is_fullscreen() -> bool);
-expose!(WINDOW(a), set_relative(b: bool));
+expose!(WINDOW(mut), set_relative(b: bool));
 expose!(WINDOW, is_relative() -> bool);
 
