@@ -28,6 +28,7 @@ rusttype = "0.7.5"
 ezpanic = "0.0.0"
 gctx = "0.2.0"
 glutin = "0.20.0"
+directories = "1.0.2"
 # sokol = "0.2.0"
 
 ggl_derive = { path = "src/macros/ggl" }

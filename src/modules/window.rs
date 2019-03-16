@@ -21,8 +21,6 @@ use derive_more::*;
 use crate::math::*;
 use crate::*;
 
-ctx!(WINDOW: Window);
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ButtonState {
 	Up,
@@ -477,6 +475,8 @@ impl Window {
 	}
 
 }
+
+ctx!(WINDOW: Window);
 
 pub fn init(title: &str, width: u32, height: u32) {
 	ctx_init!(WINDOW, Window::new(title, width, height));
