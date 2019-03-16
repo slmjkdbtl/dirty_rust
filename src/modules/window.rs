@@ -349,7 +349,9 @@ impl Window {
 
 			if let Some(key_code) = key_input.virtual_keycode {
 
-				self.key_input = Some(key_code);
+				if key_input.state == ElementState::Pressed {
+					self.key_input = Some(key_code);
+				}
 
 				if let Some(state) = self.key_states.get_mut(&key_code) {
 
