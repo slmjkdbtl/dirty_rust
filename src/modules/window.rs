@@ -478,6 +478,24 @@ impl Window {
 
 }
 
+macro_rules! expose {
+	($state:ident, $fn:ident($($argn:ident: $argt:ty),*) -> $return:ty) => {
+		pub fn $fn($($argn: $argt),*) -> $return {
+			return ctx_get!($state).$fn($($argn),*);
+		}
+	};
+	($state:ident(a), $fn:ident($($argn:ident: $argt:ty),*) -> $return:ty) => {
+		pub fn $fn($($argn: $argt),*) -> $return {
+			return ctx_mut!($state).$fn($($argn),*);
+		}
+	};
+	($state:ident, $fn:ident($($argn:ident: $argt:ty),*)) => {
+		pub fn $fn($($argn: $argt),*) {
+			return ctx_get!($state).$fn($($argn),*);
+		}
+	}
+}
+
 pub fn init(title: &str, width: u32, height: u32) {
 	ctx_init!(WINDOW, Window::new(title, width, height));
 	gfx::init();
@@ -499,75 +517,22 @@ pub fn end() {
 	ctx_get!(WINDOW).swap();
 }
 
-pub fn size() -> Size {
-	return ctx_get!(WINDOW).size();
-}
-
-pub fn swap() {
-	return ctx_get!(WINDOW).swap();
-}
-
-pub fn down_keys() -> HashSet<Key> {
-	return ctx_get!(WINDOW).down_keys();
-}
-
-pub fn key_down(key: Key) -> bool {
-	return ctx_get!(WINDOW).key_down(key);
-}
-
-pub fn key_pressed(key: Key) -> bool {
-	return ctx_get!(WINDOW).key_pressed(key);
-}
-
-pub fn key_released(key: Key) -> bool {
-	return ctx_get!(WINDOW).key_released(key);
-}
-
-pub fn key_pressed_repeat(key: Key) -> bool {
-	return ctx_get!(WINDOW).key_pressed_repeat(key);
-}
-
-pub fn char_input() -> Option<char> {
-	return ctx_get!(WINDOW).char_input();
-}
-
-pub fn mouse_down(mouse: Mouse) -> bool {
-	return ctx_get!(WINDOW).mouse_down(mouse);
-}
-
-pub fn mouse_pressed(mouse: Mouse) -> bool {
-	return ctx_get!(WINDOW).mouse_pressed(mouse);
-}
-
-pub fn mouse_released(mouse: Mouse) -> bool {
-	return ctx_get!(WINDOW).mouse_released(mouse);
-}
-
-pub fn set_fullscreen(b: bool) {
-	return ctx_mut!(WINDOW).set_fullscreen(b);
-}
-
-pub fn is_fullscreen() -> bool {
-	return ctx_get!(WINDOW).is_fullscreen();
-}
-
-pub fn set_relative(b: bool) {
-	return ctx_mut!(WINDOW).set_relative(b);
-}
-
-pub fn is_relative() -> bool {
-	return ctx_mut!(WINDOW).is_relative();
-}
-
-pub fn mouse_pos() -> MousePos {
-	return ctx_get!(WINDOW).mouse_pos();
-}
-
-pub fn mouse_delta() -> Option<MouseDelta> {
-	return ctx_get!(WINDOW).mouse_delta();
-}
-
-pub fn scroll_delta() -> Option<ScrollDelta> {
-	return ctx_get!(WINDOW).scroll_delta();
-}
+expose!(WINDOW, size() -> Size);
+expose!(WINDOW, swap());
+expose!(WINDOW, down_keys() -> HashSet<Key>);
+expose!(WINDOW, key_down(key: Key) -> bool);
+expose!(WINDOW, key_pressed(key: Key) -> bool);
+expose!(WINDOW, key_released(key: Key) -> bool);
+expose!(WINDOW, key_pressed_repeat(key: Key) -> bool);
+expose!(WINDOW, char_input() -> Option<char>);
+expose!(WINDOW, mouse_down(mouse: Mouse) -> bool);
+expose!(WINDOW, mouse_pressed(mouse: Mouse) -> bool);
+expose!(WINDOW, mouse_released(mouse: Mouse) -> bool);
+expose!(WINDOW, mouse_pos() -> MousePos);
+expose!(WINDOW, mouse_delta() -> Option<MouseDelta>);
+expose!(WINDOW, scroll_delta() -> Option<ScrollDelta>);
+expose!(WINDOW(a), set_fullscreen(b: bool));
+expose!(WINDOW, is_fullscreen() -> bool);
+expose!(WINDOW(a), set_relative(b: bool));
+expose!(WINDOW, is_relative() -> bool);
 
