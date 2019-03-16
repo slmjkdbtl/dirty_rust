@@ -11,7 +11,7 @@ use std::panic::PanicInfo;
 use gctx::*;
 
 use crate::*;
-use input::Key;
+use window::Key;
 
 // context
 ctx!(APP: AppCtx);
@@ -77,7 +77,7 @@ pub fn init() {
 			g2d::color(color!(1, 1, 0, 1));
 			g2d::line(vec2!(rand!(width), rand!(height)), vec2!(rand!(width), rand!(height)));
 
-			if input::key_pressed(Key::Escape) {
+			if window::key_pressed(Key::Escape) {
 				std::process::exit(1);
 			}
 

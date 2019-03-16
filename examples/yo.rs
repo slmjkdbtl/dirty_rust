@@ -1,7 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-use input::Key;
+use window::Key;
 
 fn main() {
 
@@ -31,6 +31,7 @@ fn main() {
 	let frames = &data.frames;
 	let anims = &data.anims;
 	let mut hovering = false;
+	let mut f = false;
 
 	let pts = vec![
 		vec2!(0, 0) + vec2!(-margin, -margin),
@@ -77,7 +78,7 @@ fn main() {
 		g2d::draw(&tex, frames[index]);
 		g2d::pop();
 
-		if col::point_poly(input::mouse_pos().into(), &pts) {
+		if col::point_poly(window::mouse_pos().into(), &pts) {
 			hovering = true;
 		} else {
 			hovering = false;
@@ -121,26 +122,26 @@ fn main() {
 // 		g2d::set_shader_default();
 
 		// inputs
-		if input::key_pressed(Key::Space) {
+		if window::key_pressed(Key::Space) {
 
 			// play a sound with effect
 			audio::play(&pop_sound.speed(rand!(2)));
 
 		}
 
-		if input::key_pressed(Key::Num1) {
+		if window::key_pressed(Key::Key1) {
 			audio::pause(&music);
 		}
 
-		if input::key_pressed(Key::Num2) {
+		if window::key_pressed(Key::Key2) {
 			audio::resume(&music);
 		}
 
-		if input::key_pressed(Key::F) {
-			window::set_fullscreen(!window::get_fullscreen())
+		if window::key_pressed(Key::F) {
+			f = !f;
 		}
 
-		if input::key_pressed(Key::Escape) {
+		if window::key_pressed(Key::Escape) {
 			app::quit();
 		}
 
