@@ -13,34 +13,9 @@ use gctx::*;
 
 use crate::*;
 
-// context
-ctx!(AUDIO: AudioCtx);
-
-struct AudioCtx {
+/// Audio Context
+struct Audio {
 	device: rodio::Device,
-}
-
-/// initialize audio module
-pub fn init() {
-
-	if !app::enabled() {
-		panic!("can't init audio without app");
-	}
-
-	ctx_init!(AUDIO, AudioCtx {
-		device: rodio::default_output_device().expect("failed to get audio device"),
-	});
-
-}
-
-/// check if audio module is initialized
-pub fn enabled() -> bool {
-	return ctx_ok!(AUDIO);
-}
-
-/// play a given sound once till end
-pub fn play(sound: &Sound) {
-	rodio::play_raw(&ctx_get!(AUDIO).device, sound.apply().convert_samples());
 }
 
 /// base struct containing sound data and effects data
@@ -56,6 +31,38 @@ struct Effect {
 	volume: f32,
 	repeat: bool,
 	fadein: u64,
+}
+
+/// a track has more control
+pub struct Track {
+	sink: Sink,
+}
+
+impl Audio {
+
+	pub fn new() -> Self {
+		return Self {
+			device: rodio::default_output_device().expect("failed to get audio device"),
+		};
+	}
+
+	pub fn play(&self, sound: &Sound) {
+		rodio::play_raw(&self.device, sound.apply().convert_samples());
+	}
+
+	/// play a sound and return a track
+	pub fn track(&self, sound: &Sound) -> Track {
+
+		let sink = Sink::new(&self.device);
+
+		sink.append(sound.apply());
+
+		return Track {
+			sink: sink,
+		}
+
+	}
+
 }
 
 impl Default for Effect {
@@ -171,37 +178,44 @@ impl Sound {
 
 }
 
-/// a track has more control
-pub struct Track {
-	sink: Sink,
-}
+impl Track {
 
-/// play a sound and return a track
-pub fn track(sound: &Sound) -> Track {
+	/// pause a track
+	pub fn pause(&self) {
+		self.sink.pause();
+	}
 
-	let ctx = ctx_get!(AUDIO);
-	let sink = Sink::new(&ctx.device);
+	/// resume a track
+	pub fn resume(&self) {
+		self.sink.play();
+	}
 
-	sink.append(sound.apply());
-
-	return Track {
-		sink: sink,
+	/// drop a track
+	pub fn drop(self) {
+		self.sink.detach();
 	}
 
 }
 
-/// pause a track
-pub fn pause(track: &Track) {
-	track.sink.pause();
+// context
+ctx!(AUDIO: Audio);
+
+/// initialize audio module
+pub fn init() {
+
+	if !app::enabled() {
+		panic!("can't init audio without app");
+	}
+
+	ctx_init!(AUDIO, Audio::new());
+
 }
 
-/// resume a track
-pub fn resume(track: &Track) {
-	track.sink.play();
+/// check if audio module is initialized
+pub fn enabled() -> bool {
+	return ctx_ok!(AUDIO);
 }
 
-/// drop a track
-pub fn drop(track: Track) {
-	track.sink.detach();
-}
+expose!(AUDIO, play(sound: &Sound));
+expose!(AUDIO, track(sound: &Sound) -> Track);
 

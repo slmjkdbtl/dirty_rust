@@ -169,9 +169,8 @@ pub fn reset() {
 
 pub(super) fn flush() {
 
-	let gfx = ctx_get!(G2D);
-	let gfx_mut = ctx_mut!(G2D);
-	let renderer = &mut gfx_mut.renderer;
+	let gfx = ctx_mut!(G2D);
+	let renderer = &mut gfx.renderer;
 
 	if let Some(tex) = &gfx.current_tex {
 
@@ -181,8 +180,8 @@ pub(super) fn flush() {
 		gfx.current_shader.send_vec2("size", vec2!(w, h));
 		gfx.current_shader.send_float("time", app::time());
 		renderer.flush(&*tex.handle, &gfx.current_shader.program);
-		gfx_mut.draw_calls += 1;
-		gfx_mut.current_tex = None;
+		gfx.draw_calls += 1;
+		gfx.current_tex = None;
 
 	}
 
@@ -231,9 +230,8 @@ pub(super) fn unflip_projection() {
 /// draw a texture with visible quad area
 pub fn draw(tex: &gfx::Texture, quad: Rect) {
 
-	let gfx = ctx_get!(G2D);
-	let gfx_mut = ctx_mut!(G2D);
-	let renderer = &mut gfx_mut.renderer;
+	let gfx = ctx_mut!(G2D);
+	let renderer = &mut gfx.renderer;
 	let t = gfx.state.transform.scale(vec3!(tex.width() as f32 * quad.w, tex.height() as f32 * quad.h, 1.0));
 	let color = gfx.state.tint;
 
@@ -243,7 +241,7 @@ pub fn draw(tex: &gfx::Texture, quad: Rect) {
 		if gfx.current_tex.is_some() {
 			flush();
 		}
-		gfx_mut.current_tex = wrapped_tex;
+		gfx.current_tex = wrapped_tex;
 	}
 
 	renderer.push(QuadShape::new(t, quad, color));
@@ -354,8 +352,12 @@ pub fn set_shader(s: &Shader) {
 
 /// stop shader effects and use default shader
 pub fn set_shader_default() {
+
+	let g2d = ctx_mut!(G2D);
+
 	flush();
-	ctx_mut!(G2D).current_shader = ctx_get!(G2D).default_shader.clone();
+	g2d.current_shader = g2d.default_shader.clone();
+
 }
 
 /// apply a custom font
@@ -365,7 +367,11 @@ pub fn set_font(f: &Font) {
 
 /// use default font
 pub fn set_font_default() {
-	ctx_mut!(G2D).current_font = ctx_get!(G2D).default_font.clone();
+
+	let g2d = ctx_mut!(G2D);
+
+	g2d.current_font = g2d.default_font.clone();
+
 }
 
 /// draw polygon with vertices
