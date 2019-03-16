@@ -491,11 +491,15 @@ pub fn begin() {
 	if !ctx_mut!(WINDOW).poll() {
 		app::quit();
 	}
-	gfx::begin();
+	if gfx::enabled() {
+		gfx::begin();
+	}
 }
 
 pub fn end() {
-	gfx::end();
+	if gfx::enabled() {
+		gfx::end();
+	}
 	ctx_get!(WINDOW).swap();
 }
 

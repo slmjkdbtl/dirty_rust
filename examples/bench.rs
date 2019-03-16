@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use window::Key;
 
 const RATE: usize = 96;
 const GATE: u32 = 48;
@@ -56,6 +57,10 @@ fn main() {
 			g2d::text(&format!("{}", count));
 			println!("{}", count);
 
+		}
+
+		if window::key_pressed(Key::Escape) {
+			app::quit();
 		}
 
 	});

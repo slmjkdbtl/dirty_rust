@@ -129,11 +129,11 @@ fn main() {
 		}
 
 		if window::key_pressed(Key::Key1) {
-			audio::pause(&music);
+			music.pause();
 		}
 
 		if window::key_pressed(Key::Key2) {
-			audio::resume(&music);
+			music.resume();
 		}
 
 		if window::key_pressed(Key::F) {
