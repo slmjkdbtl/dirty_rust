@@ -31,7 +31,6 @@ fn main() {
 	let frames = &data.frames;
 	let anims = &data.anims;
 	let mut hovering = false;
-	let mut f = false;
 
 	let pts = vec![
 		vec2!(0, 0) + vec2!(-margin, -margin),
