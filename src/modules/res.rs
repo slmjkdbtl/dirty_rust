@@ -10,30 +10,14 @@ use gctx::*;
 use crate::*;
 use crate::math::*;
 
-ctx!(RES: ResCtx);
+ctx!(RES: Res);
 
-struct ResCtx {
+struct Res {
 
 	textures: HashMap<String, gfx::Texture>,
 	sounds: HashMap<String, audio::Sound>,
 	spritedata: HashMap<String, SpriteData>,
 
-}
-
-/// initialize res module
-pub fn init() {
-
-	ctx_init!(RES, ResCtx {
-		textures: HashMap::new(),
-		sounds: HashMap::new(),
-		spritedata: HashMap::new(),
-	});
-
-}
-
-/// check if res is initialized
-pub fn enabled() -> bool {
-	return ctx_ok!(RES);
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -79,167 +63,208 @@ impl Default for SpriteData {
 	}
 }
 
-/// load all sprites from given directory
-pub fn load_all_textures_under(dir: &str) {
+impl Res {
 
-	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
-		.into_iter()
-		.map(|f| fs::basename(&f))
-		.collect();
-
-	return load_textures_under(dir, &files);
-
-}
-
-/// load all sounds from given directory
-pub fn load_all_sounds_under(dir: &str) {
-
-	let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
-		.into_iter()
-		.map(|f| fs::basename(&f))
-		.collect();
-
-	return load_sounds_under(dir, &files);
-
-}
-
-/// load all spritedata from given directory
-pub fn load_all_spritedata_under(dir: &str) {
-
-	let files: Vec<String> = fs::glob(&format!("{}*.json", dir))
-		.into_iter()
-		.map(|f| fs::basename(&f))
-		.collect();
-
-	return load_spritedata_under(dir, &files);
-
-}
-
-/// load all textures from given directory with given names
-pub fn load_textures_under<T: AsRef<str>>(dir: &str, names: &[T]) {
-
-	for name in names {
-		let name = name.as_ref();
-		load_texture(name, &fs::read_bytes(&format!("{}{}.png", dir, name)));
+	pub fn new() -> Self {
+		return Self {
+			textures: HashMap::new(),
+			sounds: HashMap::new(),
+			spritedata: HashMap::new(),
+		};
 	}
 
-}
+	/// load all sprites from given directory
+	pub fn load_all_textures_under(&mut self, dir: &str) {
 
-/// load all sounds from given directory with given names
-pub fn load_sounds_under<T: AsRef<str>>(dir: &str, names: &[T]) {
+		let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+			.into_iter()
+			.map(|f| fs::basename(&f))
+			.collect();
 
-	for name in names {
-		let name = name.as_ref();
-		load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
-	}
-
-}
-
-/// load all sprite data from given directory with given names
-pub fn load_spritedata_under<T: AsRef<str>>(dir: &str, names: &[T]) {
-
-	for name in names {
-		let name = name.as_ref();
-		load_spritedata(name, &fs::read_str(&format!("{}{}.json", dir, name)));
-	}
-
-}
-
-/// load a sprite data with json string
-pub fn load_spritedata(
-	name: &str,
-	json: &str) {
-
-	let res_mut = ctx_mut!(RES);
-
-	let mut frames = vec![];
-	let mut anims = HashMap::new();
-	let data: SpritesheetData = serde_json::from_str(json).expect("failed to parse json");
-
-	let width = data.meta.size.w;
-	let height = data.meta.size.h;
-
-	for f in data.frames {
-
-		frames.push(rect!(
-			f.frame.x as f32 / width as f32,
-			f.frame.y as f32 / height as f32,
-			f.frame.w as f32 / width as f32,
-			f.frame.h as f32 / height as f32
-		));
+		return self.load_textures_under(dir, &files
+			.iter()
+			.map(|f| f.as_ref())
+			.collect::<Vec<&str>>());
 
 	}
 
-	if let Some(frame_tags) = data.meta.frame_tags {
+	/// load all sounds from given directory
+	pub fn load_all_sounds_under(&mut self, dir: &str) {
 
-		for anim in frame_tags {
+		let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+			.into_iter()
+			.map(|f| fs::basename(&f))
+			.collect();
 
-			let dir = match anim.direction {
-				aseprite::Direction::Forward => AnimDir::Forward,
-				aseprite::Direction::Reverse => AnimDir::Reverse,
-				aseprite::Direction::Pingpong => AnimDir::PingPong,
-			};
+		return self.load_sounds_under(dir, &files
+			.iter()
+			.map(|f| f.as_ref())
+			.collect::<Vec<&str>>());
 
-			anims.insert(anim.name, Anim {
-				from: anim.from as usize,
-				to: anim.to as usize,
-				dir: dir,
-			});
+	}
 
+	/// load all spritedata from given directory
+	pub fn load_all_spritedata_under(&mut self, dir: &str) {
+
+		let files: Vec<String> = fs::glob(&format!("{}*.json", dir))
+			.into_iter()
+			.map(|f| fs::basename(&f))
+			.collect();
+
+		return self.load_spritedata_under(dir, &files
+			.iter()
+			.map(|f| f.as_ref())
+			.collect::<Vec<&str>>());
+
+	}
+
+	/// load all textures from given directory with given names
+	pub fn load_textures_under(&mut self, dir: &str, names: &[&str]) {
+
+		for name in names {
+			let name = name.as_ref();
+			self.load_texture(name, &fs::read_bytes(&format!("{}{}.png", dir, name)));
 		}
 
 	}
 
-	res_mut.spritedata.insert(name.to_owned(), SpriteData {
-		frames: frames,
-		anims: anims,
-	});
+	/// load all sounds from given directory with given names
+	pub fn load_sounds_under(&mut self, dir: &str, names: &[&str]) {
+
+		for name in names {
+			let name = name.as_ref();
+			self.load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
+		}
+
+	}
+
+	/// load all sprite data from given directory with given names
+	pub fn load_spritedata_under(&mut self, dir: &str, names: &[&str]) {
+
+		for name in names {
+			let name = name.as_ref();
+			self.load_spritedata(name, &fs::read_str(&format!("{}{}.json", dir, name)));
+		}
+
+	}
+
+	/// load a sprite data with json string
+	pub fn load_spritedata(
+		&mut self,
+		name: &str,
+		json: &str) {
+
+		let mut frames = vec![];
+		let mut anims = HashMap::new();
+		let data: SpritesheetData = serde_json::from_str(json).expect("failed to parse json");
+
+		let width = data.meta.size.w;
+		let height = data.meta.size.h;
+
+		for f in data.frames {
+
+			frames.push(rect!(
+				f.frame.x as f32 / width as f32,
+				f.frame.y as f32 / height as f32,
+				f.frame.w as f32 / width as f32,
+				f.frame.h as f32 / height as f32
+			));
+
+		}
+
+		if let Some(frame_tags) = data.meta.frame_tags {
+
+			for anim in frame_tags {
+
+				let dir = match anim.direction {
+					aseprite::Direction::Forward => AnimDir::Forward,
+					aseprite::Direction::Reverse => AnimDir::Reverse,
+					aseprite::Direction::Pingpong => AnimDir::PingPong,
+				};
+
+				anims.insert(anim.name, Anim {
+					from: anim.from as usize,
+					to: anim.to as usize,
+					dir: dir,
+				});
+
+			}
+
+		}
+
+		self.spritedata.insert(name.to_owned(), SpriteData {
+			frames: frames,
+			anims: anims,
+		});
+
+	}
+
+	/// load a sound with raw data
+	pub fn load_texture(
+		&mut self,
+		name: &str,
+		data: &[u8]) {
+
+		self.textures.insert(name.to_owned(), gfx::Texture::from_bytes(data));
+
+	}
+
+	/// load a sound with raw data
+	pub fn load_sound(
+		&mut self,
+		name: &str,
+		data: &[u8]) {
+
+		self.sounds.insert(name.to_owned(), audio::Sound::from_bytes(data));
+
+	}
+
+	/// get the sprite data that is loaded with given name
+	pub fn spritedata(&self, name: &str) -> &SpriteData {
+		return self
+			.spritedata
+			.get(name)
+			.unwrap_or_else(|| panic!("failed to get sprite data {}", name));
+	}
+
+	/// get the texture that is loaded with given name
+	pub fn texture(&self, name: &str) -> &gfx::Texture {
+		return self
+			.textures
+			.get(name)
+			.unwrap_or_else(|| panic!("failed to get texture {}", name));
+	}
+
+	/// get the sound that is loaded with given name
+	pub fn sound(&self, name: &str) -> &audio::Sound {
+		return self
+			.sounds
+			.get(name)
+			.unwrap_or_else(|| panic!("failed to get sound {}", name));
+	}
 
 }
 
-/// load a sound with raw data
-pub fn load_texture(
-	name: &str,
-	data: &[u8]) {
-
-	let res_mut = ctx_mut!(RES);
-
-	res_mut.textures.insert(name.to_owned(), gfx::Texture::from_bytes(data));
-
+/// initialize res module
+pub fn init() {
+	ctx_init!(RES, Res::new());
 }
 
-/// load a sound with raw data
-pub fn load_sound(
-	name: &str,
-	data: &[u8]) {
-
-	let res_mut = ctx_mut!(RES);
-
-	res_mut.sounds.insert(name.to_owned(), audio::Sound::from_bytes(data));
-
+/// check if res is initialized
+pub fn enabled() -> bool {
+	return ctx_ok!(RES);
 }
 
-/// get the sprite data that is loaded with given name
-pub fn spritedata(name: &str) -> &SpriteData {
-	return ctx_get!(RES)
-		.spritedata
-		.get(name)
-		.unwrap_or_else(|| panic!("failed to get sprite data {}", name));
-}
-
-/// get the texture that is loaded with given name
-pub fn texture(name: &str) -> &gfx::Texture {
-	return ctx_get!(RES)
-		.textures
-		.get(name)
-		.unwrap_or_else(|| panic!("failed to get texture {}", name));
-}
-
-/// get the sound that is loaded with given name
-pub fn sound(name: &str) -> &audio::Sound {
-	return ctx_get!(RES)
-		.sounds
-		.get(name)
-		.unwrap_or_else(|| panic!("failed to get sound {}", name));
-}
+expose!(RES(mut), load_all_spritedata_under(dir: &str));
+expose!(RES(mut), load_all_textures_under(dir: &str));
+expose!(RES(mut), load_all_sounds_under(dir: &str));
+expose!(RES(mut), load_spritedata_under(dir: &str, names: &[&str]));
+expose!(RES(mut), load_textures_under(dir: &str, names: &[&str]));
+expose!(RES(mut), load_sounds_under(dir: &str, names: &[&str]));
+expose!(RES(mut), load_spritedata(name: &str, json: &str));
+expose!(RES(mut), load_texture(name: &str, data: &[u8]));
+expose!(RES(mut), load_sound(name: &str, data: &[u8]));
+expose!(RES, spritedata(name: &str) -> &'static SpriteData);
+expose!(RES, texture(name: &str) -> &'static gfx::Texture);
+expose!(RES, sound(name: &str) -> &'static audio::Sound);
 
