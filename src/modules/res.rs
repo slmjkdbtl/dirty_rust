@@ -12,7 +12,7 @@ use crate::math::*;
 
 ctx!(RES: Res);
 
-struct Res {
+pub struct Res {
 
 	textures: HashMap<String, gfx::Texture>,
 	sounds: HashMap<String, audio::Sound>,
