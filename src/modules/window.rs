@@ -15,6 +15,16 @@ use glutin::MouseScrollDelta;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 pub use glutin::MouseButton as Mouse;
+use derive_more::Add;
+use derive_more::Sub;
+use derive_more::Mul;
+use derive_more::Div;
+use derive_more::AddAssign;
+use derive_more::SubAssign;
+use derive_more::MulAssign;
+use derive_more::DivAssign;
+use derive_more::From;
+use derive_more::Into;
 
 use crate::math::*;
 use crate::*;
@@ -29,7 +39,7 @@ pub enum ButtonState {
 	Released,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
 pub struct MousePos {
 	pub x: i32,
 	pub y: i32,
@@ -60,7 +70,7 @@ impl From<LogicalPosition> for MousePos {
 	}
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
 pub struct MouseDelta {
 	pub x: i32,
 	pub y: i32,
@@ -94,7 +104,7 @@ impl From<LogicalPosition> for MouseDelta {
 	}
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
 pub struct ScrollDelta {
 	pub x: i32,
 	pub y: i32,
