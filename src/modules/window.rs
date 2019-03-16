@@ -21,6 +21,20 @@ use derive_more::*;
 use crate::math::*;
 use crate::*;
 
+pub struct Window {
+	key_states: HashMap<Key, ButtonState>,
+	key_input: Option<Key>,
+	char_input: Option<char>,
+	mouse_pos: MousePos,
+	mouse_delta: Option<MouseDelta>,
+	scroll_delta: Option<ScrollDelta>,
+	mouse_states: HashMap<Mouse, ButtonState>,
+	event_loop: glutin::EventsLoop,
+	windowed_ctx: glutin::WindowedContext,
+	fullscreen: bool,
+	relative: bool,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ButtonState {
 	Up,
@@ -144,20 +158,6 @@ impl From<MouseScrollDelta> for ScrollDelta {
 			}
 		};
 	}
-}
-
-pub struct Window {
-	key_states: HashMap<Key, ButtonState>,
-	key_input: Option<Key>,
-	char_input: Option<char>,
-	mouse_pos: MousePos,
-	mouse_delta: Option<MouseDelta>,
-	scroll_delta: Option<ScrollDelta>,
-	mouse_states: HashMap<Mouse, ButtonState>,
-	event_loop: glutin::EventsLoop,
-	windowed_ctx: glutin::WindowedContext,
-	fullscreen: bool,
-	relative: bool,
 }
 
 impl Window {

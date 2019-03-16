@@ -14,7 +14,7 @@ use gctx::*;
 use crate::*;
 
 /// Audio Context
-struct Audio {
+pub struct Audio {
 	device: rodio::Device,
 }
 

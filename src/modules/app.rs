@@ -11,7 +11,7 @@ use gctx::*;
 use crate::*;
 use window::Key;
 
-struct App {
+pub struct App {
 
 	dt: f32,
 	time: f32,

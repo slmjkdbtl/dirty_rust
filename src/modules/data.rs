@@ -1,62 +1,90 @@
 // wengwengweng
 
-// //! Save & Load User Data
+//! Save & Load User Data
 
-// use serde::ser;
-// use serde::de;
-// pub use serde::Serialize;
-// pub use serde::Deserialize;
-// use gctx::*;
+use std::path::PathBuf;
 
-// use crate::*;
+use serde::ser;
+use serde::de;
+use gctx::*;
+use directories::BaseDirs;
+pub use serde::Serialize;
+pub use serde::Deserialize;
 
-// ctx!(DATA: DataCtx);
+use crate::*;
 
-// struct DataCtx {
-// 	dir: String,
-// }
+pub struct Data {
+	dir: PathBuf,
+}
 
-// /// initialize pref
-// pub fn init(org: &str, name: &str) {
+impl Data {
 
-// 	let dir = sdl2::filesystem::pref_path(&org, &name).expect("failed to get pref dir");
+	pub fn new(org: &str, name: &str) -> Self {
 
-// 	ctx_init!(DATA, DataCtx {
-// 		dir: dir,
-// 	});
+		let dirs = BaseDirs::new().unwrap();
+		let data_dir = dirs.data_dir();
+		let org_dir = data_dir.join(org);
 
-// }
+		if !org_dir.exists() {
+			std::fs::create_dir(&org_dir);
+		}
 
-// /// save json data
-// pub fn save<D: ser::Serialize>(fname: &str, data: D) {
+		let proj_dir = org_dir.join(name);
 
-// 	let dir = &ctx_get!(DATA).dir;
-// 	let path = format!("{}{}", dir, fname);
-// 	let string = serde_json::to_string(&data).expect("failed to serialize json");
+		if !proj_dir.exists() {
+			std::fs::create_dir(&proj_dir);
+		}
 
-// 	std::fs::write(&path, string).expect(&format!("failed to write {}", path));
+		return Self {
+			dir: proj_dir,
+		};
 
-// }
+	}
 
-// /// get json data
-// pub fn get<D: for<'a> de::Deserialize<'a>>(fname: &str) -> D {
+	pub fn save<D: ser::Serialize>(&self, fname: &str, data: D) {
 
-// 	let dir = &ctx_get!(DATA).dir;
-// 	let path = format!("{}{}", dir, fname);
-// 	let content = fs::read_str(&path);
-// 	let data: D = serde_json::from_str(&content).expect("failed to parse json");
+		let path = self.dir.join(fname);
+		let string = serde_json::to_string(&data).expect("failed to serialize json");
 
-// 	return data;
+		std::fs::write(&format!("{}", path.display()), string).expect(&format!("failed to write {}", path.display()));
 
-// }
+	}
 
-// /// check if a data file exists
-// pub fn exists(fname: &str) -> bool {
+	/// get json data
+	pub fn get<D: for<'a> de::Deserialize<'a>>(&self, fname: &str) -> D {
 
-// 	let dir = &ctx_get!(DATA).dir;
-// 	let path = format!("{}{}", dir, fname);
+		let path = self.dir.join(fname);
+		let content = fs::read_str(&format!("{}", path.display()));
+		let data: D = serde_json::from_str(&content).expect("failed to parse json");
 
-// 	return fs::exists(&path);
+		return data;
 
-// }
+	}
+
+	/// check if a data file exists
+	pub fn exists(&self, fname: &str) -> bool {
+		return self.dir.join(fname).exists();
+	}
+
+}
+
+ctx!(DATA: Data);
+
+pub fn init(org: &str, name: &str) {
+	ctx_init!(DATA, Data::new(org, name));
+}
+
+pub fn enabled() -> bool {
+	return ctx_ok!(DATA);
+}
+
+expose!(DATA, exists(fname: &str) -> bool);
+
+pub fn save<D: ser::Serialize>(fname: &str, data: D) {
+	return ctx_get!(DATA).save(fname, data);
+}
+
+pub fn get<D: for<'a> de::Deserialize<'a>>(fname: &str) -> D {
+	return ctx_get!(DATA).get(fname);
+}
 
