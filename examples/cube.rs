@@ -9,7 +9,7 @@ fn main() {
 	// init modules
 	app::init();
 	window::init("cube", 640, 480);
-// 	window::set_relative(true);
+	window::set_relative(true);
 
 	let mut pos = vec3!(9, 9, 9);
 	let mut rx: f32 = -135.0;
@@ -52,26 +52,26 @@ fn main() {
 			// ...
 		}
 
-// 		if window::get_relative() {
+		if window::is_relative() {
 
-// 			if let Some(delta) = window::mouse_delta() {
+			if let Some(delta) = window::mouse_delta() {
 
-// 				let md: Vec2 = delta.into();
+				let md: Vec2 = delta.into();
 
-// 				rx -= md.x * rot_speed;
-// 				ry -= md.y * rot_speed;
+				rx -= md.x * rot_speed;
+				ry -= md.y * rot_speed;
 
-// 				if ry > 48.0 {
-// 					ry = 48.0;
-// 				}
+				if ry > 48.0 {
+					ry = 48.0;
+				}
 
-// 				if ry < -48.0 {
-// 					ry = -48.0;
-// 				}
+				if ry < -48.0 {
+					ry = -48.0;
+				}
 
-// 			}
+			}
 
-// 		}
+		}
 
 		if window::key_down(Key::A) {
 			pos = pos + g3d::front().cross(vec3!(0, 1, 0)).unit() * dt * move_speed;
@@ -94,7 +94,7 @@ fn main() {
 		}
 
 		if window::key_pressed(Key::Escape) {
-// 			window::set_relative(!window::get_relative());
+			window::set_relative(!window::is_relative());
 		}
 
 	});
