@@ -2,6 +2,8 @@
 
 == DOING
 - game controllers
+- fix data
+- refactor to let user manage context
 
 == TODO
 - metal backend
@@ -28,7 +30,6 @@
 - remove ggl_derive
 - fix framebuffer writing is scaled in high dpi
 - add window options
-- refactor to let user manage context
 
 == DONE
 - basic window creation
@@ -85,4 +86,6 @@
 - allow nested canvas
 - strong text input api
 - fix multiline text with \n
+- refactor window with glutin
+- relative mouse
 

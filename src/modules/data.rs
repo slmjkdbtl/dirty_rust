@@ -1,62 +1,62 @@
 // wengwengweng
 
-//! Save & Load User Data
+// //! Save & Load User Data
 
-use serde::ser;
-use serde::de;
-pub use serde::Serialize;
-pub use serde::Deserialize;
-use gctx::*;
+// use serde::ser;
+// use serde::de;
+// pub use serde::Serialize;
+// pub use serde::Deserialize;
+// use gctx::*;
 
-use crate::*;
+// use crate::*;
 
-ctx!(DATA: DataCtx);
+// ctx!(DATA: DataCtx);
 
-struct DataCtx {
-	dir: String,
-}
+// struct DataCtx {
+// 	dir: String,
+// }
 
-/// initialize pref
-pub fn init(org: &str, name: &str) {
+// /// initialize pref
+// pub fn init(org: &str, name: &str) {
 
-	let dir = sdl2::filesystem::pref_path(&org, &name).expect("failed to get pref dir");
+// 	let dir = sdl2::filesystem::pref_path(&org, &name).expect("failed to get pref dir");
 
-	ctx_init!(DATA, DataCtx {
-		dir: dir,
-	});
+// 	ctx_init!(DATA, DataCtx {
+// 		dir: dir,
+// 	});
 
-}
+// }
 
-/// save json data
-pub fn save<D: ser::Serialize>(fname: &str, data: D) {
+// /// save json data
+// pub fn save<D: ser::Serialize>(fname: &str, data: D) {
 
-	let dir = &ctx_get!(DATA).dir;
-	let path = format!("{}{}", dir, fname);
-	let string = serde_json::to_string(&data).expect("failed to serialize json");
+// 	let dir = &ctx_get!(DATA).dir;
+// 	let path = format!("{}{}", dir, fname);
+// 	let string = serde_json::to_string(&data).expect("failed to serialize json");
 
-	std::fs::write(&path, string).expect(&format!("failed to write {}", path));
+// 	std::fs::write(&path, string).expect(&format!("failed to write {}", path));
 
-}
+// }
 
-/// get json data
-pub fn get<D: for<'a> de::Deserialize<'a>>(fname: &str) -> D {
+// /// get json data
+// pub fn get<D: for<'a> de::Deserialize<'a>>(fname: &str) -> D {
 
-	let dir = &ctx_get!(DATA).dir;
-	let path = format!("{}{}", dir, fname);
-	let content = fs::read_str(&path);
-	let data: D = serde_json::from_str(&content).expect("failed to parse json");
+// 	let dir = &ctx_get!(DATA).dir;
+// 	let path = format!("{}{}", dir, fname);
+// 	let content = fs::read_str(&path);
+// 	let data: D = serde_json::from_str(&content).expect("failed to parse json");
 
-	return data;
+// 	return data;
 
-}
+// }
 
-/// check if a data file exists
-pub fn exists(fname: &str) -> bool {
+// /// check if a data file exists
+// pub fn exists(fname: &str) -> bool {
 
-	let dir = &ctx_get!(DATA).dir;
-	let path = format!("{}{}", dir, fname);
+// 	let dir = &ctx_get!(DATA).dir;
+// 	let path = format!("{}{}", dir, fname);
 
-	return fs::exists(&path);
+// 	return fs::exists(&path);
 
-}
+// }
 

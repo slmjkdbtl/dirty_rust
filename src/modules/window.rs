@@ -6,6 +6,7 @@ use std::collections::HashSet;
 use gctx::*;
 use glutin::dpi::*;
 use glutin::WindowEvent;
+use glutin::DeviceEvent;
 use glutin::KeyboardInput;
 use glutin::Api;
 use glutin::GlRequest;
@@ -15,16 +16,7 @@ use glutin::MouseScrollDelta;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 pub use glutin::MouseButton as Mouse;
-use derive_more::Add;
-use derive_more::Sub;
-use derive_more::Mul;
-use derive_more::Div;
-use derive_more::AddAssign;
-use derive_more::SubAssign;
-use derive_more::MulAssign;
-use derive_more::DivAssign;
-use derive_more::From;
-use derive_more::Into;
+use derive_more::*;
 
 use crate::math::*;
 use crate::*;
@@ -66,6 +58,15 @@ impl From<LogicalPosition> for MousePos {
 		return Self {
 			x: x,
 			y: y,
+		};
+	}
+}
+
+impl From<MousePos> for LogicalPosition {
+	fn from(pos: MousePos) -> Self {
+		return Self {
+			x: pos.x as f64,
+			y: pos.y as f64,
 		};
 	}
 }
@@ -157,7 +158,8 @@ pub struct Window {
 	mouse_states: HashMap<Mouse, ButtonState>,
 	event_loop: glutin::EventsLoop,
 	windowed_ctx: glutin::WindowedContext,
-	fullscreen: bool
+	fullscreen: bool,
+	relative: bool,
 }
 
 impl Window {
@@ -192,6 +194,7 @@ impl Window {
 			scroll_delta: None,
 			windowed_ctx: windowed_ctx,
 			fullscreen: false,
+			relative: false,
 		};
 
 	}
@@ -212,6 +215,22 @@ impl Window {
 
 	pub fn is_fullscreen(&self) -> bool {
 		return self.fullscreen;
+	}
+
+	pub fn set_relative(&mut self, b: bool) {
+
+		self.relative = b;
+		self.windowed_ctx.hide_cursor(b);
+		self.windowed_ctx.grab_cursor(b);
+
+	}
+
+	pub fn is_relative(&self) -> bool {
+		return self.relative;
+	}
+
+	pub fn set_mouse_pos(&self, pos: MousePos) {
+		self.windowed_ctx.set_cursor_position(pos.into());
 	}
 
 	pub fn down_keys(&self) -> HashSet<Key> {
@@ -281,32 +300,53 @@ impl Window {
 		let mut char_input = None;
 		let mut mouse_pos = None;
 		let mut scroll_delta = None;
+		let mut device_mouse_delta = None;
 
 		self.event_loop.poll_events(&mut |event| {
+
 			match event {
+
 				glutin::Event::WindowEvent { event, .. } => match event {
+
 					WindowEvent::CloseRequested => {
 						quit = true;
 					},
+
 					WindowEvent::ReceivedCharacter(ch) => {
 						char_input = Some(ch);
 					},
+
 					WindowEvent::CursorMoved { position, .. } => {
 						mouse_pos = Some(position);
 					},
+
 					WindowEvent::MouseWheel { delta, .. } => {
 						scroll_delta = Some(delta);
 					},
+
 					WindowEvent::MouseInput { button, state, .. } => {
 						mouse_input = Some((button, state));
 					},
+
 					WindowEvent::KeyboardInput { input, .. } => {
 						key_input = Some(input);
 					},
+
+					_ => (),
+
+				},
+
+				glutin::Event::DeviceEvent { event, .. } => match event {
+					DeviceEvent::MouseMotion { delta } => {
+						device_mouse_delta = Some(delta);
+					},
 					_ => (),
 				},
-				_ => ()
+
+				_ => (),
+
 			}
+
 		});
 
 		if quit {
@@ -351,8 +391,19 @@ impl Window {
 			let prev_pos = self.mouse_pos;
 
 			self.mouse_pos = mouse_pos.into();
-			self.mouse_delta = Some(MouseDelta::new(self.mouse_pos.x - prev_pos.x, self.mouse_pos.y - prev_pos.y));
+			let delta = MouseDelta::new(self.mouse_pos.x - prev_pos.x, self.mouse_pos.y - prev_pos.y);
 
+			if delta.x != 0 && delta.y != 0 {
+				self.mouse_delta = Some(delta);
+			}
+
+		}
+
+		if let Some(device_mouse_delta) = device_mouse_delta {
+			self.mouse_delta = Some(MouseDelta {
+				x: device_mouse_delta.0 as i32,
+				y: device_mouse_delta.1 as i32,
+			});
 		}
 
 		if let Some(key_input) = key_input {
@@ -498,6 +549,14 @@ pub fn set_fullscreen(b: bool) {
 
 pub fn is_fullscreen() -> bool {
 	return ctx_get!(WINDOW).is_fullscreen();
+}
+
+pub fn set_relative(b: bool) {
+	return ctx_mut!(WINDOW).set_relative(b);
+}
+
+pub fn is_relative() -> bool {
+	return ctx_mut!(WINDOW).is_relative();
 }
 
 pub fn mouse_pos() -> MousePos {

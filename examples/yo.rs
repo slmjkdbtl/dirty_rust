@@ -138,7 +138,7 @@ fn main() {
 		}
 
 		if window::key_pressed(Key::F) {
-			f = !f;
+			window::set_fullscreen(!window::is_fullscreen());
 		}
 
 		if window::key_pressed(Key::Escape) {
