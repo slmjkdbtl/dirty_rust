@@ -28,6 +28,7 @@
 - remove ggl_derive
 - fix framebuffer writing is scaled in high dpi
 - add window options
+- refactor to let user manage context
 
 == DONE
 - basic window creation
