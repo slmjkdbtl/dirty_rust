@@ -11,20 +11,16 @@ fn get_res_dir() -> String {
 	use core_foundation::bundle;
 
 	let bundle = bundle::CFBundle::main_bundle();
-
-	let exe = bundle
+	let path = bundle
 		.executable_url().expect("Cannot get executable dir")
-		.to_path().expect("to_path error");
+		.to_path().expect("to_path error")
+		.parent()
+		.unwrap()
+		.parent()
+		.unwrap()
+		.join("Resources");
 
-	return exe
-		.parent()
-		.expect("failed to get parent dir")
-		.parent()
-		.expect("failed to get parent dir")
-		.join("Resources")
-		.into_os_string()
-		.into_string()
-		.expect("failed to convert pathbuf to string")
+	return format!("{}", path.display());
 
 }
 
@@ -33,13 +29,12 @@ fn get_res_dir() -> String {
 
 	use std::env;
 
-	return env::current_exe()
+	let path = env::current_exe()
 		.expect("Cannot get application dir")
 		.parent().expect("Cannot get application dir")
-		.to_path_buf()
-		.into_os_string()
-		.into_string()
-		.expect("failed to convert pathbuf to string")
+		.to_path_buf();
+
+	return format!("{}", path.display());
 
 }
 
