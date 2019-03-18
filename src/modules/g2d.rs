@@ -511,12 +511,12 @@ pub fn set_matrix(m: Mat4) {
 
 /// get current font width for string
 pub fn font_width() -> u32 {
-	return ctx_get!(G2D).current_font.grid_size.x;
+	return ctx_get!(G2D).current_font.width();
 }
 
 /// get current text height
 pub fn font_height() -> u32 {
-	return ctx_get!(G2D).current_font.grid_size.y;
+	return ctx_get!(G2D).current_font.height();
 }
 
 /// bitmap font
@@ -567,6 +567,16 @@ impl Font {
 
 		}
 
+	}
+
+	/// get current font width for string
+	pub fn width(&self) -> u32 {
+		return self.grid_size.x;
+	}
+
+	/// get current text height
+	pub fn height(&self) -> u32 {
+		return self.grid_size.y;
 	}
 
 }
