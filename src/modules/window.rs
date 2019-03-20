@@ -24,7 +24,7 @@ use crate::*;
 pub struct Window {
 	key_states: HashMap<Key, ButtonState>,
 	key_input: Option<Key>,
-	char_input: Option<char>,
+	text_input: Option<String>,
 	mouse_pos: MousePos,
 	mouse_delta: Option<MouseDelta>,
 	scroll_delta: Option<ScrollDelta>,
@@ -184,7 +184,7 @@ impl Window {
 		return Self {
 			event_loop: event_loop,
 			key_input: None,
-			char_input: None,
+			text_input: None,
 			key_states: HashMap::new(),
 			mouse_states: HashMap::new(),
 			mouse_pos: MousePos::new(0, 0),
@@ -255,8 +255,8 @@ impl Window {
 		return self.key_input == Some(key);
 	}
 
-	pub fn char_input(&self) -> Option<char> {
-		return self.char_input;
+	pub fn text_input(&self) -> Option<String> {
+		return self.text_input.clone();
 	}
 
 	pub fn mouse_down(&self, mouse: Mouse) -> bool {
@@ -295,9 +295,9 @@ impl Window {
 		let mut quit = false;
 		let mut key_input = None;
 		let mut mouse_input = None;
-		let mut char_input = None;
 		let mut mouse_pos = None;
 		let mut scroll_delta = None;
+		let mut text_input = None;
 		let mut device_mouse_delta = None;
 
 		self.event_loop.poll_events(&mut |event| {
@@ -311,7 +311,7 @@ impl Window {
 					},
 
 					WindowEvent::ReceivedCharacter(ch) => {
-						char_input = Some(ch);
+						text_input.get_or_insert(String::new()).push(ch);
 					},
 
 					WindowEvent::CursorMoved { position, .. } => {
@@ -378,7 +378,8 @@ impl Window {
 		self.key_input = None;
 		self.mouse_delta = None;
 		self.scroll_delta = None;
-		self.char_input = char_input;
+		self.text_input = None;
+		self.text_input = text_input;
 
 		if let Some(scroll_delta) = scroll_delta {
 			self.scroll_delta = Some(scroll_delta.into());
@@ -518,7 +519,7 @@ expose!(WINDOW, key_down(key: Key) -> bool);
 expose!(WINDOW, key_pressed(key: Key) -> bool);
 expose!(WINDOW, key_released(key: Key) -> bool);
 expose!(WINDOW, key_pressed_repeat(key: Key) -> bool);
-expose!(WINDOW, char_input() -> Option<char>);
+expose!(WINDOW, text_input() -> Option<String>);
 expose!(WINDOW, mouse_down(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_pressed(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_released(mouse: Mouse) -> bool);
