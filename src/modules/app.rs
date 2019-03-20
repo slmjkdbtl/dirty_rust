@@ -16,7 +16,7 @@ pub struct App {
 	dt: f32,
 	time: f32,
 	debug: bool,
-	started: bool,
+	running: bool,
 	fps_cap: u32,
 
 }
@@ -25,7 +25,7 @@ impl App {
 
 	pub fn run<F: FnMut()>(&mut self, mut f: F) {
 
-		self.started = true;
+		self.running = true;
 
 		loop {
 
@@ -45,6 +45,10 @@ impl App {
 			}
 
 			self.time += self.dt;
+
+			if !self.running {
+				break;
+			}
 
 		}
 
@@ -81,8 +85,8 @@ impl App {
 	}
 
 	/// quit with success code
-	pub fn quit(&self) {
-		std::process::exit(0);
+	pub fn quit(&mut self) {
+		self.running = false;
 	}
 
 	pub fn new() -> Self {
@@ -92,7 +96,7 @@ impl App {
 			dt: 0.0,
 			time: 0.0,
 			debug: false,
-			started: false,
+			running: false,
 			fps_cap: 60,
 
 		};
@@ -189,11 +193,11 @@ pub fn run<F: FnMut()>(mut f: F) {
 
 }
 
-expose!(APP, quit());
-expose!(APP(mut), cap_fps(f: u32));
 expose!(APP, dt() -> f32);
 expose!(APP, time() -> f32);
 expose!(APP, fps() -> u32);
-expose!(APP(mut), set_debug(b: bool));
 expose!(APP, is_debug() -> bool);
+expose!(APP(mut), set_debug(b: bool));
+expose!(APP(mut), quit());
+expose!(APP(mut), cap_fps(f: u32));
 

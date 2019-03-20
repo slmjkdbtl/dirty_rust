@@ -466,6 +466,14 @@ impl Window {
 
 		}
 
+		if cfg!(target_os = "macos") {
+			if key_down(Key::RWin) || key_down(Key::LWin) {
+				if key_pressed(Key::Q) {
+					return false;
+				}
+			}
+		}
+
 		return true;
 
 	}
