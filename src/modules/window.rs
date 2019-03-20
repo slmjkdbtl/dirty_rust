@@ -251,7 +251,7 @@ impl Window {
 		return self.key_states.get(&key) == Some(&ButtonState::Released);
 	}
 
-	pub fn key_pressed_repeat(&self, key: Key) -> bool {
+	pub fn key_rpressed(&self, key: Key) -> bool {
 		return self.key_input == Some(key);
 	}
 
@@ -518,7 +518,7 @@ expose!(WINDOW, down_keys() -> HashSet<Key>);
 expose!(WINDOW, key_down(key: Key) -> bool);
 expose!(WINDOW, key_pressed(key: Key) -> bool);
 expose!(WINDOW, key_released(key: Key) -> bool);
-expose!(WINDOW, key_pressed_repeat(key: Key) -> bool);
+expose!(WINDOW, key_rpressed(key: Key) -> bool);
 expose!(WINDOW, text_input() -> Option<String>);
 expose!(WINDOW, mouse_down(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_pressed(mouse: Mouse) -> bool);
