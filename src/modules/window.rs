@@ -23,7 +23,7 @@ use crate::*;
 
 pub struct Window {
 	key_states: HashMap<Key, ButtonState>,
-	key_input: Option<Key>,
+	rpressed_key: Option<Key>,
 	text_input: Option<String>,
 	mouse_pos: MousePos,
 	mouse_delta: Option<MouseDelta>,
@@ -183,7 +183,7 @@ impl Window {
 
 		return Self {
 			event_loop: event_loop,
-			key_input: None,
+			rpressed_key: None,
 			text_input: None,
 			key_states: HashMap::new(),
 			mouse_states: HashMap::new(),
@@ -252,7 +252,11 @@ impl Window {
 	}
 
 	pub fn key_rpressed(&self, key: Key) -> bool {
-		return self.key_input == Some(key);
+		return self.rpressed_key == Some(key);
+	}
+
+	pub fn rpressed_key(&self) -> Option<Key> {
+		return self.rpressed_key;
 	}
 
 	pub fn text_input(&self) -> Option<String> {
@@ -375,7 +379,7 @@ impl Window {
 			}
 		}
 
-		self.key_input = None;
+		self.rpressed_key = None;
 		self.mouse_delta = None;
 		self.scroll_delta = None;
 		self.text_input = None;
@@ -410,7 +414,7 @@ impl Window {
 			if let Some(key_code) = key_input.virtual_keycode {
 
 				if key_input.state == ElementState::Pressed {
-					self.key_input = Some(key_code);
+					self.rpressed_key = Some(key_code);
 				}
 
 				if let Some(state) = self.key_states.get_mut(&key_code) {
@@ -515,6 +519,7 @@ pub fn end() {
 expose!(WINDOW, size() -> Size);
 expose!(WINDOW, swap());
 expose!(WINDOW, down_keys() -> HashSet<Key>);
+expose!(WINDOW, rpressed_key() -> Option<Key>);
 expose!(WINDOW, key_down(key: Key) -> bool);
 expose!(WINDOW, key_pressed(key: Key) -> bool);
 expose!(WINDOW, key_released(key: Key) -> bool);
