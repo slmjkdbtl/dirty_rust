@@ -13,6 +13,7 @@ use glutin::GlRequest;
 use glutin::ElementState;
 use glutin::ContextTrait;
 use glutin::MouseScrollDelta;
+use glutin::os::macos::WindowBuilderExt;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 pub use glutin::MouseButton as Mouse;
@@ -29,6 +30,7 @@ pub struct Window {
 	mouse_delta: Option<MouseDelta>,
 	scroll_delta: Option<ScrollDelta>,
 	mouse_states: HashMap<Mouse, ButtonState>,
+	resized: Option<Size>,
 	event_loop: glutin::EventsLoop,
 	windowed_ctx: glutin::WindowedContext,
 	fullscreen: bool,
@@ -117,6 +119,15 @@ impl From<LogicalPosition> for MouseDelta {
 	}
 }
 
+impl From<LogicalSize> for Size {
+	fn from(size: LogicalSize) -> Self {
+		return Self {
+			w: size.width as u32,
+			h: size.height as u32,
+		};
+	}
+}
+
 #[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
 pub struct ScrollDelta {
 	pub x: i32,
@@ -168,6 +179,7 @@ impl Window {
 
 		let wbuilder = glutin::WindowBuilder::new()
 			.with_title(title)
+// 			.with_disallow_hidpi(true)
 			.with_resizable(true)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
 
@@ -191,6 +203,7 @@ impl Window {
 			mouse_pos: MousePos::new(0, 0),
 			mouse_delta: None,
 			scroll_delta: None,
+			resized: None,
 			windowed_ctx: windowed_ctx,
 			fullscreen: false,
 			relative: false,
@@ -288,6 +301,11 @@ impl Window {
 		return self.scroll_delta;
 	}
 
+	/// get if window was resized last frame
+	pub fn resized(&self) -> Option<Size> {
+		return self.resized;
+	}
+
 	pub fn size(&self) -> Size {
 		if let Some(size) = self.windowed_ctx.get_inner_size() {
 			return size!(size.width, size.height);
@@ -340,15 +358,11 @@ impl Window {
 						key_input = Some(input);
 					},
 
-					WindowEvent::Resized(dims) => {
-						resized = Some(dims);
+					WindowEvent::Resized(size) => {
+						resized = Some(size);
 					},
 
 					WindowEvent::Touch(touch) => {
-						// ...
-					},
-
-					WindowEvent::HiDpiFactorChanged(f) => {
 						// ...
 					},
 
@@ -400,11 +414,11 @@ impl Window {
 		self.rpressed_key = None;
 		self.mouse_delta = None;
 		self.scroll_delta = None;
-		self.text_input = None;
+		self.resized = None;
 		self.text_input = text_input;
 
-		if let Some(dims) = resized {
-			self.windowed_ctx.resize(dims.to_physical(self.windowed_ctx.get_hidpi_factor()));
+		if let Some(size) = resized {
+			self.resized = Some(size.into());
 		}
 
 		if let Some(scroll_delta) = scroll_delta {
@@ -554,6 +568,7 @@ expose!(WINDOW, mouse_pos() -> MousePos);
 expose!(WINDOW, set_mouse_pos(pos: MousePos));
 expose!(WINDOW, mouse_delta() -> Option<MouseDelta>);
 expose!(WINDOW, scroll_delta() -> Option<ScrollDelta>);
+expose!(WINDOW, resized() -> Option<Size>);
 expose!(WINDOW(mut), set_fullscreen(b: bool));
 expose!(WINDOW, is_fullscreen() -> bool);
 expose!(WINDOW(mut), set_relative(b: bool));

@@ -571,12 +571,12 @@ impl Font {
 
 	/// get current font width for string
 	pub fn width(&self) -> u32 {
-		return self.grid_size.x;
+		return self.grid_size.w;
 	}
 
 	/// get current text height
 	pub fn height(&self) -> u32 {
-		return self.grid_size.y;
+		return self.grid_size.h;
 	}
 
 }
