@@ -99,7 +99,7 @@ macro_rules! gen_vec {
 gen_vec!(Vec2(vec2) -> (x, y): f32, (0, 0));
 gen_vec!(Vec3(vec3) -> (x, y, z): f32, (0, 0, 0));
 gen_vec!(Vec4(vec4) -> (x, y, z, w): f32, (0, 0, 0, 0));
-gen_vec!(Size(size) -> (x, y): u32, (0, 0));
+gen_vec!(Size(size) -> (w, h): u32, (0, 0));
 gen_vec!(Color(color) -> (r, g, b, a): f32, (1, 1, 1, 1));
 gen_vec!(Rect(rect) -> (x, y, w, h): f32, (0, 0, 0, 0));
 
@@ -197,7 +197,7 @@ impl Color {
 
 impl From<Size> for Vec2 {
 	fn from(s: Size) -> Self {
-		return vec2!(s.x, s.y);
+		return vec2!(s.w, s.h);
 	}
 }
 
