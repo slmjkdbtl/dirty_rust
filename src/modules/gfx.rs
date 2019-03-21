@@ -99,8 +99,6 @@ pub(super) fn begin() {
 
 pub(super) fn end() {
 
-	let gfx = ctx_get!(GFX);
-
 	g2d::end();
 	g3d::end();
 	ggl::clear_framebuffer();

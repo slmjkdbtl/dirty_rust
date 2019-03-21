@@ -30,7 +30,7 @@ pub fn rect_rect(r1: Rect, r2: Rect) -> bool {
 pub fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 	let (p1, p2) = l1;
-	let (p3, p4) = l1;
+	let (p3, p4) = l2;
 
 	let a = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
 	let b = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));

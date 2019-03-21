@@ -168,6 +168,7 @@ impl Window {
 
 		let wbuilder = glutin::WindowBuilder::new()
 			.with_title(title)
+			.with_resizable(true)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
 
 		let windowed_ctx = glutin::ContextBuilder::new()
@@ -294,6 +295,10 @@ impl Window {
 		return size!(0, 0);
 	}
 
+	pub fn resize(&self, w: u32, h: u32) {
+		self.windowed_ctx.set_inner_size(LogicalSize::new(w as f64, h as f64));
+	}
+
 	pub fn poll(&mut self) -> bool {
 
 		let mut quit = false;
@@ -303,8 +308,9 @@ impl Window {
 		let mut scroll_delta = None;
 		let mut text_input = None;
 		let mut device_mouse_delta = None;
+		let mut resized = None;
 
-		self.event_loop.poll_events(&mut |event| {
+		self.event_loop.poll_events(|event| {
 
 			match event {
 
@@ -332,6 +338,18 @@ impl Window {
 
 					WindowEvent::KeyboardInput { input, .. } => {
 						key_input = Some(input);
+					},
+
+					WindowEvent::Resized(dims) => {
+						resized = Some(dims);
+					},
+
+					WindowEvent::Touch(touch) => {
+						// ...
+					},
+
+					WindowEvent::HiDpiFactorChanged(f) => {
+						// ...
 					},
 
 					_ => (),
@@ -384,6 +402,10 @@ impl Window {
 		self.scroll_delta = None;
 		self.text_input = None;
 		self.text_input = text_input;
+
+		if let Some(dims) = resized {
+			self.windowed_ctx.resize(dims.to_physical(self.windowed_ctx.get_hidpi_factor()));
+		}
 
 		if let Some(scroll_delta) = scroll_delta {
 			self.scroll_delta = Some(scroll_delta.into());
@@ -529,10 +551,12 @@ expose!(WINDOW, mouse_down(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_pressed(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_released(mouse: Mouse) -> bool);
 expose!(WINDOW, mouse_pos() -> MousePos);
+expose!(WINDOW, set_mouse_pos(pos: MousePos));
 expose!(WINDOW, mouse_delta() -> Option<MouseDelta>);
 expose!(WINDOW, scroll_delta() -> Option<ScrollDelta>);
 expose!(WINDOW(mut), set_fullscreen(b: bool));
 expose!(WINDOW, is_fullscreen() -> bool);
 expose!(WINDOW(mut), set_relative(b: bool));
 expose!(WINDOW, is_relative() -> bool);
+expose!(WINDOW, resize(w: u32, h: u32));
 
