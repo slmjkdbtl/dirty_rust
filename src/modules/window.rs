@@ -13,6 +13,7 @@ use glutin::GlRequest;
 use glutin::ElementState;
 use glutin::ContextTrait;
 use glutin::MouseScrollDelta;
+#[cfg(target_os = "macos")]
 use glutin::os::macos::WindowBuilderExt;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
@@ -179,6 +180,7 @@ impl Window {
 
 		let wbuilder = glutin::WindowBuilder::new()
 			.with_title(title)
+			.with_titlebar_transparent(true)
 // 			.with_disallow_hidpi(true)
 			.with_resizable(true)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
