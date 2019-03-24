@@ -172,6 +172,14 @@ impl From<MouseScrollDelta> for ScrollDelta {
 	}
 }
 
+pub struct Conf {
+	width: u32,
+	height: u32,
+	title: String,
+	hidpi: bool,
+	fullsize_content: bool,
+}
+
 impl Window {
 
 	pub fn new(title: &str, width: u32, height: u32) -> Self {
@@ -181,7 +189,7 @@ impl Window {
 		let wbuilder = glutin::WindowBuilder::new()
 			.with_title(title)
 			.with_titlebar_transparent(true)
-			.with_fullsize_content_view(true)
+// 			.with_fullsize_content_view(true)
 // 			.with_disallow_hidpi(true)
 			.with_resizable(true)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
