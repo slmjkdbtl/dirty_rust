@@ -5,7 +5,8 @@
 - refactor to let user manage context
 - proper error handling
 - remove ugly ggl_derive proc macro, ew
-- custom dpi settings
+- add window options
+- render to canvas by default
 
 == TODO
 - metal backend
@@ -30,7 +31,6 @@
 - scroll input
 - remove ggl_derive
 - fix framebuffer writing is scaled in high dpi
-- add window options
 - support char_input multiple char at one frame
 
 == DONE

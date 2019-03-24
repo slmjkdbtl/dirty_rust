@@ -29,7 +29,7 @@ pub(super) fn init() {
 	g2d::init();
 	ggl::set_blend(ggl::BlendFac::SourceAlpha, ggl::BlendFac::OneMinusSourceAlpha);
 	ggl::set_depth(ggl::DepthFunc::LessOrEqual);
-	ggl::clear_color(0.0, 0.0, 0.0, 1.0);
+	clear_color(color!(0, 0, 0, 1));
 	clear();
 	window::swap();
 
@@ -66,6 +66,11 @@ pub fn stop_drawon() {
 	g2d::unflip_projection();
 	ggl::clear_framebuffer();
 
+}
+
+/// set clear color
+pub fn clear_color(c: Color) {
+	ggl::clear_color(c.r, c.g, c.b, c.a);
 }
 
 /// clear view
