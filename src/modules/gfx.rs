@@ -3,6 +3,7 @@
 //! General Rendering
 
 use std::rc::Rc;
+use std::path::Path;
 
 use gctx::*;
 
@@ -152,7 +153,7 @@ impl Texture {
 	}
 
 	/// create texture from a file
-	pub fn from_file(fname: &str) -> Self {
+	pub fn from_file(fname: impl AsRef<Path>) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 

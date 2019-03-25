@@ -7,6 +7,7 @@
 - remove ugly ggl_derive proc macro, ew
 - add window options
 - render to canvas by default
+- better resize behavior
 
 == TODO
 - metal backend
