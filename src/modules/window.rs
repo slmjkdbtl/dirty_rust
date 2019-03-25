@@ -13,8 +13,6 @@ use glutin::GlRequest;
 use glutin::ElementState;
 use glutin::ContextTrait;
 use glutin::MouseScrollDelta;
-#[cfg(target_os = "macos")]
-use glutin::os::macos::WindowBuilderExt;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 pub use glutin::MouseButton as Mouse;
@@ -177,6 +175,8 @@ pub struct Conf {
 	height: u32,
 	title: String,
 	hidpi: bool,
+	resizable: bool,
+	fullscreen: bool,
 	fullsize_content: bool,
 }
 
@@ -186,13 +186,20 @@ impl Window {
 
 		let event_loop = glutin::EventsLoop::new();
 
-		let wbuilder = glutin::WindowBuilder::new()
+		let mut wbuilder = glutin::WindowBuilder::new()
 			.with_title(title)
-			.with_titlebar_transparent(true)
-// 			.with_fullsize_content_view(true)
-// 			.with_disallow_hidpi(true)
-			.with_resizable(true)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
+
+		#[cfg(target_os = "macos")] {
+
+			use glutin::os::macos::WindowBuilderExt;
+
+			wbuilder = wbuilder
+				.with_titlebar_transparent(true);
+// 				.with_fullsize_content_view(true)
+// 				.with_disallow_hidpi(true);
+
+		}
 
 		let windowed_ctx = glutin::ContextBuilder::new()
 			.with_vsync(true)
