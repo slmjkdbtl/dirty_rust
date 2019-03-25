@@ -2,6 +2,7 @@
 
 //! Sound Loading & playback
 
+use std::path::Path;
 use std::io::Cursor;
 use std::time::Duration;
 
@@ -92,7 +93,7 @@ impl Sound {
 	}
 
 	/// create a sound from file
-	pub fn from_file(fname: &str) -> Self {
+	pub fn from_file(fname: impl AsRef<Path>) -> Self {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 

@@ -4,9 +4,10 @@
 
 use std::fs;
 use std::path::Path;
+use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
-fn get_res_dir() -> String {
+fn get_res_dir() -> PathBuf {
 
 	use core_foundation::bundle;
 
@@ -20,12 +21,12 @@ fn get_res_dir() -> String {
 		.unwrap()
 		.join("Resources");
 
-	return format!("{}", path.display());
+	return path;
 
 }
 
 #[cfg(not(target_os = "macos"))]
-fn get_res_dir() -> String {
+fn get_res_dir() -> PathBuf {
 
 	use std::env;
 
@@ -34,20 +35,22 @@ fn get_res_dir() -> String {
 		.parent().expect("Cannot get application dir")
 		.to_path_buf();
 
-	return format!("{}", path.display());
+	return path;
 
 }
 
 /// check if given file exists
-pub fn exists(path: &str) -> bool {
+pub fn exists(path: impl AsRef<Path>) -> bool {
 	return validate_path(path).is_some();
 }
 
-fn validate_path(path: &str) -> Option<String> {
+fn validate_path(path: impl AsRef<Path>) -> Option<PathBuf> {
+
+	let path = path.as_ref();
 
 	if !Path::new(path).exists() {
 
-		let with_res = format!("{}/{}", get_res_dir(), path);
+		let with_res = get_res_dir().join(path);
 
 		if Path::new(&with_res).exists() {
 			return Some(with_res);
@@ -64,11 +67,13 @@ fn validate_path(path: &str) -> Option<String> {
 }
 
 /// get a list of all filenames under given directory
-pub fn glob(path: &str) -> Vec<String> {
+pub fn glob(path: impl AsRef<Path>) -> Vec<String> {
 
-	let listings = glob::glob(path)
-		.or(glob::glob(&format!("{}/{}", get_res_dir(), path)))
-		.expect(&format!("failed to read dir \"{}\"", path));
+	let path = path.as_ref();
+
+	let listings = glob::glob(&format!("{}", path.display()))
+		.or(glob::glob(&format!("{}", get_res_dir().join(path).display())))
+		.expect(&format!("failed to read dir \"{}\"", path.display()));
 
 	return listings
 		.map(|s| s.expect("failed to glob"))
@@ -80,40 +85,43 @@ pub fn glob(path: &str) -> Vec<String> {
 }
 
 /// get bytes read from given file
-pub fn read_bytes(path: &str) -> Vec<u8> {
+pub fn read_bytes(path: impl AsRef<Path>) -> Vec<u8> {
 
-	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path));
+	let path = path.as_ref();
+	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
 
 	if let Ok(content) = fs::read(&path) {
 		return content;
 	} else {
-		panic!("failed to read file \"{}\"", path);
+		panic!("failed to read file \"{}\"", path.display());
 	}
 
 }
 
 /// get string read from given file
-pub fn read_str(path: &str) -> String {
+pub fn read_str(path: impl AsRef<Path>) -> String {
 
-	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path));
+	let path = path.as_ref();
+	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
 
 	if let Ok(content) = fs::read_to_string(&path) {
 		return content;
 	} else {
-		panic!("failed to read file \"{}\"", path);
+		panic!("failed to read file \"{}\"", path.display());
 	}
 
 }
 
 /// get the basename of given file
-pub fn basename(path: &str) -> String {
+pub fn basename(path: impl AsRef<Path>) -> String {
 
-	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path));
+	let path = path.as_ref();
+	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
 
 	if let Some(name) = Path::new(&path).file_stem() {
 		return name.to_str().expect("failed to get basename").to_owned();
 	} else {
-		panic!("failed to read file \"{}\"", path);
+		panic!("failed to read file \"{}\"", path.display());
 	}
 
 }

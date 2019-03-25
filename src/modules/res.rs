@@ -2,6 +2,7 @@
 
 //! Resource Loading
 
+use std::path::Path;
 use std::collections::HashMap;
 
 use aseprite::SpritesheetData;
@@ -74,9 +75,11 @@ impl Res {
 	}
 
 	/// load all sprites from given directory
-	pub fn load_all_textures_under(&mut self, dir: &str) {
+	pub fn load_all_textures_under(&mut self, dir: impl AsRef<Path>) {
 
-		let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+		let dir = dir.as_ref();
+
+		let files: Vec<String> = fs::glob(&format!("{}/*.png", dir.display()))
 			.into_iter()
 			.map(|f| fs::basename(&f))
 			.collect();
@@ -89,9 +92,11 @@ impl Res {
 	}
 
 	/// load all sounds from given directory
-	pub fn load_all_sounds_under(&mut self, dir: &str) {
+	pub fn load_all_sounds_under(&mut self, dir: impl AsRef<Path>) {
 
-		let files: Vec<String> = fs::glob(&format!("{}*.png", dir))
+		let dir = dir.as_ref();
+
+		let files: Vec<String> = fs::glob(&format!("{}/*.png", dir.display()))
 			.into_iter()
 			.map(|f| fs::basename(&f))
 			.collect();
@@ -104,9 +109,11 @@ impl Res {
 	}
 
 	/// load all spritedata from given directory
-	pub fn load_all_spritedata_under(&mut self, dir: &str) {
+	pub fn load_all_spritedata_under(&mut self, dir: impl AsRef<Path>) {
 
-		let files: Vec<String> = fs::glob(&format!("{}*.json", dir))
+		let dir = dir.as_ref();
+
+		let files: Vec<String> = fs::glob(&format!("{}/*.json", dir.display()))
 			.into_iter()
 			.map(|f| fs::basename(&f))
 			.collect();
@@ -119,31 +126,37 @@ impl Res {
 	}
 
 	/// load all textures from given directory with given names
-	pub fn load_textures_under(&mut self, dir: &str, names: &[&str]) {
+	pub fn load_textures_under(&mut self, dir: impl AsRef<Path>, names: &[&str]) {
+
+		let dir = dir.as_ref();
 
 		for name in names {
 			let name = name.as_ref();
-			self.load_texture(name, &fs::read_bytes(&format!("{}{}.png", dir, name)));
+			self.load_texture(name, &fs::read_bytes(dir.join(&format!("{}.png", name))));
 		}
 
 	}
 
 	/// load all sounds from given directory with given names
-	pub fn load_sounds_under(&mut self, dir: &str, names: &[&str]) {
+	pub fn load_sounds_under(&mut self, dir: impl AsRef<Path>, names: &[&str]) {
+
+		let dir = dir.as_ref();
 
 		for name in names {
 			let name = name.as_ref();
-			self.load_sound(name, &fs::read_bytes(&format!("{}{}.ogg", dir, name)));
+			self.load_sound(name, &fs::read_bytes(dir.join(&format!("{}.ogg", name))));
 		}
 
 	}
 
 	/// load all sprite data from given directory with given names
-	pub fn load_spritedata_under(&mut self, dir: &str, names: &[&str]) {
+	pub fn load_spritedata_under(&mut self, dir: impl AsRef<Path>, names: &[&str]) {
+
+		let dir = dir.as_ref();
 
 		for name in names {
 			let name = name.as_ref();
-			self.load_spritedata(name, &fs::read_str(&format!("{}{}.json", dir, name)));
+			self.load_spritedata(name, &fs::read_str(dir.join(&format!("{}.json", name))));
 		}
 
 	}
@@ -255,12 +268,12 @@ pub fn enabled() -> bool {
 	return ctx_ok!(RES);
 }
 
-expose!(RES(mut), load_all_spritedata_under(dir: &str));
-expose!(RES(mut), load_all_textures_under(dir: &str));
-expose!(RES(mut), load_all_sounds_under(dir: &str));
-expose!(RES(mut), load_spritedata_under(dir: &str, names: &[&str]));
-expose!(RES(mut), load_textures_under(dir: &str, names: &[&str]));
-expose!(RES(mut), load_sounds_under(dir: &str, names: &[&str]));
+expose!(RES(mut), load_all_spritedata_under(dir: impl AsRef<Path>));
+expose!(RES(mut), load_all_textures_under(dir: impl AsRef<Path>));
+expose!(RES(mut), load_all_sounds_under(dir: impl AsRef<Path>));
+expose!(RES(mut), load_spritedata_under(dir: impl AsRef<Path>, names: &[&str]));
+expose!(RES(mut), load_textures_under(dir: impl AsRef<Path>, names: &[&str]));
+expose!(RES(mut), load_sounds_under(dir: impl AsRef<Path>, names: &[&str]));
 expose!(RES(mut), load_spritedata(name: &str, json: &str));
 expose!(RES(mut), load_texture(name: &str, data: &[u8]));
 expose!(RES(mut), load_sound(name: &str, data: &[u8]));
