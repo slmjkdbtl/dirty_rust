@@ -2,6 +2,7 @@
 
 //! Save & Load User Data
 
+use std::path::Path;
 use std::path::PathBuf;
 
 use serde::ser;
@@ -41,7 +42,8 @@ impl Data {
 
 	}
 
-	pub fn save<D: ser::Serialize>(&self, fname: &str, data: D) {
+	/// save json data
+	pub fn save(&self, fname: impl AsRef<Path>, data: impl ser::Serialize) {
 
 		let path = self.dir.join(fname);
 		let string = serde_json::to_string(&data).expect("failed to serialize json");
@@ -62,7 +64,7 @@ impl Data {
 	}
 
 	/// check if a data file exists
-	pub fn exists(&self, fname: &str) -> bool {
+	pub fn exists(&self, fname: impl AsRef<Path>) -> bool {
 		return self.dir.join(fname).exists();
 	}
 
@@ -78,11 +80,8 @@ pub fn enabled() -> bool {
 	return ctx_ok!(DATA);
 }
 
-expose!(DATA, exists(fname: &str) -> bool);
-
-pub fn save<D: ser::Serialize>(fname: &str, data: D) {
-	return ctx_get!(DATA).save(fname, data);
-}
+expose!(DATA, exists(fname: impl AsRef<Path>) -> bool);
+expose!(DATA, save(fname: impl AsRef<Path>, data: impl ser::Serialize));
 
 pub fn get<D: for<'a> de::Deserialize<'a>>(fname: &str) -> D {
 	return ctx_get!(DATA).get(fname);

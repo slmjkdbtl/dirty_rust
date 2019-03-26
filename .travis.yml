@@ -6,7 +6,6 @@ cache: cargo
 rust:
   - stable
   - beta
-  - nightly
 
 os:
   - linux
@@ -15,7 +14,7 @@ os:
 
 matrix:
   allow_failures:
-    - rust: nightly
+    - rust: beta
 
 addons:
   apt:

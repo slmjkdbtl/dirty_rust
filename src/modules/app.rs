@@ -54,6 +54,14 @@ impl App {
 
 	}
 
+	pub fn on_quit<F: FnMut()>(&mut self, mut f: F) {
+		// ...
+	}
+
+	pub fn on_err<F: FnMut()>(&mut self, mut f: F) {
+		// ...
+	}
+
 	/// set fps cap
 	pub fn cap_fps(&mut self, cap: u32) {
 		self.fps_cap = cap;
