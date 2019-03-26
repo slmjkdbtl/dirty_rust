@@ -32,7 +32,7 @@ fn main() {
 	// change data
 	d.size = 100000;
 	data::save("data.json", &d);
-	dbg!(&d);
+	dbg!(data::get::<Duck>("data.json"));
 
 }
 

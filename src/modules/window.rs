@@ -170,6 +170,24 @@ impl From<MouseScrollDelta> for ScrollDelta {
 	}
 }
 
+impl From<Vec2> for LogicalPosition {
+	fn from(pos: Vec2) -> Self {
+		return Self {
+			x: pos.x as f64,
+			y: pos.y as f64,
+		};
+	}
+}
+
+impl From<LogicalPosition> for Vec2 {
+	fn from(pos: LogicalPosition) -> Self {
+		return Self {
+			x: pos.x as f32,
+			y: pos.y as f32,
+		};
+	}
+}
+
 pub struct Conf {
 	width: u32,
 	height: u32,
@@ -263,6 +281,17 @@ impl Window {
 		self.windowed_ctx.set_cursor_position(pos.into());
 	}
 
+	pub fn set_pos(&self, pos: Vec2) {
+		self.windowed_ctx.set_position(pos.into());
+	}
+
+	pub fn get_pos(&self) -> Vec2 {
+		return self.windowed_ctx
+			.get_position()
+			.expect("cannot get window position")
+			.into();
+	}
+
 	pub fn down_keys(&self) -> HashSet<Key> {
 		return self.key_states
 			.iter()
@@ -325,10 +354,10 @@ impl Window {
 	}
 
 	pub fn size(&self) -> Size {
-		if let Some(size) = self.windowed_ctx.get_inner_size() {
-			return size!(size.width, size.height);
-		}
-		return size!(0, 0);
+		return self.windowed_ctx
+			.get_inner_size()
+			.expect("failed to get window size")
+			.into();
 	}
 
 	pub fn resize(&self, w: u32, h: u32) {
@@ -592,4 +621,6 @@ expose!(WINDOW, is_fullscreen() -> bool);
 expose!(WINDOW(mut), set_relative(b: bool));
 expose!(WINDOW, is_relative() -> bool);
 expose!(WINDOW, resize(w: u32, h: u32));
+expose!(WINDOW, set_pos(pos: Vec2));
+expose!(WINDOW, get_pos() -> Vec2);
 
