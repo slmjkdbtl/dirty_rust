@@ -208,7 +208,7 @@ impl Window {
 			.with_title(title)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
 
-		#[cfg(target_os = "macos")] {
+		if cfg!(target_os = "macos") {
 
 			use glutin::os::macos::WindowBuilderExt;
 
@@ -279,6 +279,10 @@ impl Window {
 
 	pub fn set_mouse_pos(&self, pos: MousePos) {
 		self.windowed_ctx.set_cursor_position(pos.into());
+	}
+
+	pub fn dpi(&self) -> f64 {
+		return self.windowed_ctx.get_hidpi_factor();
 	}
 
 	pub fn set_pos(&self, pos: Vec2) {
@@ -599,7 +603,21 @@ pub fn end() {
 	ctx_get!(WINDOW).swap();
 }
 
-expose!(WINDOW, size() -> Size);
+macro_rules! expose2 {
+	($state:ident, $fname:ident$($ge:tt)*($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
+		pub fn $fname($($argn: $argt),*)$( -> $return)? {
+			return ctx_get!($state).$fname($($argn),*);
+		}
+	};
+	($state:ident(mut), $fname:ident($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
+		pub fn $fname($($argn: $argt),*)$( -> $return)? {
+			return ctx_mut!($state).$fname($($argn),*);
+		}
+	};
+}
+
+expose2!(WINDOW, size() -> Size);
+// expose!(WINDOW, size() -> Size);
 expose!(WINDOW, swap());
 expose!(WINDOW, down_keys() -> HashSet<Key>);
 expose!(WINDOW, rpressed_key() -> Option<Key>);
@@ -623,4 +641,5 @@ expose!(WINDOW, is_relative() -> bool);
 expose!(WINDOW, resize(w: u32, h: u32));
 expose!(WINDOW, set_pos(pos: Vec2));
 expose!(WINDOW, get_pos() -> Vec2);
+expose!(WINDOW, dpi() -> f64);
 
