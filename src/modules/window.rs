@@ -603,21 +603,7 @@ pub fn end() {
 	ctx_get!(WINDOW).swap();
 }
 
-macro_rules! expose2 {
-	($state:ident, $fname:ident$($ge:tt)*($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
-		pub fn $fname($($argn: $argt),*)$( -> $return)? {
-			return ctx_get!($state).$fname($($argn),*);
-		}
-	};
-	($state:ident(mut), $fname:ident($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
-		pub fn $fname($($argn: $argt),*)$( -> $return)? {
-			return ctx_mut!($state).$fname($($argn),*);
-		}
-	};
-}
-
-expose2!(WINDOW, size() -> Size);
-// expose!(WINDOW, size() -> Size);
+expose!(WINDOW, size() -> Size);
 expose!(WINDOW, swap());
 expose!(WINDOW, down_keys() -> HashSet<Key>);
 expose!(WINDOW, rpressed_key() -> Option<Key>);
