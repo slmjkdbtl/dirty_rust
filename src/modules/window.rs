@@ -208,7 +208,7 @@ impl Window {
 			.with_title(title)
 			.with_dimensions(LogicalSize::new(width as f64, height as f64));
 
-		if cfg!(target_os = "macos") {
+		#[cfg(target_os = "macos")] {
 
 			use glutin::os::macos::WindowBuilderExt;
 

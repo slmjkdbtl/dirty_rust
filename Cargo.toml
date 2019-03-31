@@ -34,5 +34,5 @@ directories = "1.0.2"
 ggl_derive = { path = "src/macros/ggl" }
 
 [target.'cfg(target_os="macos")'.dependencies]
-core-foundation = "0.6.3"
+core-foundation = "0.6.4"
 
