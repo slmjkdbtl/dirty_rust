@@ -189,40 +189,73 @@ impl From<LogicalPosition> for Vec2 {
 }
 
 pub struct Conf {
-	width: u32,
-	height: u32,
-	title: String,
-	hidpi: bool,
-	resizable: bool,
-	fullscreen: bool,
-	fullsize_content: bool,
+	pub width: u32,
+	pub height: u32,
+	pub title: String,
+	pub hidpi: bool,
+	pub resizable: bool,
+	pub fullscreen: bool,
+	pub fullsize_content: bool,
+	pub vsync: bool,
+}
+
+impl Conf {
+
+	pub fn basic(title: &str, width: u32, height: u32) -> Self {
+		return Self {
+			title: title.to_owned(),
+			width: width,
+			height: height,
+			..Default::default()
+		};
+	}
+
+}
+
+impl Default for Conf {
+
+	fn default() -> Self {
+		return Self {
+			width: 640,
+			height: 480,
+			title: "".to_owned(),
+			hidpi: true,
+			resizable: false,
+			fullscreen: false,
+			fullsize_content: false,
+			vsync: false,
+		};
+	}
+
 }
 
 impl Window {
 
-	pub fn new(title: &str, width: u32, height: u32) -> Self {
+	pub fn new(conf: Conf) -> Self {
 
 		let event_loop = glutin::EventsLoop::new();
 
-		let mut wbuilder = glutin::WindowBuilder::new()
-			.with_title(title)
-			.with_dimensions(LogicalSize::new(width as f64, height as f64));
+		let mut window_builder = glutin::WindowBuilder::new()
+			.with_title(conf.title)
+			.with_resizable(conf.resizable)
+			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64));
 
 		#[cfg(target_os = "macos")] {
 
 			use glutin::os::macos::WindowBuilderExt;
 
-			wbuilder = wbuilder
-				.with_titlebar_transparent(true);
-// 				.with_fullsize_content_view(true)
-// 				.with_disallow_hidpi(true);
+			window_builder = window_builder
+				.with_titlebar_transparent(true)
+				.with_fullsize_content_view(conf.fullsize_content);
 
 		}
 
-		let windowed_ctx = glutin::ContextBuilder::new()
-			.with_vsync(true)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
-			.build_windowed(wbuilder, &event_loop)
+		let mut ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
+
+		let windowed_ctx = ctx_builder
+			.build_windowed(window_builder, &event_loop)
 			.unwrap();
 
 		unsafe {
@@ -578,8 +611,8 @@ impl Window {
 
 ctx!(WINDOW: Window);
 
-pub fn init(title: &str, width: u32, height: u32) {
-	ctx_init!(WINDOW, Window::new(title, width, height));
+pub fn init(conf: Conf) {
+	ctx_init!(WINDOW, Window::new(conf));
 	gfx::init();
 }
 

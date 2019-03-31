@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::fmt;
+use std::mem;
 
 use derive_more::*;
 
@@ -77,7 +78,7 @@ macro_rules! gen_vec {
 		impl AsRef<[$type; $count]> for $name {
 			fn as_ref(&self) -> &[$type; $count] {
 				unsafe {
-					return std::mem::transmute(self);
+					return mem::transmute(self);
 				}
 			}
 		}
@@ -85,7 +86,7 @@ macro_rules! gen_vec {
 		impl From<[$type; $count]> for $name {
 			fn from(t: [$type; $count]) -> Self {
 				unsafe {
-					return std::mem::transmute(t);
+					return mem::transmute(t);
 				}
 			}
 		}
@@ -114,7 +115,7 @@ macro_rules! gen_vec {
 
 }
 
-macro_rules! fuck {
+macro_rules! mix {
 
 	($one:ident($($mem_one:ident),+): $type_one:ty, $two:ident($($mem_two:ident),+): $type_two:ty) => {
 
@@ -149,9 +150,9 @@ gen_vec!(Size(size) -> (w, h): [u32; 2], (0, 0));
 gen_vec!(Color(color) -> (r, g, b, a): [f32; 4], (1, 1, 1, 1));
 gen_vec!(Rect(rect) -> (x, y, w, h): [f32; 4], (0, 0, 0, 0));
 
-fuck!(Vec2(x, y): f32, Size(w, h): u32);
-fuck!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
-fuck!(Vec4(x, y, z, w): f32, Rect(x, y, w, h): f32);
+mix!(Vec2(x, y): f32, Size(w, h): u32);
+mix!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
+mix!(Vec4(x, y, z, w): f32, Rect(x, y, w, h): f32);
 
 impl Vec2 {
 

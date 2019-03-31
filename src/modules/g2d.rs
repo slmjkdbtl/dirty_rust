@@ -128,9 +128,9 @@ struct Vertex2D {
 impl Vertex2D {
 	fn new(pos: Vec2, uv: Vec2, c: Color) -> Self {
 		return Self {
-			pos: [pos.x, pos.y],
-			uv: [uv.x, uv.y],
-			color: [c.r, c.g, c.b, c.a],
+			pos: pos.into(),
+			uv: uv.into(),
+			color: c.into(),
 		};
 	}
 }

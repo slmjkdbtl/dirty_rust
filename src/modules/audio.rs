@@ -14,11 +14,6 @@ use gctx::*;
 
 use crate::*;
 
-/// Audio Context
-pub struct Audio {
-	device: rodio::Device,
-}
-
 /// base struct containing sound data and effects data
 #[derive(Clone)]
 pub struct Sound {
@@ -39,29 +34,22 @@ pub struct Track {
 	sink: Sink,
 }
 
-impl Audio {
-
-	pub fn new() -> Self {
-		return Self {
-			device: rodio::default_output_device().expect("failed to get audio device"),
-		};
+pub fn play(sound: &Sound) {
+	if let Some(device) = rodio::default_output_device() {
+		rodio::play_raw(&device, sound.apply().convert_samples());
 	}
+}
 
-	pub fn play(&self, sound: &Sound) {
-		rodio::play_raw(&self.device, sound.apply().convert_samples());
-	}
+/// play a sound and return a track
+pub fn track(sound: &Sound) -> Track {
 
-	/// play a sound and return a track
-	pub fn track(&self, sound: &Sound) -> Track {
+	let device = rodio::default_output_device().expect("failed to get audio device");
+	let sink = Sink::new(&device);
 
-		let sink = Sink::new(&self.device);
+	sink.append(sound.apply());
 
-		sink.append(sound.apply());
-
-		return Track {
-			sink: sink,
-		}
-
+	return Track {
+		sink: sink,
 	}
 
 }
@@ -197,26 +185,4 @@ impl Track {
 	}
 
 }
-
-// context
-ctx!(AUDIO: Audio);
-
-/// initialize audio module
-pub fn init() {
-
-	if !app::enabled() {
-		panic!("can't init audio without app");
-	}
-
-	ctx_init!(AUDIO, Audio::new());
-
-}
-
-/// check if audio module is initialized
-pub fn enabled() -> bool {
-	return ctx_ok!(AUDIO);
-}
-
-expose!(AUDIO, play(sound: &Sound));
-expose!(AUDIO, track(sound: &Sound) -> Track);
 

@@ -7,8 +7,7 @@ fn main() {
 
 	// init modules
 	app::init();
-	audio::init();
-	window::init("yo", 640, 480);
+	window::init(window::Conf::basic("yo", 640, 480));
 	res::init();
 
 	let (width, height) = window::size().into();

@@ -9,7 +9,7 @@ const GATE: u32 = 48;
 fn main() {
 
 	app::init();
-	window::init("yo", 640, 480);
+	window::init(window::Conf::basic("bench", 640, 480));
 
 	let tex = gfx::Texture::from_bytes(include_bytes!("res/icon.png"));
 	let (w, h) = window::size().into();
