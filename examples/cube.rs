@@ -8,7 +8,7 @@ fn main() {
 
 	// init modules
 	app::init();
-	window::init("cube", 640, 480);
+	window::init(window::Conf::basic("cube", 640, 480));
 	window::set_relative(true);
 
 	let mut pos = vec3!(9, 9, 9);

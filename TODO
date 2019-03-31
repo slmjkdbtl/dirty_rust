@@ -5,7 +5,6 @@
 - refactor to let user manage context
 - proper error handling
 - remove ugly ggl_derive proc macro, ew
-- add window options
 - render to canvas by default
 - better resize behavior
 
@@ -33,6 +32,7 @@
 - remove ggl_derive
 - fix framebuffer writing is scaled in high dpi
 - support char_input multiple char at one frame
+- add window options
 
 == DONE
 - basic window creation
