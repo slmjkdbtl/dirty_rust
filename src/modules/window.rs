@@ -196,6 +196,10 @@ pub struct Conf {
 	pub resizable: bool,
 	pub fullscreen: bool,
 	pub fullsize_content: bool,
+	pub always_on_top: bool,
+	pub multi_touch: bool,
+	pub borderless: bool,
+	pub transparent: bool,
 	pub vsync: bool,
 }
 
@@ -223,6 +227,10 @@ impl Default for Conf {
 			resizable: false,
 			fullscreen: false,
 			fullsize_content: false,
+			always_on_top: true,
+			multi_touch: false,
+			borderless: false,
+			transparent: false,
 			vsync: false,
 		};
 	}
@@ -234,11 +242,25 @@ impl Window {
 	pub fn new(conf: Conf) -> Self {
 
 		let event_loop = glutin::EventsLoop::new();
+		let monitor = event_loop.get_primary_monitor();
 
 		let mut window_builder = glutin::WindowBuilder::new()
 			.with_title(conf.title.to_owned())
 			.with_resizable(conf.resizable)
+			.with_transparency(conf.transparent)
+			.with_decorations(!conf.borderless)
+			.with_always_on_top(conf.always_on_top)
 			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64));
+
+		if conf.fullscreen {
+			window_builder = window_builder
+				.with_fullscreen(Some(monitor));
+		}
+
+		if conf.multi_touch {
+			window_builder = window_builder
+				.with_multitouch();
+		}
 
 		#[cfg(target_os = "macos")] {
 
