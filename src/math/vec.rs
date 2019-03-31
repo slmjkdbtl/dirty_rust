@@ -20,7 +20,7 @@ macro_rules! nested_macro {
 
 macro_rules! gen_vec {
 
-	($name:ident($sname:ident) -> ($($member:ident),+): $type:ty, ($($default:expr),+)) => {
+	($name:ident($sname:ident) -> ($($member:ident),+): [$type:ty; $count:expr], ($($default:expr),+)) => {
 
 		nested_macro! {
 
@@ -74,6 +74,30 @@ macro_rules! gen_vec {
 
 		}
 
+		impl AsRef<[$type; $count]> for $name {
+			fn as_ref(&self) -> &[$type; $count] {
+				unsafe {
+					return std::mem::transmute(self);
+				}
+			}
+		}
+
+		impl From<[$type; $count]> for $name {
+			fn from(t: [$type; $count]) -> Self {
+				unsafe {
+					return std::mem::transmute(t);
+				}
+			}
+		}
+
+		impl Into<[$type; $count]> for $name {
+			fn into(self) -> [$type; $count] {
+				unsafe {
+					return std::mem::transmute(self);
+				}
+			}
+		}
+
 		impl Default for $name {
 			fn default() -> Self {
 				return $sname!($($default),+);
@@ -96,12 +120,44 @@ macro_rules! gen_vec {
 
 }
 
-gen_vec!(Vec2(vec2) -> (x, y): f32, (0, 0));
-gen_vec!(Vec3(vec3) -> (x, y, z): f32, (0, 0, 0));
-gen_vec!(Vec4(vec4) -> (x, y, z, w): f32, (0, 0, 0, 0));
-gen_vec!(Size(size) -> (w, h): u32, (0, 0));
-gen_vec!(Color(color) -> (r, g, b, a): f32, (1, 1, 1, 1));
-gen_vec!(Rect(rect) -> (x, y, w, h): f32, (0, 0, 0, 0));
+macro_rules! fuck {
+
+	($one:ident($($mem_one:ident),+): $type_one:ty, $two:ident($($mem_two:ident),+): $type_two:ty) => {
+
+		impl From<$one> for $two {
+			fn from(s: $one) -> Self {
+				return Self {
+					$(
+						$mem_two: s.$mem_one as $type_two
+					),+
+				};
+			}
+		}
+
+		impl Into<$one> for $two {
+			fn into(self) -> $one {
+				return $one {
+					$(
+						$mem_one: self.$mem_two as $type_one
+					),+
+				};
+			}
+		}
+
+	}
+
+}
+
+gen_vec!(Vec2(vec2) -> (x, y): [f32; 2], (0, 0));
+gen_vec!(Vec3(vec3) -> (x, y, z): [f32; 3], (0, 0, 0));
+gen_vec!(Vec4(vec4) -> (x, y, z, w): [f32; 4], (0, 0, 0, 0));
+gen_vec!(Size(size) -> (w, h): [u32; 2], (0, 0));
+gen_vec!(Color(color) -> (r, g, b, a): [f32; 4], (1, 1, 1, 1));
+gen_vec!(Rect(rect) -> (x, y, w, h): [f32; 4], (0, 0, 0, 0));
+
+fuck!(Vec2(x, y): f32, Size(w, h): u32);
+fuck!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
+fuck!(Vec4(x, y, z, w): f32, Rect(x, y, w, h): f32);
 
 impl Vec2 {
 
@@ -193,11 +249,5 @@ impl Color {
 
 	}
 
-}
-
-impl From<Size> for Vec2 {
-	fn from(s: Size) -> Self {
-		return vec2!(s.w, s.h);
-	}
 }
 
