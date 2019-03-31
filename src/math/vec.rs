@@ -49,7 +49,7 @@ macro_rules! gen_vec {
 		}
 
 		#[allow(missing_docs)]
-		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
+		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Debug)]
 		pub struct $name {
 			$(
 			pub $member: $type
@@ -107,12 +107,6 @@ macro_rules! gen_vec {
 		impl fmt::Display for $name {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 				return write!(f, "{}({})", stringify!($sname), vec![$(format!("{}", self.$member)),+].join(", "));
-			}
-		}
-
-		impl fmt::Debug for $name {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				return write!(f, "{}", self);
 			}
 		}
 
