@@ -191,7 +191,7 @@ impl From<LogicalPosition> for Vec2 {
 pub struct Conf {
 	pub width: u32,
 	pub height: u32,
-	pub title: String,
+	pub title: &'static str,
 	pub hidpi: bool,
 	pub resizable: bool,
 	pub fullscreen: bool,
@@ -201,9 +201,9 @@ pub struct Conf {
 
 impl Conf {
 
-	pub fn basic(title: &str, width: u32, height: u32) -> Self {
+	pub fn basic(title: &'static str, width: u32, height: u32) -> Self {
 		return Self {
-			title: title.to_owned(),
+			title: title,
 			width: width,
 			height: height,
 			..Default::default()
@@ -218,7 +218,7 @@ impl Default for Conf {
 		return Self {
 			width: 640,
 			height: 480,
-			title: "".to_owned(),
+			title: "",
 			hidpi: true,
 			resizable: false,
 			fullscreen: false,
@@ -236,7 +236,7 @@ impl Window {
 		let event_loop = glutin::EventsLoop::new();
 
 		let mut window_builder = glutin::WindowBuilder::new()
-			.with_title(conf.title)
+			.with_title(conf.title.to_owned())
 			.with_resizable(conf.resizable)
 			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64));
 
