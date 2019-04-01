@@ -90,7 +90,6 @@ $ dirty export
 - `app::init()` also overrides default panic behavior (also display messages to screen if `window` is initiated)
 - module contexts are handled internally
 - currently using OpenGL 2.1 for better compatibility, but might support multiple backends in the future
-- api tries to be simple and personal instead of ideomatic
 
 ### fun fact
 `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
