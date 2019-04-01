@@ -11,7 +11,7 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-gl = "0.11.0"
+gl = "0.12.0"
 image = "0.21.0"
 tobj = "0.1.6"
 rodio = "0.8.1"
