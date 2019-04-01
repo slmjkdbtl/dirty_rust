@@ -6,7 +6,7 @@ fn main() {
 
 	// init modules
 	app::init();
-	window::init(window::Conf::basic("shader", 640, 480));
+	window::init(Default::default());
 
 	let (w, h) = window::size().into();
 

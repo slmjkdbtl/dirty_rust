@@ -7,7 +7,7 @@ fn main() {
 
 	// init modules
 	app::init();
-	window::init(window::Conf::basic("yo", 640, 480));
+	window::init(Default::default());
 	res::init();
 
 	let (width, height) = window::size().into();

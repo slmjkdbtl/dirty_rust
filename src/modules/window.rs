@@ -227,7 +227,7 @@ impl Default for Conf {
 			resizable: false,
 			fullscreen: false,
 			fullsize_content: false,
-			always_on_top: true,
+			always_on_top: false,
 			multi_touch: false,
 			borderless: false,
 			transparent: false,
