@@ -320,6 +320,16 @@ impl Window {
 		return self.fullscreen;
 	}
 
+	pub fn toggle_fullscreen(&mut self) {
+
+		if self.is_fullscreen() {
+			self.set_fullscreen(false);
+		} else {
+			self.set_fullscreen(true);
+		}
+
+	}
+
 	pub fn set_relative(&mut self, b: bool) {
 
 		self.relative = b;
@@ -330,6 +340,16 @@ impl Window {
 
 	pub fn is_relative(&self) -> bool {
 		return self.relative;
+	}
+
+	pub fn toggle_relative(&mut self) {
+
+		if self.is_relative() {
+			self.set_relative(false);
+		} else {
+			self.set_relative(true);
+		}
+
 	}
 
 	pub fn set_mouse_pos(&self, pos: MousePos) {
@@ -669,8 +689,10 @@ expose!(WINDOW, scroll_delta() -> Option<ScrollDelta>);
 expose!(WINDOW, resized() -> Option<Size>);
 expose!(WINDOW(mut), set_fullscreen(b: bool));
 expose!(WINDOW, is_fullscreen() -> bool);
+expose!(WINDOW(mut), toggle_fullscreen());
 expose!(WINDOW(mut), set_relative(b: bool));
 expose!(WINDOW, is_relative() -> bool);
+expose!(WINDOW(mut), toggle_relative());
 expose!(WINDOW, resize(w: u32, h: u32));
 expose!(WINDOW, set_pos(pos: Vec2));
 expose!(WINDOW, get_pos() -> Vec2);
