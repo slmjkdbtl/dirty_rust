@@ -257,7 +257,11 @@ pub fn render(c: &gfx::Canvas) {
 		}
 	}
 
+	push();
+	scale(vec2!(1 as f64 / window::dpi()));
 	draw(&c.tex, rect!(0, 0, 1, 1));
+	pop();
+
 }
 
 /// draw text
@@ -315,6 +319,10 @@ pub fn text(s: &str) {
 
 	pop();
 
+}
+
+pub fn stext(text: &str) {
+	unimplemented!();
 }
 
 /// draw rectangle with size

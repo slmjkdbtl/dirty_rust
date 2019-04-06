@@ -10,6 +10,7 @@ use glutin::DeviceEvent;
 use glutin::KeyboardInput;
 use glutin::Api;
 use glutin::GlRequest;
+use glutin::GlProfile;
 use glutin::ElementState;
 use glutin::ContextTrait;
 use glutin::MouseScrollDelta;
@@ -195,12 +196,14 @@ pub struct Conf {
 	pub hidpi: bool,
 	pub resizable: bool,
 	pub fullscreen: bool,
-	pub fullsize_content: bool,
 	pub always_on_top: bool,
 	pub multi_touch: bool,
 	pub borderless: bool,
 	pub transparent: bool,
 	pub vsync: bool,
+	pub hide_title: bool,
+	pub hide_titlebar_buttons: bool,
+	pub fullsize_content: bool,
 }
 
 impl Conf {
@@ -226,12 +229,14 @@ impl Default for Conf {
 			hidpi: true,
 			resizable: false,
 			fullscreen: false,
-			fullsize_content: false,
 			always_on_top: false,
 			multi_touch: false,
 			borderless: false,
 			transparent: false,
 			vsync: false,
+			fullsize_content: false,
+			hide_title: false,
+			hide_titlebar_buttons: false,
 		};
 	}
 
@@ -267,6 +272,8 @@ impl Window {
 			use glutin::os::macos::WindowBuilderExt;
 
 			window_builder = window_builder
+				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
+				.with_title_hidden(conf.hide_title)
 				.with_titlebar_transparent(true)
 				.with_fullsize_content_view(conf.fullsize_content);
 
@@ -278,10 +285,10 @@ impl Window {
 
 		let windowed_ctx = ctx_builder
 			.build_windowed(window_builder, &event_loop)
-			.unwrap();
+			.expect("failed to create window");
 
 		unsafe {
-			windowed_ctx.make_current().unwrap();
+			windowed_ctx.make_current().expect("failed to create OpenGL context");
 			gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
 		}
 
@@ -354,6 +361,14 @@ impl Window {
 
 	pub fn set_mouse_pos(&self, pos: MousePos) {
 		self.windowed_ctx.set_cursor_position(pos.into());
+	}
+
+	pub fn hide(&self) {
+		self.windowed_ctx.hide();
+	}
+
+	pub fn show(&self) {
+		self.windowed_ctx.show();
 	}
 
 	pub fn dpi(&self) -> f64 {
@@ -697,4 +712,6 @@ expose!(WINDOW, resize(w: u32, h: u32));
 expose!(WINDOW, set_pos(pos: Vec2));
 expose!(WINDOW, get_pos() -> Vec2);
 expose!(WINDOW, dpi() -> f64);
+expose!(WINDOW, show());
+expose!(WINDOW, hide());
 
