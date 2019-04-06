@@ -7,7 +7,7 @@ doc:
 	cargo doc --no-deps --open
 
 loc:
-	tokei
+	loc
 
 checkdep:
 	cargo outdated --root-deps-only

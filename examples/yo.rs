@@ -13,7 +13,7 @@ fn main() {
 	let (width, height) = window::size().into();
 	let mut index = 0;
 	let margin = 16;
-	let canvas = gfx::Canvas::new(width, height);
+	let canvas = gfx::Canvas::new(320, 320);
 	let shader = g2d::Shader::from_code_frag(include_str!("res/noise.frag"));
 
 	// load resources
@@ -44,8 +44,8 @@ fn main() {
 		let time = app::time();
 		let dt = app::dt();
 
-// 		gfx::drawon(&canvas);
-// 		gfx::clear();
+		gfx::drawon(&canvas);
+		gfx::clear();
 
 		if hovering {
 			g3d::rotate(vec3!(time));
@@ -114,9 +114,9 @@ fn main() {
 		g2d::text(&format!("{}", app::fps()));
 		g2d::pop();
 
-// 		gfx::stop_drawon();
+		gfx::stop_drawon();
 // 		g2d::set_shader(&shader);
-// 		g2d::render(&canvas);
+		g2d::render(&canvas);
 // 		g2d::set_shader_default();
 
 		// inputs

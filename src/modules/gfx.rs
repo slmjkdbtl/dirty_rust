@@ -69,6 +69,19 @@ pub fn stop_drawon() {
 
 }
 
+/// return current framebuffer size
+pub fn size() -> Size {
+
+	let gfx = ctx_mut!(GFX);
+
+	if let Some(canvas) = &gfx.current_canvas {
+		return size!(canvas.width, canvas.height);
+	} else {
+		return window::size();
+	}
+
+}
+
 /// set clear color
 pub fn clear_color(c: Color) {
 	ggl::clear_color(c.r, c.g, c.b, c.a);
@@ -208,8 +221,11 @@ impl Canvas {
 	pub fn new(width: u32, height: u32) -> Self {
 
 		let handle = ggl::Framebuffer::new();
-		let pixels = vec![0.0 as u8; (width * height * 4) as usize];
-		let tex = Texture::from_raw(&pixels, width, height);
+		let dpi = window::dpi();
+		let tw = (width as f64 * dpi) as u32;
+		let th = (height as f64 * dpi) as u32;
+		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
+		let tex = Texture::from_raw(&pixels, tw, th);
 
 		handle.attach(&*tex.handle);
 
