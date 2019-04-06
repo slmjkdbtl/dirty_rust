@@ -13,7 +13,7 @@ fn main() {
 	let (width, height) = window::size().into();
 	let mut index = 0;
 	let margin = 16;
-	let canvas = gfx::Canvas::new(320, 320);
+	let canvas = gfx::Canvas::new(width, height);
 	let shader = g2d::Shader::from_code_frag(include_str!("res/noise.frag"));
 
 	// load resources
