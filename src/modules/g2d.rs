@@ -16,9 +16,9 @@ const MAX_DRAWS: usize = 65536;
 include!("../res/resources.rs");
 
 // context
-ctx!(G2D: G2dCtx);
+ctx!(G2D: G2d);
 
-struct G2dCtx {
+struct G2d {
 
 	projection: Mat4,
 	state: State,
@@ -50,7 +50,7 @@ pub(super) fn init() {
 	let (width, height) = window::size().into();
 	let projection = math::ortho(0.0, (width as f32), (height as f32), 0.0, -1.0, 1.0);
 
-	ctx_init!(G2D, G2dCtx {
+	ctx_init!(G2D, G2d {
 
 		projection: projection,
 		state_stack: Vec::with_capacity(64),

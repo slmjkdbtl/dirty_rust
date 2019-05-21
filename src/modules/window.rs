@@ -12,7 +12,8 @@ use glutin::Api;
 use glutin::GlRequest;
 use glutin::GlProfile;
 use glutin::ElementState;
-use glutin::ContextTrait;
+use glutin::PossiblyCurrent;
+use glutin::NotCurrent;
 use glutin::MouseScrollDelta;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
@@ -32,7 +33,7 @@ pub struct Window {
 	mouse_states: HashMap<Mouse, ButtonState>,
 	resized: Option<Size>,
 	event_loop: glutin::EventsLoop,
-	windowed_ctx: glutin::WindowedContext,
+	windowed_ctx: glutin::WindowedContext<PossiblyCurrent>,
 	fullscreen: bool,
 	relative: bool,
 }
@@ -279,7 +280,7 @@ impl Window {
 
 		}
 
-		let mut ctx_builder = glutin::ContextBuilder::new()
+		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
 			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
 
@@ -287,10 +288,11 @@ impl Window {
 			.build_windowed(window_builder, &event_loop)
 			.expect("failed to create window");
 
-		unsafe {
-			windowed_ctx.make_current().expect("failed to create OpenGL context");
+		let windowed_ctx = unsafe {
+			let windowed_ctx = windowed_ctx.make_current().expect("oh no");
 			gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
-		}
+			windowed_ctx
+		};
 
 		return Self {
 			event_loop: event_loop,
@@ -312,11 +314,12 @@ impl Window {
 	pub fn set_fullscreen(&mut self, b: bool) {
 
 		let ctx = &self.windowed_ctx;
+		let window = ctx.window();
 
 		if b {
-			ctx.set_fullscreen(Some(ctx.get_current_monitor()));
+			window.set_fullscreen(Some(window.get_current_monitor()));
 		} else {
-			ctx.set_fullscreen(None);
+			window.set_fullscreen(None);
 		}
 
 		self.fullscreen = b;
@@ -339,9 +342,11 @@ impl Window {
 
 	pub fn set_relative(&mut self, b: bool) {
 
+		let window = self.windowed_ctx.window();
+
 		self.relative = b;
-		self.windowed_ctx.hide_cursor(b);
-		self.windowed_ctx.grab_cursor(b);
+		window.hide_cursor(b);
+		window.grab_cursor(b);
 
 	}
 
@@ -360,27 +365,28 @@ impl Window {
 	}
 
 	pub fn set_mouse_pos(&self, pos: MousePos) {
-		self.windowed_ctx.set_cursor_position(pos.into());
+		self.windowed_ctx.window().set_cursor_position(pos.into());
 	}
 
 	pub fn hide(&self) {
-		self.windowed_ctx.hide();
+		self.windowed_ctx.window().hide();
 	}
 
 	pub fn show(&self) {
-		self.windowed_ctx.show();
+		self.windowed_ctx.window().show();
 	}
 
 	pub fn dpi(&self) -> f64 {
-		return self.windowed_ctx.get_hidpi_factor();
+		return self.windowed_ctx.window().get_hidpi_factor();
 	}
 
 	pub fn set_pos(&self, pos: Vec2) {
-		self.windowed_ctx.set_position(pos.into());
+		self.windowed_ctx.window().set_position(pos.into());
 	}
 
 	pub fn get_pos(&self) -> Vec2 {
 		return self.windowed_ctx
+			.window()
 			.get_position()
 			.expect("cannot get window position")
 			.into();
@@ -449,13 +455,14 @@ impl Window {
 
 	pub fn size(&self) -> Size {
 		return self.windowed_ctx
+			.window()
 			.get_inner_size()
 			.expect("failed to get window size")
 			.into();
 	}
 
 	pub fn resize(&self, w: u32, h: u32) {
-		self.windowed_ctx.set_inner_size(LogicalSize::new(w as f64, h as f64));
+		self.windowed_ctx.window().set_inner_size(LogicalSize::new(w as f64, h as f64));
 	}
 
 	pub fn poll(&mut self) -> bool {

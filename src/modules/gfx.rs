@@ -2,7 +2,7 @@
 
 //! General Rendering
 
-use std::rc::Rc;
+use std::sync::Arc;
 use std::path::Path;
 
 use gctx::*;
@@ -14,24 +14,77 @@ use crate::ggl;
 include!("../res/resources.rs");
 
 // context
-ctx!(GFX: GfxCtx);
+ctx!(GFX: Gfx);
 
-struct GfxCtx {
+pub struct Gfx {
 	current_canvas: Option<Canvas>,
+}
+
+impl Gfx {
+
+	pub fn new() -> Self {
+
+		let gfx = Self {
+			current_canvas:None,
+		};
+
+		g3d::init();
+		g2d::init();
+		ggl::set_blend(ggl::BlendFac::SourceAlpha, ggl::BlendFac::OneMinusSourceAlpha);
+		ggl::set_depth(ggl::DepthFunc::LessOrEqual);
+		gfx.clear_color(color!(0, 0, 0, 1));
+		gfx.clear();
+
+		return gfx;
+
+	}
+
+	/// set active canvas
+	pub fn drawon(&mut self, c: &Canvas) {
+
+		self.current_canvas = Some(c.clone());
+		g2d::flush();
+		g2d::flip_projection();
+		ggl::set_framebuffer(&*c.handle);
+
+	}
+
+	/// stop active canvas
+	pub fn stop_drawon(&mut self) {
+
+		self.current_canvas = None;
+		g2d::flush();
+		g2d::unflip_projection();
+		ggl::clear_framebuffer();
+
+	}
+
+	/// return current framebuffer size
+	pub fn size(&self) -> Size {
+
+		if let Some(canvas) = &self.current_canvas {
+			return size!(canvas.width, canvas.height);
+		} else {
+			return window::size();
+		}
+
+	}
+
+	/// set clear color
+	pub fn clear_color(&self, c: Color) {
+		ggl::clear_color(c.r, c.g, c.b, c.a);
+	}
+
+	/// clear view
+	pub fn clear(&self) {
+		ggl::clear(true, true, false);
+	}
+
 }
 
 pub(super) fn init() {
 
-	ctx_init!(GFX, GfxCtx {
-		current_canvas: None,
-	});
-
-	g3d::init();
-	g2d::init();
-	ggl::set_blend(ggl::BlendFac::SourceAlpha, ggl::BlendFac::OneMinusSourceAlpha);
-	ggl::set_depth(ggl::DepthFunc::LessOrEqual);
-	clear_color(color!(0, 0, 0, 1));
-	clear();
+	ctx_init!(GFX, Gfx::new());
 	window::swap();
 
 }
@@ -43,69 +96,6 @@ pub fn enabled() -> bool {
 
 pub(crate) fn current_canvas() -> &'static Option<Canvas> {
 	return &ctx_get!(GFX).current_canvas;
-}
-
-/// set active canvas
-pub fn drawon(c: &Canvas) {
-
-	let gfx_mut = ctx_mut!(GFX);
-
-	gfx_mut.current_canvas = Some(c.clone());
-	g2d::flush();
-	g2d::flip_projection();
-	ggl::set_framebuffer(&*c.handle);
-
-}
-
-/// stop active canvas
-pub fn stop_drawon() {
-
-	let gfx_mut = ctx_mut!(GFX);
-
-	gfx_mut.current_canvas = None;
-	g2d::flush();
-	g2d::unflip_projection();
-	ggl::clear_framebuffer();
-
-}
-
-/// return current framebuffer size
-pub fn size() -> Size {
-
-	let gfx = ctx_mut!(GFX);
-
-	if let Some(canvas) = &gfx.current_canvas {
-		return size!(canvas.width, canvas.height);
-	} else {
-		return window::size();
-	}
-
-}
-
-/// set clear color
-pub fn clear_color(c: Color) {
-	ggl::clear_color(c.r, c.g, c.b, c.a);
-}
-
-/// clear view
-pub fn clear() {
-	ggl::clear(true, true, false);
-}
-
-/// save a canvas into a png file
-pub fn capture(canvas: &Canvas, fname: &str) {
-
-	let tex = &canvas.tex;
-	let buffer = tex.handle.get_data();
-
-	image::save_buffer(
-		fname,
-		&buffer,
-		tex.width(),
-		tex.height(),
-		image::ColorType::RGBA(8),
-	).expect("failed to save png");
-
 }
 
 pub(super) fn begin() {
@@ -124,10 +114,16 @@ pub(super) fn end() {
 
 }
 
+expose!(GFX, clear());
+expose!(GFX, clear_color(c: Color));
+expose!(GFX(mut), drawon(c: &Canvas));
+expose!(GFX(mut), stop_drawon());
+expose!(GFX, size() -> Size);
+
 /// texture
 #[derive(PartialEq, Clone)]
 pub struct Texture {
-	pub(super) handle: Rc<ggl::Texture>,
+	pub(super) handle: Arc<ggl::Texture>,
 }
 
 impl Texture {
@@ -135,7 +131,7 @@ impl Texture {
 	/// create an empty texture with width and height
 	pub fn new(width: u32, height: u32) -> Self {
 		return Self {
-			handle: Rc::new(ggl::Texture::new(width, height)),
+			handle: Arc::new(ggl::Texture::new(width, height)),
 		};
 	}
 
@@ -159,7 +155,7 @@ impl Texture {
 
 		let tex = Self::new(width, height);
 
-		tex.handle.data(pixels);
+		tex.update(pixels);
 
 		return tex;
 
@@ -173,6 +169,11 @@ impl Texture {
 	/// create texture from a color block
 	pub fn from_color(c: Color, width: u32, height: u32) -> Self {
 		return Self::from_raw(&c.to_rgba(), width, height);
+	}
+
+	/// update pixel data
+	pub fn update(&self, pixels: &[u8]) {
+		self.handle.data(pixels);
 	}
 
 	/// get texture width
@@ -190,9 +191,9 @@ impl Texture {
 /// mesh
 #[derive(Clone)]
 pub struct Mesh {
-	vbuf: Rc<ggl::VertexBuffer>,
-	ibuf: Rc<ggl::IndexBuffer>,
-	texture: Rc<ggl::Texture>,
+	vbuf: Arc<ggl::VertexBuffer>,
+	ibuf: Arc<ggl::IndexBuffer>,
+	texture: Arc<ggl::Texture>,
 }
 
 impl Mesh {
@@ -208,7 +209,7 @@ impl Mesh {
 #[derive(PartialEq, Clone)]
 pub struct Canvas {
 
-	pub(super) handle: Rc<ggl::Framebuffer>,
+	pub(super) handle: Arc<ggl::Framebuffer>,
 	pub tex: Texture,
 	pub width: u32,
 	pub height: u32,
@@ -230,11 +231,27 @@ impl Canvas {
 		handle.attach(&*tex.handle);
 
 		return Self {
-			handle: Rc::new(handle),
+			handle: Arc::new(handle),
 			tex: tex,
 			width: width,
 			height: height,
 		}
+
+	}
+
+	/// save a canvas into a png file
+	pub fn capture(&self, fname: &str) {
+
+		let tex = &self.tex;
+		let buffer = tex.handle.get_data();
+
+		image::save_buffer(
+			fname,
+			&buffer,
+			tex.width(),
+			tex.height(),
+			image::ColorType::RGBA(8),
+		).expect("failed to save png");
 
 	}
 
@@ -244,12 +261,12 @@ macro_rules! gen_templated_shader {
 
 	($name:ident, $vert_template:expr, $frag_template:expr, $vert_default:expr, $frag_default:expr) => {
 
-		use std::rc::Rc;
+		use std::sync::Arc;
 
 		/// shader effect
 		#[derive(PartialEq, Clone)]
 		pub struct $name {
-			program: Rc<ggl::Program>,
+			program: Arc<ggl::Program>,
 		}
 
 		impl Shader {
@@ -261,7 +278,7 @@ macro_rules! gen_templated_shader {
 				let program = ggl::Program::new(&vert, &frag);
 
 				return Self {
-					program: Rc::new(program),
+					program: Arc::new(program),
 				};
 
 			}
