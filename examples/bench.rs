@@ -8,7 +8,6 @@ const GATE: u32 = 48;
 
 fn main() {
 
-	app::init();
 	window::init(Default::default());
 
 	let tex = gfx::Texture::from_bytes(include_bytes!("res/icon.png"));
@@ -17,9 +16,9 @@ fn main() {
 	let mut done = false;
 	let mut count = 0;
 
-	app::run(|| {
+	window::run(|| {
 
-		let fps = app::fps();
+		let fps = window::fps();
 
 		if !started {
 			if fps >= GATE {
@@ -60,7 +59,7 @@ fn main() {
 		}
 
 		if window::key_pressed(Key::Escape) {
-			app::quit();
+			window::quit();
 		}
 
 	});

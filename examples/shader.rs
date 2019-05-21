@@ -5,7 +5,6 @@ use dirty::*;
 fn main() {
 
 	// init modules
-	app::init();
 	window::init(Default::default());
 
 	let (w, h) = window::size().into();
@@ -14,7 +13,7 @@ fn main() {
 	let shader = g2d::Shader::from_code_frag(include_str!("res/test.frag"));
 
 	// main loop
-	app::run(|| {
+	window::run(|| {
 
 		g2d::color(color!(0, 1, 1, 1));
 		g2d::rect(vec2!(w, h));

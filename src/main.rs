@@ -17,13 +17,15 @@ fn main() {
 
 	if let Some(action) = args.get(1) {
 		if fs::exists(action) {
-			lua::run(action);
+			lua::run_file(action);
 		} else if action == "export" {
 			// ...
+		} else {
+			panic!("not found");
 		}
 	} else {
 		if fs::exists("main.lua") {
-			lua::run("main.lua");
+			lua::run_file("main.lua");
 		} else {
 			panic!("no");
 		}
