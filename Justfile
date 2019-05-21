@@ -3,6 +3,11 @@
 run example="yo":
 	cargo run --release --example {{example}}
 
+bin:
+	cargo build --release
+	rm -rf bin/dirty
+	cp target/release/dirty bin/dirty
+
 doc:
 	cargo doc --no-deps --open
 

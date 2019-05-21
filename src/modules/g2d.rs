@@ -178,7 +178,7 @@ pub(super) fn flush() {
 
 		gfx.current_shader.send_mat4("projection", gfx.projection);
 		gfx.current_shader.send_vec2("size", vec2!(w, h));
-		gfx.current_shader.send_float("time", app::time());
+		gfx.current_shader.send_float("time", window::time());
 		renderer.flush(&*tex.handle, &gfx.current_shader.program);
 		gfx.draw_calls += 1;
 		gfx.current_tex = None;

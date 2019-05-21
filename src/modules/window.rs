@@ -2,6 +2,9 @@
 
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::thread;
+use std::time::Instant;
+use std::time::Duration;
 
 use gctx::*;
 use glutin::dpi::*;
@@ -36,6 +39,10 @@ pub struct Window {
 	windowed_ctx: glutin::WindowedContext<PossiblyCurrent>,
 	fullscreen: bool,
 	relative: bool,
+	running: bool,
+	dt: f32,
+	time: f32,
+	fps_cap: u32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -307,7 +314,49 @@ impl Window {
 			windowed_ctx: windowed_ctx,
 			fullscreen: false,
 			relative: false,
+			running: false,
+			dt: 0.0,
+			time: 0.0,
+			fps_cap: 60,
 		};
+
+	}
+
+	pub fn run<F: FnMut()>(&mut self, mut f: F) {
+
+		self.running = true;
+
+		loop {
+
+			let start_time = Instant::now();
+
+			if !self.poll() {
+				break;
+			}
+
+			gfx::begin();
+			f();
+			gfx::end();
+			self.swap();
+
+			let actual_dt = start_time.elapsed();
+			let actual_dt = actual_dt.as_millis() as f32;
+			let expected_dt = 1000.0 / self.fps_cap as f32;
+
+			if expected_dt > actual_dt {
+				self.dt = expected_dt as f32 / 1000.0;
+				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
+			} else {
+				self.dt = actual_dt as f32 / 1000.0;
+			}
+
+			self.time += self.dt;
+
+			if !self.running {
+				break;
+			}
+
+		}
 
 	}
 
@@ -663,6 +712,31 @@ impl Window {
 		self.windowed_ctx.swap_buffers();
 	}
 
+	/// set fps cap
+	pub fn cap_fps(&mut self, cap: u32) {
+		self.fps_cap = cap;
+	}
+
+	/// get delta time between frames
+	pub fn dt(&self) -> f32 {
+		return self.dt;
+	}
+
+	/// get current framerate
+	pub fn fps(&self) -> u32 {
+		return (1.0 / self.dt) as u32;
+	}
+
+	/// get actual time since running
+	pub fn time(&self) -> f32 {
+		return self.time;
+	}
+
+	/// quit with success code
+	pub fn quit(&mut self) {
+		self.running = false;
+	}
+
 }
 
 ctx!(WINDOW: Window);
@@ -676,20 +750,8 @@ pub fn enabled() -> bool {
 	return ctx_ok!(WINDOW);
 }
 
-pub fn begin() {
-	if !ctx_mut!(WINDOW).poll() {
-		app::quit();
-	}
-	if gfx::enabled() {
-		gfx::begin();
-	}
-}
-
-pub fn end() {
-	if gfx::enabled() {
-		gfx::end();
-	}
-	ctx_get!(WINDOW).swap();
+pub fn run<F: FnMut()>(f: F) {
+	ctx_mut!(WINDOW).run(f);
 }
 
 expose!(WINDOW, size() -> Size);
@@ -721,4 +783,8 @@ expose!(WINDOW, get_pos() -> Vec2);
 expose!(WINDOW, dpi() -> f64);
 expose!(WINDOW, show());
 expose!(WINDOW, hide());
+expose!(WINDOW, time() -> f32);
+expose!(WINDOW, dt() -> f32);
+expose!(WINDOW, fps() -> u32);
+expose!(WINDOW(mut), quit());
 

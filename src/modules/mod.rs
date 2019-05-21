@@ -13,7 +13,6 @@ macro_rules! expose {
 	};
 }
 
-pub mod app;
 pub mod window;
 #[macro_use]
 pub mod gfx;

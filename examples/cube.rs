@@ -7,7 +7,6 @@ use window::Key;
 fn main() {
 
 	// init modules
-	app::init();
 	window::init(Default::default());
 	window::set_relative(true);
 
@@ -21,10 +20,10 @@ fn main() {
 	let size = 3;
 
 	// main loop
-	app::run(|| {
+	window::run(|| {
 
-		let time = app::time();
-		let dt = app::dt();
+		let time = window::time();
+		let dt = window::dt();
 
 		g3d::cam(pos);
 		g3d::look(rx.to_radians(), ry.to_radians());
@@ -35,7 +34,7 @@ fn main() {
 
 					g3d::push();
 					g3d::translate(vec3!(x, y, z));
-					g3d::rotate(vec3!(app::time()));
+					g3d::rotate(vec3!(window::time()));
 					g3d::cube();
 					g3d::pop();
 
@@ -45,7 +44,7 @@ fn main() {
 
 		g2d::push();
 		g2d::translate(vec2!(16));
-		g2d::text(&format!("{}", app::fps()));
+		g2d::text(&format!("{}", window::fps()));
 		g2d::pop();
 
 		if let Some(scroll) = window::scroll_delta() {

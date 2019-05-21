@@ -6,7 +6,6 @@ use window::Key;
 fn main() {
 
 	// init modules
-	app::init();
 	window::init(Default::default());
 	res::init();
 
@@ -39,10 +38,10 @@ fn main() {
 	];
 
 	// main loop
-	app::run(|| {
+	window::run(|| {
 
-		let time = app::time();
-		let dt = app::dt();
+		let time = window::time();
+		let dt = window::dt();
 
 		gfx::drawon(&canvas);
 		gfx::clear();
@@ -111,7 +110,7 @@ fn main() {
 
 		g2d::push();
 		g2d::translate(vec2!(16));
-		g2d::text(&format!("{}", app::fps()));
+		g2d::text(&format!("{}", window::fps()));
 		g2d::pop();
 
 		gfx::stop_drawon();
@@ -140,7 +139,7 @@ fn main() {
 		}
 
 		if window::key_pressed(Key::Escape) {
-			app::quit();
+			window::quit();
 		}
 
 	});
