@@ -67,13 +67,11 @@ fn validate_path(path: impl AsRef<Path>) -> Option<PathBuf> {
 }
 
 /// get a list of all filenames under given directory
-pub fn glob(path: impl AsRef<Path>) -> Vec<String> {
+pub fn glob(pat: &str) -> Vec<String> {
 
-	let path = path.as_ref();
-
-	let listings = glob::glob(&format!("{}", path.display()))
-		.or(glob::glob(&format!("{}", get_res_dir().join(path).display())))
-		.expect(&format!("failed to read dir \"{}\"", path.display()));
+	let listings = glob::glob(&format!("{}", pat))
+		.or(glob::glob(&format!("{}/{}", get_res_dir().display(), pat)))
+		.expect(&format!("failed to read dir \"{}\"", pat));
 
 	return listings
 		.map(|s| s.expect("failed to glob"))
