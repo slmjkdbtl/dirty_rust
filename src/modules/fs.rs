@@ -6,6 +6,8 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::err::*;
+
 #[cfg(target_os = "macos")]
 fn get_res_dir() -> PathBuf {
 
@@ -39,11 +41,6 @@ fn get_res_dir() -> PathBuf {
 
 }
 
-/// check if given file exists
-pub fn exists(path: impl AsRef<Path>) -> bool {
-	return validate_path(path).is_some();
-}
-
 fn validate_path(path: impl AsRef<Path>) -> Option<PathBuf> {
 
 	let path = path.as_ref();
@@ -64,6 +61,11 @@ fn validate_path(path: impl AsRef<Path>) -> Option<PathBuf> {
 
 	}
 
+}
+
+/// check if given file exists
+pub fn exists(path: impl AsRef<Path>) -> bool {
+	return validate_path(path).is_some();
 }
 
 /// get a list of all filenames under given directory
@@ -122,5 +124,37 @@ pub fn basename(path: impl AsRef<Path>) -> String {
 		panic!("failed to read file \"{}\"", path.display());
 	}
 
+}
+
+pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64, Error> {
+	return Ok(fs::copy(p1, p2)?);
+}
+
+pub fn mkdir(path: impl AsRef<Path>) -> Result<(), Error> {
+	return Ok(fs::create_dir_all(path)?);
+}
+
+pub fn is_file(path: impl AsRef<Path>) -> bool {
+	return path.as_ref().is_file();
+}
+
+pub fn is_dir(path: impl AsRef<Path>) -> bool {
+	return path.as_ref().is_dir();
+}
+
+pub fn remove(path: impl AsRef<Path>) -> Result<(), Error> {
+	return Ok(fs::remove_file(path)?);
+}
+
+pub fn remove_dir(path: impl AsRef<Path>) -> Result<(), Error> {
+	return Ok(fs::remove_dir(path)?);
+}
+
+pub fn rename(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<(), Error> {
+	return Ok(fs::rename(old, new)?);
+}
+
+pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<(), Error> {
+	return Ok(fs::write(path, content)?);
 }
 

@@ -10,18 +10,17 @@ use gctx::*;
 use glutin::dpi::*;
 use glutin::WindowEvent;
 use glutin::DeviceEvent;
-use glutin::KeyboardInput;
 use glutin::Api;
 use glutin::GlRequest;
-use glutin::GlProfile;
 use glutin::ElementState;
 use glutin::PossiblyCurrent;
-use glutin::NotCurrent;
 use glutin::MouseScrollDelta;
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 pub use glutin::MouseButton as Mouse;
 use derive_more::*;
+use serde::Serialize;
+use serde::Deserialize;
 
 use crate::math::*;
 use crate::*;
@@ -197,6 +196,7 @@ impl From<LogicalPosition> for Vec2 {
 	}
 }
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Conf {
 	pub width: u32,
 	pub height: u32,
@@ -322,7 +322,7 @@ impl Window {
 
 	}
 
-	pub fn run<F: FnMut()>(&mut self, mut f: F) {
+	pub fn run(&mut self, mut f: impl FnMut()) {
 
 		self.running = true;
 
@@ -708,10 +708,6 @@ impl Window {
 
 	}
 
-	pub fn swap(&self) {
-		self.windowed_ctx.swap_buffers();
-	}
-
 	/// set fps cap
 	pub fn cap_fps(&mut self, cap: u32) {
 		self.fps_cap = cap;
@@ -732,9 +728,13 @@ impl Window {
 		return self.time;
 	}
 
-	/// quit with success code
+	/// quit
 	pub fn quit(&mut self) {
 		self.running = false;
+	}
+
+	fn swap(&self) {
+		self.windowed_ctx.swap_buffers();
 	}
 
 }
@@ -742,20 +742,17 @@ impl Window {
 ctx!(WINDOW: Window);
 
 pub fn init(conf: Conf) {
-	ctx_init!(WINDOW, Window::new(conf));
+	let w = Window::new(conf);
+	ctx_init!(WINDOW, w);
 	gfx::init();
+	ctx_get!(WINDOW).swap();
 }
 
 pub fn enabled() -> bool {
 	return ctx_ok!(WINDOW);
 }
 
-pub fn run<F: FnMut()>(f: F) {
-	ctx_mut!(WINDOW).run(f);
-}
-
 expose!(WINDOW, size() -> Size);
-expose!(WINDOW, swap());
 expose!(WINDOW, down_keys() -> HashSet<Key>);
 expose!(WINDOW, rpressed_key() -> Option<Key>);
 expose!(WINDOW, key_down(key: Key) -> bool);
@@ -787,4 +784,5 @@ expose!(WINDOW, time() -> f32);
 expose!(WINDOW, dt() -> f32);
 expose!(WINDOW, fps() -> u32);
 expose!(WINDOW(mut), quit());
+expose!(WINDOW(mut), run(f: impl FnMut()));
 
