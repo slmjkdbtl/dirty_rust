@@ -83,10 +83,7 @@ impl Gfx {
 }
 
 pub(super) fn init() {
-
 	ctx_init!(GFX, Gfx::new());
-	window::swap();
-
 }
 
 /// check if gfx is initiated
