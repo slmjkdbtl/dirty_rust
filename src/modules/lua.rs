@@ -132,28 +132,43 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			runtime = runtime.set_name(&format!("{}", fname.as_ref().display()))?;
 		}
 
-		if let Err(err) = runtime.exec() {
+		let handle_err = |err: &rlua::Error| {
 
 			use rlua::Error::*;
 
 			match err {
-				SyntaxError { message, .. } => println!("{}", message),
-				RuntimeError(m) => println!("{}", m),
-				MemoryError(m) => println!("{}", m),
-				GarbageCollectorError(m) => println!("{}", m),
-				RecursiveMutCallback => println!("recursive callback error"),
-				CallbackDestructed => println!("callback destructed"),
-				StackError => println!("stack error"),
-				BindError => println!("bind error"),
-				ToLuaConversionError { .. } => println!("to lua conversion error"),
-				FromLuaConversionError { .. } => println!("from lua conversion error"),
-				CoroutineInactive => println!("coroutine inactive"),
-				UserDataTypeMismatch => println!("userdata type mismatch"),
-				UserDataBorrowError => println!("userdata borrow error"),
-				UserDataBorrowMutError => println!("user data borrow mut error"),
-				MismatchedRegistryKey => println!("mismatched registry key"),
-				CallbackError { traceback, .. } => println!("{}", traceback),
-				ExternalError(_) => println!("external error"),
+				SyntaxError { message, .. } => eprintln!("{}", message),
+				RuntimeError(m) => eprintln!("{}", m),
+				MemoryError(m) => eprintln!("{}", m),
+				GarbageCollectorError(m) => eprintln!("{}", m),
+				ToLuaConversionError { from, to, .. } => {
+					eprintln!("expected {}, found {}", to, from);
+				},
+				FromLuaConversionError { from, to, .. } => {
+					eprintln!("expected {}, found {}", to, from);
+				},
+				RecursiveMutCallback => eprintln!("recursive callback error"),
+				CallbackDestructed => eprintln!("callback destructed"),
+				StackError => eprintln!("stack error"),
+				BindError => eprintln!("bind error"),
+				CoroutineInactive => eprintln!("coroutine inactive"),
+				UserDataTypeMismatch => eprintln!("userdata type mismatch"),
+				UserDataBorrowError => eprintln!("userdata borrow error"),
+				UserDataBorrowMutError => eprintln!("user data borrow mut error"),
+				MismatchedRegistryKey => eprintln!("mismatched registry key"),
+				ExternalError(_) => eprintln!("external error"),
+				_ => {},
+			}
+
+		};
+
+		if let Err(err) = runtime.exec() {
+
+			handle_err(&err);
+
+			if let rlua::Error::CallbackError { traceback, cause } = err {
+				handle_err(&cause);
+				eprintln!("{}", traceback);
 			}
 
 		}
