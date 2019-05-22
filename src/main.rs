@@ -17,7 +17,7 @@ fn main() {
 
 	if let Some(action) = args.get(1) {
 		if fs::exists(action) {
-			lua::run_file(action);
+			lua::run_file(action, Some(&args[2..args.len()]));
 		} else if action == "export" {
 			// ...
 		} else {
@@ -25,7 +25,7 @@ fn main() {
 		}
 	} else {
 		if fs::exists("main.lua") {
-			lua::run_file("main.lua");
+			lua::run(&fs::read_str("main.lua"), Some("main.lua"), Some(&args[2..args.len()]));
 		} else {
 			panic!("no");
 		}

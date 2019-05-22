@@ -27,3 +27,5 @@ pub mod res;
 pub mod lua;
 pub mod err;
 
+pub use err::Error;
+

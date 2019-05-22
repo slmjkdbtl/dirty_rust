@@ -2,8 +2,6 @@
 
 //! Lua Bindings
 
-// wengwengweng
-
 use std::path::Path;
 use crate::*;
 use crate::err::Error;
@@ -15,13 +13,21 @@ use rlua::Result;
 
 impl From<Error> for rlua::Error {
 	fn from(err: Error) -> rlua::Error {
-		return rlua::Error::ExternalError(std::sync::Arc::new(err));
+		return match err {
+			Error::IO => rlua::Error::RuntimeError(String::from("io error")),
+			Error::Net => rlua::Error::RuntimeError(String::from("network error")),
+		}
 	}
 }
 
-pub fn run(code: &str) -> Result<()> {
+pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
 
 	let lua = Lua::new();
+
+	let args = match args {
+		Some(a) => a.to_vec(),
+		None => vec![],
+	};
 
 	return lua.context(|ctx| {
 
@@ -29,6 +35,8 @@ pub fn run(code: &str) -> Result<()> {
 		let fs = ctx.create_table()?;
 		let win = ctx.create_table()?;
 		let http = ctx.create_table()?;
+
+		globals.set("arg", args);
 
 		fs.set("glob", ctx.create_function(|_, (pat): (String)| {
 			return Ok(fs::glob(&pat));
@@ -117,7 +125,38 @@ pub fn run(code: &str) -> Result<()> {
 		globals.set("fs", fs)?;
 		globals.set("win", win)?;
 		globals.set("http", http)?;
-		ctx.load(code).exec()?;
+
+		let mut runtime = ctx.load(code);
+
+		if let Some(fname) = fname {
+			runtime = runtime.set_name(&format!("{}", fname.as_ref().display()))?;
+		}
+
+		if let Err(err) = runtime.exec() {
+
+			use rlua::Error::*;
+
+			match err {
+				SyntaxError { message, .. } => println!("{}", message),
+				RuntimeError(m) => println!("{}", m),
+				MemoryError(m) => println!("{}", m),
+				GarbageCollectorError(m) => println!("{}", m),
+				RecursiveMutCallback => println!("recursive callback error"),
+				CallbackDestructed => println!("callback destructed"),
+				StackError => println!("stack error"),
+				BindError => println!("bind error"),
+				ToLuaConversionError { .. } => println!("to lua conversion error"),
+				FromLuaConversionError { .. } => println!("from lua conversion error"),
+				CoroutineInactive => println!("coroutine inactive"),
+				UserDataTypeMismatch => println!("userdata type mismatch"),
+				UserDataBorrowError => println!("userdata borrow error"),
+				UserDataBorrowMutError => println!("user data borrow mut error"),
+				MismatchedRegistryKey => println!("mismatched registry key"),
+				CallbackError { traceback, .. } => println!("{}", traceback),
+				ExternalError(_) => println!("external error"),
+			}
+
+		}
 
 		return Ok(());
 
@@ -125,12 +164,12 @@ pub fn run(code: &str) -> Result<()> {
 
 }
 
-pub fn run_file(path: impl AsRef<Path>) {
+pub fn run_file(path: impl AsRef<Path>, args: Option<&[String]>) {
 
 	let path = path.as_ref();
 
 	if let Ok(code) = std::fs::read_to_string(path) {
-		run(&code);
+		run(&code, Some(path), args);
 	} else {
 		panic!("failed to read {}", path.display());
 	}
