@@ -6,7 +6,7 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
-use crate::err::*;
+use crate::Error;
 
 #[cfg(target_os = "macos")]
 fn get_res_dir() -> PathBuf {
