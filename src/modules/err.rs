@@ -7,6 +7,7 @@ use std::fmt;
 pub enum Error {
 	IO,
 	Net,
+	Image,
 }
 
 impl fmt::Display for Error {
@@ -14,6 +15,7 @@ impl fmt::Display for Error {
 		return match self {
 			Error::IO => write!(f, "io error"),
 			Error::Net => write!(f, "network error"),
+			Error::Image => write!(f, "image error"),
 		};
 	}
 }
@@ -21,14 +23,20 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl From<std::io::Error> for Error {
-	fn from(err: std::io::Error) -> Error {
+	fn from(_: std::io::Error) -> Self {
 		return Error::IO;
 	}
 }
 
 impl From<reqwest::Error> for Error {
-	fn from(err: reqwest::Error) -> Error {
+	fn from(_: reqwest::Error) -> Self {
 		return Error::Net;
+	}
+}
+
+impl From<image::ImageError> for Error {
+	fn from(_: image::ImageError) -> Self {
+		return Error::Image;
 	}
 }
 

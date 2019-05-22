@@ -24,6 +24,7 @@ pub mod fs;
 pub mod data;
 pub mod col;
 pub mod res;
+pub mod img;
 pub mod lua;
 pub mod err;
 

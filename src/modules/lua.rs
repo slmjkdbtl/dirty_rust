@@ -9,14 +9,13 @@ use crate::err::Error;
 use rlua::Lua;
 use rlua::Table;
 use rlua::UserData;
+use rlua::UserDataMethods;
+use rlua::MetaMethod;
 use rlua::Result;
 
 impl From<Error> for rlua::Error {
 	fn from(err: Error) -> rlua::Error {
-		return match err {
-			Error::IO => rlua::Error::RuntimeError(String::from("io error")),
-			Error::Net => rlua::Error::RuntimeError(String::from("network error")),
-		}
+		return rlua::Error::RuntimeError(format!("{}", err));
 	}
 }
 
@@ -35,6 +34,7 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		let fs = ctx.create_table()?;
 		let win = ctx.create_table()?;
 		let http = ctx.create_table()?;
+		let img = ctx.create_table()?;
 
 		globals.set("arg", args);
 
@@ -114,17 +114,74 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			return Ok(window::dt());
 		})?)?;
 
+		impl UserData for http::Response {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method("text", |_, res: &http::Response, ()| {
+					return Ok(res.text().clone());
+				});
+
+				methods.add_method("bytes", |_, res: &http::Response, ()| {
+					return Ok(res.bytes().clone());
+				});
+
+				methods.add_method("status", |_, res: &http::Response, ()| {
+					return Ok(res.status());
+				});
+
+			}
+
+		}
+
 		http.set("get", ctx.create_function(|_, (uri): (String)| {
 			return Ok(http::get(&uri)?);
 		})?)?;
 
-		http.set("get_bytes", ctx.create_function(|_, (uri): (String)| {
-			return Ok(http::get_bytes(&uri)?);
+		impl UserData for img::Image {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method("write_png", |_, img: &img::Image, (fname): (String)| {
+					return Ok(img::Image::write_png(img, fname)?);
+				});
+
+				methods.add_method("width", |_, img: &img::Image, ()| {
+					return Ok(img.width());
+				});
+
+				methods.add_method("height", |_, img: &img::Image, ()| {
+					return Ok(img.height());
+				});
+
+				methods.add_method("pixels", |_, img: &img::Image, ()| {
+					return Ok(img.pixels().clone());
+				});
+
+			}
+
+		}
+
+		img.set("decode_png", ctx.create_function(|_, (data): (Vec<u8>)| {
+			return Ok(img::decode_png(&data)?);
+		})?)?;
+
+		impl UserData for math::Vec2 {}
+		impl UserData for math::Vec3 {}
+		impl UserData for math::Color {}
+
+		globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
+			return Ok(vec2!(x, y));
+		})?)?;
+
+		globals.set("color", ctx.create_function(|_, (r, g, b, a): (f32, f32, f32, f32)| {
+			return Ok(color!(r, g, b, a));
 		})?)?;
 
 		globals.set("fs", fs)?;
 		globals.set("win", win)?;
 		globals.set("http", http)?;
+		globals.set("img", img)?;
 
 		let mut runtime = ctx.load(code);
 

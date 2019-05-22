@@ -8,23 +8,41 @@ use std::net::TcpStream;
 
 use crate::err::*;
 
-pub fn get(uri: &str) -> Result<String, Error> {
+pub struct Response {
+	text: String,
+	bytes: Vec<u8>,
+	status: u16,
+}
 
-	let mut res = reqwest::get(uri)?;
-	let text = res.text()?;
+impl Response {
 
-	return Ok(text);
+	pub fn text(&self) -> &String {
+		return &self.text;
+	}
+
+	pub fn bytes(&self) -> &Vec<u8> {
+		return &self.bytes;
+	}
+
+	pub fn status(&self) -> u16 {
+		return self.status;
+	}
 
 }
 
-pub fn get_bytes(uri: &str) -> Result<Vec<u8>, Error> {
+pub fn get(uri: &str) -> Result<Response, Error> {
 
 	let mut res = reqwest::get(uri)?;
 	let mut buf: Vec<u8> = vec![];
+	let text = res.text()?;
 
 	res.copy_to(&mut buf)?;
 
-	return Ok(buf);
+	return Ok(Response {
+		text: text,
+		bytes: buf,
+		status: res.status().as_u16(),
+	})
 
 }
 
