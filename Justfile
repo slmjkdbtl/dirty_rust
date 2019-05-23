@@ -1,9 +1,9 @@
 # wengwengweng
 
-run example="yo":
-	cargo run --release --example {{example}}
+run: build
+	./bin/dirty examples/main.lua
 
-bin:
+build:
 	cargo build --release
 	rm -rf bin/dirty
 	cp target/release/dirty bin/dirty
@@ -16,7 +16,4 @@ loc:
 
 checkdep:
 	cargo outdated --root-deps-only
-
-test-windows example="yo":
-	cargo build --release --target x86_64-pc-windows-gnu --example {{example}}
 

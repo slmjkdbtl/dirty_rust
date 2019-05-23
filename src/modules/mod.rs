@@ -15,15 +15,11 @@ macro_rules! expose {
 
 pub mod window;
 #[macro_use]
-pub mod gfx;
-pub mod g2d;
-pub mod g3d;
 pub mod audio;
 pub mod http;
 pub mod fs;
 pub mod data;
 pub mod col;
-pub mod res;
 pub mod img;
 pub mod lua;
 pub mod err;
