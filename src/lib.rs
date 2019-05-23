@@ -11,6 +11,12 @@
 mod ggl;
 mod modules;
 pub mod math;
+pub mod thread;
+pub mod lua;
+
+mod err;
+pub use err::Error;
+pub type Result<T> = ::std::result::Result<T, Error>;
 
 pub use modules::*;
 

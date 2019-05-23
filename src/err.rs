@@ -1,9 +1,8 @@
 // wengwengweng
 
-use std::error;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Error {
 	IO,
 	Net,
@@ -11,6 +10,8 @@ pub enum Error {
 	Window,
 	Audio,
 	Lua,
+	Parse,
+	Thread,
 }
 
 impl fmt::Display for Error {
@@ -22,6 +23,8 @@ impl fmt::Display for Error {
 			Error::Window => write!(f, "window error"),
 			Error::Audio => write!(f, "audio error"),
 			Error::Lua => write!(f, "lua error"),
+			Error::Parse => write!(f, "parse error"),
+			Error::Thread => write!(f, "thread error"),
 		};
 	}
 }
@@ -61,6 +64,18 @@ impl From<glutin::ContextError> for Error {
 impl From<rodio::decoder::DecoderError> for Error {
 	fn from(_: rodio::decoder::DecoderError) -> Self {
 		return Error::Audio;
+	}
+}
+
+impl From<serde_json::error::Error> for Error {
+	fn from(_: serde_json::error::Error) -> Self {
+		return Error::Parse;
+	}
+}
+
+impl From<std::sync::mpsc::TryRecvError> for Error {
+	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
+		return Error::Thread;
 	}
 }
 

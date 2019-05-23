@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::time::Instant;
 use std::time::Duration;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use glutin::dpi::*;
 use glutin::Api;
@@ -308,7 +310,7 @@ impl Window {
 
 	}
 
-	pub fn run(&mut self, mut f: impl FnMut(&mut Ctx)) -> Result<(), Error> {
+	pub fn run(&mut self, mut f: impl FnMut(&mut Ctx)) -> Result<()> {
 
 		let mut event_loop = glutin::EventsLoop::new();
 		let monitor = event_loop.get_primary_monitor();
@@ -356,10 +358,11 @@ impl Window {
 			windowed_ctx
 		};
 
-		let mut ctx = Ctx::new();
+		let mut ctx = Arc::new(Mutex::new(Ctx::new()));
 
 		loop {
 
+			let mut c = ctx.lock().unwrap();
 			let start_time = Instant::now();
 
 			use glutin::Event::*;
@@ -371,7 +374,7 @@ impl Window {
 
 					WindowEvent { event, .. } => {
 						match event {
-							CloseRequested => ctx.close(),
+							CloseRequested => c.close(),
 							_ => {},
 						}
 					},
@@ -381,7 +384,8 @@ impl Window {
 
 			});
 
-			f(&mut ctx);
+			ggl::clear(true, false, false);
+			f(&mut c);
 			windowed_ctx.swap_buffers()?;
 
 			let actual_dt = start_time.elapsed();
@@ -389,15 +393,15 @@ impl Window {
 			let expected_dt = 1000.0 / self.fps_cap as f32;
 
 			if expected_dt > actual_dt {
-				ctx.dt = expected_dt as f32 / 1000.0;
+				c.dt = expected_dt as f32 / 1000.0;
 				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
 			} else {
-				ctx.dt = actual_dt as f32 / 1000.0;
+				c.dt = actual_dt as f32 / 1000.0;
 			}
 
-			ctx.time += ctx.dt;
+			c.time += c.dt;
 
-			if ctx.closed {
+			if c.closed {
 				break;
 			}
 
