@@ -8,6 +8,7 @@ pub enum Error {
 	IO,
 	Net,
 	Image,
+	Window,
 }
 
 impl fmt::Display for Error {
@@ -16,6 +17,7 @@ impl fmt::Display for Error {
 			Error::IO => write!(f, "io error"),
 			Error::Net => write!(f, "network error"),
 			Error::Image => write!(f, "image error"),
+			Error::Window => write!(f, "window error"),
 		};
 	}
 }
@@ -37,6 +39,18 @@ impl From<reqwest::Error> for Error {
 impl From<image::ImageError> for Error {
 	fn from(_: image::ImageError) -> Self {
 		return Error::Image;
+	}
+}
+
+impl From<glutin::CreationError> for Error {
+	fn from(_: glutin::CreationError) -> Self {
+		return Error::Window;
+	}
+}
+
+impl From<glutin::ContextError> for Error {
+	fn from(_: glutin::ContextError) -> Self {
+		return Error::Window;
 	}
 }
 

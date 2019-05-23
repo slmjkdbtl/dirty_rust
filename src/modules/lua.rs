@@ -36,7 +36,7 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		let http = ctx.create_table()?;
 		let img = ctx.create_table()?;
 
-		globals.set("arg", args);
+		globals.set("arg", args)?;
 
 		fs.set("glob", ctx.create_function(|_, (pat): (String)| {
 			return Ok(fs::glob(&pat));
@@ -94,25 +94,66 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			return Ok(fs::write(&path, &content)?);
 		})?)?;
 
-		win.set("init", ctx.create_function(|_, (conf): (rlua::Value)| {
-			return Ok(window::init(window::Conf::default()));
+		impl UserData for &mut window::Ctx {}
+
+		impl UserData for window::Ctx {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method_mut("close", |_, ctx: &mut window::Ctx, ()| {
+					return Ok(ctx.close());
+				});
+
+				methods.add_method("fps", |_, ctx: &window::Ctx, ()| {
+					return Ok(ctx.fps());
+				});
+
+				methods.add_method("time", |_, ctx: &window::Ctx, ()| {
+					return Ok(ctx.time());
+				});
+
+				methods.add_method("dt", |_, ctx: &window::Ctx, ()| {
+					return Ok(ctx.dt());
+				});
+
+			}
+
+		}
+
+		impl UserData for window::Window {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method_mut("run", |_, win: &mut window::Window, (f): (rlua::Function)| {
+					return Ok(win.run(|ctx| {
+// 						let res = f.call::<_, ()>(ctx);
+// 						dbg!(res);
+					})?);
+				});
+
+			}
+
+		}
+
+		win.set("create", ctx.create_function(|_, (conf): (rlua::Value)| {
+			return Ok(window::Window::new(window::Conf::default()));
 		})?)?;
 
-		win.set("run", ctx.create_function(|_, (f): (rlua::Function)| {
-			return Ok(window::run(|| {
-				if f.call::<_, ()>(()).is_err() {
-					panic!("failed to run");
-				}
-			}));
-		})?)?;
+// 		win.set("run", ctx.create_function(|_, (f): (rlua::Function)| {
+// 			return Ok(window::run(|| {
+// 				if f.call::<_, ()>(()).is_err() {
+// 					panic!("failed to run");
+// 				}
+// 			}));
+// 		})?)?;
 
-		win.set("fps", ctx.create_function(|_, (): ()| {
-			return Ok(window::fps());
-		})?)?;
+// 		win.set("fps", ctx.create_function(|_, (): ()| {
+// 			return Ok(window::fps());
+// 		})?)?;
 
-		win.set("dt", ctx.create_function(|_, (): ()| {
-			return Ok(window::dt());
-		})?)?;
+// 		win.set("dt", ctx.create_function(|_, (): ()| {
+// 			return Ok(window::dt());
+// 		})?)?;
 
 		impl UserData for http::Response {
 
