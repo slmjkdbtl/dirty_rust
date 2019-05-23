@@ -40,16 +40,20 @@ pub fn play(sound: &Sound) {
 }
 
 /// play a sound and return a track
-pub fn track(sound: &Sound) -> Track {
+pub fn track(sound: &Sound) -> Result<Track, Error> {
 
-	let device = rodio::default_output_device().expect("failed to get audio device");
+	let device = match rodio::default_output_device() {
+		Some(d) => d,
+		None => return Err(Error::Audio),
+	};
+
 	let sink = Sink::new(&device);
 
 	sink.append(sound.apply());
 
-	return Track {
+	return Ok(Track {
 		sink: sink,
-	}
+	});
 
 }
 
@@ -67,20 +71,20 @@ impl Default for Effect {
 impl Sound {
 
 	/// create a sound from bytes
-	pub fn from_bytes(data: &[u8]) -> Self {
+	pub fn from_bytes(data: &[u8]) -> Result<Self, Error> {
 
 		let cursor = Cursor::new(data.to_owned());
-		let source = Decoder::new(cursor).expect("failed to decode sound");
+		let source = Decoder::new(cursor)?;
 
-		return Self {
+		return Ok(Self {
 			buffer: source.buffered(),
 			effect: Effect::default(),
-		};
+		});
 
 	}
 
 	/// create a sound from file
-	pub fn from_file(fname: impl AsRef<Path>) -> Self {
+	pub fn from_file(fname: impl AsRef<Path>) -> Result<Self, Error> {
 		return Self::from_bytes(&fs::read_bytes(fname));
 	}
 

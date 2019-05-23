@@ -32,9 +32,10 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		let globals = ctx.globals();
 		let fs = ctx.create_table()?;
-		let win = ctx.create_table()?;
+		let window = ctx.create_table()?;
 		let http = ctx.create_table()?;
 		let img = ctx.create_table()?;
+		let audio = ctx.create_table()?;
 
 		globals.set("arg", args)?;
 
@@ -135,25 +136,9 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		}
 
-		win.set("create", ctx.create_function(|_, (conf): (rlua::Value)| {
+		window.set("create", ctx.create_function(|_, (conf): (rlua::Value)| {
 			return Ok(window::Window::new(window::Conf::default()));
 		})?)?;
-
-// 		win.set("run", ctx.create_function(|_, (f): (rlua::Function)| {
-// 			return Ok(window::run(|| {
-// 				if f.call::<_, ()>(()).is_err() {
-// 					panic!("failed to run");
-// 				}
-// 			}));
-// 		})?)?;
-
-// 		win.set("fps", ctx.create_function(|_, (): ()| {
-// 			return Ok(window::fps());
-// 		})?)?;
-
-// 		win.set("dt", ctx.create_function(|_, (): ()| {
-// 			return Ok(window::dt());
-// 		})?)?;
 
 		impl UserData for http::Response {
 
@@ -207,6 +192,22 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			return Ok(img::decode_png(&data)?);
 		})?)?;
 
+		impl UserData for audio::Sound {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method("play", |_, s: &audio::Sound, ()| {
+					return Ok(audio::play(s));
+				});
+
+			}
+
+		}
+
+		audio.set("sound", ctx.create_function(|_, (data): (Vec<u8>)| {
+			return Ok(audio::Sound::from_bytes(&data)?);
+		})?)?;
+
 		impl UserData for math::Vec2 {}
 		impl UserData for math::Vec3 {}
 		impl UserData for math::Color {}
@@ -220,9 +221,10 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		})?)?;
 
 		globals.set("fs", fs)?;
-		globals.set("win", win)?;
+		globals.set("window", window)?;
 		globals.set("http", http)?;
 		globals.set("img", img)?;
+		globals.set("audio", audio)?;
 
 		let mut runtime = ctx.load(code);
 
