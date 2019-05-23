@@ -10,6 +10,7 @@ pub enum Error {
 	Image,
 	Window,
 	Audio,
+	Lua,
 }
 
 impl fmt::Display for Error {
@@ -20,6 +21,7 @@ impl fmt::Display for Error {
 			Error::Image => write!(f, "image error"),
 			Error::Window => write!(f, "window error"),
 			Error::Audio => write!(f, "audio error"),
+			Error::Lua => write!(f, "lua error"),
 		};
 	}
 }

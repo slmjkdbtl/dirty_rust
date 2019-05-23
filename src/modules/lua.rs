@@ -7,11 +7,9 @@ use crate::*;
 use crate::err::Error;
 
 use rlua::Lua;
-use rlua::Table;
 use rlua::UserData;
 use rlua::UserDataMethods;
 use rlua::MetaMethod;
-use rlua::Result;
 
 impl From<Error> for rlua::Error {
 	fn from(err: Error) -> rlua::Error {
@@ -19,7 +17,7 @@ impl From<Error> for rlua::Error {
 	}
 }
 
-pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
+pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> rlua::Result<()> {
 
 	let lua = Lua::new();
 
@@ -126,8 +124,8 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 				methods.add_method_mut("run", |_, win: &mut window::Window, (f): (rlua::Function)| {
-					return Ok(win.run(|ctx| {
-// 						let res = f.call::<_, ()>(ctx);
+					return Ok(win.run(|ctx: &mut window::Ctx| {
+// 						let res = f.call::<_, ()>((ctx));
 // 						dbg!(res);
 					})?);
 				});
@@ -208,7 +206,22 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			return Ok(audio::Sound::from_bytes(&data)?);
 		})?)?;
 
-		impl UserData for math::Vec2 {}
+		impl UserData for math::Vec2 {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_meta_method(MetaMethod::Index, |_, this, key: String| {
+					match key.as_ref() {
+						"x" => Ok(this.x),
+						"y" => Ok(this.y),
+						_ => Err(Error::Lua.into()),
+					}
+				});
+
+			}
+
+		}
+
 		impl UserData for math::Vec3 {}
 		impl UserData for math::Color {}
 

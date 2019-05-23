@@ -151,7 +151,7 @@ impl From<ScrollDelta> for Vec2 {
 
 impl From<MouseScrollDelta> for ScrollDelta {
 	fn from(delta: MouseScrollDelta) -> Self {
-		return match delta {
+		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
 				let (x, y): (i32, i32) = pos.into();
 				return Self {
@@ -360,12 +360,10 @@ impl Window {
 
 		loop {
 
-			let mut quit = false;
 			let start_time = Instant::now();
 
 			use glutin::Event::*;
 			use glutin::WindowEvent::*;
-			use glutin::ControlFlow;
 
 			event_loop.poll_events(|e| {
 
@@ -384,6 +382,7 @@ impl Window {
 			});
 
 			f(&mut ctx);
+			windowed_ctx.swap_buffers()?;
 
 			let actual_dt = start_time.elapsed();
 			let actual_dt = actual_dt.as_millis() as f32;
@@ -408,42 +407,6 @@ impl Window {
 
 	}
 
-// 	pub fn run(&mut self, mut f: impl FnMut()) {
-
-// 		self.running = true;
-
-// 		loop {
-
-// 			let start_time = Instant::now();
-
-// 			if !self.poll() {
-// 				break;
-// 			}
-
-// 			f();
-// 			self.swap();
-
-// 			let actual_dt = start_time.elapsed();
-// 			let actual_dt = actual_dt.as_millis() as f32;
-// 			let expected_dt = 1000.0 / self.fps_cap as f32;
-
-// 			if expected_dt > actual_dt {
-// 				self.dt = expected_dt as f32 / 1000.0;
-// 				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
-// 			} else {
-// 				self.dt = actual_dt as f32 / 1000.0;
-// 			}
-
-// 			self.time += self.dt;
-
-// 			if !self.running {
-// 				break;
-// 			}
-
-// 		}
-
-// 	}
-
 // 	pub fn set_fullscreen(&mut self, b: bool) {
 
 // 		let ctx = &self.windowed_ctx;
@@ -459,9 +422,9 @@ impl Window {
 
 // 	}
 
-	pub fn is_fullscreen(&self) -> bool {
-		return self.fullscreen;
-	}
+// 	pub fn is_fullscreen(&self) -> bool {
+// 		return self.fullscreen;
+// 	}
 
 // 	pub fn toggle_fullscreen(&mut self) {
 
@@ -483,9 +446,9 @@ impl Window {
 
 // 	}
 
-	pub fn is_relative(&self) -> bool {
-		return self.relative;
-	}
+// 	pub fn is_relative(&self) -> bool {
+// 		return self.relative;
+// 	}
 
 // 	pub fn toggle_relative(&mut self) {
 
@@ -789,15 +752,6 @@ impl Window {
 
 // 		return true;
 
-// 	}
-
-	/// set fps cap
-	pub fn cap_fps(&mut self, cap: u32) {
-		self.fps_cap = cap;
-	}
-
-// 	fn swap(&self) {
-// 		self.windowed_ctx.swap_buffers();
 // 	}
 
 }
