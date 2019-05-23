@@ -7,7 +7,7 @@ use std::path::Path;
 use serde::Serialize;
 use serde::Deserialize;
 
-use crate::Error;
+use crate::Result;
 
 #[derive(Serialize, Deserialize)]
 pub struct Image {
@@ -30,7 +30,7 @@ impl Image {
 		return &self.pixels;
 	}
 
-	pub fn write_png(&self, fname: impl AsRef<Path>) -> Result<(), Error> {
+	pub fn write_png(&self, fname: impl AsRef<Path>) -> Result<()> {
 
 		image::save_buffer(
 			fname,
@@ -46,7 +46,7 @@ impl Image {
 
 }
 
-pub fn decode_png(data: &[u8]) -> Result<Image, Error> {
+pub fn decode_png(data: &[u8]) -> Result<Image> {
 
 	let img = image::load_from_memory(data)?
 		.to_rgba();

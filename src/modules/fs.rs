@@ -7,6 +7,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::Error;
+use crate::Result;
 
 #[cfg(target_os = "macos")]
 fn get_res_dir() -> PathBuf {
@@ -85,52 +86,47 @@ pub fn glob(pat: &str) -> Vec<String> {
 }
 
 /// get bytes read from given file
-pub fn read_bytes(path: impl AsRef<Path>) -> Vec<u8> {
+pub fn read_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
 	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
 
-	if let Ok(content) = fs::read(&path) {
-		return content;
-	} else {
-		panic!("failed to read file \"{}\"", path.display());
-	}
+	return Ok(fs::read(&path)?);
 
 }
 
 /// get string read from given file
-pub fn read_str(path: impl AsRef<Path>) -> String {
+pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
 	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
 
-	if let Ok(content) = fs::read_to_string(&path) {
-		return content;
-	} else {
-		panic!("failed to read file \"{}\"", path.display());
-	}
+	return Ok(fs::read_to_string(&path)?);
 
 }
 
 /// get the basename of given file
-pub fn basename(path: impl AsRef<Path>) -> String {
+pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
 	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
 
-	if let Some(name) = Path::new(&path).file_stem() {
-		return name.to_str().expect("failed to get basename").to_owned();
-	} else {
-		panic!("failed to read file \"{}\"", path.display());
-	}
+	return Ok(
+		Path::new(&path)
+			.file_stem()
+			.ok_or(Error::IO)?
+			.to_str()
+			.ok_or(Error::IO)?
+			.to_owned()
+	);
 
 }
 
-pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64, Error> {
+pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64> {
 	return Ok(fs::copy(p1, p2)?);
 }
 
-pub fn mkdir(path: impl AsRef<Path>) -> Result<(), Error> {
+pub fn mkdir(path: impl AsRef<Path>) -> Result<()> {
 	return Ok(fs::create_dir_all(path)?);
 }
 
@@ -142,19 +138,19 @@ pub fn is_dir(path: impl AsRef<Path>) -> bool {
 	return path.as_ref().is_dir();
 }
 
-pub fn remove(path: impl AsRef<Path>) -> Result<(), Error> {
+pub fn remove(path: impl AsRef<Path>) -> Result<()> {
 	return Ok(fs::remove_file(path)?);
 }
 
-pub fn remove_dir(path: impl AsRef<Path>) -> Result<(), Error> {
+pub fn remove_dir(path: impl AsRef<Path>) -> Result<()> {
 	return Ok(fs::remove_dir(path)?);
 }
 
-pub fn rename(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<(), Error> {
+pub fn rename(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
 	return Ok(fs::rename(old, new)?);
 }
 
-pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<(), Error> {
+pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
 	return Ok(fs::write(path, content)?);
 }
 

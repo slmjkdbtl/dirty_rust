@@ -17,7 +17,7 @@ fn main() {
 		}
 	} else {
 		if fs::exists("main.lua") {
-			lua::run(&fs::read_str("main.lua"), Some("main.lua"), Some(&args[2..args.len()]));
+			lua::run(&fs::read_str("main.lua").unwrap(), Some("main.lua"), Some(&args[2..args.len()]));
 		} else {
 			eprintln!("no");
 		}

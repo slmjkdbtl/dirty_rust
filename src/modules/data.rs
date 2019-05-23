@@ -52,13 +52,13 @@ impl Data {
 	}
 
 	/// get json data
-	pub fn get<D: for<'a> de::Deserialize<'a>>(&self, fname: &str) -> D {
+	pub fn get<D: for<'a> de::Deserialize<'a>>(&self, fname: &str) -> Result<D> {
 
 		let path = self.dir.join(fname);
-		let content = fs::read_str(&format!("{}", path.display()));
-		let data: D = serde_json::from_str(&content).expect("failed to parse json");
+		let content = fs::read_str(&format!("{}", path.display()))?;
+		let data: D = serde_json::from_str(&content)?;
 
-		return data;
+		return Ok(data);
 
 	}
 

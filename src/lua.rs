@@ -3,13 +3,14 @@
 //! Lua Bindings
 
 use std::path::Path;
-use crate::*;
-use crate::err::Error;
 
 use rlua::Lua;
 use rlua::UserData;
 use rlua::UserDataMethods;
 use rlua::MetaMethod;
+
+use crate::*;
+use crate::err::Error;
 
 impl From<Error> for rlua::Error {
 	fn from(err: Error) -> rlua::Error {
@@ -62,15 +63,51 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		})?)?;
 
 		fs.set("read", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read_str(&path));
+			return Ok(fs::read_str(&path)?);
+		})?)?;
+
+		impl<'a, T: Send + Clone + 'static + for<'lua> rlua::ToLua<'lua>> UserData for thread::Task<T> {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method("done", |_, t: &thread::Task<T>, ()| {
+					return Ok(t.done());
+				});
+
+				methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
+					return Ok(t.poll());
+				});
+
+				methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
+					if t.done() {
+						return Ok(t.data().unwrap());
+					} else {
+						return Err(Error::Lua.into());
+					}
+				});
+
+			}
+
+		}
+
+		fs.set("aread", ctx.create_function(|_, (path): (String)| {
+			return Ok(thread::exec(move || {
+				return fs::read_str(&path).unwrap();
+			}));
+		})?)?;
+
+		fs.set("aread_bytes", ctx.create_function(|_, (path): (String)| {
+			return Ok(thread::exec(move || {
+				return fs::read_bytes(&path).unwrap();
+			}));
 		})?)?;
 
 		fs.set("read_bytes", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read_bytes(&path));
+			return Ok(fs::read_bytes(&path)?);
 		})?)?;
 
 		fs.set("basename", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::basename(&path));
+			return Ok(fs::basename(&path)?);
 		})?)?;
 
 		fs.set("remove", ctx.create_function(|_, (path): (String)| {
@@ -124,9 +161,8 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 				methods.add_method_mut("run", |_, win: &mut window::Window, (f): (rlua::Function)| {
-					return Ok(win.run(|ctx: &mut window::Ctx| {
-// 						let res = f.call::<_, ()>((ctx));
-// 						dbg!(res);
+					return Ok(win.run(|ctx| {
+						let res = f.call::<_, ()>(());
 					})?);
 				});
 

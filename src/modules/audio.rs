@@ -40,7 +40,7 @@ pub fn play(sound: &Sound) {
 }
 
 /// play a sound and return a track
-pub fn track(sound: &Sound) -> Result<Track, Error> {
+pub fn track(sound: &Sound) -> Result<Track> {
 
 	let device = match rodio::default_output_device() {
 		Some(d) => d,
@@ -71,7 +71,7 @@ impl Default for Effect {
 impl Sound {
 
 	/// create a sound from bytes
-	pub fn from_bytes(data: &[u8]) -> Result<Self, Error> {
+	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let cursor = Cursor::new(data.to_owned());
 		let source = Decoder::new(cursor)?;
@@ -84,8 +84,8 @@ impl Sound {
 	}
 
 	/// create a sound from file
-	pub fn from_file(fname: impl AsRef<Path>) -> Result<Self, Error> {
-		return Self::from_bytes(&fs::read_bytes(fname));
+	pub fn from_file(fname: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_bytes(&fs::read_bytes(fname)?);
 	}
 
 	/// return a new sound with given speed
