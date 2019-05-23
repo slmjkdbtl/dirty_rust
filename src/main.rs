@@ -3,8 +3,6 @@
 use std::env;
 use dirty::*;
 
-mod cli;
-
 fn main() {
 
 	let args = env::args().collect::<Vec<String>>();

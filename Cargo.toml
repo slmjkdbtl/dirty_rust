@@ -31,8 +31,6 @@ rlua = "0.16.3"
 rlua_serde = "0.3.1"
 # sokol = "0.2.0"
 
-ggl_derive = { path = "src/macros/ggl" }
-
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "0.6.4"
 
