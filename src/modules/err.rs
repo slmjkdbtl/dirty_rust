@@ -9,6 +9,7 @@ pub enum Error {
 	Net,
 	Image,
 	Window,
+	Audio,
 }
 
 impl fmt::Display for Error {
@@ -18,6 +19,7 @@ impl fmt::Display for Error {
 			Error::Net => write!(f, "network error"),
 			Error::Image => write!(f, "image error"),
 			Error::Window => write!(f, "window error"),
+			Error::Audio => write!(f, "audio error"),
 		};
 	}
 }
@@ -51,6 +53,12 @@ impl From<glutin::CreationError> for Error {
 impl From<glutin::ContextError> for Error {
 	fn from(_: glutin::ContextError) -> Self {
 		return Error::Window;
+	}
+}
+
+impl From<rodio::decoder::DecoderError> for Error {
+	fn from(_: rodio::decoder::DecoderError) -> Self {
+		return Error::Audio;
 	}
 }
 
