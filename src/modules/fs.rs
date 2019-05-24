@@ -86,7 +86,7 @@ pub fn glob(pat: &str) -> Vec<String> {
 }
 
 /// get bytes read from given file
-pub fn read_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
+pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
 	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
