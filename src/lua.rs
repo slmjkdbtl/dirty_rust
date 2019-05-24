@@ -40,7 +40,7 @@ impl<'lua> ContextExt for Context<'lua> {
 		return self.add_module(name, self.load(include_str!("res/json.lua")).eval()?);
 	}
 
-	fn add_module(&self, name: &str, val: Value<'_>) -> rlua::Result<()> {
+	fn add_module(&self, name: &str, val: Value) -> rlua::Result<()> {
 
 		let preloads: Table = self.globals().get::<_, Table>("package")?.get("preload")?;
 
@@ -78,6 +78,30 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		globals.set("arg", args)?;
 
+		impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
+
+			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+				methods.add_method("done", |_, t: &thread::Task<T>, ()| {
+					return Ok(t.done());
+				});
+
+				methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
+					return Ok(t.poll());
+				});
+
+				methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
+					if t.done() {
+						return Ok(t.data().unwrap());
+					} else {
+						return Err(Error::Lua.into());
+					}
+				});
+
+			}
+
+		}
+
 		fs.set("glob", ctx.create_function(|_, (pat): (String)| {
 			return Ok(fs::glob(&pat));
 		})?)?;
@@ -103,46 +127,22 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		})?)?;
 
 		fs.set("read", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read_str(&path)?);
+			return Ok(fs::read(&path)?);
 		})?)?;
-
-		impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method("done", |_, t: &thread::Task<T>, ()| {
-					return Ok(t.done());
-				});
-
-				methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
-					return Ok(t.poll());
-				});
-
-				methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
-					if t.done() {
-						return Ok(t.data().unwrap());
-					} else {
-						return Err(Error::Lua.into());
-					}
-				});
-
-			}
-
-		}
 
 		fs.set("async_read", ctx.create_function(|_, (path): (String)| {
 			return Ok(thread::exec(move || {
-				return fs::read_str(&path).unwrap();
+				return fs::read(&path).unwrap();
 			}));
 		})?)?;
 
-		fs.set("read_bytes", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read_bytes(&path)?);
+		fs.set("read_str", ctx.create_function(|_, (path): (String)| {
+			return Ok(fs::read_str(&path)?);
 		})?)?;
 
-		fs.set("async_read_bytes", ctx.create_function(|_, (path): (String)| {
+		fs.set("async_read_str", ctx.create_function(|_, (path): (String)| {
 			return Ok(thread::exec(move || {
-				return fs::read_bytes(&path).unwrap();
+				return fs::read_str(&path).unwrap();
 			}));
 		})?)?;
 
@@ -300,12 +300,12 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		})?)?;
 
 		audio.set("load_file", ctx.create_function(|_, (path): (String)| {
-			return Ok(audio::Sound::from_bytes(&fs::read_bytes(&path)?)?);
+			return Ok(audio::Sound::from_bytes(&fs::read(&path)?)?);
 		})?)?;
 
 		audio.set("async_load_file", ctx.create_function(|_, (path): (String)| {
 			return Ok(thread::exec(move || {
-				return audio::Sound::from_bytes(&fs::read_bytes(&path).unwrap()).unwrap();
+				return audio::Sound::from_bytes(&fs::read(&path).unwrap()).unwrap();
 			}));
 		})?)?;
 

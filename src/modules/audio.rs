@@ -85,7 +85,7 @@ impl Sound {
 
 	/// create a sound from file
 	pub fn from_file(fname: impl AsRef<Path>) -> Result<Self> {
-		return Self::from_bytes(&fs::read_bytes(fname)?);
+		return Self::from_bytes(&fs::read(fname)?);
 	}
 
 	/// return a new sound with given speed
