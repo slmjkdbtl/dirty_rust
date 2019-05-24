@@ -4,6 +4,30 @@ use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::thread;
 
+pub struct Pool {
+	// ...
+}
+
+impl Pool {
+
+	pub fn new(num: usize) -> Self {
+		return Self {};
+	}
+
+	pub fn exec<T: Send + Clone + 'static, F: FnMut() -> T + Send + 'static>(&mut self, mut f: F) -> Task<T> {
+
+		let (tx, rx) = mpsc::channel();
+
+		thread::spawn(move || {
+			tx.send(f());
+		});
+
+		return Task::new(rx);
+
+	}
+
+}
+
 pub fn exec<T: Send + Clone + 'static, F: FnMut() -> T + Send + 'static>(mut f: F) -> Task<T> {
 
 	let (tx, rx) = mpsc::channel();
