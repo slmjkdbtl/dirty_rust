@@ -29,18 +29,18 @@ impl From<rlua::Error> for Error {
 	}
 }
 
-trait ContextExt {
-	fn include_module(&self, name: &str, code: &str) -> rlua::Result<()>;
-	fn add_module(&self, name: &str, val: Value) -> rlua::Result<()>;
+trait ContextExt<'lua> {
+	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
+	fn add_lua_module(&self, name: &str, code: &str) -> rlua::Result<()>;
 }
 
-impl<'lua> ContextExt for Context<'lua> {
+impl<'lua> ContextExt<'lua> for Context<'lua> {
 
-	fn include_module(&self, name: &str, code: &str) -> rlua::Result<()> {
-		return self.add_module(name, self.load(include_str!("res/json.lua")).eval()?);
+	fn add_lua_module(&self, name: &str, code: &str) -> rlua::Result<()> {
+		return self.add_module(name, self.load(code).eval::<Value>()?);
 	}
 
-	fn add_module(&self, name: &str, val: Value) -> rlua::Result<()> {
+	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()> {
 
 		let preloads: Table = self.globals().get::<_, Table>("package")?.get("preload")?;
 
@@ -48,13 +48,291 @@ impl<'lua> ContextExt for Context<'lua> {
 			return Ok(v);
 		})?;
 
-// 		let key = self.create_registry_value(val)?;
+		let key = self.create_registry_value(val)?;
 
-// 		preloads.set(name, f.bind(self.registry_value::<Value>(&key)?)?)?;
+		preloads.set(name, f.bind(self.registry_value::<Value>(&key)?)?)?;
 
 		return Ok(());
 
 	}
+
+}
+
+pub fn bind(ctx: &Context) -> Result<()> {
+
+	let globals = ctx.globals();
+	let fs = ctx.create_table()?;
+	let window = ctx.create_table()?;
+	let http = ctx.create_table()?;
+	let img = ctx.create_table()?;
+	let audio = ctx.create_table()?;
+
+	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("done", |_, t: &thread::Task<T>, ()| {
+				return Ok(t.done());
+			});
+
+			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
+				return Ok(t.poll());
+			});
+
+			methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
+				if t.done() {
+					return Ok(t.data().unwrap());
+				} else {
+					return Err(Error::Lua.into());
+				}
+			});
+
+		}
+
+	}
+
+	fs.set("glob", ctx.create_function(|_, (pat): (String)| {
+		return Ok(fs::glob(&pat));
+	})?)?;
+
+	fs.set("copy", ctx.create_function(|_, (p1, p2): (String, String)| {
+		return Ok(fs::copy(&p1, &p2)?);
+	})?)?;
+
+	fs.set("mkdir", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::mkdir(&path)?);
+	})?)?;
+
+	fs.set("is_file", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::is_file(&path));
+	})?)?;
+
+	fs.set("is_dir", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::is_dir(&path));
+	})?)?;
+
+	fs.set("exists", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::exists(&path));
+	})?)?;
+
+	fs.set("read", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::read(&path)?);
+	})?)?;
+
+	fs.set("async_read", ctx.create_function(|_, (path): (String)| {
+		return Ok(thread::exec(move || {
+			return fs::read(&path).unwrap();
+		}));
+	})?)?;
+
+	fs.set("read_str", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::read_str(&path)?);
+	})?)?;
+
+	fs.set("async_read_str", ctx.create_function(|_, (path): (String)| {
+		return Ok(thread::exec(move || {
+			return fs::read_str(&path).unwrap();
+		}));
+	})?)?;
+
+	fs.set("basename", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::basename(&path)?);
+	})?)?;
+
+	fs.set("remove", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::remove(&path)?);
+	})?)?;
+
+	fs.set("remove_dir", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::remove_dir(&path)?);
+	})?)?;
+
+	fs.set("rename", ctx.create_function(|_, (old, new): (String, String)| {
+		return Ok(fs::rename(&old, &new)?);
+	})?)?;
+
+	fs.set("write", ctx.create_function(|_, (path, content): (String, Vec<u8>)| {
+		return Ok(fs::write(&path, &content)?);
+	})?)?;
+
+	fs.set("write_str", ctx.create_function(|_, (path, content): (String, String)| {
+		return Ok(fs::write(&path, &content)?);
+	})?)?;
+
+	impl UserData for &mut window::Ctx {}
+
+	impl UserData for window::Ctx {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method_mut("close", |_, ctx: &mut window::Ctx, ()| {
+				return Ok(ctx.close());
+			});
+
+			methods.add_method("fps", |_, ctx: &window::Ctx, ()| {
+				return Ok(ctx.fps());
+			});
+
+			methods.add_method("time", |_, ctx: &window::Ctx, ()| {
+				return Ok(ctx.time());
+			});
+
+			methods.add_method("dt", |_, ctx: &window::Ctx, ()| {
+				return Ok(ctx.dt());
+			});
+
+		}
+
+	}
+
+	impl<'lua> FromLua<'lua> for window::Conf {
+
+		fn from_lua(val: Value<'lua>, ctx: Context<'lua>) -> rlua::Result<Self> {
+
+			let mut conf = Self::default();
+
+			let t = match val {
+				Value::Table(t) => t,
+				_ => return Err(Error::Lua.into()),
+			};
+
+			return Ok(conf);
+
+		}
+
+	}
+
+	impl UserData for window::Window {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method_mut("run", |ctx, win: &mut window::Window, (f): (rlua::Function)| {
+				return Ok(win.run(|t| {
+					let res = f.call::<_, ()>(());
+				})?);
+			});
+
+		}
+
+	}
+
+	window.set("create", ctx.create_function(|_, (conf): (Value)| {
+		return Ok(window::Window::new(window::Conf::default()));
+	})?)?;
+
+	impl UserData for http::Response {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("text", |_, res: &http::Response, ()| {
+				return Ok(res.text().clone());
+			});
+
+			methods.add_method("bytes", |_, res: &http::Response, ()| {
+				return Ok(res.bytes().clone());
+			});
+
+			methods.add_method("status", |_, res: &http::Response, ()| {
+				return Ok(res.status());
+			});
+
+		}
+
+	}
+
+	http.set("get", ctx.create_function(|_, (uri): (String)| {
+		return Ok(http::get(&uri)?);
+	})?)?;
+
+	impl UserData for img::Image {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("write_png", |_, img: &img::Image, (fname): (String)| {
+				return Ok(img::Image::write_png(img, fname)?);
+			});
+
+			methods.add_method("width", |_, img: &img::Image, ()| {
+				return Ok(img.width());
+			});
+
+			methods.add_method("height", |_, img: &img::Image, ()| {
+				return Ok(img.height());
+			});
+
+			methods.add_method("pixels", |_, img: &img::Image, ()| {
+				return Ok(img.pixels().clone());
+			});
+
+		}
+
+	}
+
+	img.set("decode_png", ctx.create_function(|_, (data): (Vec<u8>)| {
+		return Ok(img::decode_png(&data)?);
+	})?)?;
+
+	impl UserData for audio::Sound {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("play", |_, s: &audio::Sound, ()| {
+				return Ok(audio::play(s));
+			});
+
+		}
+
+	}
+
+	audio.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
+		return Ok(audio::Sound::from_bytes(&data)?);
+	})?)?;
+
+	audio.set("load_file", ctx.create_function(|_, (path): (String)| {
+		return Ok(audio::Sound::from_bytes(&fs::read(&path)?)?);
+	})?)?;
+
+	audio.set("async_load_file", ctx.create_function(|_, (path): (String)| {
+		return Ok(thread::exec(move || {
+			return audio::Sound::from_bytes(&fs::read(&path).unwrap()).unwrap();
+		}));
+	})?)?;
+
+	impl UserData for math::Vec2 {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_meta_method(MetaMethod::Index, |_, this, key: String| {
+				match key.as_ref() {
+					"x" => Ok(this.x),
+					"y" => Ok(this.y),
+					_ => Err(Error::Lua.into()),
+				}
+			});
+
+		}
+
+	}
+
+	impl UserData for math::Vec3 {}
+	impl UserData for math::Color {}
+
+	globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
+		return Ok(vec2!(x, y));
+	})?)?;
+
+	globals.set("color", ctx.create_function(|_, (r, g, b, a): (f32, f32, f32, f32)| {
+		return Ok(color!(r, g, b, a));
+	})?)?;
+
+	ctx.add_module("fs", fs)?;
+	ctx.add_module("window", window)?;
+	ctx.add_module("http", http)?;
+	ctx.add_module("img", img)?;
+	ctx.add_module("audio", audio)?;
+	ctx.add_lua_module("json", include_str!("res/json.lua"));
+
+	return Ok(());
 
 }
 
@@ -69,294 +347,8 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 	return lua.context(|ctx| {
 
-		let globals = ctx.globals();
-		let fs = ctx.create_table()?;
-		let window = ctx.create_table()?;
-		let http = ctx.create_table()?;
-		let img = ctx.create_table()?;
-		let audio = ctx.create_table()?;
-
-		globals.set("arg", args)?;
-
-		impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method("done", |_, t: &thread::Task<T>, ()| {
-					return Ok(t.done());
-				});
-
-				methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
-					return Ok(t.poll());
-				});
-
-				methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
-					if t.done() {
-						return Ok(t.data().unwrap());
-					} else {
-						return Err(Error::Lua.into());
-					}
-				});
-
-			}
-
-		}
-
-		fs.set("glob", ctx.create_function(|_, (pat): (String)| {
-			return Ok(fs::glob(&pat));
-		})?)?;
-
-		fs.set("copy", ctx.create_function(|_, (p1, p2): (String, String)| {
-			return Ok(fs::copy(&p1, &p2)?);
-		})?)?;
-
-		fs.set("mkdir", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::mkdir(&path)?);
-		})?)?;
-
-		fs.set("is_file", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::is_file(&path));
-		})?)?;
-
-		fs.set("is_dir", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::is_dir(&path));
-		})?)?;
-
-		fs.set("exists", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::exists(&path));
-		})?)?;
-
-		fs.set("read", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read(&path)?);
-		})?)?;
-
-		fs.set("async_read", ctx.create_function(|_, (path): (String)| {
-			return Ok(thread::exec(move || {
-				return fs::read(&path).unwrap();
-			}));
-		})?)?;
-
-		fs.set("read_str", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read_str(&path)?);
-		})?)?;
-
-		fs.set("async_read_str", ctx.create_function(|_, (path): (String)| {
-			return Ok(thread::exec(move || {
-				return fs::read_str(&path).unwrap();
-			}));
-		})?)?;
-
-		fs.set("basename", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::basename(&path)?);
-		})?)?;
-
-		fs.set("remove", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::remove(&path)?);
-		})?)?;
-
-		fs.set("remove_dir", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::remove_dir(&path)?);
-		})?)?;
-
-		fs.set("rename", ctx.create_function(|_, (old, new): (String, String)| {
-			return Ok(fs::rename(&old, &new)?);
-		})?)?;
-
-		fs.set("write", ctx.create_function(|_, (path, content): (String, String)| {
-			return Ok(fs::write(&path, &content)?);
-		})?)?;
-
-		fs.set("write_bytes", ctx.create_function(|_, (path, content): (String, Vec<u8>)| {
-			return Ok(fs::write(&path, &content)?);
-		})?)?;
-
-		impl UserData for &mut window::Ctx {}
-
-		impl UserData for window::Ctx {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method_mut("close", |_, ctx: &mut window::Ctx, ()| {
-					return Ok(ctx.close());
-				});
-
-				methods.add_method("fps", |_, ctx: &window::Ctx, ()| {
-					return Ok(ctx.fps());
-				});
-
-				methods.add_method("time", |_, ctx: &window::Ctx, ()| {
-					return Ok(ctx.time());
-				});
-
-				methods.add_method("dt", |_, ctx: &window::Ctx, ()| {
-					return Ok(ctx.dt());
-				});
-
-			}
-
-		}
-
-		impl<'lua> FromLua<'lua> for window::Conf {
-
-			fn from_lua(val: Value<'lua>, ctx: Context<'lua>) -> rlua::Result<Self> {
-
-				let mut conf = Self::default();
-
-				let t = match val {
-					Value::Table(t) => t,
-					_ => return Err(Error::Lua.into()),
-				};
-
-				return Ok(conf);
-
-			}
-
-		}
-
-		impl UserData for window::Window {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method_mut("run", |_, win: &mut window::Window, (f): (rlua::Function)| {
-					return Ok(win.run(|_| {
-						let res = f.call::<_, ()>(());
-					})?);
-				});
-
-			}
-
-		}
-
-		window.set("create", ctx.create_function(|_, (conf): (Value)| {
-			return Ok(window::Window::new(window::Conf::default()));
-		})?)?;
-
-		impl UserData for http::Response {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method("text", |_, res: &http::Response, ()| {
-					return Ok(res.text().clone());
-				});
-
-				methods.add_method("bytes", |_, res: &http::Response, ()| {
-					return Ok(res.bytes().clone());
-				});
-
-				methods.add_method("status", |_, res: &http::Response, ()| {
-					return Ok(res.status());
-				});
-
-			}
-
-		}
-
-		http.set("get", ctx.create_function(|_, (uri): (String)| {
-			return Ok(http::get(&uri)?);
-		})?)?;
-
-		impl UserData for img::Image {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method("write_png", |_, img: &img::Image, (fname): (String)| {
-					return Ok(img::Image::write_png(img, fname)?);
-				});
-
-				methods.add_method("width", |_, img: &img::Image, ()| {
-					return Ok(img.width());
-				});
-
-				methods.add_method("height", |_, img: &img::Image, ()| {
-					return Ok(img.height());
-				});
-
-				methods.add_method("pixels", |_, img: &img::Image, ()| {
-					return Ok(img.pixels().clone());
-				});
-
-			}
-
-		}
-
-		img.set("decode_png", ctx.create_function(|_, (data): (Vec<u8>)| {
-			return Ok(img::decode_png(&data)?);
-		})?)?;
-
-		impl UserData for audio::Sound {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_method("play", |_, s: &audio::Sound, ()| {
-					return Ok(audio::play(s));
-				});
-
-			}
-
-		}
-
-		audio.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
-			return Ok(audio::Sound::from_bytes(&data)?);
-		})?)?;
-
-		audio.set("load_file", ctx.create_function(|_, (path): (String)| {
-			return Ok(audio::Sound::from_bytes(&fs::read(&path)?)?);
-		})?)?;
-
-		audio.set("async_load_file", ctx.create_function(|_, (path): (String)| {
-			return Ok(thread::exec(move || {
-				return audio::Sound::from_bytes(&fs::read(&path).unwrap()).unwrap();
-			}));
-		})?)?;
-
-		impl UserData for math::Vec2 {
-
-			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-				methods.add_meta_method(MetaMethod::Index, |_, this, key: String| {
-					match key.as_ref() {
-						"x" => Ok(this.x),
-						"y" => Ok(this.y),
-						_ => Err(Error::Lua.into()),
-					}
-				});
-
-			}
-
-		}
-
-		impl UserData for math::Vec3 {}
-		impl UserData for math::Color {}
-
-		globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
-			return Ok(vec2!(x, y));
-		})?)?;
-
-		globals.set("color", ctx.create_function(|_, (r, g, b, a): (f32, f32, f32, f32)| {
-			return Ok(color!(r, g, b, a));
-		})?)?;
-
-		let preloads: Table = ctx.globals().get::<_, Table>("package")?.get("preload")?;
-
-		let f = ctx.create_function(|_, (v): (Value)| {
-			return Ok(v);
-		})?;
-
-		let json: Value = ctx.load(include_str!("res/json.lua")).eval()?;
-
-		let json_key = ctx.create_registry_value(json)?;
-		let fs_key = ctx.create_registry_value(fs)?;
-		let window_key = ctx.create_registry_value(window)?;
-		let http_key = ctx.create_registry_value(http)?;
-		let img_key = ctx.create_registry_value(img)?;
-		let audio_key = ctx.create_registry_value(audio)?;
-
-		preloads.set("json", f.bind(ctx.registry_value::<Value>(&json_key)?)?)?;
-		preloads.set("fs", f.bind(ctx.registry_value::<Value>(&fs_key)?)?)?;
-		preloads.set("window", f.bind(ctx.registry_value::<Value>(&window_key)?)?)?;
-		preloads.set("http", f.bind(ctx.registry_value::<Value>(&http_key)?)?)?;
-		preloads.set("img", f.bind(ctx.registry_value::<Value>(&img_key)?)?)?;
-		preloads.set("audio", f.bind(ctx.registry_value::<Value>(&audio_key)?)?)?;
+		ctx.globals().set("arg", args)?;
+		bind(&ctx)?;
 
 		let mut runtime = ctx.load(code);
 
