@@ -8,6 +8,11 @@ use rlua::Lua;
 use rlua::UserData;
 use rlua::UserDataMethods;
 use rlua::MetaMethod;
+use rlua::Value;
+use rlua::Context;
+use rlua::ToLua;
+use rlua::FromLua;
+use rlua::Table;
 
 use crate::*;
 use crate::err::Error;
@@ -18,13 +23,42 @@ impl From<Error> for rlua::Error {
 	}
 }
 
-fn load_ext_mod(ctx: &rlua::Context, name: &str, code: &str) -> rlua::Result<()> {
-	let thing: rlua::Table = ctx.load(code).eval()?;
-	ctx.globals().set(name, thing);
-	return Ok(());
+impl From<rlua::Error> for Error {
+	fn from(_: rlua::Error) -> Error {
+		return Error::Lua;
+	}
 }
 
-pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> rlua::Result<()> {
+trait ContextExt {
+	fn include_module(&self, name: &str, code: &str) -> rlua::Result<()>;
+	fn add_module(&self, name: &str, val: Value) -> rlua::Result<()>;
+}
+
+impl<'lua> ContextExt for Context<'lua> {
+
+	fn include_module(&self, name: &str, code: &str) -> rlua::Result<()> {
+		return self.add_module(name, self.load(include_str!("res/json.lua")).eval()?);
+	}
+
+	fn add_module(&self, name: &str, val: Value<'_>) -> rlua::Result<()> {
+
+		let preloads: Table = self.globals().get::<_, Table>("package")?.get("preload")?;
+
+		let f = self.create_function(|_, (v): (Value)| {
+			return Ok(v);
+		})?;
+
+// 		let key = self.create_registry_value(val)?;
+
+// 		preloads.set(name, f.bind(self.registry_value::<Value>(&key)?)?)?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
 
 	let lua = Lua::new();
 
@@ -42,7 +76,6 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		let img = ctx.create_table()?;
 		let audio = ctx.create_table()?;
 
-		load_ext_mod(&ctx, "json", include_str!("res/json.lua"))?;
 		globals.set("arg", args)?;
 
 		fs.set("glob", ctx.create_function(|_, (pat): (String)| {
@@ -73,7 +106,7 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			return Ok(fs::read_str(&path)?);
 		})?)?;
 
-		impl<'a, T: Send + Clone + 'static + for<'lua> rlua::ToLua<'lua>> UserData for thread::Task<T> {
+		impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
 
 			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
@@ -163,10 +196,21 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		}
 
-		impl<'lua> rlua::FromLua<'lua> for window::Conf {
-			fn from_lua(lua_value: rlua::Value<'lua>, lua: rlua::Context<'lua>) -> rlua::Result<Self> {
-				return Err(Error::Lua.into());
+		impl<'lua> FromLua<'lua> for window::Conf {
+
+			fn from_lua(val: Value<'lua>, ctx: Context<'lua>) -> rlua::Result<Self> {
+
+				let mut conf = Self::default();
+
+				let t = match val {
+					Value::Table(t) => t,
+					_ => return Err(Error::Lua.into()),
+				};
+
+				return Ok(conf);
+
 			}
+
 		}
 
 		impl UserData for window::Window {
@@ -174,7 +218,7 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 				methods.add_method_mut("run", |_, win: &mut window::Window, (f): (rlua::Function)| {
-					return Ok(win.run(|ctx| {
+					return Ok(win.run(|_| {
 						let res = f.call::<_, ()>(());
 					})?);
 				});
@@ -183,7 +227,7 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		}
 
-		window.set("create", ctx.create_function(|_, (conf): (rlua::Value)| {
+		window.set("create", ctx.create_function(|_, (conf): (Value)| {
 			return Ok(window::Window::new(window::Conf::default()));
 		})?)?;
 
@@ -292,11 +336,27 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 			return Ok(color!(r, g, b, a));
 		})?)?;
 
-		globals.set("fs", fs)?;
-		globals.set("window", window)?;
-		globals.set("http", http)?;
-		globals.set("img", img)?;
-		globals.set("audio", audio)?;
+		let preloads: Table = ctx.globals().get::<_, Table>("package")?.get("preload")?;
+
+		let f = ctx.create_function(|_, (v): (Value)| {
+			return Ok(v);
+		})?;
+
+		let json: Value = ctx.load(include_str!("res/json.lua")).eval()?;
+
+		let json_key = ctx.create_registry_value(json)?;
+		let fs_key = ctx.create_registry_value(fs)?;
+		let window_key = ctx.create_registry_value(window)?;
+		let http_key = ctx.create_registry_value(http)?;
+		let img_key = ctx.create_registry_value(img)?;
+		let audio_key = ctx.create_registry_value(audio)?;
+
+		preloads.set("json", f.bind(ctx.registry_value::<Value>(&json_key)?)?)?;
+		preloads.set("fs", f.bind(ctx.registry_value::<Value>(&fs_key)?)?)?;
+		preloads.set("window", f.bind(ctx.registry_value::<Value>(&window_key)?)?)?;
+		preloads.set("http", f.bind(ctx.registry_value::<Value>(&http_key)?)?)?;
+		preloads.set("img", f.bind(ctx.registry_value::<Value>(&img_key)?)?)?;
+		preloads.set("audio", f.bind(ctx.registry_value::<Value>(&audio_key)?)?)?;
 
 		let mut runtime = ctx.load(code);
 
@@ -351,15 +411,12 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 }
 
-pub fn run_file(path: impl AsRef<Path>, args: Option<&[String]>) {
+pub fn run_file(path: impl AsRef<Path>, args: Option<&[String]>) -> Result<()> {
 
 	let path = path.as_ref();
+	let code = std::fs::read_to_string(path)?;
 
-	if let Ok(code) = std::fs::read_to_string(path) {
-		run(&code, Some(path), args);
-	} else {
-		panic!("failed to read {}", path.display());
-	}
+	return Ok(run(&code, Some(path), args)?);
 
 }
 

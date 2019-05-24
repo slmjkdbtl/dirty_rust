@@ -187,7 +187,7 @@ impl From<LogicalPosition> for Vec2 {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Conf {
 	pub width: u32,
 	pub height: u32,
