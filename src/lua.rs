@@ -18,6 +18,12 @@ impl From<Error> for rlua::Error {
 	}
 }
 
+fn load_ext_mod(ctx: &rlua::Context, name: &str, code: &str) -> rlua::Result<()> {
+	let thing: rlua::Table = ctx.load(code).eval()?;
+	ctx.globals().set(name, thing);
+	return Ok(());
+}
+
 pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> rlua::Result<()> {
 
 	let lua = Lua::new();
@@ -36,6 +42,7 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		let img = ctx.create_table()?;
 		let audio = ctx.create_table()?;
 
+		load_ext_mod(&ctx, "json", include_str!("res/json.lua"))?;
 		globals.set("arg", args)?;
 
 		fs.set("glob", ctx.create_function(|_, (pat): (String)| {
@@ -90,20 +97,20 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		}
 
-		fs.set("aread", ctx.create_function(|_, (path): (String)| {
+		fs.set("async_read", ctx.create_function(|_, (path): (String)| {
 			return Ok(thread::exec(move || {
 				return fs::read_str(&path).unwrap();
 			}));
 		})?)?;
 
-		fs.set("aread_bytes", ctx.create_function(|_, (path): (String)| {
+		fs.set("read_bytes", ctx.create_function(|_, (path): (String)| {
+			return Ok(fs::read_bytes(&path)?);
+		})?)?;
+
+		fs.set("async_read_bytes", ctx.create_function(|_, (path): (String)| {
 			return Ok(thread::exec(move || {
 				return fs::read_bytes(&path).unwrap();
 			}));
-		})?)?;
-
-		fs.set("read_bytes", ctx.create_function(|_, (path): (String)| {
-			return Ok(fs::read_bytes(&path)?);
 		})?)?;
 
 		fs.set("basename", ctx.create_function(|_, (path): (String)| {
@@ -154,6 +161,12 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 			}
 
+		}
+
+		impl<'lua> rlua::FromLua<'lua> for window::Conf {
+			fn from_lua(lua_value: rlua::Value<'lua>, lua: rlua::Context<'lua>) -> rlua::Result<Self> {
+				return Err(Error::Lua.into());
+			}
 		}
 
 		impl UserData for window::Window {
@@ -238,8 +251,18 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		}
 
-		audio.set("sound", ctx.create_function(|_, (data): (Vec<u8>)| {
+		audio.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
 			return Ok(audio::Sound::from_bytes(&data)?);
+		})?)?;
+
+		audio.set("load_file", ctx.create_function(|_, (path): (String)| {
+			return Ok(audio::Sound::from_bytes(&fs::read_bytes(&path)?)?);
+		})?)?;
+
+		audio.set("async_load_file", ctx.create_function(|_, (path): (String)| {
+			return Ok(thread::exec(move || {
+				return audio::Sound::from_bytes(&fs::read_bytes(&path).unwrap()).unwrap();
+			}));
 		})?)?;
 
 		impl UserData for math::Vec2 {

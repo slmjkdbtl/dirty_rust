@@ -5,8 +5,6 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::time::Instant;
 use std::time::Duration;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 use glutin::dpi::*;
 use glutin::Api;
@@ -358,11 +356,13 @@ impl Window {
 			windowed_ctx
 		};
 
-		let mut ctx = Arc::new(Mutex::new(Ctx::new()));
+		ggl::clear(true, false, false);
+		windowed_ctx.swap_buffers()?;
+
+		let mut ctx = Ctx::new();
 
 		loop {
 
-			let mut c = ctx.lock().unwrap();
 			let start_time = Instant::now();
 
 			use glutin::Event::*;
@@ -374,7 +374,7 @@ impl Window {
 
 					WindowEvent { event, .. } => {
 						match event {
-							CloseRequested => c.close(),
+							CloseRequested => ctx.close(),
 							_ => {},
 						}
 					},
@@ -385,7 +385,7 @@ impl Window {
 			});
 
 			ggl::clear(true, false, false);
-			f(&mut c);
+			f(&mut ctx);
 			windowed_ctx.swap_buffers()?;
 
 			let actual_dt = start_time.elapsed();
@@ -393,15 +393,15 @@ impl Window {
 			let expected_dt = 1000.0 / self.fps_cap as f32;
 
 			if expected_dt > actual_dt {
-				c.dt = expected_dt as f32 / 1000.0;
+				ctx.dt = expected_dt as f32 / 1000.0;
 				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
 			} else {
-				c.dt = actual_dt as f32 / 1000.0;
+				ctx.dt = actual_dt as f32 / 1000.0;
 			}
 
-			c.time += c.dt;
+			ctx.time += ctx.dt;
 
-			if c.closed {
+			if ctx.closed {
 				break;
 			}
 
