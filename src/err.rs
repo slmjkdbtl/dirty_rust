@@ -78,4 +78,8 @@ impl From<std::sync::mpsc::TryRecvError> for Error {
 		return Error::Thread;
 	}
 }
-
+impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
+	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
+		return Error::Window;
+	}
+}

@@ -7,4 +7,6 @@ pub mod fs;
 pub mod data;
 pub mod col;
 pub mod img;
+pub mod joystick;
+pub mod ansi;
 

@@ -31,6 +31,7 @@ rayon = "1.0.3"
 crossbeam = "0.7.1"
 rlua = "0.16.3"
 rlua_serde = "0.3.1"
+colored = "1.8.0"
 # sokol = "0.2.0"
 
 [target.'cfg(target_os="macos")'.dependencies]
