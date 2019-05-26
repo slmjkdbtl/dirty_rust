@@ -2,6 +2,7 @@
 
 local window = require("window")
 local audio = require("audio")
+local term = require("term")
 
 local win = window.make({})
 local sound = audio.async_load_file("examples/res/yo.ogg")
