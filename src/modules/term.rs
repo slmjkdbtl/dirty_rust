@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! TUI Utilities
+
 use crate::math::Color;
 use crate::Result;
 
@@ -44,13 +46,32 @@ impl Term {
 		return Ok(self.term.read_char()?);
 	}
 
-	pub fn clear(&self) {
-		self.term.clear_screen();
+	pub fn clear(&self) -> Result<()> {
+		return Ok(self.term.clear_screen()?);
 	}
 
-	pub fn clear_line(&self) {
-		self.term.clear_line();
+	pub fn clear_line(&self) -> Result<()> {
+		return Ok(self.term.clear_line()?);
 	}
 
 }
+
+macro_rules! ansi_wrap {
+	($name:ident) => {
+		pub fn $name(s: &str) -> String {
+			return console::style(s).$name().to_string();
+		}
+	}
+}
+
+ansi_wrap!(black);
+ansi_wrap!(red);
+ansi_wrap!(green);
+ansi_wrap!(yellow);
+ansi_wrap!(blue);
+ansi_wrap!(magenta);
+ansi_wrap!(cyan);
+ansi_wrap!(white);
+ansi_wrap!(bold);
+ansi_wrap!(italic);
 

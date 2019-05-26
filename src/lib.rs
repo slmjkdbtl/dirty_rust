@@ -1,7 +1,7 @@
 // wengwengweng
 
 //! # DIRTY
-//! simple toolkit for creating game-like experiences
+//! toolkit for things
 
 #![allow(unused_parens)]
 #![allow(dead_code)]

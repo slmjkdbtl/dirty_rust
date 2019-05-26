@@ -12,6 +12,7 @@ pub enum Error {
 	Lua,
 	Parse,
 	Thread,
+	Misc(String),
 }
 
 impl fmt::Display for Error {
@@ -25,6 +26,7 @@ impl fmt::Display for Error {
 			Error::Lua => write!(f, "lua error"),
 			Error::Parse => write!(f, "parse error"),
 			Error::Thread => write!(f, "thread error"),
+			Error::Misc(s) => write!(f, "error: {}", s),
 		};
 	}
 }
@@ -78,8 +80,16 @@ impl From<std::sync::mpsc::TryRecvError> for Error {
 		return Error::Thread;
 	}
 }
+
 impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
 	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
 		return Error::Window;
 	}
 }
+
+impl From<String> for Error {
+	fn from(s: String) -> Self {
+		return Error::Misc(s);
+	}
+}
+

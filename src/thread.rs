@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Simple Threading Utilities
+
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::thread;

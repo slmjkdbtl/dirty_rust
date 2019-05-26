@@ -198,6 +198,8 @@ pub struct Conf {
 	pub hide_titlebar_buttons: bool,
 	pub fullsize_content: bool,
 	pub titlebar_transparent: bool,
+	pub cursor_hidden: bool,
+	pub cursor_locked: bool,
 }
 
 impl Conf {
@@ -232,6 +234,8 @@ impl Default for Conf {
 			hide_title: false,
 			hide_titlebar_buttons: false,
 			titlebar_transparent: false,
+			cursor_hidden: false,
+			cursor_locked: false,
 		};
 	}
 
@@ -245,13 +249,10 @@ impl Default for Window {
 
 #[derive(Clone)]
 enum WindowRequest {
-	Fullscreen,
-	NotFullscreen,
-	HideCursor,
-	NotHideCursor,
-	LockCursor,
-	NotLockCursor,
-	None,
+	Fullscreen(bool),
+	HideCursor(bool),
+	LockCursor(bool),
+	SetTitle(String),
 }
 
 #[derive(Clone)]
@@ -265,33 +266,14 @@ pub struct Ctx {
 	mouse_pos: ScreenPt,
 	prev_mouse_pos: Option<ScreenPt>,
 	text_input: Option<String>,
-	window_request: WindowRequest,
+	window_requests: Vec<WindowRequest>,
+	title: String,
 	fullscreen: bool,
 	cursor_hidden: bool,
 	cursor_locked: bool,
 }
 
 impl Ctx {
-
-	pub fn new() -> Self {
-
-		return Self {
-			dt: 0.0,
-			time: 0.0,
-			closed: false,
-			fps_cap: 60,
-			key_state: HashMap::new(),
-			mouse_state: HashMap::new(),
-			mouse_pos: ScreenPt::new(0, 0),
-			prev_mouse_pos: None,
-			text_input: None,
-			window_request: WindowRequest::None,
-			fullscreen: false,
-			cursor_hidden: false,
-			cursor_locked: false,
-		};
-
-	}
 
 	/// get delta time between frames
 	pub fn dt(&self) -> f32 {
@@ -377,11 +359,7 @@ impl Ctx {
 	}
 
 	pub fn set_fullscreen(&mut self, b: bool) {
-		if b {
-			self.window_request = WindowRequest::Fullscreen;
-		} else {
-			self.window_request = WindowRequest::NotFullscreen;
-		}
+		self.window_requests.push(WindowRequest::Fullscreen(b));
 	}
 
 	pub fn is_fullscreen(&self) -> bool {
@@ -393,11 +371,7 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		if b {
-			self.window_request = WindowRequest::HideCursor;
-		} else {
-			self.window_request = WindowRequest::NotHideCursor;
-		}
+		self.window_requests.push(WindowRequest::HideCursor(b));
 	}
 
 	pub fn is_cursor_hidden(&self) -> bool {
@@ -409,11 +383,7 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_locked(&mut self, b: bool) {
-		if b {
-			self.window_request = WindowRequest::LockCursor;
-		} else {
-			self.window_request = WindowRequest::NotLockCursor;
-		}
+		self.window_requests.push(WindowRequest::LockCursor(b));
 	}
 
 	pub fn is_cursor_locked(&self) -> bool {
@@ -424,15 +394,40 @@ impl Ctx {
 		self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
+	pub fn set_title(&mut self, t: &str) {
+		self.window_requests.push(WindowRequest::SetTitle(t.to_owned()));
+	}
+
+	pub fn title(&self) -> String {
+		return self.title.clone();
+	}
+
 }
 
 impl Window {
 
 	pub fn new(conf: Conf) -> Self {
 
+		let ctx = Ctx {
+			dt: 0.0,
+			time: 0.0,
+			closed: false,
+			fps_cap: 60,
+			key_state: HashMap::new(),
+			mouse_state: HashMap::new(),
+			mouse_pos: ScreenPt::new(0, 0),
+			prev_mouse_pos: None,
+			text_input: None,
+			window_requests: Vec::new(),
+			fullscreen: conf.fullscreen,
+			cursor_hidden: conf.cursor_hidden,
+			cursor_locked: conf.cursor_locked,
+			title: conf.title.to_owned(),
+		};
+
 		return Self {
 			conf: conf,
-			ctx: Ctx::new(),
+			ctx: ctx,
 		};
 
 	}
@@ -583,33 +578,32 @@ impl Window {
 			f(&mut self.ctx);
 			windowed_ctx.swap_buffers()?;
 
-			match self.ctx.window_request {
-				WindowRequest::Fullscreen => {
-					self.ctx.fullscreen = true;
-					window.set_fullscreen(Some(window.get_current_monitor()));
-				},
-				WindowRequest::NotFullscreen => {
-					self.ctx.fullscreen = false;
-					window.set_fullscreen(None);
-				},
-				WindowRequest::HideCursor => {
-					self.ctx.cursor_hidden = true;
-					window.hide_cursor(true);
-				},
-				WindowRequest::NotHideCursor => {
-					self.ctx.cursor_hidden = false;
-					window.hide_cursor(false);
-				},
-				WindowRequest::LockCursor => {
-					self.ctx.cursor_locked = true;
-					window.grab_cursor(true);
-				},
-				WindowRequest::NotLockCursor => {
-					self.ctx.cursor_locked = false;
-					window.grab_cursor(false);
-				},
-				_ => {},
+			for req in &self.ctx.window_requests {
+				match *req {
+					WindowRequest::Fullscreen(b) => {
+						if b {
+							window.set_fullscreen(Some(window.get_current_monitor()));
+						} else {
+							window.set_fullscreen(None);
+						}
+						self.ctx.fullscreen = b;
+					},
+					WindowRequest::HideCursor(b) => {
+						window.hide_cursor(b);
+						self.ctx.cursor_hidden = b;
+					},
+					WindowRequest::LockCursor(b) => {
+						window.grab_cursor(b)?;
+						self.ctx.cursor_locked = b;
+					},
+					WindowRequest::SetTitle(ref s) => {
+						window.set_title(&s);
+						self.ctx.title = s.to_owned();
+					},
+				}
 			}
+
+			self.ctx.window_requests.clear();
 
 			let actual_dt = start_time.elapsed();
 			let actual_dt = actual_dt.as_millis() as f32;

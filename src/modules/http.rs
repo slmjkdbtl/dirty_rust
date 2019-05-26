@@ -1,10 +1,6 @@
 // wengwengweng
 
-//! Networking
-
-use std::io::Write;
-use std::io::Read;
-use std::net::TcpStream;
+//! HTTP Requests & Servers
 
 use crate::Result;
 
