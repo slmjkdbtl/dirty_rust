@@ -99,7 +99,7 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	}
 
 	fs.set("glob", ctx.create_function(|_, (pat): (String)| {
-		return Ok(fs::glob(&pat));
+		return Ok(fs::glob(&pat)?);
 	})?)?;
 
 	fs.set("copy", ctx.create_function(|_, (p1, p2): (String, String)| {
@@ -480,15 +480,6 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 		return Ok(());
 
 	});
-
-}
-
-pub fn run_file(path: impl AsRef<Path>, args: Option<&[String]>) -> Result<()> {
-
-	let path = path.as_ref();
-	let code = std::fs::read_to_string(path)?;
-
-	return Ok(run(&code, Some(path), args)?);
 
 }
 

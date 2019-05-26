@@ -10,32 +10,31 @@ use crate::Error;
 use crate::Result;
 
 #[cfg(target_os = "macos")]
-fn get_res_dir() -> PathBuf {
+fn get_res_dir() -> Result<PathBuf> {
 
 	use core_foundation::bundle;
 
 	let bundle = bundle::CFBundle::main_bundle();
 	let path = bundle
-		.executable_url().expect("Cannot get executable dir")
-		.to_path().expect("to_path error")
+		.executable_url().ok_or(Error::IO)?
+		.to_path().ok_or(Error::IO)?
 		.parent()
 		.unwrap()
 		.parent()
 		.unwrap()
 		.join("Resources");
 
-	return path;
+	return Ok(path);
 
 }
 
 #[cfg(not(target_os = "macos"))]
-fn get_res_dir() -> PathBuf {
+fn get_res_dir() -> Result<PathBuf> {
 
 	use std::env;
 
-	let path = env::current_exe()
-		.expect("Cannot get application dir")
-		.parent().expect("Cannot get application dir")
+	let path = env::current_exe()?
+		.parent()?
 		.to_path_buf();
 
 	return path;
@@ -48,7 +47,7 @@ fn validate_path(path: impl AsRef<Path>) -> Option<PathBuf> {
 
 	if !Path::new(path).exists() {
 
-		let with_res = get_res_dir().join(path);
+		let with_res = get_res_dir().ok()?.join(path);
 
 		if Path::new(&with_res).exists() {
 			return Some(with_res);
@@ -70,18 +69,18 @@ pub fn exists(path: impl AsRef<Path>) -> bool {
 }
 
 /// get a list of all filenames under given directory
-pub fn glob(pat: &str) -> Vec<String> {
+pub fn glob(pat: &str) -> Result<Vec<String>> {
 
 	let listings = glob::glob(&format!("{}", pat))
-		.or(glob::glob(&format!("{}/{}", get_res_dir().display(), pat)))
+		.or(glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)))
 		.expect(&format!("failed to read dir \"{}\"", pat));
 
-	return listings
+	return Ok(listings
 		.map(|s| s.expect("failed to glob"))
 		.map(|s| s.into_os_string())
 		.map(|s| s.into_string())
 		.map(|s| s.expect("failed to glob"))
-		.collect::<Vec<String>>();
+		.collect::<Vec<String>>());
 
 }
 
@@ -89,7 +88,7 @@ pub fn glob(pat: &str) -> Vec<String> {
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
-	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
+	let path = validate_path(path).ok_or(Error::IO)?;
 
 	return Ok(fs::read(&path)?);
 
@@ -99,7 +98,7 @@ pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
+	let path = validate_path(path).ok_or(Error::IO)?;
 
 	return Ok(fs::read_to_string(&path)?);
 
@@ -109,7 +108,7 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = validate_path(path).expect(&format!("failed to read file \"{}\"", path.display()));
+	let path = validate_path(path).ok_or(Error::IO)?;
 
 	return Ok(
 		Path::new(&path)
