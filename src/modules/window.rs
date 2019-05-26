@@ -38,12 +38,12 @@ pub enum ButtonState {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct MousePos {
+pub struct ScreenPt {
 	pub x: i32,
 	pub y: i32,
 }
 
-impl MousePos {
+impl ScreenPt {
 	fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
@@ -52,13 +52,13 @@ impl MousePos {
 	}
 }
 
-impl From<MousePos> for Vec2 {
-	fn from(mpos: MousePos) -> Self {
+impl From<ScreenPt> for Vec2 {
+	fn from(mpos: ScreenPt) -> Self {
 		return vec2!(mpos.x, mpos.y);
 	}
 }
 
-impl From<LogicalPosition> for MousePos {
+impl From<LogicalPosition> for ScreenPt {
 	fn from(pos: LogicalPosition) -> Self {
 		let (x, y): (i32, i32) = pos.into();
 		return Self {
@@ -68,8 +68,8 @@ impl From<LogicalPosition> for MousePos {
 	}
 }
 
-impl From<MousePos> for LogicalPosition {
-	fn from(pos: MousePos) -> Self {
+impl From<ScreenPt> for LogicalPosition {
+	fn from(pos: ScreenPt) -> Self {
 		return Self {
 			x: pos.x as f64,
 			y: pos.y as f64,
@@ -244,13 +244,31 @@ impl Default for Window {
 }
 
 #[derive(Clone)]
+enum WindowRequest {
+	Fullscreen,
+	NotFullscreen,
+	HideCursor,
+	NotHideCursor,
+	LockCursor,
+	NotLockCursor,
+	None,
+}
+
+#[derive(Clone)]
 pub struct Ctx {
 	dt: f32,
 	time: f32,
 	closed: bool,
 	fps_cap: u32,
 	key_state: HashMap<Key, ButtonState>,
-	rpressed_key: Option<Key>,
+	mouse_state: HashMap<Mouse, ButtonState>,
+	mouse_pos: ScreenPt,
+	prev_mouse_pos: Option<ScreenPt>,
+	text_input: Option<String>,
+	window_request: WindowRequest,
+	fullscreen: bool,
+	cursor_hidden: bool,
+	cursor_locked: bool,
 }
 
 impl Ctx {
@@ -258,14 +276,19 @@ impl Ctx {
 	pub fn new() -> Self {
 
 		return Self {
-
 			dt: 0.0,
 			time: 0.0,
 			closed: false,
 			fps_cap: 60,
 			key_state: HashMap::new(),
-			rpressed_key: None,
-
+			mouse_state: HashMap::new(),
+			mouse_pos: ScreenPt::new(0, 0),
+			prev_mouse_pos: None,
+			text_input: None,
+			window_request: WindowRequest::None,
+			fullscreen: false,
+			cursor_hidden: false,
+			cursor_locked: false,
 		};
 
 	}
@@ -290,35 +313,115 @@ impl Ctx {
 	}
 
 	pub fn key_down(&self, key: Key) -> bool {
-		if let Some(state) = self.key_state.get(&key) {
-			return *state == ButtonState::Down || *state == ButtonState::Pressed;
-		} else {
-			return false;
-		}
+		use ButtonState::*;
+		let state = self.key_state.get(&key);
+		return state == Some(&Down) || state == Some(&Pressed);
 	}
 
 	pub fn key_pressed(&self, key: Key) -> bool {
-		if let Some(state) = self.key_state.get(&key) {
-			return *state == ButtonState::Pressed;
-		} else {
-			return false;
-		}
+		use ButtonState::*;
+		let state = self.key_state.get(&key);
+		return state == Some(&Pressed);
 	}
 
 	pub fn key_released(&self, key: Key) -> bool {
-		if let Some(state) = self.key_state.get(&key) {
-			return *state == ButtonState::Released;
-		} else {
-			return false;
-		}
+		use ButtonState::*;
+		let state = self.key_state.get(&key);
+		return state == Some(&Released);
 	}
 
 	pub fn key_up(&self, key: Key) -> bool {
-		if let Some(state) = self.key_state.get(&key) {
-			return *state == ButtonState::Up;
+		use ButtonState::*;
+		let state = self.key_state.get(&key);
+		return state == None || state == Some(&Up);
+	}
+
+	pub fn mouse_down(&self, mouse: Mouse) -> bool {
+		use ButtonState::*;
+		let state = self.mouse_state.get(&mouse);
+		return state == Some(&Down) || state == Some(&Pressed);
+	}
+
+	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
+		use ButtonState::*;
+		let state = self.mouse_state.get(&mouse);
+		return state == Some(&Pressed);
+	}
+
+	pub fn mouse_released(&self, mouse: Mouse) -> bool {
+		use ButtonState::*;
+		let state = self.mouse_state.get(&mouse);
+		return state == Some(&Released);
+	}
+
+	pub fn mouse_up(&self, mouse: Mouse) -> bool {
+		use ButtonState::*;
+		let state = self.mouse_state.get(&mouse);
+		return state == None || state == Some(&Up);
+	}
+
+	pub fn mouse_pos(&self) -> ScreenPt {
+		return self.mouse_pos;
+	}
+
+	pub fn mouse_delta(&self) -> ScreenPt {
+		if let Some(pos) = self.prev_mouse_pos {
+			return self.mouse_pos - pos;
 		} else {
-			return true;
+			return ScreenPt::new(0, 0);
 		}
+	}
+
+	pub fn text_input(&self) -> Option<String> {
+		return self.text_input.clone();
+	}
+
+	pub fn set_fullscreen(&mut self, b: bool) {
+		if b {
+			self.window_request = WindowRequest::Fullscreen;
+		} else {
+			self.window_request = WindowRequest::NotFullscreen;
+		}
+	}
+
+	pub fn is_fullscreen(&self) -> bool {
+		return self.fullscreen;
+	}
+
+	pub fn toggle_fullscreen(&mut self) {
+		self.set_fullscreen(!self.is_fullscreen());
+	}
+
+	pub fn set_cursor_hidden(&mut self, b: bool) {
+		if b {
+			self.window_request = WindowRequest::HideCursor;
+		} else {
+			self.window_request = WindowRequest::NotHideCursor;
+		}
+	}
+
+	pub fn is_cursor_hidden(&self) -> bool {
+		return self.cursor_hidden;
+	}
+
+	pub fn toggle_cursor_hidden(&mut self) {
+		self.set_cursor_hidden(!self.is_cursor_hidden());
+	}
+
+	pub fn set_cursor_locked(&mut self, b: bool) {
+		if b {
+			self.window_request = WindowRequest::LockCursor;
+		} else {
+			self.window_request = WindowRequest::NotLockCursor;
+		}
+	}
+
+	pub fn is_cursor_locked(&self) -> bool {
+		return self.cursor_locked;
+	}
+
+	pub fn toggle_cursor_locked(&mut self) {
+		self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
 }
@@ -332,6 +435,10 @@ impl Window {
 			ctx: Ctx::new(),
 		};
 
+	}
+
+	pub fn ctx(&mut self) -> &mut Ctx {
+		return &mut self.ctx;
 	}
 
 	pub fn run(&mut self, mut f: impl FnMut(&mut Ctx)) -> Result<()> {
@@ -382,6 +489,8 @@ impl Window {
 			windowed_ctx
 		};
 
+		let window = windowed_ctx.window();
+
 		ggl::clear(true, false, false);
 		windowed_ctx.swap_buffers()?;
 
@@ -389,13 +498,24 @@ impl Window {
 
 			let start_time = Instant::now();
 
-			for (key, mut state) in &mut self.ctx.key_state {
+			for state in self.ctx.key_state.values_mut() {
 				if state == &ButtonState::Pressed {
 					*state = ButtonState::Down;
 				} else if state == &ButtonState::Released {
 					*state = ButtonState::Up;
 				}
 			}
+
+			for state in self.ctx.mouse_state.values_mut() {
+				if state == &ButtonState::Pressed {
+					*state = ButtonState::Down;
+				} else if state == &ButtonState::Released {
+					*state = ButtonState::Up;
+				}
+			}
+
+			self.ctx.prev_mouse_pos = None;
+			self.ctx.text_input = None;
 
 			event_loop.poll_events(|e| {
 
@@ -423,6 +543,30 @@ impl Window {
 							}
 						},
 
+						MouseInput { button, state, .. } => {
+							match state {
+								ElementState::Pressed => {
+									if self.ctx.mouse_up(button) || self.ctx.mouse_released(button) {
+										self.ctx.mouse_state.insert(button, ButtonState::Pressed);
+									}
+								},
+								ElementState::Released => {
+									if self.ctx.mouse_down(button) || self.ctx.mouse_pressed(button) {
+										self.ctx.mouse_state.insert(button, ButtonState::Released);
+									}
+								},
+							}
+						},
+
+						CursorMoved { position, .. } => {
+							self.ctx.prev_mouse_pos = Some(self.ctx.mouse_pos);
+							self.ctx.mouse_pos = position.into();
+						},
+
+						ReceivedCharacter(ch) => {
+							self.ctx.text_input.get_or_insert(String::new()).push(ch);
+						},
+
 						CloseRequested => self.ctx.close(),
 
 						_ => {},
@@ -438,6 +582,34 @@ impl Window {
 			ggl::clear(true, false, false);
 			f(&mut self.ctx);
 			windowed_ctx.swap_buffers()?;
+
+			match self.ctx.window_request {
+				WindowRequest::Fullscreen => {
+					self.ctx.fullscreen = true;
+					window.set_fullscreen(Some(window.get_current_monitor()));
+				},
+				WindowRequest::NotFullscreen => {
+					self.ctx.fullscreen = false;
+					window.set_fullscreen(None);
+				},
+				WindowRequest::HideCursor => {
+					self.ctx.cursor_hidden = true;
+					window.hide_cursor(true);
+				},
+				WindowRequest::NotHideCursor => {
+					self.ctx.cursor_hidden = false;
+					window.hide_cursor(false);
+				},
+				WindowRequest::LockCursor => {
+					self.ctx.cursor_locked = true;
+					window.grab_cursor(true);
+				},
+				WindowRequest::NotLockCursor => {
+					self.ctx.cursor_locked = false;
+					window.grab_cursor(false);
+				},
+				_ => {},
+			}
 
 			let actual_dt = start_time.elapsed();
 			let actual_dt = actual_dt.as_millis() as f32;
