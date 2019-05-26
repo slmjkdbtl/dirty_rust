@@ -9,7 +9,7 @@ fn main() {
 
 	win.run(|ctx| {
 		if ctx.key_pressed(Key::F) {
-			ctx.toggle_cursor_locked();
+			ctx.toggle_fullscreen();
 		}
 		if ctx.key_pressed(Key::Escape) {
 			ctx.close();

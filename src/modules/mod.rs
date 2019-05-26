@@ -1,5 +1,6 @@
 // wengwengweng
 
+mod gfx;
 pub mod window;
 pub mod audio;
 pub mod http;
@@ -8,6 +9,5 @@ pub mod data;
 pub mod col;
 pub mod img;
 pub mod joystick;
-pub mod ansi;
 pub mod term;
 

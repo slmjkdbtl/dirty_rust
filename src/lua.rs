@@ -72,7 +72,6 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	let audio = ctx.create_table()?;
 	let joystick = ctx.create_table()?;
 	let term = ctx.create_table()?;
-	let ansi = ctx.create_table()?;
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
 
@@ -345,11 +344,11 @@ pub fn bind(ctx: &Context) -> Result<()> {
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 			methods.add_method("clear_screen", |_, t: &term::Term, ()| {
-				return Ok(t.clear());
+				return Ok(t.clear()?);
 			});
 
 			methods.add_method("clear_line", |_, t: &term::Term, ()| {
-				return Ok(t.clear_line());
+				return Ok(t.clear_line()?);
 			});
 
 			methods.add_method("write_line", |_, t: &term::Term, (s): (String)| {
@@ -386,8 +385,8 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 	macro_rules! wrap_ansi {
 		($name:ident) => {
-			ansi.set(stringify!($name), ctx.create_function(|_, (s): (String)| {
-				return Ok(ansi::$name(&s));
+			term.set(stringify!($name), ctx.create_function(|_, (s): (String)| {
+				return Ok(term::$name(&s));
 			})?)?;
 		}
 	}
@@ -425,7 +424,6 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	ctx.add_module("audio", audio)?;
 	ctx.add_module("joystick", joystick)?;
 	ctx.add_module("term", term)?;
-	ctx.add_module("ansi", ansi)?;
 	ctx.add_lua_module("json", include_str!("res/json.lua"))?;
 
 	return Ok(());
