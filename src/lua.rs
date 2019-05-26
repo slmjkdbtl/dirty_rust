@@ -6,6 +6,7 @@ use std::path::Path;
 
 use rlua::Lua;
 use rlua::UserData;
+use rlua::AnyUserData;
 use rlua::UserDataMethods;
 use rlua::MetaMethod;
 use rlua::Value;
@@ -30,8 +31,10 @@ impl From<rlua::Error> for Error {
 }
 
 trait ContextExt<'lua> {
+
 	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
 	fn add_lua_module(&self, name: &str, code: &str) -> rlua::Result<()>;
+
 }
 
 impl<'lua> ContextExt<'lua> for Context<'lua> {
@@ -51,6 +54,7 @@ impl<'lua> ContextExt<'lua> for Context<'lua> {
 		let key = self.create_registry_value(val)?;
 
 		preloads.set(name, f.bind(self.registry_value::<Value>(&key)?)?)?;
+		self.remove_registry_value(key)?;
 
 		return Ok(());
 
@@ -66,6 +70,8 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	let http = ctx.create_table()?;
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
+	let joystick = ctx.create_table()?;
+	let ansi = ctx.create_table()?;
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
 
@@ -159,31 +165,9 @@ pub fn bind(ctx: &Context) -> Result<()> {
 		return Ok(fs::write(&path, &content)?);
 	})?)?;
 
-	impl UserData for &mut window::Ctx {}
-
-	impl UserData for window::Ctx {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method_mut("close", |_, ctx: &mut window::Ctx, ()| {
-				return Ok(ctx.close());
-			});
-
-			methods.add_method("fps", |_, ctx: &window::Ctx, ()| {
-				return Ok(ctx.fps());
-			});
-
-			methods.add_method("time", |_, ctx: &window::Ctx, ()| {
-				return Ok(ctx.time());
-			});
-
-			methods.add_method("dt", |_, ctx: &window::Ctx, ()| {
-				return Ok(ctx.dt());
-			});
-
-		}
-
-	}
+	fs.set("size", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::size(&path)?);
+	})?)?;
 
 	impl<'lua> FromLua<'lua> for window::Conf {
 
@@ -202,15 +186,36 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
+	impl UserData for window::Ctx {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("fps", |ctx, c: &window::Ctx, ()| {
+				return Ok(c.fps());
+			});
+
+			methods.add_method("time", |ctx, c: &window::Ctx, ()| {
+				return Ok(c.time());
+			});
+
+		}
+
+	}
+
+	impl UserData for &mut window::Ctx {}
+
 	impl UserData for window::Window {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method_mut("run", |ctx, win: &mut window::Window, (f): (rlua::Function)| {
-				return Ok(win.run(|t| {
-					let res = f.call::<_, ()>(());
-				})?);
+			methods.add_method_mut("run", |ctx, win: &mut window::Window, (cb): (rlua::Function)| {
+				return ctx.scope(|scope| {
+					return Ok(win.run(|_| {
+						cb.call::<_, ()>(());
+					})?);
+				});
 			});
+
 
 		}
 
@@ -314,6 +319,27 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
+	macro_rules! wrap_ansi {
+		($name:ident) => {
+			ansi.set(stringify!($name), ctx.create_function(|_, (s): (String)| {
+				return Ok(ansi::$name(&s));
+			})?)?;
+		}
+	}
+
+	wrap_ansi!(black);
+	wrap_ansi!(red);
+	wrap_ansi!(green);
+	wrap_ansi!(yellow);
+	wrap_ansi!(blue);
+	wrap_ansi!(magenta);
+	wrap_ansi!(purple);
+	wrap_ansi!(cyan);
+	wrap_ansi!(white);
+	wrap_ansi!(bold);
+	wrap_ansi!(italic);
+	wrap_ansi!(normal);
+
 	impl UserData for math::Vec3 {}
 	impl UserData for math::Color {}
 
@@ -330,7 +356,9 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	ctx.add_module("http", http)?;
 	ctx.add_module("img", img)?;
 	ctx.add_module("audio", audio)?;
-	ctx.add_lua_module("json", include_str!("res/json.lua"));
+	ctx.add_module("joystick", joystick)?;
+	ctx.add_module("ansi", ansi)?;
+	ctx.add_lua_module("json", include_str!("res/json.lua"))?;
 
 	return Ok(());
 

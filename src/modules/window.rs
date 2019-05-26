@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Window & Graphics
+
 use std::thread;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -21,18 +23,8 @@ use crate::math::*;
 use crate::*;
 
 pub struct Window {
-	key_states: HashMap<Key, ButtonState>,
-	rpressed_key: Option<Key>,
-	text_input: Option<String>,
-	mouse_pos: MousePos,
-	mouse_delta: Option<MouseDelta>,
-	scroll_delta: Option<ScrollDelta>,
-	mouse_states: HashMap<Mouse, ButtonState>,
-	resized: Option<Size>,
-	fullscreen: bool,
-	relative: bool,
-	fps_cap: u32,
 	conf: Conf,
+	ctx: Ctx,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -254,15 +246,17 @@ pub struct Ctx {
 	dt: f32,
 	time: f32,
 	closed: bool,
+	fps_cap: u32,
 }
 
 impl Ctx {
 
-	fn new() -> Self {
+	pub fn new() -> Self {
 		return Self {
 			dt: 0.0,
 			time: 0.0,
 			closed: false,
+			fps_cap: 60,
 		};
 	}
 
@@ -293,17 +287,7 @@ impl Window {
 
 		return Self {
 			conf: conf,
-			rpressed_key: None,
-			text_input: None,
-			key_states: HashMap::new(),
-			mouse_states: HashMap::new(),
-			mouse_pos: MousePos::new(0, 0),
-			mouse_delta: None,
-			scroll_delta: None,
-			resized: None,
-			fullscreen: false,
-			relative: false,
-			fps_cap: 60,
+			ctx: Ctx::new(),
 		};
 
 	}
@@ -351,15 +335,13 @@ impl Window {
 			.build_windowed(window_builder, &event_loop)?;
 
 		let windowed_ctx = unsafe {
-			let windowed_ctx = windowed_ctx.make_current().expect("cannot create context");
+			let windowed_ctx = windowed_ctx.make_current()?;
 			gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
 			windowed_ctx
 		};
 
 		ggl::clear(true, false, false);
 		windowed_ctx.swap_buffers()?;
-
-		let mut ctx = Ctx::new();
 
 		loop {
 
@@ -374,7 +356,7 @@ impl Window {
 
 					WindowEvent { event, .. } => {
 						match event {
-							CloseRequested => ctx.close(),
+							CloseRequested => self.ctx.close(),
 							_ => {},
 						}
 					},
@@ -385,23 +367,23 @@ impl Window {
 			});
 
 			ggl::clear(true, false, false);
-			f(&mut ctx);
+			f(&mut self.ctx);
 			windowed_ctx.swap_buffers()?;
 
 			let actual_dt = start_time.elapsed();
 			let actual_dt = actual_dt.as_millis() as f32;
-			let expected_dt = 1000.0 / self.fps_cap as f32;
+			let expected_dt = 1000.0 / self.ctx.fps_cap as f32;
 
 			if expected_dt > actual_dt {
-				ctx.dt = expected_dt as f32 / 1000.0;
+				self.ctx.dt = expected_dt as f32 / 1000.0;
 				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
 			} else {
-				ctx.dt = actual_dt as f32 / 1000.0;
+				self.ctx.dt = actual_dt as f32 / 1000.0;
 			}
 
-			ctx.time += ctx.dt;
+			self.ctx.time += self.ctx.dt;
 
-			if ctx.closed {
+			if self.ctx.closed {
 				break;
 			}
 
@@ -492,66 +474,65 @@ impl Window {
 // 			.into();
 // 	}
 
-	pub fn down_keys(&self) -> HashSet<Key> {
-		return self.key_states
-			.iter()
-			.filter(|(_, &state)| state == ButtonState::Down)
-			.map(|(key, _)| *key)
-			.collect();
-	}
+// 	pub fn down_keys(&self) -> HashSet<Key> {
+// 		return self.key_states
+// 			.iter()
+// 			.filter(|(_, &state)| state == ButtonState::Down)
+// 			.map(|(key, _)| *key)
+// 			.collect();
+// 	}
 
-	pub fn key_down(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Down);
-	}
+// 	pub fn key_down(&self, key: Key) -> bool {
+// 		return self.key_states.get(&key) == Some(&ButtonState::Down);
+// 	}
 
-	pub fn key_pressed(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
-	}
+// 	pub fn key_pressed(&self, key: Key) -> bool {
+// 		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
+// 	}
 
-	pub fn key_released(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Released);
-	}
+// 	pub fn key_released(&self, key: Key) -> bool {
+// 		return self.key_states.get(&key) == Some(&ButtonState::Released);
+// 	}
 
-	pub fn key_rpressed(&self, key: Key) -> bool {
-		return self.rpressed_key == Some(key);
-	}
+// 	pub fn key_rpressed(&self, key: Key) -> bool {
+// 		return self.rpressed_key == Some(key);
+// 	}
 
-	pub fn rpressed_key(&self) -> Option<Key> {
-		return self.rpressed_key;
-	}
+// 	pub fn rpressed_key(&self) -> Option<Key> {
+// 		return self.rpressed_key;
+// 	}
 
-	pub fn text_input(&self) -> Option<String> {
-		return self.text_input.clone();
-	}
+// 	pub fn text_input(&self) -> Option<String> {
+// 		return self.text_input.clone();
+// 	}
 
-	pub fn mouse_down(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Down);
-	}
+// 	pub fn mouse_down(&self, mouse: Mouse) -> bool {
+// 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Down);
+// 	}
 
-	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
-	}
+// 	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
+// 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
+// 	}
 
-	pub fn mouse_released(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
-	}
+// 	pub fn mouse_released(&self, mouse: Mouse) -> bool {
+// 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
+// 	}
 
-	pub fn mouse_pos(&self) -> MousePos {
-		return self.mouse_pos;
-	}
+// 	pub fn mouse_pos(&self) -> MousePos {
+// 		return self.mouse_pos;
+// 	}
 
-	pub fn mouse_delta(&self) -> Option<MouseDelta> {
-		return self.mouse_delta;
-	}
+// 	pub fn mouse_delta(&self) -> Option<MouseDelta> {
+// 		return self.mouse_delta;
+// 	}
 
-	pub fn scroll_delta(&self) -> Option<ScrollDelta> {
-		return self.scroll_delta;
-	}
+// 	pub fn scroll_delta(&self) -> Option<ScrollDelta> {
+// 		return self.scroll_delta;
+// 	}
 
-	/// get if window was resized last frame
-	pub fn resized(&self) -> Option<Size> {
-		return self.resized;
-	}
+// 	pub fn resized(&self) -> Option<Size> {
+// 		return self.resized;
+// 	}
 
 // 	pub fn size(&self) -> Size {
 // 		return self.windowed_ctx

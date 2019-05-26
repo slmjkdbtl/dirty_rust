@@ -154,3 +154,7 @@ pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
 	return Ok(fs::write(path, content)?);
 }
 
+pub fn size(path: impl AsRef<Path>) -> Result<u64> {
+	return Ok(fs::metadata(path)?.len());
+}
+
