@@ -71,6 +71,7 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
 	let joystick = ctx.create_table()?;
+	let term = ctx.create_table()?;
 	let ansi = ctx.create_table()?;
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
@@ -221,7 +222,7 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-	window.set("create", ctx.create_function(|_, (conf): (Value)| {
+	window.set("make", ctx.create_function(|_, (conf): (Value)| {
 		return Ok(window::Window::new(window::Conf::default()));
 	})?)?;
 
@@ -319,6 +320,54 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
+	struct Term {
+		term: console::Term,
+	}
+
+	impl UserData for Term {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("clear_screen", |_, t: &Term, ()| {
+				return Ok(t.term.clear_screen().map_err(|e| Error::from(e))?);
+			});
+
+			methods.add_method("clear_line", |_, t: &Term, ()| {
+				return Ok(t.term.clear_line().map_err(|e| Error::from(e))?);
+			});
+
+			methods.add_method("clear_last_lines", |_, t: &Term, (u)| {
+				return Ok(t.term.clear_last_lines(u).map_err(|e| Error::from(e))?);
+			});
+
+			methods.add_method("write_line", |_, t: &Term, (s): (String)| {
+				return Ok(t.term.write_line(&s).map_err(|e| Error::from(e))?);
+			});
+
+			methods.add_method("read_char", |_, t: &Term, ()| {
+				return Ok(t.term.read_char().map_err(|e| Error::from(e))?.to_string());
+			});
+
+			methods.add_method("read_line", |_, t: &Term, ()| {
+				return Ok(t.term.read_line().map_err(|e| Error::from(e))?);
+			});
+
+			methods.add_method("move_cursor_up", |_, t: &Term, (u)| {
+				return Ok(t.term.move_cursor_up(u).map_err(|e| Error::from(e))?);
+			});
+
+			methods.add_method("move_cursor_down", |_, t: &Term, (u)| {
+				return Ok(t.term.move_cursor_down(u).map_err(|e| Error::from(e))?);
+			});
+
+		}
+
+	}
+
+	term.set("session", ctx.create_function(|_, (): ()| {
+		return Ok(Term { term: console::Term::stdout() });
+	})?)?;
+
 	macro_rules! wrap_ansi {
 		($name:ident) => {
 			ansi.set(stringify!($name), ctx.create_function(|_, (s): (String)| {
@@ -333,12 +382,10 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	wrap_ansi!(yellow);
 	wrap_ansi!(blue);
 	wrap_ansi!(magenta);
-	wrap_ansi!(purple);
 	wrap_ansi!(cyan);
 	wrap_ansi!(white);
 	wrap_ansi!(bold);
 	wrap_ansi!(italic);
-	wrap_ansi!(normal);
 
 	impl UserData for math::Vec3 {}
 	impl UserData for math::Color {}
@@ -351,12 +398,17 @@ pub fn bind(ctx: &Context) -> Result<()> {
 		return Ok(color!(r, g, b, a));
 	})?)?;
 
+	globals.set("sleep", ctx.create_function(|_, (t): (u64)| {
+		return Ok(std::thread::sleep(std::time::Duration::from_millis(t)));
+	})?)?;
+
 	ctx.add_module("fs", fs)?;
 	ctx.add_module("window", window)?;
 	ctx.add_module("http", http)?;
 	ctx.add_module("img", img)?;
 	ctx.add_module("audio", audio)?;
 	ctx.add_module("joystick", joystick)?;
+	ctx.add_module("term", term)?;
 	ctx.add_module("ansi", ansi)?;
 	ctx.add_lua_module("json", include_str!("res/json.lua"))?;
 

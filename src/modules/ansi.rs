@@ -1,11 +1,9 @@
 // wengwengweng
 
-use colored::*;
-
 macro_rules! wrap {
 	($name:ident) => {
 		pub fn $name(s: &str) -> String {
-			return Colorize::$name(s).to_string();
+			return console::style(s).$name().to_string();
 		}
 	}
 }
@@ -16,10 +14,8 @@ wrap!(green);
 wrap!(yellow);
 wrap!(blue);
 wrap!(magenta);
-wrap!(purple);
 wrap!(cyan);
 wrap!(white);
 wrap!(bold);
 wrap!(italic);
-wrap!(normal);
 
