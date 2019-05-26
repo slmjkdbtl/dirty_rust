@@ -9,4 +9,5 @@ pub mod col;
 pub mod img;
 pub mod joystick;
 pub mod ansi;
+pub mod term;
 

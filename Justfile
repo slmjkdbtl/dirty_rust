@@ -7,6 +7,7 @@ build:
 	cargo build --release
 	rm -rf bin/dirty
 	cp target/release/dirty bin/dirty
+	strip bin/dirty
 
 doc:
 	cargo doc --no-deps --open

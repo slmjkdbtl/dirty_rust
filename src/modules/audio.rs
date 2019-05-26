@@ -33,12 +33,6 @@ pub struct Track {
 	sink: Sink,
 }
 
-pub fn play(sound: &Sound) {
-	if let Some(device) = rodio::default_output_device() {
-		rodio::play_raw(&device, sound.apply().convert_samples());
-	}
-}
-
 /// play a sound and return a track
 pub fn track(sound: &Sound) -> Result<Track> {
 
@@ -86,6 +80,10 @@ impl Sound {
 	/// create a sound from file
 	pub fn from_file(fname: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_bytes(&fs::read(fname)?);
+	}
+
+	pub fn play(&self) -> Result<()> {
+		return Ok(rodio::play_raw(&rodio::default_output_device().ok_or(Error::Audio)?, self.apply().convert_samples()));
 	}
 
 	/// return a new sound with given speed

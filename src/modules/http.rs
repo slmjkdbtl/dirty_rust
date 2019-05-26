@@ -6,7 +6,7 @@ use std::io::Write;
 use std::io::Read;
 use std::net::TcpStream;
 
-use crate::err::*;
+use crate::Result;
 
 pub struct Response {
 	text: String,
@@ -30,7 +30,7 @@ impl Response {
 
 }
 
-pub fn get(uri: &str) -> Result<Response, Error> {
+pub fn get(uri: &str) -> Result<Response> {
 
 	let mut res = reqwest::get(uri)?;
 	let mut buf: Vec<u8> = vec![];

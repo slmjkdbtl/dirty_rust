@@ -87,8 +87,8 @@ pub fn bind(ctx: &Context) -> Result<()> {
 			});
 
 			methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
-				if t.done() {
-					return Ok(t.data().unwrap());
+				if let Some(data) = t.data() {
+					return Ok(data);
 				} else {
 					return Err(Error::Lua.into());
 				}
@@ -191,12 +191,16 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method("fps", |ctx, c: &window::Ctx, ()| {
+			methods.add_method("fps", |_, c: &window::Ctx, ()| {
 				return Ok(c.fps());
 			});
 
-			methods.add_method("time", |ctx, c: &window::Ctx, ()| {
+			methods.add_method("time", |_, c: &window::Ctx, ()| {
 				return Ok(c.time());
+			});
+
+			methods.add_method_mut("close", |_, c: &mut window::Ctx, ()| {
+				return Ok(c.close());
 			});
 
 		}
@@ -283,7 +287,23 @@ pub fn bind(ctx: &Context) -> Result<()> {
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 			methods.add_method("play", |_, s: &audio::Sound, ()| {
-				return Ok(audio::play(s));
+				return Ok(s.play()?);
+			});
+
+			methods.add_method("speed", |_, s: &audio::Sound, (sp): (f32)| {
+				return Ok(s.speed(sp));
+			});
+
+			methods.add_method("volume", |_, s: &audio::Sound, (v): (f32)| {
+				return Ok(s.volume(v));
+			});
+
+			methods.add_method("repeat", |_, s: &audio::Sound, ()| {
+				return Ok(s.repeat());
+			});
+
+			methods.add_method("fadein", |_, s: &audio::Sound, (f): (u64)| {
+				return Ok(s.fadein(f));
 			});
 
 		}
@@ -295,12 +315,12 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	})?)?;
 
 	audio.set("load_file", ctx.create_function(|_, (path): (String)| {
-		return Ok(audio::Sound::from_bytes(&fs::read(&path)?)?);
+		return Ok(audio::Sound::from_file(&path)?);
 	})?)?;
 
 	audio.set("async_load_file", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
-			return audio::Sound::from_bytes(&fs::read(&path).unwrap()).unwrap();
+			return audio::Sound::from_file(&path).unwrap();
 		}));
 	})?)?;
 
@@ -320,44 +340,40 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-	struct Term {
-		term: console::Term,
-	}
-
-	impl UserData for Term {
+	impl UserData for term::Term {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method("clear_screen", |_, t: &Term, ()| {
-				return Ok(t.term.clear_screen().map_err(|e| Error::from(e))?);
+			methods.add_method("clear_screen", |_, t: &term::Term, ()| {
+				return Ok(t.clear());
 			});
 
-			methods.add_method("clear_line", |_, t: &Term, ()| {
-				return Ok(t.term.clear_line().map_err(|e| Error::from(e))?);
+			methods.add_method("clear_line", |_, t: &term::Term, ()| {
+				return Ok(t.clear_line());
 			});
 
-			methods.add_method("clear_last_lines", |_, t: &Term, (u)| {
-				return Ok(t.term.clear_last_lines(u).map_err(|e| Error::from(e))?);
+			methods.add_method("write_line", |_, t: &term::Term, (s): (String)| {
+				return Ok(t.write_line(&s)?);
 			});
 
-			methods.add_method("write_line", |_, t: &Term, (s): (String)| {
-				return Ok(t.term.write_line(&s).map_err(|e| Error::from(e))?);
+			methods.add_method("read_char", |_, t: &term::Term, ()| {
+				return Ok(t.read_char()?.to_string());
 			});
 
-			methods.add_method("read_char", |_, t: &Term, ()| {
-				return Ok(t.term.read_char().map_err(|e| Error::from(e))?.to_string());
+			methods.add_method("read_line", |_, t: &term::Term, ()| {
+				return Ok(t.read_line()?);
 			});
 
-			methods.add_method("read_line", |_, t: &Term, ()| {
-				return Ok(t.term.read_line().map_err(|e| Error::from(e))?);
+			methods.add_method("width", |_, t: &term::Term, ()| {
+				return Ok(t.width());
 			});
 
-			methods.add_method("move_cursor_up", |_, t: &Term, (u)| {
-				return Ok(t.term.move_cursor_up(u).map_err(|e| Error::from(e))?);
+			methods.add_method("height", |_, t: &term::Term, ()| {
+				return Ok(t.height());
 			});
 
-			methods.add_method("move_cursor_down", |_, t: &Term, (u)| {
-				return Ok(t.term.move_cursor_down(u).map_err(|e| Error::from(e))?);
+			methods.add_method("render_text", |_, t: &term::Term, (lines): (Vec<String>)| {
+				return Ok(t.render_text(&lines));
 			});
 
 		}
@@ -365,7 +381,7 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	}
 
 	term.set("session", ctx.create_function(|_, (): ()| {
-		return Ok(Term { term: console::Term::stdout() });
+		return Ok(term::Term::new());
 	})?)?;
 
 	macro_rules! wrap_ansi {
