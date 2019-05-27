@@ -70,7 +70,6 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	let http = ctx.create_table()?;
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
-	let joystick = ctx.create_table()?;
 	let term = ctx.create_table()?;
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
@@ -422,7 +421,6 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	ctx.add_module("http", http)?;
 	ctx.add_module("img", img)?;
 	ctx.add_module("audio", audio)?;
-	ctx.add_module("joystick", joystick)?;
 	ctx.add_module("term", term)?;
 	ctx.add_lua_module("json", include_str!("res/json.lua"))?;
 
