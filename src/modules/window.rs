@@ -11,7 +11,6 @@ use std::time::Duration;
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
-use glutin::MouseScrollDelta;
 use glutin::ElementState;
 use derive_more::*;
 use gilrs::Gilrs;
@@ -39,12 +38,12 @@ pub enum ButtonState {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct ScreenPt {
+pub struct MousePos {
 	pub x: i32,
 	pub y: i32,
 }
 
-impl ScreenPt {
+impl MousePos {
 	fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
@@ -53,13 +52,13 @@ impl ScreenPt {
 	}
 }
 
-impl From<ScreenPt> for Vec2 {
-	fn from(mpos: ScreenPt) -> Self {
+impl From<MousePos> for Vec2 {
+	fn from(mpos: MousePos) -> Self {
 		return vec2!(mpos.x, mpos.y);
 	}
 }
 
-impl From<LogicalPosition> for ScreenPt {
+impl From<LogicalPosition> for MousePos {
 	fn from(pos: LogicalPosition) -> Self {
 		let (x, y): (i32, i32) = pos.into();
 		return Self {
@@ -69,8 +68,26 @@ impl From<LogicalPosition> for ScreenPt {
 	}
 }
 
-impl From<ScreenPt> for LogicalPosition {
-	fn from(pos: ScreenPt) -> Self {
+impl From<MouseDelta> for MousePos {
+	fn from(pos: MouseDelta) -> Self {
+		return Self {
+			x: pos.x,
+			y: pos.y,
+		};
+	}
+}
+
+impl From<MousePos> for MouseDelta {
+	fn from(pos: MousePos) -> Self {
+		return Self {
+			x: pos.x,
+			y: pos.y,
+		};
+	}
+}
+
+impl From<MousePos> for LogicalPosition {
+	fn from(pos: MousePos) -> Self {
 		return Self {
 			x: pos.x as f64,
 			y: pos.y as f64,
@@ -144,8 +161,9 @@ impl From<ScrollDelta> for Vec2 {
 	}
 }
 
-impl From<MouseScrollDelta> for ScrollDelta {
-	fn from(delta: MouseScrollDelta) -> Self {
+impl From<glutin::MouseScrollDelta> for ScrollDelta {
+	fn from(delta: glutin::MouseScrollDelta) -> Self {
+		use glutin::MouseScrollDelta;
 		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
 				let (x, y): (i32, i32) = pos.into();
@@ -264,8 +282,9 @@ pub struct Ctx {
 	fps_cap: u32,
 	key_state: HashMap<Key, ButtonState>,
 	mouse_state: HashMap<Mouse, ButtonState>,
-	mouse_pos: ScreenPt,
-	prev_mouse_pos: Option<ScreenPt>,
+	mouse_pos: MousePos,
+	mouse_delta: Option<MouseDelta>,
+	scroll_delta: Option<ScrollDelta>,
 	text_input: Option<String>,
 	window_requests: Vec<WindowRequest>,
 	title: String,
@@ -343,16 +362,16 @@ impl Ctx {
 		return state == None || state == Some(&Up);
 	}
 
-	pub fn mouse_pos(&self) -> ScreenPt {
+	pub fn mouse_pos(&self) -> MousePos {
 		return self.mouse_pos;
 	}
 
-	pub fn mouse_delta(&self) -> ScreenPt {
-		if let Some(pos) = self.prev_mouse_pos {
-			return self.mouse_pos - pos;
-		} else {
-			return ScreenPt::new(0, 0);
-		}
+	pub fn mouse_delta(&self) -> Option<MouseDelta> {
+		return self.mouse_delta;
+	}
+
+	pub fn scroll_delta(&self) -> Option<ScrollDelta> {
+		return self.scroll_delta;
 	}
 
 	pub fn text_input(&self) -> Option<String> {
@@ -416,8 +435,9 @@ impl Window {
 			fps_cap: 60,
 			key_state: HashMap::new(),
 			mouse_state: HashMap::new(),
-			mouse_pos: ScreenPt::new(0, 0),
-			prev_mouse_pos: None,
+			mouse_pos: MousePos::new(0, 0),
+			mouse_delta: None,
+			scroll_delta: None,
 			text_input: None,
 			window_requests: Vec::new(),
 			fullscreen: conf.fullscreen,
@@ -512,7 +532,8 @@ impl Window {
 				}
 			}
 
-			self.ctx.prev_mouse_pos = None;
+			self.ctx.mouse_delta = None;
+			self.ctx.scroll_delta = None;
 			self.ctx.text_input = None;
 
 			event_loop.poll_events(|e| {
@@ -557,8 +578,16 @@ impl Window {
 						},
 
 						CursorMoved { position, .. } => {
-							self.ctx.prev_mouse_pos = Some(self.ctx.mouse_pos);
-							self.ctx.mouse_pos = position.into();
+
+							let pos: MousePos = position.into();
+
+							self.ctx.mouse_delta = Some((pos - self.ctx.mouse_pos).into());
+							self.ctx.mouse_pos = pos;
+
+						},
+
+						MouseWheel { delta, .. } => {
+							self.ctx.scroll_delta = Some(delta.into());
 						},
 
 						ReceivedCharacter(ch) => {
