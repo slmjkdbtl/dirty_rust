@@ -34,10 +34,10 @@ fn get_res_dir() -> Result<PathBuf> {
 	use std::env;
 
 	let path = env::current_exe()?
-		.parent()?
+		.parent().ok_or(Error::IO)?
 		.to_path_buf();
 
-	return path;
+	return Ok(path);
 
 }
 
