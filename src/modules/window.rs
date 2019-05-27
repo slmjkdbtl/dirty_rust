@@ -24,182 +24,13 @@ pub use glutin::MouseButton as Mouse;
 use crate::math::*;
 use crate::*;
 
+/// Manages Ctx
 pub struct Window {
 	conf: Conf,
 	ctx: Ctx,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ButtonState {
-	Up,
-	Pressed,
-	Down,
-	Released,
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct MousePos {
-	pub x: i32,
-	pub y: i32,
-}
-
-impl MousePos {
-	fn new(x: i32, y: i32) -> Self {
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-}
-
-impl From<MousePos> for Vec2 {
-	fn from(mpos: MousePos) -> Self {
-		return vec2!(mpos.x, mpos.y);
-	}
-}
-
-impl From<LogicalPosition> for MousePos {
-	fn from(pos: LogicalPosition) -> Self {
-		let (x, y): (i32, i32) = pos.into();
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-}
-
-impl From<MouseDelta> for MousePos {
-	fn from(pos: MouseDelta) -> Self {
-		return Self {
-			x: pos.x,
-			y: pos.y,
-		};
-	}
-}
-
-impl From<MousePos> for MouseDelta {
-	fn from(pos: MousePos) -> Self {
-		return Self {
-			x: pos.x,
-			y: pos.y,
-		};
-	}
-}
-
-impl From<MousePos> for LogicalPosition {
-	fn from(pos: MousePos) -> Self {
-		return Self {
-			x: pos.x as f64,
-			y: pos.y as f64,
-		};
-	}
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct MouseDelta {
-	pub x: i32,
-	pub y: i32,
-}
-
-impl MouseDelta {
-	pub fn new(x: i32, y: i32) -> Self {
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-	pub fn is_none(&self) -> bool {
-		return self.x == 0 && self.y == 0;
-	}
-}
-
-impl From<MouseDelta> for Vec2 {
-	fn from(mpos: MouseDelta) -> Self {
-		return vec2!(mpos.x, mpos.y);
-	}
-}
-
-impl From<LogicalPosition> for MouseDelta {
-	fn from(pos: LogicalPosition) -> Self {
-		let (x, y): (i32, i32) = pos.into();
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-}
-
-impl From<LogicalSize> for Size {
-	fn from(size: LogicalSize) -> Self {
-		return Self {
-			w: size.width as u32,
-			h: size.height as u32,
-		};
-	}
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct ScrollDelta {
-	pub x: i32,
-	pub y: i32,
-}
-
-impl ScrollDelta {
-
-	pub fn new(x: i32, y: i32) -> Self {
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-
-}
-
-impl From<ScrollDelta> for Vec2 {
-	fn from(sdis: ScrollDelta) -> Self {
-		return vec2!(sdis.x, sdis.y);
-	}
-}
-
-impl From<glutin::MouseScrollDelta> for ScrollDelta {
-	fn from(delta: glutin::MouseScrollDelta) -> Self {
-		use glutin::MouseScrollDelta;
-		match delta {
-			MouseScrollDelta::PixelDelta(pos) => {
-				let (x, y): (i32, i32) = pos.into();
-				return Self {
-					x: x,
-					y: y,
-				};
-			},
-			MouseScrollDelta::LineDelta(x, y) => {
-				return Self {
-					x: x as i32,
-					y: y as i32,
-				};
-			}
-		};
-	}
-}
-
-impl From<Vec2> for LogicalPosition {
-	fn from(pos: Vec2) -> Self {
-		return Self {
-			x: pos.x as f64,
-			y: pos.y as f64,
-		};
-	}
-}
-
-impl From<LogicalPosition> for Vec2 {
-	fn from(pos: LogicalPosition) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
-	}
-}
-
+/// Window Creation Config
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Conf {
 	pub width: u32,
@@ -274,6 +105,7 @@ enum WindowRequest {
 	SetTitle(String),
 }
 
+/// The Main Interface to Interact with the Window
 #[derive(Clone)]
 pub struct Ctx {
 	dt: f32,
@@ -662,7 +494,178 @@ impl Window {
 
 }
 
-pub fn str_to_key(s: &str) -> Option<Key> {
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum ButtonState {
+	Up,
+	Pressed,
+	Down,
+	Released,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
+pub struct MousePos {
+	pub x: i32,
+	pub y: i32,
+}
+
+impl MousePos {
+	fn new(x: i32, y: i32) -> Self {
+		return Self {
+			x: x,
+			y: y,
+		};
+	}
+}
+
+impl From<MousePos> for Vec2 {
+	fn from(mpos: MousePos) -> Self {
+		return vec2!(mpos.x, mpos.y);
+	}
+}
+
+impl From<LogicalPosition> for MousePos {
+	fn from(pos: LogicalPosition) -> Self {
+		let (x, y): (i32, i32) = pos.into();
+		return Self {
+			x: x,
+			y: y,
+		};
+	}
+}
+
+impl From<MouseDelta> for MousePos {
+	fn from(pos: MouseDelta) -> Self {
+		return Self {
+			x: pos.x,
+			y: pos.y,
+		};
+	}
+}
+
+impl From<MousePos> for MouseDelta {
+	fn from(pos: MousePos) -> Self {
+		return Self {
+			x: pos.x,
+			y: pos.y,
+		};
+	}
+}
+
+impl From<MousePos> for LogicalPosition {
+	fn from(pos: MousePos) -> Self {
+		return Self {
+			x: pos.x as f64,
+			y: pos.y as f64,
+		};
+	}
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
+pub struct MouseDelta {
+	pub x: i32,
+	pub y: i32,
+}
+
+impl MouseDelta {
+	pub fn new(x: i32, y: i32) -> Self {
+		return Self {
+			x: x,
+			y: y,
+		};
+	}
+	pub fn is_none(&self) -> bool {
+		return self.x == 0 && self.y == 0;
+	}
+}
+
+impl From<MouseDelta> for Vec2 {
+	fn from(mpos: MouseDelta) -> Self {
+		return vec2!(mpos.x, mpos.y);
+	}
+}
+
+impl From<LogicalPosition> for MouseDelta {
+	fn from(pos: LogicalPosition) -> Self {
+		let (x, y): (i32, i32) = pos.into();
+		return Self {
+			x: x,
+			y: y,
+		};
+	}
+}
+
+impl From<LogicalSize> for Size {
+	fn from(size: LogicalSize) -> Self {
+		return Self {
+			w: size.width as u32,
+			h: size.height as u32,
+		};
+	}
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
+pub struct ScrollDelta {
+	pub x: i32,
+	pub y: i32,
+}
+
+impl ScrollDelta {
+
+	pub fn new(x: i32, y: i32) -> Self {
+		return Self {
+			x: x,
+			y: y,
+		};
+	}
+
+}
+
+impl From<ScrollDelta> for Vec2 {
+	fn from(sdis: ScrollDelta) -> Self {
+		return vec2!(sdis.x, sdis.y);
+	}
+}
+
+impl From<glutin::MouseScrollDelta> for ScrollDelta {
+	fn from(delta: glutin::MouseScrollDelta) -> Self {
+		use glutin::MouseScrollDelta;
+		match delta {
+			MouseScrollDelta::PixelDelta(pos) => {
+				let (x, y): (i32, i32) = pos.into();
+				return Self {
+					x: x,
+					y: y,
+				};
+			},
+			MouseScrollDelta::LineDelta(x, y) => {
+				return Self {
+					x: x as i32,
+					y: y as i32,
+				};
+			}
+		};
+	}
+}
+
+impl From<Vec2> for LogicalPosition {
+	fn from(pos: Vec2) -> Self {
+		return Self {
+			x: pos.x as f64,
+			y: pos.y as f64,
+		};
+	}
+}
+
+impl From<LogicalPosition> for Vec2 {
+	fn from(pos: LogicalPosition) -> Self {
+		return Self {
+			x: pos.x as f32,
+			y: pos.y as f32,
+		};
+	}
+}
+
+pub(crate) fn str_to_key(s: &str) -> Option<Key> {
 
 	return match s {
 		"q" => Some(Key::Q),
@@ -744,7 +747,7 @@ pub fn str_to_key(s: &str) -> Option<Key> {
 
 }
 
-pub fn str_to_mouse(s: &str) -> Option<Mouse> {
+pub(crate) fn str_to_mouse(s: &str) -> Option<Mouse> {
 	return match s {
 		"left" => Some(Mouse::Left),
 		"right" => Some(Mouse::Right),

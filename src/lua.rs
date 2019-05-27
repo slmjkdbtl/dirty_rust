@@ -62,7 +62,7 @@ impl<'lua> ContextExt<'lua> for Context<'lua> {
 
 }
 
-pub fn bind(ctx: &Context) -> Result<()> {
+fn bind(ctx: &Context) -> Result<()> {
 
 	let globals = ctx.globals();
 	let fs = ctx.create_table()?;
@@ -299,12 +299,10 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method_mut("run", |ctx, win: &mut window::Window, (cb): (rlua::Function)| {
-				return ctx.scope(|scope| {
-					return Ok(win.run(|_| {
-						cb.call::<_, ()>(());
-					})?);
-				});
+			methods.add_method_mut("run", |_, win: &mut window::Window, (cb): (rlua::Function)| {
+				return Ok(win.run(|ctx| {
+					cb.call::<_, ()>(());
+				})?);
 			});
 
 
@@ -313,7 +311,7 @@ pub fn bind(ctx: &Context) -> Result<()> {
 	}
 
 	window.set("make", ctx.create_function(|_, (conf): (Value)| {
-		return Ok(window::Window::new(window::Conf::default()));
+		return Ok(window::Window::default());
 	})?)?;
 
 	impl UserData for http::Response {
@@ -390,6 +388,22 @@ pub fn bind(ctx: &Context) -> Result<()> {
 
 			methods.add_method("fadein", |_, s: &audio::Sound, (f): (u64)| {
 				return Ok(s.fadein(f));
+			});
+
+		}
+
+	}
+
+	impl UserData for audio::Track {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("resume", |_, s: &audio::Track, ()| {
+				return Ok(s.resume());
+			});
+
+			methods.add_method("pause", |_, s: &audio::Track, ()| {
+				return Ok(s.pause());
 			});
 
 		}
