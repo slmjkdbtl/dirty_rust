@@ -102,7 +102,7 @@ pub struct MouseDelta {
 }
 
 impl MouseDelta {
-	fn new(x: i32, y: i32) -> Self {
+	pub fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
 			y: y,
@@ -146,7 +146,7 @@ pub struct ScrollDelta {
 
 impl ScrollDelta {
 
-	fn new(x: i32, y: i32) -> Self {
+	pub fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
 			y: y,
@@ -314,52 +314,48 @@ impl Ctx {
 		self.closed = true;
 	}
 
-	pub fn key_down(&self, key: Key) -> bool {
+	pub fn down_keys(&self) -> HashSet<Key> {
+
 		use ButtonState::*;
-		let state = self.key_state.get(&key);
-		return state == Some(&Down) || state == Some(&Pressed);
+
+		return self.key_state
+			.iter()
+			.filter(|(_, &state)| state == Down || state == Pressed)
+			.map(|(key, _)| *key)
+			.collect();
+
+	}
+
+	pub fn key_down(&self, key: Key) -> bool {
+		return self.key_state.get(&key) == Some(&ButtonState::Down) || self.key_pressed(key);
 	}
 
 	pub fn key_pressed(&self, key: Key) -> bool {
-		use ButtonState::*;
-		let state = self.key_state.get(&key);
-		return state == Some(&Pressed);
+		return self.key_state.get(&key) == Some(&ButtonState::Pressed);
 	}
 
 	pub fn key_released(&self, key: Key) -> bool {
-		use ButtonState::*;
-		let state = self.key_state.get(&key);
-		return state == Some(&Released);
+		return self.key_state.get(&key) == Some(&ButtonState::Released);
 	}
 
 	pub fn key_up(&self, key: Key) -> bool {
-		use ButtonState::*;
-		let state = self.key_state.get(&key);
-		return state == None || state == Some(&Up);
+		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
 	}
 
 	pub fn mouse_down(&self, mouse: Mouse) -> bool {
-		use ButtonState::*;
-		let state = self.mouse_state.get(&mouse);
-		return state == Some(&Down) || state == Some(&Pressed);
+		return self.mouse_state.get(&mouse) == Some(&ButtonState::Down) || self.mouse_pressed(mouse);
 	}
 
 	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
-		use ButtonState::*;
-		let state = self.mouse_state.get(&mouse);
-		return state == Some(&Pressed);
+		return self.mouse_state.get(&mouse) == Some(&ButtonState::Pressed);
 	}
 
 	pub fn mouse_released(&self, mouse: Mouse) -> bool {
-		use ButtonState::*;
-		let state = self.mouse_state.get(&mouse);
-		return state == Some(&Released);
+		return self.mouse_state.get(&mouse) == Some(&ButtonState::Released);
 	}
 
 	pub fn mouse_up(&self, mouse: Mouse) -> bool {
-		use ButtonState::*;
-		let state = self.mouse_state.get(&mouse);
-		return state == None || state == Some(&Up);
+		return self.mouse_state.get(&mouse) == Some(&ButtonState::Up) || self.mouse_state.get(&mouse).is_none();
 	}
 
 	pub fn mouse_pos(&self) -> MousePos {
@@ -664,5 +660,96 @@ impl Window {
 
 	}
 
+}
+
+pub fn str_to_key(s: &str) -> Option<Key> {
+
+	return match s {
+		"q" => Some(Key::Q),
+		"w" => Some(Key::W),
+		"e" => Some(Key::E),
+		"r" => Some(Key::R),
+		"t" => Some(Key::T),
+		"y" => Some(Key::Y),
+		"u" => Some(Key::U),
+		"i" => Some(Key::I),
+		"o" => Some(Key::O),
+		"p" => Some(Key::P),
+		"a" => Some(Key::A),
+		"s" => Some(Key::S),
+		"d" => Some(Key::D),
+		"f" => Some(Key::F),
+		"g" => Some(Key::G),
+		"h" => Some(Key::H),
+		"j" => Some(Key::J),
+		"k" => Some(Key::K),
+		"l" => Some(Key::L),
+		"z" => Some(Key::Z),
+		"x" => Some(Key::X),
+		"c" => Some(Key::C),
+		"v" => Some(Key::V),
+		"b" => Some(Key::B),
+		"n" => Some(Key::N),
+		"m" => Some(Key::M),
+		"1" => Some(Key::Key1),
+		"2" => Some(Key::Key2),
+		"3" => Some(Key::Key3),
+		"4" => Some(Key::Key4),
+		"5" => Some(Key::Key5),
+		"6" => Some(Key::Key6),
+		"7" => Some(Key::Key7),
+		"8" => Some(Key::Key8),
+		"9" => Some(Key::Key9),
+		"0" => Some(Key::Key0),
+		"f1" => Some(Key::F1),
+		"f2" => Some(Key::F2),
+		"f3" => Some(Key::F3),
+		"f4" => Some(Key::F4),
+		"f5" => Some(Key::F5),
+		"f6" => Some(Key::F6),
+		"f7" => Some(Key::F7),
+		"f8" => Some(Key::F8),
+		"f9" => Some(Key::F9),
+		"f10" => Some(Key::F10),
+		"f11" => Some(Key::F11),
+		"f12" => Some(Key::F12),
+		"-" => Some(Key::Minus),
+		"=" => Some(Key::Equals),
+		"," => Some(Key::Comma),
+		"." => Some(Key::Period),
+		"`" => Some(Key::Grave),
+		"/" => Some(Key::Slash),
+		"\\" => Some(Key::Backslash),
+		";" => Some(Key::Semicolon),
+		"'" => Some(Key::Apostrophe),
+		"up" => Some(Key::Up),
+		"down" => Some(Key::Down),
+		"left" => Some(Key::Left),
+		"right" => Some(Key::Right),
+		"esc" => Some(Key::Escape),
+		"tab" => Some(Key::Tab),
+		"space" => Some(Key::Space),
+		"back" => Some(Key::Back),
+		"return" => Some(Key::Return),
+		"lshift" => Some(Key::LShift),
+		"rshift" => Some(Key::RShift),
+		"lalt" => Some(Key::LAlt),
+		"ralt" => Some(Key::RAlt),
+		"lwin" => Some(Key::LWin),
+		"rwin" => Some(Key::RWin),
+		"lctrl" => Some(Key::LControl),
+		"rctrl" => Some(Key::RControl),
+		_ => None,
+	};
+
+}
+
+pub fn str_to_mouse(s: &str) -> Option<Mouse> {
+	return match s {
+		"left" => Some(Mouse::Left),
+		"right" => Some(Mouse::Right),
+		"middle" => Some(Mouse::Middle),
+		_ => None,
+	}
 }
 
