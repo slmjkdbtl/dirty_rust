@@ -1,6 +1,6 @@
 # wengwengweng
 
-run: build
+run:
 	cargo run --release --example window
 
 run-lua: build
@@ -11,6 +11,9 @@ build:
 	rm -rf bin/dirty
 	cp target/release/dirty bin/dirty
 	strip bin/dirty
+
+build-windows:
+	cargo build --release --target x86_64-pc-windows-gnu
 
 doc:
 	cargo doc --no-deps --open

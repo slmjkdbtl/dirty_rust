@@ -8,6 +8,7 @@ pub enum Error {
 	Net,
 	Image,
 	Window,
+	Gamepad,
 	Audio,
 	Lua,
 	Parse,
@@ -22,6 +23,7 @@ impl fmt::Display for Error {
 			Error::Net => write!(f, "network error"),
 			Error::Image => write!(f, "image error"),
 			Error::Window => write!(f, "window error"),
+			Error::Gamepad => write!(f, "gamepad error"),
 			Error::Audio => write!(f, "audio error"),
 			Error::Lua => write!(f, "lua error"),
 			Error::Parse => write!(f, "parse error"),
@@ -77,6 +79,12 @@ impl From<serde_json::error::Error> for Error {
 
 impl From<std::sync::mpsc::TryRecvError> for Error {
 	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
+		return Error::Thread;
+	}
+}
+
+impl From<gilrs::Error> for Error {
+	fn from(_: gilrs::Error) -> Self {
 		return Error::Thread;
 	}
 }

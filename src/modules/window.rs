@@ -14,6 +14,7 @@ use glutin::GlRequest;
 use glutin::MouseScrollDelta;
 use glutin::ElementState;
 use derive_more::*;
+use gilrs::Gilrs;
 use serde::Serialize;
 use serde::Deserialize;
 
@@ -486,6 +487,8 @@ impl Window {
 
 		let window = windowed_ctx.window();
 
+		let mut gamepad_ctx = Gilrs::new()?;
+
 		ggl::clear(true, false, false);
 		windowed_ctx.swap_buffers()?;
 
@@ -573,6 +576,10 @@ impl Window {
 				};
 
 			});
+
+			while let Some(gilrs::Event { id, event, .. }) = gamepad_ctx.next_event() {
+				// ...
+			}
 
 			ggl::clear(true, false, false);
 			f(&mut self.ctx);
