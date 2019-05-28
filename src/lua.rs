@@ -6,7 +6,6 @@ use std::path::Path;
 
 use rlua::Lua;
 use rlua::UserData;
-use rlua::AnyUserData;
 use rlua::UserDataMethods;
 use rlua::MetaMethod;
 use rlua::Value;
@@ -16,7 +15,7 @@ use rlua::FromLua;
 use rlua::Table;
 
 use crate::*;
-use crate::err::Error;
+use crate::Error;
 
 impl From<Error> for rlua::Error {
 	fn from(err: Error) -> rlua::Error {
@@ -71,25 +70,14 @@ fn bind(ctx: &Context) -> Result<()> {
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
 	let term = ctx.create_table()?;
+	let mut pool = thread::Pool {};
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method("done", |_, t: &thread::Task<T>, ()| {
-				return Ok(t.done());
-			});
-
 			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
 				return Ok(t.poll());
-			});
-
-			methods.add_method("data", |_, t: &thread::Task<T>, (): ()| {
-				if let Some(data) = t.data() {
-					return Ok(data);
-				} else {
-					return Err(Error::Lua.into());
-				}
 			});
 
 		}
@@ -123,6 +111,14 @@ fn bind(ctx: &Context) -> Result<()> {
 	fs.set("read", ctx.create_function(|_, (path): (String)| {
 		return Ok(fs::read(&path)?);
 	})?)?;
+
+// 	ctx.scope(|s| {
+// 		return fs.set("async_read", s.create_function_mut(|_, (path): (String)| {
+// 			return Ok(pool.exec(move || {
+// 				return fs::read(&path).unwrap();
+// 			}));
+// 		})?);
+// 	})?;
 
 	fs.set("async_read", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
@@ -450,22 +446,6 @@ fn bind(ctx: &Context) -> Result<()> {
 		}));
 	})?)?;
 
-	impl UserData for math::Vec2 {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_meta_method(MetaMethod::Index, |_, this, key: String| {
-				match key.as_ref() {
-					"x" => Ok(this.x),
-					"y" => Ok(this.y),
-					_ => Err(Error::Lua.into()),
-				}
-			});
-
-		}
-
-	}
-
 	impl UserData for term::Term {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -529,15 +509,46 @@ fn bind(ctx: &Context) -> Result<()> {
 	wrap_ansi!(bold);
 	wrap_ansi!(italic);
 
+	impl UserData for math::Vec2 {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_meta_method(MetaMethod::Index, |_, this, key: String| {
+				match key.as_ref() {
+					"x" => Ok(this.x),
+					"y" => Ok(this.y),
+					_ => Err(Error::Lua.into()),
+				}
+			});
+
+		}
+
+	}
+
 	impl UserData for math::Vec3 {}
+	impl UserData for math::Vec4 {}
+	impl UserData for math::Mat4 {}
 	impl UserData for math::Color {}
+	impl UserData for math::Rect {}
 
 	globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
 		return Ok(vec2!(x, y));
 	})?)?;
 
+	globals.set("vec3", ctx.create_function(|_, (x, y, z): (f32, f32, f32)| {
+		return Ok(vec3!(x, y, z));
+	})?)?;
+
+	globals.set("vec4", ctx.create_function(|_, (x, y, z, w): (f32, f32, f32, f32)| {
+		return Ok(vec4!(x, y, z, w));
+	})?)?;
+
 	globals.set("color", ctx.create_function(|_, (r, g, b, a): (f32, f32, f32, f32)| {
 		return Ok(color!(r, g, b, a));
+	})?)?;
+
+	globals.set("rect", ctx.create_function(|_, (x, y, w, h): (f32, f32, f32, f32)| {
+		return Ok(rect!(x, y, w, h));
 	})?)?;
 
 	globals.set("sleep", ctx.create_function(|_, (t): (u64)| {
