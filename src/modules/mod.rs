@@ -1,6 +1,6 @@
 // wengwengweng
 
-mod gfx;
+pub mod gfx;
 pub mod window;
 pub mod audio;
 pub mod http;
