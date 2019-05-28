@@ -66,6 +66,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	let globals = ctx.globals();
 	let fs = ctx.create_table()?;
 	let window = ctx.create_table()?;
+	let gfx = ctx.create_table()?;
 	let http = ctx.create_table()?;
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
@@ -336,6 +337,12 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?));
 	})?)?;
 
+	impl UserData for gfx::Texture {}
+
+	gfx.set("texture", ctx.create_function(|_, (d): (Vec<u8>)| {
+		return Ok(gfx::Texture::from_bytes(&d)?);
+	})?)?;
+
 	impl UserData for http::Response {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -364,10 +371,6 @@ fn bind(ctx: &Context) -> Result<()> {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method("write_png", |_, img, (fname): (String)| {
-				return Ok(img::Image::write_png(img, fname)?);
-			});
-
 			methods.add_method("width", |_, img, ()| {
 				return Ok(img.width());
 			});
@@ -376,16 +379,16 @@ fn bind(ctx: &Context) -> Result<()> {
 				return Ok(img.height());
 			});
 
-			methods.add_method("pixels", |_, img, ()| {
-				return Ok(img.pixels().clone());
+			methods.add_method("write", |_, img, (path): (String)| {
+				return Ok(img.write(path)?);
 			});
 
 		}
 
 	}
 
-	img.set("decode_png", ctx.create_function(|_, (data): (Vec<u8>)| {
-		return Ok(img::decode_png(&data)?);
+	img.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
+		return Ok(img::Image::from_bytes(&data)?);
 	})?)?;
 
 	impl UserData for audio::Sound {
@@ -557,6 +560,7 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	ctx.add_module("fs", fs)?;
 	ctx.add_module("window", window)?;
+	ctx.add_module("gfx", gfx)?;
 	ctx.add_module("http", http)?;
 	ctx.add_module("img", img)?;
 	ctx.add_module("audio", audio)?;
@@ -567,7 +571,7 @@ fn bind(ctx: &Context) -> Result<()> {
 
 }
 
-pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
+pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
 
 	let lua = Lua::new();
 
@@ -583,8 +587,8 @@ pub fn run(code: &str, fname: Option<impl AsRef<Path>>, args: Option<&[String]>)
 
 		let mut runtime = ctx.load(code);
 
-		if let Some(fname) = fname {
-			runtime = runtime.set_name(&format!("{}", fname.as_ref().display()))?;
+		if let Some(path) = path {
+			runtime = runtime.set_name(&format!("{}", path.as_ref().display()))?;
 		}
 
 		let handle_err = |err: &rlua::Error| {
