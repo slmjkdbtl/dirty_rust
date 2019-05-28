@@ -127,6 +127,26 @@ pub struct Ctx {
 
 impl Ctx {
 
+	pub fn new() -> Self {
+		return Self {
+			dt: 0.0,
+			time: 0.0,
+			closed: false,
+			fps_cap: 60,
+			key_state: HashMap::new(),
+			mouse_state: HashMap::new(),
+			mouse_pos: MousePos::new(0, 0),
+			mouse_delta: None,
+			scroll_delta: None,
+			text_input: None,
+			window_requests: Vec::new(),
+			fullscreen: false,
+			cursor_hidden: false,
+			cursor_locked: false,
+			title: String::new(),
+		};
+	}
+
 	/// get delta time between frames
 	pub fn dt(&self) -> f32 {
 		return self.dt;

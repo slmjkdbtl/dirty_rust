@@ -13,6 +13,7 @@ pub enum Error {
 	Parse,
 	Thread,
 	Lua,
+	Ketos,
 	Misc(String),
 }
 
@@ -28,6 +29,7 @@ impl fmt::Display for Error {
 			Error::Parse => write!(f, "parse error"),
 			Error::Thread => write!(f, "thread error"),
 			Error::Lua => write!(f, "lua error"),
+			Error::Ketos => write!(f, "ketos error"),
 			Error::Misc(s) => write!(f, "error: {}", s),
 		};
 	}
@@ -80,6 +82,18 @@ impl From<serde_json::error::Error> for Error {
 impl From<std::sync::mpsc::TryRecvError> for Error {
 	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
 		return Error::Thread;
+	}
+}
+
+impl From<ketos::Error> for Error {
+	fn from(_: ketos::Error) -> Self {
+		return Error::Ketos;
+	}
+}
+
+impl From<ketos::ExecError> for Error {
+	fn from(_: ketos::ExecError) -> Self {
+		return Error::Ketos;
 	}
 }
 
