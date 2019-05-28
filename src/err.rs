@@ -10,9 +10,9 @@ pub enum Error {
 	Window,
 	Gamepad,
 	Audio,
-	Lua,
 	Parse,
 	Thread,
+	Lua,
 	Misc(String),
 }
 
@@ -25,9 +25,9 @@ impl fmt::Display for Error {
 			Error::Window => write!(f, "window error"),
 			Error::Gamepad => write!(f, "gamepad error"),
 			Error::Audio => write!(f, "audio error"),
-			Error::Lua => write!(f, "lua error"),
 			Error::Parse => write!(f, "parse error"),
 			Error::Thread => write!(f, "thread error"),
+			Error::Lua => write!(f, "lua error"),
 			Error::Misc(s) => write!(f, "error: {}", s),
 		};
 	}

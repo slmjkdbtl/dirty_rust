@@ -293,15 +293,124 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-	impl UserData for &mut window::Ctx {}
+	impl UserData for &mut window::Ctx {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("fps", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.fps());
+			});
+
+			methods.add_method("time", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.time());
+			});
+
+			methods.add_method("dt", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.dt());
+			});
+
+			methods.add_method_mut("close", |_, c: &mut &mut window::Ctx, ()| {
+				return Ok(c.close());
+			});
+
+			methods.add_method("key_pressed", |_, c: &&mut window::Ctx, (k): (String)| {
+				return Ok(c.key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("key_down", |_, c: &&mut window::Ctx, (k): (String)| {
+				return Ok(c.key_down(window::str_to_key(&k).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("key_released", |_, c: &&mut window::Ctx, (k): (String)| {
+				return Ok(c.key_released(window::str_to_key(&k).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_pressed", |_, c: &&mut window::Ctx, (m): (String)| {
+				return Ok(c.mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_down", |_, c: &&mut window::Ctx, (m): (String)| {
+				return Ok(c.mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_released", |_, c: &&mut window::Ctx, (m): (String)| {
+				return Ok(c.mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_pos", |_, c: &&mut window::Ctx, ()| -> rlua::Result<math::Vec2> {
+				return Ok(c.mouse_pos().into());
+			});
+
+			methods.add_method("mouse_delta", |_, c: &&mut window::Ctx, ()| -> rlua::Result<math::Vec2> {
+				return Ok(c.mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
+			});
+
+			methods.add_method("scroll_delta", |_, c: &&mut window::Ctx, ()| -> rlua::Result<math::Vec2> {
+				return Ok(c.scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
+			});
+
+			methods.add_method("text_input", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.text_input().unwrap_or(String::new()));
+			});
+
+			methods.add_method_mut("set_fullscreen", |_, c: &mut &mut window::Ctx, (b): (bool)| {
+				return Ok(c.set_fullscreen(b));
+			});
+
+			methods.add_method("is_fullscreen", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.is_fullscreen());
+			});
+
+			methods.add_method_mut("toggle_fullscreen", |_, c: &mut &mut window::Ctx, ()| {
+				return Ok(c.toggle_fullscreen());
+			});
+
+			methods.add_method_mut("set_cursor_hidden", |_, c: &mut &mut window::Ctx, (b): (bool)| {
+				return Ok(c.set_cursor_hidden(b));
+			});
+
+			methods.add_method("is_cursor_hidden", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.is_cursor_hidden());
+			});
+
+			methods.add_method_mut("toggle_cursor_hidden", |_, c: &mut &mut window::Ctx, ()| {
+				return Ok(c.toggle_cursor_hidden());
+			});
+
+			methods.add_method_mut("set_cursor_locked", |_, c: &mut &mut window::Ctx, (b): (bool)| {
+				return Ok(c.set_cursor_locked(b));
+			});
+
+			methods.add_method("is_cursor_locked", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.is_cursor_locked());
+			});
+
+			methods.add_method_mut("toggle_cursor_locked", |_, c: &mut &mut window::Ctx, ()| {
+				return Ok(c.toggle_cursor_locked());
+			});
+
+			methods.add_method_mut("set_title", |_, c: &mut &mut window::Ctx, (s): (String)| {
+				return Ok(c.set_title(&s));
+			});
+
+			methods.add_method("title", |_, c: &&mut window::Ctx, ()| {
+				return Ok(c.title());
+			});
+
+		}
+
+
+	}
 
 	impl UserData for window::Window {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method_mut("run", |_, win: &mut window::Window, (cb): (rlua::Function)| {
-				return Ok(win.run(|ctx| {
-					cb.call::<_, ()>(());
+			methods.add_method_mut("run", |ctx, win: &mut window::Window, (cb): (rlua::Function)| {
+				return Ok(win.run(|c| {
+					ctx.scope(|s| {
+						cb.call::<_, ()>(s.create_nonstatic_userdata(c).expect("failed to create userdata")).expect("failed");
+					});
 				})?);
 			});
 
