@@ -179,6 +179,31 @@ fn bind(ctx: &Context) -> Result<()> {
 				_ => return Err(Error::Lua.into()),
 			};
 
+			macro_rules! set {
+				($lt:ident[$lk:expr] -> $val:ident::$key:ident) => {
+					if let Ok(v) = $lt.raw_get($lk) {
+						$val.$key = v;
+					}
+				}
+			}
+
+			set!(t["width"] -> conf::width);
+			set!(t["height"] -> conf::height);
+			set!(t["title"] -> conf::title);
+			set!(t["hidpi"] -> conf::hidpi);
+			set!(t["resizable"] -> conf::resizable);
+			set!(t["fullscreen"] -> conf::fullscreen);
+			set!(t["always_on_top"] -> conf::always_on_top);
+			set!(t["borderless"] -> conf::borderless);
+			set!(t["transparent"] -> conf::transparent);
+			set!(t["vsync"] -> conf::vsync);
+			set!(t["hide_title"] -> conf::hide_title);
+			set!(t["hide_titlebar_buttons"] -> conf::hide_titlebar_buttons);
+			set!(t["fullsize_content"] -> conf::fullsize_content);
+			set!(t["titlebar_transparent"] -> conf::titlebar_transparent);
+			set!(t["cursor_hidden"] -> conf::cursor_hidden);
+			set!(t["cursor_locked"] -> conf::cursor_locked);
+
 			return Ok(conf);
 
 		}
@@ -186,120 +211,112 @@ fn bind(ctx: &Context) -> Result<()> {
 	}
 
 
-	fn add_ctx_methods<'lua, T, M: UserDataMethods<'lua, T>>(methods: &mut M) where T: std::borrow::BorrowMut<window::Ctx> + UserData {
-
-		methods.add_method("fps", |_, c, ()| {
-			return Ok(c.borrow().fps());
-		});
-
-		methods.add_method("time", |_, c, ()| {
-			return Ok(c.borrow().time());
-		});
-
-		methods.add_method("dt", |_, c, ()| {
-			return Ok(c.borrow().dt());
-		});
-
-		methods.add_method_mut("close", |_, c, ()| {
-			return Ok(c.borrow_mut().close());
-		});
-
-		methods.add_method("key_pressed", |_, c, (k): (String)| {
-			return Ok(c.borrow().key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
-		});
-
-		methods.add_method("key_down", |_, c, (k): (String)| {
-			return Ok(c.borrow().key_down(window::str_to_key(&k).ok_or(Error::Window)?));
-		});
-
-		methods.add_method("key_released", |_, c, (k): (String)| {
-			return Ok(c.borrow().key_released(window::str_to_key(&k).ok_or(Error::Window)?));
-		});
-
-		methods.add_method("mouse_pressed", |_, c, (m): (String)| {
-			return Ok(c.borrow().mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
-		});
-
-		methods.add_method("mouse_down", |_, c, (m): (String)| {
-			return Ok(c.borrow().mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
-		});
-
-		methods.add_method("mouse_released", |_, c, (m): (String)| {
-			return Ok(c.borrow().mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
-		});
-
-		methods.add_method("mouse_pos", |_, c, ()| -> rlua::Result<math::Vec2> {
-			return Ok(c.borrow().mouse_pos().into());
-		});
-
-		methods.add_method("mouse_delta", |_, c, ()| -> rlua::Result<math::Vec2> {
-			return Ok(c.borrow().mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
-		});
-
-		methods.add_method("scroll_delta", |_, c, ()| -> rlua::Result<math::Vec2> {
-			return Ok(c.borrow().scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
-		});
-
-		methods.add_method("text_input", |_, c, ()| {
-			return Ok(c.borrow().text_input().unwrap_or(String::new()));
-		});
-
-		methods.add_method_mut("set_fullscreen", |_, c, (b): (bool)| {
-			return Ok(c.borrow_mut().set_fullscreen(b));
-		});
-
-		methods.add_method("is_fullscreen", |_, c, ()| {
-			return Ok(c.borrow().is_fullscreen());
-		});
-
-		methods.add_method_mut("toggle_fullscreen", |_, c, ()| {
-			return Ok(c.borrow_mut().toggle_fullscreen());
-		});
-
-		methods.add_method_mut("set_cursor_hidden", |_, c, (b): (bool)| {
-			return Ok(c.borrow_mut().set_cursor_hidden(b));
-		});
-
-		methods.add_method("is_cursor_hidden", |_, c, ()| {
-			return Ok(c.borrow().is_cursor_hidden());
-		});
-
-		methods.add_method_mut("toggle_cursor_hidden", |_, c, ()| {
-			return Ok(c.borrow_mut().toggle_cursor_hidden());
-		});
-
-		methods.add_method_mut("set_cursor_locked", |_, c, (b): (bool)| {
-			return Ok(c.borrow_mut().set_cursor_locked(b));
-		});
-
-		methods.add_method("is_cursor_locked", |_, c, ()| {
-			return Ok(c.borrow().is_cursor_locked());
-		});
-
-		methods.add_method_mut("toggle_cursor_locked", |_, c, ()| {
-			return Ok(c.borrow_mut().toggle_cursor_locked());
-		});
-
-		methods.add_method_mut("set_title", |_, c, (s): (String)| {
-			return Ok(c.borrow_mut().set_title(&s));
-		});
-
-		methods.add_method("title", |_, c, ()| {
-			return Ok(c.borrow().title());
-		});
-
-	}
-
 	impl UserData for &mut window::Ctx {
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-			add_ctx_methods(methods);
-		}
-	}
 
-	impl UserData for window::Ctx {
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-			add_ctx_methods(methods);
+
+			methods.add_method("fps", |_, c, ()| {
+				return Ok(c.fps());
+			});
+
+			methods.add_method("time", |_, c, ()| {
+				return Ok(c.time());
+			});
+
+			methods.add_method("dt", |_, c, ()| {
+				return Ok(c.dt());
+			});
+
+			methods.add_method_mut("close", |_, c, ()| {
+				return Ok(c.close());
+			});
+
+			methods.add_method("key_pressed", |_, c, (k): (String)| {
+				return Ok(c.key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("key_down", |_, c, (k): (String)| {
+				return Ok(c.key_down(window::str_to_key(&k).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("key_released", |_, c, (k): (String)| {
+				return Ok(c.key_released(window::str_to_key(&k).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_pressed", |_, c, (m): (String)| {
+				return Ok(c.mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_down", |_, c, (m): (String)| {
+				return Ok(c.mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_released", |_, c, (m): (String)| {
+				return Ok(c.mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
+			});
+
+			methods.add_method("mouse_pos", |_, c, ()| -> rlua::Result<math::Vec2> {
+				return Ok(c.mouse_pos().into());
+			});
+
+			methods.add_method("mouse_delta", |_, c, ()| -> rlua::Result<math::Vec2> {
+				return Ok(c.mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
+			});
+
+			methods.add_method("scroll_delta", |_, c, ()| -> rlua::Result<math::Vec2> {
+				return Ok(c.scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
+			});
+
+			methods.add_method("text_input", |_, c, ()| {
+				return Ok(c.text_input().unwrap_or(String::new()));
+			});
+
+			methods.add_method_mut("set_fullscreen", |_, c, (b): (bool)| {
+				return Ok(c.set_fullscreen(b));
+			});
+
+			methods.add_method("is_fullscreen", |_, c, ()| {
+				return Ok(c.is_fullscreen());
+			});
+
+			methods.add_method_mut("toggle_fullscreen", |_, c, ()| {
+				return Ok(c.toggle_fullscreen());
+			});
+
+			methods.add_method_mut("set_cursor_hidden", |_, c, (b): (bool)| {
+				return Ok(c.set_cursor_hidden(b));
+			});
+
+			methods.add_method("is_cursor_hidden", |_, c, ()| {
+				return Ok(c.is_cursor_hidden());
+			});
+
+			methods.add_method_mut("toggle_cursor_hidden", |_, c, ()| {
+				return Ok(c.toggle_cursor_hidden());
+			});
+
+			methods.add_method_mut("set_cursor_locked", |_, c, (b): (bool)| {
+				return Ok(c.set_cursor_locked(b));
+			});
+
+			methods.add_method("is_cursor_locked", |_, c, ()| {
+				return Ok(c.is_cursor_locked());
+			});
+
+			methods.add_method_mut("toggle_cursor_locked", |_, c, ()| {
+				return Ok(c.toggle_cursor_locked());
+			});
+
+			methods.add_method_mut("set_title", |_, c, (s): (String)| {
+				return Ok(c.set_title(&s));
+			});
+
+			methods.add_method("title", |_, c, ()| {
+				return Ok(c.title());
+			});
+
 		}
+
 	}
 
 	impl UserData for window::Window {
@@ -319,9 +336,8 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-	window.set("make", ctx.create_function(|_, (conf): (Value)| {
-// 		let c = rlua_serde::from_value::<window::Conf>(conf)?;
-		return Ok(window::Window::default());
+	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
+		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?));
 	})?)?;
 
 	impl UserData for http::Response {

@@ -35,12 +35,11 @@ pub struct Window {
 pub struct Conf {
 	pub width: u32,
 	pub height: u32,
-	pub title: &'static str,
+	pub title: String,
 	pub hidpi: bool,
 	pub resizable: bool,
 	pub fullscreen: bool,
 	pub always_on_top: bool,
-	pub multi_touch: bool,
 	pub borderless: bool,
 	pub transparent: bool,
 	pub vsync: bool,
@@ -54,9 +53,9 @@ pub struct Conf {
 
 impl Conf {
 
-	pub fn basic(title: &'static str, width: u32, height: u32) -> Self {
+	pub fn basic(title: &str, width: u32, height: u32) -> Self {
 		return Self {
-			title: title,
+			title: String::from(title),
 			width: width,
 			height: height,
 			..Default::default()
@@ -71,12 +70,11 @@ impl Default for Conf {
 		return Self {
 			width: 640,
 			height: 480,
-			title: "",
+			title: String::new(),
 			hidpi: true,
 			resizable: false,
 			fullscreen: false,
 			always_on_top: false,
-			multi_touch: false,
 			borderless: false,
 			transparent: false,
 			vsync: false,
@@ -308,7 +306,6 @@ impl Window {
 	pub fn run(&mut self, mut f: impl FnMut(&mut Ctx)) -> Result<()> {
 
 		let mut event_loop = glutin::EventsLoop::new();
-		let monitor = event_loop.get_primary_monitor();
 
 		let mut window_builder = glutin::WindowBuilder::new()
 			.with_title(self.conf.title.to_owned())
@@ -316,16 +313,12 @@ impl Window {
 			.with_transparency(self.conf.transparent)
 			.with_decorations(!self.conf.borderless)
 			.with_always_on_top(self.conf.always_on_top)
-			.with_dimensions(LogicalSize::new(self.conf.width as f64, self.conf.height as f64));
+			.with_dimensions(LogicalSize::new(self.conf.width as f64, self.conf.height as f64))
+			.with_multitouch();
 
 		if self.conf.fullscreen {
 			window_builder = window_builder
-				.with_fullscreen(Some(monitor));
-		}
-
-		if self.conf.multi_touch {
-			window_builder = window_builder
-				.with_multitouch();
+				.with_fullscreen(Some(event_loop.get_primary_monitor()));
 		}
 
 		#[cfg(target_os = "macos")] {
