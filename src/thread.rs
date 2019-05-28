@@ -16,7 +16,7 @@ impl Pool {
 		return Self {};
 	}
 
-	pub fn exec<T: Send + Clone + 'static, F: FnMut() -> T + Send + 'static>(&mut self, mut f: F) -> Task<T> {
+	pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(&mut self, mut f: F) -> Task<T> {
 
 		let (tx, rx) = mpsc::channel();
 
@@ -30,7 +30,7 @@ impl Pool {
 
 }
 
-pub fn exec<T: Send + Clone + 'static, F: FnMut() -> T + Send + 'static>(mut f: F) -> Task<T> {
+pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(mut f: F) -> Task<T> {
 
 	let (tx, rx) = mpsc::channel();
 
@@ -44,34 +44,22 @@ pub fn exec<T: Send + Clone + 'static, F: FnMut() -> T + Send + 'static>(mut f: 
 
 pub struct Task<T> {
 	rx: Receiver<T>,
-	data: Option<T>,
 }
 
-impl<T: Clone> Task<T> {
+impl<T> Task<T> {
 
 	pub fn new(rx: Receiver<T>) -> Self {
 		return Self {
 			rx: rx,
-			data: None,
 		};
 	}
 
-	pub fn data(&self) -> Option<T> {
-		return self.data.clone();
-	}
-
-	pub fn done(&self) -> bool {
-		return self.data.is_some();
-	}
-
-	pub fn poll(&mut self) {
-
-		if self.done() {
-			return;
-		}
+	pub fn poll(&mut self) -> Option<T> {
 
 		if let Ok(data) = self.rx.try_recv() {
-			self.data = Some(data);
+			return Some(data);
+		} else {
+			return None;
 		}
 
 	}

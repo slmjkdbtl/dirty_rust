@@ -340,11 +340,13 @@ impl Window {
 		let windowed_ctx = ctx_builder
 			.build_windowed(window_builder, &event_loop)?;
 
-		let windowed_ctx = unsafe {
-			let windowed_ctx = windowed_ctx.make_current()?;
-			gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
-			windowed_ctx
-		};
+		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
+
+		gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
+
+// 		let gl_ctx = glow::native::Context::from_loader_function(|s| {
+// 			windowed_ctx.get_proc_address(s) as *const _
+// 		});
 
 		let window = windowed_ctx.window();
 
@@ -603,15 +605,6 @@ impl From<LogicalPosition> for MouseDelta {
 		return Self {
 			x: x,
 			y: y,
-		};
-	}
-}
-
-impl From<LogicalSize> for Size {
-	fn from(size: LogicalSize) -> Self {
-		return Self {
-			w: size.width as u32,
-			h: size.height as u32,
 		};
 	}
 }

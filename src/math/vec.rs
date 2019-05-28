@@ -146,11 +146,9 @@ macro_rules! mix {
 gen_vec!(Vec2(vec2) -> (x, y): [f32; 2], (0, 0));
 gen_vec!(Vec3(vec3) -> (x, y, z): [f32; 3], (0, 0, 0));
 gen_vec!(Vec4(vec4) -> (x, y, z, w): [f32; 4], (0, 0, 0, 0));
-gen_vec!(Size(size) -> (w, h): [u32; 2], (0, 0));
 gen_vec!(Color(color) -> (r, g, b, a): [f32; 4], (1, 1, 1, 1));
 gen_vec!(Rect(rect) -> (x, y, w, h): [f32; 4], (0, 0, 0, 0));
 
-mix!(Vec2(x, y): f32, Size(w, h): u32);
 mix!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
 mix!(Vec4(x, y, z, w): f32, Rect(x, y, w, h): f32);
 
