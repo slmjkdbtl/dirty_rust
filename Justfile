@@ -4,7 +4,7 @@ run:
 	cargo run --release --example window
 
 run-lua: build
-	./bin/dirty examples/main.lua
+	./bin/dirty examples/window.lua
 
 build:
 	cargo build --release
