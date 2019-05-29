@@ -158,23 +158,17 @@ pub fn size(path: impl AsRef<Path>) -> Result<u64> {
 	return Ok(fs::metadata(path)?.len());
 }
 
-pub fn data_dir(org: &str, name: &str) -> Result<PathBuf> {
+pub fn data_dir(name: &str) -> Result<PathBuf> {
 
 	let dirs = BaseDirs::new().ok_or(Error::IO)?;
 	let data_dir = dirs.data_dir();
-	let org_dir = data_dir.join(org);
+	let data_dir = data_dir.join(name);
 
-	if !org_dir.exists() {
-		mkdir(&org_dir)?;
+	if !data_dir.exists() {
+		mkdir(&data_dir)?;
 	}
 
-	let proj_dir = org_dir.join(name);
-
-	if !proj_dir.exists() {
-		mkdir(&proj_dir)?;
-	}
-
-	return Ok(proj_dir);
+	return Ok(data_dir);
 
 }
 

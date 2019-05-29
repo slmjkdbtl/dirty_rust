@@ -4,6 +4,7 @@
 
 use std::path::Path;
 
+use regex::Regex;
 use rlua::Lua;
 use rlua::UserData;
 use rlua::UserDataMethods;
@@ -72,6 +73,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
 	let term = ctx.create_table()?;
+	let regex = ctx.create_table()?;
 	let mut pool = thread::Pool {};
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
@@ -166,8 +168,8 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(fs::size(&path)?);
 	})?)?;
 
-	fs.set("data_dir", ctx.create_function(|_, (org, name): (String, String)| {
-		return Ok(format!("{}", fs::data_dir(&org, &name)?.display()));
+	fs.set("data_dir", ctx.create_function(|_, (org): (String)| {
+		return Ok(format!("{}", fs::data_dir(&org)?.display()));
 	})?)?;
 
 	fs.set("join", ctx.create_function(|_, (a, b): (String, String)| {
@@ -587,6 +589,7 @@ fn bind(ctx: &Context) -> Result<()> {
 
 pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
 
+	let mut code = code.to_owned();
 	let lua = Lua::new();
 
 	let args = match args {
@@ -594,12 +597,24 @@ pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) 
 		None => vec![],
 	};
 
+	if let Some(fl) = code.lines().next() {
+		if let Ok(pat) = Regex::new("^#!") {
+			if pat.is_match(fl) {
+				code = code
+					.lines()
+					.skip(1)
+					.collect::<Vec<&str>>()
+					.join("\n");
+			}
+		}
+	}
+
 	return lua.context(|ctx| {
 
 		ctx.globals().set("arg", args)?;
 		bind(&ctx)?;
 
-		let mut runtime = ctx.load(code);
+		let mut runtime = ctx.load(&code);
 
 		if let Some(path) = path {
 			runtime = runtime.set_name(&format!("{}", path.as_ref().display()))?;
