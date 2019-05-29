@@ -15,9 +15,9 @@ pub struct Image {
 
 impl Image {
 
-	pub fn from_raw(w: u32, h: u32, buf: &[u8]) -> Result<Self> {
+	pub fn new(w: u32, h: u32) -> Result<Self> {
 		return Ok(Self {
-			handle: image::ImageBuffer::from_raw(w, h, buf.to_vec()).ok_or(Error::Image)?,
+			handle: image::ImageBuffer::new(w, h),
 		});
 	}
 
@@ -36,6 +36,10 @@ impl Image {
 
 	}
 
+	pub fn from_pixels(w: u32, h: u32, pixels: &[u8]) -> Self {
+		unimplemented!();
+	}
+
 	pub fn width(&self) -> u32 {
 		return self.handle.width();
 	}
@@ -46,6 +50,10 @@ impl Image {
 
 	pub fn write(&self, fname: impl AsRef<Path>) -> Result<()> {
 		return Ok(self.handle.save(fname)?);
+	}
+
+	pub fn into_raw(self) -> Vec<u8> {
+		return self.handle.into_raw();
 	}
 
 }
