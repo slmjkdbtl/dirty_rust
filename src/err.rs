@@ -109,6 +109,12 @@ impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::C
 	}
 }
 
+impl From<glob::PatternError> for Error {
+	fn from(_: glob::PatternError) -> Self {
+		return Error::IO;
+	}
+}
+
 impl From<String> for Error {
 	fn from(s: String) -> Self {
 		return Error::Misc(s);

@@ -1,11 +1,16 @@
 // wengwengweng
 
-use dirty::window::Window;
+use dirty::*;
 use dirty::window::Key;
+
+#[derive(Default)]
+struct State {
+	count: i32,
+}
 
 fn main() {
 
-	let mut win = Window::default();
+	let mut win = window::Window::default();
 
 	win.run(|ctx| {
 

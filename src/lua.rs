@@ -65,6 +65,7 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	let globals = ctx.globals();
 	let fs = ctx.create_table()?;
+	let data = ctx.create_table()?;
 	let window = ctx.create_table()?;
 	let gfx = ctx.create_table()?;
 	let http = ctx.create_table()?;
@@ -165,9 +166,17 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(fs::size(&path)?);
 	})?)?;
 
+	fs.set("data_dir", ctx.create_function(|_, (org, name): (String, String)| {
+		return Ok(format!("{}", fs::data_dir(&org, &name)?.display()));
+	})?)?;
+
+	fs.set("join", ctx.create_function(|_, (a, b): (String, String)| {
+		return Ok(format!("{}", fs::join(&a, &b).display()));
+	})?)?;
+
 	impl<'lua> FromLua<'lua> for window::Conf {
 
-		fn from_lua(val: Value<'lua>, ctx: Context<'lua>) -> rlua::Result<Self> {
+		fn from_lua(val: Value<'lua>, _: Context<'lua>) -> rlua::Result<Self> {
 
 			let mut conf = Self::default();
 
@@ -322,8 +331,8 @@ fn bind(ctx: &Context) -> Result<()> {
 
 			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
 				return Ok(win.run(|c| {
-					ctx.scope(|s| {
-						cb.call::<_, ()>(s.create_nonstatic_userdata(c).expect("failed to create userdata")).expect("failed");
+					ctx.scope(|s| -> rlua::Result<()> {
+						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
 					});
 				})?);
 			});
@@ -338,9 +347,14 @@ fn bind(ctx: &Context) -> Result<()> {
 	})?)?;
 
 	impl UserData for gfx::Texture {}
+	impl UserData for gfx::Canvas {}
 
 	gfx.set("texture", ctx.create_function(|_, (d): (Vec<u8>)| {
 		return Ok(gfx::Texture::from_bytes(&d)?);
+	})?)?;
+
+	gfx.set("canvas", ctx.create_function(|_, (w, h): (u32, u32)| {
+		return Ok(gfx::Canvas::new(w, h));
 	})?)?;
 
 	impl UserData for http::Response {

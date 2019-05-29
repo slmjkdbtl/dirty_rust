@@ -6,6 +6,8 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
+use directories::BaseDirs;
+
 use crate::Error;
 use crate::Result;
 
@@ -72,8 +74,7 @@ pub fn exists(path: impl AsRef<Path>) -> bool {
 pub fn glob(pat: &str) -> Result<Vec<String>> {
 
 	let listings = glob::glob(&format!("{}", pat))
-		.or(glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)))
-		.expect(&format!("failed to read dir \"{}\"", pat));
+		.or(glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)))?;
 
 	return Ok(listings
 		.map(|s| s.expect("failed to glob"))
@@ -155,5 +156,29 @@ pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
 
 pub fn size(path: impl AsRef<Path>) -> Result<u64> {
 	return Ok(fs::metadata(path)?.len());
+}
+
+pub fn data_dir(org: &str, name: &str) -> Result<PathBuf> {
+
+	let dirs = BaseDirs::new().ok_or(Error::IO)?;
+	let data_dir = dirs.data_dir();
+	let org_dir = data_dir.join(org);
+
+	if !org_dir.exists() {
+		mkdir(&org_dir)?;
+	}
+
+	let proj_dir = org_dir.join(name);
+
+	if !proj_dir.exists() {
+		mkdir(&proj_dir)?;
+	}
+
+	return Ok(proj_dir);
+
+}
+
+pub fn join(a: impl AsRef<Path>, b: impl AsRef<Path>) -> PathBuf {
+	return a.as_ref().join(b.as_ref());
 }
 
