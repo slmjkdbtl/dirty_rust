@@ -115,6 +115,12 @@ impl From<glob::PatternError> for Error {
 	}
 }
 
+impl From<regex::Error> for Error {
+	fn from(_: regex::Error) -> Self {
+		return Error::IO;
+	}
+}
+
 impl From<String> for Error {
 	fn from(s: String) -> Self {
 		return Error::Misc(s);
