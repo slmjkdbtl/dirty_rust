@@ -4,7 +4,6 @@
 
 use std::path::Path;
 
-use regex::Regex;
 use rlua::Lua;
 use rlua::UserData;
 use rlua::UserDataMethods;
@@ -73,7 +72,6 @@ fn bind(ctx: &Context) -> Result<()> {
 	let img = ctx.create_table()?;
 	let audio = ctx.create_table()?;
 	let term = ctx.create_table()?;
-	let regex = ctx.create_table()?;
 	let mut pool = thread::Pool {};
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
@@ -587,9 +585,24 @@ fn bind(ctx: &Context) -> Result<()> {
 
 }
 
+fn remove_shebang(code: &str) -> String {
+
+	if let Some(fl) = code.lines().next() {
+		if fl.get(0..2) == Some("#!") {
+			return code
+				.lines()
+				.skip(1)
+				.collect::<Vec<&str>>()
+				.join("\n");
+		}
+	}
+
+	return code.to_owned();
+
+}
+
 pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) -> Result<()> {
 
-	let mut code = code.to_owned();
 	let lua = Lua::new();
 
 	let args = match args {
@@ -597,23 +610,11 @@ pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) 
 		None => vec![],
 	};
 
-	if let Some(fl) = code.lines().next() {
-		if let Ok(pat) = Regex::new("^#!") {
-			if pat.is_match(fl) {
-				code = code
-					.lines()
-					.skip(1)
-					.collect::<Vec<&str>>()
-					.join("\n");
-			}
-		}
-	}
-
 	return lua.context(|ctx| {
 
-		ctx.globals().set("arg", args)?;
 		bind(&ctx)?;
 
+		let code = remove_shebang(code);
 		let mut runtime = ctx.load(&code);
 
 		if let Some(path) = path {
@@ -650,7 +651,7 @@ pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) 
 
 		};
 
-		if let Err(err) = runtime.exec() {
+		if let Err(err) = runtime.call::<_, ()>(args) {
 
 			handle_err(&err);
 
