@@ -18,7 +18,6 @@ pub enum Error {
 	FromUtf8,
 	HTTPMessage,
 	Lua,
-	Ketos,
 	Misc(String),
 }
 
@@ -38,7 +37,6 @@ impl fmt::Display for Error {
 			Error::FromUtf8 => write!(f, "failed to convert from utf8"),
 			Error::HTTPMessage => write!(f, "failed to parse http message"),
 			Error::Lua => write!(f, "lua error"),
-			Error::Ketos => write!(f, "ketos error"),
 			Error::Misc(s) => write!(f, "error: {}", s),
 		};
 	}
@@ -76,27 +74,9 @@ impl From<rodio::decoder::DecoderError> for Error {
 	}
 }
 
-impl From<serde_json::error::Error> for Error {
-	fn from(_: serde_json::error::Error) -> Self {
-		return Error::Parse;
-	}
-}
-
 impl From<std::sync::mpsc::TryRecvError> for Error {
 	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
 		return Error::Thread;
-	}
-}
-
-impl From<ketos::Error> for Error {
-	fn from(_: ketos::Error) -> Self {
-		return Error::Ketos;
-	}
-}
-
-impl From<ketos::ExecError> for Error {
-	fn from(_: ketos::ExecError) -> Self {
-		return Error::Ketos;
 	}
 }
 

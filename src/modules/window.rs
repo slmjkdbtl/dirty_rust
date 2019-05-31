@@ -14,8 +14,6 @@ use glutin::GlRequest;
 use glutin::ElementState;
 use derive_more::*;
 use gilrs::Gilrs;
-use serde::Serialize;
-use serde::Deserialize;
 
 pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
@@ -31,7 +29,7 @@ pub struct Window {
 }
 
 /// Window Creation Config
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Conf {
 	pub width: u32,
 	pub height: u32,

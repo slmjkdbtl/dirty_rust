@@ -32,13 +32,14 @@ impl From<rlua::Error> for Error {
 trait ContextExt<'lua> {
 
 	fn add_package<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
-	fn add_lua_package(&self, name: &str, code: &str) -> rlua::Result<()>;
+	fn add_package_from_lua(&self, name: &str, code: &str) -> rlua::Result<()>;
+	fn ext_std(&self, modname: &str, fname: &str, f: rlua::Function) -> rlua::Result<()>;
 
 }
 
 impl<'lua> ContextExt<'lua> for Context<'lua> {
 
-	fn add_lua_package(&self, name: &str, code: &str) -> rlua::Result<()> {
+	fn add_package_from_lua(&self, name: &str, code: &str) -> rlua::Result<()> {
 		return self.add_package(name, self.load(code).eval::<Value>()?);
 	}
 
@@ -54,6 +55,16 @@ impl<'lua> ContextExt<'lua> for Context<'lua> {
 
 		preloads.set(name, f.bind(self.registry_value::<Value>(&key)?)?)?;
 		self.remove_registry_value(key)?;
+
+		return Ok(());
+
+	}
+
+	fn ext_std(&self, modname: &str, fname: &str, f: rlua::Function) -> rlua::Result<()> {
+
+		let module: Table = self.globals().get::<_, Table>(modname)?;
+
+// 		module.set(fname, f);
 
 		return Ok(());
 
@@ -381,6 +392,10 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(http::get(&uri)?);
 	})?)?;
 
+	http.set("post", ctx.create_function(|_, (uri, data): (String, Vec<u8>)| {
+		return Ok(http::post(&uri, &data)?);
+	})?)?;
+
 	impl UserData for img::Image {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -579,7 +594,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	ctx.add_package("img", img)?;
 	ctx.add_package("audio", audio)?;
 	ctx.add_package("term", term)?;
-	ctx.add_lua_package("json", include_str!("res/json.lua"))?;
+	ctx.add_package_from_lua("json", include_str!("res/json.lua"))?;
 
 	return Ok(());
 
