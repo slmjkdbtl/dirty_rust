@@ -71,17 +71,14 @@ pub fn exists(path: impl AsRef<Path>) -> bool {
 }
 
 /// get a list of all filenames under given directory
-pub fn glob(pat: &str) -> Result<Vec<String>> {
+pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 	let listings = glob::glob(&format!("{}", pat))
 		.or(glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)))?;
 
 	return Ok(listings
 		.map(|s| s.expect("failed to glob"))
-		.map(|s| s.into_os_string())
-		.map(|s| s.into_string())
-		.map(|s| s.expect("failed to glob"))
-		.collect::<Vec<String>>());
+		.collect());
 
 }
 

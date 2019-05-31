@@ -86,9 +86,9 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-	fs.set("glob", ctx.create_function(|_, (pat): (String)| {
-		return Ok(fs::glob(&pat)?);
-	})?)?;
+// 	fs.set("glob", ctx.create_function(|_, (pat): (String)| {
+// 		return Ok(fs::glob(&pat)?);
+// 	})?)?;
 
 	fs.set("copy", ctx.create_function(|_, (p1, p2): (String, String)| {
 		return Ok(fs::copy(&p1, &p2)?);
@@ -363,14 +363,6 @@ fn bind(ctx: &Context) -> Result<()> {
 
 			methods.add_method("text", |_, res, ()| {
 				return Ok(res.text().clone());
-			});
-
-			methods.add_method("bytes", |_, res, ()| {
-				return Ok(res.bytes().clone());
-			});
-
-			methods.add_method("status", |_, res, ()| {
-				return Ok(res.status());
 			});
 
 		}

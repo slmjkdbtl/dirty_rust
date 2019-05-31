@@ -1,9 +1,12 @@
 // wengwengweng
 
+use std::path::PathBuf;
 use std::fmt;
 
 #[derive(Debug, Clone)]
 pub enum Error {
+	FileWrite(PathBuf),
+	FileRead(PathBuf),
 	IO,
 	Net,
 	Image,
@@ -20,6 +23,8 @@ pub enum Error {
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		return match self {
+			Error::FileWrite(p) => write!(f, "failed to write {}", p.display()),
+			Error::FileRead(p) => write!(f, "failed to read {}", p.display()),
 			Error::IO => write!(f, "io error"),
 			Error::Net => write!(f, "network error"),
 			Error::Image => write!(f, "image error"),
@@ -40,12 +45,6 @@ impl std::error::Error for Error {}
 impl From<std::io::Error> for Error {
 	fn from(_: std::io::Error) -> Self {
 		return Error::IO;
-	}
-}
-
-impl From<reqwest::Error> for Error {
-	fn from(_: reqwest::Error) -> Self {
-		return Error::Net;
 	}
 }
 
@@ -112,6 +111,30 @@ impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::C
 impl From<glob::PatternError> for Error {
 	fn from(_: glob::PatternError) -> Self {
 		return Error::IO;
+	}
+}
+
+impl From<url::ParseError> for Error {
+	fn from(_: url::ParseError) -> Self {
+		return Error::Net;
+	}
+}
+
+impl From<native_tls::Error> for Error {
+	fn from(_: native_tls::Error) -> Self {
+		return Error::Net;
+	}
+}
+
+impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
+	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
+		return Error::Net;
+	}
+}
+
+impl From<httparse::Error> for Error {
+	fn from(_: httparse::Error) -> Self {
+		return Error::Net;
 	}
 }
 
