@@ -31,18 +31,18 @@ impl From<rlua::Error> for Error {
 
 trait ContextExt<'lua> {
 
-	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
-	fn add_lua_module(&self, name: &str, code: &str) -> rlua::Result<()>;
+	fn add_package<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
+	fn add_lua_package(&self, name: &str, code: &str) -> rlua::Result<()>;
 
 }
 
 impl<'lua> ContextExt<'lua> for Context<'lua> {
 
-	fn add_lua_module(&self, name: &str, code: &str) -> rlua::Result<()> {
-		return self.add_module(name, self.load(code).eval::<Value>()?);
+	fn add_lua_package(&self, name: &str, code: &str) -> rlua::Result<()> {
+		return self.add_package(name, self.load(code).eval::<Value>()?);
 	}
 
-	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()> {
+	fn add_package<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()> {
 
 		let preloads: Table = self.globals().get::<_, Table>("package")?.get("preload")?;
 
@@ -362,7 +362,15 @@ fn bind(ctx: &Context) -> Result<()> {
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 			methods.add_method("text", |_, res, ()| {
-				return Ok(res.text().clone());
+				return Ok(res.text());
+			});
+
+			methods.add_method("bytes", |_, res, ()| {
+				return Ok(res.bytes().to_vec());
+			});
+
+			methods.add_method("code", |_, res, ()| {
+				return Ok(res.code());
 			});
 
 		}
@@ -564,14 +572,14 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(std::thread::sleep(std::time::Duration::from_millis(t)));
 	})?)?;
 
-	ctx.add_module("fs", fs)?;
-	ctx.add_module("window", window)?;
-	ctx.add_module("gfx", gfx)?;
-	ctx.add_module("http", http)?;
-	ctx.add_module("img", img)?;
-	ctx.add_module("audio", audio)?;
-	ctx.add_module("term", term)?;
-	ctx.add_lua_module("json", include_str!("res/json.lua"))?;
+	ctx.add_package("fs", fs)?;
+	ctx.add_package("window", window)?;
+	ctx.add_package("gfx", gfx)?;
+	ctx.add_package("http", http)?;
+	ctx.add_package("img", img)?;
+	ctx.add_package("audio", audio)?;
+	ctx.add_package("term", term)?;
+	ctx.add_lua_package("json", include_str!("res/json.lua"))?;
 
 	return Ok(());
 

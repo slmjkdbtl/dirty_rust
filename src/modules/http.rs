@@ -87,31 +87,43 @@ pub struct Request {
 
 pub struct Response {
 	body: Vec<u8>,
+	code: u16,
+	headers: HashMap<String, String>,
 }
 
 impl Response {
 
 	pub fn from_raw(buf: &[u8]) -> Result<Self> {
 
-		let mut headers = [httparse::EMPTY_HEADER; 16];
+		let mut headers = [httparse::EMPTY_HEADER; 128];
 		let mut res = httparse::Response::new(&mut headers);
 		let status = res.parse(&buf)?;
 
 		let body_pos = match status {
 			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => panic!("123"),
+			httparse::Status::Partial => return Err(Error::Net),
 		};
 
 		let body = &buf[body_pos..];
 
 		return Ok(Self {
 			body: body.to_vec(),
+			code: res.code.ok_or(Error::Net)?,
+			headers: HashMap::new(),
 		});
 
 	}
 
+	pub fn bytes(&self) -> &[u8] {
+		return &self.body;
+	}
+
 	pub fn text(&self) -> String {
-		return String::from_utf8(self.body.clone()).expect("utf8");
+		return String::from_utf8_lossy(self.bytes()).to_owned().to_string();
+	}
+
+	pub fn code(&self) -> u16 {
+		return self.code;
 	}
 
 }
@@ -153,12 +165,16 @@ impl Request {
 		return &self.path;
 	}
 
-	pub fn method(&self) -> &Method {
-		return &self.method;
+	pub fn scheme(&self) -> Scheme {
+		return self.scheme;
 	}
 
-	pub fn version(&self) -> &Version {
-		return &self.version;
+	pub fn method(&self) -> Method {
+		return self.method;
+	}
+
+	pub fn version(&self) -> Version {
+		return self.version;
 	}
 
 	pub fn headers(&self) -> &HashMap<String, String> {
@@ -192,14 +208,28 @@ impl Request {
 	pub fn send(&mut self) -> Result<Response> {
 
 		let mut stream = TcpStream::connect((self.host(), self.port()))?;
-		let connector = TlsConnector::new()?;
-		let mut stream = connector.connect(self.host(), stream)?;
-
-		stream.write_all(self.to_message().as_bytes())?;
-
 		let mut buf = Vec::new();
 
-		stream.read_to_end(&mut buf)?;
+		match self.scheme() {
+
+			Scheme::HTTP => {
+
+				stream.write_all(self.to_message().as_bytes())?;
+				stream.read_to_end(&mut buf)?;
+
+			},
+
+			Scheme::HTTPS => {
+
+				let connector = TlsConnector::new()?;
+				let mut stream = connector.connect(self.host(), stream)?;
+
+				stream.write_all(self.to_message().as_bytes())?;
+				stream.read_to_end(&mut buf)?;
+
+			},
+
+		};
 
 		return Response::from_raw(&buf);
 
