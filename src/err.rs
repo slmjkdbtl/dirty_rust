@@ -15,6 +15,8 @@ pub enum Error {
 	Audio,
 	Parse,
 	Thread,
+	FromUtf8,
+	HTTPMessage,
 	Lua,
 	Ketos,
 	Misc(String),
@@ -33,6 +35,8 @@ impl fmt::Display for Error {
 			Error::Audio => write!(f, "audio error"),
 			Error::Parse => write!(f, "parse error"),
 			Error::Thread => write!(f, "thread error"),
+			Error::FromUtf8 => write!(f, "failed to convert from utf8"),
+			Error::HTTPMessage => write!(f, "failed to parse http message"),
 			Error::Lua => write!(f, "lua error"),
 			Error::Ketos => write!(f, "ketos error"),
 			Error::Misc(s) => write!(f, "error: {}", s),
@@ -134,7 +138,13 @@ impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 
 impl From<httparse::Error> for Error {
 	fn from(_: httparse::Error) -> Self {
-		return Error::Net;
+		return Error::HTTPMessage;
+	}
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+	fn from(_: std::string::FromUtf8Error) -> Self {
+		return Error::FromUtf8;
 	}
 }
 
