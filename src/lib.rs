@@ -13,7 +13,6 @@ mod modules;
 pub mod math;
 pub mod thread;
 pub mod lua;
-pub mod ketos;
 
 mod err;
 pub use err::Error;

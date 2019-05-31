@@ -14,6 +14,10 @@ use native_tls::TlsConnector;
 use crate::Error;
 use crate::Result;
 
+const HTTP_PORT: u16 = 80;
+const HTTPS_PORT: u16 = 443;
+const RESPONSE_BUF_SIZE: usize = 1024;
+
 #[derive(Clone, Copy)]
 pub enum Scheme {
 	HTTP,
@@ -23,8 +27,8 @@ pub enum Scheme {
 impl Scheme {
 	pub fn port(&self) -> u16 {
 		return match self {
-			Scheme::HTTP => 80,
-			Scheme::HTTPS => 443,
+			Scheme::HTTP => HTTP_PORT,
+			Scheme::HTTPS => HTTPS_PORT,
 		};
 	}
 }
@@ -83,6 +87,7 @@ pub struct Request {
 	path: String,
 	port: u16,
 	headers: HashMap<String, String>,
+	body: Option<Vec<u8>>,
 }
 
 pub struct Response {
@@ -145,6 +150,7 @@ impl Request {
 			path: path.to_owned(),
 			port: scheme.port(),
 			headers: HashMap::new(),
+			body: None,
 		});
 
 	}
@@ -185,7 +191,11 @@ impl Request {
 		self.headers.insert(key.to_owned(), value.to_owned());
 	}
 
-	pub fn to_message(&self) -> String {
+	pub fn body(&mut self, data: &[u8]) {
+		self.body = Some(data.to_vec());
+	}
+
+	pub fn message(&self) -> Vec<u8> {
 
 		let mut m = String::new();
 
@@ -201,20 +211,30 @@ impl Request {
 
 		m.push_str("\r\n");
 
-		return m;
+		let mut bytes = m.as_bytes().to_vec();
+
+		if let Some(mut body) = self.body.clone() {
+			bytes.append(&mut body);
+		}
+
+		return bytes;
 
 	}
 
-	pub fn send(&mut self) -> Result<Response> {
+	pub fn send(&mut self, data: Option<&[u8]>) -> Result<Response> {
+
+		if let Some(data) = data {
+			self.body(data);
+		}
 
 		let mut stream = TcpStream::connect((self.host(), self.port()))?;
-		let mut buf = Vec::new();
+		let mut buf = Vec::with_capacity(RESPONSE_BUF_SIZE);
 
 		match self.scheme() {
 
 			Scheme::HTTP => {
 
-				stream.write_all(self.to_message().as_bytes())?;
+				stream.write_all(&self.message())?;
 				stream.read_to_end(&mut buf)?;
 
 			},
@@ -224,7 +244,7 @@ impl Request {
 				let connector = TlsConnector::new()?;
 				let mut stream = connector.connect(self.host(), stream)?;
 
-				stream.write_all(self.to_message().as_bytes())?;
+				stream.write_all(&self.message())?;
 				stream.read_to_end(&mut buf)?;
 
 			},
@@ -238,7 +258,10 @@ impl Request {
 }
 
 pub fn get(url: &str) -> Result<Response> {
-	return Request::get(url)?.send();
+	return Request::get(url)?.send(None);
 }
 
+pub fn post(url: &str, data: &[u8]) -> Result<Response> {
+	return Request::get(url)?.send(Some(data));
+}
 
