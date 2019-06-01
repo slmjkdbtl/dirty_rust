@@ -3,10 +3,12 @@
 == DOING
 
 == TODO
+- http less allocation / copying
 - gfx
-- better error handling
 - gamepads
 - ketos
 
 == DONE
+- refactor http
+- clearer error messages
 

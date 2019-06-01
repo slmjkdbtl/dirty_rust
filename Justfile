@@ -6,11 +6,14 @@ run example="window":
 run-lua: build
 	./bin/dirty examples/window.lua
 
+install: build
+	upx bin/dirty
+	install -v bin/dirty $BIN
+
 build:
 	cargo build --release
 	rm -rf bin/dirty
 	cp target/release/dirty bin/dirty
-	strip bin/dirty
 
 build-windows:
 	cargo build --release --target x86_64-pc-windows-gnu
