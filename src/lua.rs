@@ -227,8 +227,7 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-
-	impl UserData for &mut window::Ctx {
+	impl UserData for &mut window::Window {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
@@ -328,10 +327,6 @@ fn bind(ctx: &Context) -> Result<()> {
 				return Ok(c.set_title(&s));
 			});
 
-			methods.add_method("title", |_, c, ()| {
-				return Ok(c.title());
-			});
-
 		}
 
 	}
@@ -354,7 +349,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	}
 
 	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
-		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?));
+		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?)?);
 	})?)?;
 
 	impl UserData for gfx::Texture {}
@@ -388,12 +383,46 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
+	impl UserData for &http::Request {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("path", |_, req, ()| {
+				return Ok(req.path().to_owned());
+			});
+
+		}
+
+	}
+
+	impl UserData for http::Server {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("serve", |_, serv, ()| {
+				return Ok(serv.serve()?);
+			});
+
+			methods.add_method_mut("handle", |_, serv, (f): (rlua::Function)| {
+				return Ok(serv.handle(|req| {
+					return None;
+				}));
+			});
+
+		}
+
+	}
+
 	http.set("get", ctx.create_function(|_, (uri): (String)| {
 		return Ok(http::get(&uri)?);
 	})?)?;
 
 	http.set("post", ctx.create_function(|_, (uri, data): (String, Vec<u8>)| {
 		return Ok(http::post(&uri, &data)?);
+	})?)?;
+
+	http.set("server", ctx.create_function(|_, (loc, port): (String, u16)| {
+		return Ok(http::server(&loc, port));
 	})?)?;
 
 	impl UserData for img::Image {

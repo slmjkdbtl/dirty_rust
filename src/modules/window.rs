@@ -24,9 +24,29 @@ use crate::*;
 
 /// Manages Ctx
 pub struct Window {
-	conf: Conf,
-	ctx: Ctx,
+
+	dt: f32,
+	time: f32,
+	closed: bool,
+	fps_cap: u32,
+	key_state: HashMap<Key, ButtonState>,
+	mouse_state: HashMap<Mouse, ButtonState>,
+	mouse_pos: MousePos,
+	mouse_delta: Option<MouseDelta>,
+	scroll_delta: Option<ScrollDelta>,
+	text_input: Option<String>,
+	title: String,
+	fullscreen: bool,
+	cursor_hidden: bool,
+	cursor_locked: bool,
+
+	events_loop: glutin::EventsLoop,
+	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
+	gamepad_ctx: gilrs::Gilrs,
+
 }
+
+unsafe impl Send for Window {}
 
 /// Window Creation Config
 #[derive(Clone, Debug)]
@@ -87,44 +107,62 @@ impl Default for Conf {
 
 }
 
-impl Default for Window {
-	fn default() -> Self {
-		return Self::new(Conf::default());
-	}
-}
+impl Window {
 
-#[derive(Clone)]
-enum WindowRequest {
-	Fullscreen(bool),
-	HideCursor(bool),
-	LockCursor(bool),
-	SetTitle(String),
-}
+	pub fn new(conf: Conf) -> Result<Self> {
 
-/// The Main Interface to Interact with the Window
-#[derive(Clone)]
-pub struct Ctx {
-	dt: f32,
-	time: f32,
-	closed: bool,
-	fps_cap: u32,
-	key_state: HashMap<Key, ButtonState>,
-	mouse_state: HashMap<Mouse, ButtonState>,
-	mouse_pos: MousePos,
-	mouse_delta: Option<MouseDelta>,
-	scroll_delta: Option<ScrollDelta>,
-	text_input: Option<String>,
-	window_requests: Vec<WindowRequest>,
-	title: String,
-	fullscreen: bool,
-	cursor_hidden: bool,
-	cursor_locked: bool,
-}
+		let mut events_loop = glutin::EventsLoop::new();
 
-impl Ctx {
+		let mut window_builder = glutin::WindowBuilder::new()
+			.with_title(conf.title.to_owned())
+			.with_resizable(conf.resizable)
+			.with_transparency(conf.transparent)
+			.with_decorations(!conf.borderless)
+			.with_always_on_top(conf.always_on_top)
+			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
+			.with_multitouch();
 
-	pub fn new() -> Self {
-		return Self {
+		if conf.fullscreen {
+			window_builder = window_builder
+				.with_fullscreen(Some(events_loop.get_primary_monitor()));
+		}
+
+		#[cfg(target_os = "macos")] {
+
+			use glutin::os::macos::WindowBuilderExt;
+
+			window_builder = window_builder
+				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
+				.with_title_hidden(conf.hide_title)
+				.with_titlebar_transparent(conf.titlebar_transparent)
+				.with_fullsize_content_view(conf.fullsize_content);
+
+		}
+
+		let ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
+
+		let windowed_ctx = ctx_builder
+			.build_windowed(window_builder, &events_loop)?;
+
+		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
+
+		gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
+
+// 		let gl_ctx = glow::native::Context::from_loader_function(|s| {
+// 			windowed_ctx.get_proc_address(s) as *const _
+// 		});
+
+		let window = windowed_ctx.window();
+
+		let mut gamepad_ctx = Gilrs::new()?;
+
+		ggl::clear(true, false, false);
+		windowed_ctx.swap_buffers()?;
+
+		return Ok(Self {
+
 			dt: 0.0,
 			time: 0.0,
 			closed: false,
@@ -135,12 +173,170 @@ impl Ctx {
 			mouse_delta: None,
 			scroll_delta: None,
 			text_input: None,
-			window_requests: Vec::new(),
-			fullscreen: false,
-			cursor_hidden: false,
-			cursor_locked: false,
-			title: String::new(),
-		};
+			fullscreen: conf.fullscreen,
+			cursor_hidden: conf.cursor_hidden,
+			cursor_locked: conf.cursor_locked,
+			title: conf.title.to_owned(),
+
+			events_loop: events_loop,
+			windowed_ctx: windowed_ctx,
+			gamepad_ctx: gamepad_ctx,
+
+		});
+
+	}
+
+	pub fn run(&mut self, mut f: impl FnMut(&mut Self)) -> Result<()> {
+
+		loop {
+
+			let start_time = Instant::now();
+
+			for state in self.key_state.values_mut() {
+				if state == &ButtonState::Pressed {
+					*state = ButtonState::Down;
+				} else if state == &ButtonState::Released {
+					*state = ButtonState::Up;
+				}
+			}
+
+			for state in self.mouse_state.values_mut() {
+				if state == &ButtonState::Pressed {
+					*state = ButtonState::Down;
+				} else if state == &ButtonState::Released {
+					*state = ButtonState::Up;
+				}
+			}
+
+			self.mouse_delta = None;
+			self.scroll_delta = None;
+			self.text_input = None;
+
+			let mut keyboard_input = None;
+			let mut mouse_input = None;
+			let mut cursor_moved = None;
+			let mut mouse_wheel = None;
+			let mut close = false;
+
+			self.events_loop.poll_events(|e| {
+
+				use glutin::Event::*;
+				use glutin::WindowEvent::*;
+
+				match e {
+
+					WindowEvent { event, .. } => match event {
+
+						KeyboardInput { input, .. } => {
+							keyboard_input = Some(input);
+						},
+
+						MouseInput { button, state, .. } => {
+							mouse_input = Some((button, state));
+						},
+
+						CursorMoved { position, .. } => {
+							cursor_moved = Some(position);
+						},
+
+						MouseWheel { delta, .. } => {
+							mouse_wheel = Some(delta);
+						},
+
+						ReceivedCharacter(ch) => {
+// 							self.text_input.get_or_insert(String::new()).push(ch);
+						},
+
+						CloseRequested => close = true,
+
+						_ => {},
+
+					},
+
+					_ => {},
+
+				};
+
+			});
+
+			if close {
+				self.close();
+			}
+
+			if let Some(input) = keyboard_input {
+				if let Some(kc) = input.virtual_keycode {
+					match input.state {
+						ElementState::Pressed => {
+							if self.key_up(kc) || self.key_released(kc) {
+								self.key_state.insert(kc, ButtonState::Pressed);
+							}
+						},
+						ElementState::Released => {
+							if self.key_down(kc) || self.key_pressed(kc) {
+								self.key_state.insert(kc, ButtonState::Released);
+							}
+						},
+					}
+				}
+			}
+
+			if let Some((button, state)) = mouse_input {
+				match state {
+					ElementState::Pressed => {
+						if self.mouse_up(button) || self.mouse_released(button) {
+							self.mouse_state.insert(button, ButtonState::Pressed);
+						}
+					},
+					ElementState::Released => {
+						if self.mouse_down(button) || self.mouse_pressed(button) {
+							self.mouse_state.insert(button, ButtonState::Released);
+						}
+					},
+				}
+			}
+
+			if let Some(pos) = cursor_moved {
+
+				let pos: MousePos = pos.into();
+
+				self.mouse_delta = Some((pos - self.mouse_pos).into());
+				self.mouse_pos = pos;
+
+			}
+
+			if let Some(delta) = mouse_wheel {
+				self.scroll_delta = Some(delta.into());
+			}
+
+			while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
+				// ...
+			}
+
+			ggl::clear(true, false, false);
+			f(self);
+			self.windowed_ctx.swap_buffers()?;
+
+			let actual_dt = start_time.elapsed();
+			let actual_dt = actual_dt.as_millis() as f32;
+			let expected_dt = 1000.0 / self.fps_cap as f32;
+
+			if expected_dt > actual_dt {
+				self.dt = expected_dt as f32 / 1000.0;
+				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
+			} else {
+				self.dt = actual_dt as f32 / 1000.0;
+			}
+
+			self.time += self.dt;
+
+			if self.closed {
+				break;
+			}
+
+		}
+
+		return Ok(());
+
 	}
 
 	/// get delta time between frames
@@ -223,7 +419,17 @@ impl Ctx {
 	}
 
 	pub fn set_fullscreen(&mut self, b: bool) {
-		self.window_requests.push(WindowRequest::Fullscreen(b));
+
+		let window = self.windowed_ctx.window();
+
+		if b {
+			window.set_fullscreen(Some(window.get_current_monitor()));
+			self.fullscreen = true;
+		} else {
+			window.set_fullscreen(None);
+			self.fullscreen = false;
+		}
+
 	}
 
 	pub fn is_fullscreen(&self) -> bool {
@@ -235,7 +441,8 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		self.window_requests.push(WindowRequest::HideCursor(b));
+		self.windowed_ctx.window().hide_cursor(b);
+		self.cursor_hidden = b;
 	}
 
 	pub fn is_cursor_hidden(&self) -> bool {
@@ -247,7 +454,8 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_locked(&mut self, b: bool) {
-		self.window_requests.push(WindowRequest::LockCursor(b));
+		self.windowed_ctx.window().grab_cursor(b);
+		self.cursor_locked = b;
 	}
 
 	pub fn is_cursor_locked(&self) -> bool {
@@ -259,250 +467,7 @@ impl Ctx {
 	}
 
 	pub fn set_title(&mut self, t: &str) {
-		self.window_requests.push(WindowRequest::SetTitle(t.to_owned()));
-	}
-
-	pub fn title(&self) -> String {
-		return self.title.clone();
-	}
-
-}
-
-impl Window {
-
-	pub fn new(conf: Conf) -> Self {
-
-		let ctx = Ctx {
-			dt: 0.0,
-			time: 0.0,
-			closed: false,
-			fps_cap: 60,
-			key_state: HashMap::new(),
-			mouse_state: HashMap::new(),
-			mouse_pos: MousePos::new(0, 0),
-			mouse_delta: None,
-			scroll_delta: None,
-			text_input: None,
-			window_requests: Vec::new(),
-			fullscreen: conf.fullscreen,
-			cursor_hidden: conf.cursor_hidden,
-			cursor_locked: conf.cursor_locked,
-			title: conf.title.to_owned(),
-		};
-
-		return Self {
-			conf: conf,
-			ctx: ctx,
-		};
-
-	}
-
-	pub fn ctx(&mut self) -> &mut Ctx {
-		return &mut self.ctx;
-	}
-
-	pub fn run(&mut self, mut f: impl FnMut(&mut Ctx)) -> Result<()> {
-
-		let mut event_loop = glutin::EventsLoop::new();
-
-		let mut window_builder = glutin::WindowBuilder::new()
-			.with_title(self.conf.title.to_owned())
-			.with_resizable(self.conf.resizable)
-			.with_transparency(self.conf.transparent)
-			.with_decorations(!self.conf.borderless)
-			.with_always_on_top(self.conf.always_on_top)
-			.with_dimensions(LogicalSize::new(self.conf.width as f64, self.conf.height as f64))
-			.with_multitouch();
-
-		if self.conf.fullscreen {
-			window_builder = window_builder
-				.with_fullscreen(Some(event_loop.get_primary_monitor()));
-		}
-
-		#[cfg(target_os = "macos")] {
-
-			use glutin::os::macos::WindowBuilderExt;
-
-			window_builder = window_builder
-				.with_titlebar_buttons_hidden(self.conf.hide_titlebar_buttons)
-				.with_title_hidden(self.conf.hide_title)
-				.with_titlebar_transparent(self.conf.titlebar_transparent)
-				.with_fullsize_content_view(self.conf.fullsize_content);
-
-		}
-
-		let ctx_builder = glutin::ContextBuilder::new()
-			.with_vsync(self.conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
-
-		let windowed_ctx = ctx_builder
-			.build_windowed(window_builder, &event_loop)?;
-
-		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
-
-		gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
-
-// 		let gl_ctx = glow::native::Context::from_loader_function(|s| {
-// 			windowed_ctx.get_proc_address(s) as *const _
-// 		});
-
-		let window = windowed_ctx.window();
-
-		let mut gamepad_ctx = Gilrs::new()?;
-
-		ggl::clear(true, false, false);
-		windowed_ctx.swap_buffers()?;
-
-		loop {
-
-			let start_time = Instant::now();
-
-			for state in self.ctx.key_state.values_mut() {
-				if state == &ButtonState::Pressed {
-					*state = ButtonState::Down;
-				} else if state == &ButtonState::Released {
-					*state = ButtonState::Up;
-				}
-			}
-
-			for state in self.ctx.mouse_state.values_mut() {
-				if state == &ButtonState::Pressed {
-					*state = ButtonState::Down;
-				} else if state == &ButtonState::Released {
-					*state = ButtonState::Up;
-				}
-			}
-
-			self.ctx.mouse_delta = None;
-			self.ctx.scroll_delta = None;
-			self.ctx.text_input = None;
-
-			event_loop.poll_events(|e| {
-
-				use glutin::Event::*;
-				use glutin::WindowEvent::*;
-
-				match e {
-
-					WindowEvent { event, .. } => match event {
-
-						KeyboardInput { input, .. } => {
-							if let Some(kc) = input.virtual_keycode {
-								match input.state {
-									ElementState::Pressed => {
-										if self.ctx.key_up(kc) || self.ctx.key_released(kc) {
-											self.ctx.key_state.insert(kc, ButtonState::Pressed);
-										}
-									},
-									ElementState::Released => {
-										if self.ctx.key_down(kc) || self.ctx.key_pressed(kc) {
-											self.ctx.key_state.insert(kc, ButtonState::Released);
-										}
-									},
-								}
-							}
-						},
-
-						MouseInput { button, state, .. } => {
-							match state {
-								ElementState::Pressed => {
-									if self.ctx.mouse_up(button) || self.ctx.mouse_released(button) {
-										self.ctx.mouse_state.insert(button, ButtonState::Pressed);
-									}
-								},
-								ElementState::Released => {
-									if self.ctx.mouse_down(button) || self.ctx.mouse_pressed(button) {
-										self.ctx.mouse_state.insert(button, ButtonState::Released);
-									}
-								},
-							}
-						},
-
-						CursorMoved { position, .. } => {
-
-							let pos: MousePos = position.into();
-
-							self.ctx.mouse_delta = Some((pos - self.ctx.mouse_pos).into());
-							self.ctx.mouse_pos = pos;
-
-						},
-
-						MouseWheel { delta, .. } => {
-							self.ctx.scroll_delta = Some(delta.into());
-						},
-
-						ReceivedCharacter(ch) => {
-							self.ctx.text_input.get_or_insert(String::new()).push(ch);
-						},
-
-						CloseRequested => self.ctx.close(),
-
-						_ => {},
-
-					},
-
-					_ => {},
-
-				};
-
-			});
-
-			while let Some(gilrs::Event { id, event, .. }) = gamepad_ctx.next_event() {
-				// ...
-			}
-
-			ggl::clear(true, false, false);
-			f(&mut self.ctx);
-			windowed_ctx.swap_buffers()?;
-
-			for req in &self.ctx.window_requests {
-				match *req {
-					WindowRequest::Fullscreen(b) => {
-						if b {
-							window.set_fullscreen(Some(window.get_current_monitor()));
-						} else {
-							window.set_fullscreen(None);
-						}
-						self.ctx.fullscreen = b;
-					},
-					WindowRequest::HideCursor(b) => {
-						window.hide_cursor(b);
-						self.ctx.cursor_hidden = b;
-					},
-					WindowRequest::LockCursor(b) => {
-						window.grab_cursor(b)?;
-						self.ctx.cursor_locked = b;
-					},
-					WindowRequest::SetTitle(ref s) => {
-						window.set_title(&s);
-						self.ctx.title = s.to_owned();
-					},
-				}
-			}
-
-			self.ctx.window_requests.clear();
-
-			let actual_dt = start_time.elapsed();
-			let actual_dt = actual_dt.as_millis() as f32;
-			let expected_dt = 1000.0 / self.ctx.fps_cap as f32;
-
-			if expected_dt > actual_dt {
-				self.ctx.dt = expected_dt as f32 / 1000.0;
-				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
-			} else {
-				self.ctx.dt = actual_dt as f32 / 1000.0;
-			}
-
-			self.ctx.time += self.ctx.dt;
-
-			if self.ctx.closed {
-				break;
-			}
-
-		}
-
-		return Ok(());
-
+		self.windowed_ctx.window().set_title(t);
 	}
 
 }

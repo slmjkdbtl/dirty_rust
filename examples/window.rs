@@ -5,7 +5,7 @@ use dirty::window::Key;
 
 fn main() {
 
-	let mut win = window::Window::default();
+	let mut win = window::Window::new(window::Conf::default()).expect("failed to create window");
 
 	win.run(|ctx| {
 
