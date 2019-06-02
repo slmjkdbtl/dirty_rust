@@ -1,19 +1,22 @@
 // wengwengweng
 
 use std::env;
-use dirty::*;
+
 
 fn no() {
 	eprintln!("no");
 }
 
-fn main() {
+#[cfg(feature = "lua")]
+fn run_lua() {
+
+	use dirty::lua;
 
 	let args = env::args().collect::<Vec<String>>();
 
 	if let Some(action) = args.get(1) {
 
-		if let Ok(code) = fs::read_str(action) {
+		if let Ok(code) = std::fs::read_to_string(action) {
 			if let Err(_) = lua::run(&code, Some(action), Some(&args[2..args.len()])) {
 				no();
 			}
@@ -23,7 +26,13 @@ fn main() {
 
 	} else {
 
-		if let Ok(code) = fs::read_str("main.lua") {
+		#[cfg(feature = "fs")]
+		let code = dirty::fs::read_str("main.lua");
+
+		#[cfg(not(feature = "fs"))]
+		let code = std::fs::read_to_string("main.lua");
+
+		if let Ok(code) = code {
 			if let Err(_) = lua::run(&code, Some("main.lua"), None) {
 				no();
 			}
@@ -32,6 +41,13 @@ fn main() {
 		}
 
 	}
+
+}
+
+fn main() {
+
+	#[cfg(feature = "lua")]
+	run_lua();
 
 }
 

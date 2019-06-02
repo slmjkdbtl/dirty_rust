@@ -8,10 +8,15 @@
 
 #![deny(clippy::implicit_return)]
 
+#[cfg(feature = "gfx")]
 mod ggl;
+
 mod modules;
+
 pub mod math;
 pub mod thread;
+
+#[cfg(feature = "lua")]
 pub mod lua;
 
 mod err;

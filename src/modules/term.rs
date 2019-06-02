@@ -31,11 +31,9 @@ impl Term {
 	}
 
 	pub fn render_text<S: AsRef<str>>(&self, lines: &[S]) {
-		// ...
 	}
 
 	pub fn render_color(&self, buffer: &[Color]) {
-		// ...
 	}
 
 	pub fn read_line(&self) -> Result<String> {

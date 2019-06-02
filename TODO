@@ -7,8 +7,9 @@
 - gfx
 - gamepads
 - ketos
+- clearer error messages
 
 == DONE
 - refactor http
-- clearer error messages
+- use cargo feature
 
