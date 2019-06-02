@@ -11,7 +11,14 @@ use rodio::Decoder;
 use rodio::Sink;
 use rodio::source::Buffered;
 
-use crate::*;
+#[cfg(feature = "fs")]
+use crate::fs;
+
+#[cfg(not(feature = "fs"))]
+use std::fs;
+
+use crate::Result;
+use crate::Error;
 
 /// base struct containing sound data and effects data
 #[derive(Clone)]

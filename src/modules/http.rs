@@ -169,8 +169,11 @@ impl Server {
 		let folder = folder.as_ref().to_owned();
 
 		self.handle(move |req| {
-			// ...
+
+			let path = req.path();
+
 			return None;
+
 		});
 
 	}

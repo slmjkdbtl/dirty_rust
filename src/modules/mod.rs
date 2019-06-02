@@ -1,11 +1,24 @@
 // wengwengweng
 
-pub mod gfx;
-pub mod window;
-pub mod audio;
-pub mod http;
+#[cfg(feature = "fs")]
 pub mod fs;
-pub mod col;
+
+#[cfg(feature = "gfx")]
+pub mod gfx;
+#[cfg(feature = "gfx")]
+pub mod window;
+
+#[cfg(feature = "img")]
 pub mod img;
+
+#[cfg(feature = "audio")]
+pub mod audio;
+
+#[cfg(feature = "http")]
+pub mod http;
+
+#[cfg(feature = "term")]
 pub mod term;
+
+pub mod col;
 

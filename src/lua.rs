@@ -3,6 +3,7 @@
 //! Lua Bindings
 
 use std::path::Path;
+use std::borrow::BorrowMut;
 
 use rlua::Lua;
 use rlua::UserData;
@@ -72,30 +73,10 @@ impl<'lua> ContextExt<'lua> for Context<'lua> {
 
 }
 
-fn bind(ctx: &Context) -> Result<()> {
+#[cfg(feature = "fs")]
+fn bind_fs(ctx: &Context) -> Result<()> {
 
-	let globals = ctx.globals();
 	let fs = ctx.create_table()?;
-	let data = ctx.create_table()?;
-	let window = ctx.create_table()?;
-	let gfx = ctx.create_table()?;
-	let http = ctx.create_table()?;
-	let img = ctx.create_table()?;
-	let audio = ctx.create_table()?;
-	let term = ctx.create_table()?;
-	let mut pool = thread::Pool {};
-
-	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
-				return Ok(t.poll());
-			});
-
-		}
-
-	}
 
 // 	fs.set("glob", ctx.create_function(|_, (pat): (String)| {
 // 		return Ok(fs::glob(&pat)?);
@@ -185,6 +166,17 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(format!("{}", fs::join(&a, &b).display()));
 	})?)?;
 
+	ctx.add_package("fs", fs)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "gfx")]
+fn bind_window(ctx: &Context) -> Result<()> {
+
+	let window = ctx.create_table()?;
+
 	impl<'lua> FromLua<'lua> for window::Conf {
 
 		fn from_lua(val: Value<'lua>, _: Context<'lua>) -> rlua::Result<Self> {
@@ -227,227 +219,164 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	}
 
-	impl UserData for &mut window::Window {
+	fn add_window_methods<'lua, T: BorrowMut<window::Window> + UserData, M: UserDataMethods<'lua, T>>(methods: &mut M) {
 
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+		methods.add_method("fps", |_, win, ()| {
+			return Ok(win.borrow().fps());
+		});
 
-			methods.add_method("fps", |_, c, ()| {
-				return Ok(c.fps());
-			});
+		methods.add_method("time", |_, win, ()| {
+			return Ok(win.borrow().time());
+		});
 
-			methods.add_method("time", |_, c, ()| {
-				return Ok(c.time());
-			});
+		methods.add_method("dt", |_, win, ()| {
+			return Ok(win.borrow().dt());
+		});
 
-			methods.add_method("dt", |_, c, ()| {
-				return Ok(c.dt());
-			});
+		methods.add_method_mut("close", |_, win, ()| {
+			return Ok(win.borrow_mut().close());
+		});
 
-			methods.add_method_mut("close", |_, c, ()| {
-				return Ok(c.close());
-			});
+		methods.add_method("key_pressed", |_, win, (k): (String)| {
+			return Ok(win.borrow().key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
+		});
 
-			methods.add_method("key_pressed", |_, c, (k): (String)| {
-				return Ok(c.key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
-			});
+		methods.add_method("key_down", |_, win, (k): (String)| {
+			return Ok(win.borrow().key_down(window::str_to_key(&k).ok_or(Error::Window)?));
+		});
 
-			methods.add_method("key_down", |_, c, (k): (String)| {
-				return Ok(c.key_down(window::str_to_key(&k).ok_or(Error::Window)?));
-			});
+		methods.add_method("key_released", |_, win, (k): (String)| {
+			return Ok(win.borrow().key_released(window::str_to_key(&k).ok_or(Error::Window)?));
+		});
 
-			methods.add_method("key_released", |_, c, (k): (String)| {
-				return Ok(c.key_released(window::str_to_key(&k).ok_or(Error::Window)?));
-			});
+		methods.add_method("mouse_pressed", |_, win, (m): (String)| {
+			return Ok(win.borrow().mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
+		});
 
-			methods.add_method("mouse_pressed", |_, c, (m): (String)| {
-				return Ok(c.mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
-			});
+		methods.add_method("mouse_down", |_, win, (m): (String)| {
+			return Ok(win.borrow().mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
+		});
 
-			methods.add_method("mouse_down", |_, c, (m): (String)| {
-				return Ok(c.mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
-			});
+		methods.add_method("mouse_released", |_, win, (m): (String)| {
+			return Ok(win.borrow().mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
+		});
 
-			methods.add_method("mouse_released", |_, c, (m): (String)| {
-				return Ok(c.mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
-			});
+		methods.add_method("mouse_pos", |_, win, ()| -> rlua::Result<math::Vec2> {
+			return Ok(win.borrow().mouse_pos().into());
+		});
 
-			methods.add_method("mouse_pos", |_, c, ()| -> rlua::Result<math::Vec2> {
-				return Ok(c.mouse_pos().into());
-			});
+		methods.add_method("mouse_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
+			return Ok(win.borrow().mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
+		});
 
-			methods.add_method("mouse_delta", |_, c, ()| -> rlua::Result<math::Vec2> {
-				return Ok(c.mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
-			});
+		methods.add_method("scroll_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
+			return Ok(win.borrow().scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
+		});
 
-			methods.add_method("scroll_delta", |_, c, ()| -> rlua::Result<math::Vec2> {
-				return Ok(c.scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
-			});
+		methods.add_method("text_input", |_, win, ()| {
+			return Ok(win.borrow().text_input().unwrap_or(String::new()));
+		});
 
-			methods.add_method("text_input", |_, c, ()| {
-				return Ok(c.text_input().unwrap_or(String::new()));
-			});
+		methods.add_method_mut("set_fullscreen", |_, win, (b): (bool)| {
+			return Ok(win.borrow_mut().set_fullscreen(b));
+		});
 
-			methods.add_method_mut("set_fullscreen", |_, c, (b): (bool)| {
-				return Ok(c.set_fullscreen(b));
-			});
+		methods.add_method("is_fullscreen", |_, win, ()| {
+			return Ok(win.borrow().is_fullscreen());
+		});
 
-			methods.add_method("is_fullscreen", |_, c, ()| {
-				return Ok(c.is_fullscreen());
-			});
+		methods.add_method_mut("toggle_fullscreen", |_, win, ()| {
+			return Ok(win.borrow_mut().toggle_fullscreen());
+		});
 
-			methods.add_method_mut("toggle_fullscreen", |_, c, ()| {
-				return Ok(c.toggle_fullscreen());
-			});
+		methods.add_method_mut("set_cursor_hidden", |_, win, (b): (bool)| {
+			return Ok(win.borrow_mut().set_cursor_hidden(b));
+		});
 
-			methods.add_method_mut("set_cursor_hidden", |_, c, (b): (bool)| {
-				return Ok(c.set_cursor_hidden(b));
-			});
+		methods.add_method("is_cursor_hidden", |_, win, ()| {
+			return Ok(win.borrow().is_cursor_hidden());
+		});
 
-			methods.add_method("is_cursor_hidden", |_, c, ()| {
-				return Ok(c.is_cursor_hidden());
-			});
+		methods.add_method_mut("toggle_cursor_hidden", |_, win, ()| {
+			return Ok(win.borrow_mut().toggle_cursor_hidden());
+		});
 
-			methods.add_method_mut("toggle_cursor_hidden", |_, c, ()| {
-				return Ok(c.toggle_cursor_hidden());
-			});
+		methods.add_method_mut("set_cursor_locked", |_, win, (b): (bool)| {
+			return Ok(win.borrow_mut().set_cursor_locked(b));
+		});
 
-			methods.add_method_mut("set_cursor_locked", |_, c, (b): (bool)| {
-				return Ok(c.set_cursor_locked(b));
-			});
+		methods.add_method("is_cursor_locked", |_, win, ()| {
+			return Ok(win.borrow().is_cursor_locked());
+		});
 
-			methods.add_method("is_cursor_locked", |_, c, ()| {
-				return Ok(c.is_cursor_locked());
-			});
+		methods.add_method_mut("toggle_cursor_locked", |_, win, ()| {
+			return Ok(win.borrow_mut().toggle_cursor_locked());
+		});
 
-			methods.add_method_mut("toggle_cursor_locked", |_, c, ()| {
-				return Ok(c.toggle_cursor_locked());
-			});
+		methods.add_method_mut("set_title", |_, win, (s): (String)| {
+			return Ok(win.borrow_mut().set_title(&s));
+		});
 
-			methods.add_method_mut("set_title", |_, c, (s): (String)| {
-				return Ok(c.set_title(&s));
-			});
-
-		}
+		methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
+			return Ok(win.borrow_mut().run(|c| {
+				ctx.scope(|s| -> rlua::Result<()> {
+					return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
+				});
+			})?);
+		});
 
 	}
 
 	impl UserData for window::Window {
-
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
-				return Ok(win.run(|c| {
-					ctx.scope(|s| -> rlua::Result<()> {
-						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
-					});
-				})?);
-			});
-
-
+			add_window_methods(methods);
 		}
+	}
 
+	impl UserData for &mut window::Window {
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+			add_window_methods(methods);
+		}
 	}
 
 	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
 		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?)?);
 	})?)?;
 
+	ctx.add_package("window", window)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "gfx")]
+fn bind_gfx(ctx: &Context) -> Result<()> {
+
+	let gfx = ctx.create_table()?;
+
 	impl UserData for gfx::Texture {}
 	impl UserData for gfx::Canvas {}
 
+	#[cfg(feature = "img")]
 	gfx.set("texture", ctx.create_function(|_, (d): (Vec<u8>)| {
 		return Ok(gfx::Texture::from_bytes(&d)?);
 	})?)?;
 
+	#[cfg(feature = "img")]
 	gfx.set("canvas", ctx.create_function(|_, (w, h): (u32, u32)| {
 		return Ok(gfx::Canvas::new(w, h));
 	})?)?;
 
-	impl UserData for http::Response {
+	ctx.add_package("gfx", gfx)?;
 
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	return Ok(());
 
-			methods.add_method("text", |_, res, ()| {
-				return Ok(res.text());
-			});
+}
 
-			methods.add_method("bytes", |_, res, ()| {
-				return Ok(res.bytes().to_vec());
-			});
+#[cfg(feature = "audio")]
+fn bind_audio(ctx: &Context) -> Result<()> {
 
-			methods.add_method("code", |_, res, ()| {
-				return Ok(res.code());
-			});
-
-		}
-
-	}
-
-	impl UserData for &http::Request {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method("path", |_, req, ()| {
-				return Ok(req.path().to_owned());
-			});
-
-		}
-
-	}
-
-	impl UserData for http::Server {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method("serve", |_, serv, ()| {
-				return Ok(serv.serve()?);
-			});
-
-			methods.add_method_mut("handle", |_, serv, (f): (rlua::Function)| {
-				return Ok(serv.handle(|req| {
-					return None;
-				}));
-			});
-
-		}
-
-	}
-
-	http.set("get", ctx.create_function(|_, (uri): (String)| {
-		return Ok(http::get(&uri)?);
-	})?)?;
-
-	http.set("post", ctx.create_function(|_, (uri, data): (String, Vec<u8>)| {
-		return Ok(http::post(&uri, &data)?);
-	})?)?;
-
-	http.set("server", ctx.create_function(|_, (loc, port): (String, u16)| {
-		return Ok(http::server(&loc, port));
-	})?)?;
-
-	impl UserData for img::Image {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method("width", |_, img, ()| {
-				return Ok(img.width());
-			});
-
-			methods.add_method("height", |_, img, ()| {
-				return Ok(img.height());
-			});
-
-			methods.add_method("write", |_, img, (path): (String)| {
-				return Ok(img.write(path)?);
-			});
-
-		}
-
-	}
-
-	img.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
-		return Ok(img::Image::from_bytes(&data)?);
-	})?)?;
+	let audio = ctx.create_table()?;
 
 	impl UserData for audio::Sound {
 
@@ -506,6 +435,91 @@ fn bind(ctx: &Context) -> Result<()> {
 			return audio::Sound::from_file(&path).unwrap();
 		}));
 	})?)?;
+
+	ctx.add_package("audio", audio)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "http")]
+fn bind_http(ctx: &Context) -> Result<()> {
+
+	let http = ctx.create_table()?;
+
+	impl UserData for http::Response {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("text", |_, res, ()| {
+				return Ok(res.text());
+			});
+
+			methods.add_method("bytes", |_, res, ()| {
+				return Ok(res.bytes().to_vec());
+			});
+
+			methods.add_method("code", |_, res, ()| {
+				return Ok(res.code());
+			});
+
+		}
+
+	}
+
+	impl UserData for &http::Request {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("path", |_, req, ()| {
+				return Ok(req.path().to_owned());
+			});
+
+		}
+
+	}
+
+	impl UserData for http::Server {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("serve", |_, serv, ()| {
+				return Ok(serv.serve()?);
+			});
+
+			methods.add_method_mut("handle", |_, serv, (f): (rlua::Function)| {
+				return Ok(serv.handle(move |req| {
+// 					f.call::<_, ()>(());
+					return None;
+				}));
+			});
+
+		}
+
+	}
+
+	http.set("get", ctx.create_function(|_, (uri): (String)| {
+		return Ok(http::get(&uri)?);
+	})?)?;
+
+	http.set("post", ctx.create_function(|_, (uri, data): (String, Vec<u8>)| {
+		return Ok(http::post(&uri, &data)?);
+	})?)?;
+
+	http.set("server", ctx.create_function(|_, (loc, port): (String, u16)| {
+		return Ok(http::server(&loc, port));
+	})?)?;
+
+	ctx.add_package("http", http)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "term")]
+fn bind_term(ctx: &Context) -> Result<()> {
+
+	let term = ctx.create_table()?;
 
 	impl UserData for term::Term {
 
@@ -570,6 +584,63 @@ fn bind(ctx: &Context) -> Result<()> {
 	wrap_ansi!(bold);
 	wrap_ansi!(italic);
 
+	ctx.add_package("term", term)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "img")]
+fn bind_img(ctx: &Context) -> Result<()> {
+
+	let img = ctx.create_table()?;
+
+	impl UserData for img::Image {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("width", |_, img, ()| {
+				return Ok(img.width());
+			});
+
+			methods.add_method("height", |_, img, ()| {
+				return Ok(img.height());
+			});
+
+			methods.add_method("write", |_, img, (path): (String)| {
+				return Ok(img.write(path)?);
+			});
+
+		}
+
+	}
+
+	img.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
+		return Ok(img::Image::from_bytes(&data)?);
+	})?)?;
+
+	ctx.add_package("img", img)?;
+
+	return Ok(());
+
+}
+
+fn bind_vec(ctx: &Context) -> Result<()> {
+
+	let globals = ctx.globals();
+
+	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
+				return Ok(t.poll());
+			});
+
+		}
+
+	}
+
 	impl UserData for math::Vec2 {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -616,13 +687,34 @@ fn bind(ctx: &Context) -> Result<()> {
 		return Ok(std::thread::sleep(std::time::Duration::from_millis(t)));
 	})?)?;
 
-	ctx.add_package("fs", fs)?;
-	ctx.add_package("window", window)?;
-	ctx.add_package("gfx", gfx)?;
-	ctx.add_package("http", http)?;
-	ctx.add_package("img", img)?;
-	ctx.add_package("audio", audio)?;
-	ctx.add_package("term", term)?;
+	return Ok(());
+
+}
+
+fn bind(ctx: &Context) -> Result<()> {
+
+	bind_vec(&ctx)?;
+
+	#[cfg(feature = "fs")]
+	bind_fs(&ctx)?;
+
+	#[cfg(feature = "gfx")]
+	bind_window(&ctx)?;
+	#[cfg(feature = "gfx")]
+	bind_gfx(&ctx)?;
+
+	#[cfg(feature = "img")]
+	bind_img(&ctx)?;
+
+	#[cfg(feature = "audio")]
+	bind_audio(&ctx)?;
+
+	#[cfg(feature = "http")]
+	bind_http(&ctx)?;
+
+	#[cfg(feature = "term")]
+	bind_term(&ctx)?;
+
 	ctx.add_package_from_lua("json", include_str!("res/json.lua"))?;
 
 	return Ok(());

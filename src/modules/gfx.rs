@@ -3,7 +3,10 @@
 use std::sync::Arc;
 
 use crate::math::*;
+
+#[cfg(feature = "img")]
 use crate::img::Image;
+
 use crate::*;
 
 pub struct Ctx {
@@ -73,6 +76,7 @@ pub struct Texture {
 	handle: Arc<ggl::Texture>,
 }
 
+#[cfg(feature = "img")]
 impl Texture {
 
 	pub fn from_image(img: Image) -> Self {
@@ -112,6 +116,7 @@ pub struct Canvas {
 
 }
 
+#[cfg(feature = "img")]
 impl Canvas {
 
 	/// create new canvas

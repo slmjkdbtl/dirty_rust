@@ -50,24 +50,28 @@ impl From<std::io::Error> for Error {
 	}
 }
 
+#[cfg(feature = "img")]
 impl From<image::ImageError> for Error {
 	fn from(_: image::ImageError) -> Self {
 		return Error::Image;
 	}
 }
 
+#[cfg(feature = "gfx")]
 impl From<glutin::CreationError> for Error {
 	fn from(_: glutin::CreationError) -> Self {
 		return Error::Window;
 	}
 }
 
+#[cfg(feature = "gfx")]
 impl From<glutin::ContextError> for Error {
 	fn from(_: glutin::ContextError) -> Self {
 		return Error::Window;
 	}
 }
 
+#[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {
 	fn from(_: rodio::decoder::DecoderError) -> Self {
 		return Error::Audio;
@@ -80,42 +84,49 @@ impl From<std::sync::mpsc::TryRecvError> for Error {
 	}
 }
 
+#[cfg(feature = "gfx")]
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Thread;
 	}
 }
 
+#[cfg(feature = "gfx")]
 impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
 	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
 		return Error::Window;
 	}
 }
 
+#[cfg(feature = "fs")]
 impl From<glob::PatternError> for Error {
 	fn from(_: glob::PatternError) -> Self {
 		return Error::IO;
 	}
 }
 
+#[cfg(feature = "http")]
 impl From<url::ParseError> for Error {
 	fn from(_: url::ParseError) -> Self {
 		return Error::Net;
 	}
 }
 
+#[cfg(feature = "http")]
 impl From<native_tls::Error> for Error {
 	fn from(_: native_tls::Error) -> Self {
 		return Error::Net;
 	}
 }
 
+#[cfg(feature = "http")]
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
 		return Error::Net;
 	}
 }
 
+#[cfg(feature = "http")]
 impl From<httparse::Error> for Error {
 	fn from(_: httparse::Error) -> Self {
 		return Error::HTTPMessage;
