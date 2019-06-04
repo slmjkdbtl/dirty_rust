@@ -429,27 +429,12 @@ fn bind_audio(ctx: &Context) -> Result<()> {
 
 	}
 
-	audio.set("load", ctx.create_function(|_, (v): (MultiValue)| {
+	audio.set("load_bytes", ctx.create_function(|_, (b): (Vec<u8>)| {
+		return Ok(audio::Sound::from_bytes(&b)?);
+	})?)?;
 
-		let values = v.into_vec();
-
-		if values.len() == 1 {
-			if let Some(v1) = values.get(0) {
-				if let Value::String(path) = v1 {
-					return Ok(audio::Sound::from_file(path.to_str()?)?);
-				} else if let Value::Table(t) = v1 {
-					let bytes = t
-						.clone()
-						.sequence_values::<u8>()
-						.flatten()
-						.collect::<Vec<u8>>();
-					return Ok(audio::Sound::from_bytes(&bytes)?);
-				}
-			}
-		}
-
-		return Err(Error::Image.into());
-
+	audio.set("load_file", ctx.create_function(|_, (p): (String)| {
+		return Ok(audio::Sound::from_file(&p)?);
 	})?)?;
 
 	audio.set("async_read", ctx.create_function(|_, (path): (String)| {
@@ -489,35 +474,12 @@ fn bind_img(ctx: &Context) -> Result<()> {
 
 	}
 
-	img.set("load", ctx.create_function(|_, (v): (MultiValue)| {
+	img.set("load_bytes", ctx.create_function(|_, (b): (Vec<u8>)| {
+		return Ok(img::Image::from_bytes(&b)?);
+	})?)?;
 
-		let values = v.into_vec();
-
-		if values.len() == 1 {
-
-			if let Some(v1) = values.get(0) {
-
-				if let Value::String(path) = v1 {
-
-					return Ok(img::Image::from_file(path.to_str()?)?);
-
-				} else if let Value::Table(t) = v1 {
-
-					let bytes = t
-						.clone()
-						.sequence_values::<u8>()
-						.flatten()
-						.collect::<Vec<u8>>();
-
-					return Ok(img::Image::from_bytes(&bytes)?);
-
-				}
-			}
-
-		}
-
-		return Err(Error::Image.into());
-
+	img.set("load_file", ctx.create_function(|_, (p): (String)| {
+		return Ok(img::Image::from_file(&p)?);
 	})?)?;
 
 	ctx.add_module("img", img)?;
@@ -674,23 +636,71 @@ fn bind_term(ctx: &Context) -> Result<()> {
 
 }
 
+#[cfg(feature = "ase")]
+fn bind_ase(ctx: &Context) -> Result<()> {
+
+	let ase = ctx.create_table()?;
+
+	impl UserData for ase::AnimDir {}
+	impl UserData for ase::Anim {}
+	impl UserData for ase::SpriteData {}
+
+	ase.set("from_file", ctx.create_function(|_, (path): (String)| {
+		return Ok(ase::SpriteData::from_file(path)?);
+	})?)?;
+
+	ase.set("from_json", ctx.create_function(|_, (data): (String)| {
+		return Ok(ase::SpriteData::from_json(&data));
+	})?)?;
+
+	ctx.add_module("ase", ase)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "col")]
+fn bind_col(ctx: &Context) -> Result<()> {
+
+	use math::*;
+
+	let col = ctx.create_table()?;
+
+	col.set("rect_rect", ctx.create_function(|_, (r1, r2): (Rect, Rect)| {
+		return Ok(col::rect_rect(r1, r2));
+	})?)?;
+
+	col.set("line_line", ctx.create_function(|_, (p1, p2, p3, p4): (Vec2, Vec2, Vec2, Vec2)| {
+		return Ok(col::line_line((p1, p2), (p3, p4)));
+	})?)?;
+
+	col.set("line_poly", ctx.create_function(|_, (p1, p2, poly): (Vec2, Vec2, Vec<Vec2>)| {
+		return Ok(col::line_poly((p1, p2), &poly));
+	})?)?;
+
+	col.set("poly_poly", ctx.create_function(|_, (p1, p2): (Vec<Vec2>, Vec<Vec2>)| {
+		return Ok(col::poly_poly(&p1, &p2));
+	})?)?;
+
+	col.set("point_rect", ctx.create_function(|_, (pt, r): (Vec2, Rect)| {
+		return Ok(col::point_rect(pt, r));
+	})?)?;
+
+	col.set("point_poly", ctx.create_function(|_, (pt, p): (Vec2, Vec<Vec2>)| {
+		return Ok(col::point_poly(pt, &p));
+	})?)?;
+
+	return Ok(());
+
+}
+
 fn bind_vec(ctx: &Context) -> Result<()> {
+
+	use math::*;
 
 	let globals = ctx.globals();
 
-	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
-				return Ok(t.poll());
-			});
-
-		}
-
-	}
-
-	impl UserData for math::Vec2 {
+	impl UserData for Vec2 {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
@@ -706,11 +716,11 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 
 	}
 
-	impl UserData for math::Vec3 {}
-	impl UserData for math::Vec4 {}
-	impl UserData for math::Mat4 {}
-	impl UserData for math::Color {}
-	impl UserData for math::Rect {}
+	impl UserData for Vec3 {}
+	impl UserData for Vec4 {}
+	impl UserData for Mat4 {}
+	impl UserData for Color {}
+	impl UserData for Rect {}
 
 	globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
 		return Ok(vec2!(x, y));
@@ -740,9 +750,28 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 
 }
 
+fn bind_thread(ctx: &Context) -> Result<()> {
+
+	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
+				return Ok(t.poll());
+			});
+
+		}
+
+	}
+
+	return Ok(());
+
+}
+
 fn bind(ctx: &Context) -> Result<()> {
 
 	bind_vec(&ctx)?;
+	bind_thread(&ctx)?;
 
 	#[cfg(feature = "fs")]
 	bind_fs(&ctx)?;
@@ -763,6 +792,12 @@ fn bind(ctx: &Context) -> Result<()> {
 
 	#[cfg(feature = "term")]
 	bind_term(&ctx)?;
+
+	#[cfg(feature = "ase")]
+	bind_ase(&ctx)?;
+
+	#[cfg(feature = "col")]
+	bind_col(&ctx)?;
 
 	ctx.add_module_from_lua("json", include_str!("res/json.lua"))?;
 

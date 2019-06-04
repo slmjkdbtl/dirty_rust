@@ -23,3 +23,6 @@ pub mod term;
 #[cfg(feature = "col")]
 pub mod col;
 
+#[cfg(feature = "ase")]
+pub mod ase;
+
