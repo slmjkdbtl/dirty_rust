@@ -1,17 +1,14 @@
 -- wengwengweng
 
+local fs = require("fs")
 local http = require("http")
 
 http.serve("localhost", 7878, function(req)
-
-	local path = req:path()
-
-	if path == "/" then
-		print("hi")
+	if req:path() == "/" then
+		return http.response(fs.read_str("examples/res/index.html"));
 	else
-		print("no")
+		return http.response("no")
 	end
-
 end)
 
 

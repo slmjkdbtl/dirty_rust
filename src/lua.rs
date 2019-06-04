@@ -533,10 +533,13 @@ fn bind_http(ctx: &Context) -> Result<()> {
 		return Ok(http::post(&uri, &data)?);
 	})?)?;
 
-	http.set("serve", ctx.create_function(|cctx, (loc, port, handler): (String, u16, rlua::Function)| {
+	http.set("response", ctx.create_function(|_, (s): (String)| {
+		return Ok(http::Response::new(&s));
+	})?)?;
+
+	http.set("serve", ctx.create_function(|_, (loc, port, handler): (String, u16, rlua::Function)| {
 		return Ok(http::serve(&loc, port, |req| {
-			let res = handler.call::<_, Option<http::Response>>(req).ok();
-			return Some(http::Response::success("yo"));
+			return handler.call::<_, http::Response>(req).ok();
 		})?);
 	})?)?;
 

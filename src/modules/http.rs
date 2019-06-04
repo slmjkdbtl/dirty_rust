@@ -156,7 +156,7 @@ pub struct Request {
 	body: Vec<u8>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Response {
 	body: Vec<u8>,
 	code: u16,
@@ -164,6 +164,14 @@ pub struct Response {
 }
 
 impl Response {
+
+	pub fn new(body: impl AsRef<[u8]>) -> Self {
+		return Self {
+			body: body.as_ref().to_owned(),
+			code: 200,
+			headers: HashMap::new(),
+		};
+	}
 
 	pub fn from_raw(buf: &[u8]) -> Result<Self> {
 
