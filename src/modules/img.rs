@@ -6,7 +6,6 @@ use std::path::Path;
 
 #[cfg(feature = "fs")]
 use crate::fs;
-
 #[cfg(not(feature = "fs"))]
 use std::fs;
 

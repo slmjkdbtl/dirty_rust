@@ -1,13 +1,13 @@
 # wengwengweng
 
 == DOING
+- clearer error messages
 
 == TODO
 - http less allocation / copying
 - gfx
 - gamepads
 - ketos
-- clearer error messages
 
 == DONE
 - refactor http

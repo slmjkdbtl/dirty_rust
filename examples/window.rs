@@ -6,6 +6,7 @@ use dirty::window::Key;
 fn main() {
 
 	let mut win = window::Window::new(window::Conf::default()).expect("failed to create window");
+	let a = gfx::Texture::from_bytes(include_bytes!("res/car.png"));
 
 	win.run(|ctx| {
 

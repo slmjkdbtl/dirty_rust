@@ -20,10 +20,8 @@ fn get_res_dir() -> Result<PathBuf> {
 	let path = bundle
 		.executable_url().ok_or(Error::IO)?
 		.to_path().ok_or(Error::IO)?
-		.parent()
-		.unwrap()
-		.parent()
-		.unwrap()
+		.parent().ok_or(Error::IO)?
+		.parent().ok_or(Error::IO)?
 		.join("Resources");
 
 	return Ok(path);
@@ -74,7 +72,8 @@ pub fn exists(path: impl AsRef<Path>) -> bool {
 pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 	let listings = glob::glob(&format!("{}", pat))
-		.or(glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)))?;
+		.or(glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)))
+		.map_err(|_| Error::DirRead(PathBuf::from(pat)))?;
 
 	return Ok(listings
 		.map(|s| s.expect("failed to glob"))
@@ -86,9 +85,11 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
-	let path = validate_path(path).ok_or(Error::IO)?;
+	let path = validate_path(path)
+		.ok_or(Error::FileRead(path.to_owned()))?;
 
-	return Ok(fs::read(&path)?);
+	return fs::read(&path)
+		.map_err(|_| Error::FileRead(path.to_owned()));
 
 }
 
@@ -96,9 +97,11 @@ pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = validate_path(path).ok_or(Error::IO)?;
+	let path = validate_path(path)
+		.ok_or(Error::FileRead(path.to_owned()))?;
 
-	return Ok(fs::read_to_string(&path)?);
+	return fs::read_to_string(&path)
+		.map_err(|_| Error::FileRead(path.to_owned()));
 
 }
 
@@ -106,25 +109,37 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = validate_path(path).ok_or(Error::IO)?;
+	let path = validate_path(path)
+		.ok_or(Error::FileBasename(path.to_owned()))?;
 
 	return Ok(
 		Path::new(&path)
 			.file_stem()
-			.ok_or(Error::IO)?
+			.ok_or(Error::FileBasename(path.to_owned()))?
 			.to_str()
-			.ok_or(Error::IO)?
+			.ok_or(Error::FileBasename(path.to_owned()))?
 			.to_owned()
 	);
 
 }
 
 pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64> {
-	return Ok(fs::copy(p1, p2)?);
+
+	let p1 = p1.as_ref();
+	let p2 = p2.as_ref();
+
+	return fs::copy(p1, p2)
+		.map_err(|_| Error::FileCopy(p1.to_owned(), p2.to_owned()));
+
 }
 
 pub fn mkdir(path: impl AsRef<Path>) -> Result<()> {
-	return Ok(fs::create_dir_all(path)?);
+
+	let path = path.as_ref();
+
+	return fs::create_dir_all(path)
+		.map_err(|_| Error::Mkdir(path.to_owned()));
+
 }
 
 pub fn is_file(path: impl AsRef<Path>) -> bool {
@@ -136,28 +151,55 @@ pub fn is_dir(path: impl AsRef<Path>) -> bool {
 }
 
 pub fn remove(path: impl AsRef<Path>) -> Result<()> {
-	return Ok(fs::remove_file(path)?);
+
+	let path = path.as_ref();
+
+	return fs::remove_file(path)
+		.map_err(|_| Error::FileRemove(path.to_owned()));
+
 }
 
 pub fn remove_dir(path: impl AsRef<Path>) -> Result<()> {
-	return Ok(fs::remove_dir(path)?);
+
+	let path = path.as_ref();
+
+	return fs::remove_dir(path)
+		.map_err(|_| Error::DirRemove(path.to_owned()));
+
 }
 
-pub fn rename(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
-	return Ok(fs::rename(old, new)?);
+pub fn rename(path: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
+
+	let path = path.as_ref();
+
+	return fs::rename(path, new)
+		.map_err(|_| Error::Rename(path.to_owned()));
+
 }
 
 pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
-	return Ok(fs::write(path, content)?);
+
+	let path = path.as_ref();
+
+	return fs::write(path, content)
+		.map_err(|_| Error::FileWrite(path.to_owned()));
+
 }
 
 pub fn size(path: impl AsRef<Path>) -> Result<u64> {
-	return Ok(fs::metadata(path)?.len());
+
+	let path = path.as_ref();
+	let len = fs::metadata(path)
+		.map_err(|_| Error::FileRead(path.to_owned()))?
+		.len();
+
+	return Ok(len);
+
 }
 
 pub fn data_dir(name: &str) -> Result<PathBuf> {
 
-	let dirs = BaseDirs::new().ok_or(Error::IO)?;
+	let dirs = BaseDirs::new().ok_or(Error::GetDataDir)?;
 	let data_dir = dirs.data_dir();
 	let data_dir = data_dir.join(name);
 

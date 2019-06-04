@@ -11,7 +11,7 @@ edition = "2018"
 readme = "README.md"
 
 [features]
-default = [ "lua", "fs", "gfx", "img", "audio", "http", "term" ]
+default = [ "lua", "fs", "gfx", "img", "audio", "http", "term", "col", ]
 
 lua = [
 	"rlua",
@@ -48,9 +48,12 @@ term = [
 	"console",
 ]
 
+col = []
+
 [dependencies]
 rand = "0.6"
 derive_more = "0.14"
+rayon = "1.0"
 
 directories = { version = "2.0", optional = true }
 glob = { version = "0.3", optional = true }
