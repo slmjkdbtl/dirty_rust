@@ -513,31 +513,12 @@ fn bind_http(ctx: &Context) -> Result<()> {
 
 	}
 
-	impl UserData for &http::Request {
+	impl UserData for http::Request {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 			methods.add_method("path", |_, req, ()| {
 				return Ok(req.path().to_owned());
-			});
-
-		}
-
-	}
-
-	impl UserData for http::Server {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method("serve", |_, serv, ()| {
-				return Ok(serv.serve()?);
-			});
-
-			methods.add_method_mut("handle", |ctx, serv, (f): (rlua::Function)| {
-				return Ok(serv.handle(move |req| {
-// 					f.call::<_, ()>(());
-					return None;
-				}));
 			});
 
 		}
@@ -552,8 +533,11 @@ fn bind_http(ctx: &Context) -> Result<()> {
 		return Ok(http::post(&uri, &data)?);
 	})?)?;
 
-	http.set("server", ctx.create_function(|_, (loc, port): (String, u16)| {
-		return Ok(http::server(&loc, port));
+	http.set("serve", ctx.create_function(|cctx, (loc, port, handler): (String, u16, rlua::Function)| {
+		return Ok(http::serve(&loc, port, |req| {
+			let res = handler.call::<_, Option<http::Response>>(req).ok();
+			return Some(http::Response::success("yo"));
+		})?);
 	})?)?;
 
 	ctx.add_module("http", http)?;

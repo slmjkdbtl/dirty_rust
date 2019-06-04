@@ -121,87 +121,26 @@ impl FromStr for Version {
 
 }
 
-#[derive(Hash, Clone, PartialEq, Eq, Debug)]
-pub enum Handle {
-	GET(String),
-	POST(String),
-}
+pub fn serve<F: Fn(Request) -> Option<Response>>(loc: &str, port: u16, handler: F) -> Result<()> {
 
-pub struct Server {
-	location: String,
-	port: u16,
-	handlers: Vec<Box<Fn(&Request) -> Option<Response>>>,
-}
+	let listener = TcpListener::bind((loc, port))?;
 
-unsafe impl Send for Server {}
+	for stream in listener.incoming() {
 
-impl Server {
+		let mut stream = stream?;
+		let mut buf = [0; 512];
 
-	pub fn new(loc: &str, port: u16) -> Self {
-		return Self {
-			location: loc.to_owned(),
-			port: port,
-			handlers: Vec::new(),
-		};
-	}
+		stream.read(&mut buf)?;
 
-	pub fn handle<F: Fn(&Request) -> Option<Response> + 'static>(&mut self, f: F) {
-		self.handlers.push(Box::new(f));
-	}
+		let req = Request::from_raw(&buf)?;
 
-	pub fn get<T: AsRef<[u8]>, F: Fn() -> T + 'static>(&mut self, path: &str, f: F) {
-
-		let path = path.to_owned();
-
-		self.handle(move |req| {
-			if req.method() == Method::GET && req.path() == path {
-				return Some(Response::success(f()));
-			} else {
-				return None;
-			}
-		});
-
-	}
-
-	pub fn statics(&mut self, path: &str, folder: impl AsRef<Path>) {
-
-		let path = path.to_owned();
-		let folder = folder.as_ref().to_owned();
-
-		self.handle(move |req| {
-
-			let path = req.path();
-
-			return None;
-
-		});
-
-	}
-
-	pub fn serve(&self) -> Result<()> {
-
-		let listener = TcpListener::bind((&self.location[..], self.port))?;
-
-		for stream in listener.incoming() {
-
-			let mut stream = stream?;
-			let mut buf = [0; 512];
-
-			stream.read(&mut buf)?;
-
-			let req = Request::from_raw(&buf)?;
-
-			for handler in &self.handlers {
-				if let Some(res) = handler(&req) {
-					stream.write_all(&res.message())?;
-				}
-			}
-
+		if let Some(res) = handler(req) {
+			stream.write_all(&res.message());
 		}
 
-		return Ok(());
-
 	}
+
+	return Ok(());
 
 }
 
@@ -217,7 +156,7 @@ pub struct Request {
 	body: Vec<u8>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Response {
 	body: Vec<u8>,
 	code: u16,
@@ -374,13 +313,6 @@ impl Request {
 		self.body = data.as_ref().to_owned();
 	}
 
-	pub fn handle(&self) -> Handle {
-		return match self.method {
-			Method::GET => Handle::GET(self.path.to_owned()),
-			Method::POST => Handle::POST(self.path.to_owned()),
-		};
-	}
-
 	pub fn message(&self) -> Vec<u8> {
 
 		let mut m = String::new();
@@ -447,9 +379,5 @@ pub fn get(url: &str) -> Result<Response> {
 
 pub fn post(url: &str, data: &[u8]) -> Result<Response> {
 	return Request::get(url)?.send(Some(data));
-}
-
-pub fn server(loc: &str, port: u16) -> Server {
-	return Server::new(loc, port);
 }
 

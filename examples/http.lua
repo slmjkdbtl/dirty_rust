@@ -1,11 +1,17 @@
 -- wengwengweng
 
 local http = require("http")
-local server = http.server("127.0.0.1", 7878)
 
-server:get("/", function()
-	return "123"
+http.serve("localhost", 7878, function(req)
+
+	local path = req:path()
+
+	if path == "/" then
+		print("hi")
+	else
+		print("no")
+	end
+
 end)
 
-server:serve()
 
