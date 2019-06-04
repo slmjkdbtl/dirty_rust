@@ -690,6 +690,10 @@ fn bind_col(ctx: &Context) -> Result<()> {
 		return Ok(col::point_poly(pt, &p));
 	})?)?;
 
+	col.set("sat", ctx.create_function(|_, (p1, p2): (Vec<Vec2>, Vec<Vec2>)| {
+		return Ok(col::sat(&p1, &p2));
+	})?)?;
+
 	return Ok(());
 
 }
@@ -742,15 +746,13 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 		return Ok(rect!(x, y, w, h));
 	})?)?;
 
-	globals.set("sleep", ctx.create_function(|_, (t): (u64)| {
-		return Ok(std::thread::sleep(std::time::Duration::from_millis(t)));
-	})?)?;
-
 	return Ok(());
 
 }
 
 fn bind_thread(ctx: &Context) -> Result<()> {
+
+	let globals = ctx.globals();
 
 	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
 
@@ -763,6 +765,10 @@ fn bind_thread(ctx: &Context) -> Result<()> {
 		}
 
 	}
+
+	globals.set("sleep", ctx.create_function(|_, (t): (u64)| {
+		return Ok(std::thread::sleep(std::time::Duration::from_millis(t)));
+	})?)?;
 
 	return Ok(());
 
