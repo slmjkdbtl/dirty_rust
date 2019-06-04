@@ -6,7 +6,7 @@ use http::Method;
 
 fn main() {
 
-	let mut server = http::server("127.0.0.1", 7878);
+	let mut server = http::server("localhost", 7878);
 
 	server.statics("/", "res/");
 

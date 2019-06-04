@@ -180,7 +180,7 @@ impl Server {
 
 	pub fn serve(&self) -> Result<()> {
 
-		let listener = TcpListener::bind((&self.location[..], self.port)).unwrap();
+		let listener = TcpListener::bind((&self.location[..], self.port))?;
 
 		for stream in listener.incoming() {
 
@@ -205,6 +205,7 @@ impl Server {
 
 }
 
+#[derive(Clone)]
 pub struct Request {
 	method: Method,
 	scheme: Scheme,
@@ -216,6 +217,7 @@ pub struct Request {
 	body: Vec<u8>,
 }
 
+#[derive(Clone)]
 pub struct Response {
 	body: Vec<u8>,
 	code: u16,

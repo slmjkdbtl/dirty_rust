@@ -20,5 +20,6 @@ pub mod http;
 #[cfg(feature = "term")]
 pub mod term;
 
+#[cfg(feature = "col")]
 pub mod col;
 

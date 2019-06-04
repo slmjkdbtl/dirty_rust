@@ -7,6 +7,14 @@ use std::fmt;
 pub enum Error {
 	FileWrite(PathBuf),
 	FileRead(PathBuf),
+	FileBasename(PathBuf),
+	FileCopy(PathBuf, PathBuf),
+	FileRemove(PathBuf),
+	Rename(PathBuf),
+	DirRead(PathBuf),
+	DirRemove(PathBuf),
+	Mkdir(PathBuf),
+	GetDataDir,
 	IO,
 	Net,
 	Image,
@@ -26,6 +34,14 @@ impl fmt::Display for Error {
 		return match self {
 			Error::FileWrite(p) => write!(f, "failed to write {}", p.display()),
 			Error::FileRead(p) => write!(f, "failed to read {}", p.display()),
+			Error::FileBasename(p) => write!(f, "failed to get basename for {}", p.display()),
+			Error::FileCopy(p1, p2) => write!(f, "failed to copy {} to {}", p1.display(), p2.display()),
+			Error::FileRemove(p) => write!(f, "failed to remove file {}", p.display()),
+			Error::DirRemove(p) => write!(f, "failed to remove dir {}", p.display()),
+			Error::DirRead(p) => write!(f, "failed to read dir {}", p.display()),
+			Error::Mkdir(p) => write!(f, "failed to create directory {}", p.display()),
+			Error::Rename(p) => write!(f, "failed to rename {}", p.display()),
+			Error::GetDataDir => write!(f, "failed to get data dir"),
 			Error::IO => write!(f, "io error"),
 			Error::Net => write!(f, "network error"),
 			Error::Image => write!(f, "image error"),
@@ -95,13 +111,6 @@ impl From<gilrs::Error> for Error {
 impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
 	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
 		return Error::Window;
-	}
-}
-
-#[cfg(feature = "fs")]
-impl From<glob::PatternError> for Error {
-	fn from(_: glob::PatternError) -> Self {
-		return Error::IO;
 	}
 }
 

@@ -14,6 +14,7 @@ use rlua::Context;
 use rlua::ToLua;
 use rlua::FromLua;
 use rlua::Table;
+use rlua::MultiValue;
 
 use crate::*;
 use crate::Error;
@@ -32,19 +33,19 @@ impl From<rlua::Error> for Error {
 
 trait ContextExt<'lua> {
 
-	fn add_package<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
-	fn add_package_from_lua(&self, name: &str, code: &str) -> rlua::Result<()>;
+	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
+	fn add_module_from_lua(&self, name: &str, code: &str) -> rlua::Result<()>;
 	fn ext_std(&self, modname: &str, fname: &str, f: rlua::Function) -> rlua::Result<()>;
 
 }
 
 impl<'lua> ContextExt<'lua> for Context<'lua> {
 
-	fn add_package_from_lua(&self, name: &str, code: &str) -> rlua::Result<()> {
-		return self.add_package(name, self.load(code).eval::<Value>()?);
+	fn add_module_from_lua(&self, name: &str, code: &str) -> rlua::Result<()> {
+		return self.add_module(name, self.load(code).eval::<Value>()?);
 	}
 
-	fn add_package<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()> {
+	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()> {
 
 		let preloads: Table = self.globals().get::<_, Table>("package")?.get("preload")?;
 
@@ -116,7 +117,7 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 
 	fs.set("async_read", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
-			return fs::read(&path).unwrap();
+			return fs::read(&path).ok();
 		}));
 	})?)?;
 
@@ -126,7 +127,7 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 
 	fs.set("async_read_str", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
-			return fs::read_str(&path).unwrap();
+			return fs::read_str(&path).ok();
 		}));
 	})?)?;
 
@@ -166,7 +167,7 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 		return Ok(format!("{}", fs::join(&a, &b).display()));
 	})?)?;
 
-	ctx.add_package("fs", fs)?;
+	ctx.add_module("fs", fs)?;
 
 	return Ok(());
 
@@ -317,33 +318,39 @@ fn bind_window(ctx: &Context) -> Result<()> {
 			return Ok(win.borrow_mut().set_title(&s));
 		});
 
-		methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
-			return Ok(win.borrow_mut().run(|c| {
-				ctx.scope(|s| -> rlua::Result<()> {
-					return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
-				});
-			})?);
-		});
-
 	}
 
 	impl UserData for window::Window {
+
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
 			add_window_methods(methods);
+
+			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
+				return Ok(win.borrow_mut().run(|c| {
+					ctx.scope(|s| -> rlua::Result<()> {
+						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
+					});
+				})?);
+			});
+
 		}
+
 	}
 
 	impl UserData for &mut window::Window {
+
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 			add_window_methods(methods);
 		}
+
 	}
 
 	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
 		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?)?);
 	})?)?;
 
-	ctx.add_package("window", window)?;
+	ctx.add_module("window", window)?;
 
 	return Ok(());
 
@@ -367,7 +374,7 @@ fn bind_gfx(ctx: &Context) -> Result<()> {
 		return Ok(gfx::Canvas::new(w, h));
 	})?)?;
 
-	ctx.add_package("gfx", gfx)?;
+	ctx.add_module("gfx", gfx)?;
 
 	return Ok(());
 
@@ -422,21 +429,98 @@ fn bind_audio(ctx: &Context) -> Result<()> {
 
 	}
 
-	audio.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
-		return Ok(audio::Sound::from_bytes(&data)?);
+	audio.set("load", ctx.create_function(|_, (v): (MultiValue)| {
+
+		let values = v.into_vec();
+
+		if values.len() == 1 {
+			if let Some(v1) = values.get(0) {
+				if let Value::String(path) = v1 {
+					return Ok(audio::Sound::from_file(path.to_str()?)?);
+				} else if let Value::Table(t) = v1 {
+					let bytes = t
+						.clone()
+						.sequence_values::<u8>()
+						.flatten()
+						.collect::<Vec<u8>>();
+					return Ok(audio::Sound::from_bytes(&bytes)?);
+				}
+			}
+		}
+
+		return Err(Error::Image.into());
+
 	})?)?;
 
-	audio.set("load_file", ctx.create_function(|_, (path): (String)| {
-		return Ok(audio::Sound::from_file(&path)?);
-	})?)?;
-
-	audio.set("async_load_file", ctx.create_function(|_, (path): (String)| {
+	audio.set("async_read", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
-			return audio::Sound::from_file(&path).unwrap();
+			return audio::Sound::from_file(&path).ok();
 		}));
 	})?)?;
 
-	ctx.add_package("audio", audio)?;
+	ctx.add_module("audio", audio)?;
+
+	return Ok(());
+
+}
+
+#[cfg(feature = "img")]
+fn bind_img(ctx: &Context) -> Result<()> {
+
+	let img = ctx.create_table()?;
+
+	impl UserData for img::Image {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("width", |_, img, ()| {
+				return Ok(img.width());
+			});
+
+			methods.add_method("height", |_, img, ()| {
+				return Ok(img.height());
+			});
+
+			methods.add_method("write", |_, img, (path): (String)| {
+				return Ok(img.write(path)?);
+			});
+
+		}
+
+	}
+
+	img.set("load", ctx.create_function(|_, (v): (MultiValue)| {
+
+		let values = v.into_vec();
+
+		if values.len() == 1 {
+
+			if let Some(v1) = values.get(0) {
+
+				if let Value::String(path) = v1 {
+
+					return Ok(img::Image::from_file(path.to_str()?)?);
+
+				} else if let Value::Table(t) = v1 {
+
+					let bytes = t
+						.clone()
+						.sequence_values::<u8>()
+						.flatten()
+						.collect::<Vec<u8>>();
+
+					return Ok(img::Image::from_bytes(&bytes)?);
+
+				}
+			}
+
+		}
+
+		return Err(Error::Image.into());
+
+	})?)?;
+
+	ctx.add_module("img", img)?;
 
 	return Ok(());
 
@@ -487,7 +571,7 @@ fn bind_http(ctx: &Context) -> Result<()> {
 				return Ok(serv.serve()?);
 			});
 
-			methods.add_method_mut("handle", |_, serv, (f): (rlua::Function)| {
+			methods.add_method_mut("handle", |ctx, serv, (f): (rlua::Function)| {
 				return Ok(serv.handle(move |req| {
 // 					f.call::<_, ()>(());
 					return None;
@@ -510,7 +594,7 @@ fn bind_http(ctx: &Context) -> Result<()> {
 		return Ok(http::server(&loc, port));
 	})?)?;
 
-	ctx.add_package("http", http)?;
+	ctx.add_module("http", http)?;
 
 	return Ok(());
 
@@ -584,42 +668,7 @@ fn bind_term(ctx: &Context) -> Result<()> {
 	wrap_ansi!(bold);
 	wrap_ansi!(italic);
 
-	ctx.add_package("term", term)?;
-
-	return Ok(());
-
-}
-
-#[cfg(feature = "img")]
-fn bind_img(ctx: &Context) -> Result<()> {
-
-	let img = ctx.create_table()?;
-
-	impl UserData for img::Image {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method("width", |_, img, ()| {
-				return Ok(img.width());
-			});
-
-			methods.add_method("height", |_, img, ()| {
-				return Ok(img.height());
-			});
-
-			methods.add_method("write", |_, img, (path): (String)| {
-				return Ok(img.write(path)?);
-			});
-
-		}
-
-	}
-
-	img.set("load", ctx.create_function(|_, (data): (Vec<u8>)| {
-		return Ok(img::Image::from_bytes(&data)?);
-	})?)?;
-
-	ctx.add_package("img", img)?;
+	ctx.add_module("term", term)?;
 
 	return Ok(());
 
@@ -715,7 +764,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	#[cfg(feature = "term")]
 	bind_term(&ctx)?;
 
-	ctx.add_package_from_lua("json", include_str!("res/json.lua"))?;
+	ctx.add_module_from_lua("json", include_str!("res/json.lua"))?;
 
 	return Ok(());
 
