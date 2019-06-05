@@ -8,6 +8,7 @@ pub enum Error {
 	FileWrite(PathBuf),
 	FileRead(PathBuf),
 	FileBasename(PathBuf),
+	FileExt(PathBuf),
 	FileCopy(PathBuf, PathBuf),
 	FileRemove(PathBuf),
 	Rename(PathBuf),
@@ -35,6 +36,7 @@ impl fmt::Display for Error {
 			Error::FileWrite(p) => write!(f, "failed to write {}", p.display()),
 			Error::FileRead(p) => write!(f, "failed to read {}", p.display()),
 			Error::FileBasename(p) => write!(f, "failed to get basename for {}", p.display()),
+			Error::FileExt(p) => write!(f, "failed to get extension for {}", p.display()),
 			Error::FileCopy(p1, p2) => write!(f, "failed to copy {} to {}", p1.display(), p2.display()),
 			Error::FileRemove(p) => write!(f, "failed to remove file {}", p.display()),
 			Error::DirRemove(p) => write!(f, "failed to remove dir {}", p.display()),
@@ -151,6 +153,12 @@ impl From<std::string::FromUtf8Error> for Error {
 impl From<String> for Error {
 	fn from(s: String) -> Self {
 		return Error::Misc(s);
+	}
+}
+
+impl From<std::ffi::OsString> for Error {
+	fn from(s: std::ffi::OsString) -> Self {
+		return Error::Misc(String::new());
 	}
 }
 

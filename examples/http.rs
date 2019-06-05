@@ -2,19 +2,13 @@
 
 use dirty::*;
 use http::Response;
-use http::Method;
+use http::ContentType;
 
 fn main() {
 
-	let mut server = http::server("localhost", 7878);
-
-	server.statics("/", "res/");
-
-	server.get("/", || {
-		return include_bytes!("res/index.html").to_vec();
+	http::serve("localhost", 7878, |req| {
+		return Response::new(ContentType::Text, "yo");
 	});
-
-	server.serve();
 
 }
 

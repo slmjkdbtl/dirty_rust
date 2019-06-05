@@ -57,10 +57,11 @@ pub enum Method {
 
 impl ToString for Method {
 	fn to_string(&self) -> String {
+		use Method::*;
 		return match self {
-			Method::GET => String::from("GET"),
-			Method::POST => String::from("POST"),
-		};
+			GET => "GET",
+			POST => "POST",
+		}.to_owned();
 	}
 }
 
@@ -121,27 +122,17 @@ impl FromStr for Version {
 
 }
 
-pub fn serve<F: Fn(Request) -> Option<Response>>(loc: &str, port: u16, handler: F) -> Result<()> {
+pub struct Router {
+	handlers: Vec<Box<Fn(&Request) -> Option<Response>>>,
+}
 
-	let listener = TcpListener::bind((loc, port))?;
-
-	for stream in listener.incoming() {
-
-		let mut stream = stream?;
-		let mut buf = [0; 512];
-
-		stream.read(&mut buf)?;
-
-		let req = Request::from_raw(&buf)?;
-
-		if let Some(res) = handler(req) {
-			stream.write_all(&res.message());
-		}
-
+impl Router {
+	pub fn get<D: AsRef<[u8]>, F: Fn() -> D + 'static>(&mut self, pat: &str, f: F) {
+		self.handlers.push(Box::new(move |req| {
+			f();
+			return None;
+		}));
 	}
-
-	return Ok(());
-
 }
 
 #[derive(Clone)]
@@ -152,7 +143,7 @@ pub struct Request {
 	host: String,
 	path: String,
 	port: u16,
-	headers: HashMap<String, String>,
+	headers: HeaderMap,
 	body: Vec<u8>,
 }
 
@@ -160,17 +151,151 @@ pub struct Request {
 pub struct Response {
 	body: Vec<u8>,
 	code: u16,
-	headers: HashMap<String, String>,
+	headers: HeaderMap,
+}
+
+#[derive(Clone)]
+pub struct HeaderMap {
+	map: HashMap<Header, String>,
+}
+
+impl HeaderMap {
+	pub fn new() -> Self {
+		return Self {
+			map: HashMap::new(),
+		};
+	}
+	pub fn add(&mut self, key: Header, val: &str) {
+		self.map.insert(key, val.to_owned());
+	}
+}
+
+impl ToString for HeaderMap {
+	fn to_string(&self) -> String {
+		let mut m = String::new();
+		for (key, val) in &self.map {
+			m.push_str(&format!("{}: {}", key.to_string(), val));
+			m.push_str("\r\n");
+		}
+		return m;
+	}
+}
+
+#[derive(Hash, PartialEq, Eq, Clone)]
+pub enum Header {
+	ContentType,
+	Connection,
+	Host,
+}
+
+impl ToString for Header {
+	fn to_string(&self) -> String {
+		use Header::*;
+		return match self {
+			ContentType => "Content-Type",
+			Connection => "Connection",
+			Host => "Host",
+		}.to_owned();
+	}
+}
+
+pub enum ContentType {
+	Text,
+	HTML,
+	CSS,
+	JavaScript,
+	JSON,
+	Markdown,
+	PNG,
+	JPEG,
+	GIF,
+	PDF,
+	MP3,
+	OGG,
+	WAV,
+	MIDI,
+	TTF,
+	OTF,
+	WOFF,
+	WOFF2,
+	MP4,
+	ZIP,
+}
+
+impl ToString for ContentType {
+	fn to_string(&self) -> String {
+		use ContentType::*;
+		return match self {
+			Text => "text/plain; charset=utf-8",
+			HTML => "text/html; charset=utf-8",
+			Markdown => "text/markdown; charset=utf-8",
+			CSS => "text/css; charset=utf-8",
+			PNG => "image/png",
+			JPEG => "image/jpeg",
+			GIF => "image/gif",
+			PDF => "application/pdf",
+			JavaScript => "application/javascript; charset=utf-8",
+			JSON => "application/json; charset=utf-8",
+			ZIP => "application/zip",
+			MP3 => "audio/mpeg",
+			OGG => "audio/ogg",
+			WAV => "audio/wav",
+			MIDI => "audio/midi",
+			TTF => "font/ttf",
+			OTF => "font/otf",
+			WOFF => "font/woff",
+			WOFF2 => "font/woff2",
+			MP4 => "video/mp4",
+		}.to_owned();
+	}
+}
+
+impl ContentType {
+
+	pub fn from_ext(ext: &str) -> Option<Self> {
+		use ContentType::*;
+		return match ext {
+			"txt" => Some(Text),
+			"html" => Some(HTML),
+			"md" => Some(Markdown),
+			"css" => Some(CSS),
+			"png" => Some(PNG),
+			"jpeg" => Some(JPEG),
+			"jpg" => Some(JPEG),
+			"gif" => Some(GIF),
+			"pdf" => Some(PDF),
+			"js" => Some(JavaScript),
+			"json" => Some(JSON),
+			"mp3" => Some(MP3),
+			"ogg" => Some(OGG),
+			"wav" => Some(WAV),
+			"midi" => Some(MIDI),
+			"ttf" => Some(TTF),
+			"otf" => Some(OTF),
+			"woff" => Some(WOFF),
+			"woff2" => Some(WOFF2),
+			"mp4" => Some(MP4),
+			"zip" => Some(ZIP),
+			_ => None,
+		};
+	}
+
 }
 
 impl Response {
 
-	pub fn new(body: impl AsRef<[u8]>) -> Self {
+	pub fn new(t: ContentType, body: impl AsRef<[u8]>) -> Self {
+
+		let mut headers = HeaderMap::new();
+
+		headers.add(Header::ContentType, &t.to_string());
+
 		return Self {
 			body: body.as_ref().to_owned(),
 			code: 200,
-			headers: HashMap::new(),
+			headers: headers,
 		};
+
 	}
 
 	pub fn from_raw(buf: &[u8]) -> Result<Self> {
@@ -188,17 +313,9 @@ impl Response {
 		return Ok(Self {
 			body: body.to_owned(),
 			code: res.code.ok_or(Error::Net)?,
-			headers: HashMap::new(),
+			headers: HeaderMap::new(),
 		});
 
-	}
-
-	pub fn success(body: impl AsRef<[u8]>) -> Self {
-		return Self {
-			body: body.as_ref().to_owned(),
-			code: 200,
-			headers: HashMap::new(),
-		};
 	}
 
 	pub fn bytes(&self) -> &[u8] {
@@ -213,12 +330,21 @@ impl Response {
 		return self.code;
 	}
 
+	pub fn add_header(&mut self, key: Header, value: &str) {
+		self.headers.add(key, value);
+	}
+
+	pub fn headers(&self) -> &HeaderMap {
+		return &self.headers;
+	}
+
 	pub fn message(&self) -> Vec<u8> {
 
 		let mut m = String::new();
 
 		m.push_str("HTTP/1.1 200 OK");
 		m.push_str("\r\n");
+		m.push_str(&self.headers.to_string());
 		m.push_str("\r\n");
 
 		let mut bytes = m.as_bytes().to_owned();
@@ -255,7 +381,7 @@ impl Request {
 			host: String::new(),
 			path: path.to_owned(),
 			port: 80,
-			headers: HashMap::new(),
+			headers: HeaderMap::new(),
 			body: body.to_owned(),
 		});
 
@@ -267,6 +393,9 @@ impl Request {
 		let scheme = url.scheme().parse::<Scheme>()?;
 		let host = url.host_str().ok_or(Error::Net)?;
 		let path = url.path();
+		let mut headers = HeaderMap::new();
+
+		headers.add(Header::Host, host);
 
 		return Ok(Self {
 			method: method,
@@ -275,7 +404,7 @@ impl Request {
 			host: host.to_owned(),
 			path: path.to_owned(),
 			port: scheme.port(),
-			headers: HashMap::new(),
+			headers: headers,
 			body: Vec::new(),
 		});
 
@@ -309,12 +438,12 @@ impl Request {
 		return self.version;
 	}
 
-	pub fn headers(&self) -> &HashMap<String, String> {
+	pub fn headers(&self) -> &HeaderMap {
 		return &self.headers;
 	}
 
-	pub fn add_header(&mut self, key: &str, value: &str) {
-		self.headers.insert(key.to_owned(), value.to_owned());
+	pub fn add_header(&mut self, key: Header, value: &str) {
+		self.headers.add(key, value);
 	}
 
 	pub fn body(&mut self, data: impl AsRef<[u8]>) {
@@ -327,14 +456,7 @@ impl Request {
 
 		m.push_str(&format!("{} {} {}", self.method().to_string(), self.path(), self.version().to_string()));
 		m.push_str("\r\n");
-		m.push_str(&format!("Host: {}", self.host()));
-		m.push_str("\r\n");
-
-		for (key, val) in self.headers() {
-			m.push_str(&format!("{}: {}", key, val));
-			m.push_str("\r\n");
-		}
-
+		m.push_str(&self.headers.to_string());
 		m.push_str("\r\n");
 
 		let mut bytes = m.as_bytes().to_vec();
@@ -385,7 +507,29 @@ pub fn get(url: &str) -> Result<Response> {
 	return Request::get(url)?.send(None);
 }
 
-pub fn post(url: &str, data: &[u8]) -> Result<Response> {
-	return Request::get(url)?.send(Some(data));
+pub fn post(url: &str, data: impl AsRef<[u8]>) -> Result<Response> {
+	return Request::get(url)?.send(Some(data.as_ref()));
+}
+
+pub fn serve<F: Fn(Request) -> Response>(loc: &str, port: u16, handler: F) -> Result<()> {
+
+	let listener = TcpListener::bind((loc, port))?;
+
+	for stream in listener.incoming() {
+
+		let mut stream = stream?;
+		let mut buf = [0; 512];
+
+		stream.read(&mut buf)?;
+
+		let req = Request::from_raw(&buf)?;
+		let res = handler(req);
+
+		stream.write_all(&res.message());
+
+	}
+
+	return Ok(());
+
 }
 
