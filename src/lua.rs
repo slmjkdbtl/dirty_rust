@@ -497,6 +497,18 @@ fn bind_http(ctx: &Context) -> Result<()> {
 
 	let http = ctx.create_table()?;
 
+	impl UserData for http::Status {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method("code", |_, s, ()| {
+				return Ok(s.code());
+			});
+
+		}
+
+	}
+
 	impl UserData for http::Response {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -509,8 +521,8 @@ fn bind_http(ctx: &Context) -> Result<()> {
 				return Ok(res.bytes().to_vec());
 			});
 
-			methods.add_method("code", |_, res, ()| {
-				return Ok(res.code());
+			methods.add_method("status", |_, res, ()| {
+				return Ok(res.status());
 			});
 
 		}
@@ -565,7 +577,7 @@ fn bind_http(ctx: &Context) -> Result<()> {
 	macro_rules! gen_res {
 		($fname:expr => $tname:ident($type:ty)) => {
 			res.set($fname, ctx.create_function(|_, (data): ($type)| {
-				return Ok(http::Response::new(http::ContentType::$tname, &data));
+				return Ok(http::Response::new(http::Status::Ok, http::ContentType::$tname, &data));
 			})?)?;
 		};
 	};
@@ -590,6 +602,14 @@ fn bind_http(ctx: &Context) -> Result<()> {
 	gen_res!("woff2" => WOFF2(Vec<u8>));
 	gen_res!("mp4" => MP4(Vec<u8>));
 	gen_res!("zip" => ZIP(Vec<u8>));
+
+	res.set("no", ctx.create_function(|_, (data): (String)| {
+		return Ok(http::Response::new(http::Status::NotFound, http::ContentType::HTML, &data));
+	})?)?;
+
+	res.set("redirect", ctx.create_function(|_, (url): (String)| {
+		return Ok(http::Response::redirect(&url));
+	})?)?;
 
 	http.set("res", res)?;
 	ctx.add_module("http", http)?;
