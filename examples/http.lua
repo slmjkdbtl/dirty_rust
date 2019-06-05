@@ -12,9 +12,9 @@ http.serve("localhost", 7878, function(req)
 
 	if req:path() == "/" then
 		return res.html(fs.read_str("examples/res/index.html"));
-	else
-		return res.text("no")
 	end
+
+	return res.no("no")
 
 end)
 

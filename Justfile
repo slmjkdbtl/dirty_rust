@@ -3,8 +3,8 @@
 run example="window":
 	cargo run --release --example {{example}}
 
-run-lua: build
-	./bin/dirty examples/window.lua
+run-lua example="window":
+	./bin/dirty examples/{{example}}.lua
 
 install: build
 	upx bin/dirty
@@ -17,6 +17,9 @@ build:
 
 build-windows:
 	cargo build --release --target x86_64-pc-windows-gnu
+
+build-linux:
+	cargo build --release --target x86_64-unknown-linux-gnu
 
 doc:
 	cargo doc --no-deps --open
