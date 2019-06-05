@@ -123,6 +123,20 @@ pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 }
 
+/// get the extension of given file
+pub fn extname(path: impl AsRef<Path>) -> Result<String> {
+
+	let path = path.as_ref();
+	let ext = path
+		.extension()
+		.ok_or(Error::FileExt(path.to_owned()))?
+		.to_os_string()
+		.into_string()?;
+
+	return Ok(ext);
+
+}
+
 pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64> {
 
 	let p1 = p1.as_ref();

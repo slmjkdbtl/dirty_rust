@@ -135,6 +135,10 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 		return Ok(fs::basename(&path)?);
 	})?)?;
 
+	fs.set("extname", ctx.create_function(|_, (path): (String)| {
+		return Ok(fs::extname(&path)?);
+	})?)?;
+
 	fs.set("remove", ctx.create_function(|_, (path): (String)| {
 		return Ok(fs::remove(&path)?);
 	})?)?;
@@ -429,11 +433,11 @@ fn bind_audio(ctx: &Context) -> Result<()> {
 
 	}
 
-	audio.set("load_bytes", ctx.create_function(|_, (b): (Vec<u8>)| {
+	audio.set("load", ctx.create_function(|_, (b): (Vec<u8>)| {
 		return Ok(audio::Sound::from_bytes(&b)?);
 	})?)?;
 
-	audio.set("load_file", ctx.create_function(|_, (p): (String)| {
+	audio.set("read", ctx.create_function(|_, (p): (String)| {
 		return Ok(audio::Sound::from_file(&p)?);
 	})?)?;
 
@@ -474,11 +478,11 @@ fn bind_img(ctx: &Context) -> Result<()> {
 
 	}
 
-	img.set("load_bytes", ctx.create_function(|_, (b): (Vec<u8>)| {
+	img.set("load", ctx.create_function(|_, (b): (Vec<u8>)| {
 		return Ok(img::Image::from_bytes(&b)?);
 	})?)?;
 
-	img.set("load_file", ctx.create_function(|_, (p): (String)| {
+	img.set("read", ctx.create_function(|_, (p): (String)| {
 		return Ok(img::Image::from_file(&p)?);
 	})?)?;
 
@@ -525,6 +529,23 @@ fn bind_http(ctx: &Context) -> Result<()> {
 
 	}
 
+	impl UserData for http::Router {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_method_mut("get", |ctx, r, (pat, f): (String, rlua::Function)| {
+				let key = ctx.create_registry_value(f)?;
+				r.get(&pat, move || {
+// 					let ff = ctx.registry_value::<Value>(&key);
+					return "";
+				});
+				return Ok(());
+			});
+
+		}
+
+	}
+
 	http.set("get", ctx.create_function(|_, (uri): (String)| {
 		return Ok(http::get(&uri)?);
 	})?)?;
@@ -533,16 +554,44 @@ fn bind_http(ctx: &Context) -> Result<()> {
 		return Ok(http::post(&uri, &data)?);
 	})?)?;
 
-	http.set("response", ctx.create_function(|_, (s): (String)| {
-		return Ok(http::Response::new(&s));
-	})?)?;
-
 	http.set("serve", ctx.create_function(|_, (loc, port, handler): (String, u16, rlua::Function)| {
 		return Ok(http::serve(&loc, port, |req| {
-			return handler.call::<_, http::Response>(req).ok();
+			return handler.call::<_, http::Response>(req).ok().expect("response required");
 		})?);
 	})?)?;
 
+	let res = ctx.create_table()?;
+
+	macro_rules! gen_res {
+		($fname:expr => $tname:ident($type:ty)) => {
+			res.set($fname, ctx.create_function(|_, (data): ($type)| {
+				return Ok(http::Response::new(http::ContentType::$tname, &data));
+			})?)?;
+		};
+	};
+
+	gen_res!("text" => Text(String));
+	gen_res!("html" => HTML(String));
+	gen_res!("css" => CSS(String));
+	gen_res!("javascript" => JavaScript(String));
+	gen_res!("json" => JSON(String));
+	gen_res!("markdown" => Markdown(String));
+	gen_res!("png" => PNG(Vec<u8>));
+	gen_res!("jpeg" => JPEG(Vec<u8>));
+	gen_res!("gif" => GIF(Vec<u8>));
+	gen_res!("pdf" => PDF(Vec<u8>));
+	gen_res!("mp3" => MP3(Vec<u8>));
+	gen_res!("ogg" => OGG(Vec<u8>));
+	gen_res!("wav" => WAV(Vec<u8>));
+	gen_res!("midi" => MIDI(Vec<u8>));
+	gen_res!("ttf" => TTF(Vec<u8>));
+	gen_res!("otf" => OTF(Vec<u8>));
+	gen_res!("woff" => WOFF(Vec<u8>));
+	gen_res!("woff2" => WOFF2(Vec<u8>));
+	gen_res!("mp4" => MP4(Vec<u8>));
+	gen_res!("zip" => ZIP(Vec<u8>));
+
+	http.set("res", res)?;
 	ctx.add_module("http", http)?;
 
 	return Ok(());
