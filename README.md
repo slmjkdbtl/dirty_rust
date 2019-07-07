@@ -18,7 +18,7 @@ This library was intended to be a game toolkit, but added a lot of other stuff d
 ```toml
 default = [ "lua", "fs", "gfx", "img", "audio", "http", "term", "col", "ase", ]
 ```
-All the modules can be used with lua bindings or plain rust, toggle with `lua` feature
+All the modules can be used with lua or as rust modules, toggle with `lua` feature
 
 ### cli
 
@@ -29,7 +29,6 @@ $ dirty frog.lua
 
 If no argument is provided, it'll search for `main.lua`. It'll search everywhere possible, including `${Bundle}/Contents/Resources/` on MacOS, making it easy for packaging windowing applications.
 
-
-### status
-**10%** complete. The code is not robust in any way. Meant to be my personal library for doing things, will not be a serious library for production use ever.
+### facts
+- `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
 

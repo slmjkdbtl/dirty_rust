@@ -34,9 +34,11 @@ pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(mut f:
 
 	let (tx, rx) = mpsc::channel();
 
-	thread::spawn(move || {
+	let t = thread::spawn(move || {
 		tx.send(f());
 	});
+
+	t.join();
 
 	return Task::new(rx);
 

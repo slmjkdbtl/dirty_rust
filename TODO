@@ -2,12 +2,14 @@
 
 == DOING
 - clearer error messages
+- better http response api
 
 == TODO
 - http less allocation / copying
 - gfx
 - gamepads
 - ketos
+- use rustls instead of native-tls
 
 == DONE
 - refactor http

@@ -21,8 +21,11 @@ build-windows:
 build-linux:
 	cargo build --release --target x86_64-unknown-linux-gnu
 
-doc:
-	cargo doc --no-deps --open
+doc crate="dirty":
+	cargo doc --no-deps --open -p {{crate}}
+
+update:
+	cargo update
 
 loc:
 	loc
