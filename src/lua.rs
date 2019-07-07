@@ -108,14 +108,14 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 	})?)?;
 
 // 	ctx.scope(|s| {
-// 		return fs.set("async_read", s.create_function_mut(|_, (path): (String)| {
+// 		return fs.set("read_async", s.create_function_mut(|_, (path): (String)| {
 // 			return Ok(pool.exec(move || {
 // 				return fs::read(&path).unwrap();
 // 			}));
 // 		})?);
 // 	})?;
 
-	fs.set("async_read", ctx.create_function(|_, (path): (String)| {
+	fs.set("read_async", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
 			return fs::read(&path).ok();
 		}));
@@ -125,7 +125,7 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 		return Ok(fs::read_str(&path)?);
 	})?)?;
 
-	fs.set("async_read_str", ctx.create_function(|_, (path): (String)| {
+	fs.set("read_str_async", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
 			return fs::read_str(&path).ok();
 		}));
@@ -331,7 +331,7 @@ fn bind_window(ctx: &Context) -> Result<()> {
 			add_window_methods(methods);
 
 			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
-				return Ok(win.borrow_mut().run(|c| {
+				return Ok(win.run(|c| {
 					ctx.scope(|s| -> rlua::Result<()> {
 						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
 					});
@@ -441,7 +441,7 @@ fn bind_audio(ctx: &Context) -> Result<()> {
 		return Ok(audio::Sound::from_file(&p)?);
 	})?)?;
 
-	audio.set("async_read", ctx.create_function(|_, (path): (String)| {
+	audio.set("read_async", ctx.create_function(|_, (path): (String)| {
 		return Ok(thread::exec(move || {
 			return audio::Sound::from_file(&path).ok();
 		}));
@@ -546,11 +546,13 @@ fn bind_http(ctx: &Context) -> Result<()> {
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
 			methods.add_method_mut("get", |ctx, r, (pat, f): (String, rlua::Function)| {
-				let key = ctx.create_registry_value(f)?;
-				r.get(&pat, move || {
-// 					let ff = ctx.registry_value::<Value>(&key);
-					return "";
-				});
+// 				let key = ctx.create_registry_value(f)?;
+// 				let f = ctx.registry_value::<rlua::Function>(&key)?;
+// 				r.get(&pat, move || {
+// 					let f = ctx.registry_value::<rlua::Function>(&key).unwrap();
+// 					f.call::<_, ()>(());
+// 					return "";
+// 				});
 				return Ok(());
 			});
 

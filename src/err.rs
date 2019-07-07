@@ -162,3 +162,9 @@ impl From<std::ffi::OsString> for Error {
 	}
 }
 
+impl From<()> for Error {
+	fn from(_: ()) -> Self {
+		return Error::Misc(String::new());
+	}
+}
+

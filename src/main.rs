@@ -2,7 +2,6 @@
 
 use std::env;
 
-
 fn no() {
 	eprintln!("no");
 }

@@ -125,13 +125,23 @@ pub struct Router {
 	handlers: Vec<Box<Fn(&Request) -> Option<Response>>>,
 }
 
+unsafe impl Send for Router {}
+
 impl Router {
+
+	pub fn new() -> Self {
+		return Self {
+			handlers: Vec::new(),
+		};
+	}
+
 	pub fn get<D: AsRef<[u8]>, F: Fn() -> D + 'static>(&mut self, pat: &str, f: F) {
 		self.handlers.push(Box::new(move |req| {
 			f();
 			return None;
 		}));
 	}
+
 }
 
 #[derive(Clone)]
@@ -467,19 +477,16 @@ impl Response {
 
 	pub fn message(&self) -> Vec<u8> {
 
-		let mut m = String::new();
+		let mut m = Vec::new();
 		let status = self.status();
 
-		m.push_str(&format!("HTTP/1.1 {} {}", status.code(), status.reason()));
-		m.push_str("\r\n");
-		m.push_str(&self.headers.to_string());
-		m.push_str("\r\n");
+		m.extend_from_slice(&format!("HTTP/1.1 {} {}", status.code(), status.reason()).as_bytes());
+		m.extend_from_slice("\r\n".as_bytes());
+		m.extend_from_slice(&self.headers.to_string().as_bytes());
+		m.extend_from_slice("\r\n".as_bytes());
+		m.extend_from_slice(&self.body);
 
-		let mut bytes = m.as_bytes().to_owned();
-
-		bytes.append(&mut self.body.clone());
-
-		return bytes;
+		return m;
 
 	}
 
@@ -584,18 +591,15 @@ impl Request {
 
 	pub fn message(&self) -> Vec<u8> {
 
-		let mut m = String::new();
+		let mut m = Vec::new();
 
-		m.push_str(&format!("{} {} {}", self.method().to_string(), self.path(), self.version().to_string()));
-		m.push_str("\r\n");
-		m.push_str(&self.headers.to_string());
-		m.push_str("\r\n");
+		m.extend_from_slice(&format!("{} {} {}", self.method().to_string(), self.path(), self.version().to_string()).as_bytes());
+		m.extend_from_slice("\r\n".as_bytes());
+		m.extend_from_slice(&self.headers.to_string().as_bytes());
+		m.extend_from_slice("\r\n".as_bytes());
+		m.extend_from_slice(&self.body);
 
-		let mut bytes = m.as_bytes().to_vec();
-
-		bytes.append(&mut self.body.clone());
-
-		return bytes;
+		return m;
 
 	}
 
@@ -618,6 +622,17 @@ impl Request {
 			},
 
 			Scheme::HTTPS => {
+
+// 				let mut config = rustls::ClientConfig::new();
+
+// 				config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
+
+// 				let dns_name = webpki::DNSNameRef::try_from_ascii_str(self.host())?;
+// 				let mut tlssession = rustls::ClientSession::new(&Arc::new(config), dns_name);
+// 				let mut tlsstream = rustls::Stream::new(&mut tlssession, &mut stream);
+
+// 				tlsstream.write_all(&self.message())?;
+// 				tlsstream.read_to_end(&mut buf)?;
 
 				let connector = TlsConnector::new()?;
 				let mut stream = connector.connect(self.host(), stream)?;
