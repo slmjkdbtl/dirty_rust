@@ -10,17 +10,20 @@ license = "Zlib"
 edition = "2018"
 readme = "README.md"
 
+[profile.release]
+lto = true
+
 [features]
 default = [
-	"lua",
+# 	"lua",
 	"fs",
-	"gfx",
+	"app",
 	"img",
-	"audio",
-	"http",
-	"term",
-	"col",
-	"ase",
+# 	"audio",
+# 	"http",
+# 	"term",
+# 	"col",
+# 	"ase",
 ]
 
 lua = [
@@ -32,7 +35,7 @@ fs = [
 	"glob",
 ]
 
-gfx = [
+app = [
 	"glutin",
 	"gl",
 	"gilrs",
@@ -80,7 +83,7 @@ glob = { version = "0.3", optional = true }
 rlua = { version = "0.16", optional = true }
 
 glutin = { version = "0.21", optional = true }
-gl = { version = "0.12", optional = true }
+gl = { version = "0.13", optional = true }
 gilrs = { version = "0.7", optional = true }
 glow = { version = "0.2", optional = true }
 

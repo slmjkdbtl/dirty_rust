@@ -8,9 +8,6 @@
 
 #![deny(clippy::implicit_return)]
 
-#[cfg(feature = "gfx")]
-mod ggl;
-
 mod modules;
 
 pub mod math;

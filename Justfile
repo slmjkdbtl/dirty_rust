@@ -1,7 +1,7 @@
 # wengwengweng
 
 run example="window":
-	cargo run --release --example {{example}}
+	cargo run --example {{example}}
 
 run-lua example="window":
 	./bin/dirty examples/{{example}}.lua
