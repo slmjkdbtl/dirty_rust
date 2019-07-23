@@ -75,14 +75,14 @@ impl From<image::ImageError> for Error {
 	}
 }
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 impl From<glutin::CreationError> for Error {
 	fn from(_: glutin::CreationError) -> Self {
 		return Error::Window;
 	}
 }
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 impl From<glutin::ContextError> for Error {
 	fn from(_: glutin::ContextError) -> Self {
 		return Error::Window;
@@ -102,14 +102,14 @@ impl From<std::sync::mpsc::TryRecvError> for Error {
 	}
 }
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Thread;
 	}
 }
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
 	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
 		return Error::Window;

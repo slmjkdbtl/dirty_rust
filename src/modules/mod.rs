@@ -3,10 +3,12 @@
 #[cfg(feature = "fs")]
 pub mod fs;
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 pub mod gfx;
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 pub mod window;
+#[cfg(feature = "app")]
+pub mod app;
 
 #[cfg(feature = "img")]
 pub mod img;

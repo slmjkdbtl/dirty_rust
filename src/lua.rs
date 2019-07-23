@@ -177,7 +177,7 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 
 }
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 fn bind_window(ctx: &Context) -> Result<()> {
 
 	let window = ctx.create_table()?;
@@ -360,7 +360,7 @@ fn bind_window(ctx: &Context) -> Result<()> {
 
 }
 
-#[cfg(feature = "gfx")]
+#[cfg(feature = "app")]
 fn bind_gfx(ctx: &Context) -> Result<()> {
 
 	let gfx = ctx.create_table()?;
@@ -840,9 +840,9 @@ fn bind(ctx: &Context) -> Result<()> {
 	#[cfg(feature = "fs")]
 	bind_fs(&ctx)?;
 
-	#[cfg(feature = "gfx")]
+	#[cfg(feature = "app")]
 	bind_window(&ctx)?;
-	#[cfg(feature = "gfx")]
+	#[cfg(feature = "app")]
 	bind_gfx(&ctx)?;
 
 	#[cfg(feature = "img")]

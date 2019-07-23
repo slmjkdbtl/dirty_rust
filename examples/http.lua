@@ -4,7 +4,7 @@ local fs = require("fs")
 local http = require("http")
 local res = http.res
 
-http.serve("localhost", 7878, function(req)
+http.serve("0.0.0.0", 7878, function(req)
 
 	if req:path() == "/icon.png" then
 		return res.png(fs.read("icon.png"))

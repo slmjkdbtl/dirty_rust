@@ -2,11 +2,8 @@
 
 //! Window & Graphics
 
-use std::thread;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::time::Instant;
-use std::time::Duration;
 
 use glutin::dpi::*;
 use glutin::Api;
@@ -23,12 +20,8 @@ use crate::math::*;
 use crate::*;
 
 /// Manages Ctx
-pub struct Window {
+pub struct Ctx {
 
-	dt: f32,
-	time: f32,
-	closed: bool,
-	fps_cap: u32,
 	key_state: HashMap<Key, ButtonState>,
 	mouse_state: HashMap<Mouse, ButtonState>,
 	mouse_pos: MousePos,
@@ -40,76 +33,15 @@ pub struct Window {
 	cursor_hidden: bool,
 	cursor_locked: bool,
 
+	pub(crate) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	events_loop: glutin::EventsLoop,
-	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	gamepad_ctx: gilrs::Gilrs,
 
 }
 
-unsafe impl Send for Window {}
+impl Ctx {
 
-/// Window Creation Config
-#[derive(Clone, Debug)]
-pub struct Conf {
-	pub width: u32,
-	pub height: u32,
-	pub title: String,
-	pub hidpi: bool,
-	pub resizable: bool,
-	pub fullscreen: bool,
-	pub always_on_top: bool,
-	pub borderless: bool,
-	pub transparent: bool,
-	pub vsync: bool,
-	pub hide_title: bool,
-	pub hide_titlebar_buttons: bool,
-	pub fullsize_content: bool,
-	pub titlebar_transparent: bool,
-	pub cursor_hidden: bool,
-	pub cursor_locked: bool,
-}
-
-impl Conf {
-
-	pub fn basic(title: &str, width: u32, height: u32) -> Self {
-		return Self {
-			title: String::from(title),
-			width: width,
-			height: height,
-			..Default::default()
-		};
-	}
-
-}
-
-impl Default for Conf {
-
-	fn default() -> Self {
-		return Self {
-			width: 640,
-			height: 480,
-			title: String::new(),
-			hidpi: true,
-			resizable: false,
-			fullscreen: false,
-			always_on_top: false,
-			borderless: false,
-			transparent: false,
-			vsync: false,
-			fullsize_content: false,
-			hide_title: false,
-			hide_titlebar_buttons: false,
-			titlebar_transparent: false,
-			cursor_hidden: false,
-			cursor_locked: false,
-		};
-	}
-
-}
-
-impl Window {
-
-	pub fn new(conf: Conf) -> Result<Self> {
+	pub fn new(conf: &app::Conf) -> Result<Self> {
 
 		let mut events_loop = glutin::EventsLoop::new();
 
@@ -141,32 +73,20 @@ impl Window {
 
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
+			.with_gl(GlRequest::Specific(Api::OpenGl, (3, 2)));
 
 		let windowed_ctx = ctx_builder
 			.build_windowed(window_builder, &events_loop)?;
 
 		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
-
-		gl::load_with(|symbol| windowed_ctx.get_proc_address(symbol) as *const _);
-
-// 		let gl_ctx = glow::native::Context::from_loader_function(|s| {
-// 			windowed_ctx.get_proc_address(s) as *const _
-// 		});
-
 		let window = windowed_ctx.window();
 
 		let mut gamepad_ctx = Gilrs::new()?;
 
-		ggl::clear(true, false, false);
 		windowed_ctx.swap_buffers()?;
 
 		return Ok(Self {
 
-			dt: 0.0,
-			time: 0.0,
-			closed: false,
-			fps_cap: 60,
 			key_state: HashMap::new(),
 			mouse_state: HashMap::new(),
 			mouse_pos: MousePos::new(0, 0),
@@ -186,176 +106,134 @@ impl Window {
 
 	}
 
-	pub fn run(&mut self, mut f: impl FnMut(&mut Self)) -> Result<()> {
+	pub(crate) fn poll(&mut self) -> Result<bool> {
 
-		loop {
-
-			let start_time = Instant::now();
-
-			for state in self.key_state.values_mut() {
-				if state == &ButtonState::Pressed {
-					*state = ButtonState::Down;
-				} else if state == &ButtonState::Released {
-					*state = ButtonState::Up;
-				}
+		for state in self.key_state.values_mut() {
+			if state == &ButtonState::Pressed {
+				*state = ButtonState::Down;
+			} else if state == &ButtonState::Released {
+				*state = ButtonState::Up;
 			}
+		}
 
-			for state in self.mouse_state.values_mut() {
-				if state == &ButtonState::Pressed {
-					*state = ButtonState::Down;
-				} else if state == &ButtonState::Released {
-					*state = ButtonState::Up;
-				}
+		for state in self.mouse_state.values_mut() {
+			if state == &ButtonState::Pressed {
+				*state = ButtonState::Down;
+			} else if state == &ButtonState::Released {
+				*state = ButtonState::Up;
 			}
+		}
 
-			self.mouse_delta = None;
-			self.scroll_delta = None;
-			self.text_input = None;
+		self.mouse_delta = None;
+		self.scroll_delta = None;
+		self.text_input = None;
 
-			let mut keyboard_input = None;
-			let mut mouse_input = None;
-			let mut cursor_moved = None;
-			let mut mouse_wheel = None;
-			let mut close = false;
+		let mut keyboard_input = None;
+		let mut mouse_input = None;
+		let mut cursor_moved = None;
+		let mut mouse_wheel = None;
+		let mut close = false;
 
-			self.events_loop.poll_events(|e| {
+		self.events_loop.poll_events(|e| {
 
-				use glutin::Event::*;
-				use glutin::WindowEvent::*;
+			use glutin::Event::*;
+			use glutin::WindowEvent::*;
 
-				match e {
+			match e {
 
-					WindowEvent { event, .. } => match event {
+				WindowEvent { event, .. } => match event {
 
-						KeyboardInput { input, .. } => {
-							keyboard_input = Some(input);
-						},
-
-						MouseInput { button, state, .. } => {
-							mouse_input = Some((button, state));
-						},
-
-						CursorMoved { position, .. } => {
-							cursor_moved = Some(position);
-						},
-
-						MouseWheel { delta, .. } => {
-							mouse_wheel = Some(delta);
-						},
-
-						ReceivedCharacter(ch) => {
-// 							self.text_input.get_or_insert(String::new()).push(ch);
-						},
-
-						CloseRequested => close = true,
-
-						_ => {},
-
+					KeyboardInput { input, .. } => {
+						keyboard_input = Some(input);
 					},
+
+					MouseInput { button, state, .. } => {
+						mouse_input = Some((button, state));
+					},
+
+					CursorMoved { position, .. } => {
+						cursor_moved = Some(position);
+					},
+
+					MouseWheel { delta, .. } => {
+						mouse_wheel = Some(delta);
+					},
+
+					ReceivedCharacter(ch) => {
+// 						self.text_input.get_or_insert(String::new()).push(ch);
+					},
+
+					CloseRequested => close = true,
 
 					_ => {},
 
-				};
+				},
 
-			});
+				_ => {},
 
-			if close {
-				self.close();
-			}
+			};
 
-			if let Some(input) = keyboard_input {
-				if let Some(kc) = input.virtual_keycode {
-					match input.state {
-						ElementState::Pressed => {
-							if self.key_up(kc) || self.key_released(kc) {
-								self.key_state.insert(kc, ButtonState::Pressed);
-							}
-						},
-						ElementState::Released => {
-							if self.key_down(kc) || self.key_pressed(kc) {
-								self.key_state.insert(kc, ButtonState::Released);
-							}
-						},
-					}
-				}
-			}
+		});
 
-			if let Some((button, state)) = mouse_input {
-				match state {
+		if close {
+			return Ok(false);
+		}
+
+		if let Some(input) = keyboard_input {
+			if let Some(kc) = input.virtual_keycode {
+				match input.state {
 					ElementState::Pressed => {
-						if self.mouse_up(button) || self.mouse_released(button) {
-							self.mouse_state.insert(button, ButtonState::Pressed);
+						if self.key_up(kc) || self.key_released(kc) {
+							self.key_state.insert(kc, ButtonState::Pressed);
 						}
 					},
 					ElementState::Released => {
-						if self.mouse_down(button) || self.mouse_pressed(button) {
-							self.mouse_state.insert(button, ButtonState::Released);
+						if self.key_down(kc) || self.key_pressed(kc) {
+							self.key_state.insert(kc, ButtonState::Released);
 						}
 					},
 				}
 			}
+		}
 
-			if let Some(pos) = cursor_moved {
-
-				let pos: MousePos = pos.into();
-
-				self.mouse_delta = Some((pos - self.mouse_pos).into());
-				self.mouse_pos = pos;
-
+		if let Some((button, state)) = mouse_input {
+			match state {
+				ElementState::Pressed => {
+					if self.mouse_up(button) || self.mouse_released(button) {
+						self.mouse_state.insert(button, ButtonState::Pressed);
+					}
+				},
+				ElementState::Released => {
+					if self.mouse_down(button) || self.mouse_pressed(button) {
+						self.mouse_state.insert(button, ButtonState::Released);
+					}
+				},
 			}
+		}
 
-			if let Some(delta) = mouse_wheel {
-				self.scroll_delta = Some(delta.into());
-			}
+		if let Some(pos) = cursor_moved {
 
-			while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
-				// ...
-			}
+			let pos: MousePos = pos.into();
 
-			ggl::clear(true, false, false);
-			f(self);
-			self.windowed_ctx.swap_buffers()?;
-
-			let actual_dt = start_time.elapsed();
-			let actual_dt = actual_dt.as_millis() as f32;
-			let expected_dt = 1000.0 / self.fps_cap as f32;
-
-			if expected_dt > actual_dt {
-				self.dt = expected_dt as f32 / 1000.0;
-				thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
-			} else {
-				self.dt = actual_dt as f32 / 1000.0;
-			}
-
-			self.time += self.dt;
-
-			if self.closed {
-				break;
-			}
+			self.mouse_delta = Some((pos - self.mouse_pos).into());
+			self.mouse_pos = pos;
 
 		}
 
-		return Ok(());
+		if let Some(delta) = mouse_wheel {
+			self.scroll_delta = Some(delta.into());
+		}
+
+		while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
+			// ...
+		}
+
+		return Ok(true);
 
 	}
 
-	/// get delta time between frames
-	pub fn dt(&self) -> f32 {
-		return self.dt;
-	}
-
-	/// get current framerate
-	pub fn fps(&self) -> u32 {
-		return (1.0 / self.dt) as u32;
-	}
-
-	/// get actual time since running
-	pub fn time(&self) -> f32 {
-		return self.time;
-	}
-
-	pub fn close(&mut self) {
-		self.closed = true;
+	pub(crate) fn swap(&self) -> Result<()> {
+		return Ok(self.windowed_ctx.swap_buffers()?);
 	}
 
 	pub fn down_keys(&self) -> HashSet<Key> {
@@ -470,6 +348,10 @@ impl Window {
 		self.windowed_ctx.window().set_title(t);
 	}
 
+}
+
+pub fn key_pressed(ctx: &app::Ctx, key: Key) -> bool {
+	return ctx.window.key_pressed(key);
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
