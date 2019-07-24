@@ -27,6 +27,7 @@ pub enum Error {
 	FromUtf8,
 	HTTPMessage,
 	Lua,
+	OpenGL(String),
 	Misc(String),
 }
 
@@ -55,6 +56,7 @@ impl fmt::Display for Error {
 			Error::FromUtf8 => write!(f, "failed to convert from utf8"),
 			Error::HTTPMessage => write!(f, "failed to parse http message"),
 			Error::Lua => write!(f, "lua error"),
+			Error::OpenGL(s) => write!(f, "error: {}", s),
 			Error::Misc(s) => write!(f, "error: {}", s),
 		};
 	}

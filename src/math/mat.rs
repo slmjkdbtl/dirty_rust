@@ -37,7 +37,7 @@ impl Mat4 {
 
 	}
 
-	pub fn translate(self, pos: Vec3) -> Self {
+	pub fn translate(pos: Vec3) -> Self {
 
 		let mut m = Self::identity();
 
@@ -45,11 +45,11 @@ impl Mat4 {
 		m.m[3][1] = pos.y;
 		m.m[3][2] = pos.z;
 
-		return self * m;
+		return m;
 
 	}
 
-	pub fn scale(self, scale: Vec3) -> Self {
+	pub fn scale(scale: Vec3) -> Self {
 
 		let mut m = Self::identity();
 
@@ -57,11 +57,11 @@ impl Mat4 {
 		m.m[1][1] = scale.y;
 		m.m[2][2] = scale.z;
 
-		return self * m;
+		return m;
 
 	}
 
-	pub fn rotate(self, rot: f32, dir: Dir) -> Self {
+	pub fn rotate(rot: f32, dir: Dir) -> Self {
 
 		let mut m = Self::identity();
 		let c = rot.cos();
@@ -86,7 +86,7 @@ impl Mat4 {
 		m.m[2][1] = (axis.z * axis.y * cv) - (axis.x * s);
 		m.m[2][2] = (axis.z * axis.z * cv) + c;
 
-		return self * m;
+		return m;
 
 	}
 
@@ -147,17 +147,6 @@ impl Mat4 {
 		}
 
 		return nm;
-
-	}
-
-	pub fn forward(&self, pt: Vec2) -> Vec2 {
-
-		let mut npt = vec2!();
-
-		npt.x = pt.x * self.m[0][0] + pt.y * self.m[1][0] + self.m[3][0];
-		npt.y = pt.x * self.m[0][1] + pt.y * self.m[1][1] + self.m[3][1];
-
-		return npt;
 
 	}
 
