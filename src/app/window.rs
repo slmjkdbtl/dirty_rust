@@ -34,7 +34,7 @@ pub struct Ctx {
 	cursor_locked: bool,
 	should_quit: bool,
 
-	pub(crate) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
+	pub(super) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	events_loop: glutin::EventsLoop,
 	gamepad_ctx: gilrs::Gilrs,
 
@@ -42,7 +42,7 @@ pub struct Ctx {
 
 impl Ctx {
 
-	pub fn new(conf: &app::Conf) -> Result<Self> {
+	pub(super) fn new(conf: &app::Conf) -> Result<Self> {
 
 		let mut events_loop = glutin::EventsLoop::new();
 
@@ -84,9 +84,7 @@ impl Ctx {
 
 		let mut gamepad_ctx = Gilrs::new()?;
 
-		windowed_ctx.swap_buffers()?;
-
-		return Ok(Self {
+		let mut ctx = Self {
 
 			key_state: HashMap::new(),
 			mouse_state: HashMap::new(),
@@ -104,11 +102,21 @@ impl Ctx {
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: gamepad_ctx,
 
-		});
+		};
+
+		if conf.cursor_hidden {
+			ctx.set_cursor_hidden(true);
+		}
+
+		if conf.cursor_locked {
+			ctx.set_cursor_locked(true);
+		}
+
+		return Ok(ctx);
 
 	}
 
-	pub(crate) fn poll(&mut self) -> Result<()> {
+	pub(super) fn poll(&mut self) -> Result<()> {
 
 		for state in self.key_state.values_mut() {
 			if state == &ButtonState::Pressed {
@@ -237,11 +245,11 @@ impl Ctx {
 
 	}
 
-	pub(crate) fn swap(&self) -> Result<()> {
+	pub(super) fn swap(&self) -> Result<()> {
 		return Ok(self.windowed_ctx.swap_buffers()?);
 	}
 
-	pub(crate) fn should_quit(&self) -> bool {
+	pub(super) fn should_quit(&self) -> bool {
 		return self.should_quit;
 	}
 
@@ -360,6 +368,10 @@ impl Ctx {
 	pub fn set_title(&mut self, t: &str) {
 		self.windowed_ctx.window().set_title(t);
 	}
+
+// 	pub fn size(&self) -> Option<Pos> {
+// 		return self.windowed_ctx.window().get_inner_size();
+// 	}
 
 }
 

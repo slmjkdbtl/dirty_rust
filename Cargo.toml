@@ -37,7 +37,6 @@ fs = [
 
 app = [
 	"glutin",
-	"gl",
 	"gilrs",
 	"glow",
 ]
@@ -83,7 +82,6 @@ glob = { version = "0.3", optional = true }
 rlua = { version = "0.16", optional = true }
 
 glutin = { version = "0.21", optional = true }
-gl = { version = "0.13", optional = true }
 gilrs = { version = "0.7", optional = true }
 glow = { version = "0.2", optional = true }
 

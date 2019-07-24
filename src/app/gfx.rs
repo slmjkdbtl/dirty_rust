@@ -4,28 +4,24 @@ use std::rc::Rc;
 
 use crate::math::*;
 
-use glow::Context;
-type GLContext = glow::native::Context;
-
 #[cfg(feature = "img")]
 use crate::img::Image;
 
 use crate::*;
+use super::gl;
 
 pub struct Ctx {
-	gl: Rc<GLContext>,
+	device: gl::Device,
 }
 
 impl Ctx {
 
-    pub fn new(w: &window::Ctx, conf: &app::Conf) -> Self {
-
-		let gl = GLContext::from_loader_function(|s| {
-			w.windowed_ctx.get_proc_address(s) as *const _
-		});
+    pub(super) fn new(w: &window::Ctx, conf: &app::Conf) -> Self {
 
 		let ctx = Self {
-			gl: Rc::new(gl),
+			device: gl::Device::from_loader(|s| {
+				w.windowed_ctx.get_proc_address(s) as *const _
+			}),
 		};
 
 		ctx.clear_color(conf.clear_color);
@@ -36,15 +32,11 @@ impl Ctx {
 	}
 
 	pub fn clear_color(&self, c: Color) {
-		unsafe {
-			self.gl.clear_color(c.r, c.g, c.b, c.a);
-		}
+		self.device.clear_color(c);
 	}
 
 	pub fn clear(&self) {
-		unsafe {
-			self.gl.clear(glow::COLOR_BUFFER_BIT);
-		}
+		self.device.clear();
 	}
 
 }
