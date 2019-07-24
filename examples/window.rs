@@ -7,19 +7,24 @@ struct Game;
 
 impl app::State for Game {
 
-	fn init(&mut self, ctx: &mut app::Ctx) {
-		gfx::clear_color(ctx, color!(0, 0, 1, 1));
-	}
-
 	fn run(&mut self, ctx: &mut app::Ctx) {
+
+		if window::key_pressed(ctx, Key::F) {
+			window::toggle_fullscreen(ctx);
+		}
+
 		if window::key_pressed(ctx, Key::Escape) {
 			app::quit(ctx);
 		}
+
 	}
 
 }
 
 fn main() {
-	app::run(Game);
+	app::run_with_conf(Game, app::Conf {
+		clear_color: color!(0, 0, 1, 1),
+		..Default::default()
+	}).expect("oh no");
 }
 

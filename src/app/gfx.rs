@@ -18,41 +18,39 @@ pub struct Ctx {
 
 impl Ctx {
 
-    pub fn new(w: &window::Ctx) -> Self {
+    pub fn new(w: &window::Ctx, conf: &app::Conf) -> Self {
 
 		let gl = GLContext::from_loader_function(|s| {
 			w.windowed_ctx.get_proc_address(s) as *const _
 		});
 
-		unsafe {
-			gl.clear_color(0.0, 0.0, 0.0, 1.0);
-			gl.clear(glow::COLOR_BUFFER_BIT);
-		}
-
-		return Self {
+		let ctx = Self {
 			gl: Rc::new(gl),
 		};
 
+		ctx.clear_color(conf.clear_color);
+		ctx.clear();
+
+		return ctx;
+
+	}
+
+	pub fn clear_color(&self, c: Color) {
+		unsafe {
+			self.gl.clear_color(c.r, c.g, c.b, c.a);
+		}
+	}
+
+	pub fn clear(&self) {
+		unsafe {
+			self.gl.clear(glow::COLOR_BUFFER_BIT);
+		}
 	}
 
 }
 
-pub fn clear_color(ctx: &app::Ctx, c: Color) {
-	unsafe {
-		ctx.gfx.gl.clear_color(c.r, c.g, c.b, c.a);
-	}
-}
-
-pub fn clear(ctx: &app::Ctx) {
-	unsafe {
-		ctx.gfx.gl.clear(glow::COLOR_BUFFER_BIT);
-	}
-}
-
-pub struct G2d {
-	transform: Mat4,
-	stack: Vec<Mat4>,
-}
+expose!(gfx, clear_color(c: Color));
+expose!(gfx, clear());
 
 #[derive(Clone)]
 pub struct Texture {
