@@ -24,14 +24,15 @@ pub struct Ctx {
 
 	key_state: HashMap<Key, ButtonState>,
 	mouse_state: HashMap<Mouse, ButtonState>,
-	mouse_pos: MousePos,
-	mouse_delta: Option<MouseDelta>,
-	scroll_delta: Option<ScrollDelta>,
+	mouse_pos: Pos,
+	mouse_delta: Option<Pos>,
+	scroll_delta: Option<Pos>,
 	text_input: Option<String>,
 	title: String,
 	fullscreen: bool,
 	cursor_hidden: bool,
 	cursor_locked: bool,
+	should_quit: bool,
 
 	pub(crate) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	events_loop: glutin::EventsLoop,
@@ -89,7 +90,7 @@ impl Ctx {
 
 			key_state: HashMap::new(),
 			mouse_state: HashMap::new(),
-			mouse_pos: MousePos::new(0, 0),
+			mouse_pos: Pos::new(0, 0),
 			mouse_delta: None,
 			scroll_delta: None,
 			text_input: None,
@@ -97,6 +98,7 @@ impl Ctx {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_owned(),
+			should_quit: false,
 
 			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
@@ -106,7 +108,7 @@ impl Ctx {
 
 	}
 
-	pub(crate) fn poll(&mut self) -> Result<bool> {
+	pub(crate) fn poll(&mut self) -> Result<()> {
 
 		for state in self.key_state.values_mut() {
 			if state == &ButtonState::Pressed {
@@ -132,6 +134,7 @@ impl Ctx {
 		let mut mouse_input = None;
 		let mut cursor_moved = None;
 		let mut mouse_wheel = None;
+		let mut text_input = None;
 		let mut close = false;
 
 		self.events_loop.poll_events(|e| {
@@ -160,7 +163,7 @@ impl Ctx {
 					},
 
 					ReceivedCharacter(ch) => {
-// 						self.text_input.get_or_insert(String::new()).push(ch);
+						text_input.get_or_insert(String::new()).push(ch);
 					},
 
 					CloseRequested => close = true,
@@ -176,7 +179,7 @@ impl Ctx {
 		});
 
 		if close {
-			return Ok(false);
+			self.should_quit = true
 		}
 
 		if let Some(input) = keyboard_input {
@@ -213,7 +216,7 @@ impl Ctx {
 
 		if let Some(pos) = cursor_moved {
 
-			let pos: MousePos = pos.into();
+			let pos: Pos = pos.into();
 
 			self.mouse_delta = Some((pos - self.mouse_pos).into());
 			self.mouse_pos = pos;
@@ -224,16 +227,22 @@ impl Ctx {
 			self.scroll_delta = Some(delta.into());
 		}
 
+		self.text_input = text_input;
+
 		while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
 			// ...
 		}
 
-		return Ok(true);
+		return Ok(());
 
 	}
 
 	pub(crate) fn swap(&self) -> Result<()> {
 		return Ok(self.windowed_ctx.swap_buffers()?);
+	}
+
+	pub(crate) fn should_quit(&self) -> bool {
+		return self.should_quit;
 	}
 
 	pub fn down_keys(&self) -> HashSet<Key> {
@@ -264,6 +273,10 @@ impl Ctx {
 		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
 	}
 
+	pub fn key_pressed_repeat(&self, key: Key) -> bool {
+		unimplemented!();
+	}
+
 	pub fn mouse_down(&self, mouse: Mouse) -> bool {
 		return self.mouse_state.get(&mouse) == Some(&ButtonState::Down) || self.mouse_pressed(mouse);
 	}
@@ -280,15 +293,15 @@ impl Ctx {
 		return self.mouse_state.get(&mouse) == Some(&ButtonState::Up) || self.mouse_state.get(&mouse).is_none();
 	}
 
-	pub fn mouse_pos(&self) -> MousePos {
+	pub fn mouse_pos(&self) -> Pos {
 		return self.mouse_pos;
 	}
 
-	pub fn mouse_delta(&self) -> Option<MouseDelta> {
+	pub fn mouse_delta(&self) -> Option<Pos> {
 		return self.mouse_delta;
 	}
 
-	pub fn scroll_delta(&self) -> Option<ScrollDelta> {
+	pub fn scroll_delta(&self) -> Option<Pos> {
 		return self.scroll_delta;
 	}
 
@@ -350,9 +363,23 @@ impl Ctx {
 
 }
 
-pub fn key_pressed(ctx: &app::Ctx, key: Key) -> bool {
-	return ctx.window.key_pressed(key);
-}
+// expose!(window, size() -> Size);
+expose!(window, down_keys() -> HashSet<Key>);
+expose!(window, key_down(key: Key) -> bool);
+expose!(window, key_pressed(key: Key) -> bool);
+expose!(window, key_released(key: Key) -> bool);
+expose!(window, key_pressed_repeat(key: Key) -> bool);
+expose!(window, text_input() -> Option<String>);
+expose!(window, mouse_down(mouse: Mouse) -> bool);
+expose!(window, mouse_pressed(mouse: Mouse) -> bool);
+expose!(window, mouse_released(mouse: Mouse) -> bool);
+expose!(window, mouse_pos() -> Pos);
+expose!(window, mouse_delta() -> Option<Pos>);
+expose!(window, scroll_delta() -> Option<Pos>);
+expose!(window(mut), set_fullscreen(b: bool));
+expose!(window(mut), toggle_fullscreen());
+expose!(window, is_fullscreen() -> bool);
+expose!(window(mut), set_title(t: &str));
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum ButtonState {
@@ -363,12 +390,12 @@ enum ButtonState {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct MousePos {
+pub struct Pos {
 	pub x: i32,
 	pub y: i32,
 }
 
-impl MousePos {
+impl Pos {
 	fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
@@ -377,13 +404,13 @@ impl MousePos {
 	}
 }
 
-impl From<MousePos> for Vec2 {
-	fn from(mpos: MousePos) -> Self {
+impl From<Pos> for Vec2 {
+	fn from(mpos: Pos) -> Self {
 		return vec2!(mpos.x, mpos.y);
 	}
 }
 
-impl From<LogicalPosition> for MousePos {
+impl From<LogicalPosition> for Pos {
 	fn from(pos: LogicalPosition) -> Self {
 		let (x, y): (i32, i32) = pos.into();
 		return Self {
@@ -393,26 +420,8 @@ impl From<LogicalPosition> for MousePos {
 	}
 }
 
-impl From<MouseDelta> for MousePos {
-	fn from(pos: MouseDelta) -> Self {
-		return Self {
-			x: pos.x,
-			y: pos.y,
-		};
-	}
-}
-
-impl From<MousePos> for MouseDelta {
-	fn from(pos: MousePos) -> Self {
-		return Self {
-			x: pos.x,
-			y: pos.y,
-		};
-	}
-}
-
-impl From<MousePos> for LogicalPosition {
-	fn from(pos: MousePos) -> Self {
+impl From<Pos> for LogicalPosition {
+	fn from(pos: Pos) -> Self {
 		return Self {
 			x: pos.x as f64,
 			y: pos.y as f64,
@@ -420,64 +429,7 @@ impl From<MousePos> for LogicalPosition {
 	}
 }
 
-#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct MouseDelta {
-	pub x: i32,
-	pub y: i32,
-}
-
-impl MouseDelta {
-	pub fn new(x: i32, y: i32) -> Self {
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-	pub fn is_none(&self) -> bool {
-		return self.x == 0 && self.y == 0;
-	}
-}
-
-impl From<MouseDelta> for Vec2 {
-	fn from(mpos: MouseDelta) -> Self {
-		return vec2!(mpos.x, mpos.y);
-	}
-}
-
-impl From<LogicalPosition> for MouseDelta {
-	fn from(pos: LogicalPosition) -> Self {
-		let (x, y): (i32, i32) = pos.into();
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct ScrollDelta {
-	pub x: i32,
-	pub y: i32,
-}
-
-impl ScrollDelta {
-
-	pub fn new(x: i32, y: i32) -> Self {
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-
-}
-
-impl From<ScrollDelta> for Vec2 {
-	fn from(sdis: ScrollDelta) -> Self {
-		return vec2!(sdis.x, sdis.y);
-	}
-}
-
-impl From<glutin::MouseScrollDelta> for ScrollDelta {
+impl From<glutin::MouseScrollDelta> for Pos {
 	fn from(delta: glutin::MouseScrollDelta) -> Self {
 		use glutin::MouseScrollDelta;
 		match delta {

@@ -1,15 +1,32 @@
 // wengwengweng
 
+macro_rules! expose {
+	($mod:ident, $fn:ident($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
+		pub fn $fn(ctx: &app::Ctx, $($argn: $argt),*)$( -> $return)? {
+			return ctx.$mod.$fn($($argn),*);
+		}
+	};
+	($mod:ident(mut), $fn:ident($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
+		pub fn $fn(ctx: &mut app::Ctx, $($argn: $argt),*)$( -> $return)? {
+			return ctx.$mod.$fn($($argn),*);
+		}
+	};
+}
+
+pub mod gfx;
+pub mod window;
+
 use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
 use crate::*;
+use crate::math::*;
 
 pub struct Ctx {
 
-	pub(crate) window: window::Ctx,
-	pub(crate) gfx: gfx::Ctx,
+	pub(self) window: window::Ctx,
+	pub(self) gfx: gfx::Ctx,
 
 	quit: bool,
 	dt: f32,
@@ -36,6 +53,7 @@ pub struct Conf {
 	pub titlebar_transparent: bool,
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
+	pub clear_color: Color,
 }
 
 impl Conf {
@@ -71,6 +89,7 @@ impl Default for Conf {
 			titlebar_transparent: false,
 			cursor_hidden: false,
 			cursor_locked: false,
+			clear_color: color!(0, 0, 0, 1),
 		};
 	}
 
@@ -82,9 +101,13 @@ pub trait State {
 }
 
 pub fn run<S: State>(mut s: S) -> Result<()> {
+	return run_with_conf(s, Conf::default());
+}
 
-	let window = window::Ctx::new(&Conf::default())?;
-	let gfx = gfx::Ctx::new(&window);
+pub fn run_with_conf<S: State>(mut s: S, conf: Conf) -> Result<()> {
+
+	let window = window::Ctx::new(&conf)?;
+	let gfx = gfx::Ctx::new(&window, &conf);
 
 	let mut ctx = Ctx {
 
@@ -104,11 +127,13 @@ pub fn run<S: State>(mut s: S) -> Result<()> {
 
 		let start_time = Instant::now();
 
-		if !ctx.window.poll()? {
+		ctx.window.poll()?;
+
+		if ctx.window.should_quit() {
 			break;
 		}
 
-		gfx::clear(&mut ctx);
+		ctx.gfx.clear();
 		s.run(&mut ctx);
 		ctx.window.swap()?;
 

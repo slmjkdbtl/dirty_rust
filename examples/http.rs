@@ -7,7 +7,7 @@ use http::Status;
 
 fn main() {
 
-	http::serve("localhost", 7878, |req| {
+	http::serve("0.0.0.0", 7878, |req| {
 		return Response::new(Status::Ok, ContentType::Text, "yo");
 	});
 
