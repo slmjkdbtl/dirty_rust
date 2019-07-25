@@ -34,6 +34,8 @@ pub struct Ctx {
 	cursor_hidden: bool,
 	cursor_locked: bool,
 	should_quit: bool,
+	width: i32,
+	height: i32,
 
 	pub(super) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	events_loop: glutin::EventsLoop,
@@ -96,6 +98,8 @@ impl Ctx {
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_owned(),
 			should_quit: false,
+			width: conf.width,
+			height: conf.height,
 
 			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
@@ -368,13 +372,18 @@ impl Ctx {
 		self.windowed_ctx.window().set_title(t);
 	}
 
-// 	pub fn size(&self) -> Option<Pos> {
-// 		return self.windowed_ctx.window().get_inner_size();
-// 	}
+	pub fn width(&self) -> i32 {
+		return self.width;
+	}
+
+	pub fn height(&self) -> i32 {
+		return self.height;
+	}
 
 }
 
-// expose!(window, size() -> Size);
+expose!(window, width() -> i32);
+expose!(window, height() -> i32);
 expose!(window, down_keys() -> HashSet<Key>);
 expose!(window, key_down(key: Key) -> bool);
 expose!(window, key_pressed(key: Key) -> bool);

@@ -10,9 +10,10 @@ use super::gl;
 
 pub struct Ctx {
 	device: gl::Device,
+	empty_tex: gl::Texture,
+	_tex: gl::Texture,
 	_vao: gl::VertexArray,
 	_ibuf: gl::IndexBuffer,
-	_tex: gl::Texture,
 	_program: gl::Program,
 }
 
@@ -24,15 +25,34 @@ impl Ctx {
 			w.windowed_ctx.get_proc_address(s) as *const _
 		});
 
+		let img = img::Image::from_bytes(include_bytes!("../res/CP437.png")).unwrap();
+		let tex = gl::Texture::new(&device, img.width() as i32, img.height() as i32).unwrap();
+
+		tex.data(&img.into_raw());
+
+		let empty_tex = gl::Texture::new(&device, 1, 1).unwrap();
+
+		empty_tex.data(&[255, 255, 255, 255]);
+
 		let vbuf = gl::VertexBuffer::new(&device, 36, 9, gl::BufferUsage::Static).unwrap();
 		let vao = gl::VertexArray::new(&device).unwrap();
 
+		let model =
+			Mat4::scale(vec3!(tex.width * 2, tex.height * 2, 1))
+			* Mat4::rotate(15f32.to_radians(), Dir::Z)
+			* Mat4::translate(vec3!(w.width() / 2, w.height() / 2, 0));
+
+		let p1 = model.forward(vec4!(-0.5, 0.5, 0, 1));
+		let p2 = model.forward(vec4!(0.5, 0.5, 0, 1));
+		let p3 = model.forward(vec4!(0.5, -0.5, 0, 1));
+		let p4 = model.forward(vec4!(-0.5, -0.5, 0, 1));
+
 		vbuf.data(&[
 			// pos       // colors        // uv
-			-0.5,  0.5, 0.0,   1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  // top left
-			0.5,  0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0, // top right
-			0.5, -0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0, // bottom right
-			-0.5, -0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0, // bottom left
+			p1.x, p1.y, p1.z,   1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  // top left
+			p2.x, p2.y, p2.z,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0, // top right
+			p3.x, p3.y, p3.z,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0, // bottom right
+			p4.x, p4.y, p4.z,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0, // bottom left
 		], 0);
 
 		let ibuf = gl::IndexBuffer::new(&device, 6, gl::BufferUsage::Static).unwrap();
@@ -46,20 +66,22 @@ impl Ctx {
 		vao.attr(&vbuf, 1, 4, 3);
 		vao.attr(&vbuf, 2, 2, 7);
 
-		let img = img::Image::from_bytes(include_bytes!("../res/CP437.png")).unwrap();
-		let tex = gl::Texture::new(&device, img.width() as i32, img.height() as i32).unwrap();
-
-		tex.data(&img.into_raw());
-
 		let program = gl::Program::new(&device, include_str!("test.vert"), include_str!("test.frag")).expect("oh no");
 
 		program.send("u_color", color!(0, 0, 1, 1));
 
+		let proj = math::ortho(0.0, (w.width() as f32), 0.0, (w.height() as f32), -1.0, 1.0);
+// 			* Mat4::translate(vec3!(w.width() / 2, w.height() / 2, 0))
+// 			* Mat4::scale(vec3!(tex.width, tex.height, 1));
+
+		program.send("u_proj", proj);
+
 		let ctx = Self {
 			device: device,
+			empty_tex: empty_tex,
+			_tex: tex,
 			_vao: vao,
 			_ibuf: ibuf,
-			_tex: tex,
 			_program: program,
 		};
 
