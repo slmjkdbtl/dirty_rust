@@ -8,6 +8,7 @@ use std::collections::HashSet;
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
+use glutin::GlProfile;
 use glutin::ElementState;
 use derive_more::*;
 use gilrs::Gilrs;
@@ -44,7 +45,7 @@ impl Ctx {
 
 	pub(super) fn new(conf: &app::Conf) -> Result<Self> {
 
-		let mut events_loop = glutin::EventsLoop::new();
+		let events_loop = glutin::EventsLoop::new();
 
 		let mut window_builder = glutin::WindowBuilder::new()
 			.with_title(conf.title.to_owned())
@@ -74,15 +75,13 @@ impl Ctx {
 
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (3, 2)));
+			.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+			.with_gl_profile(GlProfile::Core);
 
 		let windowed_ctx = ctx_builder
 			.build_windowed(window_builder, &events_loop)?;
 
 		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
-		let window = windowed_ctx.window();
-
-		let mut gamepad_ctx = Gilrs::new()?;
 
 		let mut ctx = Self {
 
@@ -100,7 +99,7 @@ impl Ctx {
 
 			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
-			gamepad_ctx: gamepad_ctx,
+			gamepad_ctx: Gilrs::new()?,
 
 		};
 

@@ -97,15 +97,18 @@ impl Default for Conf {
 }
 
 pub trait State {
-	fn init(&mut self, ctx: &mut Ctx) {}
-	fn run(&mut self, ctx: &mut Ctx, dt: f32) {}
+
+	fn run(&mut self, _: &mut Ctx, _: f32) -> Result<()> {
+		return Ok(());
+	}
+
+	fn quit(&mut self, _: &mut Ctx) -> Result<()> {
+		return Ok(());
+	}
+
 }
 
-pub fn run<S: State>(mut s: S) -> Result<()> {
-	return run_ex(s, Conf::default());
-}
-
-pub fn run_ex<S: State>(mut s: S, conf: Conf) -> Result<()> {
+pub fn run<S: State, F: FnOnce(&mut Ctx) -> Result<S>>(f: F, conf: Conf) -> Result<()> {
 
 	let window = window::Ctx::new(&conf)?;
 	let gfx = gfx::Ctx::new(&window, &conf);
@@ -124,7 +127,7 @@ pub fn run_ex<S: State>(mut s: S, conf: Conf) -> Result<()> {
 
 	};
 
-	s.init(&mut ctx);
+	let mut s = f(&mut ctx)?;
 
 	loop {
 
@@ -139,7 +142,7 @@ pub fn run_ex<S: State>(mut s: S, conf: Conf) -> Result<()> {
 		let dt = ctx.dt;
 
 		ctx.gfx.clear();
-		s.run(&mut ctx, dt);
+		s.run(&mut ctx, dt)?;
 		ctx.window.swap()?;
 
 		if ctx.quit {

@@ -672,7 +672,7 @@ pub fn serve<F: Fn(Request) -> Response>(loc: &str, port: u16, handler: F) -> Re
 		let req = Request::from_raw(&buf)?;
 		let res = handler(req);
 
-		stream.write_all(&res.message());
+		stream.write_all(&res.message())?;
 
 	}
 
