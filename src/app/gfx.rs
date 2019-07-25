@@ -12,6 +12,7 @@ pub struct Ctx {
 	device: gl::Device,
 	_vao: gl::VertexArray,
 	_ibuf: gl::IndexBuffer,
+	_tex: gl::Texture,
 	_program: gl::Program,
 }
 
@@ -23,14 +24,15 @@ impl Ctx {
 			w.windowed_ctx.get_proc_address(s) as *const _
 		});
 
-		let vbuf = gl::VertexBuffer::new(&device, 12, 3, gl::BufferUsage::Static).unwrap();
+		let vbuf = gl::VertexBuffer::new(&device, 36, 9, gl::BufferUsage::Static).unwrap();
 		let vao = gl::VertexArray::new(&device).unwrap();
 
 		vbuf.data(&[
-			 0.5,  0.5, 0.0,
-			 0.5, -0.5, 0.0,
-			-0.5, -0.5, 0.0,
-			-0.5,  0.5, 0.0,
+			// pos       // colors        // uv
+			-0.5,  0.5, 0.0,   1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  // top left
+			0.5,  0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0, // top right
+			0.5, -0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0, // bottom right
+			-0.5, -0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0, // bottom left
 		], 0);
 
 		let ibuf = gl::IndexBuffer::new(&device, 6, gl::BufferUsage::Static).unwrap();
@@ -41,15 +43,23 @@ impl Ctx {
 		], 0);
 
 		vao.attr(&vbuf, 0, 3, 0);
+		vao.attr(&vbuf, 1, 4, 3);
+		vao.attr(&vbuf, 2, 2, 7);
+
+		let img = img::Image::from_bytes(include_bytes!("../res/CP437.png")).unwrap();
+		let tex = gl::Texture::new(&device, img.width() as i32, img.height() as i32).unwrap();
+
+		tex.data(&img.into_raw());
 
 		let program = gl::Program::new(&device, include_str!("test.vert"), include_str!("test.frag")).expect("oh no");
 
-		program.send("color", color!(0, 0, 1, 1));
+		program.send("u_color", color!(0, 0, 1, 1));
 
 		let ctx = Self {
 			device: device,
 			_vao: vao,
 			_ibuf: ibuf,
+			_tex: tex,
 			_program: program,
 		};
 
@@ -60,17 +70,13 @@ impl Ctx {
 
 	}
 
-	pub fn draw_on(canvas: &Canvas) {
-		// ...
-	}
-
 	pub fn clear_color(&self, c: Color) {
 		self.device.clear_color(c);
 	}
 
 	pub fn clear(&self) {
 		self.device.clear();
-		self.device.draw_elements(&self._vao, &self._ibuf, &self._program, 6);
+		self.device.draw_elements(&self._vao, &self._ibuf, &self._program, &self._tex, 6);
 	}
 
 }

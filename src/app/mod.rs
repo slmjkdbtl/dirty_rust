@@ -176,6 +176,10 @@ pub fn dt(ctx: &Ctx) -> f32 {
 	return ctx.dt;
 }
 
+pub fn fps(ctx: &Ctx) -> i32 {
+	return (1.0 / ctx.dt) as i32;
+}
+
 pub fn time(ctx: &Ctx) -> f32 {
 	return ctx.time;
 }

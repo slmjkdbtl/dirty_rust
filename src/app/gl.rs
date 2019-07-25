@@ -35,8 +35,8 @@ impl Device {
 		&self,
 		vao: &VertexArray,
 		ibuf: &IndexBuffer,
-// 		tex: &Texture,
 		program: &Program,
+		tex: &Texture,
 		count: i32,
 	) {
 
@@ -44,15 +44,15 @@ impl Device {
 
 			vao.bind();
 			ibuf.bind();
-// 			tex.bind();
 			program.bind();
+			tex.bind();
 
 			self.ctx.draw_elements(glow::TRIANGLES, count, glow::UNSIGNED_INT, 0);
 
 			vao.unbind();
 			ibuf.unbind();
-// 			tex.unbind();
 			program.unbind();
+			tex.unbind();
 
 		}
 
