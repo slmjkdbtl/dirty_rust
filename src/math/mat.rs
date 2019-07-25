@@ -11,14 +11,24 @@ pub enum Dir {
 	Z,
 }
 
+impl From<Dir> for Vec3 {
+	fn from(d: Dir) -> Vec3 {
+		return match d {
+			Dir::X => vec3!(1, 0, 0),
+			Dir::Y => vec3!(0, 1, 0),
+			Dir::Z => vec3!(0, 0, 1),
+		};
+	}
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Mat4 {
-	pub(super) m: [[f32; 4]; 4],
+	pub(super) m: [f32; 16],
 }
 
 impl Mat4 {
 
-	pub fn new(m: [[f32; 4]; 4]) -> Self {
+	pub fn new(m: [f32; 16]) -> Self {
 		return Self {
 			m: m,
 		};
@@ -28,37 +38,31 @@ impl Mat4 {
 
 		return Self {
 			m: [
-				[1.0, 0.0, 0.0, 0.0],
-				[0.0, 1.0, 0.0, 0.0],
-				[0.0, 0.0, 1.0, 0.0],
-				[0.0, 0.0, 0.0, 1.0],
+				1.0, 0.0, 0.0, 0.0,
+				0.0, 1.0, 0.0, 0.0,
+				0.0, 0.0, 1.0, 0.0,
+				0.0, 0.0, 0.0, 1.0,
 			]
 		};
 
 	}
 
 	pub fn translate(pos: Vec3) -> Self {
-
-		let mut m = Self::identity();
-
-		m.m[3][0] = pos.x;
-		m.m[3][1] = pos.y;
-		m.m[3][2] = pos.z;
-
-		return m;
-
+		return Self::new([
+			1.0, 0.0, 0.0, pos.x,
+			0.0, 1.0, 0.0, pos.y,
+			0.0, 0.0, 1.0, pos.z,
+			0.0, 0.0, 0.0, 1.0,
+		]);
 	}
 
 	pub fn scale(scale: Vec3) -> Self {
-
-		let mut m = Self::identity();
-
-		m.m[0][0] = scale.x;
-		m.m[1][1] = scale.y;
-		m.m[2][2] = scale.z;
-
-		return m;
-
+		return Self::new([
+			scale.x, 0.0, 0.0, 0.0,
+			0.0, scale.y, 0.0, 0.0,
+			0.0, 0.0, scale.z, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		]);
 	}
 
 	pub fn rotate(rot: f32, dir: Dir) -> Self {
@@ -67,91 +71,39 @@ impl Mat4 {
 		let c = rot.cos();
 		let s = rot.sin();
 		let cv = 1.0 - c;
+		let axis: Vec3 = dir.into();
 
-		let axis = match dir {
-			Dir::X => vec3!(1, 0, 0),
-			Dir::Y => vec3!(0, 1, 0),
-			Dir::Z => vec3!(0, 0, 1),
-		};
+		m.m[0] = (axis.x * axis.x * cv) + c;
+		m.m[1] = (axis.x * axis.y * cv) + (axis.z * s);
+		m.m[2] = (axis.x * axis.z * cv) - (axis.y * s);
 
-		m.m[0][0] = (axis.x * axis.x * cv) + c;
-		m.m[0][1] = (axis.x * axis.y * cv) + (axis.z * s);
-		m.m[0][2] = (axis.x * axis.z * cv) - (axis.y * s);
+		m.m[4] = (axis.y * axis.x * cv) - (axis.z * s);
+		m.m[5] = (axis.y * axis.y * cv) + c;
+		m.m[6] = (axis.y * axis.z * cv) + (axis.x * s);
 
-		m.m[1][0] = (axis.y * axis.x * cv) - (axis.z * s);
-		m.m[1][1] = (axis.y * axis.y * cv) + c;
-		m.m[1][2] = (axis.y * axis.z * cv) + (axis.x * s);
-
-		m.m[2][0] = (axis.z * axis.x * cv) + (axis.y * s);
-		m.m[2][1] = (axis.z * axis.y * cv) - (axis.x * s);
-		m.m[2][2] = (axis.z * axis.z * cv) + c;
+		m.m[8] = (axis.z * axis.x * cv) + (axis.y * s);
+		m.m[9] = (axis.z * axis.y * cv) - (axis.x * s);
+		m.m[10] = (axis.z * axis.z * cv) + c;
 
 		return m;
 
 	}
 
-	pub fn inverse(&self) -> Self {
-
-		let mut nm = Self::identity();
-
-		let f00 = self.m[2][2] * self.m[3][3] - self.m[3][2] * self.m[2][3];
-		let f01 = self.m[2][1] * self.m[3][3] - self.m[3][1] * self.m[2][3];
-		let f02 = self.m[2][1] * self.m[3][2] - self.m[3][1] * self.m[2][2];
-		let f03 = self.m[2][0] * self.m[3][3] - self.m[3][0] * self.m[2][3];
-		let f04 = self.m[2][0] * self.m[3][2] - self.m[3][0] * self.m[2][2];
-		let f05 = self.m[2][0] * self.m[3][1] - self.m[3][0] * self.m[2][1];
-		let f06 = self.m[1][2] * self.m[3][3] - self.m[3][2] * self.m[1][3];
-		let f07 = self.m[1][1] * self.m[3][3] - self.m[3][1] * self.m[1][3];
-		let f08 = self.m[1][1] * self.m[3][2] - self.m[3][1] * self.m[1][2];
-		let f09 = self.m[1][0] * self.m[3][3] - self.m[3][0] * self.m[1][3];
-		let f10 = self.m[1][0] * self.m[3][2] - self.m[3][0] * self.m[1][2];
-		let f11 = self.m[1][1] * self.m[3][3] - self.m[3][1] * self.m[1][3];
-		let f12 = self.m[1][0] * self.m[3][1] - self.m[3][0] * self.m[1][1];
-		let f13 = self.m[1][2] * self.m[2][3] - self.m[2][2] * self.m[1][3];
-		let f14 = self.m[1][1] * self.m[2][3] - self.m[2][1] * self.m[1][3];
-		let f15 = self.m[1][1] * self.m[2][2] - self.m[2][1] * self.m[1][2];
-		let f16 = self.m[1][0] * self.m[2][3] - self.m[2][0] * self.m[1][3];
-		let f17 = self.m[1][0] * self.m[2][2] - self.m[2][0] * self.m[1][2];
-		let f18 = self.m[1][0] * self.m[2][1] - self.m[2][0] * self.m[1][1];
-
-		nm.m[0][0] = self.m[1][1] * f00 - self.m[1][2] * f01 + self.m[1][3] * f02;
-		nm.m[1][0] = -(self.m[1][0] * f00 - self.m[1][2] * f03 + self.m[1][3] * f04);
-		nm.m[2][0] = self.m[1][0] * f01 - self.m[1][1] * f03 + self.m[1][3] * f05;
-		nm.m[3][0] = -(self.m[1][0] * f02 - self.m[1][1] * f04 + self.m[1][2] * f05);
-
-		nm.m[0][1] = -(self.m[0][1] * f00 - self.m[0][2] * f01 + self.m[0][3] * f02);
-		nm.m[1][1] = self.m[0][0] * f00 - self.m[0][2] * f03 + self.m[0][3] * f04;
-		nm.m[2][1] = -(self.m[0][0] * f01 - self.m[0][1] * f03 + self.m[0][3] * f05);
-		nm.m[3][1] = self.m[0][0] * f02 - self.m[0][1] * f04 + self.m[0][2] * f05;
-
-		nm.m[0][2] = self.m[0][1] * f06 - self.m[0][2] * f07 + self.m[0][3] * f08;
-		nm.m[1][2] = -(self.m[0][0] * f06 - self.m[0][2] * f09 + self.m[0][3] * f10);
-		nm.m[2][2] = self.m[0][0] * f11 - self.m[0][1] * f09 + self.m[0][3] * f12;
-		nm.m[3][2] = -(self.m[0][0] * f08 - self.m[0][1] * f10 + self.m[0][2] * f12);
-
-		nm.m[0][3] = -(self.m[0][1] * f13 - self.m[0][2] * f14 + self.m[0][3] * f15);
-		nm.m[1][3] = self.m[0][0] * f13 - self.m[0][2] * f16 + self.m[0][3] * f17;
-		nm.m[2][3] = -(self.m[0][0] * f14 - self.m[0][1] * f16 + self.m[0][3] * f18);
-		nm.m[3][3] = self.m[0][0] * f15 - self.m[0][1] * f17 + self.m[0][2] * f18;
-
-		let det =
-			self.m[0][0] * nm.m[0][0] +
-			self.m[0][1] * nm.m[1][0] +
-			self.m[0][2] * nm.m[2][0] +
-			self.m[0][3] * nm.m[3][0];
-
-		for i in 0..4 {
-			for j in 0..4 {
-				nm.m[i][j] *= (1.0 / det);
-			}
-		}
-
-		return nm;
-
+	pub fn as_arr(&self) -> [f32; 16] {
+		return self.m;
 	}
 
-	pub fn as_arr(&self) -> [[f32; 4]; 4] {
-		return self.m;
+	pub fn forward(&self, v: Vec4) -> Vec4 {
+
+		let m = self.m;
+
+		return vec4!(
+			m[0] * v.x + m[1] * v.y + m[2] * v.z + m[3] * v.w,
+			m[4] * v.x + m[5] * v.y + m[6] * v.z + m[7] * v.w,
+			m[8] * v.x + m[9] * v.y + m[10] * v.z + m[11] * v.w,
+			m[12] * v.x + m[13] * v.y + m[14] * v.z + m[15] * v.w
+		);
+
 	}
 
 }
@@ -170,15 +122,15 @@ impl ops::Mul for Mat4 {
 
 	fn mul(self, other: Self) -> Self {
 
-		let mut nm = Mat4::identity();
+		let mut nm = Self::identity();
 
 		for i in 0..4 {
 			for j in 0..4 {
-				nm.m[i][j] =
-					self.m[0][j] * other.m[i][0] +
-					self.m[1][j] * other.m[i][1] +
-					self.m[2][j] * other.m[i][2] +
-					self.m[3][j] * other.m[i][3];
+				nm.m[i * 4 + j] =
+					self.m[0 * 4 + j] * other.m[i * 4 + 0] +
+					self.m[1 * 4 + j] * other.m[i * 4 + 1] +
+					self.m[2 * 4 + j] * other.m[i * 4 + 2] +
+					self.m[3 * 4 + j] * other.m[i * 4 + 3];
 			}
 		};
 

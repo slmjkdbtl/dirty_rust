@@ -52,35 +52,27 @@ pub fn map(val: f32, a1: f32, a2: f32, b1: f32, b2: f32) -> f32 {
 /// generate orthographic matrix
 pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {
 
-	let mut m = Mat4::identity();
-
-	m.m[0][0] = 2.0 / (right - left);
-	m.m[1][1] = 2.0 / (top - bottom);
-	m.m[2][2] = 2.0 / (near - far);
-
-	m.m[3][0] = (left + right) / (left - right);
-	m.m[3][1] = (bottom + top) / (bottom - top);
-	m.m[3][2] = (far + near) / (near - far);
-
-	return m;
+	return Mat4::new([
+		2.0 / (right - left), 0.0, 0.0, 0.0,
+		0.0, 2.0 / (top - bottom), 0.0, 0.0,
+		0.0, 0.0, 2.0 / (near - far), 0.0,
+		(left + right) / (left - right), (bottom + top) / (bottom - top), (far + near) / (near - far), 1.0,
+	]);
 
 }
 
 /// construct perspective matrix
 pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 
-	let mut m = Mat4::identity();
 	let f_depth = far - near;
 	let o_depth = 1.0 / f_depth;
 
-	m.m[1][1] = 1.0 / (0.5 * fov).tan();
-	m.m[0][0] = m.m[1][1] / aspect;
-	m.m[2][2] = far * o_depth;
-	m.m[3][2] = (-far * near) * o_depth;
-	m.m[2][3] = 1.0;
-	m.m[3][3] = 0.0;
-
-	return m;
+	return Mat4::new([
+		(0.5 * fov).tan() / aspect, 0.0, 0.0, 0.0,
+		0.0, 1.0 / (0.5 * fov).tan(), 0.0, 0.0,
+		0.0, 0.0, far * o_depth, 1.0,
+		0.0, 0.0, (-far * near) * o_depth, 0.0,
+	]);
 
 }
 
@@ -90,25 +82,13 @@ pub fn lookat(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
 	let z = (center - eye).unit();
 	let x = up.cross(z).unit();
 	let y = z.cross(x);
-	let mut m = Mat4::identity();
 
-	m.m[0][0] = x.x;
-	m.m[0][1] = y.x;
-	m.m[0][2] = z.x;
-
-	m.m[1][0] = x.y;
-	m.m[1][1] = y.y;
-	m.m[1][2] = z.y;
-
-	m.m[2][0] = x.z;
-	m.m[2][1] = y.z;
-	m.m[2][2] = z.z;
-
-	m.m[3][0] = -x.dot(eye);
-	m.m[3][1] = -y.dot(eye);
-	m.m[3][2] = -z.dot(eye);
-
-	return m;
+	return Mat4::new([
+		x.x, y.x, z.x, 0.0,
+		x.y, y.y, z.y, 0.0,
+		x.z, y.z, z.z, 0.0,
+		-x.dot(eye), -y.dot(eye), -z.dot(eye), 1.0,
+	]);
 
 }
 

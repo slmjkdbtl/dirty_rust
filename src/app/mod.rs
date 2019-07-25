@@ -38,8 +38,8 @@ pub struct Ctx {
 
 #[derive(Clone, Debug)]
 pub struct Conf {
-	pub width: u32,
-	pub height: u32,
+	pub width: i32,
+	pub height: i32,
 	pub title: String,
 	pub hidpi: bool,
 	pub resizable: bool,
@@ -59,7 +59,7 @@ pub struct Conf {
 
 impl Conf {
 
-	pub fn basic(title: &str, width: u32, height: u32) -> Self {
+	pub fn basic(title: &str, width: i32, height: i32) -> Self {
 		return Self {
 			title: String::from(title),
 			width: width,

@@ -743,9 +743,9 @@ impl UniformValue for Color {
 	}
 }
 
-// impl UniformValue for Mat4 {
-//	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-//		ctx.uniform_4_f32_slice(loc, self);
-//	}
-// }
+impl UniformValue for Mat4 {
+	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
+		ctx.uniform_matrix_4_f32_slice(loc, false, &self.as_arr());
+	}
+}
 
