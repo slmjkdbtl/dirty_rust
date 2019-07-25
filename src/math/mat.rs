@@ -49,10 +49,10 @@ impl Mat4 {
 
 	pub fn translate(pos: Vec3) -> Self {
 		return Self::new([
-			1.0, 0.0, 0.0, pos.x,
-			0.0, 1.0, 0.0, pos.y,
-			0.0, 0.0, 1.0, pos.z,
-			0.0, 0.0, 0.0, 1.0,
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			pos.x, pos.y, pos.z, 1.0,
 		]);
 	}
 
@@ -93,16 +93,16 @@ impl Mat4 {
 		return self.m;
 	}
 
-	pub fn forward(&self, v: Vec4) -> Vec4 {
+	pub fn forward(&self, pt: Vec4) -> Vec4 {
 
 		let m = self.m;
 
 		return vec4!(
-			m[0] * v.x + m[1] * v.y + m[2] * v.z + m[3] * v.w,
-			m[4] * v.x + m[5] * v.y + m[6] * v.z + m[7] * v.w,
-			m[8] * v.x + m[9] * v.y + m[10] * v.z + m[11] * v.w,
-			m[12] * v.x + m[13] * v.y + m[14] * v.z + m[15] * v.w
-		);
+			pt.x * m[0] + pt.y * m[4] + pt.z * m[8] + pt.w * m[12],
+			pt.x * m[1] + pt.y * m[5] + pt.z * m[9] + pt.w * m[13],
+			pt.x * m[2] + pt.y * m[6] + pt.z * m[10] + pt.w * m[14],
+			pt.x * m[3] + pt.y * m[7] + pt.z * m[11] + pt.w * m[15]
+		)
 
 	}
 
