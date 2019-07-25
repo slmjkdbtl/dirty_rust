@@ -38,21 +38,23 @@ impl Ctx {
 		let vao = gl::VertexArray::new(&device).unwrap();
 
 		let model =
-			Mat4::scale(vec3!(tex.width * 2, tex.height * 2, 1))
+			Mat4::translate(vec3!(w.width() / 2, w.height() / 2, 0))
 			* Mat4::rotate(15f32.to_radians(), Dir::Z)
-			* Mat4::translate(vec3!(w.width() / 2, w.height() / 2, 0));
+			* Mat4::scale(vec3!(tex.width * 2, tex.height * 2, 1));
 
-		let p1 = model.forward(vec4!(-0.5, 0.5, 0, 1));
-		let p2 = model.forward(vec4!(0.5, 0.5, 0, 1));
-		let p3 = model.forward(vec4!(0.5, -0.5, 0, 1));
-		let p4 = model.forward(vec4!(-0.5, -0.5, 0, 1));
+// 		let model = Mat4::identity();
+
+		let p1 = model.forward(vec4!(-0.5, 0.5, 0.0, 1.0));
+		let p2 = model.forward(vec4!(0.5, 0.5, 0.0, 1.0));
+		let p3 = model.forward(vec4!(0.5, -0.5, 0.0, 1.0));
+		let p4 = model.forward(vec4!(-0.5, -0.5, 0.0, 1.0));
 
 		vbuf.data(&[
 			// pos       // colors        // uv
-			p1.x, p1.y, p1.z,   1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  // top left
-			p2.x, p2.y, p2.z,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0, // top right
-			p3.x, p3.y, p3.z,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0, // bottom right
-			p4.x, p4.y, p4.z,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0, // bottom left
+			p1.x, p1.y, 0.0,   1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  // top left
+			p2.x, p2.y, 0.0,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0, // top right
+			p3.x, p3.y, 0.0,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0, // bottom right
+			p4.x, p4.y, 0.0,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0, // bottom left
 		], 0);
 
 		let ibuf = gl::IndexBuffer::new(&device, 6, gl::BufferUsage::Static).unwrap();
@@ -72,7 +74,7 @@ impl Ctx {
 
 		let proj = math::ortho(0.0, (w.width() as f32), 0.0, (w.height() as f32), -1.0, 1.0);
 // 			* Mat4::translate(vec3!(w.width() / 2, w.height() / 2, 0))
-// 			* Mat4::scale(vec3!(tex.width, tex.height, 1));
+// 			* Mat4::scale(vec3!(tex.width * 2, tex.height * 2, 1));
 
 		program.send("u_proj", proj);
 
