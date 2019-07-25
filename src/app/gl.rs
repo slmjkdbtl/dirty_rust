@@ -16,39 +16,83 @@ use crate::Result;
 use crate::math::*;
 
 pub struct Device {
-	gl: Rc<GLCtx>,
+	ctx: Rc<GLCtx>,
 }
 
 impl Device {
 
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
-		return Self {
-			gl: Rc::new(GLCtx::from_loader_function(f)),
+
+		let device = Self {
+			ctx: Rc::new(GLCtx::from_loader_function(f)),
 		};
+
+		return device;
+
 	}
 
 	pub fn draw_elements(
-		&mut self,
-		vbuf: &VertexBuffer,
+		&self,
+		vao: &VertexArray,
 		ibuf: &IndexBuffer,
-		tex: &Texture,
+// 		tex: &Texture,
 		program: &Program,
 		count: i32,
 	) {
 
 		unsafe {
 
-			vbuf.bind();
+			vao.bind();
 			ibuf.bind();
-			tex.bind();
+// 			tex.bind();
 			program.bind();
 
-			self.gl.draw_elements(glow::TRIANGLES, count, glow::UNSIGNED_INT, 0);
+			self.ctx.draw_elements(glow::TRIANGLES, count, glow::UNSIGNED_INT, 0);
 
-			vbuf.unbind();
+			vao.unbind();
 			ibuf.unbind();
-			tex.unbind();
+// 			tex.unbind();
 			program.unbind();
+
+		}
+
+	}
+
+	pub fn draw_arrays(
+		&self,
+		vao: &VertexArray,
+		program: &Program,
+	) {
+
+		unsafe {
+
+			vao.bind();
+			program.bind();
+			self.ctx.draw_arrays(glow::TRIANGLES, 0, 3);
+			vao.unbind();
+			program.unbind();
+
+		}
+
+	}
+
+	pub fn get_error(&self) -> Result<()> {
+
+		unsafe {
+
+			use Error::OpenGL;
+
+			return match self.ctx.get_error() {
+				glow::NO_ERROR => Ok(()),
+				glow::INVALID_ENUM => Err(OpenGL("INVALID_ENUM".to_owned())),
+				glow::INVALID_VALUE => Err(OpenGL("INVALID_VALUE".to_owned())),
+				glow::INVALID_OPERATION => Err(OpenGL("INVALID_OPERATION".to_owned())),
+				glow::STACK_OVERFLOW => Err(OpenGL("STACK_OVERFLOW".to_owned())),
+				glow::STACK_UNDERFLOW => Err(OpenGL("STACK_UNDERFLOW".to_owned())),
+				glow::OUT_OF_MEMORY => Err(OpenGL("OUT_OF_MEMORY".to_owned())),
+				glow::INVALID_FRAMEBUFFER_OPERATION => Err(OpenGL("INVALID_FRAMEBUFFER_OPERATION".to_owned())),
+				_ => Err(OpenGL("UNKNOWN".to_owned())),
+			};
 
 		}
 
@@ -56,14 +100,77 @@ impl Device {
 
 	pub fn clear_color(&self, c: Color) {
 		unsafe {
-			self.gl.clear_color(c.r, c.g, c.b, c.a);
+			self.ctx.clear_color(c.r, c.g, c.b, c.a);
 		}
 	}
 
 	pub fn clear(&self) {
 		unsafe {
-			self.gl.clear(glow::COLOR_BUFFER_BIT);
+			self.ctx.clear(glow::COLOR_BUFFER_BIT);
 		}
+	}
+
+}
+
+pub struct VertexArray {
+	ctx: Rc<GLCtx>,
+	id: VertexArrayID,
+}
+
+impl VertexArray {
+
+	pub fn new(device: &Device) -> Result<Self> {
+
+		unsafe {
+
+			let ctx = device.ctx.clone();
+			let id = ctx.create_vertex_array()?;
+
+			let buf = Self {
+				ctx: ctx,
+				id: id,
+			};
+
+			return Ok(buf);
+
+		}
+
+	}
+
+	fn bind(&self) {
+		unsafe {
+			self.ctx.bind_vertex_array(Some(self.id));
+		}
+	}
+
+	fn unbind(&self) {
+		unsafe {
+			self.ctx.bind_vertex_array(None);
+		}
+	}
+
+	pub fn attr(&self, vbuf: &VertexBuffer, index: u32, size: i32, offset: usize) {
+
+		unsafe {
+
+			self.bind();
+			vbuf.bind();
+
+			self.ctx.vertex_attrib_pointer_f32(
+				index,
+				size,
+				glow::FLOAT,
+				false,
+				(vbuf.stride * mem::size_of::<f32>()) as i32,
+				(offset * mem::size_of::<f32>()) as i32,
+			);
+
+			self.ctx.enable_vertex_attrib_array(index);
+			vbuf.unbind();
+			self.unbind();
+
+		}
+
 	}
 
 }
@@ -83,8 +190,8 @@ impl VertexBuffer {
 
 		unsafe {
 
-			let ctx = device.gl.clone();
-			let id = ctx.create_texture()?;
+			let ctx = device.ctx.clone();
+			let id = ctx.create_buffer()?;
 
 			let buf = Self {
 				ctx: ctx,
@@ -109,13 +216,13 @@ impl VertexBuffer {
 
 	}
 
-	pub fn bind(&self) {
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, None);
 		}
@@ -166,7 +273,7 @@ impl IndexBuffer {
 
 		unsafe {
 
-			let ctx = device.gl.clone();
+			let ctx = device.ctx.clone();
 			let id = ctx.create_buffer()?;
 
 			let buf = Self {
@@ -191,19 +298,19 @@ impl IndexBuffer {
 
 	}
 
-	pub fn bind(&self) {
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
 		}
 	}
 
-	pub fn data(&self, data: &[f32], offset: usize) {
+	pub fn data(&self, data: &[u32], offset: usize) {
 
 		unsafe {
 
@@ -214,7 +321,7 @@ impl IndexBuffer {
 
 			self.ctx.buffer_sub_data_u8_slice(
 				glow::ELEMENT_ARRAY_BUFFER,
-				(offset * mem::size_of::<f32>()) as i32,
+				(offset * mem::size_of::<u32>()) as i32,
 				byte_slice,
 			);
 
@@ -237,8 +344,8 @@ impl Drop for IndexBuffer {
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
-	width: i32,
-	height: i32,
+	pub width: i32,
+	pub height: i32,
 }
 
 impl Texture {
@@ -247,7 +354,7 @@ impl Texture {
 
 		unsafe {
 
-			let ctx = device.gl.clone();
+			let ctx = device.ctx.clone();
 			let id = ctx.create_texture()?;
 
 			let tex = Self {
@@ -339,6 +446,31 @@ impl Texture {
 
 	}
 
+	pub fn get_data(&self) -> Vec<u8> {
+
+		let size = (self.width * self.height * 4) as usize;
+		let pixels = vec![0.0 as u8; size];
+
+		self.bind();
+
+		unsafe {
+
+			self.ctx.get_tex_image_u8_slice(
+				glow::TEXTURE_2D,
+				0,
+				glow::RGBA,
+				glow::UNSIGNED_BYTE,
+				Some(&pixels),
+			);
+
+		}
+
+		self.unbind();
+
+		return pixels;
+
+	}
+
 }
 
 impl Drop for Texture {
@@ -360,7 +492,7 @@ impl Program {
 
 		unsafe {
 
-			let ctx = device.gl.clone();
+			let ctx = device.ctx.clone();
 			let program_id = ctx.create_program()?;
 
 			let vert_id = ctx.create_shader(glow::VERTEX_SHADER)?;
@@ -451,7 +583,7 @@ impl Framebuffer {
 
 		unsafe {
 
-			let ctx = device.gl.clone();
+			let ctx = device.ctx.clone();
 			let id = ctx.create_framebuffer()?;
 			let tex = Texture::new(device, width, height)?;
 
@@ -612,8 +744,8 @@ impl UniformValue for Color {
 }
 
 // impl UniformValue for Mat4 {
-// 	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-// 		ctx.uniform_4_f32_slice(loc, self);
-// 	}
+//	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
+//		ctx.uniform_4_f32_slice(loc, self);
+//	}
 // }
 
