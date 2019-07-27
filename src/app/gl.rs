@@ -103,6 +103,51 @@ impl Device {
 
 }
 
+pub struct Renderer<S: Shape> {
+	vbuf: VertexBuffer<S::Vertex>,
+	ibuf: IndexBuffer,
+}
+
+impl<S: Shape> Renderer<S> {
+
+	pub fn new(device: &Device, s: S) -> Result<Self> {
+
+		let indices = S::indices();
+		let vert_count = S::COUNT;
+		let vert_stride = S::Vertex::STRIDE;
+
+		let vbuf = VertexBuffer::new(&device, S::COUNT, BufferUsage::Static)?;
+		let ibuf = IndexBuffer::new(&device, indices.len(), BufferUsage::Static)?;
+
+		ibuf.data(0, &indices);
+
+		let mut queue = vec![];
+
+		s.push(&mut queue);
+		vbuf.data(0, &queue);
+
+		return Ok(Self {
+			vbuf: vbuf,
+			ibuf: ibuf,
+		});
+
+	}
+
+	pub fn draw(&mut self, device: &Device, program: &Program) {
+
+		self.vbuf.bind();
+		self.ibuf.bind();
+		program.bind();
+		self.vbuf.bind_attrs(program);
+		device.draw_elements(S::indices().len() as i32);
+		program.unbind();
+		self.vbuf.unbind();
+		self.ibuf.unbind();
+
+	}
+
+}
+
 pub struct BatchedRenderer<S: Shape> {
 
 	vbuf: VertexBuffer<S::Vertex>,
@@ -166,11 +211,11 @@ impl<S: Shape> BatchedRenderer<S> {
 		self.vbuf.data(0, &self.queue);
 		self.vbuf.bind();
 		self.ibuf.bind();
-		program.bind();
 		self.vbuf.bind_attrs(program);
+		program.bind();
 
 		device.draw_elements(
-			(self.queue.len() / S::Vertex::STRIDE / S::COUNT * S::indices().len()) as i32
+			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as i32
 		);
 
 		program.unbind();
@@ -300,7 +345,7 @@ pub struct VertexBuffer<V: VertexLayout> {
 	id: BufferID,
 	stride: usize,
 	attrs: Vec<VertexAttr>,
-	_type: PhantomData<V>,
+	layout: PhantomData<V>,
 
 }
 
@@ -318,7 +363,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 				id: id,
 				stride: V::STRIDE,
 				attrs: V::attrs(),
-				_type: PhantomData,
+				layout: PhantomData,
 			};
 
 			buf.bind();
@@ -810,6 +855,7 @@ impl PartialEq for Framebuffer {
 pub enum BufferUsage {
 	Static,
 	Dynamic,
+	Stream,
 }
 
 impl From<BufferUsage> for u32 {
@@ -817,6 +863,7 @@ impl From<BufferUsage> for u32 {
 		return match buffer_usage {
 			BufferUsage::Static => glow::STATIC_DRAW,
 			BufferUsage::Dynamic => glow::DYNAMIC_DRAW,
+			BufferUsage::Stream => glow::STREAM_DRAW,
 		};
 	}
 }
