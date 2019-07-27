@@ -14,9 +14,9 @@ use gl::Shape;
 pub struct Ctx {
 	pub(super) device: Rc<gl::Device>,
 // 	g2d: g2d::Ctx;
-	active_tex: Option<Texture>,
+	cur_tex: Option<Texture>,
 	renderer: gl::BatchedRenderer<QuadShape>,
-	_program: gl::Program,
+	program: gl::Program,
 	draw_calls_last: usize,
 	draw_calls: usize,
 }
@@ -109,6 +109,32 @@ impl VertexLayout for Vertex2D {
 	}
 }
 
+pub enum Origin {
+	Center,
+	TopLeft,
+	BottomLeft,
+	TopRight,
+	BottomRight,
+}
+
+impl Origin {
+
+	pub fn to_ortho(&self, w: i32, h: i32) -> Mat4 {
+
+		let w = w as f32;
+		let h = h as f32;
+
+		return match self {
+			Origin::Center => math::ortho(-w / 2.0, w / 2.0, -h / 2.0, h / 2.0, -1.0, 1.0),
+			Origin::TopLeft => math::ortho(0.0, w, -h, 0.0, -1.0, 1.0),
+			Origin::BottomLeft => math::ortho(0.0, w, 0.0, h, -1.0, 1.0),
+			Origin::TopRight => math::ortho(-w, 0.0, -h, 0.0, -1.0, 1.0),
+			Origin::BottomRight => math::ortho(-w, 0.0, 0.0, h, -1.0, 1.0),
+		};
+
+	}
+}
+
 impl Ctx {
 
     pub(super) fn new(window: &window::Ctx, conf: &app::Conf) -> Result<Self> {
@@ -125,27 +151,21 @@ impl Ctx {
 		device.clear();
 		window.swap()?;
 
-		let img = img::Image::from_bytes(include_bytes!("../../icon.png"))?;
-		let tex = gl::Texture::new(&device, img.width() as i32, img.height() as i32)?;
-
-		tex.data(&img.into_raw());
-
 		let mut renderer = gl::BatchedRenderer::<QuadShape>::new(&device, 120)?;
 
 		let vert_src = include_str!("../res/2d_template.vert").replace("###REPLACE###", include_str!("../res/2d_default.vert"));
 		let frag_src = include_str!("../res/2d_template.frag").replace("###REPLACE###", include_str!("../res/2d_default.frag"));
 
 		let program = gl::Program::new(&device, &vert_src, &frag_src)?;
+		let proj = Origin::Center.to_ortho(window.width(), window.height());
 
-		let proj = math::ortho(0.0, (window.width() as f32), 0.0, (window.height() as f32), -1.0, 1.0);
-
-		program.send("u_proj", proj);
+		program.send("projection", proj);
 
 		let ctx = Self {
 			device: device,
-			active_tex: None,
+			cur_tex: None,
 			renderer: renderer,
-			_program: program,
+			program: program,
 			draw_calls: 0,
 			draw_calls_last: 0,
 		};
@@ -175,10 +195,10 @@ impl Ctx {
 
 	pub fn flush(&mut self) {
 
-		if let Some(tex) = &self.active_tex {
+		if let Some(tex) = &self.cur_tex {
 
 			tex.handle.bind();
-			self.renderer.flush(&self.device, &self._program);
+			self.renderer.flush(&self.device, &self.program);
 			tex.handle.unbind();
 			self.draw_calls += 1;
 
@@ -201,11 +221,11 @@ impl Ctx {
 
 		let wrapped_tex = Some(tex.clone());
 
-		if self.active_tex != wrapped_tex {
-			if self.active_tex.is_some() {
+		if self.cur_tex != wrapped_tex {
+			if self.cur_tex.is_some() {
 				self.flush();
 			}
-			self.active_tex = wrapped_tex;
+			self.cur_tex = wrapped_tex;
 		}
 
 		self.renderer.push(QuadShape::new(model, c, quad));

@@ -25,11 +25,9 @@ impl app::State for Game {
 			app::quit(ctx);
 		}
 
-		for _ in 0..10000 {
-			gfx::draw(ctx, &self.tex, vec2!(window::width(ctx) / 2, window::height(ctx) / 2), 0.0, vec2!(1), rect!(0, 0, 0.25, 1), color!());
+		for _ in 0..100 {
+			gfx::draw(ctx, &self.tex, vec2!(0), 0.0, vec2!(1), rect!(0, 0, 0.25, 1), color!());
 		}
-		dbg!(gfx::draw_calls(ctx));
-		dbg!(app::fps(ctx));
 
 		return Ok(());
 
