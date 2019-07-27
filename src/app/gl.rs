@@ -2,18 +2,20 @@
 
 use std::mem;
 use std::rc::Rc;
+use std::marker::PhantomData;
 
 use glow::Context;
+
+use crate::Error;
+use crate::Result;
+use crate::math::*;
+
 type GLCtx = glow::native::Context;
 type BufferID = <GLCtx as Context>::Buffer;
 type ProgramID = <GLCtx as Context>::Program;
 type TextureID = <GLCtx as Context>::Texture;
 type FramebufferID = <GLCtx as Context>::Framebuffer;
 type VertexArrayID = <GLCtx as Context>::VertexArray;
-
-use crate::Error;
-use crate::Result;
-use crate::math::*;
 
 pub struct Device {
 	ctx: Rc<GLCtx>,
@@ -23,57 +25,46 @@ impl Device {
 
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
 
-		let device = Self {
+		return Self {
 			ctx: Rc::new(GLCtx::from_loader_function(f)),
 		};
 
-		return device;
-
 	}
 
-	pub fn draw_elements(
-		&self,
-		vao: &VertexArray,
-		ibuf: &IndexBuffer,
-		program: &Program,
-		tex: &Texture,
-		count: i32,
-	) {
-
+	pub fn enable(&self, cap: Capability) {
 		unsafe {
+			self.ctx.enable(cap.into());
+		}
+	}
 
-			vao.bind();
-			ibuf.bind();
-			program.bind();
-			tex.bind();
+	pub fn disable(&self, cap: Capability) {
+		unsafe {
+			self.ctx.disable(cap.into());
+		}
+	}
 
+	pub fn blend_func(&self, src: BlendFunc, dest: BlendFunc) {
+		unsafe {
+			self.ctx.blend_func(src.into(), dest.into());
+		}
+	}
+
+	pub fn blend_func_sep(&self, src_rgb: BlendFunc, dest_rgb: BlendFunc, src_a: BlendFunc, dest_a: BlendFunc) {
+		unsafe {
+			self.ctx.blend_func_separate(src_rgb.into(), dest_rgb.into(), src_a.into(), dest_a.into());
+		}
+	}
+
+	pub fn draw_elements(&self, count: i32) {
+		unsafe {
 			self.ctx.draw_elements(glow::TRIANGLES, count, glow::UNSIGNED_INT, 0);
-
-			vao.unbind();
-			ibuf.unbind();
-			program.unbind();
-			tex.unbind();
-
 		}
-
 	}
 
-	pub fn draw_arrays(
-		&self,
-		vao: &VertexArray,
-		program: &Program,
-	) {
-
+	pub fn draw_arrays(&self, count: i32) {
 		unsafe {
-
-			vao.bind();
-			program.bind();
-			self.ctx.draw_arrays(glow::TRIANGLES, 0, 3);
-			vao.unbind();
-			program.unbind();
-
+			self.ctx.draw_arrays(glow::TRIANGLES, 0, count);
 		}
-
 	}
 
 	pub fn get_error(&self) -> Result<()> {
@@ -112,6 +103,120 @@ impl Device {
 
 }
 
+pub struct BatchedRenderer<S: Shape> {
+
+	vbuf: VertexBuffer<S::Vertex>,
+	ibuf: IndexBuffer,
+	queue: Vec<f32>,
+
+}
+
+impl<S: Shape> BatchedRenderer<S> {
+
+	pub fn new(device: &Device, max: usize) -> Result<Self> {
+
+		let indices = S::indices();
+		let vert_count = S::COUNT;
+		let vert_stride = S::Vertex::STRIDE;
+		let max_vertices = max * vert_stride * vert_count;
+		let max_indices = max * indices.len();
+
+		let indices_batch: Vec<u32> = indices
+			.iter()
+			.cycle()
+			.take(max * indices.len())
+			.enumerate()
+			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
+			.collect();
+
+		let vbuf = VertexBuffer::new(&device, S::COUNT * max, BufferUsage::Dynamic)?;
+		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Static)?;
+
+		ibuf.data(0, &indices_batch);
+
+		let queue = Vec::with_capacity(max_vertices);
+
+		return Ok(Self {
+			vbuf: vbuf,
+			ibuf: ibuf,
+			queue: queue,
+		});
+
+	}
+
+	pub fn push(&mut self, mesh: S) -> Result<()> {
+
+		if self.queue.len() >= self.queue.capacity() {
+			self.queue.clear();
+			return Err(Error::MaxDraw);
+		}
+
+		mesh.push(&mut self.queue);
+
+		return Ok(());
+
+	}
+
+	pub fn flush(&mut self, device: &Device, program: &Program) {
+
+		if self.queue.is_empty() {
+			return;
+		}
+
+		self.vbuf.data(0, &self.queue);
+		self.vbuf.bind();
+		self.ibuf.bind();
+		program.bind();
+		self.vbuf.bind_attrs(program);
+
+		device.draw_elements(
+			(self.queue.len() / S::Vertex::STRIDE / S::COUNT * S::indices().len()) as i32
+		);
+
+		program.unbind();
+		self.vbuf.unbind();
+		self.ibuf.unbind();
+		self.queue.clear();
+
+	}
+
+}
+
+pub trait Shape {
+
+	type Vertex: VertexLayout;
+	const COUNT: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn indices() -> Vec<u32>;
+
+}
+
+pub trait VertexLayout {
+
+	const STRIDE: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn attrs() -> Vec<VertexAttr>;
+
+}
+
+pub struct VertexAttr {
+
+	name: String,
+	size: i32,
+	offset: usize,
+
+}
+
+impl VertexAttr {
+	pub fn new(name: &str, size: i32, offset: usize) -> Self {
+		return Self {
+			name: name.to_owned(),
+			size: size,
+			offset: offset,
+		};
+	}
+}
+
 pub struct VertexArray {
 	ctx: Rc<GLCtx>,
 	id: VertexArrayID,
@@ -137,19 +242,19 @@ impl VertexArray {
 
 	}
 
-	fn bind(&self) {
+	pub fn bind(&self) {
 		unsafe {
 			self.ctx.bind_vertex_array(Some(self.id));
 		}
 	}
 
-	fn unbind(&self) {
+	pub fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_vertex_array(None);
 		}
 	}
 
-	pub fn attr(&self, vbuf: &VertexBuffer, index: u32, size: i32, offset: usize) {
+	pub fn attr<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, index: u32, size: i32, offset: usize) {
 
 		unsafe {
 
@@ -175,18 +280,33 @@ impl VertexArray {
 
 }
 
-pub struct VertexBuffer {
+impl Drop for VertexArray {
+	fn drop(&mut self) {
+		unsafe {
+			self.ctx.delete_vertex_array(self.id);
+		}
+	}
+}
+
+impl PartialEq for VertexArray {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
+	}
+}
+
+pub struct VertexBuffer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
 	id: BufferID,
-	count: usize,
 	stride: usize,
+	attrs: Vec<VertexAttr>,
+	_type: PhantomData<V>,
 
 }
 
-impl VertexBuffer {
+impl<V: VertexLayout> VertexBuffer<V> {
 
-	pub fn new(device: &Device, count: usize, stride: usize, usage: BufferUsage) -> Result<Self> {
+	pub fn new(device: &Device, count: usize, usage: BufferUsage) -> Result<Self> {
 
 		unsafe {
 
@@ -196,15 +316,16 @@ impl VertexBuffer {
 			let buf = Self {
 				ctx: ctx,
 				id: id,
-				count: count,
-				stride: stride,
+				stride: V::STRIDE,
+				attrs: V::attrs(),
+				_type: PhantomData,
 			};
 
 			buf.bind();
 
 			buf.ctx.buffer_data_size(
 				glow::ARRAY_BUFFER,
-				(count * mem::size_of::<f32>()) as i32,
+				(count * V::STRIDE * mem::size_of::<f32>()) as i32,
 				usage.into(),
 			);
 
@@ -216,19 +337,44 @@ impl VertexBuffer {
 
 	}
 
-	fn bind(&self) {
+	pub fn bind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, Some(self.id));
 		}
 	}
 
-	fn unbind(&self) {
+	pub fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, None);
 		}
 	}
 
-	pub fn data(&self, data: &[f32], offset: usize) {
+	pub fn bind_attrs(&self, program: &Program) {
+
+		unsafe {
+
+			for attr in &self.attrs {
+
+				let index = self.ctx.get_attrib_location(program.id, &attr.name) as u32;
+
+				self.ctx.vertex_attrib_pointer_f32(
+					index,
+					attr.size,
+					glow::FLOAT,
+					false,
+					(self.stride * mem::size_of::<f32>()) as i32,
+					(attr.offset * mem::size_of::<f32>()) as i32,
+				);
+
+				self.ctx.enable_vertex_attrib_array(index);
+
+			}
+
+		}
+
+	}
+
+	pub fn data(&self, offset: usize, data: &[f32]) {
 
 		unsafe {
 
@@ -251,7 +397,7 @@ impl VertexBuffer {
 
 }
 
-impl Drop for VertexBuffer {
+impl<V: VertexLayout> Drop for VertexBuffer<V> {
 	fn drop(&mut self) {
 		unsafe {
 			self.ctx.delete_buffer(self.id);
@@ -259,11 +405,16 @@ impl Drop for VertexBuffer {
 	}
 }
 
+impl<V: VertexLayout> PartialEq for VertexBuffer<V> {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
+	}
+}
+
 pub struct IndexBuffer {
 
 	ctx: Rc<GLCtx>,
 	id: BufferID,
-	count: usize,
 
 }
 
@@ -279,7 +430,6 @@ impl IndexBuffer {
 			let buf = Self {
 				ctx: ctx,
 				id: id,
-				count: count,
 			};
 
 			buf.bind();
@@ -298,19 +448,19 @@ impl IndexBuffer {
 
 	}
 
-	fn bind(&self) {
+	pub fn bind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.id));
 		}
 	}
 
-	fn unbind(&self) {
+	pub fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
 		}
 	}
 
-	pub fn data(&self, data: &[u32], offset: usize) {
+	pub fn data(&self, offset: usize, data: &[u32]) {
 
 		unsafe {
 
@@ -338,6 +488,12 @@ impl Drop for IndexBuffer {
 		unsafe {
 			self.ctx.delete_buffer(self.id);
 		}
+	}
+}
+
+impl PartialEq for IndexBuffer {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
 	}
 }
 
@@ -410,13 +566,13 @@ impl Texture {
 
 	}
 
-	fn bind(&self) {
+	pub fn bind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, Some(self.id));
 		}
 	}
 
-	fn unbind(&self) {
+	pub fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, None);
 		}
@@ -478,6 +634,12 @@ impl Drop for Texture {
 		unsafe {
 			self.ctx.delete_texture(self.id);
 		}
+	}
+}
+
+impl PartialEq for Texture {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
 	}
 }
 
@@ -569,6 +731,12 @@ impl Drop for Program {
 	}
 }
 
+impl PartialEq for Program {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
+	}
+}
+
 pub struct Framebuffer {
 
 	ctx: Rc<GLCtx>,
@@ -632,6 +800,12 @@ impl Drop for Framebuffer {
 	}
 }
 
+impl PartialEq for Framebuffer {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
+	}
+}
+
 #[derive(Clone, Copy)]
 pub enum BufferUsage {
 	Static,
@@ -640,10 +814,10 @@ pub enum BufferUsage {
 
 impl From<BufferUsage> for u32 {
 	fn from(buffer_usage: BufferUsage) -> u32 {
-		match buffer_usage {
+		return match buffer_usage {
 			BufferUsage::Static => glow::STATIC_DRAW,
 			BufferUsage::Dynamic => glow::DYNAMIC_DRAW,
-		}
+		};
 	}
 }
 
@@ -655,10 +829,46 @@ pub enum FilterMode {
 
 impl From<FilterMode> for i32 {
 	fn from(filter_mode: FilterMode) -> i32 {
-		match filter_mode {
+		return match filter_mode {
 			FilterMode::Nearest => glow::NEAREST as i32,
 			FilterMode::Linear => glow::LINEAR as i32,
-		}
+		};
+	}
+}
+
+pub enum Capability {
+	Blend,
+	CullFace,
+	DepthTest,
+	StencilTest,
+	ScissorTest,
+}
+
+impl From<Capability> for u32 {
+	fn from(cap: Capability) -> u32 {
+		return match cap {
+			Capability::Blend => glow::BLEND,
+			Capability::CullFace => glow::CULL_FACE,
+			Capability::DepthTest => glow::DEPTH_TEST,
+			Capability::StencilTest => glow::STENCIL_TEST,
+			Capability::ScissorTest => glow::SCISSOR_TEST,
+		};
+	}
+}
+
+pub enum BlendFunc {
+	One,
+	SrcAlpha,
+	OneMinusSrcAlpha,
+}
+
+impl From<BlendFunc> for u32 {
+	fn from(cap: BlendFunc) -> u32 {
+		return match cap {
+			BlendFunc::One => glow::ONE,
+			BlendFunc::SrcAlpha => glow::SRC_ALPHA,
+			BlendFunc::OneMinusSrcAlpha => glow::ONE_MINUS_SRC_ALPHA,
+		};
 	}
 }
 

@@ -63,7 +63,7 @@ impl Ctx {
 				.with_fullscreen(Some(events_loop.get_primary_monitor()));
 		}
 
-		#[cfg(target_os = "macos")] {
+		if cfg!(target_os = "macos") {
 
 			use glutin::os::macos::WindowBuilderExt;
 
@@ -77,8 +77,7 @@ impl Ctx {
 
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
-			.with_gl_profile(GlProfile::Core);
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
 
 		let windowed_ctx = ctx_builder
 			.build_windowed(window_builder, &events_loop)?;

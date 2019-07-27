@@ -1,6 +1,31 @@
 // wengwengweng
 
 macro_rules! expose {
+
+	($tname:ident, $mod:ident, {$($fn:ident($($argn:ident: $argt:ty),*)$( -> $return:ty)?),*}) => {
+
+		pub trait $tname {
+			$(
+				fn $fn(&self, $($argn: $argt),*)$( -> $return)?;
+			)*
+		}
+
+		impl $tname for app::Ctx {
+			$(
+				fn $fn(&self, $($argn: $argt),*)$( -> $return)? {
+					// ...
+				}
+			)*
+		}
+
+		$(
+			pub fn $fn(ctx: &app::Ctx, $($argn: $argt),*)$( -> $return)? {
+				return ctx.$mod.$fn($($argn),*);
+			}
+		)*
+
+	};
+
 	($mod:ident, $fn:ident($($argn:ident: $argt:ty),*)$( -> $return:ty)?) => {
 		pub fn $fn(ctx: &app::Ctx, $($argn: $argt),*)$( -> $return)? {
 			return ctx.$mod.$fn($($argn),*);
@@ -13,8 +38,9 @@ macro_rules! expose {
 	};
 }
 
-mod gl;
+pub mod gl;
 pub mod gfx;
+pub mod g2d;
 pub mod window;
 
 use std::thread;
@@ -32,7 +58,8 @@ pub struct Ctx {
 	quit: bool,
 	dt: f32,
 	time: f32,
-	fps_cap: u32,
+	fps_cap: u16,
+	fps_counter: FPSCounter,
 
 }
 
@@ -98,6 +125,8 @@ impl Default for Conf {
 
 pub trait State {
 
+	fn init(_: &mut Ctx) -> Result<Self> where Self: Sized;
+
 	fn run(&mut self, _: &mut Ctx, _: f32) -> Result<()> {
 		return Ok(());
 	}
@@ -108,12 +137,10 @@ pub trait State {
 
 }
 
-pub fn run<S: State, F: FnOnce(&mut Ctx) -> Result<S>>(f: F, conf: Conf) -> Result<()> {
+pub fn run<S: State>(conf: Conf) -> Result<()> {
 
 	let window = window::Ctx::new(&conf)?;
-	let gfx = gfx::Ctx::new(&window, &conf);
-
-	window.swap()?;
+	let gfx = gfx::Ctx::new(&window, &conf)?;
 
 	let mut ctx = Ctx {
 
@@ -124,10 +151,11 @@ pub fn run<S: State, F: FnOnce(&mut Ctx) -> Result<S>>(f: F, conf: Conf) -> Resu
 		dt: 0.0,
 		time: 0.0,
 		fps_cap: 60,
+		fps_counter: FPSCounter::new(16),
 
 	};
 
-	let mut s = f(&mut ctx)?;
+	let mut s = S::init(&mut ctx)?;
 
 	loop {
 
@@ -141,26 +169,25 @@ pub fn run<S: State, F: FnOnce(&mut Ctx) -> Result<S>>(f: F, conf: Conf) -> Resu
 
 		let dt = ctx.dt;
 
-		ctx.gfx.clear();
+		ctx.gfx.begin();
 		s.run(&mut ctx, dt)?;
+		ctx.gfx.end();
 		ctx.window.swap()?;
 
 		if ctx.quit {
 			break;
 		}
 
-		let actual_dt = start_time.elapsed();
-		let actual_dt = actual_dt.as_millis() as f32;
-		let expected_dt = 1000.0 / ctx.fps_cap as f32;
+		let real_dt = start_time.elapsed().as_millis();
+		let expected_dt = (1000.0 / ctx.fps_cap as f32) as u128;
 
-		if expected_dt > actual_dt {
-			ctx.dt = expected_dt as f32 / 1000.0;
-			thread::sleep(Duration::from_millis((expected_dt - actual_dt) as u64));
-		} else {
-			ctx.dt = actual_dt as f32 / 1000.0;
+		if real_dt < expected_dt {
+			thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
 		}
 
+		ctx.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
 		ctx.time += ctx.dt;
+		ctx.fps_counter.push((1.0 / ctx.dt) as u16);
 
 	}
 
@@ -176,11 +203,43 @@ pub fn dt(ctx: &Ctx) -> f32 {
 	return ctx.dt;
 }
 
-pub fn fps(ctx: &Ctx) -> i32 {
-	return (1.0 / ctx.dt) as i32;
+pub fn fps(ctx: &Ctx) -> u16 {
+	return ctx.fps_counter.get_avg();
 }
 
 pub fn time(ctx: &Ctx) -> f32 {
 	return ctx.time;
+}
+
+struct FPSCounter {
+	buffer: Vec<u16>,
+}
+
+impl FPSCounter {
+
+	fn new(max: usize) -> Self {
+		return Self {
+			buffer: Vec::with_capacity(max),
+		}
+	}
+
+	fn push(&mut self, fps: u16) {
+		if self.buffer.len() == self.buffer.capacity() {
+			self.buffer.remove(0);
+		}
+		self.buffer.push(fps);
+	}
+
+	fn get_avg(&self) -> u16 {
+
+		if self.buffer.is_empty() {
+			return 0;
+		}
+
+		let sum: u16 = self.buffer.iter().sum();
+		return sum / self.buffer.len() as u16;
+
+	}
+
 }
 
