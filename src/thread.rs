@@ -16,7 +16,7 @@ impl Pool {
 		return Self {};
 	}
 
-	pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(&mut self, mut f: F) -> Task<T> {
+	pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(&mut self, f: F) -> Task<T> {
 
 		let (tx, rx) = mpsc::channel();
 
@@ -30,7 +30,7 @@ impl Pool {
 
 }
 
-pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(mut f: F) -> Task<T> {
+pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(f: F) -> Task<T> {
 
 	let (tx, rx) = mpsc::channel();
 
