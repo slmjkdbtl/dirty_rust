@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::fmt;
+use std::ops;
 use std::mem;
 
 use derive_more::*;
@@ -71,6 +72,18 @@ macro_rules! gen_vec {
 				return Self {
 					$($member: x),+
 				}
+			}
+
+		}
+
+		impl ops::Mul<$name> for $name {
+
+			type Output = Self;
+
+			fn mul(self, other: Self) -> Self {
+				return Self {
+					$($member: self.$member * other.$member),+
+				};
 			}
 
 		}
