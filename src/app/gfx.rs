@@ -11,11 +11,12 @@ use super::gl;
 use gl::VertexLayout;
 use gl::Shape;
 
+const MAX_DRAWS: usize = 65536;
+
 pub struct Ctx {
 	pub(super) device: Rc<gl::Device>,
-// 	g2d: g2d::Ctx;
 	cur_tex: Option<Texture>,
-	renderer: gl::BatchedRenderer<QuadShape>,
+	batched_renderer: gl::BatchedRenderer<QuadShape>,
 	program: gl::Program,
 	draw_calls_last: usize,
 	draw_calls: usize,
@@ -86,16 +87,16 @@ impl VertexLayout for Vertex2D {
 	const STRIDE: usize = 8;
 
 	fn push(&self, queue: &mut Vec<f32>) {
-
-		queue.push(self.pos.x);
-		queue.push(self.pos.y);
-		queue.push(self.color.r);
-		queue.push(self.color.g);
-		queue.push(self.color.b);
-		queue.push(self.color.a);
-		queue.push(self.uv.x);
-		queue.push(self.uv.y);
-
+		queue.extend_from_slice(&[
+			self.pos.x,
+			self.pos.y,
+			self.color.r,
+			self.color.g,
+			self.color.b,
+			self.color.a,
+			self.uv.x,
+			self.uv.y,
+		]);
 	}
 
 	fn attrs() -> Vec<gl::VertexAttr> {
@@ -133,6 +134,7 @@ impl Origin {
 		};
 
 	}
+
 }
 
 impl Ctx {
@@ -151,7 +153,7 @@ impl Ctx {
 		device.clear();
 		window.swap()?;
 
-		let mut renderer = gl::BatchedRenderer::<QuadShape>::new(&device, 120)?;
+		let batched_renderer = gl::BatchedRenderer::<QuadShape>::new(&device, MAX_DRAWS)?;
 
 		let vert_src = include_str!("../res/2d_template.vert").replace("###REPLACE###", include_str!("../res/2d_default.vert"));
 		let frag_src = include_str!("../res/2d_template.frag").replace("###REPLACE###", include_str!("../res/2d_default.frag"));
@@ -164,7 +166,7 @@ impl Ctx {
 		let ctx = Self {
 			device: device,
 			cur_tex: None,
-			renderer: renderer,
+			batched_renderer: batched_renderer,
 			program: program,
 			draw_calls: 0,
 			draw_calls_last: 0,
@@ -190,7 +192,6 @@ impl Ctx {
 
 	pub fn end(&mut self) {
 		self.flush();
-		self.draw_calls_last = 0;
 	}
 
 	pub fn flush(&mut self) {
@@ -198,7 +199,7 @@ impl Ctx {
 		if let Some(tex) = &self.cur_tex {
 
 			tex.handle.bind();
-			self.renderer.flush(&self.device, &self.program);
+			self.batched_renderer.flush(&self.device, &self.program);
 			tex.handle.unbind();
 			self.draw_calls += 1;
 
@@ -210,7 +211,7 @@ impl Ctx {
 		return self.draw_calls_last;
 	}
 
-	pub fn draw(&mut self, tex: &Texture, pos: Vec2, rot: f32, scale: Vec2, quad: Rect, c: Color) {
+	pub fn draw(&mut self, tex: &Texture, pos: Vec2, rot: f32, scale: Vec2, quad: Rect, c: Color) -> Result<()> {
 
 		let scale = scale * vec2!(tex.width(), tex.height()) * vec2!(quad.w, quad.h);
 
@@ -228,7 +229,9 @@ impl Ctx {
 			self.cur_tex = wrapped_tex;
 		}
 
-		self.renderer.push(QuadShape::new(model, c, quad));
+		self.batched_renderer.push(QuadShape::new(model, c, quad))?;
+
+		return Ok(());
 
 	}
 
@@ -236,7 +239,7 @@ impl Ctx {
 
 expose!(gfx, clear_color(c: Color));
 expose!(gfx, clear());
-expose!(gfx(mut), draw(tex: &Texture, pos: Vec2, rot: f32, scale: Vec2, quad: Rect, c: Color));
+expose!(gfx(mut), draw(tex: &Texture, pos: Vec2, rot: f32, scale: Vec2, quad: Rect, c: Color) -> Result<()>);
 expose!(gfx, draw_calls() -> usize);
 
 #[derive(Clone, PartialEq)]

@@ -10,8 +10,8 @@ license = "Zlib"
 edition = "2018"
 readme = "README.md"
 
-[profile.release]
-lto = true
+# [profile.release]
+# lto = true
 
 [features]
 default = [
