@@ -40,7 +40,6 @@ macro_rules! expose {
 
 pub mod gl;
 pub mod gfx;
-pub mod g2d;
 pub mod window;
 
 use std::thread;
