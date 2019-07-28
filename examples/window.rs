@@ -18,6 +18,7 @@ struct Game {
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
 			count: 0,
@@ -40,15 +41,34 @@ impl app::State for Game {
 		}
 
 		if self.started {
+
 			if !self.done {
+
 				for _ in 0..self.count {
-					gfx::draw(ctx, &self.tex, vec2!(rand!(0, w), rand!(0, h)), 0.0, vec2!(1), rect!(0, 0, 1, 1), color!())?;
+
+					gfx::push(ctx);
+					gfx::translate(ctx, vec2!(rand!(0, w), rand!(0, h)));
+					gfx::draw(ctx, &self.tex, rect!(0, 0, 1, 1))?;
+					gfx::pop(ctx)?;
+
 				}
+
 			} else {
-				gfx::text(ctx, &format!("{}", self.count), vec2!(24));
+
+				gfx::push(ctx);
+				gfx::translate(ctx, vec2!(24));
+				gfx::text(ctx, &format!("{}", self.count))?;
+				gfx::pop(ctx)?;
+
 			}
+
 		} else {
-			gfx::text(ctx, "preparing...", vec2!(24));
+
+			gfx::push(ctx);
+			gfx::translate(ctx, vec2!(24));
+			gfx::text(ctx, "waiting...")?;
+			gfx::pop(ctx)?;
+
 		}
 
 		window::set_title(ctx, &format!("FPS: {} DCS: {} OBJS: {}", app::fps(ctx), gfx::draw_calls(ctx), self.count));

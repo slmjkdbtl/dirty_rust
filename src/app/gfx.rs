@@ -35,6 +35,14 @@ pub struct Ctx {
 	cur_font: Font,
 	draw_calls_last: usize,
 	draw_calls: usize,
+	state: State,
+	state_stack: Vec<State>,
+}
+
+#[derive(Clone, Default)]
+struct State {
+	transform: Mat4,
+	color: Color,
 }
 
 struct QuadShape {
@@ -200,6 +208,8 @@ impl Ctx {
 			cur_font: font,
 			draw_calls: 0,
 			draw_calls_last: 0,
+			state: State::default(),
+			state_stack: Vec::with_capacity(16),
 		};
 
 		return Ok(ctx);
@@ -207,13 +217,19 @@ impl Ctx {
 	}
 
 	pub(super) fn begin(&mut self) {
+
 		self.draw_calls_last = self.draw_calls;
 		self.draw_calls = 0;
 		self.clear();
+
 	}
 
 	pub(super) fn end(&mut self) {
+
 		self.flush();
+		self.state = State::default();
+		self.state_stack.clear();
+
 	}
 
 	fn flush(&mut self) {
@@ -241,16 +257,31 @@ impl Ctx {
 		return self.draw_calls_last;
 	}
 
-	pub fn draw(&mut self, tex: &Texture, pos: Vec2, rot: f32, scale: Vec2, quad: Rect, c: Color) -> Result<()> {
+	pub fn push(&mut self) {
+		self.state_stack.push(self.state.clone());
+	}
 
-		let scale = scale * vec2!(tex.width(), tex.height()) * vec2!(quad.w, quad.h);
+	pub fn pop(&mut self) -> Result<()> {
+		self.state = self.state_stack.pop().ok_or(Error::StateStack)?;
+		return Ok(());
+	}
 
-		let model =
-			Mat4::translate(vec3!(pos.x, pos.y, 0))
-			* Mat4::rotate(rot, Dir::Z)
-			* Mat4::scale(vec3!(scale.x, scale.y, 1));
+	pub fn translate(&mut self, pos: Vec2) {
+		self.state.transform = self.state.transform * Mat4::translate(vec3!(pos.x, pos.y, 0));
+	}
+
+	pub fn rotate(&mut self, angle: f32) {
+		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::Z);
+	}
+
+	pub fn scale(&mut self, scale: Vec2) {
+		self.state.transform = self.state.transform * Mat4::scale(vec3!(scale.x, scale.y, 1));
+	}
+
+	pub fn draw(&mut self, tex: &Texture, quad: Rect) -> Result<()> {
 
 		let wrapped_tex = Some(tex.clone());
+		let scale = vec2!(tex.width(), tex.height()) * vec2!(quad.w, quad.h);
 
 		if self.cur_tex != wrapped_tex {
 			if self.cur_tex.is_some() {
@@ -259,18 +290,23 @@ impl Ctx {
 			self.cur_tex = wrapped_tex;
 		}
 
-		self.batched_renderer.push(QuadShape::new(model, c, quad))?;
+		self.push();
+		self.scale(scale);
+		self.batched_renderer.push(QuadShape::new(self.state.transform, self.state.color, quad))?;
+		self.pop()?;
 
 		return Ok(());
 
 	}
 
 	/// draw text
-	pub fn text(&mut self, s: &str, pos: Vec2) -> Result<()> {
+	pub fn text(&mut self, s: &str) -> Result<()> {
 
 		let w = self.cur_font.quad_size.x * self.cur_font.tex.width() as f32;
 		let h = self.cur_font.quad_size.y * self.cur_font.tex.height() as f32;
 		let tex = self.cur_font.tex.clone();
+
+		self.push();
 
 		for (i, ch) in s.chars().enumerate() {
 
@@ -279,12 +315,16 @@ impl Ctx {
 			if ch != ' ' {
 
 				if let Some(quad) = self.cur_font.map.get(&ch) {
-					self.draw(&tex, vec2!(x, 0) + pos, 0.0, vec2!(1, 1), *quad, color!())?;
+					self.draw(&tex, *quad)?;
 				}
 
 			}
 
+			self.translate(vec2!(w, 0));
+
 		}
+
+		self.pop();
 
 		return Ok(());
 
@@ -295,8 +335,13 @@ impl Ctx {
 expose!(gfx, clear_color(c: Color));
 expose!(gfx, clear());
 expose!(gfx, draw_calls() -> usize);
-expose!(gfx(mut), draw(tex: &Texture, pos: Vec2, rot: f32, scale: Vec2, quad: Rect, c: Color) -> Result<()>);
-expose!(gfx(mut), text(txt: &str, pos: Vec2) -> Result<()>);
+expose!(gfx(mut), draw(tex: &Texture, quad: Rect) -> Result<()>);
+expose!(gfx(mut), text(txt: &str) -> Result<()>);
+expose!(gfx(mut), push());
+expose!(gfx(mut), pop() -> Result<()>);
+expose!(gfx(mut), translate(pos: Vec2));
+expose!(gfx(mut), rotate(angle: f32));
+expose!(gfx(mut), scale(scale: Vec2));
 
 #[derive(Clone, PartialEq)]
 pub struct Texture {
