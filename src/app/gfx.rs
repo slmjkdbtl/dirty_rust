@@ -26,17 +26,24 @@ const DEFAULT_FONT_ROWS: usize = 8;
 const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
 
 pub struct Ctx {
+
 	pub(super) device: Rc<gl::Device>,
 	batched_renderer: gl::BatchedRenderer<QuadShape>,
+
 	cur_tex: Option<Texture>,
+	empty_tex: Texture,
+
 	default_shader: Shader,
 	cur_shader: Shader,
+
 	default_font: Font,
-	cur_font: Font,
+
 	draw_calls_last: usize,
 	draw_calls: usize,
+
 	state: State,
 	state_stack: Vec<State>,
+
 }
 
 #[derive(Clone, Default)]
@@ -47,16 +54,16 @@ struct State {
 
 struct QuadShape {
 	transform: Mat4,
+	quad: Quad,
 	color: Color,
-	quad: Rect,
 }
 
 impl QuadShape {
-	fn new(t: Mat4, c: Color, q: Rect) -> Self {
+	fn new(t: Mat4, q: Quad, c: Color) -> Self {
 		return Self {
 			transform: t,
-			color: c,
 			quad: q,
+			color: c,
 		};
 	}
 }
@@ -76,10 +83,10 @@ impl Shape for QuadShape {
 		let p3 = t.forward(vec4!(0.5, -0.5, 0, 1));
 		let p4 = t.forward(vec4!(-0.5, -0.5, 0, 1));
 
-		Self::Vertex::new(vec2!(p1.x, p1.y), *c, vec2!(q.x, q.y + q.h)).push(queue);
-		Self::Vertex::new(vec2!(p2.x, p2.y), *c, vec2!(q.x + q.w, q.y + q.h)).push(queue);
-		Self::Vertex::new(vec2!(p3.x, p3.y), *c, vec2!(q.x + q.w, q.y)).push(queue);
-		Self::Vertex::new(vec2!(p4.x, p4.y), *c, vec2!(q.x, q.y)).push(queue);
+		Self::Vertex::new(vec2!(p1.x, p1.y), vec2!(q.x, q.y + q.h), *c).push(queue);
+		Self::Vertex::new(vec2!(p2.x, p2.y), vec2!(q.x + q.w, q.y + q.h), *c).push(queue);
+		Self::Vertex::new(vec2!(p3.x, p3.y), vec2!(q.x + q.w, q.y), *c).push(queue);
+		Self::Vertex::new(vec2!(p4.x, p4.y), vec2!(q.x, q.y), *c).push(queue);
 
 	}
 
@@ -91,16 +98,16 @@ impl Shape for QuadShape {
 
 struct Vertex2D {
 	pos: Vec2,
-	color: Color,
 	uv: Vec2,
+	color: Color,
 }
 
 impl Vertex2D {
-	fn new(pos: Vec2, color: Color, uv: Vec2) -> Self {
+	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
 		return Self {
 			pos: pos,
-			color: color,
 			uv: uv,
+			color: color,
 		};
 	}
 }
@@ -113,12 +120,12 @@ impl VertexLayout for Vertex2D {
 		queue.extend_from_slice(&[
 			self.pos.x,
 			self.pos.y,
+			self.uv.x,
+			self.uv.y,
 			self.color.r,
 			self.color.g,
 			self.color.b,
 			self.color.a,
-			self.uv.x,
-			self.uv.y,
 		]);
 	}
 
@@ -126,8 +133,8 @@ impl VertexLayout for Vertex2D {
 
 		return vec![
 			gl::VertexAttr::new("pos", 2, 0),
-			gl::VertexAttr::new("color", 4, 2),
-			gl::VertexAttr::new("uv", 2, 6),
+			gl::VertexAttr::new("uv", 2, 2),
+			gl::VertexAttr::new("color", 4, 4),
 		];
 
 	}
@@ -178,6 +185,10 @@ impl Ctx {
 
 		let batched_renderer = gl::BatchedRenderer::<QuadShape>::new(&device, MAX_DRAWS)?;
 
+		let empty_tex = gl::Texture::new(&device, 1, 1)?;
+		empty_tex.data(&[255, 255, 255, 255]);
+		let empty_tex = Texture::from_handle(empty_tex);
+
 		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
@@ -191,7 +202,7 @@ impl Ctx {
 		font_tex.data(&font_img.into_raw());
 		let font_tex = Texture::from_handle(font_tex);
 
-		let font = Font::new(
+		let font = Font::from_tex(
 			font_tex,
 			DEFAULT_FONT_COLS,
 			DEFAULT_FONT_ROWS,
@@ -199,17 +210,24 @@ impl Ctx {
 		)?;
 
 		let ctx = Self {
+
 			device: device,
-			cur_tex: None,
 			batched_renderer: batched_renderer,
+
+			cur_tex: None,
+			empty_tex: empty_tex,
+
 			default_shader: shader.clone(),
 			cur_shader: shader,
-			default_font: font.clone(),
-			cur_font: font,
+
+			default_font: font,
+
 			draw_calls: 0,
 			draw_calls_last: 0,
+
 			state: State::default(),
 			state_stack: Vec::with_capacity(16),
+
 		};
 
 		return Ok(ctx);
@@ -278,56 +296,12 @@ impl Ctx {
 		self.state.transform = self.state.transform * Mat4::scale(vec3!(scale.x, scale.y, 1));
 	}
 
-	pub fn draw(&mut self, tex: &Texture, quad: Rect) -> Result<()> {
-
-		let wrapped_tex = Some(tex.clone());
-		let scale = vec2!(tex.width(), tex.height()) * vec2!(quad.w, quad.h);
-
-		if self.cur_tex != wrapped_tex {
-			if self.cur_tex.is_some() {
-				self.flush();
-			}
-			self.cur_tex = wrapped_tex;
-		}
-
-		self.push();
-		self.scale(scale);
-		self.batched_renderer.push(QuadShape::new(self.state.transform, self.state.color, quad))?;
-		self.pop()?;
-
-		return Ok(());
-
+	pub fn color(&mut self, c: Color) {
+		self.state.color = c;
 	}
 
-	/// draw text
-	pub fn text(&mut self, s: &str) -> Result<()> {
-
-		let w = self.cur_font.quad_size.x * self.cur_font.tex.width() as f32;
-		let h = self.cur_font.quad_size.y * self.cur_font.tex.height() as f32;
-		let tex = self.cur_font.tex.clone();
-
-		self.push();
-
-		for (i, ch) in s.chars().enumerate() {
-
-			let x = i as f32 * w;
-
-			if ch != ' ' {
-
-				if let Some(quad) = self.cur_font.map.get(&ch) {
-					self.draw(&tex, *quad)?;
-				}
-
-			}
-
-			self.translate(vec2!(w, 0));
-
-		}
-
-		self.pop();
-
-		return Ok(());
-
+	pub fn draw(&mut self, thing: impl Drawable) -> Result<()> {
+		return thing.draw(self);
 	}
 
 }
@@ -335,13 +309,13 @@ impl Ctx {
 expose!(gfx, clear_color(c: Color));
 expose!(gfx, clear());
 expose!(gfx, draw_calls() -> usize);
-expose!(gfx(mut), draw(tex: &Texture, quad: Rect) -> Result<()>);
-expose!(gfx(mut), text(txt: &str) -> Result<()>);
+expose!(gfx(mut), draw(t: impl Drawable) -> Result<()>);
 expose!(gfx(mut), push());
 expose!(gfx(mut), pop() -> Result<()>);
 expose!(gfx(mut), translate(pos: Vec2));
 expose!(gfx(mut), rotate(angle: f32));
 expose!(gfx(mut), scale(scale: Vec2));
+expose!(gfx(mut), color(c: Color));
 
 #[derive(Clone, PartialEq)]
 pub struct Texture {
@@ -396,7 +370,7 @@ impl Texture {
 pub struct Font {
 
 	tex: gfx::Texture,
-	map: HashMap<char, Rect>,
+	map: HashMap<char, Quad>,
 	quad_size: Vec2,
 	grid_size: Size,
 
@@ -405,7 +379,7 @@ pub struct Font {
 impl Font {
 
 	/// creat a bitmap font from a texture, and grid of characters
-	pub fn new(tex: gfx::Texture, cols: usize, rows: usize, chars: &str) -> Result<Self> {
+	pub fn from_tex(tex: gfx::Texture, cols: usize, rows: usize, chars: &str) -> Result<Self> {
 
 		let mut map = HashMap::new();
 		let quad_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
@@ -420,7 +394,7 @@ impl Font {
 
 		for (i, ch) in chars.chars().enumerate() {
 
-			map.insert(ch, rect!(
+			map.insert(ch, quad!(
 
 				(i % cols) as f32 * quad_size.x,
 				(i / cols) as f32 * quad_size.y,
@@ -504,6 +478,182 @@ impl Canvas {
 // 			width: width,
 // 			height: height,
 		});
+
+	}
+
+}
+
+pub trait Drawable {
+	fn draw(&self, ctx: &mut gfx::Ctx) -> Result<()>;
+}
+
+pub struct Sprite<'a> {
+	tex: &'a gfx::Texture,
+	quad: Quad,
+}
+
+impl<'a> Sprite<'a> {
+	pub fn quad(mut self, quad: Quad) -> Self {
+		self.quad = quad;
+		return self;
+	}
+}
+
+pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
+	return Sprite {
+		tex: tex,
+		quad: quad!(0, 0, 1, 1),
+	};
+}
+
+impl<'a> Drawable for Sprite<'a> {
+
+	fn draw(&self, ctx: &mut gfx::Ctx) -> Result<()> {
+
+		let wrapped_tex = Some(self.tex.clone());
+		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
+
+		if ctx.cur_tex != wrapped_tex {
+			if ctx.cur_tex.is_some() {
+				ctx.flush();
+			}
+			ctx.cur_tex = wrapped_tex;
+		}
+
+		ctx.push();
+		ctx.scale(scale);
+		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color))?;
+		ctx.pop()?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Text<'a> {
+	txt: &'a str,
+	font: Option<&'a Font>,
+}
+
+impl<'a> Text<'a> {
+	pub fn font(mut self, font: &'a Font) -> Self {
+		self.font = Some(font);
+		return self;
+	}
+}
+
+pub fn text<'a>(txt: &'a str) -> Text<'a> {
+	return Text {
+		txt: txt,
+		font: None,
+	};
+}
+
+impl<'a> Drawable for Text<'a> {
+
+	fn draw(&self, ctx: &mut gfx::Ctx) -> Result<()> {
+
+		let font;
+
+		if let Some(f) = self.font {
+			font = f.clone();
+		} else {
+			font = ctx.default_font.clone();
+		}
+
+		let w = font.quad_size.x * font.tex.width() as f32;
+		let h = font.quad_size.y * font.tex.height() as f32;
+		let tex = font.tex.clone();
+
+		ctx.push();
+
+		for (i, ch) in self.txt.chars().enumerate() {
+
+			let x = i as f32 * w;
+
+			if ch != ' ' {
+
+				if let Some(quad) = font.map.get(&ch) {
+					ctx.draw(sprite(&tex).quad(*quad))?;
+				}
+
+			}
+
+			ctx.translate(vec2!(w, 0));
+
+		}
+
+		ctx.pop()?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Line {
+	p1: Vec2,
+	p2: Vec2,
+	width: f32,
+}
+
+impl Line {
+	pub fn width(mut self, w: f32) -> Self {
+		self.width = w;
+		return self;
+	}
+}
+
+pub fn line(p1: Vec2, p2: Vec2) -> Line {
+	return Line {
+		p1: p1,
+		p2: p2,
+		width: 1.0,
+	};
+}
+
+impl Drawable for Line {
+
+	fn draw(&self, ctx: &mut gfx::Ctx) -> Result<()> {
+
+		let len = ((self.p2.x - self.p1.x).powi(2) + (self.p2.y - self.p1.y).powi(2)).sqrt();
+		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
+
+		ctx.push();
+		ctx.translate(self.p1);
+		ctx.rotate(rot);
+		ctx.draw(rect(len, self.width))?;
+		ctx.pop()?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Rect {
+	width: f32,
+	height: f32,
+}
+
+pub fn rect(w: f32, h: f32) -> Rect {
+	return Rect {
+		width: w,
+		height: h,
+	};
+}
+
+impl Drawable for Rect {
+
+	fn draw(&self, ctx: &mut gfx::Ctx) -> Result<()> {
+
+		ctx.push();
+		ctx.scale(vec2!(self.width, self.height));
+		ctx.draw(sprite(&ctx.empty_tex.clone()))?;
+		ctx.pop()?;
+
+		return Ok(());
 
 	}
 

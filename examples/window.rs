@@ -48,7 +48,7 @@ impl app::State for Game {
 
 					gfx::push(ctx);
 					gfx::translate(ctx, vec2!(rand!(0, w), rand!(0, h)));
-					gfx::draw(ctx, &self.tex, rect!(0, 0, 1, 1))?;
+					gfx::draw(ctx, gfx::sprite(&self.tex))?;
 					gfx::pop(ctx)?;
 
 				}
@@ -57,7 +57,7 @@ impl app::State for Game {
 
 				gfx::push(ctx);
 				gfx::translate(ctx, vec2!(24));
-				gfx::text(ctx, &format!("{}", self.count))?;
+				gfx::draw(ctx, gfx::text(&format!("{}", self.count)))?;
 				gfx::pop(ctx)?;
 
 			}
@@ -66,7 +66,7 @@ impl app::State for Game {
 
 			gfx::push(ctx);
 			gfx::translate(ctx, vec2!(24));
-			gfx::text(ctx, "waiting...")?;
+			gfx::draw(ctx, gfx::text("waiting..."))?;
 			gfx::pop(ctx)?;
 
 		}
@@ -95,7 +95,8 @@ impl app::State for Game {
 
 fn main() {
 
-	let result = app::run::<Game>(app::Conf::default());
+	let result = app::App::new()
+		.run::<Game>();
 
 	if let Err(err) = result {
 		println!("{}", err);
