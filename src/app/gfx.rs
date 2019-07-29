@@ -417,6 +417,8 @@ pub trait Drawable {
 pub struct Sprite<'a> {
 	tex: &'a gfx::Texture,
 	quad: Quad,
+	offset: Vec2,
+	radius: f32,
 }
 
 impl<'a> Sprite<'a> {
@@ -424,12 +426,22 @@ impl<'a> Sprite<'a> {
 		self.quad = quad;
 		return self;
 	}
+	pub fn offset(mut self, offset: Vec2) -> Self {
+		self.offset = offset;
+		return self;
+	}
+	pub fn radius(mut self, r: f32) -> Self {
+		self.radius = r;
+		return self
+	}
 }
 
 pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	return Sprite {
 		tex: tex,
 		quad: quad!(0, 0, 1, 1),
+		offset: vec2!(0),
+		radius: 0.0,
 	};
 }
 
@@ -449,6 +461,7 @@ impl<'a> Drawable for Sprite<'a> {
 
 		ctx.push();
 		ctx.scale(scale);
+		ctx.translate(self.offset * -0.5);
 		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color))?;
 		ctx.pop()?;
 
@@ -461,12 +474,16 @@ impl<'a> Drawable for Sprite<'a> {
 pub struct Text<'a> {
 	txt: &'a str,
 	font: Option<&'a Font>,
-	origin: Origin,
+	offset: Vec2,
 }
 
 impl<'a> Text<'a> {
 	pub fn font(mut self, font: &'a Font) -> Self {
 		self.font = Some(font);
+		return self;
+	}
+	pub fn offset(mut self, offset: Vec2) -> Self {
+		self.offset = offset;
 		return self;
 	}
 }
@@ -475,7 +492,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 	return Text {
 		txt: txt,
 		font: None,
-		origin: Origin::Center,
+		offset: vec2!(0),
 	};
 }
 
@@ -491,22 +508,19 @@ impl<'a> Drawable for Text<'a> {
 			font = ctx.default_font.clone();
 		}
 
+		let len = self.txt.len();
 		let gw = font.width();
 		let gh = font.height();
+		let tw = font.width() * len as u32;
+		let th = gh;
 		let w = font.quad_size.x * font.tex.width() as f32;
 		let h = font.quad_size.y * font.tex.height() as f32;
 		let tex = font.tex.clone();
+		let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
+		let offset = offset + self.offset * vec2!(tw, th) * -0.5;
 
 		ctx.push();
-
-		match self.origin {
-			Origin::Center => {
-				ctx.translate(vec2!(gw as f32 * (self.txt.len() as f32 * -0.5 + 0.5), 0));
-			}
-			_ => {
-				unimplemented!();
-			},
-		}
+		ctx.translate(offset);
 
 		for (i, ch) in self.txt.chars().enumerate() {
 
@@ -575,13 +589,22 @@ impl Drawable for Line {
 pub struct Rect {
 	width: f32,
 	height: f32,
+	radius: f32,
 }
 
 pub fn rect(w: f32, h: f32) -> Rect {
 	return Rect {
 		width: w,
 		height: h,
+		radius: 0.0,
 	};
+}
+
+impl Rect {
+	pub fn radius(mut self, r: f32) -> Self {
+		self.radius = r;
+		return self
+	}
 }
 
 impl Drawable for Rect {
