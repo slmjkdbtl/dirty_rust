@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::mem;
 use std::rc::Rc;
 use std::collections::HashMap;
 
@@ -52,13 +53,13 @@ impl Shape for QuadShape {
 
 	fn push(&self, queue: &mut Vec<f32>) {
 
-		let t = &self.transform;
-		let q = &self.quad;
-		let c = &self.color;
-		let p1 = t.forward(vec4!(-0.5, 0.5, 0, 1));
-		let p2 = t.forward(vec4!(0.5, 0.5, 0, 1));
-		let p3 = t.forward(vec4!(0.5, -0.5, 0, 1));
-		let p4 = t.forward(vec4!(-0.5, -0.5, 0, 1));
+		let t = self.transform;
+		let q = self.quad;
+		let c = self.color;
+		let p1 = t * vec2!(-0.5, 0.5);
+		let p2 = t * vec2!(0.5, 0.5);
+		let p3 = t * vec2!(0.5, -0.5);
+		let p4 = t * vec2!(-0.5, -0.5);
 
 		let mut u1 = vec2!(q.x, q.y + q.h);
 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
@@ -67,24 +68,24 @@ impl Shape for QuadShape {
 
 		match self.flip {
 			Flip::X => {
-				std::mem::swap(&mut u1, &mut u2);
-				std::mem::swap(&mut u4, &mut u3);
+				mem::swap(&mut u1, &mut u2);
+				mem::swap(&mut u4, &mut u3);
 			},
 			Flip::Y => {
-				std::mem::swap(&mut u2, &mut u3);
-				std::mem::swap(&mut u1, &mut u4);
+				mem::swap(&mut u2, &mut u3);
+				mem::swap(&mut u1, &mut u4);
 			},
 			Flip::XY => {
-				std::mem::swap(&mut u2, &mut u4);
-				std::mem::swap(&mut u1, &mut u3);
+				mem::swap(&mut u2, &mut u4);
+				mem::swap(&mut u1, &mut u3);
 			},
 			_ => {},
 		}
 
-		Self::Vertex::new(vec2!(p1.x, p1.y), u1, *c).push(queue);
-		Self::Vertex::new(vec2!(p2.x, p2.y), u2, *c).push(queue);
-		Self::Vertex::new(vec2!(p3.x, p3.y), u3, *c).push(queue);
-		Self::Vertex::new(vec2!(p4.x, p4.y), u4, *c).push(queue);
+		Self::Vertex::new(p1, u1, c).push(queue);
+		Self::Vertex::new(p2, u2, c).push(queue);
+		Self::Vertex::new(p3, u3, c).push(queue);
+		Self::Vertex::new(p4, u4, c).push(queue);
 
 	}
 

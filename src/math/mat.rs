@@ -89,19 +89,6 @@ impl Mat4 {
 		return self.m;
 	}
 
-	pub fn forward(&self, pt: Vec4) -> Vec4 {
-
-		let m = self.m;
-
-		return vec4!(
-			pt.x * m[0] + pt.y * m[4] + pt.z * m[8] + pt.w * m[12],
-			pt.x * m[1] + pt.y * m[5] + pt.z * m[9] + pt.w * m[13],
-			pt.x * m[2] + pt.y * m[6] + pt.z * m[10] + pt.w * m[14],
-			pt.x * m[3] + pt.y * m[7] + pt.z * m[11] + pt.w * m[15]
-		)
-
-	}
-
 }
 
 impl Default for Mat4 {
@@ -135,3 +122,45 @@ impl ops::Mul for Mat4 {
 	}
 
 }
+
+impl ops::Mul<Vec4> for Mat4 {
+
+	type Output = Vec4;
+
+	fn mul(self, pt: Self::Output) -> Self::Output {
+
+		let m = self.m;
+
+		return vec4!(
+			pt.x * m[0] + pt.y * m[4] + pt.z * m[8] + pt.w * m[12],
+			pt.x * m[1] + pt.y * m[5] + pt.z * m[9] + pt.w * m[13],
+			pt.x * m[2] + pt.y * m[6] + pt.z * m[10] + pt.w * m[14],
+			pt.x * m[3] + pt.y * m[7] + pt.z * m[11] + pt.w * m[15]
+		)
+
+	}
+
+}
+
+impl ops::Mul<Vec3> for Mat4 {
+
+	type Output = Vec3;
+
+	fn mul(self, pt: Self::Output) -> Self::Output {
+		let p = self * vec4!(pt.x, pt.y, pt.z, 1);
+		return vec3!(p.x, p.y, p.z);
+	}
+
+}
+
+impl ops::Mul<Vec2> for Mat4 {
+
+	type Output = Vec2;
+
+	fn mul(self, pt: Self::Output) -> Self::Output {
+		let p = self * vec4!(pt.x, pt.y, 0, 1);
+		return vec2!(p.x, p.y);
+	}
+
+}
+
