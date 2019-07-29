@@ -68,7 +68,7 @@ impl Input for app::Ctx {
 		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
 	}
 
-	fn key_pressed_repeat(&self, _key: Key) -> bool {
+	fn key_pressed_repeat(&self, key: Key) -> bool {
 		unimplemented!();
 	}
 

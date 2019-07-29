@@ -38,8 +38,9 @@ impl Image {
 
 	}
 
-// 	pub fn from_pixels(w: u32, h: u32, pixels: &[u8]) -> Self {
-// 	}
+	pub fn from_pixels(w: u32, h: u32, pixels: &[u8]) -> Self {
+		unimplemented!();
+	}
 
 	pub fn width(&self) -> u32 {
 		return self.handle.width();

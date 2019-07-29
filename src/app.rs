@@ -29,15 +29,17 @@ use input::Mouse;
 
 use window::Pos;
 
+use gfx::Origin;
+
 const MAX_DRAWS: usize = 65536;
 
-const TEMPLATE_2D_VERT: &str = include_str!("../res/2d_template.vert");
-const TEMPLATE_2D_FRAG: &str = include_str!("../res/2d_template.frag");
+const TEMPLATE_2D_VERT: &str = include_str!("res/2d_template.vert");
+const TEMPLATE_2D_FRAG: &str = include_str!("res/2d_template.frag");
 
-const DEFAULT_2D_VERT: &str = include_str!("../res/2d_default.vert");
-const DEFAULT_2D_FRAG: &str = include_str!("../res/2d_default.frag");
+const DEFAULT_2D_VERT: &str = include_str!("res/2d_default.vert");
+const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default.frag");
 
-const DEFAULT_FONT_IMG: &[u8] = include_bytes!("../res/CP437.png");
+const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/CP437.png");
 const DEFAULT_FONT_COLS: usize = 32;
 const DEFAULT_FONT_ROWS: usize = 8;
 const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
@@ -65,8 +67,8 @@ pub struct Ctx {
 	pub(self) fullscreen: bool,
 	pub(self) cursor_hidden: bool,
 	pub(self) cursor_locked: bool,
-	pub(self) width: i32,
-	pub(self) height: i32,
+	pub(self) width: u32,
+	pub(self) height: u32,
 
 	// gfx
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
@@ -151,7 +153,7 @@ impl Ctx {
 		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
 		let shader = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_src, &frag_src)?);
-		let proj = gfx::Origin::TopLeft.to_ortho(conf.width, conf.height);
+		let proj = conf.origin.to_ortho(conf.width, conf.height);
 
 		shader.send("projection", proj);
 
@@ -308,7 +310,7 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn size(mut self, w: i32, h: i32) -> Self {
+	pub fn size(mut self, w: u32, h: u32) -> Self {
 		self.conf.width = w;
 		self.conf.height = h;
 		return self;
@@ -374,12 +376,17 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn origin(mut self, o: Origin) -> Self {
+		self.conf.origin = o;
+		return self;
+	}
+
 }
 
 #[derive(Clone, Debug)]
 pub struct Conf {
-	pub width: i32,
-	pub height: i32,
+	pub width: u32,
+	pub height: u32,
 	pub title: String,
 	pub hidpi: bool,
 	pub resizable: bool,
@@ -395,11 +402,12 @@ pub struct Conf {
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
 	pub clear_color: Color,
+	pub origin: Origin,
 }
 
 impl Conf {
 
-	pub fn basic(title: &str, width: i32, height: i32) -> Self {
+	pub fn basic(title: &str, width: u32, height: u32) -> Self {
 		return Self {
 			title: String::from(title),
 			width: width,
@@ -431,6 +439,7 @@ impl Default for Conf {
 			cursor_hidden: false,
 			cursor_locked: false,
 			clear_color: color!(0, 0, 0, 1),
+			origin: Origin::Center,
 		};
 	}
 
