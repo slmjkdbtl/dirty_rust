@@ -19,10 +19,10 @@ pub trait Window {
 	fn toggle_cursor_hidden(&mut self);
 	fn set_cursor_locked(&mut self, b: bool) -> Result<()>;
 	fn is_cursor_locked(&self) -> bool;
-	fn toggle_cursor_locked(&mut self);
+	fn toggle_cursor_locked(&mut self) -> Result<()>;
 	fn set_title(&mut self, t: &str);
-	fn width(&self) -> i32;
-	fn height(&self) -> i32;
+	fn width(&self) -> u32;
+	fn height(&self) -> u32;
 
 }
 
@@ -73,19 +73,19 @@ impl Window for Ctx {
 		return self.cursor_locked;
 	}
 
-	fn toggle_cursor_locked(&mut self) {
-		self.set_cursor_locked(!self.is_cursor_locked());
+	fn toggle_cursor_locked(&mut self) -> Result<()> {
+		return self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
 	fn set_title(&mut self, t: &str) {
 		self.windowed_ctx.window().set_title(t);
 	}
 
-	fn width(&self) -> i32 {
+	fn width(&self) -> u32 {
 		return self.width;
 	}
 
-	fn height(&self) -> i32 {
+	fn height(&self) -> u32 {
 		return self.height;
 	}
 }

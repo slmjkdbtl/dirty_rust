@@ -2,6 +2,7 @@
 
 == DOING
 - better UniformValue api
+- custom shader
 
 == TODO
 - http less allocation / copying
@@ -16,4 +17,5 @@
 - use cargo feature
 - restructure app module api
 - massive cleaning
+- sprite example
 

@@ -4,8 +4,7 @@
 toolkit for things
 
 ### modules
-- **window** Window Creation & Config
-- **gfx** GPU Accelerated Drawing
+- **app** Windowing, Input, and Graphics
 - **img** Image Loading & Writing
 - **audio** Sound Loading & playback
 - **fs** Common File System Functions
@@ -16,7 +15,7 @@ toolkit for things
 
 This library was intended to be a game toolkit, but added a lot of other stuff due to my other scripting needs, and to provide a more integrated and unified scripting interface. All the modules can be configured with cargo feature:
 ```toml
-default = [ "lua", "fs", "gfx", "img", "audio", "http", "term", "col", "ase", ]
+default = [ "fs", "app", "img", "audio", ]
 ```
 All the modules can be used with lua or as rust modules, toggle with `lua` feature
 

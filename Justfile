@@ -1,9 +1,9 @@
 # wengwengweng
 
-run example="window":
+run example="app":
 	cargo run --example {{example}} --release
 
-run-lua example="window":
+run-lua example="app":
 	./bin/dirty examples/{{example}}.lua
 
 install: build

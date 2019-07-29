@@ -10,7 +10,6 @@ const GATE: u16 = 54;
 struct Game {
 
 	tex: gfx::Texture,
-	canvas: gfx::Canvas,
 	count: usize,
 	started: bool,
 	done: bool,
@@ -23,7 +22,6 @@ impl app::State for Game {
 
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
-			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			count: 0,
 			done: false,
 			started: false,
@@ -32,8 +30,8 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let w = ctx.width();
-		let h = ctx.height();
+		let w = ctx.width() as i32;
+		let h = ctx.height() as i32;
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();
@@ -50,7 +48,7 @@ impl app::State for Game {
 				for _ in 0..self.count {
 
 					ctx.push();
-					ctx.translate(vec2!(rand!(0, w), rand!(0, h)));
+					ctx.translate(vec2!(rand!(-w / 2, w / 2), rand!(-h / 2, h / 2)));
 					ctx.draw(gfx::sprite(&self.tex))?;
 					ctx.pop()?;
 
@@ -60,7 +58,6 @@ impl app::State for Game {
 
 				ctx.push();
 				ctx.scale(vec2!(4));
-				ctx.translate(vec2!(16));
 				ctx.draw(gfx::text(&format!("{}", self.count)))?;
 				ctx.pop()?;
 
@@ -70,7 +67,6 @@ impl app::State for Game {
 
 			ctx.push();
 			ctx.scale(vec2!(2));
-			ctx.translate(vec2!(16));
 			ctx.draw(gfx::text("waiting..."))?;
 			ctx.pop()?;
 

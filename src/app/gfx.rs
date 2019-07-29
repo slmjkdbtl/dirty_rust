@@ -107,6 +107,7 @@ impl VertexLayout for Vertex2D {
 	}
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub enum Origin {
 	Center,
 	TopLeft,
@@ -117,7 +118,7 @@ pub enum Origin {
 
 impl Origin {
 
-	pub fn to_ortho(&self, w: i32, h: i32) -> Mat4 {
+	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
 
 		let w = w as f32;
 		let h = h as f32;
@@ -460,6 +461,7 @@ impl<'a> Drawable for Sprite<'a> {
 pub struct Text<'a> {
 	txt: &'a str,
 	font: Option<&'a Font>,
+	origin: Origin,
 }
 
 impl<'a> Text<'a> {
@@ -473,6 +475,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 	return Text {
 		txt: txt,
 		font: None,
+		origin: Origin::Center,
 	};
 }
 
@@ -488,15 +491,26 @@ impl<'a> Drawable for Text<'a> {
 			font = ctx.default_font.clone();
 		}
 
+		let gw = font.width();
+		let gh = font.height();
 		let w = font.quad_size.x * font.tex.width() as f32;
-// 		let h = font.quad_size.y * font.tex.height() as f32;
+		let h = font.quad_size.y * font.tex.height() as f32;
 		let tex = font.tex.clone();
 
 		ctx.push();
 
+		match self.origin {
+			Origin::Center => {
+				ctx.translate(vec2!(gw as f32 * (self.txt.len() as f32 * -0.5 + 0.5), 0));
+			}
+			_ => {
+				unimplemented!();
+			},
+		}
+
 		for (i, ch) in self.txt.chars().enumerate() {
 
-// 			let x = i as f32 * w;
+			let x = i as f32 * w;
 
 			if ch != ' ' {
 
