@@ -21,6 +21,7 @@ pub trait Window {
 	fn is_cursor_locked(&self) -> bool;
 	fn toggle_cursor_locked(&mut self) -> Result<()>;
 	fn set_title(&mut self, t: &str);
+	fn dpi(&self) -> f64;
 	fn width(&self) -> u32;
 	fn height(&self) -> u32;
 
@@ -81,6 +82,10 @@ impl Window for Ctx {
 		self.windowed_ctx.window().set_title(t);
 	}
 
+	fn dpi(&self) -> f64 {
+		return self.windowed_ctx.window().get_hidpi_factor();
+	}
+
 	fn width(&self) -> u32 {
 		return self.width;
 	}
@@ -90,7 +95,7 @@ impl Window for Ctx {
 	}
 }
 
-pub(super) fn swap(ctx: &window::Ctx) -> Result<()> {
+pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
 	return Ok(ctx.windowed_ctx.swap_buffers()?);
 }
 

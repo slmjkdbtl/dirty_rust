@@ -15,24 +15,32 @@ use gl::Shape;
 
 #[derive(Clone, Default)]
 pub(super) struct State {
-	transform: Mat4,
-	color: Color,
+	pub transform: Mat4,
+	pub color: Color,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum Flip {
+	None,
+	X,
+	Y,
+	XY,
 }
 
 pub(super) struct QuadShape {
-	transform: Mat4,
-	quad: Quad,
-	color: Color,
-	radius: f32,
+	pub transform: Mat4,
+	pub quad: Quad,
+	pub color: Color,
+	pub flip: Flip,
 }
 
 impl QuadShape {
-	fn new(t: Mat4, q: Quad, c: Color, r: f32) -> Self {
+	pub fn new(t: Mat4, q: Quad, c: Color, f: Flip) -> Self {
 		return Self {
 			transform: t,
 			quad: q,
 			color: c,
-			radius: r,
+			flip: f,
 		};
 	}
 }
@@ -47,16 +55,36 @@ impl Shape for QuadShape {
 		let t = &self.transform;
 		let q = &self.quad;
 		let c = &self.color;
-		let r = self.radius;
 		let p1 = t.forward(vec4!(-0.5, 0.5, 0, 1));
 		let p2 = t.forward(vec4!(0.5, 0.5, 0, 1));
 		let p3 = t.forward(vec4!(0.5, -0.5, 0, 1));
 		let p4 = t.forward(vec4!(-0.5, -0.5, 0, 1));
 
-		Self::Vertex::new(vec2!(p1.x, p1.y), vec2!(q.x, q.y + q.h), *c, r).push(queue);
-		Self::Vertex::new(vec2!(p2.x, p2.y), vec2!(q.x + q.w, q.y + q.h), *c, r).push(queue);
-		Self::Vertex::new(vec2!(p3.x, p3.y), vec2!(q.x + q.w, q.y), *c, r).push(queue);
-		Self::Vertex::new(vec2!(p4.x, p4.y), vec2!(q.x, q.y), *c, r).push(queue);
+		let mut u1 = vec2!(q.x, q.y + q.h);
+		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u3 = vec2!(q.x + q.w, q.y);
+		let mut u4 = vec2!(q.x, q.y);
+
+		match self.flip {
+			Flip::X => {
+				std::mem::swap(&mut u1, &mut u2);
+				std::mem::swap(&mut u4, &mut u3);
+			},
+			Flip::Y => {
+				std::mem::swap(&mut u2, &mut u3);
+				std::mem::swap(&mut u1, &mut u4);
+			},
+			Flip::XY => {
+				std::mem::swap(&mut u2, &mut u4);
+				std::mem::swap(&mut u1, &mut u3);
+			},
+			_ => {},
+		}
+
+		Self::Vertex::new(vec2!(p1.x, p1.y), u1, *c).push(queue);
+		Self::Vertex::new(vec2!(p2.x, p2.y), u2, *c).push(queue);
+		Self::Vertex::new(vec2!(p3.x, p3.y), u3, *c).push(queue);
+		Self::Vertex::new(vec2!(p4.x, p4.y), u4, *c).push(queue);
 
 	}
 
@@ -70,23 +98,21 @@ pub(super) struct Vertex2D {
 	pos: Vec2,
 	uv: Vec2,
 	color: Color,
-	radius: f32,
 }
 
 impl Vertex2D {
-	fn new(pos: Vec2, uv: Vec2, color: Color, radius: f32) -> Self {
+	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
 		return Self {
 			pos: pos,
 			uv: uv,
 			color: color,
-			radius: radius,
 		};
 	}
 }
 
 impl VertexLayout for Vertex2D {
 
-	const STRIDE: usize = 9;
+	const STRIDE: usize = 8;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
@@ -98,7 +124,6 @@ impl VertexLayout for Vertex2D {
 			self.color.g,
 			self.color.b,
 			self.color.a,
-			self.radius,
 		]);
 	}
 
@@ -108,7 +133,6 @@ impl VertexLayout for Vertex2D {
 			gl::VertexAttr::new("pos", 2, 0),
 			gl::VertexAttr::new("uv", 2, 2),
 			gl::VertexAttr::new("color", 4, 4),
-			gl::VertexAttr::new("radius", 1, 8),
 		];
 
 	}
@@ -140,6 +164,16 @@ impl Origin {
 
 	}
 
+	pub fn to_pt(&self) -> Vec2 {
+		return match self {
+			Origin::Center => vec2!(0, 0),
+			Origin::TopLeft => vec2!(-1, -1),
+			Origin::BottomLeft => vec2!(-1, 1),
+			Origin::TopRight =>vec2!(1, -1),
+			Origin::BottomRight => vec2!(1, 1),
+		};
+	}
+
 }
 
 pub trait Gfx {
@@ -156,7 +190,12 @@ pub trait Gfx {
 	fn rotate(&mut self, angle: f32);
 	fn scale(&mut self, scale: Vec2);
 	fn color(&mut self, c: Color);
+	fn reset(&mut self);
 
+}
+
+pub(super) fn origin(ctx: &app::Ctx) -> Origin {
+	return ctx.origin;
 }
 
 pub(super) fn begin(ctx: &mut Ctx) {
@@ -233,8 +272,13 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
+		flush(self);
 		canvas.handle.bind();
+		self.push();
+		self.reset();
 		f(self)?;
+		self.pop()?;
+		flush(self);
 		canvas.handle.unbind();
 
 		return Ok(());
@@ -249,6 +293,10 @@ impl Gfx for Ctx {
 
 		return Ok(());
 
+	}
+
+	fn reset(&mut self) {
+		self.state = State::default();
 	}
 
 }
@@ -309,9 +357,9 @@ impl Texture {
 #[derive(Clone, PartialEq)]
 pub struct Font {
 
-	tex: gfx::Texture,
-	map: HashMap<char, Quad>,
-	quad_size: Vec2,
+	pub(super) tex: gfx::Texture,
+	pub(super) map: HashMap<char, Quad>,
+	pub(super) quad_size: Vec2,
 	grid_size: Size,
 
 }
@@ -395,7 +443,7 @@ impl Shader {
 pub struct Canvas {
 
 	handle: Rc<gl::Framebuffer>,
-	tex: Texture,
+	pub(super) tex: Texture,
 
 }
 
@@ -404,8 +452,11 @@ impl Canvas {
 
 	pub fn new(ctx: &Ctx, width: u32, height: u32) -> Result<Self> {
 
-		let pixels = vec![0.0 as u8; (width * height * 4) as usize];
-		let tex = Texture::from_pixels(&ctx, width, height, &pixels)?;
+		let dpi = ctx.dpi();
+		let tw = (width as f64 * dpi) as u32;
+		let th = (height as f64 * dpi) as u32;
+		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
+		let tex = Texture::from_pixels(&ctx, tw, th, &pixels)?;
 		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle)?;
 
 		return Ok(Self {
@@ -415,263 +466,17 @@ impl Canvas {
 
 	}
 
+	pub fn width(&self) -> i32 {
+		return self.tex.width();
+	}
+
+	pub fn height(&self) -> i32 {
+		return self.tex.height();
+	}
+
 }
 
 pub trait Drawable {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
-}
-
-pub struct Sprite<'a> {
-	tex: &'a gfx::Texture,
-	quad: Quad,
-	offset: Vec2,
-	radius: f32,
-}
-
-impl<'a> Sprite<'a> {
-	pub fn quad(mut self, quad: Quad) -> Self {
-		self.quad = quad;
-		return self;
-	}
-	pub fn offset(mut self, offset: Vec2) -> Self {
-		self.offset = offset;
-		return self;
-	}
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = r;
-		return self
-	}
-}
-
-pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
-	return Sprite {
-		tex: tex,
-		quad: quad!(0, 0, 1, 1),
-		offset: vec2!(0),
-		radius: 0.0,
-	};
-}
-
-impl<'a> Drawable for Sprite<'a> {
-
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		let wrapped_tex = Some(self.tex.clone());
-		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
-
-		if ctx.cur_tex != wrapped_tex {
-			if ctx.cur_tex.is_some() {
-				flush(ctx);
-			}
-			ctx.cur_tex = wrapped_tex;
-		}
-
-		ctx.push();
-		ctx.scale(scale);
-		ctx.translate(self.offset * -0.5);
-		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color, 0.0))?;
-		ctx.pop()?;
-
-		return Ok(());
-
-	}
-
-}
-
-pub struct Text<'a> {
-	txt: &'a str,
-	font: Option<&'a Font>,
-	offset: Vec2,
-}
-
-impl<'a> Text<'a> {
-	pub fn font(mut self, font: &'a Font) -> Self {
-		self.font = Some(font);
-		return self;
-	}
-	pub fn offset(mut self, offset: Vec2) -> Self {
-		self.offset = offset;
-		return self;
-	}
-}
-
-pub fn text<'a>(txt: &'a str) -> Text<'a> {
-	return Text {
-		txt: txt,
-		font: None,
-		offset: vec2!(0),
-	};
-}
-
-impl<'a> Drawable for Text<'a> {
-
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		let font;
-
-		if let Some(f) = self.font {
-			font = f.clone();
-		} else {
-			font = ctx.default_font.clone();
-		}
-
-		let len = self.txt.len();
-		let gw = font.width();
-		let gh = font.height();
-		let tw = font.width() * len as u32;
-		let th = gh;
-		let w = font.quad_size.x * font.tex.width() as f32;
-		let h = font.quad_size.y * font.tex.height() as f32;
-		let tex = font.tex.clone();
-		let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
-		let offset = offset + self.offset * vec2!(tw, th) * -0.5;
-
-		ctx.push();
-		ctx.translate(offset);
-
-		for (i, ch) in self.txt.chars().enumerate() {
-
-			let x = i as f32 * w;
-
-			if ch != ' ' {
-
-				if let Some(quad) = font.map.get(&ch) {
-					ctx.draw(sprite(&tex).quad(*quad))?;
-				}
-
-			}
-
-			ctx.translate(vec2!(w, 0));
-
-		}
-
-		ctx.pop()?;
-
-		return Ok(());
-
-	}
-
-}
-
-pub struct Line {
-	p1: Vec2,
-	p2: Vec2,
-	width: f32,
-}
-
-impl Line {
-	pub fn width(mut self, w: f32) -> Self {
-		self.width = w;
-		return self;
-	}
-}
-
-pub fn line(p1: Vec2, p2: Vec2) -> Line {
-	return Line {
-		p1: p1,
-		p2: p2,
-		width: 1.0,
-	};
-}
-
-impl Drawable for Line {
-
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		let len = ((self.p2.x - self.p1.x).powi(2) + (self.p2.y - self.p1.y).powi(2)).sqrt();
-		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
-
-		ctx.push();
-		ctx.translate(self.p1);
-		ctx.rotate(rot);
-		ctx.draw(rect(len, self.width))?;
-		ctx.pop()?;
-
-		return Ok(());
-
-	}
-
-}
-
-pub struct Rect {
-	width: f32,
-	height: f32,
-	radius: f32,
-	stroke: Option<f32>,
-}
-
-pub fn rect(w: f32, h: f32) -> Rect {
-	return Rect {
-		width: w,
-		height: h,
-		radius: 0.0,
-		stroke: None,
-	};
-}
-
-impl Rect {
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = r;
-		return self
-	}
-	pub fn stroke(mut self, s: f32) -> Self {
-		self.stroke = Some(s);
-		return self
-	}
-}
-
-impl Drawable for Rect {
-
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		ctx.push();
-		ctx.scale(vec2!(self.width, self.height));
-		ctx.draw(sprite(&ctx.empty_tex.clone()))?;
-		ctx.pop()?;
-
-		if let Some(stroke) = self.stroke {
-			unimplemented!();
-		}
-
-		return Ok(());
-
-	}
-
-}
-
-pub struct Points<'a> {
-	pts: &'a[Vec2],
-	size: f32,
-}
-
-impl<'a> Points<'a> {
-	pub fn size(mut self, s: f32) -> Self {
-		self.size = s;
-		return self;
-	}
-}
-
-pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
-	return Points {
-		pts: pts,
-		size: 1.0,
-	};
-}
-
-impl<'a> Drawable for Points<'a> {
-
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		for pt in self.pts {
-			ctx.push();
-			ctx.translate(*pt);
-			ctx.draw(rect(self.size, self.size))?;
-			ctx.pop()?;
-		}
-
-		return Ok(());
-
-	}
-
 }
 
