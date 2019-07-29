@@ -1,9 +1,8 @@
 // wengwengweng
 
 use dirty::*;
-use window::Key;
-
-use dirty::app::Gfx;
+use dirty::app::*;
+use input::Key;
 
 const RATE: usize = 128;
 const GATE: u16 = 54;
@@ -20,7 +19,7 @@ struct Game {
 
 impl app::State for Game {
 
-	fn init(ctx: &mut window::Ctx) -> Result<Self> {
+	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
@@ -31,7 +30,7 @@ impl app::State for Game {
 		});
 	}
 
-	fn run(&mut self, ctx: &mut window::Ctx) -> Result<()> {
+	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let w = 640;
 		let h = 480;
@@ -101,8 +100,7 @@ impl app::State for Game {
 
 fn main() {
 
-	let result = app::App::new()
-		.run::<Game>();
+	let result = app::run::<Game>();
 
 	if let Err(err) = result {
 		println!("{}", err);

@@ -2,496 +2,33 @@
 
 //! Window & Graphics
 
-use std::rc::Rc;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::thread;
-use std::time::Instant;
-use std::time::Duration;
-
 use glutin::dpi::*;
-use glutin::Api;
-use glutin::GlRequest;
-use glutin::ElementState;
 use derive_more::*;
-use gilrs::Gilrs;
 
-pub use glutin::ModifiersState as Mod;
-pub use glutin::VirtualKeyCode as Key;
-pub use glutin::MouseButton as Mouse;
-
-use super::gl;
+use super::*;
 use crate::math::*;
 use crate::*;
 
-const MAX_DRAWS: usize = 65536;
+pub trait Window {
 
-const TEMPLATE_2D_VERT: &str = include_str!("../res/2d_template.vert");
-const TEMPLATE_2D_FRAG: &str = include_str!("../res/2d_template.frag");
-
-const DEFAULT_2D_VERT: &str = include_str!("../res/2d_default.vert");
-const DEFAULT_2D_FRAG: &str = include_str!("../res/2d_default.frag");
-
-const DEFAULT_FONT_IMG: &[u8] = include_bytes!("../res/CP437.png");
-const DEFAULT_FONT_COLS: usize = 32;
-const DEFAULT_FONT_ROWS: usize = 8;
-const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
-
-struct FPSCounter {
-	buffer: Vec<u16>,
-}
-
-impl FPSCounter {
-
-	fn new(max: usize) -> Self {
-		return Self {
-			buffer: Vec::with_capacity(max),
-		}
-	}
-
-	fn push(&mut self, fps: u16) {
-		if self.buffer.len() == self.buffer.capacity() {
-			self.buffer.remove(0);
-		}
-		self.buffer.push(fps);
-	}
-
-	fn get_avg(&self) -> u16 {
-
-		if self.buffer.is_empty() {
-			return 0;
-		}
-
-		let sum: u16 = self.buffer.iter().sum();
-		return sum / self.buffer.len() as u16;
-
-	}
+	fn set_fullscreen(&mut self, b: bool);
+	fn is_fullscreen(&self) -> bool;
+	fn toggle_fullscreen(&mut self);
+	fn set_cursor_hidden(&mut self, b: bool);
+	fn is_cursor_hidden(&self) -> bool;
+	fn toggle_cursor_hidden(&mut self);
+	fn set_cursor_locked(&mut self, b: bool) -> Result<()>;
+	fn is_cursor_locked(&self) -> bool;
+	fn toggle_cursor_locked(&mut self);
+	fn set_title(&mut self, t: &str);
+	fn width(&self) -> i32;
+	fn height(&self) -> i32;
 
 }
 
-/// Manages Ctx
-pub struct Ctx {
+impl Window for Ctx {
 
-	quit: bool,
-	dt: f32,
-	time: f32,
-	fps_cap: u16,
-	fps_counter: FPSCounter,
-
-	key_state: HashMap<Key, ButtonState>,
-	mouse_state: HashMap<Mouse, ButtonState>,
-	mouse_pos: Pos,
-	mouse_delta: Option<Pos>,
-	scroll_delta: Option<Pos>,
-	text_input: Option<String>,
-	title: String,
-	fullscreen: bool,
-	cursor_hidden: bool,
-	cursor_locked: bool,
-	width: i32,
-	height: i32,
-
-	pub(super) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	pub(super) events_loop: glutin::EventsLoop,
-	pub(super) gamepad_ctx: gilrs::Gilrs,
-
-	pub(super) gl: Rc<gl::Device>,
-	pub(super) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
-
-	pub(super) cur_tex: Option<gfx::Texture>,
-	pub(super) empty_tex: gfx::Texture,
-
-	pub(super) default_shader: gfx::Shader,
-	pub(super) cur_shader: gfx::Shader,
-
-	pub(super) default_font: gfx::Font,
-
-	pub(super) draw_calls_last: usize,
-	pub(super) draw_calls: usize,
-
-	pub(super) state: gfx::State,
-	pub(super) state_stack: Vec<gfx::State>,
-
-}
-
-impl Ctx {
-
-	pub(super) fn new(conf: &app::Conf) -> Result<Self> {
-
-		let events_loop = glutin::EventsLoop::new();
-
-		let mut window_builder = glutin::WindowBuilder::new()
-			.with_title(conf.title.to_owned())
-			.with_resizable(conf.resizable)
-			.with_transparency(conf.transparent)
-			.with_decorations(!conf.borderless)
-			.with_always_on_top(conf.always_on_top)
-			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-			.with_multitouch();
-
-		if conf.fullscreen {
-			window_builder = window_builder
-				.with_fullscreen(Some(events_loop.get_primary_monitor()));
-		}
-
-		if cfg!(target_os = "macos") {
-
-			use glutin::os::macos::WindowBuilderExt;
-
-			window_builder = window_builder
-				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
-				.with_title_hidden(conf.hide_title)
-				.with_titlebar_transparent(conf.titlebar_transparent)
-				.with_fullsize_content_view(conf.fullsize_content);
-// 				.with_disallow_hidpi(!conf.hidpi);
-
-		}
-
-		let windowed_ctx = glutin::ContextBuilder::new()
-			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
-			.build_windowed(window_builder, &events_loop)?;
-
-		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
-
-		let gl = gl::Device::from_loader(|s| {
-			windowed_ctx.get_proc_address(s) as *const _
-		});
-
-		gl.enable(gl::Capability::Blend);
-		gl.blend_func_sep(gl::BlendFunc::SrcAlpha, gl::BlendFunc::OneMinusSrcAlpha, gl::BlendFunc::One, gl::BlendFunc::OneMinusSrcAlpha);
-		gl.clear_color(conf.clear_color);
-		gl.clear();
-
-		let batched_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
-
-		let empty_tex = gl::Texture::new(&gl, 1, 1)?;
-		empty_tex.data(&[255, 255, 255, 255]);
-		let empty_tex = gfx::Texture::from_handle(empty_tex);
-
-		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
-		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
-
-		let shader = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_src, &frag_src)?);
-		let proj = gfx::Origin::TopLeft.to_ortho(conf.width, conf.height);
-
-		shader.send("projection", proj);
-
-		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
-		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
-		font_tex.data(&font_img.into_raw());
-		let font_tex = gfx::Texture::from_handle(font_tex);
-
-		let font = gfx::Font::from_tex(
-			font_tex,
-			DEFAULT_FONT_COLS,
-			DEFAULT_FONT_ROWS,
-			DEFAULT_FONT_CHARS,
-		)?;
-
-		let mut ctx = Self {
-
-			quit: false,
-			dt: 0.0,
-			time: 0.0,
-			fps_cap: 60,
-			fps_counter: FPSCounter::new(16),
-
-			key_state: HashMap::new(),
-			mouse_state: HashMap::new(),
-			mouse_pos: Pos::new(0, 0),
-			mouse_delta: None,
-			scroll_delta: None,
-			text_input: None,
-			fullscreen: conf.fullscreen,
-			cursor_hidden: conf.cursor_hidden,
-			cursor_locked: conf.cursor_locked,
-			title: conf.title.to_owned(),
-			width: conf.width,
-			height: conf.height,
-
-			events_loop: events_loop,
-			windowed_ctx: windowed_ctx,
-			gamepad_ctx: Gilrs::new()?,
-
-			gl: Rc::new(gl),
-			batched_renderer: batched_renderer,
-
-			cur_tex: None,
-			empty_tex: empty_tex,
-
-			default_shader: shader.clone(),
-			cur_shader: shader,
-
-			default_font: font,
-
-			draw_calls: 0,
-			draw_calls_last: 0,
-
-			state: gfx::State::default(),
-			state_stack: Vec::with_capacity(16),
-
-		};
-
-		if conf.cursor_hidden {
-			ctx.set_cursor_hidden(true);
-		}
-
-		if conf.cursor_locked {
-			ctx.set_cursor_locked(true);
-		}
-
-		return Ok(ctx);
-
-	}
-
-	pub(super) fn run<S: super::State>(&mut self, s: &mut S) -> Result<()> {
-
-		loop {
-
-			let start_time = Instant::now();
-
-			self.poll()?;
-
-			gfx::begin(self);
-			s.run(self)?;
-			gfx::end(self);
-			self.swap()?;
-
-			if self.quit {
-				return Ok(());
-			}
-
-			let real_dt = start_time.elapsed().as_millis();
-			let expected_dt = (1000.0 / self.fps_cap as f32) as u128;
-
-			if real_dt < expected_dt {
-				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
-			}
-
-			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
-			self.time += self.dt;
-			self.fps_counter.push((1.0 / self.dt) as u16);
-
-		}
-
-	}
-
-	pub(super) fn poll(&mut self) -> Result<()> {
-
-		for state in self.key_state.values_mut() {
-			if state == &ButtonState::Pressed {
-				*state = ButtonState::Down;
-			} else if state == &ButtonState::Released {
-				*state = ButtonState::Up;
-			}
-		}
-
-		for state in self.mouse_state.values_mut() {
-			if state == &ButtonState::Pressed {
-				*state = ButtonState::Down;
-			} else if state == &ButtonState::Released {
-				*state = ButtonState::Up;
-			}
-		}
-
-		self.mouse_delta = None;
-		self.scroll_delta = None;
-		self.text_input = None;
-
-		let mut keyboard_input = None;
-		let mut mouse_input = None;
-		let mut cursor_moved = None;
-		let mut mouse_wheel = None;
-		let mut text_input = None;
-		let mut close = false;
-
-		self.events_loop.poll_events(|e| {
-
-			use glutin::Event::*;
-			use glutin::WindowEvent::*;
-
-			match e {
-
-				WindowEvent { event, .. } => match event {
-
-					KeyboardInput { input, .. } => {
-						keyboard_input = Some(input);
-					},
-
-					MouseInput { button, state, .. } => {
-						mouse_input = Some((button, state));
-					},
-
-					CursorMoved { position, .. } => {
-						cursor_moved = Some(position);
-					},
-
-					MouseWheel { delta, .. } => {
-						mouse_wheel = Some(delta);
-					},
-
-					ReceivedCharacter(ch) => {
-						text_input.get_or_insert(String::new()).push(ch);
-					},
-
-					CloseRequested => close = true,
-
-					_ => {},
-
-				},
-
-				_ => {},
-
-			};
-
-		});
-
-		if close {
-			self.quit = true;
-			return Ok(());
-		}
-
-		if let Some(input) = keyboard_input {
-			if let Some(kc) = input.virtual_keycode {
-				match input.state {
-					ElementState::Pressed => {
-						if self.key_up(kc) || self.key_released(kc) {
-							self.key_state.insert(kc, ButtonState::Pressed);
-						}
-					},
-					ElementState::Released => {
-						if self.key_down(kc) || self.key_pressed(kc) {
-							self.key_state.insert(kc, ButtonState::Released);
-						}
-					},
-				}
-			}
-		}
-
-		if let Some((button, state)) = mouse_input {
-			match state {
-				ElementState::Pressed => {
-					if self.mouse_up(button) || self.mouse_released(button) {
-						self.mouse_state.insert(button, ButtonState::Pressed);
-					}
-				},
-				ElementState::Released => {
-					if self.mouse_down(button) || self.mouse_pressed(button) {
-						self.mouse_state.insert(button, ButtonState::Released);
-					}
-				},
-			}
-		}
-
-		if let Some(pos) = cursor_moved {
-
-			let pos: Pos = pos.into();
-
-			self.mouse_delta = Some((pos - self.mouse_pos).into());
-			self.mouse_pos = pos;
-
-		}
-
-		if let Some(delta) = mouse_wheel {
-			self.scroll_delta = Some(delta.into());
-		}
-
-		self.text_input = text_input;
-
-		while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
-			// ...
-		}
-
-		return Ok(());
-
-	}
-
-	pub(super) fn swap(&self) -> Result<()> {
-		return Ok(self.windowed_ctx.swap_buffers()?);
-	}
-
-	pub fn quit(&mut self) {
-		self.quit = true;
-	}
-
-	pub fn dt(&self) -> f32 {
-		return self.dt;
-	}
-
-	pub fn fps(&self) -> u16 {
-		return self.fps_counter.get_avg();
-	}
-
-	pub fn time(&self) -> f32 {
-		return self.time;
-	}
-
-	pub fn down_keys(&self) -> HashSet<Key> {
-
-		use ButtonState::*;
-
-		return self.key_state
-			.iter()
-			.filter(|(_, &state)| state == Down || state == Pressed)
-			.map(|(key, _)| *key)
-			.collect();
-
-	}
-
-	pub fn key_down(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Down) || self.key_pressed(key);
-	}
-
-	pub fn key_pressed(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Pressed);
-	}
-
-	pub fn key_released(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Released);
-	}
-
-	pub fn key_up(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
-	}
-
-	pub fn key_pressed_repeat(&self, key: Key) -> bool {
-		unimplemented!();
-	}
-
-	pub fn mouse_down(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Down) || self.mouse_pressed(mouse);
-	}
-
-	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Pressed);
-	}
-
-	pub fn mouse_released(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Released);
-	}
-
-	pub fn mouse_up(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Up) || self.mouse_state.get(&mouse).is_none();
-	}
-
-	pub fn mouse_pos(&self) -> Pos {
-		return self.mouse_pos;
-	}
-
-	pub fn mouse_delta(&self) -> Option<Pos> {
-		return self.mouse_delta;
-	}
-
-	pub fn scroll_delta(&self) -> Option<Pos> {
-		return self.scroll_delta;
-	}
-
-	pub fn text_input(&self) -> Option<String> {
-		return self.text_input.clone();
-	}
-
-	pub fn set_fullscreen(&mut self, b: bool) {
+	fn set_fullscreen(&mut self, b: bool) {
 
 		let window = self.windowed_ctx.window();
 
@@ -505,60 +42,56 @@ impl Ctx {
 
 	}
 
-	pub fn is_fullscreen(&self) -> bool {
+	fn is_fullscreen(&self) -> bool {
 		return self.fullscreen;
 	}
 
-	pub fn toggle_fullscreen(&mut self) {
+	fn toggle_fullscreen(&mut self) {
 		self.set_fullscreen(!self.is_fullscreen());
 	}
 
-	pub fn set_cursor_hidden(&mut self, b: bool) {
+	fn set_cursor_hidden(&mut self, b: bool) {
 		self.windowed_ctx.window().hide_cursor(b);
 		self.cursor_hidden = b;
 	}
 
-	pub fn is_cursor_hidden(&self) -> bool {
+	fn is_cursor_hidden(&self) -> bool {
 		return self.cursor_hidden;
 	}
 
-	pub fn toggle_cursor_hidden(&mut self) {
+	fn toggle_cursor_hidden(&mut self) {
 		self.set_cursor_hidden(!self.is_cursor_hidden());
 	}
 
-	pub fn set_cursor_locked(&mut self, b: bool) {
-		self.windowed_ctx.window().grab_cursor(b);
+	fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
+		self.windowed_ctx.window().grab_cursor(b)?;
 		self.cursor_locked = b;
+		return Ok(());
 	}
 
-	pub fn is_cursor_locked(&self) -> bool {
+	fn is_cursor_locked(&self) -> bool {
 		return self.cursor_locked;
 	}
 
-	pub fn toggle_cursor_locked(&mut self) {
+	fn toggle_cursor_locked(&mut self) {
 		self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
-	pub fn set_title(&mut self, t: &str) {
+	fn set_title(&mut self, t: &str) {
 		self.windowed_ctx.window().set_title(t);
 	}
 
-	pub fn width(&self) -> i32 {
+	fn width(&self) -> i32 {
 		return self.width;
 	}
 
-	pub fn height(&self) -> i32 {
+	fn height(&self) -> i32 {
 		return self.height;
 	}
-
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum ButtonState {
-	Up,
-	Pressed,
-	Down,
-	Released,
+pub(super) fn swap(ctx: &window::Ctx) -> Result<()> {
+	return Ok(ctx.windowed_ctx.swap_buffers()?);
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
@@ -568,7 +101,7 @@ pub struct Pos {
 }
 
 impl Pos {
-	fn new(x: i32, y: i32) -> Self {
+	pub(super) fn new(x: i32, y: i32) -> Self {
 		return Self {
 			x: x,
 			y: y,
@@ -637,97 +170,6 @@ impl From<LogicalPosition> for Vec2 {
 			x: pos.x as f32,
 			y: pos.y as f32,
 		};
-	}
-}
-
-pub(crate) fn str_to_key(s: &str) -> Option<Key> {
-
-	return match s {
-		"q" => Some(Key::Q),
-		"w" => Some(Key::W),
-		"e" => Some(Key::E),
-		"r" => Some(Key::R),
-		"t" => Some(Key::T),
-		"y" => Some(Key::Y),
-		"u" => Some(Key::U),
-		"i" => Some(Key::I),
-		"o" => Some(Key::O),
-		"p" => Some(Key::P),
-		"a" => Some(Key::A),
-		"s" => Some(Key::S),
-		"d" => Some(Key::D),
-		"f" => Some(Key::F),
-		"g" => Some(Key::G),
-		"h" => Some(Key::H),
-		"j" => Some(Key::J),
-		"k" => Some(Key::K),
-		"l" => Some(Key::L),
-		"z" => Some(Key::Z),
-		"x" => Some(Key::X),
-		"c" => Some(Key::C),
-		"v" => Some(Key::V),
-		"b" => Some(Key::B),
-		"n" => Some(Key::N),
-		"m" => Some(Key::M),
-		"1" => Some(Key::Key1),
-		"2" => Some(Key::Key2),
-		"3" => Some(Key::Key3),
-		"4" => Some(Key::Key4),
-		"5" => Some(Key::Key5),
-		"6" => Some(Key::Key6),
-		"7" => Some(Key::Key7),
-		"8" => Some(Key::Key8),
-		"9" => Some(Key::Key9),
-		"0" => Some(Key::Key0),
-		"f1" => Some(Key::F1),
-		"f2" => Some(Key::F2),
-		"f3" => Some(Key::F3),
-		"f4" => Some(Key::F4),
-		"f5" => Some(Key::F5),
-		"f6" => Some(Key::F6),
-		"f7" => Some(Key::F7),
-		"f8" => Some(Key::F8),
-		"f9" => Some(Key::F9),
-		"f10" => Some(Key::F10),
-		"f11" => Some(Key::F11),
-		"f12" => Some(Key::F12),
-		"-" => Some(Key::Minus),
-		"=" => Some(Key::Equals),
-		"," => Some(Key::Comma),
-		"." => Some(Key::Period),
-		"`" => Some(Key::Grave),
-		"/" => Some(Key::Slash),
-		"\\" => Some(Key::Backslash),
-		";" => Some(Key::Semicolon),
-		"'" => Some(Key::Apostrophe),
-		"up" => Some(Key::Up),
-		"down" => Some(Key::Down),
-		"left" => Some(Key::Left),
-		"right" => Some(Key::Right),
-		"esc" => Some(Key::Escape),
-		"tab" => Some(Key::Tab),
-		"space" => Some(Key::Space),
-		"back" => Some(Key::Back),
-		"return" => Some(Key::Return),
-		"lshift" => Some(Key::LShift),
-		"rshift" => Some(Key::RShift),
-		"lalt" => Some(Key::LAlt),
-		"ralt" => Some(Key::RAlt),
-		"lwin" => Some(Key::LWin),
-		"rwin" => Some(Key::RWin),
-		"lctrl" => Some(Key::LControl),
-		"rctrl" => Some(Key::RControl),
-		_ => None,
-	};
-
-}
-
-pub(crate) fn str_to_mouse(s: &str) -> Option<Mouse> {
-	return match s {
-		"left" => Some(Mouse::Left),
-		"right" => Some(Mouse::Right),
-		"middle" => Some(Mouse::Middle),
-		_ => None,
 	}
 }
 

@@ -7,23 +7,9 @@ use std::collections::HashMap;
 use crate::img::Image;
 use crate::*;
 use crate::math::*;
-use super::gl;
-
+use super::*;
 use gl::VertexLayout;
 use gl::Shape;
-
-const MAX_DRAWS: usize = 65536;
-
-const TEMPLATE_2D_VERT: &str = include_str!("../res/2d_template.vert");
-const TEMPLATE_2D_FRAG: &str = include_str!("../res/2d_template.frag");
-
-const DEFAULT_2D_VERT: &str = include_str!("../res/2d_default.vert");
-const DEFAULT_2D_FRAG: &str = include_str!("../res/2d_default.frag");
-
-const DEFAULT_FONT_IMG: &[u8] = include_bytes!("../res/CP437.png");
-const DEFAULT_FONT_COLS: usize = 32;
-const DEFAULT_FONT_ROWS: usize = 8;
-const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
 
 #[derive(Clone, Default)]
 pub(super) struct State {
@@ -152,7 +138,7 @@ pub trait Gfx {
 	fn clear(&self);
 	fn draw_calls(&self) -> usize;
 	fn draw(&mut self, t: impl Drawable) -> Result<()>;
-// 	fn draw_on(&mut self, canvas: &Canvas, ff: impl fnMut(&mut self, &mut Ctx) -> Result<()>) -> Result<()>;
+	fn draw_on(&mut self, canvas: &Canvas, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
 	fn push(&mut self, );
 	fn pop(&mut self, ) -> Result<()>;
 	fn translate(&mut self, pos: Vec2);
@@ -162,7 +148,7 @@ pub trait Gfx {
 
 }
 
-pub(super) fn begin(ctx: &mut window::Ctx) {
+pub(super) fn begin(ctx: &mut app::Ctx) {
 
 	ctx.draw_calls_last = ctx.draw_calls;
 	ctx.draw_calls = 0;
@@ -170,7 +156,7 @@ pub(super) fn begin(ctx: &mut window::Ctx) {
 
 }
 
-pub(super) fn end(ctx: &mut window::Ctx) {
+pub(super) fn end(ctx: &mut app::Ctx) {
 
 	flush(ctx);
 	ctx.state = State::default();
@@ -178,7 +164,7 @@ pub(super) fn end(ctx: &mut window::Ctx) {
 
 }
 
-pub(super) fn flush(ctx: &mut window::Ctx) {
+pub(super) fn flush(ctx: &mut app::Ctx) {
 
 	if let Some(tex) = &ctx.cur_tex {
 
@@ -191,7 +177,7 @@ pub(super) fn flush(ctx: &mut window::Ctx) {
 
 }
 
-impl Gfx for window::Ctx {
+impl Gfx for app::Ctx {
 
 	fn clear_color(&self, c: Color) {
 		self.gl.clear_color(c);
@@ -234,15 +220,15 @@ impl Gfx for window::Ctx {
 		return thing.draw(self);
 	}
 
-// 	fn draw_on(&mut self, canvas: &Canvas, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
+	fn draw_on(&mut self, canvas: &Canvas, mut f: impl FnMut(&mut app::Ctx) -> Result<()>) -> Result<()> {
 
-// 		canvas.handle.bind();
-// 		f(self)?;
-// 		canvas.handle.unbind();
+		canvas.handle.bind();
+		f(self)?;
+		canvas.handle.unbind();
 
-// 		return Ok(());
+		return Ok(());
 
-// 	}
+	}
 
 }
 
@@ -260,7 +246,7 @@ impl Texture {
 		};
 	}
 
-	pub fn from_image(ctx: &window::Ctx, img: Image) -> Result<Self> {
+	pub fn from_image(ctx: &app::Ctx, img: Image) -> Result<Self> {
 
 		let w = img.width() as i32;
 		let h = img.height() as i32;
@@ -272,15 +258,15 @@ impl Texture {
 
 	}
 
-	pub fn from_file(ctx: &window::Ctx, fname: &str) -> Result<Self> {
+	pub fn from_file(ctx: &app::Ctx, fname: &str) -> Result<Self> {
 		return Self::from_image(ctx, Image::from_file(fname)?);
 	}
 
-	pub fn from_bytes(ctx: &window::Ctx, data: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &app::Ctx, data: &[u8]) -> Result<Self> {
 		return Self::from_image(ctx, Image::from_bytes(data)?);
 	}
 
-	pub fn from_pixels(ctx: &window::Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
+	pub fn from_pixels(ctx: &app::Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::new(&ctx.gl, w as i32, h as i32)?;
 		handle.data(&pixels);
@@ -374,7 +360,7 @@ impl Shader {
 		};
 	}
 
-	pub fn new(ctx: &window::Ctx, vert: &str, frag: &str) -> Result<Self> {
+	pub fn new(ctx: &app::Ctx, vert: &str, frag: &str) -> Result<Self> {
 		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
 	}
 
@@ -395,7 +381,7 @@ pub struct Canvas {
 #[cfg(feature = "img")]
 impl Canvas {
 
-	pub fn new(ctx: &window::Ctx, width: u32, height: u32) -> Result<Self> {
+	pub fn new(ctx: &app::Ctx, width: u32, height: u32) -> Result<Self> {
 
 		let pixels = vec![0.0 as u8; (width * height * 4) as usize];
 		let tex = Texture::from_pixels(&ctx, width, height, &pixels)?;
@@ -411,7 +397,7 @@ impl Canvas {
 }
 
 pub trait Drawable {
-	fn draw(&self, ctx: &mut window::Ctx) -> Result<()>;
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()>;
 }
 
 pub struct Sprite<'a> {
@@ -435,7 +421,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 
 impl<'a> Drawable for Sprite<'a> {
 
-	fn draw(&self, ctx: &mut window::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let wrapped_tex = Some(self.tex.clone());
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
@@ -479,7 +465,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 
 impl<'a> Drawable for Text<'a> {
 
-	fn draw(&self, ctx: &mut window::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let font;
 
@@ -542,7 +528,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 
 impl Drawable for Line {
 
-	fn draw(&self, ctx: &mut window::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let len = ((self.p2.x - self.p1.x).powi(2) + (self.p2.y - self.p1.y).powi(2)).sqrt();
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
@@ -573,7 +559,7 @@ pub fn rect(w: f32, h: f32) -> Rect {
 
 impl Drawable for Rect {
 
-	fn draw(&self, ctx: &mut window::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push();
 		ctx.scale(vec2!(self.width, self.height));
@@ -607,7 +593,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 
 impl<'a> Drawable for Points<'a> {
 
-	fn draw(&self, ctx: &mut window::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		for pt in self.pts {
 			ctx.push();
