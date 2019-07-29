@@ -786,24 +786,21 @@ pub struct Framebuffer {
 
 	ctx: Rc<GLCtx>,
 	id: FramebufferID,
-	tex: Texture,
 
 }
 
 impl Framebuffer {
 
-	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
+	pub fn new(device: &Device, tex: &Texture) -> Result<Self> {
 
 		unsafe {
 
 			let ctx = device.ctx.clone();
 			let id = ctx.create_framebuffer()?;
-			let tex = Texture::new(device, width, height)?;
 
 			let fbuf = Self {
 				ctx: ctx,
 				id: id,
-				tex: tex,
 			};
 
 			fbuf.bind();
@@ -812,7 +809,7 @@ impl Framebuffer {
 				glow::FRAMEBUFFER,
 				glow::COLOR_ATTACHMENT0,
 				glow::TEXTURE_2D,
-				Some(fbuf.tex.id),
+				Some(tex.id),
 				0,
 			);
 

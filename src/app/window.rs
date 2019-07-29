@@ -2,13 +2,16 @@
 
 //! Window & Graphics
 
+use std::rc::Rc;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::thread;
+use std::time::Instant;
+use std::time::Duration;
 
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
-use glutin::GlProfile;
 use glutin::ElementState;
 use derive_more::*;
 use gilrs::Gilrs;
@@ -17,11 +20,63 @@ pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 pub use glutin::MouseButton as Mouse;
 
+use super::gl;
 use crate::math::*;
 use crate::*;
 
+const MAX_DRAWS: usize = 65536;
+
+const TEMPLATE_2D_VERT: &str = include_str!("../res/2d_template.vert");
+const TEMPLATE_2D_FRAG: &str = include_str!("../res/2d_template.frag");
+
+const DEFAULT_2D_VERT: &str = include_str!("../res/2d_default.vert");
+const DEFAULT_2D_FRAG: &str = include_str!("../res/2d_default.frag");
+
+const DEFAULT_FONT_IMG: &[u8] = include_bytes!("../res/CP437.png");
+const DEFAULT_FONT_COLS: usize = 32;
+const DEFAULT_FONT_ROWS: usize = 8;
+const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
+
+struct FPSCounter {
+	buffer: Vec<u16>,
+}
+
+impl FPSCounter {
+
+	fn new(max: usize) -> Self {
+		return Self {
+			buffer: Vec::with_capacity(max),
+		}
+	}
+
+	fn push(&mut self, fps: u16) {
+		if self.buffer.len() == self.buffer.capacity() {
+			self.buffer.remove(0);
+		}
+		self.buffer.push(fps);
+	}
+
+	fn get_avg(&self) -> u16 {
+
+		if self.buffer.is_empty() {
+			return 0;
+		}
+
+		let sum: u16 = self.buffer.iter().sum();
+		return sum / self.buffer.len() as u16;
+
+	}
+
+}
+
 /// Manages Ctx
 pub struct Ctx {
+
+	quit: bool,
+	dt: f32,
+	time: f32,
+	fps_cap: u16,
+	fps_counter: FPSCounter,
 
 	key_state: HashMap<Key, ButtonState>,
 	mouse_state: HashMap<Mouse, ButtonState>,
@@ -33,13 +88,29 @@ pub struct Ctx {
 	fullscreen: bool,
 	cursor_hidden: bool,
 	cursor_locked: bool,
-	should_quit: bool,
 	width: i32,
 	height: i32,
 
 	pub(super) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	events_loop: glutin::EventsLoop,
-	gamepad_ctx: gilrs::Gilrs,
+	pub(super) events_loop: glutin::EventsLoop,
+	pub(super) gamepad_ctx: gilrs::Gilrs,
+
+	pub(super) gl: Rc<gl::Device>,
+	pub(super) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
+
+	pub(super) cur_tex: Option<gfx::Texture>,
+	pub(super) empty_tex: gfx::Texture,
+
+	pub(super) default_shader: gfx::Shader,
+	pub(super) cur_shader: gfx::Shader,
+
+	pub(super) default_font: gfx::Font,
+
+	pub(super) draw_calls_last: usize,
+	pub(super) draw_calls: usize,
+
+	pub(super) state: gfx::State,
+	pub(super) state_stack: Vec<gfx::State>,
 
 }
 
@@ -72,19 +143,59 @@ impl Ctx {
 				.with_title_hidden(conf.hide_title)
 				.with_titlebar_transparent(conf.titlebar_transparent)
 				.with_fullsize_content_view(conf.fullsize_content);
+// 				.with_disallow_hidpi(!conf.hidpi);
 
 		}
 
-		let ctx_builder = glutin::ContextBuilder::new()
+		let windowed_ctx = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
-
-		let windowed_ctx = ctx_builder
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
 			.build_windowed(window_builder, &events_loop)?;
 
 		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
 
+		let gl = gl::Device::from_loader(|s| {
+			windowed_ctx.get_proc_address(s) as *const _
+		});
+
+		gl.enable(gl::Capability::Blend);
+		gl.blend_func_sep(gl::BlendFunc::SrcAlpha, gl::BlendFunc::OneMinusSrcAlpha, gl::BlendFunc::One, gl::BlendFunc::OneMinusSrcAlpha);
+		gl.clear_color(conf.clear_color);
+		gl.clear();
+
+		let batched_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
+
+		let empty_tex = gl::Texture::new(&gl, 1, 1)?;
+		empty_tex.data(&[255, 255, 255, 255]);
+		let empty_tex = gfx::Texture::from_handle(empty_tex);
+
+		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
+		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
+
+		let shader = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_src, &frag_src)?);
+		let proj = gfx::Origin::TopLeft.to_ortho(conf.width, conf.height);
+
+		shader.send("projection", proj);
+
+		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
+		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
+		font_tex.data(&font_img.into_raw());
+		let font_tex = gfx::Texture::from_handle(font_tex);
+
+		let font = gfx::Font::from_tex(
+			font_tex,
+			DEFAULT_FONT_COLS,
+			DEFAULT_FONT_ROWS,
+			DEFAULT_FONT_CHARS,
+		)?;
+
 		let mut ctx = Self {
+
+			quit: false,
+			dt: 0.0,
+			time: 0.0,
+			fps_cap: 60,
+			fps_counter: FPSCounter::new(16),
 
 			key_state: HashMap::new(),
 			mouse_state: HashMap::new(),
@@ -96,13 +207,29 @@ impl Ctx {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_owned(),
-			should_quit: false,
 			width: conf.width,
 			height: conf.height,
 
 			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: Gilrs::new()?,
+
+			gl: Rc::new(gl),
+			batched_renderer: batched_renderer,
+
+			cur_tex: None,
+			empty_tex: empty_tex,
+
+			default_shader: shader.clone(),
+			cur_shader: shader,
+
+			default_font: font,
+
+			draw_calls: 0,
+			draw_calls_last: 0,
+
+			state: gfx::State::default(),
+			state_stack: Vec::with_capacity(16),
 
 		};
 
@@ -115,6 +242,38 @@ impl Ctx {
 		}
 
 		return Ok(ctx);
+
+	}
+
+	pub(super) fn run<S: super::State>(&mut self, s: &mut S) -> Result<()> {
+
+		loop {
+
+			let start_time = Instant::now();
+
+			self.poll()?;
+
+			gfx::begin(self);
+			s.run(self)?;
+			gfx::end(self);
+			self.swap()?;
+
+			if self.quit {
+				return Ok(());
+			}
+
+			let real_dt = start_time.elapsed().as_millis();
+			let expected_dt = (1000.0 / self.fps_cap as f32) as u128;
+
+			if real_dt < expected_dt {
+				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+			}
+
+			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
+			self.time += self.dt;
+			self.fps_counter.push((1.0 / self.dt) as u16);
+
+		}
 
 	}
 
@@ -189,7 +348,8 @@ impl Ctx {
 		});
 
 		if close {
-			self.should_quit = true
+			self.quit = true;
+			return Ok(());
 		}
 
 		if let Some(input) = keyboard_input {
@@ -251,8 +411,20 @@ impl Ctx {
 		return Ok(self.windowed_ctx.swap_buffers()?);
 	}
 
-	pub(super) fn should_quit(&self) -> bool {
-		return self.should_quit;
+	pub fn quit(&mut self) {
+		self.quit = true;
+	}
+
+	pub fn dt(&self) -> f32 {
+		return self.dt;
+	}
+
+	pub fn fps(&self) -> u16 {
+		return self.fps_counter.get_avg();
+	}
+
+	pub fn time(&self) -> f32 {
+		return self.time;
 	}
 
 	pub fn down_keys(&self) -> HashSet<Key> {
@@ -380,25 +552,6 @@ impl Ctx {
 	}
 
 }
-
-expose!(window, width() -> i32);
-expose!(window, height() -> i32);
-expose!(window, down_keys() -> HashSet<Key>);
-expose!(window, key_down(key: Key) -> bool);
-expose!(window, key_pressed(key: Key) -> bool);
-expose!(window, key_released(key: Key) -> bool);
-expose!(window, key_pressed_repeat(key: Key) -> bool);
-expose!(window, text_input() -> Option<String>);
-expose!(window, mouse_down(mouse: Mouse) -> bool);
-expose!(window, mouse_pressed(mouse: Mouse) -> bool);
-expose!(window, mouse_released(mouse: Mouse) -> bool);
-expose!(window, mouse_pos() -> Pos);
-expose!(window, mouse_delta() -> Option<Pos>);
-expose!(window, scroll_delta() -> Option<Pos>);
-expose!(window(mut), set_fullscreen(b: bool));
-expose!(window(mut), toggle_fullscreen());
-expose!(window, is_fullscreen() -> bool);
-expose!(window(mut), set_title(t: &str));
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum ButtonState {
