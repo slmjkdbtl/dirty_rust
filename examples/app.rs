@@ -64,12 +64,16 @@ impl Sprite {
 
 impl gfx::Drawable for &Sprite {
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
-		return ctx.draw(gfx::sprite(&self.tex).quad(self.frames[self.cur_frame]));
+		return ctx.draw(
+			shapes::sprite(&self.tex)
+				.quad(self.frames[self.cur_frame])
+		);
 	}
 }
 
 struct Game {
 	sprite: Sprite,
+	canvas: gfx::Canvas,
 }
 
 impl app::State for Game {
@@ -83,6 +87,7 @@ impl app::State for Game {
 
 		return Ok(Self {
 			sprite: sprite,
+			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 		});
 
 	}
@@ -90,7 +95,13 @@ impl app::State for Game {
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		self.sprite.next();
-		ctx.draw(&self.sprite)?;
+
+		ctx.draw_on(&self.canvas, |ctx| {
+			ctx.draw(&self.sprite)?;
+			return Ok(());
+		})?;
+
+		ctx.draw(shapes::canvas(&self.canvas))?;
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();
@@ -108,7 +119,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::run::<Game>() {
+	if let Err(err) = app::launcher().origin(gfx::Origin::Center).run::<Game>() {
 		println!("{}", err);
 	}
 

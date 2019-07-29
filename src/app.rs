@@ -4,6 +4,7 @@ mod gl;
 pub mod gfx;
 pub mod input;
 pub mod window;
+pub mod shapes;
 
 use crate::*;
 use crate::math::*;
@@ -70,10 +71,13 @@ pub struct Ctx {
 	pub(self) width: u32,
 	pub(self) height: u32,
 
-	// gfx
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(self) events_loop: glutin::EventsLoop,
 	pub(self) gamepad_ctx: gilrs::Gilrs,
+
+	// gfx
+	pub(self) origin: gfx::Origin,
+	pub(self) texture_origin: gfx::Origin,
 
 	pub(self) gl: Rc<gl::Device>,
 	pub(self) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
@@ -196,6 +200,8 @@ impl Ctx {
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: Gilrs::new()?,
 
+			origin: conf.origin,
+			texture_origin: conf.texture_origin,
 			gl: Rc::new(gl),
 			batched_renderer: batched_renderer,
 
@@ -391,6 +397,11 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn texture_origin(mut self, o: Origin) -> Self {
+		self.conf.texture_origin = o;
+		return self;
+	}
+
 }
 
 #[derive(Clone, Debug)]
@@ -413,6 +424,7 @@ pub struct Conf {
 	pub cursor_locked: bool,
 	pub clear_color: Color,
 	pub origin: Origin,
+	pub texture_origin: Origin,
 }
 
 impl Conf {
@@ -450,6 +462,7 @@ impl Default for Conf {
 			cursor_locked: false,
 			clear_color: color!(0, 0, 0, 1),
 			origin: Origin::Center,
+			texture_origin: Origin::Center,
 		};
 	}
 

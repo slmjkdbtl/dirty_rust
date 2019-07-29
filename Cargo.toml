@@ -15,7 +15,7 @@ readme = "README.md"
 
 [features]
 default = [
-# 	"lua",
+	"lua",
 	"fs",
 	"app",
 	"img",
