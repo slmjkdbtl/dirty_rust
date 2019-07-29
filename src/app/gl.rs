@@ -113,9 +113,6 @@ impl<S: Shape> Renderer<S> {
 	pub fn new(device: &Device, s: S) -> Result<Self> {
 
 		let indices = S::indices();
-		let vert_count = S::COUNT;
-		let vert_stride = S::Vertex::STRIDE;
-
 		let vbuf = VertexBuffer::new(&device, S::COUNT, BufferUsage::Static)?;
 		let ibuf = IndexBuffer::new(&device, indices.len(), BufferUsage::Static)?;
 

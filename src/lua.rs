@@ -62,16 +62,6 @@ impl<'lua> ContextExt<'lua> for Context<'lua> {
 
 	}
 
-	fn ext_std(&self, modname: &str, fname: &str, f: rlua::Function) -> rlua::Result<()> {
-
-		let module: Table = self.globals().get::<_, Table>(modname)?;
-
-// 		module.set(fname, f);
-
-		return Ok(());
-
-	}
-
 }
 
 #[cfg(feature = "fs")]
@@ -178,11 +168,11 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 }
 
 #[cfg(feature = "app")]
-fn bind_window(ctx: &Context) -> Result<()> {
+fn bind_app(ctx: &Context) -> Result<()> {
 
-	let window = ctx.create_table()?;
+	let app = ctx.create_table()?;
 
-	impl<'lua> FromLua<'lua> for window::Conf {
+	impl<'lua> FromLua<'lua> for app::Conf {
 
 		fn from_lua(val: Value<'lua>, _: Context<'lua>) -> rlua::Result<Self> {
 
@@ -224,161 +214,137 @@ fn bind_window(ctx: &Context) -> Result<()> {
 
 	}
 
-	fn add_window_methods<'lua, T: BorrowMut<window::Window> + UserData, M: UserDataMethods<'lua, T>>(methods: &mut M) {
+// 	fn add_window_methods<'lua, T: BorrowMut<window::Window> + UserData, M: UserDataMethods<'lua, T>>(methods: &mut M) {
 
-		methods.add_method("fps", |_, win, ()| {
-			return Ok(win.borrow().fps());
-		});
+// 		methods.add_method("fps", |_, win, ()| {
+// 			return Ok(win.borrow().fps());
+// 		});
 
-		methods.add_method("time", |_, win, ()| {
-			return Ok(win.borrow().time());
-		});
+// 		methods.add_method("time", |_, win, ()| {
+// 			return Ok(win.borrow().time());
+// 		});
 
-		methods.add_method("dt", |_, win, ()| {
-			return Ok(win.borrow().dt());
-		});
+// 		methods.add_method("dt", |_, win, ()| {
+// 			return Ok(win.borrow().dt());
+// 		});
 
-		methods.add_method_mut("close", |_, win, ()| {
-			return Ok(win.borrow_mut().close());
-		});
+// 		methods.add_method_mut("close", |_, win, ()| {
+// 			return Ok(win.borrow_mut().close());
+// 		});
 
-		methods.add_method("key_pressed", |_, win, (k): (String)| {
-			return Ok(win.borrow().key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
-		});
+// 		methods.add_method("key_pressed", |_, win, (k): (String)| {
+// 			return Ok(win.borrow().key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
+// 		});
 
-		methods.add_method("key_down", |_, win, (k): (String)| {
-			return Ok(win.borrow().key_down(window::str_to_key(&k).ok_or(Error::Window)?));
-		});
+// 		methods.add_method("key_down", |_, win, (k): (String)| {
+// 			return Ok(win.borrow().key_down(window::str_to_key(&k).ok_or(Error::Window)?));
+// 		});
 
-		methods.add_method("key_released", |_, win, (k): (String)| {
-			return Ok(win.borrow().key_released(window::str_to_key(&k).ok_or(Error::Window)?));
-		});
+// 		methods.add_method("key_released", |_, win, (k): (String)| {
+// 			return Ok(win.borrow().key_released(window::str_to_key(&k).ok_or(Error::Window)?));
+// 		});
 
-		methods.add_method("mouse_pressed", |_, win, (m): (String)| {
-			return Ok(win.borrow().mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
-		});
+// 		methods.add_method("mouse_pressed", |_, win, (m): (String)| {
+// 			return Ok(win.borrow().mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
+// 		});
 
-		methods.add_method("mouse_down", |_, win, (m): (String)| {
-			return Ok(win.borrow().mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
-		});
+// 		methods.add_method("mouse_down", |_, win, (m): (String)| {
+// 			return Ok(win.borrow().mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
+// 		});
 
-		methods.add_method("mouse_released", |_, win, (m): (String)| {
-			return Ok(win.borrow().mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
-		});
+// 		methods.add_method("mouse_released", |_, win, (m): (String)| {
+// 			return Ok(win.borrow().mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
+// 		});
 
-		methods.add_method("mouse_pos", |_, win, ()| -> rlua::Result<math::Vec2> {
-			return Ok(win.borrow().mouse_pos().into());
-		});
+// 		methods.add_method("mouse_pos", |_, win, ()| -> rlua::Result<math::Vec2> {
+// 			return Ok(win.borrow().mouse_pos().into());
+// 		});
 
-		methods.add_method("mouse_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
-			return Ok(win.borrow().mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
-		});
+// 		methods.add_method("mouse_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
+// 			return Ok(win.borrow().mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
+// 		});
 
-		methods.add_method("scroll_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
-			return Ok(win.borrow().scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
-		});
+// 		methods.add_method("scroll_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
+// 			return Ok(win.borrow().scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
+// 		});
 
-		methods.add_method("text_input", |_, win, ()| {
-			return Ok(win.borrow().text_input().unwrap_or(String::new()));
-		});
+// 		methods.add_method("text_input", |_, win, ()| {
+// 			return Ok(win.borrow().text_input().unwrap_or(String::new()));
+// 		});
 
-		methods.add_method_mut("set_fullscreen", |_, win, (b): (bool)| {
-			return Ok(win.borrow_mut().set_fullscreen(b));
-		});
+// 		methods.add_method_mut("set_fullscreen", |_, win, (b): (bool)| {
+// 			return Ok(win.borrow_mut().set_fullscreen(b));
+// 		});
 
-		methods.add_method("is_fullscreen", |_, win, ()| {
-			return Ok(win.borrow().is_fullscreen());
-		});
+// 		methods.add_method("is_fullscreen", |_, win, ()| {
+// 			return Ok(win.borrow().is_fullscreen());
+// 		});
 
-		methods.add_method_mut("toggle_fullscreen", |_, win, ()| {
-			return Ok(win.borrow_mut().toggle_fullscreen());
-		});
+// 		methods.add_method_mut("toggle_fullscreen", |_, win, ()| {
+// 			return Ok(win.borrow_mut().toggle_fullscreen());
+// 		});
 
-		methods.add_method_mut("set_cursor_hidden", |_, win, (b): (bool)| {
-			return Ok(win.borrow_mut().set_cursor_hidden(b));
-		});
+// 		methods.add_method_mut("set_cursor_hidden", |_, win, (b): (bool)| {
+// 			return Ok(win.borrow_mut().set_cursor_hidden(b));
+// 		});
 
-		methods.add_method("is_cursor_hidden", |_, win, ()| {
-			return Ok(win.borrow().is_cursor_hidden());
-		});
+// 		methods.add_method("is_cursor_hidden", |_, win, ()| {
+// 			return Ok(win.borrow().is_cursor_hidden());
+// 		});
 
-		methods.add_method_mut("toggle_cursor_hidden", |_, win, ()| {
-			return Ok(win.borrow_mut().toggle_cursor_hidden());
-		});
+// 		methods.add_method_mut("toggle_cursor_hidden", |_, win, ()| {
+// 			return Ok(win.borrow_mut().toggle_cursor_hidden());
+// 		});
 
-		methods.add_method_mut("set_cursor_locked", |_, win, (b): (bool)| {
-			return Ok(win.borrow_mut().set_cursor_locked(b));
-		});
+// 		methods.add_method_mut("set_cursor_locked", |_, win, (b): (bool)| {
+// 			return Ok(win.borrow_mut().set_cursor_locked(b));
+// 		});
 
-		methods.add_method("is_cursor_locked", |_, win, ()| {
-			return Ok(win.borrow().is_cursor_locked());
-		});
+// 		methods.add_method("is_cursor_locked", |_, win, ()| {
+// 			return Ok(win.borrow().is_cursor_locked());
+// 		});
 
-		methods.add_method_mut("toggle_cursor_locked", |_, win, ()| {
-			return Ok(win.borrow_mut().toggle_cursor_locked());
-		});
+// 		methods.add_method_mut("toggle_cursor_locked", |_, win, ()| {
+// 			return Ok(win.borrow_mut().toggle_cursor_locked());
+// 		});
 
-		methods.add_method_mut("set_title", |_, win, (s): (String)| {
-			return Ok(win.borrow_mut().set_title(&s));
-		});
+// 		methods.add_method_mut("set_title", |_, win, (s): (String)| {
+// 			return Ok(win.borrow_mut().set_title(&s));
+// 		});
 
-	}
+// 	}
 
-	impl UserData for window::Window {
+// 	impl UserData for window::Window {
 
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+// 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			add_window_methods(methods);
+// 			add_window_methods(methods);
 
-			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
-				return Ok(win.run(|c| {
-					ctx.scope(|s| -> rlua::Result<()> {
-						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
-					});
-				})?);
-			});
+// 			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
+// 				return Ok(win.run(|c| {
+// 					ctx.scope(|s| -> rlua::Result<()> {
+// 						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
+// 					});
+// 				})?);
+// 			});
 
-		}
+// 		}
 
-	}
+// 	}
 
-	impl UserData for &mut window::Window {
+// 	impl UserData for &mut window::Window {
 
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-			add_window_methods(methods);
-		}
+// 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+// 			add_window_methods(methods);
+// 		}
 
-	}
+// 	}
 
-	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
-		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?)?);
-	})?)?;
+// 	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
+// 		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?)?);
+// 	})?)?;
 
-	ctx.add_module("window", window)?;
-
-	return Ok(());
-
-}
-
-#[cfg(feature = "app")]
-fn bind_gfx(ctx: &Context) -> Result<()> {
-
-	let gfx = ctx.create_table()?;
-
-	impl UserData for gfx::Texture {}
-	impl UserData for gfx::Canvas {}
-
-	#[cfg(feature = "img")]
-	gfx.set("texture", ctx.create_function(|_, (d): (Vec<u8>)| {
-		return Ok(gfx::Texture::from_bytes(&d)?);
-	})?)?;
-
-	#[cfg(feature = "img")]
-	gfx.set("canvas", ctx.create_function(|_, (w, h): (u32, u32)| {
-		return Ok(gfx::Canvas::new(w, h));
-	})?)?;
-
-	ctx.add_module("gfx", gfx)?;
+	ctx.add_module("app", app)?;
 
 	return Ok(());
 
@@ -724,7 +690,7 @@ fn bind_col(ctx: &Context) -> Result<()> {
 
 	let col = ctx.create_table()?;
 
-	col.set("rect_rect", ctx.create_function(|_, (r1, r2): (Rect, Rect)| {
+	col.set("rect_rect", ctx.create_function(|_, (r1, r2): (Quad, Quad)| {
 		return Ok(col::rect_rect(r1, r2));
 	})?)?;
 
@@ -740,7 +706,7 @@ fn bind_col(ctx: &Context) -> Result<()> {
 		return Ok(col::poly_poly(&p1, &p2));
 	})?)?;
 
-	col.set("point_rect", ctx.create_function(|_, (pt, r): (Vec2, Rect)| {
+	col.set("point_rect", ctx.create_function(|_, (pt, r): (Vec2, Quad)| {
 		return Ok(col::point_rect(pt, r));
 	})?)?;
 
@@ -782,7 +748,7 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 	impl UserData for Vec4 {}
 	impl UserData for Mat4 {}
 	impl UserData for Color {}
-	impl UserData for Rect {}
+	impl UserData for Quad {}
 
 	globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
 		return Ok(vec2!(x, y));
@@ -800,8 +766,8 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 		return Ok(color!(r, g, b, a));
 	})?)?;
 
-	globals.set("rect", ctx.create_function(|_, (x, y, w, h): (f32, f32, f32, f32)| {
-		return Ok(rect!(x, y, w, h));
+	globals.set("quad", ctx.create_function(|_, (x, y, w, h): (f32, f32, f32, f32)| {
+		return Ok(quad!(x, y, w, h));
 	})?)?;
 
 	return Ok(());
@@ -841,9 +807,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	bind_fs(&ctx)?;
 
 	#[cfg(feature = "app")]
-	bind_window(&ctx)?;
-	#[cfg(feature = "app")]
-	bind_gfx(&ctx)?;
+	bind_app(&ctx)?;
 
 	#[cfg(feature = "img")]
 	bind_img(&ctx)?;

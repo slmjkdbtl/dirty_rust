@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use aseprite::SpritesheetData;
 
 use crate::math::*;
-use crate::Error;
 use crate::Result;
 
 ///! Load Aseprite Spritesheets
@@ -39,7 +38,7 @@ pub struct Anim {
 pub struct SpriteData {
 
 	/// frames
-	pub frames: Vec<Rect>,
+	pub frames: Vec<Quad>,
 	/// anims
 	pub anims: HashMap<String, Anim>,
 
@@ -70,7 +69,7 @@ impl SpriteData {
 
 		for f in data.frames {
 
-			frames.push(Rect::new(
+			frames.push(Quad::new(
 				f.frame.x as f32 / width as f32,
 				f.frame.y as f32 / height as f32,
 				f.frame.w as f32 / width as f32,

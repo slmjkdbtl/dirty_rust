@@ -16,11 +16,11 @@ readme = "README.md"
 [features]
 default = [
 # 	"lua",
-# 	"fs",
+	"fs",
 	"app",
 	"img",
-# 	"audio",
-	"http",
+	"audio",
+# 	"http",
 # 	"term",
 # 	"col",
 # 	"ase",

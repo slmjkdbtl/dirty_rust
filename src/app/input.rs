@@ -9,7 +9,6 @@ pub use glutin::MouseButton as Mouse;
 
 use super::*;
 use crate::*;
-use crate::math::*;
 use window::Pos;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -69,7 +68,7 @@ impl Input for app::Ctx {
 		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
 	}
 
-	fn key_pressed_repeat(&self, key: Key) -> bool {
+	fn key_pressed_repeat(&self, _key: Key) -> bool {
 		unimplemented!();
 	}
 
@@ -229,9 +228,8 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	ctx.text_input = text_input;
 
-	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
-		// ...
-	}
+// 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+// 	}
 
 	return Ok(());
 

@@ -32,8 +32,8 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let w = 640;
-		let h = 480;
+		let w = ctx.width();
+		let h = ctx.height();
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();
@@ -100,9 +100,7 @@ impl app::State for Game {
 
 fn main() {
 
-	let result = app::run::<Game>();
-
-	if let Err(err) = result {
+	if let Err(err) = app::run::<Game>() {
 		println!("{}", err);
 	}
 
