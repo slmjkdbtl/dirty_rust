@@ -3,12 +3,15 @@
 use dirty::*;
 use window::Key;
 
+use dirty::app::Gfx;
+
 const RATE: usize = 128;
 const GATE: u16 = 54;
 
 struct Game {
 
 	tex: gfx::Texture,
+	canvas: gfx::Canvas,
 	count: usize,
 	started: bool,
 	done: bool,
@@ -17,27 +20,28 @@ struct Game {
 
 impl app::State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut window::Ctx) -> Result<Self> {
 
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
+			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			count: 0,
 			done: false,
 			started: false,
 		});
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx, dt: f32) -> Result<()> {
+	fn run(&mut self, ctx: &mut window::Ctx) -> Result<()> {
 
 		let w = 640;
 		let h = 480;
 
-		if window::key_pressed(ctx, Key::F) {
-			window::toggle_fullscreen(ctx);
+		if ctx.key_pressed(Key::F) {
+			ctx.toggle_fullscreen();
 		}
 
-		if window::key_pressed(ctx, Key::Escape) {
-			app::quit(ctx);
+		if ctx.key_pressed(Key::Escape) {
+			ctx.quit();
 		}
 
 		if self.started {
@@ -46,41 +50,43 @@ impl app::State for Game {
 
 				for _ in 0..self.count {
 
-					gfx::push(ctx);
-					gfx::translate(ctx, vec2!(rand!(0, w), rand!(0, h)));
-					gfx::draw(ctx, gfx::sprite(&self.tex))?;
-					gfx::pop(ctx)?;
+					ctx.push();
+					ctx.translate(vec2!(rand!(0, w), rand!(0, h)));
+					ctx.draw(gfx::sprite(&self.tex))?;
+					ctx.pop()?;
 
 				}
 
 			} else {
 
-				gfx::push(ctx);
-				gfx::translate(ctx, vec2!(24));
-				gfx::draw(ctx, gfx::text(&format!("{}", self.count)))?;
-				gfx::pop(ctx)?;
+				ctx.push();
+				ctx.scale(vec2!(4));
+				ctx.translate(vec2!(16));
+				ctx.draw(gfx::text(&format!("{}", self.count)))?;
+				ctx.pop()?;
 
 			}
 
 		} else {
 
-			gfx::push(ctx);
-			gfx::translate(ctx, vec2!(24));
-			gfx::draw(ctx, gfx::text("waiting..."))?;
-			gfx::pop(ctx)?;
+			ctx.push();
+			ctx.scale(vec2!(2));
+			ctx.translate(vec2!(16));
+			ctx.draw(gfx::text("waiting..."))?;
+			ctx.pop()?;
 
 		}
 
-		window::set_title(ctx, &format!("FPS: {} DCS: {} OBJS: {}", app::fps(ctx), gfx::draw_calls(ctx), self.count));
+		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
 
 		if !self.started {
-			if app::fps(ctx) >= 60 {
+			if ctx.fps() >= 60 {
 				self.started = true;
 			}
 		} else {
 			if !self.done {
 				self.count += RATE;
-				if app::fps(ctx) <= GATE {
+				if ctx.fps() <= GATE {
 					println!("{}", self.count);
 					self.done = true;
 				}

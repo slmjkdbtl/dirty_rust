@@ -1,17 +1,19 @@
 # wengwengweng
 
 == DOING
-- clearer error messages
-- better http response api
+- massive cleaning
 
 == TODO
 - http less allocation / copying
-- gfx
 - gamepads
 - ketos
 - use rustls instead of native-tls
+- clearer error messages
+- better http response api
+- better UniformValue api
 
 == DONE
 - refactor http
 - use cargo feature
+- restructure app module api
 
