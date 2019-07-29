@@ -14,9 +14,6 @@ pub mod thread;
 #[cfg(feature = "app")]
 pub mod app;
 
-pub use app::window;
-pub use app::gfx;
-
 #[cfg(feature = "fs")]
 pub mod fs;
 
