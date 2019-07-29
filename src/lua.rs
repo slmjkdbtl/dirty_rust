@@ -3,18 +3,17 @@
 //! Lua Bindings
 
 use std::path::Path;
-use std::borrow::BorrowMut;
 
 use rlua::Lua;
 use rlua::UserData;
 use rlua::UserDataMethods;
 use rlua::MetaMethod;
 use rlua::Value;
-use rlua::Context;
 use rlua::ToLua;
 use rlua::FromLua;
 use rlua::Table;
 use rlua::MultiValue;
+use rlua::Context;
 
 use crate::*;
 use crate::Error;
@@ -35,7 +34,6 @@ trait ContextExt<'lua> {
 
 	fn add_module<T: ToLua<'lua>>(&self, name: &str, val: T) -> rlua::Result<()>;
 	fn add_module_from_lua(&self, name: &str, code: &str) -> rlua::Result<()>;
-	fn ext_std(&self, modname: &str, fname: &str, f: rlua::Function) -> rlua::Result<()>;
 
 }
 
@@ -207,6 +205,7 @@ fn bind_app(ctx: &Context) -> Result<()> {
 			set!(t["titlebar_transparent"] -> conf::titlebar_transparent);
 			set!(t["cursor_hidden"] -> conf::cursor_hidden);
 			set!(t["cursor_locked"] -> conf::cursor_locked);
+			set!(t["clear_color"] -> conf::clear_color);
 
 			return Ok(conf);
 
@@ -214,135 +213,53 @@ fn bind_app(ctx: &Context) -> Result<()> {
 
 	}
 
-// 	fn add_window_methods<'lua, T: BorrowMut<window::Window> + UserData, M: UserDataMethods<'lua, T>>(methods: &mut M) {
+	impl UserData for &mut app::Ctx {
 
-// 		methods.add_method("fps", |_, win, ()| {
-// 			return Ok(win.borrow().fps());
-// 		});
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-// 		methods.add_method("time", |_, win, ()| {
-// 			return Ok(win.borrow().time());
-// 		});
+			use app::*;
 
-// 		methods.add_method("dt", |_, win, ()| {
-// 			return Ok(win.borrow().dt());
-// 		});
+			methods.add_method("time", |_, ctx, ()| {
+				return Ok(ctx.time());
+			});
 
-// 		methods.add_method_mut("close", |_, win, ()| {
-// 			return Ok(win.borrow_mut().close());
-// 		});
+		}
 
-// 		methods.add_method("key_pressed", |_, win, (k): (String)| {
-// 			return Ok(win.borrow().key_pressed(window::str_to_key(&k).ok_or(Error::Window)?));
-// 		});
+	}
 
-// 		methods.add_method("key_down", |_, win, (k): (String)| {
-// 			return Ok(win.borrow().key_down(window::str_to_key(&k).ok_or(Error::Window)?));
-// 		});
+	impl UserData for app::Ctx {
 
-// 		methods.add_method("key_released", |_, win, (k): (String)| {
-// 			return Ok(win.borrow().key_released(window::str_to_key(&k).ok_or(Error::Window)?));
-// 		});
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-// 		methods.add_method("mouse_pressed", |_, win, (m): (String)| {
-// 			return Ok(win.borrow().mouse_pressed(window::str_to_mouse(&m).ok_or(Error::Window)?));
-// 		});
+			use app::*;
 
-// 		methods.add_method("mouse_down", |_, win, (m): (String)| {
-// 			return Ok(win.borrow().mouse_down(window::str_to_mouse(&m).ok_or(Error::Window)?));
-// 		});
+			methods.add_method_mut("init", |ctx, app, (cb): (rlua::Function)| {
+				ctx.scope(|s| -> rlua::Result<()> {
+					return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(app)?)?);
+				});
+				return Ok(());
+			});
 
-// 		methods.add_method("mouse_released", |_, win, (m): (String)| {
-// 			return Ok(win.borrow().mouse_released(window::str_to_mouse(&m).ok_or(Error::Window)?));
-// 		});
+			methods.add_method_mut("run", |ctx, app, (cb): (rlua::Function)| {
+				return Ok(app.run(|c| {
+					ctx.scope(|s| -> rlua::Result<()> {
+						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
+					});
+					return Ok(());
+				})?);
+			});
 
-// 		methods.add_method("mouse_pos", |_, win, ()| -> rlua::Result<math::Vec2> {
-// 			return Ok(win.borrow().mouse_pos().into());
-// 		});
+		}
 
-// 		methods.add_method("mouse_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
-// 			return Ok(win.borrow().mouse_delta().unwrap_or(window::MouseDelta::new(0, 0)).into());
-// 		});
+	}
 
-// 		methods.add_method("scroll_delta", |_, win, ()| -> rlua::Result<math::Vec2> {
-// 			return Ok(win.borrow().scroll_delta().unwrap_or(window::ScrollDelta::new(0, 0)).into());
-// 		});
-
-// 		methods.add_method("text_input", |_, win, ()| {
-// 			return Ok(win.borrow().text_input().unwrap_or(String::new()));
-// 		});
-
-// 		methods.add_method_mut("set_fullscreen", |_, win, (b): (bool)| {
-// 			return Ok(win.borrow_mut().set_fullscreen(b));
-// 		});
-
-// 		methods.add_method("is_fullscreen", |_, win, ()| {
-// 			return Ok(win.borrow().is_fullscreen());
-// 		});
-
-// 		methods.add_method_mut("toggle_fullscreen", |_, win, ()| {
-// 			return Ok(win.borrow_mut().toggle_fullscreen());
-// 		});
-
-// 		methods.add_method_mut("set_cursor_hidden", |_, win, (b): (bool)| {
-// 			return Ok(win.borrow_mut().set_cursor_hidden(b));
-// 		});
-
-// 		methods.add_method("is_cursor_hidden", |_, win, ()| {
-// 			return Ok(win.borrow().is_cursor_hidden());
-// 		});
-
-// 		methods.add_method_mut("toggle_cursor_hidden", |_, win, ()| {
-// 			return Ok(win.borrow_mut().toggle_cursor_hidden());
-// 		});
-
-// 		methods.add_method_mut("set_cursor_locked", |_, win, (b): (bool)| {
-// 			return Ok(win.borrow_mut().set_cursor_locked(b));
-// 		});
-
-// 		methods.add_method("is_cursor_locked", |_, win, ()| {
-// 			return Ok(win.borrow().is_cursor_locked());
-// 		});
-
-// 		methods.add_method_mut("toggle_cursor_locked", |_, win, ()| {
-// 			return Ok(win.borrow_mut().toggle_cursor_locked());
-// 		});
-
-// 		methods.add_method_mut("set_title", |_, win, (s): (String)| {
-// 			return Ok(win.borrow_mut().set_title(&s));
-// 		});
-
-// 	}
-
-// 	impl UserData for window::Window {
-
-// 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-// 			add_window_methods(methods);
-
-// 			methods.add_method_mut("run", |ctx, win, (cb): (rlua::Function)| {
-// 				return Ok(win.run(|c| {
-// 					ctx.scope(|s| -> rlua::Result<()> {
-// 						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
-// 					});
-// 				})?);
-// 			});
-
-// 		}
-
-// 	}
-
-// 	impl UserData for &mut window::Window {
-
-// 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-// 			add_window_methods(methods);
-// 		}
-
-// 	}
-
-// 	window.set("make", ctx.create_function(|ctx, (conf): (Value)| {
-// 		return Ok(window::Window::new(window::Conf::from_lua(conf, ctx)?)?);
-// 	})?)?;
+	app.set("make", ctx.create_function(|ctx, (conf): (Option<Value>)| {
+		if let Some(conf) = conf {
+			return Ok(app::Ctx::new(app::Conf::from_lua(conf, ctx)?)?);
+		} else {
+			return Ok(app::Ctx::new(app::Conf::default())?);
+		}
+	})?)?;
 
 	ctx.add_module("app", app)?;
 
@@ -501,25 +418,6 @@ fn bind_http(ctx: &Context) -> Result<()> {
 
 			methods.add_method("path", |_, req, ()| {
 				return Ok(req.path().to_owned());
-			});
-
-		}
-
-	}
-
-	impl UserData for http::Router {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method_mut("get", |ctx, r, (pat, f): (String, rlua::Function)| {
-// 				let key = ctx.create_registry_value(f)?;
-// 				let f = ctx.registry_value::<rlua::Function>(&key)?;
-// 				r.get(&pat, move || {
-// 					let f = ctx.registry_value::<rlua::Function>(&key).unwrap();
-// 					f.call::<_, ()>(());
-// 					return "";
-// 				});
-				return Ok(());
 			});
 
 		}
