@@ -20,7 +20,7 @@ default = [
 	"app",
 	"img",
 	"audio",
-# 	"http",
+	"http",
 # 	"term",
 # 	"col",
 # 	"ase",
@@ -56,7 +56,6 @@ audio = [
 http = [
 	"url",
 	"httparse",
-	"native-tls",
 	"rustls",
 	"webpki",
 	"webpki-roots",
@@ -95,7 +94,6 @@ rodio = { version = "0.9", optional = true }
 
 url = { version = "1.7", optional = true }
 httparse = { version = "1.3", optional = true }
-native-tls = { version = "0.2", optional = true }
 rustls = { version = "0.15", optional = true }
 webpki = { version = "0.19", optional = true }
 webpki-roots = { version = "0.16", optional = true }

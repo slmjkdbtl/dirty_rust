@@ -49,7 +49,7 @@ impl app::State for Game {
 
 					ctx.push();
 					ctx.translate(vec2!(rand!(-w / 2, w / 2), rand!(-h / 2, h / 2)));
-					ctx.draw(gfx::sprite(&self.tex))?;
+					ctx.draw(shapes::sprite(&self.tex))?;
 					ctx.pop()?;
 
 				}
@@ -58,7 +58,7 @@ impl app::State for Game {
 
 				ctx.push();
 				ctx.scale(vec2!(6));
-				ctx.draw(gfx::text(&format!("{}", self.count)))?;
+				ctx.draw(shapes::text(&format!("{}", self.count)))?;
 				ctx.pop()?;
 
 			}
@@ -67,7 +67,7 @@ impl app::State for Game {
 
 			ctx.push();
 			ctx.scale(vec2!(2));
-			ctx.draw(gfx::text("waiting..."))?;
+			ctx.draw(shapes::text("waiting..."))?;
 			ctx.pop()?;
 
 		}
