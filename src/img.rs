@@ -9,9 +9,7 @@ use crate::fs;
 #[cfg(not(feature = "fs"))]
 use std::fs;
 
-use crate::math::Color;
 use crate::Result;
-use crate::Error;
 
 pub struct Image {
 	handle: image::RgbaImage,
@@ -40,9 +38,8 @@ impl Image {
 
 	}
 
-	pub fn from_pixels(w: u32, h: u32, pixels: &[u8]) -> Self {
-		unimplemented!();
-	}
+// 	pub fn from_pixels(w: u32, h: u32, pixels: &[u8]) -> Self {
+// 	}
 
 	pub fn width(&self) -> u32 {
 		return self.handle.width();

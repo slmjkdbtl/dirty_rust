@@ -22,7 +22,7 @@ fn pair<T, F: FnMut(&T, &T)>(list: &[T], mut f: F) {
 }
 
 /// check collision between 2 rectangles
-pub fn rect_rect(r1: Rect, r2: Rect) -> bool {
+pub fn rect_rect(r1: Quad, r2: Quad) -> bool {
 	return r1.x <= r2.x && r1.x + r1.w >= r2.x && r1.y <= r2.y && r1.y + r1.h >= r2.y;
 }
 
@@ -77,7 +77,7 @@ pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 }
 
 /// check if a point is side a rect
-pub fn point_rect(p: Vec2, rect: Rect) -> bool {
+pub fn point_rect(p: Vec2, rect: Quad) -> bool {
 	return p.x >= rect.x && p.x <= rect.x + rect.w && p.y >= rect.y && p.y <= rect.y + rect.h;
 }
 
