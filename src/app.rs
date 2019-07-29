@@ -229,6 +229,8 @@ impl Ctx {
 			ctx.set_cursor_locked(true)?;
 		}
 
+		window::swap(&ctx)?;
+
 		return Ok(ctx);
 
 	}
