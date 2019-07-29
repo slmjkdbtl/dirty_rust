@@ -23,14 +23,16 @@ pub(super) struct QuadShape {
 	transform: Mat4,
 	quad: Quad,
 	color: Color,
+	radius: f32,
 }
 
 impl QuadShape {
-	fn new(t: Mat4, q: Quad, c: Color) -> Self {
+	fn new(t: Mat4, q: Quad, c: Color, r: f32) -> Self {
 		return Self {
 			transform: t,
 			quad: q,
 			color: c,
+			radius: r,
 		};
 	}
 }
@@ -45,15 +47,16 @@ impl Shape for QuadShape {
 		let t = &self.transform;
 		let q = &self.quad;
 		let c = &self.color;
+		let r = self.radius;
 		let p1 = t.forward(vec4!(-0.5, 0.5, 0, 1));
 		let p2 = t.forward(vec4!(0.5, 0.5, 0, 1));
 		let p3 = t.forward(vec4!(0.5, -0.5, 0, 1));
 		let p4 = t.forward(vec4!(-0.5, -0.5, 0, 1));
 
-		Self::Vertex::new(vec2!(p1.x, p1.y), vec2!(q.x, q.y + q.h), *c).push(queue);
-		Self::Vertex::new(vec2!(p2.x, p2.y), vec2!(q.x + q.w, q.y + q.h), *c).push(queue);
-		Self::Vertex::new(vec2!(p3.x, p3.y), vec2!(q.x + q.w, q.y), *c).push(queue);
-		Self::Vertex::new(vec2!(p4.x, p4.y), vec2!(q.x, q.y), *c).push(queue);
+		Self::Vertex::new(vec2!(p1.x, p1.y), vec2!(q.x, q.y + q.h), *c, r).push(queue);
+		Self::Vertex::new(vec2!(p2.x, p2.y), vec2!(q.x + q.w, q.y + q.h), *c, r).push(queue);
+		Self::Vertex::new(vec2!(p3.x, p3.y), vec2!(q.x + q.w, q.y), *c, r).push(queue);
+		Self::Vertex::new(vec2!(p4.x, p4.y), vec2!(q.x, q.y), *c, r).push(queue);
 
 	}
 
@@ -67,21 +70,23 @@ pub(super) struct Vertex2D {
 	pos: Vec2,
 	uv: Vec2,
 	color: Color,
+	radius: f32,
 }
 
 impl Vertex2D {
-	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
+	fn new(pos: Vec2, uv: Vec2, color: Color, radius: f32) -> Self {
 		return Self {
 			pos: pos,
 			uv: uv,
 			color: color,
+			radius: radius,
 		};
 	}
 }
 
 impl VertexLayout for Vertex2D {
 
-	const STRIDE: usize = 8;
+	const STRIDE: usize = 9;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
@@ -93,6 +98,7 @@ impl VertexLayout for Vertex2D {
 			self.color.g,
 			self.color.b,
 			self.color.a,
+			self.radius,
 		]);
 	}
 
@@ -102,6 +108,7 @@ impl VertexLayout for Vertex2D {
 			gl::VertexAttr::new("pos", 2, 0),
 			gl::VertexAttr::new("uv", 2, 2),
 			gl::VertexAttr::new("color", 4, 4),
+			gl::VertexAttr::new("radius", 1, 8),
 		];
 
 	}
@@ -462,7 +469,7 @@ impl<'a> Drawable for Sprite<'a> {
 		ctx.push();
 		ctx.scale(scale);
 		ctx.translate(self.offset * -0.5);
-		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color))?;
+		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color, 0.0))?;
 		ctx.pop()?;
 
 		return Ok(());
@@ -590,6 +597,7 @@ pub struct Rect {
 	width: f32,
 	height: f32,
 	radius: f32,
+	stroke: Option<f32>,
 }
 
 pub fn rect(w: f32, h: f32) -> Rect {
@@ -597,12 +605,17 @@ pub fn rect(w: f32, h: f32) -> Rect {
 		width: w,
 		height: h,
 		radius: 0.0,
+		stroke: None,
 	};
 }
 
 impl Rect {
 	pub fn radius(mut self, r: f32) -> Self {
 		self.radius = r;
+		return self
+	}
+	pub fn stroke(mut self, s: f32) -> Self {
+		self.stroke = Some(s);
 		return self
 	}
 }
@@ -615,6 +628,10 @@ impl Drawable for Rect {
 		ctx.scale(vec2!(self.width, self.height));
 		ctx.draw(sprite(&ctx.empty_tex.clone()))?;
 		ctx.pop()?;
+
+		if let Some(stroke) = self.stroke {
+			unimplemented!();
+		}
 
 		return Ok(());
 

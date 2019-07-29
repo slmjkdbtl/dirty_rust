@@ -94,9 +94,11 @@ pub struct Ctx {
 
 }
 
+unsafe impl Send for Ctx {}
+
 impl Ctx {
 
-	fn new(conf: &app::Conf) -> Result<Self> {
+	pub(super) fn new(conf: app::Conf) -> Result<Self> {
 
 		let events_loop = glutin::EventsLoop::new();
 
@@ -225,6 +227,40 @@ impl Ctx {
 
 	}
 
+	pub(super) fn run(&mut self, mut f: impl FnMut(&mut Self) -> Result<()>) -> Result<()> {
+
+		loop {
+
+			let start_time = Instant::now();
+
+			input::poll(self)?;
+
+			gfx::begin(self);
+			f(self)?;
+			gfx::end(self);
+			window::swap(self)?;
+
+			if self.quit {
+				break;
+			}
+
+			let real_dt = start_time.elapsed().as_millis();
+			let expected_dt = (1000.0 / self.fps_cap as f32) as u128;
+
+			if real_dt < expected_dt {
+				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+			}
+
+			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
+			self.time += self.dt;
+			self.fps_counter.push((1.0 / self.dt) as u16);
+
+		}
+
+		return Ok(());
+
+	}
+
 }
 
 pub trait App {
@@ -270,38 +306,12 @@ impl Launcher {
 
 	pub fn run<S: State>(self) -> Result<()> {
 
-		let mut ctx = Ctx::new(&self.conf)?;
+		let mut ctx = Ctx::new(self.conf)?;
 		let mut s = S::init(&mut ctx)?;
 
-		loop {
-
-			let start_time = Instant::now();
-
-			input::poll(&mut ctx)?;
-
-			gfx::begin(&mut ctx);
-			s.run(&mut ctx)?;
-			gfx::end(&mut ctx);
-			window::swap(&mut ctx)?;
-
-			if ctx.quit {
-				break;
-			}
-
-			let real_dt = start_time.elapsed().as_millis();
-			let expected_dt = (1000.0 / ctx.fps_cap as f32) as u128;
-
-			if real_dt < expected_dt {
-				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
-			}
-
-			ctx.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
-			ctx.time += ctx.dt;
-			ctx.fps_counter.push((1.0 / ctx.dt) as u16);
-
-		}
-
-		return Ok(());
+		return ctx.run(|c| {
+			return s.run(c);
+		});
 
 	}
 
