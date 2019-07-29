@@ -254,7 +254,11 @@ impl App for Ctx {
 }
 
 pub fn run<S: State>() -> Result<()> {
-	return Launcher::new().run::<S>();
+	return launcher().run::<S>();
+}
+
+pub fn launcher() -> Launcher {
+	return Launcher::default();
 }
 
 #[derive(Default)]
@@ -263,10 +267,6 @@ pub struct Launcher {
 }
 
 impl Launcher {
-
-	pub fn new() -> Self {
-		return Self::default();
-	}
 
 	pub fn run<S: State>(self) -> Result<()> {
 

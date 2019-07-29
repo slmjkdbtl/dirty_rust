@@ -57,7 +57,7 @@ impl app::State for Game {
 			} else {
 
 				ctx.push();
-				ctx.scale(vec2!(4));
+				ctx.scale(vec2!(6));
 				ctx.draw(gfx::text(&format!("{}", self.count)))?;
 				ctx.pop()?;
 
