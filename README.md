@@ -1,7 +1,7 @@
 ![icon](icon.png)
 
 ## DIRTY
-toolkit for things
+personal toolkit for things
 
 ### modules
 - **app** Windowing, Input, and Graphics
