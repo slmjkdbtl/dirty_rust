@@ -26,7 +26,7 @@ The `dirty` binary is for running lua scripts
 $ dirty frog.lua
 ```
 
-If no argument is provided, it'll search for `main.lua`. It'll search everywhere possible, including `${Bundle}/Contents/Resources/` on MacOS, making it easy for packaging windowing applications.
+If no argument is provided, it'll search for `main.lua`
 
 ### facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**

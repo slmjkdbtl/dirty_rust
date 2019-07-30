@@ -51,6 +51,7 @@ pub fn track(sound: &Sound) -> Result<Track> {
 	let sink = Sink::new(&device);
 
 	sink.append(sound.apply());
+	sink.pause();
 
 	return Ok(Track {
 		sink: sink,
@@ -183,7 +184,7 @@ impl Track {
 	}
 
 	/// resume a track
-	pub fn resume(&self) {
+	pub fn play(&self) {
 		self.sink.play();
 	}
 

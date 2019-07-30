@@ -237,7 +237,7 @@ impl Ctx {
 
 	pub(super) fn run(&mut self, mut f: impl FnMut(&mut Self) -> Result<()>) -> Result<()> {
 
-		loop {
+		'run: loop {
 
 			let start_time = Instant::now();
 
@@ -249,7 +249,7 @@ impl Ctx {
 			window::swap(self)?;
 
 			if self.quit {
-				break;
+				break 'run;
 			}
 
 			let real_dt = start_time.elapsed().as_millis();

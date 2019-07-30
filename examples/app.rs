@@ -74,6 +74,7 @@ impl gfx::Drawable for &Sprite {
 struct Game {
 	sprite: Sprite,
 	canvas: gfx::Canvas,
+	track: audio::Track,
 }
 
 impl app::State for Game {
@@ -82,12 +83,15 @@ impl app::State for Game {
 
 		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/car.png"))?;
 		let mut sprite = Sprite::new(tex);
+		let track = audio::track(&audio::Sound::from_bytes(include_bytes!("res/yo.ogg"))?)?;
 
+		track.play();
 		sprite.slice(4, 1);
 
 		return Ok(Self {
 			sprite: sprite,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			track: track,
 		});
 
 	}
