@@ -76,6 +76,7 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 		.map_err(|_| Error::DirRead(PathBuf::from(pat)))?;
 
 	return Ok(listings
+		.filter(|s| s.is_ok())
 		.map(|s| s.expect("failed to glob"))
 		.collect());
 

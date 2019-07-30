@@ -54,15 +54,15 @@ impl SpriteData {
 		#[cfg(not(feature = "fs"))]
 		let json = std::fs::read_to_string(path);
 
-		return Ok(Self::from_json(&json?));
+		return Self::from_json(&json?);
 
 	}
 
-	pub fn from_json(json: &str) -> Self {
+	pub fn from_json(json: &str) -> Result<Self> {
 
 		let mut frames = vec![];
 		let mut anims = HashMap::new();
-		let data: SpritesheetData = serde_json::from_str(json).expect("failed to parse json");
+		let data: SpritesheetData = serde_json::from_str(json)?;
 
 		let width = data.meta.size.w;
 		let height = data.meta.size.h;
@@ -98,10 +98,10 @@ impl SpriteData {
 
 		}
 
-		return SpriteData {
+		return Ok(SpriteData {
 			frames: frames,
 			anims: anims,
-		};
+		});
 
 	}
 

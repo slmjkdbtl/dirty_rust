@@ -304,8 +304,8 @@ fn bind_audio(ctx: &Context) -> Result<()> {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			methods.add_method("resume", |_, t, ()| {
-				return Ok(t.resume());
+			methods.add_method("play", |_, t, ()| {
+				return Ok(t.play());
 			});
 
 			methods.add_method("pause", |_, t, ()| {
@@ -572,7 +572,7 @@ fn bind_ase(ctx: &Context) -> Result<()> {
 	})?)?;
 
 	ase.set("from_json", ctx.create_function(|_, (data): (String)| {
-		return Ok(ase::SpriteData::from_json(&data));
+		return Ok(ase::SpriteData::from_json(&data)?);
 	})?)?;
 
 	ctx.add_module("ase", ase)?;

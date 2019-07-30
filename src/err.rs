@@ -138,6 +138,13 @@ impl From<httparse::Error> for Error {
 	}
 }
 
+#[cfg(feature = "ase")]
+impl From<serde_json::error::Error> for Error {
+	fn from(_: serde_json::error::Error) -> Self {
+		return Error::Parse;
+	}
+}
+
 impl From<std::string::FromUtf8Error> for Error {
 	fn from(_: std::string::FromUtf8Error) -> Self {
 		return Error::FromUtf8;
