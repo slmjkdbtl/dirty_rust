@@ -180,8 +180,8 @@ impl Ctx {
 			quit: false,
 			dt: 0.0,
 			time: 0.0,
-			fps_cap: 60,
-			fps_counter: FPSCounter::new(16),
+			fps_cap: conf.fps_cap,
+			fps_counter: FPSCounter::new(),
 
 			key_state: HashMap::new(),
 			mouse_state: HashMap::new(),
@@ -261,7 +261,7 @@ impl Ctx {
 
 			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
 			self.time += self.dt;
-			self.fps_counter.push((1.0 / self.dt) as u16);
+			self.fps_counter.tick(self.dt);
 
 		}
 
@@ -289,12 +289,13 @@ impl App for Ctx {
 	}
 
 	fn fps(&self) -> u16 {
-		return self.fps_counter.get_avg();
+		return self.fps_counter.fps();
 	}
 
 	fn time(&self) -> f32 {
 		return self.time;
 	}
+
 }
 
 pub fn run<S: State>() -> Result<()> {
@@ -404,6 +405,11 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn fps_cap(mut self, f: u16) -> Self {
+		self.conf.fps_cap = f;
+		return self;
+	}
+
 }
 
 #[derive(Clone, Debug)]
@@ -427,6 +433,7 @@ pub struct Conf {
 	pub clear_color: Color,
 	pub origin: Origin,
 	pub texture_origin: Origin,
+	pub fps_cap: u16,
 }
 
 impl Conf {
@@ -465,6 +472,7 @@ impl Default for Conf {
 			clear_color: color!(0, 0, 0, 1),
 			origin: Origin::Center,
 			texture_origin: Origin::Center,
+			fps_cap: 60,
 		};
 	}
 
@@ -485,33 +493,36 @@ pub trait State {
 }
 
 pub(super) struct FPSCounter {
-	buffer: Vec<u16>,
+	frames: usize,
+	timer: f32,
+	fps: u16,
 }
 
 impl FPSCounter {
 
-	fn new(max: usize) -> Self {
+	fn new() -> Self {
 		return Self {
-			buffer: Vec::with_capacity(max),
+			frames: 0,
+			timer: 0.0,
+			fps: 0,
 		}
 	}
 
-	fn push(&mut self, fps: u16) {
-		if self.buffer.len() == self.buffer.capacity() {
-			self.buffer.remove(0);
+	fn tick(&mut self, dt: f32) {
+
+		self.frames += 1;
+		self.timer += dt;
+
+		if self.timer >= 1.0 {
+			self.fps = self.frames as u16;
+			self.timer = 0.0;
+			self.frames = 0;
 		}
-		self.buffer.push(fps);
+
 	}
 
-	fn get_avg(&self) -> u16 {
-
-		if self.buffer.is_empty() {
-			return 0;
-		}
-
-		let sum: u16 = self.buffer.iter().sum();
-		return sum / self.buffer.len() as u16;
-
+	fn fps(&self) -> u16 {
+		return self.fps;
 	}
 
 }
