@@ -12,7 +12,6 @@ use rlua::Value;
 use rlua::ToLua;
 use rlua::FromLua;
 use rlua::Table;
-use rlua::MultiValue;
 use rlua::Context;
 
 use crate::*;
