@@ -3,6 +3,7 @@
 == DOING
 - better UniformValue api
 - custom shader
+- fix canvas size and flip
 
 == TODO
 - http less allocation / copying

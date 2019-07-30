@@ -217,6 +217,10 @@ pub(super) fn end(ctx: &mut Ctx) {
 
 pub(super) fn flush(ctx: &mut Ctx) {
 
+	if ctx.batched_renderer.empty() {
+		return;
+	}
+
 	if let Some(tex) = &ctx.cur_tex {
 
 		tex.handle.bind();
@@ -440,6 +444,7 @@ impl Shader {
 
 }
 
+// TODO: flip when canvas is binded instead of only when drawing
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
 
@@ -473,6 +478,23 @@ impl Canvas {
 
 	pub fn height(&self) -> i32 {
 		return self.tex.height();
+	}
+
+	pub fn capture(&self, fname: &str) -> Result<()> {
+
+		let tex = &self.tex;
+		let buffer = tex.handle.get_data();
+
+		image::save_buffer(
+			fname,
+			&buffer,
+			tex.width() as u32,
+			tex.height() as u32,
+			image::ColorType::RGBA(8),
+		)?;
+
+		return Ok(());
+
 	}
 
 }

@@ -1,13 +1,16 @@
 // wengwengweng
 
 use dirty::*;
-use http::Response;
-use http::ContentType;
-use http::Status;
 
 fn main() {
-	http::serve("0.0.0.0", 7878, |req| {
-		return Response::new(Status::Ok, ContentType::Text, "yo");
-	});
-}
 
+	let url = "https://www.example.com";
+
+	match http::get(url) {
+		Ok(res) => println!("{}", res.text()),
+		Err(err) => {
+			dbg!(err);
+		},
+	};
+
+ }

@@ -1,11 +1,11 @@
 // wengwengweng
 
-use std::sync::Arc;
 use std::io::Write;
 use std::io::Read;
 use std::net::TcpStream;
 
 use url::Url;
+use native_tls::TlsConnector;
 
 use crate::Error;
 use crate::Result;
@@ -157,16 +157,11 @@ impl Request {
 
 			Scheme::HTTPS => {
 
-				let mut config = rustls::ClientConfig::new();
+				let connector = TlsConnector::new()?;
+				let mut stream = connector.connect(self.host(), stream)?;
 
-				config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
-
-				let dns_name = webpki::DNSNameRef::try_from_ascii_str(self.host())?;
-				let mut tlssession = rustls::ClientSession::new(&Arc::new(config), dns_name);
-				let mut tlsstream = rustls::Stream::new(&mut tlssession, &mut stream);
-
-				tlsstream.write_all(&self.message())?;
-				tlsstream.read_to_end(&mut buf)?;
+				stream.write_all(&self.message())?;
+				stream.read_to_end(&mut buf)?;
 
 			},
 

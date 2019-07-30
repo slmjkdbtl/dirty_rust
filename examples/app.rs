@@ -106,10 +106,7 @@ impl app::State for Game {
 		})?;
 
 		ctx.draw(shapes::canvas(&self.canvas))?;
-		ctx.push();
-		ctx.translate(vec2!(-160));
-		ctx.draw(shapes::text(&format!("{}", ctx.fps())))?;
-		ctx.pop()?;
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();
