@@ -201,7 +201,7 @@ impl<S: Shape> BatchedRenderer<S> {
 
 	pub fn flush(&mut self, device: &Device, program: &Program) {
 
-		if self.queue.is_empty() {
+		if self.empty() {
 			return;
 		}
 
@@ -220,6 +220,10 @@ impl<S: Shape> BatchedRenderer<S> {
 		self.ibuf.unbind();
 		self.queue.clear();
 
+	}
+
+	pub fn empty(&self) -> bool {
+		return self.queue.is_empty();
 	}
 
 }
@@ -416,6 +420,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
+	// TODO: change this to take V
 	pub fn data(&self, offset: usize, data: &[f32]) {
 
 		unsafe {
@@ -918,6 +923,7 @@ pub enum ShaderType {
 	Fragment,
 }
 
+// TODO: better UniformValue api
 pub trait UniformValue {
 	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>);
 }

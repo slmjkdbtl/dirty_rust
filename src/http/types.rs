@@ -9,7 +9,7 @@ use crate::Result;
 const HTTP_PORT: u16 = 80;
 const HTTPS_PORT: u16 = 443;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Scheme {
 	HTTP,
 	HTTPS,
@@ -38,7 +38,7 @@ impl FromStr for Scheme {
 
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum Method {
 	GET,
 	POST,
@@ -68,7 +68,7 @@ impl FromStr for Method {
 
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Version {
 	V10,
 	V11,
@@ -111,7 +111,7 @@ impl FromStr for Version {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HeaderMap {
 	map: HashMap<Header, String>,
 }
@@ -142,7 +142,7 @@ macro_rules! gen_headers {
 
 	($($name:ident => $msg:expr),*$(,)?) => {
 
-		#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+		#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 		pub enum Header {
 			$(
 				$name,
@@ -239,7 +239,7 @@ macro_rules! gen_status {
 
 	($($code:expr, $name:ident => $reason:expr),*$(,)?) => {
 
-		#[derive(Clone, Copy)]
+		#[derive(Clone, Copy, Debug)]
 		pub enum Status {
 			$(
 				$name,

@@ -138,6 +138,19 @@ impl From<httparse::Error> for Error {
 	}
 }
 
+#[cfg(feature = "http")]
+impl From<native_tls::Error> for Error {
+	fn from(_: native_tls::Error) -> Self {
+		return Error::Net;
+	}
+}
+
+#[cfg(feature = "http")]
+impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
+	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
+		return Error::Net;
+	}
+}
 #[cfg(feature = "ase")]
 impl From<serde_json::error::Error> for Error {
 	fn from(_: serde_json::error::Error) -> Self {

@@ -7,7 +7,7 @@ use crate::Result;
 
 use super::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Response {
 	body: Vec<u8>,
 	status: Status,
