@@ -11,6 +11,8 @@ use std::fs;
 
 use crate::Result;
 
+pub use image::ImageFormat as Format;
+
 pub struct Image {
 	handle: image::RgbaImage,
 }

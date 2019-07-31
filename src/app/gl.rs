@@ -101,6 +101,11 @@ impl Device {
 		}
 	}
 
+	pub fn viewport(&self) {
+		// TODO
+		unimplemented!();
+	}
+
 }
 
 pub struct Renderer<S: Shape> {
