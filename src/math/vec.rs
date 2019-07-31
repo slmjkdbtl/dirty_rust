@@ -51,7 +51,7 @@ macro_rules! gen_vec {
 		}
 
 		#[allow(missing_docs)]
-		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Debug)]
+		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into, Debug)]
 		pub struct $name {
 			$(
 			pub $member: $type
@@ -161,11 +161,9 @@ gen_vec!(Vec3(vec3) -> (x, y, z): [f32; 3], (0, 0, 0));
 gen_vec!(Vec4(vec4) -> (x, y, z, w): [f32; 4], (0, 0, 0, 0));
 gen_vec!(Color(color) -> (r, g, b, a): [f32; 4], (1, 1, 1, 1));
 gen_vec!(Quad(quad) -> (x, y, w, h): [f32; 4], (0, 0, 0, 0));
-gen_vec!(Size(size) -> (w, h): [u32; 2], (0, 0));
 
 mix!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
 mix!(Vec4(x, y, z, w): f32, Quad(x, y, w, h): f32);
-mix!(Vec2(x, y): f32, Size(w, h): u32);
 
 impl Vec2 {
 
