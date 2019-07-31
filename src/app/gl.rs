@@ -154,6 +154,8 @@ pub struct BatchedRenderer<S: Shape> {
 
 	vbuf: VertexBuffer<S::Vertex>,
 	ibuf: IndexBuffer,
+	#[cfg(feature="gl3")]
+	vao: VertexArray,
 	queue: Vec<f32>,
 
 }
@@ -183,9 +185,16 @@ impl<S: Shape> BatchedRenderer<S> {
 
 		let queue = Vec::with_capacity(max_vertices);
 
+		#[cfg(feature="gl3")]
+		let vao = VertexArray::new(&device)?;
+		#[cfg(feature="gl3")]
+		vao.attr(&vbuf);
+
 		return Ok(Self {
 			vbuf: vbuf,
 			ibuf: ibuf,
+			#[cfg(feature="gl3")]
+			vao: vao,
 			queue: queue,
 		});
 
@@ -211,9 +220,15 @@ impl<S: Shape> BatchedRenderer<S> {
 		}
 
 		self.vbuf.data(0, &self.queue);
+
+		#[cfg(feature="gl3")]
+		self.vao.bind();
+		#[cfg(not(feature="gl3"))]
 		self.vbuf.bind();
-		self.ibuf.bind();
+		#[cfg(not(feature="gl3"))]
 		self.vbuf.bind_attrs(program);
+
+		self.ibuf.bind();
 		program.bind();
 
 		device.draw_elements(
@@ -221,7 +236,12 @@ impl<S: Shape> BatchedRenderer<S> {
 		);
 
 		program.unbind();
+
+		#[cfg(feature="gl3")]
+		self.vao.unbind();
+		#[cfg(not(feature="gl3"))]
 		self.vbuf.unbind();
+
 		self.ibuf.unbind();
 		self.queue.clear();
 
@@ -305,23 +325,28 @@ impl VertexArray {
 		}
 	}
 
-	pub fn attr<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, index: u32, size: i32, offset: usize) {
+	pub fn attr<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>) {
 
 		unsafe {
 
 			self.bind();
 			vbuf.bind();
 
-			self.ctx.vertex_attrib_pointer_f32(
-				index,
-				size,
-				glow::FLOAT,
-				false,
-				(vbuf.stride * mem::size_of::<f32>()) as i32,
-				(offset * mem::size_of::<f32>()) as i32,
-			);
+			for (i, attr) in V::attrs().iter().enumerate() {
 
-			self.ctx.enable_vertex_attrib_array(index);
+				self.ctx.vertex_attrib_pointer_f32(
+					i as u32,
+					attr.size,
+					glow::FLOAT,
+					false,
+					(V::STRIDE * mem::size_of::<f32>()) as i32,
+					(attr.offset * mem::size_of::<f32>()) as i32,
+				);
+
+				self.ctx.enable_vertex_attrib_array(i as u32);
+
+			}
+
 			vbuf.unbind();
 			self.unbind();
 
