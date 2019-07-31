@@ -25,8 +25,8 @@ impl Image {
 		});
 	}
 
-	pub fn from_file(fname: &str) -> Result<Self> {
-		return Self::from_bytes(&fs::read(fname)?);
+	pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_bytes(&fs::read(path)?);
 	}
 
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
@@ -52,8 +52,8 @@ impl Image {
 		return self.handle.height();
 	}
 
-	pub fn write(&self, fname: impl AsRef<Path>) -> Result<()> {
-		return Ok(self.handle.save(fname)?);
+	pub fn write(&self, path: impl AsRef<Path>) -> Result<()> {
+		return Ok(self.handle.save(path)?);
 	}
 
 	pub fn into_raw(self) -> Vec<u8> {

@@ -76,6 +76,7 @@ impl gfx::Drawable for &Sprite {
 struct Game {
 	sprite: Sprite,
 	canvas: gfx::Canvas,
+	effect: gfx::Shader,
 // 	track: audio::Track,
 }
 
@@ -93,6 +94,7 @@ impl app::State for Game {
 		return Ok(Self {
 			sprite: sprite,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			effect: gfx::Shader::effect(ctx, include_str!("res/noise.frag"))?,
 // 			track: track,
 		});
 
@@ -107,7 +109,11 @@ impl app::State for Game {
 			return Ok(());
 		})?;
 
-		ctx.draw(shapes::canvas(&self.canvas))?;
+		ctx.draw_with(&self.effect, |ctx| {
+			ctx.draw(shapes::canvas(&self.canvas))?;
+			return Ok(());
+		})?;
+
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		if ctx.key_pressed(Key::F) {

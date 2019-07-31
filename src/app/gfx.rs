@@ -3,6 +3,7 @@
 use std::mem;
 use std::rc::Rc;
 use std::collections::HashMap;
+use std::path::Path;
 
 #[cfg(feature = "img")]
 use crate::img::Image;
@@ -293,10 +294,12 @@ impl Gfx for Ctx {
 
 	}
 
+	// TODO: why this doesn't work?
 	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
 		self.cur_shader = shader.clone();
 		f(self)?;
+		flush(self);
 		self.cur_shader = self.default_shader.clone();
 
 		return Ok(());
@@ -335,8 +338,8 @@ impl Texture {
 
 	}
 
-	pub fn from_file(ctx: &Ctx, fname: &str) -> Result<Self> {
-		return Self::from_image(ctx, Image::from_file(fname)?);
+	pub fn from_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_image(ctx, Image::from_file(path)?);
 	}
 
 	pub fn from_bytes(ctx: &Ctx, data: &[u8]) -> Result<Self> {
@@ -424,6 +427,7 @@ impl Font {
 
 }
 
+// TODO: user shader
 #[derive(Clone, PartialEq)]
 pub struct Shader {
 	handle: Rc<gl::Program>,
@@ -437,7 +441,16 @@ impl Shader {
 		};
 	}
 
-	pub fn new(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
+	pub fn effect(ctx: &Ctx, frag: &str) -> Result<Self> {
+
+		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
+		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
+
+		return Self::from_code(ctx, &vert_src, &frag_src);
+
+	}
+
+	pub fn from_code(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
 		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
 	}
 
@@ -483,13 +496,13 @@ impl Canvas {
 		return self.tex.height();
 	}
 
-	pub fn capture(&self, fname: &str) -> Result<()> {
+	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 
 		let tex = &self.tex;
 		let buffer = tex.handle.get_data();
 
 		image::save_buffer(
-			fname,
+			path,
 			&buffer,
 			tex.width() as u32,
 			tex.height() as u32,

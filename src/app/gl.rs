@@ -75,18 +75,19 @@ impl Device {
 	#[cfg(not(feature="gl3"))]
 	pub fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32) {
 
+
+		program.bind();
 		vbuf.bind();
 		vbuf.bind_attrs(program);
 		ibuf.bind();
-		program.bind();
 
 		unsafe {
 			self.ctx.draw_elements(glow::TRIANGLES, count as i32, glow::UNSIGNED_INT, 0);
 		}
 
-		program.unbind();
 		ibuf.unbind();
 		vbuf.unbind();
+		program.unbind();
 
 	}
 
