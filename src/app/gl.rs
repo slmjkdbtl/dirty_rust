@@ -109,8 +109,12 @@ impl Device {
 }
 
 pub struct Renderer<S: Shape> {
+	#[cfg(feature="gl3")]
+	vao: VertexArray,
+	#[cfg(not(feature="gl3"))]
 	vbuf: VertexBuffer<S::Vertex>,
 	ibuf: IndexBuffer,
+	shape: PhantomData<S>,
 }
 
 impl<S: Shape> Renderer<S> {
@@ -118,7 +122,7 @@ impl<S: Shape> Renderer<S> {
 	pub fn new(device: &Device, s: S) -> Result<Self> {
 
 		let indices = S::indices();
-		let vbuf = VertexBuffer::new(&device, S::COUNT, BufferUsage::Static)?;
+		let vbuf = VertexBuffer::<S::Vertex>::new(&device, S::COUNT, BufferUsage::Static)?;
 		let ibuf = IndexBuffer::new(&device, indices.len(), BufferUsage::Static)?;
 
 		ibuf.data(0, &indices);
@@ -128,23 +132,41 @@ impl<S: Shape> Renderer<S> {
 		s.push(&mut queue);
 		vbuf.data(0, &queue);
 
+		#[cfg(feature="gl3")]
+		let vao = VertexArray::new(&device)?;
+		#[cfg(feature="gl3")]
+		vao.attr(&vbuf);
+
 		return Ok(Self {
+			#[cfg(feature="gl3")]
+			vao: vao,
+			#[cfg(not(feature="gl3"))]
 			vbuf: vbuf,
 			ibuf: ibuf,
+			shape: PhantomData,
 		});
 
 	}
 
 	pub fn draw(&mut self, device: &Device, program: &Program) {
 
+		#[cfg(feature="gl3")]
+		self.vao.bind();
+		#[cfg(not(feature="gl3"))]
 		self.vbuf.bind();
+		#[cfg(not(feature="gl3"))]
+		self.vbuf.bind_attrs(program);
+
 		self.ibuf.bind();
 		program.bind();
-		self.vbuf.bind_attrs(program);
 		device.draw_elements(S::indices().len() as i32);
 		program.unbind();
-		self.vbuf.unbind();
 		self.ibuf.unbind();
+
+		#[cfg(feature="gl3")]
+		self.vao.unbind();
+		#[cfg(not(feature="gl3"))]
+		self.vbuf.unbind();
 
 	}
 
@@ -157,6 +179,7 @@ pub struct BatchedRenderer<S: Shape> {
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	queue: Vec<f32>,
+	shape: PhantomData<S>,
 
 }
 
@@ -196,6 +219,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			queue: queue,
+			shape: PhantomData,
 		});
 
 	}

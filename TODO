@@ -4,6 +4,7 @@
 - better UniformValue api
 - custom shader
 - fix canvas size and flip
+- better gl abstraction
 
 == TODO
 - http less allocation / copying
@@ -20,4 +21,5 @@
 - massive cleaning
 - sprite example
 - canvas rendering
+- gl3 feature
 
