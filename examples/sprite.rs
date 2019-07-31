@@ -5,8 +5,6 @@ use dirty::app::*;
 use dirty::math::*;
 use input::Key;
 
-use gfx::UniformValue;
-
 struct Sprite {
 
 	tex: gfx::Texture,
