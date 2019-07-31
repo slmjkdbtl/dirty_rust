@@ -18,6 +18,24 @@ use gl::Shape;
 pub use gl::UniformValue;
 pub use gl::UniformType;
 
+pub trait Gfx {
+
+	fn clear_color(&self, c: Color);
+	fn clear(&self);
+	fn draw_calls(&self) -> usize;
+	fn draw(&mut self, t: impl Drawable) -> Result<()>;
+	fn draw_on(&mut self, canvas: &Canvas, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_with(&mut self, shader: &Shader, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
+	fn push(&mut self);
+	fn pop(&mut self) -> Result<()>;
+	fn translate(&mut self, pos: Vec2);
+	fn rotate(&mut self, angle: f32);
+	fn scale(&mut self, scale: Vec2);
+	fn color(&mut self, c: Color);
+	fn reset(&mut self);
+
+}
+
 #[derive(Clone, Default)]
 pub(super) struct State {
 	pub transform: Mat4,
@@ -178,24 +196,6 @@ impl Origin {
 			Origin::BottomRight => vec2!(1, 1),
 		};
 	}
-
-}
-
-pub trait Gfx {
-
-	fn clear_color(&self, c: Color);
-	fn clear(&self);
-	fn draw_calls(&self) -> usize;
-	fn draw(&mut self, t: impl Drawable) -> Result<()>;
-	fn draw_on(&mut self, canvas: &Canvas, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_with(&mut self, shader: &Shader, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
-	fn push(&mut self);
-	fn pop(&mut self) -> Result<()>;
-	fn translate(&mut self, pos: Vec2);
-	fn rotate(&mut self, angle: f32);
-	fn scale(&mut self, scale: Vec2);
-	fn color(&mut self, c: Color);
-	fn reset(&mut self);
 
 }
 

@@ -30,6 +30,7 @@ pub enum Error {
 	MaxDraw,
 	StateStack,
 	Font,
+	Input,
 	OpenGL(String),
 	Misc(String),
 }
@@ -60,8 +61,9 @@ impl fmt::Display for Error {
 			Error::HTTPMessage => write!(f, "failed to parse http message"),
 			Error::Lua => write!(f, "lua error"),
 			Error::MaxDraw => write!(f, "reached maximum draw calls"),
-			Error::StateStack => write!(f, "state stack error",),
-			Error::Font => write!(f, "font error",),
+			Error::StateStack => write!(f, "state stack error"),
+			Error::Font => write!(f, "font error"),
+			Error::Input => write!(f, "input error"),
 			Error::OpenGL(s) => write!(f, "error: {}", s),
 			Error::Misc(s) => write!(f, "error: {}", s),
 		};

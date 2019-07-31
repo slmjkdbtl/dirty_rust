@@ -104,13 +104,13 @@ impl app::State for Game {
 
 		self.sprite.next();
 
-		ctx.draw_on(&self.canvas, |ctx| {
+// 		ctx.draw_on(&self.canvas, |ctx| {
 			ctx.draw(&self.sprite)?;
-			return Ok(());
-		})?;
+// 			return Ok(());
+// 		})?;
 
 // 		ctx.draw_with(&self.effect, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas))?;
+// 			ctx.draw(shapes::canvas(&self.canvas))?;
 // 			return Ok(());
 // 		})?;
 
@@ -132,7 +132,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher().origin(gfx::Origin::Center).run::<Game>() {
+	if let Err(err) = app::run::<Game>() {
 		println!("{}", err);
 	}
 

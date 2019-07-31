@@ -44,7 +44,7 @@ impl Window for Ctx {
 	}
 
 	fn is_fullscreen(&self) -> bool {
-		return self.fullscreen;
+		return self.windowed_ctx.window().get_fullscreen().is_some();
 	}
 
 	fn toggle_fullscreen(&mut self) {

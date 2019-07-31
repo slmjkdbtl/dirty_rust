@@ -11,14 +11,6 @@ use super::*;
 use crate::*;
 use window::Pos;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) enum ButtonState {
-	Up,
-	Pressed,
-	Down,
-	Released,
-}
-
 pub trait Input {
 
 	fn down_keys(&self) -> HashSet<Key>;
@@ -36,6 +28,14 @@ pub trait Input {
 	fn scroll_delta(&self) -> Option<Pos>;
 	fn text_input(&self) -> Option<String>;
 
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) enum ButtonState {
+	Up,
+	Pressed,
+	Down,
+	Released,
 }
 
 impl Input for app::Ctx {
@@ -69,6 +69,7 @@ impl Input for app::Ctx {
 	}
 
 	fn key_pressed_repeat(&self, key: Key) -> bool {
+		// TODO: do this
 		unimplemented!();
 	}
 
@@ -228,8 +229,9 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	ctx.text_input = text_input;
 
-// 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
-// 	}
+	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+		// TODO: add gamepad input
+	}
 
 	return Ok(());
 
