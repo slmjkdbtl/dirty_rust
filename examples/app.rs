@@ -109,10 +109,10 @@ impl app::State for Game {
 			return Ok(());
 		})?;
 
-		ctx.draw_with(&self.effect, |ctx| {
+// 		ctx.draw_with(&self.effect, |ctx| {
 			ctx.draw(shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+// 			return Ok(());
+// 		})?;
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 

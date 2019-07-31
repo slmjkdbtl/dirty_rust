@@ -75,7 +75,6 @@ impl Device {
 	#[cfg(not(feature="gl3"))]
 	pub fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32) {
 
-
 		program.bind();
 		vbuf.bind();
 		vbuf.bind_attrs(program);

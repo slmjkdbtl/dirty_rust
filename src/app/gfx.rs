@@ -294,7 +294,6 @@ impl Gfx for Ctx {
 
 	}
 
-	// TODO: why this doesn't work?
 	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
 		self.cur_shader = shader.clone();
@@ -371,7 +370,8 @@ pub struct Font {
 	pub(super) tex: gfx::Texture,
 	pub(super) map: HashMap<char, Quad>,
 	pub(super) quad_size: Vec2,
-	grid_size: Size,
+	grid_width: u32,
+	grid_height: u32,
 
 }
 
@@ -388,8 +388,6 @@ impl Font {
 		if (tw % cols as i32 != 0 || th % rows as i32 != 0) {
 			return Err(Error::Font);
 		}
-
-		let size = Size::new(tw as u32 / cols as u32, th as u32 / rows as u32);
 
 		for (i, ch) in chars.chars().enumerate() {
 
@@ -409,7 +407,8 @@ impl Font {
 			tex: tex,
 			map: map,
 			quad_size: quad_size,
-			grid_size: size,
+			grid_width: tw as u32 / cols as u32,
+			grid_height: th as u32 / rows as u32,
 
 		});
 
@@ -417,12 +416,12 @@ impl Font {
 
 	/// get current font width for string
 	pub fn width(&self) -> u32 {
-		return self.grid_size.w;
+		return self.grid_width;
 	}
 
 	/// get current text height
 	pub fn height(&self) -> u32 {
-		return self.grid_size.h;
+		return self.grid_height;
 	}
 
 }
