@@ -19,13 +19,13 @@ default = [
 	"fs",
 	"app",
 	"img",
-# 	"audio",
+	"audio",
 	"http",
 	"term",
-# 	"col",
-# 	"ase",
-# 	"texpack",
-# 	"gl3",
+	"col",
+	"ase",
+	"texpack",
+	"gl3",
 # 	"python",
 ]
 
@@ -43,6 +43,7 @@ app = [
 	"glutin",
 	"gilrs",
 	"glow",
+	"glyph_brush",
 	"web-sys",
 	"wasm-bindgen",
 ]
@@ -96,8 +97,9 @@ rlua = { version = "0.16", optional = true }
 glutin = { version = "0.21", optional = true }
 gilrs = { version = "0.7", optional = true }
 glow = { version = "0.2", optional = true }
+glyph_brush = { version = "0.5", optional = true }
 
-image = { version = "0.22", optional = true }
+image = { version = "0.22", optional = true, default-features = false, features = [ "jpeg", "png_codec"] }
 tobj = { version = "0.1", optional = true }
 
 rodio = { version = "0.9", optional = true }

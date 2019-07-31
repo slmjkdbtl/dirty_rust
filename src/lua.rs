@@ -13,6 +13,8 @@ use rlua::ToLua;
 use rlua::FromLua;
 use rlua::Table;
 use rlua::Context;
+use rlua::MultiValue;
+use rlua::Function;
 
 use crate::*;
 use crate::Error;
@@ -222,6 +224,67 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(ctx.time());
 			});
 
+			methods.add_method("dt", |_, ctx, ()| {
+				return Ok(ctx.dt());
+			});
+
+			methods.add_method("fps", |_, ctx, ()| {
+				return Ok(ctx.fps());
+			});
+
+			methods.add_method_mut("quit", |_, ctx, ()| {
+				return Ok(ctx.quit());
+			});
+
+			// TODO: macro this
+			methods.add_method_mut("fullscreen", |_, ctx, (v): (MultiValue)| {
+				ctx.set_fullscreen(true);
+// 				if !v.is_empty() {
+// 					if v.len() == 1 {
+// 						let v = v.into_vec();
+// 						match &v[0] {
+// 							Value::Boolean(b) => ctx.set_fullscreen(*b),
+// 							_ => return Err(rlua::Error::BindError),
+// 						};
+// 					} else {
+// 						return Err(rlua::Error::BindError);
+// 					}
+// 				}
+				return Ok(ctx.is_fullscreen());
+			});
+
+			methods.add_method_mut("title", |_, ctx, (v): (MultiValue)| {
+				if !v.is_empty() {
+					if v.len() == 1 {
+						let v = v.into_vec();
+						match &v[0] {
+							Value::String(s) => ctx.set_title(s.to_str()?),
+							_ => return Err(rlua::Error::BindError),
+						};
+					} else {
+						return Err(rlua::Error::BindError);
+					}
+				}
+				return Ok(());
+			});
+
+			methods.add_method("key_pressed", |_, ctx, (k): (String)| {
+				return Ok(ctx.key_pressed(input::str_to_key(&k).ok_or(Error::Input)?));
+			});
+
+			methods.add_method("key_down", |_, ctx, (k): (String)| {
+				return Ok(ctx.key_down(input::str_to_key(&k).ok_or(Error::Input)?));
+			});
+
+			methods.add_method("key_released", |_, ctx, (k): (String)| {
+				return Ok(ctx.key_released(input::str_to_key(&k).ok_or(Error::Input)?));
+			});
+
+			methods.add_method("mouse_pos", |_, ctx, ()| {
+				let pos: math::Vec2 = ctx.mouse_pos().into();
+				return Ok(pos);
+			});
+
 		}
 
 	}
@@ -232,14 +295,14 @@ fn bind_app(ctx: &Context) -> Result<()> {
 
 			use app::*;
 
-			methods.add_method_mut("init", |ctx, app, (cb): (rlua::Function)| {
+			methods.add_method_mut("init", |ctx, app, (cb): (Function)| {
 				ctx.scope(|s| -> rlua::Result<()> {
 					return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(app)?)?);
 				});
 				return Ok(());
 			});
 
-			methods.add_method_mut("run", |ctx, app, (cb): (rlua::Function)| {
+			methods.add_method_mut("run", |ctx, app, (cb): (Function)| {
 				return Ok(app.run(|c| {
 					ctx.scope(|s| -> rlua::Result<()> {
 						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
@@ -431,7 +494,7 @@ fn bind_http(ctx: &Context) -> Result<()> {
 		return Ok(http::post(&uri, &data)?);
 	})?)?;
 
-	http.set("serve", ctx.create_function(|_, (loc, port, handler): (String, u16, rlua::Function)| {
+	http.set("serve", ctx.create_function(|_, (loc, port, handler): (String, u16, Function)| {
 		return Ok(http::serve(&loc, port, |req| {
 			return handler.call::<_, http::Response>(req).ok().expect("response required");
 		})?);
@@ -625,6 +688,7 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 
 	let globals = ctx.globals();
 
+	// TODO: macro this
 	impl UserData for Vec2 {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -637,6 +701,34 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 				}
 			});
 
+			methods.add_meta_method(MetaMethod::Mul, |_, this, s: f32| {
+				return Ok(*this * s);
+			});
+
+			methods.add_meta_method(MetaMethod::Div, |_, this, s: f32| {
+				return Ok(*this / s);
+			});
+
+			methods.add_meta_method(MetaMethod::Add, |_, this, other: Vec2| {
+				return Ok(*this + other);
+			});
+
+			methods.add_meta_method(MetaMethod::Sub, |_, this, other: Vec2| {
+				return Ok(*this - other);
+			});
+
+			methods.add_meta_method(MetaMethod::Unm, |_, this, _: ()| {
+				return Ok(-*this);
+			});
+
+			methods.add_meta_method(MetaMethod::Eq, |_, this, other: Vec2| {
+				return Ok(*this == other);
+			});
+
+			methods.add_meta_method(MetaMethod::ToString, |_, this, _: ()| {
+				return Ok(format!("{}", this));
+			});
+
 		}
 
 	}
@@ -646,6 +738,7 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 	impl UserData for Mat4 {}
 	impl UserData for Color {}
 	impl UserData for Quad {}
+	impl UserData for app::window::Pos {}
 
 	globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
 		return Ok(vec2!(x, y));
