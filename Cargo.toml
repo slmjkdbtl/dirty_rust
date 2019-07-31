@@ -26,6 +26,7 @@ default = [
 # 	"ase",
 # 	"texpack",
 # 	"gl3",
+# 	"python",
 ]
 
 lua = [
@@ -78,6 +79,9 @@ texpack = [
 ]
 
 gl3 = []
+python = [
+	"rustpython",
+]
 
 [dependencies]
 rand = "0.7"
@@ -109,6 +113,8 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
 
 guillotiere = { version = "0.4.2", optional = true }
+
+rustpython = { version = "0.1.0", optional = true }
 
 # ketos = "0.11"
 # rusttype = "0.7"
