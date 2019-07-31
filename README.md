@@ -13,7 +13,7 @@ personal toolkit for things
 - **col** Common Collision Detections
 - **ase** Load Aseprite Spritesheets
 
-This library was intended to be a game toolkit, but added a lot of other stuff due to my other scripting needs, and to provide a more integrated and unified scripting interface. All the modules can be configured with cargo feature:
+All the modules can be configured with cargo feature:
 ```toml
 default = [ "fs", "app", "img", "audio", ]
 ```
