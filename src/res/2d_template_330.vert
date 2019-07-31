@@ -1,11 +1,13 @@
 // wengwengweng
 
-attribute vec2 pos;
-attribute vec2 uv;
-attribute vec4 color;
+#version 330
 
-varying vec2 coord;
-varying vec4 tint;
+layout(location = 0) in vec2 pos;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec4 color;
+
+out vec2 coord;
+out vec4 tint;
 
 uniform mat4 proj;
 uniform float time;

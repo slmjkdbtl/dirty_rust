@@ -25,6 +25,7 @@ default = [
 # 	"col",
 # 	"ase",
 # 	"texpack",
+# 	"gl3",
 ]
 
 lua = [
@@ -75,6 +76,8 @@ col = []
 texpack = [
 	"guillotiere",
 ]
+
+gl3 = []
 
 [dependencies]
 rand = "0.7"

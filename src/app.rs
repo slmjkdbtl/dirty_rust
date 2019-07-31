@@ -22,6 +22,7 @@ use std::time::Duration;
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
+use glutin::GlProfile;
 use gilrs::Gilrs;
 
 use input::ButtonState;
@@ -34,10 +35,24 @@ use gfx::Origin;
 
 const MAX_DRAWS: usize = 65536;
 
+#[cfg(feature="gl3")]
+const TEMPLATE_2D_VERT: &str = include_str!("res/2d_template_330.vert");
+#[cfg(feature="gl3")]
+const TEMPLATE_2D_FRAG: &str = include_str!("res/2d_template_330.frag");
+
+#[cfg(feature="gl3")]
+const DEFAULT_2D_VERT: &str = include_str!("res/2d_default_330.vert");
+#[cfg(feature="gl3")]
+const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default_330.frag");
+
+#[cfg(not(feature="gl3"))]
 const TEMPLATE_2D_VERT: &str = include_str!("res/2d_template.vert");
+#[cfg(not(feature="gl3"))]
 const TEMPLATE_2D_FRAG: &str = include_str!("res/2d_template.frag");
 
+#[cfg(not(feature="gl3"))]
 const DEFAULT_2D_VERT: &str = include_str!("res/2d_default.vert");
+#[cfg(not(feature="gl3"))]
 const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default.frag");
 
 const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/CP437.png");
@@ -52,7 +67,7 @@ pub struct Ctx {
 	pub(self) quit: bool,
 	pub(self) dt: f32,
 	pub(self) time: f32,
-	pub(self) fps_cap: u16,
+	pub(self) fps_cap: Option<u16>,
 	pub(self) fps_counter: FPSCounter,
 
 	// input
@@ -133,14 +148,19 @@ impl Ctx {
 
 		}
 
-		let windowed_ctx = glutin::ContextBuilder::new()
+		let mut ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
-// 			.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
-// 			.with_gl_profile(glutin::GlProfile::Core)
-			.build_windowed(window_builder, &events_loop)?;
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
 
-		let windowed_ctx = unsafe { windowed_ctx.make_current()? };
+		#[cfg(feature = "gl3")] {
+			ctx_builder = ctx_builder
+				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+				.with_gl_profile(glutin::GlProfile::Core);
+		}
+
+		let windowed_ctx = unsafe {
+			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
+		};
 
 		let gl = gl::Device::from_loader(|s| {
 			windowed_ctx.get_proc_address(s) as *const _
@@ -163,7 +183,7 @@ impl Ctx {
 		let shader = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_src, &frag_src)?);
 		let proj = conf.origin.to_ortho(conf.width, conf.height);
 
-		shader.send("projection", proj);
+		shader.send("proj", proj);
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
@@ -254,11 +274,15 @@ impl Ctx {
 				break 'run;
 			}
 
-			let real_dt = start_time.elapsed().as_millis();
-			let expected_dt = (1000.0 / self.fps_cap as f32) as u128;
+			if let Some(fps_cap) = self.fps_cap {
 
-			if real_dt < expected_dt {
-				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+				let real_dt = start_time.elapsed().as_millis();
+				let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+				if real_dt < expected_dt {
+					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+				}
+
 			}
 
 			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
@@ -407,7 +431,7 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn fps_cap(mut self, f: u16) -> Self {
+	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
 		self.conf.fps_cap = f;
 		return self;
 	}
@@ -435,7 +459,7 @@ pub struct Conf {
 	pub clear_color: Color,
 	pub origin: Origin,
 	pub texture_origin: Origin,
-	pub fps_cap: u16,
+	pub fps_cap: Option<u16>,
 }
 
 impl Conf {
@@ -464,7 +488,7 @@ impl Default for Conf {
 			always_on_top: false,
 			borderless: false,
 			transparent: false,
-			vsync: false,
+			vsync: true,
 			fullsize_content: false,
 			hide_title: false,
 			hide_titlebar_buttons: false,
@@ -474,7 +498,7 @@ impl Default for Conf {
 			clear_color: color!(0, 0, 0, 1),
 			origin: Origin::Center,
 			texture_origin: Origin::Center,
-			fps_cap: 60,
+			fps_cap: Some(60),
 		};
 	}
 
