@@ -5,6 +5,7 @@
 - fix canvas size and flip
 - better gl abstraction
 - fix fullscreen framebuffer weirdness
+- weird lua fullscreen error
 
 == TODO
 - http less allocation / copying
