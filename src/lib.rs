@@ -8,6 +8,9 @@
 
 #![deny(clippy::implicit_return)]
 
+#[cfg(all(feature = "lua", feature = "python"))]
+compile_error!("can only enable one scripting option");
+
 pub mod math;
 pub mod thread;
 

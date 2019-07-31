@@ -55,16 +55,39 @@ impl Device {
 		}
 	}
 
-	pub fn draw_elements(&self, count: i32) {
+	#[cfg(feature="gl3")]
+	pub fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32) {
+
+		vao.bind();
+		ibuf.bind();
+		program.bind();
+
 		unsafe {
-			self.ctx.draw_elements(glow::TRIANGLES, count, glow::UNSIGNED_INT, 0);
+			self.ctx.draw_elements(glow::TRIANGLES, count as i32, glow::UNSIGNED_INT, 0);
 		}
+
+		program.unbind();
+		ibuf.unbind();
+		vao.unbind();
+
 	}
 
-	pub fn draw_arrays(&self, count: i32) {
+	#[cfg(not(feature="gl3"))]
+	pub fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32) {
+
+		vbuf.bind();
+		vbuf.bind_attrs(program);
+		ibuf.bind();
+		program.bind();
+
 		unsafe {
-			self.ctx.draw_arrays(glow::TRIANGLES, 0, count);
+			self.ctx.draw_elements(glow::TRIANGLES, count as i32, glow::UNSIGNED_INT, 0);
 		}
+
+		program.unbind();
+		ibuf.unbind();
+		vbuf.unbind();
+
 	}
 
 	pub fn get_error(&self) -> Result<()> {
@@ -151,22 +174,20 @@ impl<S: Shape> Renderer<S> {
 	pub fn draw(&mut self, device: &Device, program: &Program) {
 
 		#[cfg(feature="gl3")]
-		self.vao.bind();
-		#[cfg(not(feature="gl3"))]
-		self.vbuf.bind();
-		#[cfg(not(feature="gl3"))]
-		self.vbuf.bind_attrs(program);
+		device.draw(
+			&self.vao,
+			&self.ibuf,
+			&program,
+			S::indices().len() as u32
+		);
 
-		self.ibuf.bind();
-		program.bind();
-		device.draw_elements(S::indices().len() as i32);
-		program.unbind();
-		self.ibuf.unbind();
-
-		#[cfg(feature="gl3")]
-		self.vao.unbind();
 		#[cfg(not(feature="gl3"))]
-		self.vbuf.unbind();
+		device.draw(
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			S::indices().len() as u32
+		);
 
 	}
 
@@ -246,27 +267,21 @@ impl<S: Shape> BatchedRenderer<S> {
 		self.vbuf.data(0, &self.queue);
 
 		#[cfg(feature="gl3")]
-		self.vao.bind();
-		#[cfg(not(feature="gl3"))]
-		self.vbuf.bind();
-		#[cfg(not(feature="gl3"))]
-		self.vbuf.bind_attrs(program);
-
-		self.ibuf.bind();
-		program.bind();
-
-		device.draw_elements(
-			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as i32
+		device.draw(
+			&self.vao,
+			&self.ibuf,
+			&program,
+			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32
 		);
 
-		program.unbind();
-
-		#[cfg(feature="gl3")]
-		self.vao.unbind();
 		#[cfg(not(feature="gl3"))]
-		self.vbuf.unbind();
+		device.draw(
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32
+		);
 
-		self.ibuf.unbind();
 		self.queue.clear();
 
 	}
@@ -798,12 +813,24 @@ impl Program {
 
 	}
 
-	pub fn send<T: UniformValue>(&self, name: &str, value: T) {
+	pub fn send(&self, name: &str, value: impl UniformValue) {
 
 		unsafe {
 
 			self.bind();
-			value.send(&self.ctx, self.ctx.get_uniform_location(self.id, name));
+
+			use UniformType::*;
+
+			let loc = self.ctx.get_uniform_location(self.id, name);
+
+			match value.get() {
+				F1(f) => self.ctx.uniform_1_f32(loc, f),
+				F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
+				F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
+				F4(f1, f2, f3, f4) => self.ctx.uniform_4_f32(loc, f1, f2, f3, f4),
+				Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
+			}
+
 			self.unbind();
 
 		}
@@ -977,86 +1004,75 @@ pub enum ShaderType {
 	Fragment,
 }
 
-// TODO: better UniformValue api
-pub trait UniformValue {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>);
+pub enum UniformType {
+	F1(f32),
+	F2(f32, f32),
+	F3(f32, f32, f32),
+	F4(f32, f32, f32, f32),
+	Mat4([f32; 16]),
 }
 
-impl UniformValue for i32 {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_1_i32(loc, *self);
-	}
+pub trait UniformValue {
+	fn get(&self) -> UniformType;
 }
 
 impl UniformValue for f32 {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_1_f32(loc, *self);
+	fn get(&self) -> UniformType {
+		return UniformType::F1(*self);
 	}
 }
 
 impl UniformValue for [f32; 2] {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_2_f32(loc, self[0], self[1]);
-	}
-}
-
-impl UniformValue for [i32; 2] {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_2_i32(loc, self[0], self[1]);
+	fn get(&self) -> UniformType {
+		return UniformType::F2(self[0], self[1]);
 	}
 }
 
 impl UniformValue for [f32; 3] {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_3_f32(loc, self[0], self[1], self[2]);
-	}
-}
-
-impl UniformValue for [i32; 3] {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_3_i32(loc, self[0], self[1], self[2]);
+	fn get(&self) -> UniformType {
+		return UniformType::F3(self[0], self[1], self[2]);
 	}
 }
 
 impl UniformValue for [f32; 4] {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_4_f32(loc, self[0], self[1], self[2], self[3]);
-	}
-}
-
-impl UniformValue for [i32; 4] {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_4_i32(loc, self[0], self[1], self[2], self[3]);
+	fn get(&self) -> UniformType {
+		return UniformType::F4(self[0], self[1], self[2], self[3]);
 	}
 }
 
 impl UniformValue for Vec2 {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_2_f32(loc, self.x, self.y);
+	fn get(&self) -> UniformType {
+		return UniformType::F2(self.x, self.y);
 	}
 }
 
 impl UniformValue for Vec3 {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_3_f32(loc, self.x, self.y, self.z);
+	fn get(&self) -> UniformType {
+		return UniformType::F3(self.x, self.y, self.z);
 	}
 }
 
 impl UniformValue for Vec4 {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_4_f32(loc, self.x, self.y, self.z, self.w);
+	fn get(&self) -> UniformType {
+		return UniformType::F4(self.x, self.y, self.z, self.w);
 	}
 }
 
 impl UniformValue for Color {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_4_f32(loc, self.r, self.g, self.b, self.a);
+	fn get(&self) -> UniformType {
+		return UniformType::F4(self.r, self.g, self.b, self.a);
+	}
+}
+
+impl UniformValue for Quad {
+	fn get(&self) -> UniformType {
+		return UniformType::F4(self.x, self.y, self.w, self.h);
 	}
 }
 
 impl UniformValue for Mat4 {
-	unsafe fn send(&self, ctx: &GLCtx, loc: Option<u32>) {
-		ctx.uniform_matrix_4_f32_slice(loc, false, &self.as_arr());
+	fn get(&self) -> UniformType {
+		return UniformType::Mat4(self.as_arr());
 	}
 }
 

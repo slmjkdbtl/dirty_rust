@@ -14,6 +14,9 @@ use super::*;
 use gl::VertexLayout;
 use gl::Shape;
 
+pub use gl::UniformValue;
+pub use gl::UniformType;
+
 #[derive(Clone, Default)]
 pub(super) struct State {
 	pub transform: Mat4,
