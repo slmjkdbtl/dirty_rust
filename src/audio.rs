@@ -86,8 +86,8 @@ impl Sound {
 	}
 
 	/// create a sound from file
-	pub fn from_file(fname: impl AsRef<Path>) -> Result<Self> {
-		return Self::from_bytes(&fs::read(fname)?);
+	pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_bytes(&fs::read(path)?);
 	}
 
 	pub fn play(&self) -> Result<()> {
