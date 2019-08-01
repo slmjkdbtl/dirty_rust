@@ -1,6 +1,6 @@
 # wengwengweng
 
-run example="app":
+run example="sprite":
 	cargo run --example {{example}} --release
 
 run-lua example="app":

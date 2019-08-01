@@ -57,7 +57,7 @@ impl<'a> Drawable for Sprite<'a> {
 		ctx.push();
 		ctx.scale(scale);
 		ctx.translate(self.offset * -0.5);
-		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color, self.flip))?;
+		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color, ctx.texture_origin, self.flip))?;
 		ctx.pop()?;
 
 		return Ok(());
@@ -279,7 +279,7 @@ impl<'a> Drawable for Canvas<'a> {
 
 		ctx.push();
 		ctx.scale(vec2!(1.0 / ctx.dpi() as f32));
-		ctx.draw(sprite(&self.canvas.tex).flip(gfx::Flip::Y))?;
+		ctx.draw(sprite(&self.canvas.tex))?;
 		ctx.pop()?;
 
 		return Ok(());

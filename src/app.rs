@@ -94,6 +94,8 @@ pub struct Ctx {
 	pub(self) origin: gfx::Origin,
 	pub(self) texture_origin: gfx::Origin,
 
+	pub(self) projection: math::Mat4,
+
 	pub(self) gl: Rc<gl::Device>,
 	pub(self) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
 
@@ -183,7 +185,7 @@ impl Ctx {
 		let shader = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_src, &frag_src)?);
 		let proj = conf.origin.to_ortho(conf.width, conf.height);
 
-		shader.send("proj", proj);
+		shader.send("proj", proj.clone());
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
@@ -222,22 +224,18 @@ impl Ctx {
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: Gilrs::new()?,
 
+			gl: Rc::new(gl),
 			origin: conf.origin,
 			texture_origin: conf.texture_origin,
-			gl: Rc::new(gl),
 			batched_renderer: batched_renderer,
-
+			projection: proj,
 			cur_tex: None,
 			empty_tex: empty_tex,
-
 			default_shader: shader.clone(),
 			cur_shader: shader,
-
 			default_font: font,
-
 			draw_calls: 0,
 			draw_calls_last: 0,
-
 			state: gfx::State::default(),
 			state_stack: Vec::with_capacity(16),
 
