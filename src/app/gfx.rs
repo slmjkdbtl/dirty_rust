@@ -529,6 +529,23 @@ impl Canvas {
 
 }
 
+pub struct Model {
+}
+
+impl Model {
+
+// 	pub fn from_obj(code: &str) -> Result<Self> {
+// 		let cornell_box = tobj::load_obj(&Path::new("cornell_box.obj"));
+// 		return Ok(Self {});
+// 	}
+
+	pub fn from_obj(path: impl AsRef<Path>) -> Result<Self> {
+		let cornell_box = tobj::load_obj(&Path::new("cornell_box.obj"));
+		return Self::from_obj(&fs::read_str(path)?);
+	}
+
+}
+
 pub trait Drawable {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
 }

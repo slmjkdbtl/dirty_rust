@@ -185,3 +185,12 @@ pub struct Ray {
 	pub angle: f32,
 }
 
+impl Ray {
+	pub fn new(pt: Vec2, angle: f32) -> Self {
+		return Self {
+			pt: pt,
+			angle: angle,
+		};
+	}
+}
+
