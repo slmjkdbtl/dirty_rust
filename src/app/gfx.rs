@@ -4,6 +4,7 @@ use std::mem;
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
+use std::io::Cursor;
 
 #[cfg(feature = "img")]
 use crate::img::Image;
@@ -231,7 +232,7 @@ pub(super) fn flush(ctx: &mut Ctx) {
 	if let Some(tex) = &ctx.cur_tex {
 
 		tex.handle.bind();
-		ctx.batched_renderer.flush(&ctx.gl, &ctx.cur_shader.handle);
+		ctx.batched_renderer.flush(&ctx.gl, &ctx.cur_shader_2d.handle);
 		tex.handle.unbind();
 		ctx.draw_calls += 1;
 
@@ -284,7 +285,7 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
-		let mut flipped_proj = self.projection.clone();
+		let mut flipped_proj = self.proj_2d.clone();
 
 		if let Some(val) = flipped_proj.get_mut(1, 1) {
 			*val = -*val;
@@ -296,13 +297,13 @@ impl Gfx for Ctx {
 
 		flush(self);
 		canvas.handle.bind();
-		self.cur_shader.send("proj", flipped_proj);
+		self.cur_shader_2d.send("proj", flipped_proj);
 		self.push();
 		self.reset();
 		f(self)?;
 		self.pop()?;
 		flush(self);
-		self.cur_shader.send("proj", self.projection);
+		self.cur_shader_2d.send("proj", self.proj_2d);
 
 		canvas.handle.unbind();
 
@@ -313,10 +314,10 @@ impl Gfx for Ctx {
 	// TODO: user shader black screen
 	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
-		self.cur_shader = shader.clone();
+		self.cur_shader_2d = shader.clone();
 		f(self)?;
 		flush(self);
-		self.cur_shader = self.default_shader.clone();
+		self.cur_shader_2d = self.default_shader_2d.clone();
 
 		return Ok(());
 
@@ -445,7 +446,7 @@ impl Font {
 
 #[derive(Clone, PartialEq)]
 pub struct Shader {
-	handle: Rc<gl::Program>,
+	pub(super) handle: Rc<gl::Program>,
 }
 
 impl Shader {
@@ -529,19 +530,72 @@ impl Canvas {
 
 }
 
+pub struct Vertex3D {
+	pos: Vec3,
+}
+
+impl VertexLayout for Vertex3D {
+
+	const STRIDE: usize = 3;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+		queue.extend_from_slice(&[
+			self.pos.x,
+			self.pos.y,
+			self.pos.z,
+		]);
+	}
+
+	fn attrs() -> Vec<gl::VertexAttr> {
+
+		return vec![
+			gl::VertexAttr::new("pos", 3, 0),
+		];
+
+	}
+}
+
 pub struct Model {
+	pub(super) vbuf: gl::VertexBuffer<Vertex3D>,
+	pub(super) ibuf: gl::IndexBuffer,
+	pub(super) len: usize,
 }
 
 impl Model {
 
-// 	pub fn from_obj(code: &str) -> Result<Self> {
-// 		let cornell_box = tobj::load_obj(&Path::new("cornell_box.obj"));
-// 		return Ok(Self {});
-// 	}
+	fn from_tobj(ctx: &Ctx, tobj: tobj::LoadResult) -> Result<Self> {
 
-	pub fn from_obj(path: impl AsRef<Path>) -> Result<Self> {
-		let cornell_box = tobj::load_obj(&Path::new("cornell_box.obj"));
-		return Self::from_obj(&fs::read_str(path)?);
+		let (models, mtls) = tobj?;
+		let mesh = &models.get(0).ok_or(Error::ObjLoad)?.mesh;
+
+		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, mesh.positions.len(), gl::BufferUsage::Static)?;
+		let ibuf = gl::IndexBuffer::new(&ctx.gl, mesh.indices.len(), gl::BufferUsage::Static)?;
+
+		vbuf.data(0, &mesh.positions);
+		ibuf.data(0, &mesh.indices);
+
+		return Ok(Self {
+			vbuf: vbuf,
+			ibuf: ibuf,
+			len: mesh.indices.len(),
+		});
+
+	}
+
+	pub fn from_obj(ctx: &Ctx, obj: &str) -> Result<Self> {
+		return Self::from_tobj(ctx, tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
+			return Err(tobj::LoadError::GenericFailure);
+		}));
+	}
+
+	pub fn from_obj_with_mtl(ctx: &Ctx, obj: &str, mtl: &str) -> Result<Self> {
+		return Self::from_tobj(ctx, tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
+			return tobj::load_mtl_buf(&mut Cursor::new(mtl));
+		}));
+	}
+
+	pub fn from_obj_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_tobj(ctx, tobj::load_obj(path.as_ref()));
 	}
 
 }

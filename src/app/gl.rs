@@ -132,68 +132,6 @@ impl Device {
 
 }
 
-pub struct Renderer<S: Shape> {
-	#[cfg(feature="gl3")]
-	vao: VertexArray,
-	#[cfg(not(feature="gl3"))]
-	vbuf: VertexBuffer<S::Vertex>,
-	ibuf: IndexBuffer,
-	shape: PhantomData<S>,
-}
-
-impl<S: Shape> Renderer<S> {
-
-	pub fn new(device: &Device, s: S) -> Result<Self> {
-
-		let indices = S::indices();
-		let vbuf = VertexBuffer::<S::Vertex>::new(&device, S::COUNT, BufferUsage::Static)?;
-		let ibuf = IndexBuffer::new(&device, indices.len(), BufferUsage::Static)?;
-
-		ibuf.data(0, &indices);
-
-		let mut queue = vec![];
-
-		s.push(&mut queue);
-		vbuf.data(0, &queue);
-
-		#[cfg(feature="gl3")]
-		let vao = VertexArray::new(&device)?;
-		#[cfg(feature="gl3")]
-		vao.attr(&vbuf);
-
-		return Ok(Self {
-			#[cfg(feature="gl3")]
-			vao: vao,
-			#[cfg(not(feature="gl3"))]
-			vbuf: vbuf,
-			ibuf: ibuf,
-			shape: PhantomData,
-		});
-
-	}
-
-	pub fn draw(&mut self, device: &Device, program: &Program) {
-
-		#[cfg(feature="gl3")]
-		device.draw(
-			&self.vao,
-			&self.ibuf,
-			&program,
-			S::indices().len() as u32
-		);
-
-		#[cfg(not(feature="gl3"))]
-		device.draw(
-			&self.vbuf,
-			&self.ibuf,
-			&program,
-			S::indices().len() as u32
-		);
-
-	}
-
-}
-
 pub struct BatchedRenderer<S: Shape> {
 
 	vbuf: VertexBuffer<S::Vertex>,

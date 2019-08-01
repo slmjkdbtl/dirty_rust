@@ -27,7 +27,7 @@ default = [
 	"geom",
 # 	"ase",
 # 	"texpack",
-	"gl3",
+# 	"gl3",
 ]
 
 lua = [

@@ -55,6 +55,9 @@ const DEFAULT_2D_VERT: &str = include_str!("res/2d_default.vert");
 #[cfg(not(feature="gl3"))]
 const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default.frag");
 
+const DEFAULT_3D_VERT: &str = include_str!("res/3d.vert");
+const DEFAULT_3D_FRAG: &str = include_str!("res/3d.frag");
+
 const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/CP437.png");
 const DEFAULT_FONT_COLS: usize = 32;
 const DEFAULT_FONT_ROWS: usize = 8;
@@ -94,7 +97,8 @@ pub struct Ctx {
 	pub(self) origin: gfx::Origin,
 	pub(self) texture_origin: gfx::Origin,
 
-	pub(self) projection: math::Mat4,
+	pub(self) proj_2d: math::Mat4,
+	pub(self) proj_3d: math::Mat4,
 
 	pub(self) gl: Rc<gl::Device>,
 	pub(self) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
@@ -102,8 +106,11 @@ pub struct Ctx {
 	pub(self) cur_tex: Option<gfx::Texture>,
 	pub(self) empty_tex: gfx::Texture,
 
-	pub(self) default_shader: gfx::Shader,
-	pub(self) cur_shader: gfx::Shader,
+	pub(self) default_shader_2d: gfx::Shader,
+	pub(self) cur_shader_2d: gfx::Shader,
+
+	pub(self) default_shader_3d: gfx::Shader,
+	pub(self) cur_shader_3d: gfx::Shader,
 
 	pub(self) default_font: gfx::Font,
 
@@ -179,13 +186,18 @@ impl Ctx {
 		empty_tex.data(&[255, 255, 255, 255]);
 		let empty_tex = gfx::Texture::from_handle(empty_tex);
 
-		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
-		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
+		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
+		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
-		let shader = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_src, &frag_src)?);
-		let proj = conf.origin.to_ortho(conf.width, conf.height);
+		let shader_2d = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_2d_src, &frag_2d_src)?);
+		let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
 
-		shader.send("proj", proj.clone());
+		shader_2d.send("proj", proj_2d.clone());
+
+		let shader_3d = gfx::Shader::from_handle(gl::Program::new(&gl, DEFAULT_3D_VERT, DEFAULT_3D_FRAG)?);
+		let proj_3d = conf.origin.to_ortho(conf.width, conf.height);
+
+		shader_3d.send("proj", proj_3d.clone());
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
@@ -228,11 +240,19 @@ impl Ctx {
 			origin: conf.origin,
 			texture_origin: conf.texture_origin,
 			batched_renderer: batched_renderer,
-			projection: proj,
+
+			proj_2d: proj_2d,
+			proj_3d: proj_3d,
+
 			cur_tex: None,
 			empty_tex: empty_tex,
-			default_shader: shader.clone(),
-			cur_shader: shader,
+
+			default_shader_2d: shader_2d.clone(),
+			cur_shader_2d: shader_2d,
+
+			default_shader_3d: shader_3d.clone(),
+			cur_shader_3d: shader_3d,
+
 			default_font: font,
 			draw_calls: 0,
 			draw_calls_last: 0,

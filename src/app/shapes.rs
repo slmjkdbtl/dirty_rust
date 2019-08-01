@@ -267,7 +267,7 @@ pub struct Canvas<'a> {
 	canvas: &'a gfx::Canvas,
 }
 
-pub fn canvas<'a>(c: &'a  gfx::Canvas) -> Canvas<'a> {
+pub fn canvas<'a>(c: &'a gfx::Canvas) -> Canvas<'a> {
 	return Canvas {
 		canvas: c,
 	};
@@ -281,6 +281,29 @@ impl<'a> Drawable for Canvas<'a> {
 		ctx.scale(vec2!(1.0 / ctx.dpi() as f32));
 		ctx.draw(sprite(&self.canvas.tex))?;
 		ctx.pop()?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Model<'a> {
+	model: &'a gfx::Model,
+}
+
+pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
+	return Model {
+		model: m,
+	};
+}
+
+impl<'a> Drawable for Model<'a> {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		ctx.cur_shader_3d.send("model", Mat4::scale(vec3!(30, -30, 1)));
+		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32);
 
 		return Ok(());
 
