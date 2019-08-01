@@ -286,12 +286,12 @@ impl Gfx for Ctx {
 
 		let mut flipped_proj = self.projection.clone();
 
-		if let Some(val) = flipped_proj.get(1, 1) {
-			flipped_proj.set(1, 1, -val);
+		if let Some(val) = flipped_proj.get_mut(1, 1) {
+			*val = -*val;
 		}
 
-		if let Some(val) = flipped_proj.get(3, 1) {
-			flipped_proj.set(3, 1, -val);
+		if let Some(val) = flipped_proj.get_mut(3, 1) {
+			*val = -*val;
 		}
 
 		flush(self);
@@ -310,6 +310,7 @@ impl Gfx for Ctx {
 
 	}
 
+	// TODO: user shader black screen
 	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
 		self.cur_shader = shader.clone();
@@ -442,7 +443,6 @@ impl Font {
 
 }
 
-// TODO: fix user shader black screen
 #[derive(Clone, PartialEq)]
 pub struct Shader {
 	handle: Rc<gl::Program>,
@@ -475,7 +475,6 @@ impl Shader {
 
 }
 
-// TODO: flip when canvas is binded instead of only when drawing
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
 

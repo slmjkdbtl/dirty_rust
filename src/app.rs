@@ -169,7 +169,7 @@ impl Ctx {
 		});
 
 		gl.enable(gl::Capability::Blend);
-		gl.blend_func_sep(gl::BlendFunc::SrcAlpha, gl::BlendFunc::OneMinusSrcAlpha, gl::BlendFunc::One, gl::BlendFunc::OneMinusSrcAlpha);
+		gl.blend_func_sep(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha, gl::BlendFac::One, gl::BlendFac::OneMinusSourceAlpha);
 		gl.clear_color(conf.clear_color);
 		gl.clear();
 

@@ -43,13 +43,13 @@ impl Device {
 		}
 	}
 
-	pub fn blend_func(&self, src: BlendFunc, dest: BlendFunc) {
+	pub fn blend_func(&self, src: BlendFac, dest: BlendFac) {
 		unsafe {
 			self.ctx.blend_func(src.into(), dest.into());
 		}
 	}
 
-	pub fn blend_func_sep(&self, src_rgb: BlendFunc, dest_rgb: BlendFunc, src_a: BlendFunc, dest_a: BlendFunc) {
+	pub fn blend_func_sep(&self, src_rgb: BlendFac, dest_rgb: BlendFac, src_a: BlendFac, dest_a: BlendFac) {
 		unsafe {
 			self.ctx.blend_func_separate(src_rgb.into(), dest_rgb.into(), src_a.into(), dest_a.into());
 		}
@@ -63,7 +63,7 @@ impl Device {
 		program.bind();
 
 		unsafe {
-			self.ctx.draw_elements(glow::TRIANGLES, count as i32, glow::UNSIGNED_INT, 0);
+			self.ctx.draw_elements(DrawMode::Triangle.into(), count as i32, glow::UNSIGNED_INT, 0);
 		}
 
 		program.unbind();
@@ -81,7 +81,7 @@ impl Device {
 		ibuf.bind();
 
 		unsafe {
-			self.ctx.draw_elements(glow::TRIANGLES, count as i32, glow::UNSIGNED_INT, 0);
+			self.ctx.draw_elements(DrawMode::Triangle.into(), count as i32, glow::UNSIGNED_INT, 0);
 		}
 
 		ibuf.unbind();
@@ -774,7 +774,7 @@ impl Program {
 			let ctx = device.ctx.clone();
 			let program_id = ctx.create_program()?;
 
-			let vert_id = ctx.create_shader(glow::VERTEX_SHADER)?;
+			let vert_id = ctx.create_shader(ShaderType::Vertex.into())?;
 
 			ctx.shader_source(vert_id, vert_src);
 			ctx.compile_shader(vert_id);
@@ -784,7 +784,7 @@ impl Program {
 				return Err(Error::OpenGL(ctx.get_shader_info_log(vert_id)));
 			}
 
-			let frag_id = ctx.create_shader(glow::FRAGMENT_SHADER)?;
+			let frag_id = ctx.create_shader(ShaderType::Fragment.into())?;
 
 			ctx.shader_source(frag_id, frag_src);
 			ctx.compile_shader(frag_id);
@@ -932,78 +932,95 @@ impl PartialEq for Framebuffer {
 	}
 }
 
-#[derive(Clone, Copy)]
-pub enum BufferUsage {
-	Static,
-	Dynamic,
-	Stream,
+macro_rules! bind_enum {
+
+	($name:ident($type:ty) { $($member:ident => $dest:expr),+$(,)? }) => {
+
+		#[allow(missing_docs)]
+		#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+		pub enum $name {
+			$($member,)+
+		}
+
+		impl From<$name> for $type {
+
+			fn from(usage: $name) -> $type {
+
+				match usage {
+					$($name::$member => $dest,)+
+				}
+
+			}
+
+		}
+
+	};
+
 }
 
-impl From<BufferUsage> for u32 {
-	fn from(buffer_usage: BufferUsage) -> u32 {
-		return match buffer_usage {
-			BufferUsage::Static => glow::STATIC_DRAW,
-			BufferUsage::Dynamic => glow::DYNAMIC_DRAW,
-			BufferUsage::Stream => glow::STREAM_DRAW,
-		};
-	}
-}
+bind_enum!(BufferUsage(u32) {
+	Static => glow::STATIC_DRAW,
+	Dynamic => glow::DYNAMIC_DRAW,
+	Stream => glow::STREAM_DRAW,
+});
 
-#[derive(Clone, Copy)]
-pub enum FilterMode {
-	Linear,
-	Nearest,
-}
+bind_enum!(FilterMode(i32) {
+	Nearest => glow::NEAREST as i32,
+	Linear => glow::LINEAR as i32,
+});
 
-impl From<FilterMode> for i32 {
-	fn from(filter_mode: FilterMode) -> i32 {
-		return match filter_mode {
-			FilterMode::Nearest => glow::NEAREST as i32,
-			FilterMode::Linear => glow::LINEAR as i32,
-		};
-	}
-}
+bind_enum!(Capability(u32) {
+	Blend => glow::BLEND,
+	CullFace => glow::CULL_FACE,
+	DepthTest => glow::DEPTH_TEST,
+	StencilTest => glow::STENCIL_TEST,
+	ScissorTest => glow::SCISSOR_TEST,
+});
 
-pub enum Capability {
-	Blend,
-	CullFace,
-	DepthTest,
-	StencilTest,
-	ScissorTest,
-}
+bind_enum!(BlendFac(u32) {
+	Zero => glow::ZERO,
+	One => glow::ONE,
+	SourceColor => glow::SRC_COLOR,
+	OneMinusSourceColor => glow::ONE_MINUS_SRC_COLOR,
+	DestinationColor => glow::DST_COLOR,
+	OneMinusDestinationColor => glow::ONE_MINUS_DST_COLOR,
+	SourceAlpha => glow::SRC_ALPHA,
+	OneMinusSourceAlpha => glow::ONE_MINUS_SRC_ALPHA,
+	DestinationAlpha => glow::DST_ALPHA,
+	OneMinusDestinationAlpha => glow::ONE_MINUS_DST_ALPHA,
+	SourceAlphaSaturate => glow::SRC_ALPHA_SATURATE,
+	ConstantColor => glow::CONSTANT_COLOR,
+	OneMinusConstantColor => glow::ONE_MINUS_CONSTANT_COLOR,
+	ConstantAlpha => glow::CONSTANT_ALPHA,
+	OneMinusConstantAlpha => glow::ONE_MINUS_CONSTANT_ALPHA,
+});
 
-impl From<Capability> for u32 {
-	fn from(cap: Capability) -> u32 {
-		return match cap {
-			Capability::Blend => glow::BLEND,
-			Capability::CullFace => glow::CULL_FACE,
-			Capability::DepthTest => glow::DEPTH_TEST,
-			Capability::StencilTest => glow::STENCIL_TEST,
-			Capability::ScissorTest => glow::SCISSOR_TEST,
-		};
-	}
-}
+bind_enum!(DrawMode(u32) {
+	Point => glow::POINT,
+	Line => glow::LINE,
+	Triangle => glow::TRIANGLES,
+	LineStrip => glow::LINE_STRIP,
+	TriangleFan => glow::TRIANGLE_FAN,
+	TriangleStrip => glow::TRIANGLE_STRIP,
+});
 
-pub enum BlendFunc {
-	One,
-	SrcAlpha,
-	OneMinusSrcAlpha,
-}
+bind_enum!(ShaderType(u32) {
+	Vertex => glow::VERTEX_SHADER,
+	Fragment => glow::FRAGMENT_SHADER,
+});
 
-impl From<BlendFunc> for u32 {
-	fn from(cap: BlendFunc) -> u32 {
-		return match cap {
-			BlendFunc::One => glow::ONE,
-			BlendFunc::SrcAlpha => glow::SRC_ALPHA,
-			BlendFunc::OneMinusSrcAlpha => glow::ONE_MINUS_SRC_ALPHA,
-		};
-	}
-}
+bind_enum!(DepthFunc(u32) {
 
-pub enum ShaderType {
-	Vertex,
-	Fragment,
-}
+	Never => glow::NEVER,
+	Less => glow::LESS,
+	Equal => glow::EQUAL,
+	LessOrEqual => glow::LEQUAL,
+	Greater => glow::GREATER,
+	NotEqual => glow::NOTEQUAL,
+	GreaterOrEqual => glow::GEQUAL,
+	Always => glow::ALWAYS,
+
+});
 
 pub enum UniformType {
 	F1(f32),

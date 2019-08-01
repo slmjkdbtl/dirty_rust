@@ -236,21 +236,37 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(ctx.quit());
 			});
 
+			macro_rules! check_args {
+				($args:expr, {
+					$(
+						($arg:ident: $type:ty) => $exec:block
+					),*$(,)?
+				}) => {};
+			}
+
 			// TODO: macro this
 			methods.add_method_mut("fullscreen", |_, ctx, (v): (MultiValue)| {
-				ctx.set_fullscreen(true);
-// 				if !v.is_empty() {
-// 					if v.len() == 1 {
-// 						let v = v.into_vec();
-// 						match &v[0] {
-// 							Value::Boolean(b) => ctx.set_fullscreen(*b),
-// 							_ => return Err(rlua::Error::BindError),
-// 						};
-// 					} else {
-// 						return Err(rlua::Error::BindError);
-// 					}
-// 				}
+
+				check_args!(v, {
+					(b: bool) => {
+						// ...
+					},
+				});
+
+				if !v.is_empty() {
+					if v.len() == 1 {
+						let v = v.into_vec();
+						match &v[0] {
+							Value::Boolean(b) => ctx.set_fullscreen(*b),
+							_ => return Err(rlua::Error::BindError),
+						};
+					} else {
+						return Err(rlua::Error::BindError);
+					}
+				}
+
 				return Ok(ctx.is_fullscreen());
+
 			});
 
 			methods.add_method_mut("title", |_, ctx, (v): (MultiValue)| {
@@ -283,6 +299,42 @@ fn bind_app(ctx: &Context) -> Result<()> {
 			methods.add_method("mouse_pos", |_, ctx, ()| {
 				let pos: math::Vec2 = ctx.mouse_pos().into();
 				return Ok(pos);
+			});
+
+			methods.add_method("clear_color", |_, ctx, (c): (math::Color)| {
+				return Ok(ctx.clear_color(c));
+			});
+
+			methods.add_method("clear", |_, ctx, ()| {
+				return Ok(ctx.clear());
+			});
+
+			methods.add_method_mut("line", |_, ctx, (p1, p2): (math::Vec2, math::Vec2)| {
+				return Ok(ctx.draw(shapes::line(p1, p2))?);
+			});
+
+			methods.add_method_mut("text", |_, ctx, (s): (String)| {
+				return Ok(ctx.draw(shapes::text(&s))?);
+			});
+
+			methods.add_method_mut("push", |_, ctx, ()| {
+				return Ok(ctx.push());
+			});
+
+			methods.add_method_mut("pop", |_, ctx, ()| {
+				return Ok(ctx.pop()?);
+			});
+
+			methods.add_method_mut("translate", |_, ctx, (t): (math::Vec2)| {
+				return Ok(ctx.translate(t));
+			});
+
+			methods.add_method_mut("rotate", |_, ctx, (t): (f32)| {
+				return Ok(ctx.rotate(t));
+			});
+
+			methods.add_method_mut("scale", |_, ctx, (t): (math::Vec2)| {
+				return Ok(ctx.scale(t));
 			});
 
 		}
@@ -817,7 +869,7 @@ fn bind(ctx: &Context) -> Result<()> {
 	#[cfg(feature = "col")]
 	bind_col(&ctx)?;
 
-	ctx.add_module_from_lua("json", include_str!("res/json.lua"))?;
+	ctx.add_module_from_lua("json", include_str!("../res/json.lua"))?;
 
 	return Ok(());
 

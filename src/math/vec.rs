@@ -40,7 +40,7 @@ macro_rules! gen_vec {
 						crate::math::$name::all($v as $type);
 					};
 
-					($d($v:expr),*) => {
+					($d($v:expr),*$d(,)?) => {
 						crate::math::$name::new($d($v as $type),*)
 					};
 

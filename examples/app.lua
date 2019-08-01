@@ -8,13 +8,14 @@ end)
 
 window:run(function(ctx)
 
-	if ctx:key_down("f") then
-		ctx:fullscreen()
+	ctx:title(tostring(ctx:mouse_pos()))
+	ctx:text("yo")
+
+	if ctx:key_pressed("f") then
+		ctx:fullscreen(not ctx:fullscreen())
 	end
 
-	print(ctx:mouse_pos())
-
-	if ctx:key_down("esc") then
+	if ctx:key_pressed("esc") then
 		ctx:quit()
 	end
 

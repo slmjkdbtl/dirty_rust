@@ -8,9 +8,6 @@
 
 #![deny(clippy::implicit_return)]
 
-#[cfg(all(feature = "lua", feature = "python"))]
-compile_error!("can only enable one scripting option");
-
 pub mod math;
 pub mod thread;
 
@@ -32,14 +29,19 @@ pub mod http;
 #[cfg(feature = "term")]
 pub mod term;
 
-#[cfg(feature = "col")]
-pub mod col;
+#[cfg(feature = "geom")]
+pub mod geom;
 
 #[cfg(feature = "ase")]
 pub mod ase;
 
+mod bindings;
+
 #[cfg(feature = "lua")]
-pub mod lua;
+pub use bindings::lua;
+
+#[cfg(feature = "python")]
+pub use bindings::python;
 
 mod err;
 pub use err::Error;

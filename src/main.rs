@@ -2,41 +2,46 @@
 
 use std::env;
 
-fn no() {
-	eprintln!("no");
-}
+fn run() {
 
-#[cfg(feature = "lua")]
-fn run_lua() {
+	#[cfg(feature = "lua")]
+	let runner = dirty::lua::run;
 
-	use dirty::lua;
+	#[cfg(feature = "python")]
+	let runner = dirty::python::run;
+
+	#[cfg(feature = "lua")]
+	let default_file = "main.lua";
+
+	#[cfg(feature = "python")]
+	let default_file = "main.py";
 
 	let args = env::args().collect::<Vec<String>>();
 
 	if let Some(action) = args.get(1) {
 
 		if let Ok(code) = std::fs::read_to_string(action) {
-			if let Err(_) = lua::run(&code, Some(action), Some(&args[2..args.len()])) {
-				no();
+			if let Err(err) = runner(&code, Some(action), Some(&args[2..args.len()])) {
+				eprintln!("{}", err);
 			}
 		} else {
-			no();
+			eprintln!("failed to read {}", action);
 		}
 
 	} else {
 
 		#[cfg(feature = "fs")]
-		let code = dirty::fs::read_str("main.lua");
+		let code = dirty::fs::read_str(default_file);
 
 		#[cfg(not(feature = "fs"))]
-		let code = std::fs::read_to_string("main.lua");
+		let code = std::fs::read_to_string(default_file);
 
 		if let Ok(code) = code {
-			if let Err(_) = lua::run(&code, Some("main.lua"), None) {
-				no();
-			}
+// 			if let Err(err) = runner(&code, Some(default_file), None) {
+// 				eprintln!("{}", err);
+// 			}
 		} else {
-			no();
+			eprintln!("no file to run");
 		}
 
 	}
@@ -44,9 +49,6 @@ fn run_lua() {
 }
 
 fn main() {
-
-	#[cfg(feature = "lua")]
-	run_lua();
-
+	run();
 }
 
