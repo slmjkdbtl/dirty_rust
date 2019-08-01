@@ -39,6 +39,11 @@ pub fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 }
 
+// TODO: do this
+pub fn line_ray(l: (Vec2, Vec2), r: Ray) -> bool {
+	unimplemented!();
+}
+
 /// check collision between a line and a polygon
 pub fn line_poly(line: (Vec2, Vec2), poly: &[Vec2]) -> bool {
 
@@ -173,5 +178,10 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 	unimplemented!();
+}
+
+pub struct Ray {
+	pub pt: Vec2,
+	pub angle: f32,
 }
 

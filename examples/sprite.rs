@@ -122,10 +122,6 @@ impl app::State for Game {
 			ctx.quit();
 		}
 
-		if ctx.key_pressed(Key::Space) {
-			self.canvas.capture("test.png")?;
-		}
-
 		return Ok(());
 
 	}

@@ -31,7 +31,7 @@ impl Mat4 {
 	}
 
 	pub fn identity() -> Self {
-		return Self::new([
+		return Self([
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
@@ -39,18 +39,16 @@ impl Mat4 {
 		]);
 	}
 
-	pub fn get(&self, x: usize, y: usize) -> Option<f32> {
-		return self.0.get(x * 4 + y).map(|s| *s);
+	pub fn get(&self, x: usize, y: usize) -> Option<&f32> {
+		return self.0.get(x * 4 + y);
 	}
 
-	pub fn set(&mut self, x: usize, y: usize, val: f32) {
-		if let Some(v) = self.0.get_mut(x * 4 + y) {
-			*v = val;
-		}
+	pub fn get_mut(&mut self, x: usize, y: usize) -> Option<&mut f32> {
+		return self.0.get_mut(x * 4 + y);
 	}
 
 	pub fn translate(pos: Vec3) -> Self {
-		return Self::new([
+		return Self([
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
@@ -59,7 +57,7 @@ impl Mat4 {
 	}
 
 	pub fn scale(scale: Vec3) -> Self {
-		return Self::new([
+		return Self([
 			scale.x, 0.0, 0.0, 0.0,
 			0.0, scale.y, 0.0, 0.0,
 			0.0, 0.0, scale.z, 0.0,
