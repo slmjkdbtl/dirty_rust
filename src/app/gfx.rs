@@ -54,15 +54,17 @@ pub(super) struct QuadShape {
 	pub transform: Mat4,
 	pub quad: Quad,
 	pub color: Color,
+	pub origin: Origin,
 	pub flip: Flip,
 }
 
 impl QuadShape {
-	pub fn new(t: Mat4, q: Quad, c: Color, f: Flip) -> Self {
+	pub fn new(t: Mat4, q: Quad, c: Color, o: Origin, f: Flip) -> Self {
 		return Self {
 			transform: t,
 			quad: q,
 			color: c,
+			origin: o,
 			flip: f,
 		};
 	}
@@ -78,10 +80,11 @@ impl Shape for QuadShape {
 		let t = self.transform;
 		let q = self.quad;
 		let c = self.color;
-		let p1 = t * vec2!(-0.5, 0.5);
-		let p2 = t * vec2!(0.5, 0.5);
-		let p3 = t * vec2!(0.5, -0.5);
-		let p4 = t * vec2!(-0.5, -0.5);
+		let offset = self.origin.as_pt() * 0.5;
+		let p1 = t * (vec2!(-0.5, 0.5) - offset);
+		let p2 = t * (vec2!(0.5, 0.5) - offset);
+		let p3 = t * (vec2!(0.5, -0.5) - offset);
+		let p4 = t * (vec2!(-0.5, -0.5) - offset);
 
 		let mut u1 = vec2!(q.x, q.y + q.h);
 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
@@ -180,19 +183,19 @@ impl Origin {
 		return match self {
 			Origin::Center => math::ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, -1.0, 1.0),
 			Origin::TopLeft => math::ortho(0.0, w, h, 0.0, -1.0, 1.0),
-			Origin::BottomLeft => math::ortho(0.0, w, 0.0, h, -1.0, 1.0),
-			Origin::TopRight => math::ortho(w, 0.0, h, 0.0, -1.0, 1.0),
-			Origin::BottomRight => math::ortho(-w, 0.0, 0.0, h, -1.0, 1.0),
+			Origin::BottomLeft => math::ortho(0.0, w, 0.0, -h, -1.0, 1.0),
+			Origin::TopRight => math::ortho(-w, 0.0, h, 0.0, -1.0, 1.0),
+			Origin::BottomRight => math::ortho(-w, 0.0, 0.0, -h, -1.0, 1.0),
 		};
 
 	}
 
-	pub fn to_pt(&self) -> Vec2 {
+	pub fn as_pt(&self) -> Vec2 {
 		return match self {
 			Origin::Center => vec2!(0, 0),
 			Origin::TopLeft => vec2!(-1, -1),
 			Origin::BottomLeft => vec2!(-1, 1),
-			Origin::TopRight =>vec2!(1, -1),
+			Origin::TopRight => vec2!(1, -1),
 			Origin::BottomRight => vec2!(1, 1),
 		};
 	}
@@ -281,13 +284,26 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
+		let mut flipped_proj = self.projection.clone();
+
+		if let Some(val) = flipped_proj.get(1, 1) {
+			flipped_proj.set(1, 1, -val);
+		}
+
+		if let Some(val) = flipped_proj.get(3, 1) {
+			flipped_proj.set(3, 1, -val);
+		}
+
 		flush(self);
 		canvas.handle.bind();
+		self.cur_shader.send("proj", flipped_proj);
 		self.push();
 		self.reset();
 		f(self)?;
 		self.pop()?;
 		flush(self);
+		self.cur_shader.send("proj", self.projection);
+
 		canvas.handle.unbind();
 
 		return Ok(());
@@ -426,7 +442,7 @@ impl Font {
 
 }
 
-// TODO: user shader
+// TODO: fix user shader black screen
 #[derive(Clone, PartialEq)]
 pub struct Shader {
 	handle: Rc<gl::Program>,

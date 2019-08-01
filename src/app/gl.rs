@@ -124,10 +124,11 @@ impl Device {
 		}
 	}
 
-	pub fn viewport(&self) {
-		// TODO
-		unimplemented!();
-	}
+    pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
+        unsafe {
+            self.ctx.viewport(x, y, width, height);
+        }
+    }
 
 }
 

@@ -22,16 +22,12 @@ impl From<Dir> for Vec3 {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Mat4 {
-	pub(super) m: [f32; 16],
-}
+pub struct Mat4([f32; 16]);
 
 impl Mat4 {
 
 	pub fn new(m: [f32; 16]) -> Self {
-		return Self {
-			m: m,
-		};
+		return Self(m);
 	}
 
 	pub fn identity() -> Self {
@@ -41,6 +37,16 @@ impl Mat4 {
 			0.0, 0.0, 1.0, 0.0,
 			0.0, 0.0, 0.0, 1.0,
 		]);
+	}
+
+	pub fn get(&self, x: usize, y: usize) -> Option<f32> {
+		return self.0.get(x * 4 + y).map(|s| *s);
+	}
+
+	pub fn set(&mut self, x: usize, y: usize, val: f32) {
+		if let Some(v) = self.0.get_mut(x * 4 + y) {
+			*v = val;
+		}
 	}
 
 	pub fn translate(pos: Vec3) -> Self {
@@ -69,24 +75,24 @@ impl Mat4 {
 		let cv = 1.0 - c;
 		let axis: Vec3 = dir.into();
 
-		m.m[0] = (axis.x * axis.x * cv) + c;
-		m.m[1] = (axis.x * axis.y * cv) + (axis.z * s);
-		m.m[2] = (axis.x * axis.z * cv) - (axis.y * s);
+		m.0[0] = (axis.x * axis.x * cv) + c;
+		m.0[1] = (axis.x * axis.y * cv) + (axis.z * s);
+		m.0[2] = (axis.x * axis.z * cv) - (axis.y * s);
 
-		m.m[4] = (axis.y * axis.x * cv) - (axis.z * s);
-		m.m[5] = (axis.y * axis.y * cv) + c;
-		m.m[6] = (axis.y * axis.z * cv) + (axis.x * s);
+		m.0[4] = (axis.y * axis.x * cv) - (axis.z * s);
+		m.0[5] = (axis.y * axis.y * cv) + c;
+		m.0[6] = (axis.y * axis.z * cv) + (axis.x * s);
 
-		m.m[8] = (axis.z * axis.x * cv) + (axis.y * s);
-		m.m[9] = (axis.z * axis.y * cv) - (axis.x * s);
-		m.m[10] = (axis.z * axis.z * cv) + c;
+		m.0[8] = (axis.z * axis.x * cv) + (axis.y * s);
+		m.0[9] = (axis.z * axis.y * cv) - (axis.x * s);
+		m.0[10] = (axis.z * axis.z * cv) + c;
 
 		return m;
 
 	}
 
 	pub fn as_arr(&self) -> [f32; 16] {
-		return self.m;
+		return self.0;
 	}
 
 }
@@ -109,11 +115,11 @@ impl ops::Mul for Mat4 {
 
 		for i in 0..4 {
 			for j in 0..4 {
-				nm.m[i * 4 + j] =
-					self.m[0 * 4 + j] * other.m[i * 4 + 0] +
-					self.m[1 * 4 + j] * other.m[i * 4 + 1] +
-					self.m[2 * 4 + j] * other.m[i * 4 + 2] +
-					self.m[3 * 4 + j] * other.m[i * 4 + 3];
+				nm.0[i * 4 + j] =
+					self.0[0 * 4 + j] * other.0[i * 4 + 0] +
+					self.0[1 * 4 + j] * other.0[i * 4 + 1] +
+					self.0[2 * 4 + j] * other.0[i * 4 + 2] +
+					self.0[3 * 4 + j] * other.0[i * 4 + 3];
 			}
 		};
 
@@ -129,7 +135,7 @@ impl ops::Mul<Vec4> for Mat4 {
 
 	fn mul(self, pt: Self::Output) -> Self::Output {
 
-		let m = self.m;
+		let m = self.0;
 
 		return vec4!(
 			pt.x * m[0] + pt.y * m[4] + pt.z * m[8] + pt.w * m[12],
