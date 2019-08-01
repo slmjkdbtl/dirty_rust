@@ -1,54 +1,59 @@
 // wengwengweng
 
 use std::env;
+use std::path::Path;
+use std::path::PathBuf;
 
-fn run() {
+#[cfg(feature = "lua")]
+const DEFAULT_FILE: &'static str = "main.lua";
+#[cfg(feature = "python")]
+const DEFAULT_FILE: &'static str = "main.py";
+
+fn run(path: Option<impl AsRef<Path>>, args: Option<&[String]>) {
 
 	#[cfg(feature = "lua")]
 	let runner = dirty::lua::run;
-
 	#[cfg(feature = "python")]
 	let runner = dirty::python::run;
 
-	#[cfg(feature = "lua")]
-	let default_file = "main.lua";
+	let path: PathBuf = {
 
-	#[cfg(feature = "python")]
-	let default_file = "main.py";
-
-	let args = env::args().collect::<Vec<String>>();
-
-	if let Some(action) = args.get(1) {
-
-		if let Ok(code) = std::fs::read_to_string(action) {
-			if let Err(err) = runner(&code, Some(action), Some(&args[2..args.len()])) {
-				eprintln!("{}", err);
-			}
+		if let Some(p) = path {
+			p.as_ref().to_owned()
 		} else {
-			eprintln!("failed to read {}", action);
+			PathBuf::from(DEFAULT_FILE)
 		}
 
+	};
+
+	let code: Option<String> = {
+		if cfg!(feature = "fs") {
+			dirty::fs::read_str(&path).ok()
+		} else {
+			std::fs::read_to_string(&path).ok()
+		}
+	};
+
+	if let Some(code) = code {
+		if let Err(err) = runner(&code, Some(&path), None) {
+			eprintln!("{}", err);
+		}
 	} else {
-
-		#[cfg(feature = "fs")]
-		let code = dirty::fs::read_str(default_file);
-
-		#[cfg(not(feature = "fs"))]
-		let code = std::fs::read_to_string(default_file);
-
-		if let Ok(code) = code {
-// 			if let Err(err) = runner(&code, Some(default_file), None) {
-// 				eprintln!("{}", err);
-// 			}
-		} else {
-			eprintln!("no file to run");
-		}
-
+		eprintln!("failed to load {}", path.display());
+		std::process::exit(1);
 	}
 
 }
 
 fn main() {
-	run();
+
+	let args = env::args().collect::<Vec<String>>();
+
+	if let Some(action) = args.get(1) {
+		run(Some(action), Some(&args[2..args.len()]));
+	} else {
+		run(None as Option<&str>, None);
+	}
+
 }
 
