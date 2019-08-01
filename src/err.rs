@@ -30,6 +30,7 @@ pub enum Error {
 	MaxDraw,
 	StateStack,
 	Font,
+	ObjLoad,
 	Input,
 	OpenGL(String),
 	Misc(String),
@@ -62,6 +63,7 @@ impl fmt::Display for Error {
 			Error::Lua => write!(f, "lua error"),
 			Error::MaxDraw => write!(f, "reached maximum draw calls"),
 			Error::StateStack => write!(f, "state stack error"),
+			Error::ObjLoad => write!(f, "failed to load obj"),
 			Error::Font => write!(f, "font error"),
 			Error::Input => write!(f, "input error"),
 			Error::OpenGL(s) => write!(f, "error: {}", s),
@@ -116,6 +118,12 @@ impl From<std::sync::mpsc::TryRecvError> for Error {
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Thread;
+	}
+}
+
+impl From<tobj::LoadError> for Error {
+	fn from(_: tobj::LoadError) -> Self {
+		return Error::ObjLoad;
 	}
 }
 

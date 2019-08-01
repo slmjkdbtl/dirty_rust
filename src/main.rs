@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::env;
+use std::process;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -16,31 +17,22 @@ fn run(path: Option<impl AsRef<Path>>, args: Option<&[String]>) {
 	#[cfg(feature = "python")]
 	let runner = dirty::python::run;
 
-	let path: PathBuf = {
+	let path = path
+		.map(|s| s.as_ref().to_owned())
+		.unwrap_or(PathBuf::from(DEFAULT_FILE));
 
-		if let Some(p) = path {
-			p.as_ref().to_owned()
-		} else {
-			PathBuf::from(DEFAULT_FILE)
-		}
-
-	};
-
-	let code: Option<String> = {
-		if cfg!(feature = "fs") {
-			dirty::fs::read_str(&path).ok()
-		} else {
-			std::fs::read_to_string(&path).ok()
-		}
-	};
+	#[cfg(feature = "fs")]
+	let code = dirty::fs::read_str(&path).ok();
+	#[cfg(not(feature = "fs"))]
+	let code = std::fs::read_to_string(&path).ok();
 
 	if let Some(code) = code {
-		if let Err(err) = runner(&code, Some(&path), None) {
+		if let Err(err) = runner(&code, Some(&path), args) {
 			eprintln!("{}", err);
 		}
 	} else {
 		eprintln!("failed to load {}", path.display());
-		std::process::exit(1);
+		process::exit(1);
 	}
 
 }
