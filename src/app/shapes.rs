@@ -9,11 +9,16 @@ pub struct Sprite<'a> {
 	offset: Vec2,
 	radius: f32,
 	flip: gfx::Flip,
+	color: Color,
 }
 
 impl<'a> Sprite<'a> {
 	pub fn quad(mut self, quad: Quad) -> Self {
 		self.quad = quad;
+		return self;
+	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
 		return self;
 	}
 	pub fn offset(mut self, offset: Vec2) -> Self {
@@ -34,6 +39,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	return Sprite {
 		tex: tex,
 		quad: quad!(0, 0, 1, 1),
+		color: color!(1),
 		offset: vec2!(0),
 		radius: 0.0,
 		flip: gfx::Flip::None,
@@ -57,7 +63,7 @@ impl<'a> Drawable for Sprite<'a> {
 		ctx.push();
 		ctx.scale(scale);
 		ctx.translate(self.offset * -0.5);
-		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.state.transform, self.quad, ctx.state.color, ctx.texture_origin, self.flip))?;
+		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.texture_origin, self.flip))?;
 		ctx.pop()?;
 
 		return Ok(());
@@ -69,12 +75,17 @@ impl<'a> Drawable for Sprite<'a> {
 pub struct Text<'a> {
 	txt: &'a str,
 	font: Option<&'a gfx::Font>,
+	color: Color,
 	offset: Vec2,
 }
 
 impl<'a> Text<'a> {
 	pub fn font(mut self, font: &'a gfx::Font) -> Self {
 		self.font = Some(font);
+		return self;
+	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
 		return self;
 	}
 	pub fn offset(mut self, offset: Vec2) -> Self {
@@ -88,6 +99,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 		txt: txt,
 		font: None,
 		offset: vec2!(0),
+		color: color!(1),
 	};
 }
 
@@ -124,7 +136,7 @@ impl<'a> Drawable for Text<'a> {
 			if ch != ' ' {
 
 				if let Some(quad) = font.map.get(&ch) {
-					ctx.draw(sprite(&tex).quad(*quad))?;
+					ctx.draw(sprite(&tex).quad(*quad).color(self.color))?;
 				}
 
 			}
@@ -145,11 +157,16 @@ pub struct Line {
 	p1: Vec2,
 	p2: Vec2,
 	width: f32,
+	color: Color,
 }
 
 impl Line {
 	pub fn width(mut self, w: f32) -> Self {
 		self.width = w;
+		return self;
+	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
 		return self;
 	}
 }
@@ -159,6 +176,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 		p1: p1,
 		p2: p2,
 		width: 1.0,
+		color: color!(1),
 	};
 }
 
@@ -172,7 +190,7 @@ impl Drawable for Line {
 		ctx.push();
 		ctx.translate(self.p1);
 		ctx.rotate(rot);
-		ctx.draw(rect(len, self.width))?;
+		ctx.draw(rect(len, self.width).color(self.color))?;
 		ctx.pop()?;
 
 		return Ok(());
@@ -186,6 +204,7 @@ pub struct Rect {
 	height: f32,
 	radius: f32,
 	stroke: Option<f32>,
+	color: Color,
 }
 
 pub fn rect(w: f32, h: f32) -> Rect {
@@ -194,6 +213,7 @@ pub fn rect(w: f32, h: f32) -> Rect {
 		height: h,
 		radius: 0.0,
 		stroke: None,
+		color: color!(1),
 	};
 }
 
@@ -206,6 +226,10 @@ impl Rect {
 		self.stroke = Some(s);
 		return self
 	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
+		return self;
+	}
 }
 
 impl Drawable for Rect {
@@ -214,7 +238,7 @@ impl Drawable for Rect {
 
 		ctx.push();
 		ctx.scale(vec2!(self.width, self.height));
-		ctx.draw(sprite(&ctx.empty_tex.clone()))?;
+		ctx.draw(sprite(&ctx.empty_tex.clone()).color(self.color))?;
 		ctx.pop()?;
 
 		if let Some(stroke) = self.stroke {
@@ -230,11 +254,16 @@ impl Drawable for Rect {
 pub struct Points<'a> {
 	pts: &'a[Vec2],
 	size: f32,
+	color: Color,
 }
 
 impl<'a> Points<'a> {
 	pub fn size(mut self, s: f32) -> Self {
 		self.size = s;
+		return self;
+	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
 		return self;
 	}
 }
@@ -243,6 +272,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 	return Points {
 		pts: pts,
 		size: 1.0,
+		color: color!(1),
 	};
 }
 
@@ -253,7 +283,7 @@ impl<'a> Drawable for Points<'a> {
 		for pt in self.pts {
 			ctx.push();
 			ctx.translate(*pt);
-			ctx.draw(rect(self.size, self.size))?;
+			ctx.draw(rect(self.size, self.size).color(self.color))?;
 			ctx.pop()?;
 		}
 
@@ -265,11 +295,13 @@ impl<'a> Drawable for Points<'a> {
 
 pub struct Canvas<'a> {
 	canvas: &'a gfx::Canvas,
+	color: Color,
 }
 
 pub fn canvas<'a>(c: &'a gfx::Canvas) -> Canvas<'a> {
 	return Canvas {
 		canvas: c,
+		color: color!(1),
 	};
 }
 
@@ -279,7 +311,7 @@ impl<'a> Drawable for Canvas<'a> {
 
 		ctx.push();
 		ctx.scale(vec2!(1.0 / ctx.dpi() as f32));
-		ctx.draw(sprite(&self.canvas.tex))?;
+		ctx.draw(sprite(&self.canvas.tex).color(self.color))?;
 		ctx.pop()?;
 
 		return Ok(());
@@ -302,8 +334,8 @@ impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.cur_shader_3d.send("model", ctx.state.transform);
-		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32, gl::DrawMode::LineStrip);
+		ctx.cur_shader_3d.send("model", ctx.transform);
+		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32, gl::DrawMode::Triangle);
 
 		return Ok(());
 

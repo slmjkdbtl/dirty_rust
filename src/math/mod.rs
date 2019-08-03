@@ -64,15 +64,14 @@ pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) 
 /// construct perspective matrix
 pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 
-	let f_depth = far - near;
-	let o_depth = 1.0 / f_depth;
+	let f = 1.0 / (fov / 2.0).tan();
 
 	return Mat4::new([
-		(0.5 * fov).tan() / aspect, 0.0, 0.0, 0.0,
-		0.0, 1.0 / (0.5 * fov).tan(), 0.0, 0.0,
-		0.0, 0.0, far * o_depth, 1.0,
-		0.0, 0.0, (-far * near) * o_depth, 0.0,
-	]);
+		f / aspect, 0.0, 0.0, 0.0,
+		0.0, f, 0.0, 0.0,
+		0.0, 0.0, (far + near) / (far - near), 1.0,
+		0.0, 0.0, -(2.0 * far * near) / (far - near), 0.0,
+	])
 
 }
 

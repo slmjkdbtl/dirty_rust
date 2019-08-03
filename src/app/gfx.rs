@@ -37,15 +37,8 @@ pub trait Gfx {
 	fn rotate_y(&mut self, angle: f32);
 	fn rotate_z(&mut self, angle: f32);
 	fn scale3d(&mut self, scale: Vec3);
-	fn color(&mut self, c: Color);
 	fn reset(&mut self);
 
-}
-
-#[derive(Clone, Default)]
-pub(super) struct State {
-	pub transform: Mat4,
-	pub color: Color,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -223,8 +216,8 @@ pub(super) fn begin(ctx: &mut Ctx) {
 pub(super) fn end(ctx: &mut Ctx) {
 
 	flush(ctx);
-	ctx.state = State::default();
-	ctx.state_stack.clear();
+	ctx.transform = Mat4::identity();
+	ctx.transform_stack.clear();
 
 }
 
@@ -260,48 +253,44 @@ impl Gfx for Ctx {
 	}
 
 	fn push(&mut self) {
-		self.state_stack.push(self.state.clone());
+		self.transform_stack.push(self.transform.clone());
 	}
 
 	fn pop(&mut self) -> Result<()> {
-		self.state = self.state_stack.pop().ok_or(Error::StateStack)?;
+		self.transform = self.transform_stack.pop().ok_or(Error::GfxPop)?;
 		return Ok(());
 	}
 
 	fn translate(&mut self, pos: Vec2) {
-		self.state.transform *= Mat4::translate(vec3!(pos.x, pos.y, 0));
+		self.transform *= Mat4::translate(vec3!(pos.x, pos.y, 0));
 	}
 
 	fn rotate(&mut self, angle: f32) {
-		self.state.transform *= Mat4::rotate(angle, Dir::Z);
+		self.transform *= Mat4::rotate(angle, Dir::Z);
 	}
 
 	fn scale(&mut self, scale: Vec2) {
-		self.state.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
+		self.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
 	}
 
 	fn translate3d(&mut self, pos: Vec3) {
-		self.state.transform *= Mat4::translate(pos);
+		self.transform *= Mat4::translate(pos);
 	}
 
 	fn rotate_x(&mut self, angle: f32) {
-		self.state.transform *= Mat4::rotate(angle, Dir::X);
+		self.transform *= Mat4::rotate(angle, Dir::X);
 	}
 
 	fn rotate_y(&mut self, angle: f32) {
-		self.state.transform *= Mat4::rotate(angle, Dir::Y);
+		self.transform *= Mat4::rotate(angle, Dir::Y);
 	}
 
 	fn rotate_z(&mut self, angle: f32) {
-		self.state.transform *= Mat4::rotate(angle, Dir::Z);
+		self.transform *= Mat4::rotate(angle, Dir::Z);
 	}
 
 	fn scale3d(&mut self, scale: Vec3) {
-		self.state.transform *= Mat4::scale(scale);
-	}
-
-	fn color(&mut self, c: Color) {
-		self.state.color = c;
+		self.transform *= Mat4::scale(scale);
 	}
 
 	fn draw(&mut self, thing: impl Drawable) -> Result<()> {
@@ -349,7 +338,7 @@ impl Gfx for Ctx {
 	}
 
 	fn reset(&mut self) {
-		self.state = State::default();
+		self.transform = Mat4::identity();
 	}
 
 }

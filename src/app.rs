@@ -13,7 +13,6 @@ pub use gfx::Gfx;
 pub use input::Input;
 pub use window::Window;
 
-use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
@@ -22,7 +21,6 @@ use std::time::Duration;
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
-use glutin::GlProfile;
 use gilrs::Gilrs;
 
 use input::ButtonState;
@@ -117,8 +115,8 @@ pub struct Ctx {
 	pub(self) draw_calls_last: usize,
 	pub(self) draw_calls: usize,
 
-	pub(self) state: gfx::State,
-	pub(self) state_stack: Vec<gfx::State>,
+	pub(self) transform: Mat4,
+	pub(self) transform_stack: Vec<Mat4>,
 
 }
 
@@ -137,7 +135,8 @@ impl Ctx {
 			.with_decorations(!conf.borderless)
 			.with_always_on_top(conf.always_on_top)
 			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-			.with_multitouch();
+			.with_multitouch()
+			;
 
 		if conf.fullscreen {
 			window_builder = window_builder
@@ -152,19 +151,22 @@ impl Ctx {
 				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
 				.with_title_hidden(conf.hide_title)
 				.with_titlebar_transparent(conf.titlebar_transparent)
-				.with_fullsize_content_view(conf.fullsize_content);
-// 				.with_disallow_hidpi(!conf.hidpi);
+				.with_fullsize_content_view(conf.fullsize_content)
+// 				.with_disallow_hidpi(!conf.hidpi)
+				;
 
 		}
 
-		let ctx_builder = glutin::ContextBuilder::new()
+		let mut ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
+			;
 
 		#[cfg(feature = "gl3")] {
 			ctx_builder = ctx_builder
 				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
-				.with_gl_profile(glutin::GlProfile::Core);
+				.with_gl_profile(glutin::GlProfile::Core)
+				;
 		}
 
 		let windowed_ctx = unsafe {
@@ -195,7 +197,7 @@ impl Ctx {
 		shader_2d.send("proj", proj_2d.clone());
 
 		let shader_3d = gfx::Shader::from_handle(gl::Program::new(&gl, DEFAULT_3D_VERT, DEFAULT_3D_FRAG)?);
-		let proj_3d = conf.origin.to_ortho(conf.width, conf.height);
+		let proj_3d = math::perspective(60f32.to_radians(), conf.width as f32 / conf.height as f32, 0.1, 1024.0);
 
 		shader_3d.send("proj", proj_3d.clone());
 
@@ -256,8 +258,9 @@ impl Ctx {
 			default_font: font,
 			draw_calls: 0,
 			draw_calls_last: 0,
-			state: gfx::State::default(),
-			state_stack: Vec::with_capacity(16),
+
+			transform: Mat4::identity(),
+			transform_stack: Vec::with_capacity(4),
 
 		};
 
