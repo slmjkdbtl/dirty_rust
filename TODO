@@ -28,4 +28,5 @@
 - fix canvas size and flip
 - fix gfx origin
 - weird lua fullscreen error (stupid)
+- move color to shape parameter
 

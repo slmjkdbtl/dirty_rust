@@ -1,7 +1,7 @@
 // wengwengweng
 
 use super::*;
-use gfx::Drawable;
+use gfx::DrawCmd;
 
 pub struct Sprite<'a> {
 	tex: &'a gfx::Texture,
@@ -46,7 +46,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	};
 }
 
-impl<'a> Drawable for Sprite<'a> {
+impl<'a> DrawCmd for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -103,7 +103,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 	};
 }
 
-impl<'a> Drawable for Text<'a> {
+impl<'a> DrawCmd for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -180,7 +180,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 	};
 }
 
-impl Drawable for Line {
+impl DrawCmd for Line {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -232,7 +232,7 @@ impl Rect {
 	}
 }
 
-impl Drawable for Rect {
+impl DrawCmd for Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -276,7 +276,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 	};
 }
 
-impl<'a> Drawable for Points<'a> {
+impl<'a> DrawCmd for Points<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -305,7 +305,14 @@ pub fn canvas<'a>(c: &'a gfx::Canvas) -> Canvas<'a> {
 	};
 }
 
-impl<'a> Drawable for Canvas<'a> {
+impl<'a> Canvas<'a> {
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
+		return self;
+	}
+}
+
+impl<'a> DrawCmd for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -330,7 +337,7 @@ pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
 	};
 }
 
-impl<'a> Drawable for Model<'a> {
+impl<'a> DrawCmd for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
