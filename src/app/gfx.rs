@@ -24,7 +24,7 @@ pub trait Gfx {
 	fn clear_color(&self, c: Color);
 	fn clear(&self);
 	fn draw_calls(&self) -> usize;
-	fn draw(&mut self, t: impl Drawable) -> Result<()>;
+	fn draw(&mut self, t: impl DrawCmd) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_with(&mut self, shader: &Shader, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
 	fn push(&mut self);
@@ -293,7 +293,7 @@ impl Gfx for Ctx {
 		self.transform *= Mat4::scale(scale);
 	}
 
-	fn draw(&mut self, thing: impl Drawable) -> Result<()> {
+	fn draw(&mut self, thing: impl DrawCmd) -> Result<()> {
 		return thing.draw(self);
 	}
 
@@ -615,7 +615,7 @@ impl Model {
 
 }
 
-pub trait Drawable {
+pub trait DrawCmd {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
 }
 

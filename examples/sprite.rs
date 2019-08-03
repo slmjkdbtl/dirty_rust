@@ -62,7 +62,7 @@ impl Sprite {
 
 }
 
-impl gfx::Drawable for &Sprite {
+impl gfx::DrawCmd for &Sprite {
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 		return ctx.draw(
 			shapes::sprite(&self.tex)
