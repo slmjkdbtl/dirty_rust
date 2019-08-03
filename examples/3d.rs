@@ -21,6 +21,7 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		ctx.scale3d(vec3!(30, -30, 1));
 		ctx.draw(shapes::model(&self.model))?;
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 

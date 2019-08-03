@@ -100,7 +100,7 @@ pub struct Ctx {
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
 
-	pub(self) gl: Rc<gl::Device>,
+	pub(self) gl: gl::Device,
 	pub(self) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
 
 	pub(self) cur_tex: Option<gfx::Texture>,
@@ -236,7 +236,7 @@ impl Ctx {
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: Gilrs::new()?,
 
-			gl: Rc::new(gl),
+			gl: gl,
 			origin: conf.origin,
 			texture_origin: conf.texture_origin,
 			batched_renderer: batched_renderer,
