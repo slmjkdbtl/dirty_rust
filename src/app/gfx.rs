@@ -269,35 +269,35 @@ impl Gfx for Ctx {
 	}
 
 	fn translate(&mut self, pos: Vec2) {
-		self.state.transform = self.state.transform * Mat4::translate(vec3!(pos.x, pos.y, 0));
+		self.state.transform *= Mat4::translate(vec3!(pos.x, pos.y, 0));
 	}
 
 	fn rotate(&mut self, angle: f32) {
-		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::Z);
+		self.state.transform *= Mat4::rotate(angle, Dir::Z);
 	}
 
 	fn scale(&mut self, scale: Vec2) {
-		self.state.transform = self.state.transform * Mat4::scale(vec3!(scale.x, scale.y, 1));
+		self.state.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
 	}
 
 	fn translate3d(&mut self, pos: Vec3) {
-		self.state.transform = self.state.transform * Mat4::translate(pos);
+		self.state.transform *= Mat4::translate(pos);
 	}
 
 	fn rotate_x(&mut self, angle: f32) {
-		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::X);
+		self.state.transform *= Mat4::rotate(angle, Dir::X);
 	}
 
 	fn rotate_y(&mut self, angle: f32) {
-		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::Y);
+		self.state.transform *= Mat4::rotate(angle, Dir::Y);
 	}
 
 	fn rotate_z(&mut self, angle: f32) {
-		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::Z);
+		self.state.transform *= Mat4::rotate(angle, Dir::Z);
 	}
 
 	fn scale3d(&mut self, scale: Vec3) {
-		self.state.transform = self.state.transform * Mat4::scale(scale);
+		self.state.transform *= Mat4::scale(scale);
 	}
 
 	fn color(&mut self, c: Color) {

@@ -157,7 +157,7 @@ impl Ctx {
 
 		}
 
-		let mut ctx_builder = glutin::ContextBuilder::new()
+		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
 			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)));
 

@@ -13,6 +13,7 @@
 - use rustls instead of native-tls
 - clearer error messages
 - better http response api
+- imgui integration
 
 == DONE
 - refactor http
