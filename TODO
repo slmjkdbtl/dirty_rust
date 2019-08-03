@@ -4,7 +4,6 @@
 - custom shader
 - better gl abstraction
 - fix fullscreen framebuffer weirdness
-- 3d camera
 
 == TODO
 - http less allocation / copying
@@ -29,4 +28,5 @@
 - fix gfx origin
 - weird lua fullscreen error (stupid)
 - move color to shape parameter
+- 3d camera
 

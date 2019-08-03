@@ -97,6 +97,7 @@ pub struct Ctx {
 
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
+	pub(self) cam_3d: gfx::Camera,
 
 	pub(self) gl: gl::Device,
 	pub(self) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
@@ -198,8 +199,10 @@ impl Ctx {
 
 		let shader_3d = gfx::Shader::from_handle(gl::Program::new(&gl, DEFAULT_3D_VERT, DEFAULT_3D_FRAG)?);
 		let proj_3d = math::perspective(60f32.to_radians(), conf.width as f32 / conf.height as f32, 0.1, 1024.0);
+		let cam_3d = gfx::Camera::new(vec3!(), 0.0, 0.0);
 
 		shader_3d.send("proj", proj_3d.clone());
+		shader_3d.send("view", cam_3d.as_mat());
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
@@ -245,6 +248,7 @@ impl Ctx {
 
 			proj_2d: proj_2d,
 			proj_3d: proj_3d,
+			cam_3d: cam_3d,
 
 			cur_tex: None,
 			empty_tex: empty_tex,

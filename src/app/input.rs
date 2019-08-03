@@ -133,6 +133,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	let mut mouse_input = None;
 	let mut cursor_moved = None;
 	let mut mouse_wheel = None;
+	let mut mouse_delta = None;
 	let mut text_input = None;
 	let mut close = false;
 
@@ -169,6 +170,13 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 				_ => {},
 
+			},
+
+			DeviceEvent { event, .. } => match event {
+				glutin::DeviceEvent::MouseMotion { delta } => {
+					mouse_delta = Some(delta);
+				},
+				_ => (),
 			},
 
 			_ => {},
@@ -221,6 +229,13 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 		ctx.mouse_delta = Some((pos - ctx.mouse_pos).into());
 		ctx.mouse_pos = pos;
 
+	}
+
+	if let Some(delta) = mouse_delta {
+		ctx.mouse_delta = Some(Pos {
+			x: delta.0 as i32,
+			y: delta.1 as i32,
+		});
 	}
 
 	if let Some(delta) = mouse_wheel {
