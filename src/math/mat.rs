@@ -127,6 +127,12 @@ impl ops::Mul for Mat4 {
 
 }
 
+impl ops::MulAssign for Mat4 {
+	fn mul_assign(&mut self, pt: Self) {
+		*self = *self * pt;
+	}
+}
+
 impl ops::Mul<Vec4> for Mat4 {
 
 	type Output = Vec4;
