@@ -37,6 +37,8 @@ pub trait Gfx {
 	fn rotate_y(&mut self, angle: f32);
 	fn rotate_z(&mut self, angle: f32);
 	fn scale3d(&mut self, scale: Vec3);
+	fn look(&mut self, yaw: f32, pitch: f32);
+	fn pos(&mut self, pos: Vec3);
 	fn reset(&mut self);
 
 }
@@ -337,6 +339,16 @@ impl Gfx for Ctx {
 
 	}
 
+	fn look(&mut self, yaw: f32, pitch: f32) {
+		self.cam_3d.set_angle(yaw, pitch);
+		self.default_shader_3d.send("view", self.cam_3d.as_mat());
+	}
+
+	fn pos(&mut self, pos: Vec3) {
+		self.cam_3d.set_pos(pos);
+		self.default_shader_3d.send("view", self.cam_3d.as_mat());
+	}
+
 	fn reset(&mut self) {
 		self.transform = Mat4::identity();
 	}
@@ -565,6 +577,47 @@ impl VertexLayout for Vertex3D {
 		return vec![
 			gl::VertexAttr::new("pos", 3, 0),
 		];
+
+	}
+
+}
+
+#[derive(Clone)]
+pub struct Camera {
+	front: Vec3,
+	pos: Vec3,
+}
+
+impl Camera {
+
+	pub fn new(pos: Vec3, yaw: f32, pitch: f32) -> Self {
+
+		let mut c = Self {
+			front: vec3!(),
+			pos: vec3!(),
+		};
+
+		c.set_pos(pos);
+		c.set_angle(yaw, pitch);
+
+		return c;
+
+	}
+
+	pub(super) fn as_mat(&self) -> Mat4 {
+		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+	}
+
+	pub fn set_pos(&mut self, pos: Vec3) {
+		self.pos = pos;
+	}
+
+	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
+
+		self.front.x = pitch.cos() * yaw.cos();
+		self.front.y = pitch.sin();
+		self.front.z = pitch.cos() * yaw.sin();
+		self.front = self.front.unit();
 
 	}
 
