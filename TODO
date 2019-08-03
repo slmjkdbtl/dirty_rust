@@ -4,7 +4,7 @@
 - custom shader
 - better gl abstraction
 - fix fullscreen framebuffer weirdness
-- add some dirty::CONSTANTs
+- 3d camera
 
 == TODO
 - http less allocation / copying
@@ -14,6 +14,7 @@
 - clearer error messages
 - better http response api
 - imgui integration
+- add some dirty::CONSTANTs
 
 == DONE
 - refactor http
