@@ -32,6 +32,11 @@ pub trait Gfx {
 	fn translate(&mut self, pos: Vec2);
 	fn rotate(&mut self, angle: f32);
 	fn scale(&mut self, scale: Vec2);
+	fn translate3d(&mut self, pos: Vec3);
+	fn rotate_x(&mut self, angle: f32);
+	fn rotate_y(&mut self, angle: f32);
+	fn rotate_z(&mut self, angle: f32);
+	fn scale3d(&mut self, scale: Vec3);
 	fn color(&mut self, c: Color);
 	fn reset(&mut self);
 
@@ -273,6 +278,26 @@ impl Gfx for Ctx {
 
 	fn scale(&mut self, scale: Vec2) {
 		self.state.transform = self.state.transform * Mat4::scale(vec3!(scale.x, scale.y, 1));
+	}
+
+	fn translate3d(&mut self, pos: Vec3) {
+		self.state.transform = self.state.transform * Mat4::translate(pos);
+	}
+
+	fn rotate_x(&mut self, angle: f32) {
+		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::X);
+	}
+
+	fn rotate_y(&mut self, angle: f32) {
+		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::Y);
+	}
+
+	fn rotate_z(&mut self, angle: f32) {
+		self.state.transform = self.state.transform * Mat4::rotate(angle, Dir::Z);
+	}
+
+	fn scale3d(&mut self, scale: Vec3) {
+		self.state.transform = self.state.transform * Mat4::scale(scale);
 	}
 
 	fn color(&mut self, c: Color) {
@@ -553,6 +578,7 @@ impl VertexLayout for Vertex3D {
 		];
 
 	}
+
 }
 
 pub struct Model {
@@ -568,7 +594,7 @@ impl Model {
 		let (models, mtls) = tobj?;
 		let mesh = &models.get(0).ok_or(Error::ObjLoad)?.mesh;
 
-		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, mesh.positions.len(), gl::BufferUsage::Static)?;
+		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, mesh.positions.len() / Vertex3D::STRIDE, gl::BufferUsage::Static)?;
 		let ibuf = gl::IndexBuffer::new(&ctx.gl, mesh.indices.len(), gl::BufferUsage::Static)?;
 
 		vbuf.data(0, &mesh.positions);

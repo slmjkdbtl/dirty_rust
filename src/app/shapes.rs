@@ -302,8 +302,8 @@ impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.cur_shader_3d.send("model", Mat4::scale(vec3!(30, -30, 1)));
-		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32);
+		ctx.cur_shader_3d.send("model", ctx.state.transform);
+		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32, gl::DrawMode::LineStrip);
 
 		return Ok(());
 

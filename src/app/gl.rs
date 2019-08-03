@@ -56,14 +56,14 @@ impl Device {
 	}
 
 	#[cfg(feature="gl3")]
-	pub fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32) {
+	pub fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
 
 		vao.bind();
 		ibuf.bind();
 		program.bind();
 
 		unsafe {
-			self.ctx.draw_elements(DrawMode::Triangle.into(), count as i32, glow::UNSIGNED_INT, 0);
+			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
 		}
 
 		program.unbind();
@@ -73,7 +73,7 @@ impl Device {
 	}
 
 	#[cfg(not(feature="gl3"))]
-	pub fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32) {
+	pub fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
 
 		program.bind();
 		vbuf.bind();
@@ -81,7 +81,7 @@ impl Device {
 		ibuf.bind();
 
 		unsafe {
-			self.ctx.draw_elements(DrawMode::Triangle.into(), count as i32, glow::UNSIGNED_INT, 0);
+			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
 		}
 
 		ibuf.unbind();
@@ -210,7 +210,8 @@ impl<S: Shape> BatchedRenderer<S> {
 			&self.vao,
 			&self.ibuf,
 			&program,
-			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32
+			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
+			DrawMode::Triangle,
 		);
 
 		#[cfg(not(feature="gl3"))]
@@ -218,7 +219,8 @@ impl<S: Shape> BatchedRenderer<S> {
 			&self.vbuf,
 			&self.ibuf,
 			&program,
-			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32
+			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
+			DrawMode::Triangle,
 		);
 
 		self.queue.clear();
