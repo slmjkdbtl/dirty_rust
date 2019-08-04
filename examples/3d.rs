@@ -16,12 +16,10 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		ctx.look(-90f32.to_radians(), 0.0);
-
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			pos: vec3!(0, 0, 120),
-			rx: -90.0,
+			pos: vec3!(0, 0, 60),
+			rx: 0.0,
 			ry: 0.0,
 		});
 
@@ -32,13 +30,13 @@ impl app::State for Game {
 		let speed = 60.0;
 		let rot_speed = 0.2;
 
-		ctx.translate3d(vec3!(0, 0, 80));
+		ctx.translate3d(vec3!(0, 0, 0));
 		ctx.rotate_y(ctx.time());
 		ctx.scale3d(vec3!(4, 4, 4));
 		ctx.draw(shapes::model(&self.model))?;
 		ctx.pos(self.pos);
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 		ctx.look(self.rx.to_radians(), self.ry.to_radians());
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		if ctx.key_down(Key::W) {
 			self.pos -= vec3!(0, 0, ctx.dt() * speed);

@@ -29,4 +29,5 @@
 - weird lua fullscreen error (stupid)
 - move color to shape parameter
 - 3d camera
+- basic truetype support
 
