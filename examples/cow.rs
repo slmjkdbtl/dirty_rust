@@ -17,10 +17,9 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		ctx.pos(vec3!(0, 0, 60));
-		ctx.light(vec3!(0, 20, 0));
 
 		return Ok(Self {
-			model: gfx::Model::from_obj(ctx, include_str!("res/cow2.obj"))?,
+			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
 			pos: vec3!(0, 0, 60),
 			rx: 0.0,
 			ry: 0.0,
@@ -34,7 +33,7 @@ impl app::State for Game {
 		let rot_speed = 0.2;
 
 		ctx.translate3d(vec3!(0, 0, 0));
-		ctx.rotate_y(ctx.time());
+		ctx.rotate3d(ctx.time(), vec3!(0, 1, 0));
 		ctx.scale3d(vec3!(4, 4, 4));
 		ctx.draw(shapes::model(&self.model))?;
 		ctx.pos(self.pos);

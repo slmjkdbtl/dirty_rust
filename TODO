@@ -6,6 +6,8 @@
 - fix fullscreen framebuffer weirdness
 - integrate truetype font with shape
 - calculate vertex normals
+- inverse matrix
+- imgui integration
 
 == TODO
 - http less allocation / copying
@@ -14,8 +16,8 @@
 - use rustls instead of native-tls
 - clearer error messages
 - better http response api
-- imgui integration
 - add some dirty::CONSTANTs
+- use Future on assets
 
 == DONE
 - refactor http
