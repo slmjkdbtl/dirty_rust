@@ -1,12 +1,14 @@
 // wengwengweng
 
-attribute vec3 pos;
-attribute vec3 normal;
-attribute vec4 color;
+#version 330
+
+layout(location = 0) in vec2 pos;
+layout(location = 1) in vec2 normal;
+layout(location = 2) in vec4 color;
 
 // varying vec2 v_uv;
-varying vec4 v_color;
-varying float v_brightness;
+out vec4 v_color;
+out float v_brightness;
 
 uniform mat4 model;
 uniform mat4 view;

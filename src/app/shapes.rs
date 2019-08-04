@@ -342,6 +342,7 @@ impl<'a> DrawCmd for Model<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.cur_shader_3d.send("model", ctx.transform);
+		#[cfg(not(feature = "gl3"))]
 		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32, gl::DrawMode::Triangle);
 
 		return Ok(());

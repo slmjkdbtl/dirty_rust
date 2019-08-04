@@ -17,6 +17,7 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		ctx.pos(vec3!(0, 0, 60));
+		ctx.light(vec3!(0, 20, 0));
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow2.obj"))?,
