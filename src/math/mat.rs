@@ -5,23 +5,6 @@ use std::ops;
 use super::*;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Dir {
-	X,
-	Y,
-	Z,
-}
-
-impl From<Dir> for Vec3 {
-	fn from(d: Dir) -> Vec3 {
-		return match d {
-			Dir::X => vec3!(1, 0, 0),
-			Dir::Y => vec3!(0, 1, 0),
-			Dir::Z => vec3!(0, 0, 1),
-		};
-	}
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Mat4([f32; 16]);
 
 impl Mat4 {
@@ -65,13 +48,12 @@ impl Mat4 {
 		]);
 	}
 
-	pub fn rotate(rot: f32, dir: Dir) -> Self {
+	pub fn rotate(rot: f32, axis: Vec3) -> Self {
 
 		let mut m = Self::identity();
 		let c = rot.cos();
 		let s = rot.sin();
 		let cv = 1.0 - c;
-		let axis: Vec3 = dir.into();
 
 		m.0[0] = (axis.x * axis.x * cv) + c;
 		m.0[1] = (axis.x * axis.y * cv) + (axis.z * s);

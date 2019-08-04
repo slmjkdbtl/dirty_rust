@@ -33,16 +33,13 @@ pub trait Gfx {
 	fn rotate(&mut self, angle: f32);
 	fn scale(&mut self, scale: Vec2);
 	fn translate3d(&mut self, pos: Vec3);
-	fn rotate_x(&mut self, angle: f32);
-	fn rotate_y(&mut self, angle: f32);
-	fn rotate_z(&mut self, angle: f32);
+	fn rotate3d(&mut self, angle: f32, axis: Vec3);
 	fn scale3d(&mut self, scale: Vec3);
 	fn reset(&mut self);
 
 	// TODO
 	fn look(&mut self, yaw: f32, pitch: f32);
 	fn pos(&mut self, pos: Vec3);
-	fn light(&self, pos: Vec3);
 
 }
 
@@ -271,7 +268,7 @@ impl Gfx for Ctx {
 	}
 
 	fn rotate(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, Dir::Z);
+		self.transform *= Mat4::rotate(angle, vec3!(0, 0, 1));
 	}
 
 	fn scale(&mut self, scale: Vec2) {
@@ -282,16 +279,8 @@ impl Gfx for Ctx {
 		self.transform *= Mat4::translate(pos);
 	}
 
-	fn rotate_x(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, Dir::X);
-	}
-
-	fn rotate_y(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, Dir::Y);
-	}
-
-	fn rotate_z(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, Dir::Z);
+	fn rotate3d(&mut self, angle: f32, axis: Vec3) {
+		self.transform *= Mat4::rotate(angle, axis);
 	}
 
 	fn scale3d(&mut self, scale: Vec3) {
@@ -355,10 +344,6 @@ impl Gfx for Ctx {
 	fn pos(&mut self, pos: Vec3) {
 		self.cam_3d.set_pos(pos);
 		self.default_shader_3d.send("view", self.cam_3d.as_mat());
-	}
-
-	fn light(&self, pos: Vec3) {
-		self.default_shader_3d.send("light_pos", pos);
 	}
 
 }
@@ -624,7 +609,7 @@ impl VertexLayout for Vertex3D {
 }
 
 #[derive(Clone)]
-pub struct Camera {
+pub(super) struct Camera {
 	front: Vec3,
 	pos: Vec3,
 }
@@ -681,6 +666,8 @@ impl Model {
 		let indices = &mesh.indices;
 		let count = positions.len() / 3;
 
+		// TODO: calculate normals
+
 		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, count, gl::BufferUsage::Static)?;
 		let ibuf = gl::IndexBuffer::new(&ctx.gl, mesh.indices.len(), gl::BufferUsage::Static)?;
 		let mut queue = Vec::with_capacity(count * Vertex3D::STRIDE);
@@ -690,10 +677,10 @@ impl Model {
 			let vx = positions[i * 3 + 0];
 			let vy = positions[i * 3 + 1];
 			let vz = positions[i * 3 + 2];
-			let nx = normals[i * 3 + 0];
-			let ny = normals[i * 3 + 1];
-			let nz = normals[i * 3 + 2];
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(nx, ny, nz), color!(1));
+			let nx = normals.get(i * 3 + 0).unwrap_or(&0.0);
+			let ny = normals.get(i * 3 + 1).unwrap_or(&0.0);
+			let nz = normals.get(i * 3 + 2).unwrap_or(&0.0);
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz), color!(1));
 
 			vert.push(&mut queue);
 
@@ -839,11 +826,6 @@ impl TrueTypeFont {
 
 	}
 
-}
-
-pub struct Light {
-	pos: Vec3,
-	color: Color,
 }
 
 pub trait DrawCmd {
