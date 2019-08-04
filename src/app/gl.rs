@@ -55,6 +55,12 @@ impl Device {
 		}
 	}
 
+	pub fn depth_func(&self, f: DepthFunc) {
+		unsafe {
+			self.ctx.depth_func(f.into());
+		}
+	}
+
 	#[cfg(feature="gl3")]
 	pub fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
 
@@ -120,7 +126,7 @@ impl Device {
 
 	pub fn clear(&self) {
 		unsafe {
-			self.ctx.clear(glow::COLOR_BUFFER_BIT);
+			self.ctx.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
 		}
 	}
 

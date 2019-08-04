@@ -37,9 +37,12 @@ pub trait Gfx {
 	fn rotate_y(&mut self, angle: f32);
 	fn rotate_z(&mut self, angle: f32);
 	fn scale3d(&mut self, scale: Vec3);
+	fn reset(&mut self);
+
+	// TODO
 	fn look(&mut self, yaw: f32, pitch: f32);
 	fn pos(&mut self, pos: Vec3);
-	fn reset(&mut self);
+	fn light(&self, pos: Vec3);
 
 }
 
@@ -339,6 +342,11 @@ impl Gfx for Ctx {
 
 	}
 
+	fn reset(&mut self) {
+		self.transform = Mat4::identity();
+	}
+
+	// TODO
 	fn look(&mut self, yaw: f32, pitch: f32) {
 		self.cam_3d.set_angle(yaw, pitch);
 		self.default_shader_3d.send("view", self.cam_3d.as_mat());
@@ -349,8 +357,8 @@ impl Gfx for Ctx {
 		self.default_shader_3d.send("view", self.cam_3d.as_mat());
 	}
 
-	fn reset(&mut self) {
-		self.transform = Mat4::identity();
+	fn light(&self, pos: Vec3) {
+		self.default_shader_3d.send("light_pos", pos);
 	}
 
 }
@@ -583,6 +591,7 @@ impl Vertex3D {
 		};
 	}
 }
+
 impl VertexLayout for Vertex3D {
 
 	const STRIDE: usize = 10;
@@ -684,7 +693,7 @@ impl Model {
 			let nx = normals[i * 3 + 0];
 			let ny = normals[i * 3 + 1];
 			let nz = normals[i * 3 + 2];
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(nx, ny, nz), color!(rand!(), rand!(), rand!(), rand!()));
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(nx, ny, nz), color!(1));
 
 			vert.push(&mut queue);
 

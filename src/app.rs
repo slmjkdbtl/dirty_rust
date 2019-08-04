@@ -53,10 +53,25 @@ const DEFAULT_2D_VERT: &str = include_str!("res/2d_default.vert");
 #[cfg(not(feature="gl3"))]
 const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default.frag");
 
-const DEFAULT_3D_VERT: &str = include_str!("res/3d_default.vert");
+#[cfg(feature="gl3")]
+const TEMPLATE_3D_VERT: &str = include_str!("res/3d_template_330.vert");
+#[cfg(feature="gl3")]
+const TEMPLATE_3D_FRAG: &str = include_str!("res/3d_template_330.frag");
+
+#[cfg(feature="gl3")]
+const DEFAULT_3D_VERT: &str = include_str!("res/3d_default_330.vert");
+#[cfg(feature="gl3")]
+const DEFAULT_3D_FRAG: &str = include_str!("res/3d_default_330.frag");
+
+#[cfg(not(feature="gl3"))]
 const TEMPLATE_3D_VERT: &str = include_str!("res/3d_template.vert");
-const DEFAULT_3D_FRAG: &str = include_str!("res/3d_default.frag");
+#[cfg(not(feature="gl3"))]
 const TEMPLATE_3D_FRAG: &str = include_str!("res/3d_template.frag");
+
+#[cfg(not(feature="gl3"))]
+const DEFAULT_3D_VERT: &str = include_str!("res/3d_default.vert");
+#[cfg(not(feature="gl3"))]
+const DEFAULT_3D_FRAG: &str = include_str!("res/3d_default.frag");
 
 const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/CP437.png");
 const DEFAULT_FONT_COLS: usize = 32;
@@ -181,7 +196,9 @@ impl Ctx {
 		});
 
 		gl.enable(gl::Capability::Blend);
+		gl.enable(gl::Capability::DepthTest);
 		gl.blend_func_sep(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha, gl::BlendFac::One, gl::BlendFac::OneMinusSourceAlpha);
+		gl.depth_func(gl::DepthFunc::LessOrEqual);
 		gl.clear_color(conf.clear_color);
 		gl.clear();
 
