@@ -1,11 +1,12 @@
 // wengwengweng
 
 attribute vec3 pos;
-// attribute vec2 uv;
-// attribute vec4 color;
+attribute vec3 normal;
+attribute vec4 color;
 
 // varying vec2 coord;
-// varying vec4 tint;
+varying vec4 tint;
+varying vec3 v_normal;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -16,7 +17,7 @@ uniform float time;
 
 void main() {
 // 	coord = uv;
-// 	tint = color;
+	tint = color;
 	gl_Position = vert(proj, view, model, vec4(pos, 1.0));
 }
 

@@ -246,26 +246,62 @@ pub trait VertexLayout {
 
 	const STRIDE: usize;
 	fn push(&self, queue: &mut Vec<f32>);
-	fn attrs() -> Vec<VertexAttr>;
+	fn attrs() -> VertexAttrGroup;
 
 }
 
+pub struct VertexAttrGroup {
+	attrs: Vec<VertexAttr>,
+	cur_offset: usize,
+}
+
+impl VertexAttrGroup {
+
+	pub fn build() -> Self {
+		return Self {
+			attrs: Vec::new(),
+			cur_offset: 0,
+		};
+	}
+
+	pub fn iter(&self) -> std::slice::Iter<VertexAttr> {
+		return self.attrs.iter();
+	}
+
+	pub fn add(mut self, name: &str, size: u8) -> Self {
+
+		self.attrs.push(VertexAttr {
+			name: name.to_owned(),
+			size: size as i32,
+			offset: self.cur_offset,
+		});
+
+		self.cur_offset += size as usize;
+
+		return self;
+
+	}
+
+}
+
+impl<'a> IntoIterator for &'a VertexAttrGroup {
+
+	type Item = &'a VertexAttr;
+	type IntoIter = std::slice::Iter<'a, VertexAttr>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		return self.attrs.iter();
+	}
+
+}
+
+#[derive(Clone)]
 pub struct VertexAttr {
 
 	name: String,
 	size: i32,
 	offset: usize,
 
-}
-
-impl VertexAttr {
-	pub fn new(name: &str, size: i32, offset: usize) -> Self {
-		return Self {
-			name: name.to_owned(),
-			size: size,
-			offset: offset,
-		};
-	}
 }
 
 pub struct VertexArray {
@@ -355,7 +391,7 @@ pub struct VertexBuffer<V: VertexLayout> {
 	ctx: Rc<GLCtx>,
 	id: BufferID,
 	stride: usize,
-	attrs: Vec<VertexAttr>,
+	attrs: VertexAttrGroup,
 	layout: PhantomData<V>,
 
 }
