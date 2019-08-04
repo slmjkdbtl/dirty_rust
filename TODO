@@ -4,6 +4,8 @@
 - custom shader
 - better gl abstraction
 - fix fullscreen framebuffer weirdness
+- integrate truetype font with shape
+- calculate vertex normals
 
 == TODO
 - http less allocation / copying

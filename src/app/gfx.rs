@@ -154,13 +154,13 @@ impl VertexLayout for Vertex2D {
 		]);
 	}
 
-	fn attrs() -> Vec<gl::VertexAttr> {
+	fn attrs() -> gl::VertexAttrGroup {
 
-		return vec![
-			gl::VertexAttr::new("pos", 2, 0),
-			gl::VertexAttr::new("uv", 2, 2),
-			gl::VertexAttr::new("color", 4, 4),
-		];
+		return gl::VertexAttrGroup::build()
+			.add("pos", 2)
+			.add("uv", 2)
+			.add("color", 4)
+			;
 
 	}
 }
@@ -362,7 +362,6 @@ pub struct Texture {
 	height: u32,
 }
 
-#[cfg(feature = "img")]
 impl Texture {
 
 	pub(super) fn from_handle(handle: gl::Texture, w: u32, h: u32) -> Self {
@@ -373,6 +372,7 @@ impl Texture {
 		};
 	}
 
+	#[cfg(feature = "img")]
 	pub fn from_image(ctx: &Ctx, img: Image) -> Result<Self> {
 
 		let w = img.width() as i32;
@@ -385,10 +385,12 @@ impl Texture {
 
 	}
 
+	#[cfg(feature = "img")]
 	pub fn from_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_image(ctx, Image::from_file(path)?);
 	}
 
+	#[cfg(feature = "img")]
 	pub fn from_bytes(ctx: &Ctx, data: &[u8]) -> Result<Self> {
 		return Self::from_image(ctx, Image::from_bytes(data)?);
 	}
@@ -506,7 +508,7 @@ impl Shader {
 		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
 	}
 
-	pub fn send<T: gl::UniformValue>(&self, name: &str, value: T) {
+	pub fn send(&self, name: &str, value: impl gl::UniformValue) {
 		self.handle.send(name, value);
 	}
 
@@ -520,7 +522,6 @@ pub struct Canvas {
 
 }
 
-#[cfg(feature = "img")]
 impl Canvas {
 
 	pub fn new(ctx: &Ctx, width: u32, height: u32) -> Result<Self> {
@@ -547,6 +548,7 @@ impl Canvas {
 		return self.tex.height();
 	}
 
+	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 
 		let tex = &self.tex;
@@ -568,25 +570,45 @@ impl Canvas {
 
 pub struct Vertex3D {
 	pos: Vec3,
+	normal: Vec3,
+	color: Color,
 }
 
+impl Vertex3D {
+	fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
+		return Self {
+			pos: pos,
+			normal: normal,
+			color: color,
+		};
+	}
+}
 impl VertexLayout for Vertex3D {
 
-	const STRIDE: usize = 3;
+	const STRIDE: usize = 10;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
 			self.pos.x,
 			self.pos.y,
 			self.pos.z,
+			self.normal.x,
+			self.normal.y,
+			self.normal.z,
+			self.color.r,
+			self.color.g,
+			self.color.b,
+			self.color.a,
 		]);
 	}
 
-	fn attrs() -> Vec<gl::VertexAttr> {
+	fn attrs() -> gl::VertexAttrGroup {
 
-		return vec![
-			gl::VertexAttr::new("pos", 3, 0),
-		];
+		return gl::VertexAttrGroup::build()
+			.add("pos", 3)
+			.add("normal", 3)
+			.add("color", 4)
+			;
 
 	}
 
@@ -645,12 +667,31 @@ impl Model {
 
 		let (models, mtls) = tobj?;
 		let mesh = &models.get(0).ok_or(Error::ObjLoad)?.mesh;
+		let positions = &mesh.positions;
+		let normals = &mesh.normals;
+		let indices = &mesh.indices;
+		let count = positions.len() / 3;
 
-		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, mesh.positions.len() / Vertex3D::STRIDE, gl::BufferUsage::Static)?;
+		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, count, gl::BufferUsage::Static)?;
 		let ibuf = gl::IndexBuffer::new(&ctx.gl, mesh.indices.len(), gl::BufferUsage::Static)?;
+		let mut queue = Vec::with_capacity(count * Vertex3D::STRIDE);
 
-		vbuf.data(0, &mesh.positions);
-		ibuf.data(0, &mesh.indices);
+		for i in 0..count {
+
+			let vx = positions[i * 3 + 0];
+			let vy = positions[i * 3 + 1];
+			let vz = positions[i * 3 + 2];
+			let nx = normals[i * 3 + 0];
+			let ny = normals[i * 3 + 1];
+			let nz = normals[i * 3 + 2];
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(nx, ny, nz), color!(rand!(), rand!(), rand!(), rand!()));
+
+			vert.push(&mut queue);
+
+		}
+
+		vbuf.data(0, &queue);
+		ibuf.data(0, &indices);
 
 		return Ok(Self {
 			vbuf: vbuf,
@@ -715,6 +756,7 @@ impl TrueTypeFont {
 
 	}
 
+	// TODO: let shape take care of this
 	pub fn draw(&mut self, ctx: &mut Ctx, txt: &str) -> Result<()> {
 
 		let mut tex = self.tex.clone();
@@ -788,6 +830,11 @@ impl TrueTypeFont {
 
 	}
 
+}
+
+pub struct Light {
+	pos: Vec3,
+	color: Color,
 }
 
 pub trait DrawCmd {
