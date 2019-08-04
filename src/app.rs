@@ -53,8 +53,10 @@ const DEFAULT_2D_VERT: &str = include_str!("res/2d_default.vert");
 #[cfg(not(feature="gl3"))]
 const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default.frag");
 
-const DEFAULT_3D_VERT: &str = include_str!("res/3d.vert");
-const DEFAULT_3D_FRAG: &str = include_str!("res/3d.frag");
+const DEFAULT_3D_VERT: &str = include_str!("res/3d_default.vert");
+const TEMPLATE_3D_VERT: &str = include_str!("res/3d_template.vert");
+const DEFAULT_3D_FRAG: &str = include_str!("res/3d_default.frag");
+const TEMPLATE_3D_FRAG: &str = include_str!("res/3d_template.frag");
 
 const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/CP437.png");
 const DEFAULT_FONT_COLS: usize = 32;
@@ -185,9 +187,9 @@ impl Ctx {
 
 		let batched_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
 
-		let empty_tex = gl::Texture::new(&gl, 1, 1)?;
-		empty_tex.data(&[255, 255, 255, 255]);
-		let empty_tex = gfx::Texture::from_handle(empty_tex);
+		let mut empty_tex = gl::Texture::new(&gl, 1, 1)?;
+		empty_tex.data(0, 0, 1, 1, &[255, 255, 255, 255]);
+		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
 
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
@@ -197,7 +199,10 @@ impl Ctx {
 
 		shader_2d.send("proj", proj_2d.clone());
 
-		let shader_3d = gfx::Shader::from_handle(gl::Program::new(&gl, DEFAULT_3D_VERT, DEFAULT_3D_FRAG)?);
+		let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
+		let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
+
+		let shader_3d = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_3d_src, &frag_3d_src)?);
 		let proj_3d = math::perspective(60f32.to_radians(), conf.width as f32 / conf.height as f32, 0.1, 1024.0);
 		let cam_3d = gfx::Camera::new(vec3!(), 0.0, 0.0);
 
@@ -205,9 +210,11 @@ impl Ctx {
 		shader_3d.send("view", cam_3d.as_mat());
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
+		let font_width = font_img.width();
+		let font_height = font_img.height();
 		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
-		font_tex.data(&font_img.into_raw());
-		let font_tex = gfx::Texture::from_handle(font_tex);
+		font_tex.data(0, 0, font_width as i32, font_height as i32, &font_img.into_raw());
+		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
 
 		let font = gfx::Font::from_tex(
 			font_tex,

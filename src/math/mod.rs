@@ -52,11 +52,15 @@ pub fn map(val: f32, a1: f32, a2: f32, b1: f32, b2: f32) -> f32 {
 /// generate orthographic matrix
 pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {
 
+	let tx = -(right + left) / (right - left);
+	let ty = -(top + bottom) / (top - bottom);
+	let tz = -(far + near) / (far - near);
+
 	return Mat4::new([
 		2.0 / (right - left), 0.0, 0.0, 0.0,
 		0.0, 2.0 / (top - bottom), 0.0, 0.0,
 		0.0, 0.0, 2.0 / (near - far), 0.0,
-		(left + right) / (left - right), (bottom + top) / (bottom - top), (far + near) / (near - far), 1.0,
+		tx, ty, tz, 1.0,
 	]);
 
 }

@@ -358,14 +358,18 @@ impl Gfx for Ctx {
 #[derive(Clone, PartialEq)]
 pub struct Texture {
 	handle: Rc<gl::Texture>,
+	width: u32,
+	height: u32,
 }
 
 #[cfg(feature = "img")]
 impl Texture {
 
-	pub(super) fn from_handle(handle: gl::Texture) -> Self {
+	pub(super) fn from_handle(handle: gl::Texture, w: u32, h: u32) -> Self {
 		return Self {
 			handle: Rc::new(handle),
+			width: w,
+			height: h,
 		};
 	}
 
@@ -375,9 +379,9 @@ impl Texture {
 		let h = img.height() as i32;
 		let handle = gl::Texture::new(&ctx.gl, w, h)?;
 
-		handle.data(&img.into_raw());
+		handle.data(0, 0, w, h, &img.into_raw());
 
-		return Ok(Self::from_handle(handle));
+		return Ok(Self::from_handle(handle, w as u32, h as u32));
 
 	}
 
@@ -392,17 +396,23 @@ impl Texture {
 	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::new(&ctx.gl, w as i32, h as i32)?;
-		handle.data(&pixels);
-		return Ok(Self::from_handle(handle));
+		handle.data(0, 0, w as i32, h as i32, &pixels);
+		return Ok(Self::from_handle(handle, w, h));
 
 	}
 
-	pub fn width(&self) -> i32 {
-		return self.handle.width;
+	pub fn width(&self) -> u32 {
+		return self.width;
 	}
 
-	pub fn height(&self) -> i32 {
-		return self.handle.height;
+	pub fn height(&self) -> u32 {
+		return self.height;
+	}
+
+	pub fn data(&mut self, x: u32, y: u32, width: u32, height: u32, data: &[u8]) {
+		self.width = width;
+		self.height = height;
+		self.handle.data(x as i32, y as i32, width as i32, height as i32, data);
 	}
 
 }
@@ -426,8 +436,8 @@ impl Font {
 
 		let mut map = HashMap::new();
 		let quad_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
-		let tw = tex.width();
-		let th = tex.height();
+		let tw = tex.width() as i32;
+		let th = tex.height() as i32;
 
 		if (tw % cols as i32 != 0 || th % rows as i32 != 0) {
 			return Err(Error::Font);
@@ -529,18 +539,18 @@ impl Canvas {
 
 	}
 
-	pub fn width(&self) -> i32 {
+	pub fn width(&self) -> u32 {
 		return self.tex.width();
 	}
 
-	pub fn height(&self) -> i32 {
+	pub fn height(&self) -> u32 {
 		return self.tex.height();
 	}
 
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 
 		let tex = &self.tex;
-		let buffer = tex.handle.get_data();
+		let buffer = tex.handle.get_data(self.width(), self.height());
 
 		image::save_buffer(
 			path,
@@ -614,9 +624,9 @@ impl Camera {
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
-		self.front.x = pitch.cos() * yaw.cos();
+		self.front.x = pitch.cos() * (yaw - 90f32.to_radians()).cos();
 		self.front.y = pitch.sin();
-		self.front.z = pitch.cos() * yaw.sin();
+		self.front.z = pitch.cos() * (yaw - 90f32.to_radians()).sin();
 		self.front = self.front.unit();
 
 	}
@@ -664,6 +674,109 @@ impl Model {
 
 	pub fn from_obj_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_tobj(ctx, tobj::load_obj(path.as_ref()));
+	}
+
+}
+
+use glyph_brush::GlyphBrush;
+use glyph_brush::BrushAction;
+use glyph_brush::BrushError;
+use glyph_brush::GlyphBrushBuilder;
+use glyph_brush::Section;
+
+pub struct TTF {
+	cache: GlyphBrush<'static, Quad>,
+	tex: Texture,
+	quads: Vec<Quad>,
+}
+
+impl TTF {
+
+	pub fn new(ctx: &Ctx, bytes: &'static [u8]) -> Result<Self> {
+
+		let font_cache = GlyphBrushBuilder::using_font_bytes(bytes).build();
+
+		let (width, height) = font_cache.texture_dimensions();
+		let font_cache_texture = gl::Texture::new(&ctx.gl, width as i32, height as i32)?;
+
+		return Ok(Self {
+			cache: font_cache,
+			tex: Texture::from_handle(font_cache_texture, width, height),
+			quads: Vec::with_capacity(64),
+		})
+
+	}
+
+	pub fn draw(&mut self, ctx: &mut Ctx, txt: &str) -> Result<()> {
+
+		let mut tex = self.tex.clone();
+
+		self.cache.queue(Section {
+			text: txt,
+			..Section::default()
+		});
+
+		let mut update_texture = |rect: glyph_brush::rusttype::Rect<u32>, data: &[u8]| {
+
+			let mut padded_data = Vec::with_capacity(data.len() * 4);
+
+			for a in data {
+				padded_data.push(255);
+				padded_data.push(255);
+				padded_data.push(255);
+				padded_data.push(*a);
+			}
+
+			tex.data(
+				rect.min.x,
+				rect.min.y,
+				rect.width(),
+				rect.height(),
+				&padded_data,
+			);
+
+		};
+
+		let into_vertex = |verts: &glyph_brush::GlyphVertex| {
+
+			let uv = verts.tex_coords;
+			let x = uv.min.x;
+			let y = uv.min.y;
+			let w = uv.max.x - x;
+			let h = uv.max.y - y;
+
+			return quad!(x, y, w, h);
+
+		};
+
+		match self.cache.process_queued(
+			|rect, tex_data| update_texture(rect, tex_data),
+			|verts| into_vertex(&verts),
+		) {
+			Ok(BrushAction::Draw(quads)) => {
+				self.quads = quads;
+				ctx.push();
+				for q in &self.quads {
+					ctx.draw(shapes::sprite(&tex).quad(*q))?;
+					ctx.translate(vec2!(tex.width() as f32 * q.w, 0));
+				}
+				ctx.pop();
+			}
+			Ok(BrushAction::ReDraw) => {
+				ctx.push();
+				for q in &self.quads {
+					ctx.draw(shapes::sprite(&tex).quad(*q))?;
+					ctx.translate(vec2!(tex.width() as f32 * q.w, 0));
+				}
+				ctx.pop();
+			}
+			Err(BrushError::TextureTooSmall { suggested }) => {
+				// Enlarge texture + font_cache texture cache and retry.
+			}
+		}
+
+		return Ok(());
+
 	}
 
 }

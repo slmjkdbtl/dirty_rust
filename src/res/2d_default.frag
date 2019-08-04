@@ -5,9 +5,8 @@ vec4 frag(
 	vec2 tc,
 	vec2 sc,
 	vec2 size,
-	float time) {
-
+	float time
+) {
 	return texture2D(tex, tc);
-
 }
 

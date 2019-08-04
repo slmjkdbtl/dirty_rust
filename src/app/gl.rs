@@ -557,8 +557,6 @@ impl PartialEq for IndexBuffer {
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
-	pub width: i32,
-	pub height: i32,
 }
 
 impl Texture {
@@ -573,8 +571,6 @@ impl Texture {
 			let tex = Self {
 				ctx: ctx,
 				id: id,
-				width: width,
-				height: height,
 			};
 
 			tex.bind();
@@ -635,7 +631,7 @@ impl Texture {
 		}
 	}
 
-	pub fn data(&self, data: &[u8]) {
+	pub fn data(&self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
 
 		unsafe {
 
@@ -644,10 +640,10 @@ impl Texture {
 			self.ctx.tex_sub_image_2d_u8_slice(
 				glow::TEXTURE_2D,
 				0,
-				0,
-				0,
-				self.width,
-				self.height,
+				x,
+				y,
+				width,
+				height,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
 				Some(data),
@@ -659,9 +655,9 @@ impl Texture {
 
 	}
 
-	pub fn get_data(&self) -> Vec<u8> {
+	pub fn get_data(&self, width: u32, height: u32) -> Vec<u8> {
 
-		let size = (self.width * self.height * 4) as usize;
+		let size = (width * height * 4) as usize;
 		let pixels = vec![0.0 as u8; size];
 
 		self.bind();
