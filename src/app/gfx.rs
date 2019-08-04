@@ -680,19 +680,26 @@ impl Model {
 
 use glyph_brush::GlyphBrush;
 use glyph_brush::BrushAction;
-use glyph_brush::BrushError;
 use glyph_brush::GlyphBrushBuilder;
 use glyph_brush::Section;
+use glyph_brush::rusttype;
 
-pub struct TTF {
-	cache: GlyphBrush<'static, Quad>,
-	tex: Texture,
-	quads: Vec<Quad>,
+#[derive(Clone)]
+struct FontQuad {
+	pos: Vec2,
+	quad: Quad,
 }
 
-impl TTF {
+pub struct TrueTypeFont {
+	cache: GlyphBrush<'static, FontQuad>,
+	tex: Texture,
+	quads: Vec<FontQuad>,
+	size: f32,
+}
 
-	pub fn new(ctx: &Ctx, bytes: &'static [u8]) -> Result<Self> {
+impl TrueTypeFont {
+
+	pub fn new(ctx: &Ctx, bytes: &'static [u8], size: f32) -> Result<Self> {
 
 		let font_cache = GlyphBrushBuilder::using_font_bytes(bytes).build();
 
@@ -703,6 +710,7 @@ impl TTF {
 			cache: font_cache,
 			tex: Texture::from_handle(font_cache_texture, width, height),
 			quads: Vec::with_capacity(64),
+			size: size,
 		})
 
 	}
@@ -713,18 +721,21 @@ impl TTF {
 
 		self.cache.queue(Section {
 			text: txt,
+			scale: rusttype::Scale::uniform(self.size),
 			..Section::default()
 		});
 
-		let mut update_texture = |rect: glyph_brush::rusttype::Rect<u32>, data: &[u8]| {
+		let mut update_texture = |rect: rusttype::Rect<u32>, data: &[u8]| {
 
 			let mut padded_data = Vec::with_capacity(data.len() * 4);
 
 			for a in data {
-				padded_data.push(255);
-				padded_data.push(255);
-				padded_data.push(255);
-				padded_data.push(*a);
+				padded_data.extend_from_slice(&[
+					255,
+					255,
+					255,
+					*a,
+				]);
 			}
 
 			tex.data(
@@ -740,39 +751,37 @@ impl TTF {
 		let into_vertex = |verts: &glyph_brush::GlyphVertex| {
 
 			let uv = verts.tex_coords;
+			let pos = verts.pixel_coords.min;
 			let x = uv.min.x;
 			let y = uv.min.y;
 			let w = uv.max.x - x;
 			let h = uv.max.y - y;
 
-			return quad!(x, y, w, h);
+			return FontQuad {
+				pos: vec2!(pos.x, pos.y),
+				quad: quad!(x, y, w, h),
+			}
 
 		};
 
-		match self.cache.process_queued(
+		if let Ok(action) = self.cache.process_queued(
 			|rect, tex_data| update_texture(rect, tex_data),
 			|verts| into_vertex(&verts),
 		) {
-			Ok(BrushAction::Draw(quads)) => {
+
+			if let BrushAction::Draw(quads) = action {
 				self.quads = quads;
+			}
+
+			for q in &self.quads {
+
 				ctx.push();
-				for q in &self.quads {
-					ctx.draw(shapes::sprite(&tex).quad(*q))?;
-					ctx.translate(vec2!(tex.width() as f32 * q.w, 0));
-				}
-				ctx.pop();
+				ctx.translate(q.pos);
+				ctx.draw(shapes::sprite(&tex).quad(q.quad))?;
+				ctx.pop()?;
+
 			}
-			Ok(BrushAction::ReDraw) => {
-				ctx.push();
-				for q in &self.quads {
-					ctx.draw(shapes::sprite(&tex).quad(*q))?;
-					ctx.translate(vec2!(tex.width() as f32 * q.w, 0));
-				}
-				ctx.pop();
-			}
-			Err(BrushError::TextureTooSmall { suggested }) => {
-				// Enlarge texture + font_cache texture cache and retry.
-			}
+
 		}
 
 		return Ok(());
