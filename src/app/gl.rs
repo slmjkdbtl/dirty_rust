@@ -153,8 +153,8 @@ impl<V: VertexLayout> Renderer<V> {
 
 	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
 
-		let vbuf = VertexBuffer::<V>::init(&device, BufferUsage::Static, &verts)?;
-		let ibuf = IndexBuffer::init(&device, BufferUsage::Static, &indices)?;
+		let vbuf = VertexBuffer::<V>::init(&device, &verts)?;
+		let ibuf = IndexBuffer::init(&device, &indices)?;
 
 		#[cfg(feature="gl3")]
 		let vao = VertexArray::init(&device, &vbuf)?;
@@ -216,9 +216,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			.collect();
 
 		let vbuf = VertexBuffer::new(&device, vert_count * vert_stride * max, BufferUsage::Dynamic)?;
-		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Static)?;
-
-		ibuf.data(0, &indices_batch);
+		let ibuf = IndexBuffer::init(&device, &indices_batch)?;
 
 		let queue = Vec::with_capacity(max_vertices);
 
@@ -482,9 +480,9 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	pub fn init(device: &Device, usage: BufferUsage, data: &[f32]) -> Result<Self> {
+	pub fn init(device: &Device, data: &[f32]) -> Result<Self> {
 
-		let buf = Self::new(device, data.len(), usage)?;
+		let buf = Self::new(device, data.len(), BufferUsage::Static)?;
 		buf.data(0, data);
 		return Ok(buf);
 
@@ -590,7 +588,7 @@ impl IndexBuffer {
 
 			buf.ctx.buffer_data_size(
 				glow::ELEMENT_ARRAY_BUFFER,
-				(count * mem::size_of::<f32>()) as i32,
+				(count * mem::size_of::<u32>()) as i32,
 				usage.into(),
 			);
 
@@ -602,9 +600,9 @@ impl IndexBuffer {
 
 	}
 
-	pub fn init(device: &Device, usage: BufferUsage, data: &[u32]) -> Result<Self> {
+	pub fn init(device: &Device, data: &[u32]) -> Result<Self> {
 
-		let buf = Self::new(device, data.len(), usage)?;
+		let buf = Self::new(device, data.len(), BufferUsage::Static)?;
 		buf.data(0, data);
 		return Ok(buf);
 
