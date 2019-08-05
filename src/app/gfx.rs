@@ -35,6 +35,8 @@ pub trait Gfx {
 	fn translate3d(&mut self, pos: Vec3);
 	fn rotate3d(&mut self, angle: f32, axis: Vec3);
 	fn scale3d(&mut self, scale: Vec3);
+	fn matrix(&self) -> Mat4;
+	fn apply_matrix(&mut self, m: Mat4);
 	fn reset(&mut self);
 
 	// TODO
@@ -287,6 +289,18 @@ impl Gfx for Ctx {
 		self.transform *= Mat4::scale(scale);
 	}
 
+	fn matrix(&self) -> Mat4 {
+		return self.transform;
+	}
+
+	fn apply_matrix(&mut self, m: Mat4) {
+		self.transform = m;
+	}
+
+	fn reset(&mut self) {
+		self.transform = Mat4::identity();
+	}
+
 	fn draw(&mut self, thing: impl DrawCmd) -> Result<()> {
 		return thing.draw(self);
 	}
@@ -330,10 +344,6 @@ impl Gfx for Ctx {
 
 		return Ok(());
 
-	}
-
-	fn reset(&mut self) {
-		self.transform = Mat4::identity();
 	}
 
 	// TODO
