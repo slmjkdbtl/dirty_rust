@@ -111,6 +111,7 @@ impl app::State for Game {
 		})?;
 
 		ctx.draw_with(&self.effect, |ctx| {
+// 			ctx.draw(&self.sprite)?;
 			ctx.draw(shapes::canvas(&self.canvas))?;
 			return Ok(());
 		})?;

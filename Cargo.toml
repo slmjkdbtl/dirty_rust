@@ -29,6 +29,7 @@ default = [
 	"http",
 	"term",
 	"geom",
+# 	"assets",
 # 	"ui",
 
 	# features
