@@ -263,6 +263,11 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 		ctx.scroll_delta = Some(delta.into());
 	}
 
+	if let Some(size) = resized {
+		ctx.width = size.width as u32;
+		ctx.height = size.height as u32;
+	}
+
 	ctx.text_input = text_input;
 
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {

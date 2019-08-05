@@ -319,6 +319,8 @@ impl Gfx for Ctx {
 
 		flush(self);
 		canvas.handle.bind();
+		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
+		self.gl.viewport(0, 0, canvas.width() as i32, canvas.height() as i32);
 		self.cur_shader_2d.send("proj", flipped_proj);
 		self.push();
 		self.reset();
@@ -328,6 +330,7 @@ impl Gfx for Ctx {
 		self.cur_shader_2d.send("proj", self.proj_2d);
 
 		canvas.handle.unbind();
+		self.gl.viewport(0, 0, self.width() as i32 * self.dpi() as i32, self.height() as i32 * self.dpi() as i32);
 
 		return Ok(());
 
@@ -515,7 +518,6 @@ impl Shader {
 
 }
 
-// TODO: fix fullscreen framebuffer weirdness
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
 

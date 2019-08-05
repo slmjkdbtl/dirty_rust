@@ -32,6 +32,9 @@ pub mod term;
 #[cfg(feature = "geom")]
 pub mod geom;
 
+#[cfg(feature = "assets")]
+pub mod assets;
+
 #[cfg(feature = "ase")]
 pub mod ase;
 

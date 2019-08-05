@@ -1,11 +1,11 @@
 # wengwengweng
 
 == DOING
-- fix fullscreen framebuffer weirdness
 - integrate truetype font with shape
 - calculate vertex normals
 - text wrapping
 - fix ttf flashing first frame
+- fix resize framebuffer weirdness
 
 == TODO
 - http less allocation / copying
@@ -37,4 +37,5 @@
 - basic truetype support
 - custom shader
 - inverse matrix
+- fix fullscreen framebuffer weirdness
 
