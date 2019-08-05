@@ -72,10 +72,12 @@ impl gfx::DrawCmd for &Sprite {
 }
 
 struct Game {
+
 	sprite: Sprite,
 	canvas: gfx::Canvas,
 	effect: gfx::Shader,
-// 	track: audio::Track,
+	pix_size: f32,
+
 }
 
 impl app::State for Game {
@@ -84,16 +86,18 @@ impl app::State for Game {
 
 		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/car.png"))?;
 		let mut sprite = Sprite::new(tex);
-// 		let track = audio::track(&audio::Sound::from_bytes(include_bytes!("res/yo.ogg"))?)?;
 
-// 		track.play();
 		sprite.slice(4, 1);
+
+		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
+
+		effect.send("size", 0.0);
 
 		return Ok(Self {
 			sprite: sprite,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
-			effect: gfx::Shader::effect(ctx, include_str!("res/noise.frag"))?,
-// 			track: track,
+			effect: effect,
+			pix_size: 0.0,
 		});
 
 	}
@@ -108,10 +112,12 @@ impl app::State for Game {
 		})?;
 
 		ctx.draw_with(&self.effect, |ctx| {
-// 			ctx.draw(&self.sprite)?;
 			ctx.draw(shapes::canvas(&self.canvas))?;
 			return Ok(());
 		})?;
+
+		self.pix_size = rand!() / 100.0;
+		self.effect.send("size", self.pix_size);
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
