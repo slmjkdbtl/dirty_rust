@@ -14,11 +14,12 @@ use window::Pos;
 pub trait Input {
 
 	fn down_keys(&self) -> HashSet<Key>;
+	fn rpressed_key(&self) -> Option<Key>;
 	fn key_down(&self, key: Key) -> bool;
 	fn key_pressed(&self, key: Key) -> bool;
 	fn key_released(&self, key: Key) -> bool;
 	fn key_up(&self, key: Key) -> bool;
-	fn key_pressed_repeat(&self, key: Key) -> bool;
+	fn key_rpressed(&self, key: Key) -> bool;
 	fn mouse_down(&self, mouse: Mouse) -> bool;
 	fn mouse_pressed(&self, mouse: Mouse) -> bool;
 	fn mouse_released(&self, mouse: Mouse) -> bool;
@@ -52,6 +53,10 @@ impl Input for app::Ctx {
 
 	}
 
+	fn rpressed_key(&self) -> Option<Key> {
+		return self.rpressed_key;
+	}
+
 	fn key_down(&self, key: Key) -> bool {
 		return self.key_state.get(&key) == Some(&ButtonState::Down) || self.key_pressed(key);
 	}
@@ -68,9 +73,8 @@ impl Input for app::Ctx {
 		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
 	}
 
-	fn key_pressed_repeat(&self, key: Key) -> bool {
-		// TODO: do this
-		unimplemented!();
+	fn key_rpressed(&self, key: Key) -> bool {
+		return self.rpressed_key == Some(key);
 	}
 
 	fn mouse_down(&self, mouse: Mouse) -> bool {
@@ -128,6 +132,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	ctx.mouse_delta = None;
 	ctx.scroll_delta = None;
 	ctx.text_input = None;
+	ctx.rpressed_key = None;
 
 	let mut keyboard_input = None;
 	let mut mouse_input = None;
@@ -191,20 +196,31 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	}
 
 	if let Some(input) = keyboard_input {
+
 		if let Some(kc) = input.virtual_keycode {
+
 			match input.state {
+
 				ElementState::Pressed => {
+
+					ctx.rpressed_key = Some(kc);
+
 					if ctx.key_up(kc) || ctx.key_released(kc) {
 						ctx.key_state.insert(kc, ButtonState::Pressed);
 					}
+
 				},
+
 				ElementState::Released => {
 					if ctx.key_down(kc) || ctx.key_pressed(kc) {
 						ctx.key_state.insert(kc, ButtonState::Released);
 					}
 				},
+
 			}
+
 		}
+
 	}
 
 	if let Some((button, state)) = mouse_input {

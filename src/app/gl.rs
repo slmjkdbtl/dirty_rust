@@ -138,6 +138,38 @@ impl Device {
 
 }
 
+pub struct Renderer<V: VertexLayout> {
+	vbuf: VertexBuffer<V>,
+	ibuf: IndexBuffer,
+	count: usize,
+	vertex: PhantomData<V>,
+}
+
+impl<V: VertexLayout> Renderer<V> {
+
+	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
+
+		let vbuf = VertexBuffer::<V>::new(&device, verts.len() / V::STRIDE, BufferUsage::Static)?;
+		let ibuf = IndexBuffer::new(&device, indices.len(), BufferUsage::Static)?;
+
+		vbuf.data(0, &verts);
+		ibuf.data(0, &indices);
+
+		return Ok(Self {
+			vbuf: vbuf,
+			ibuf: ibuf,
+			count: indices.len(),
+			vertex: PhantomData,
+		});
+
+	}
+
+	pub fn draw(&self, device: &Device, program: &Program) {
+		device.draw(&self.vbuf, &self.ibuf, &program, self.count as u32, DrawMode::Triangle);
+	}
+
+}
+
 pub struct BatchedRenderer<S: Shape> {
 
 	vbuf: VertexBuffer<S::Vertex>,
