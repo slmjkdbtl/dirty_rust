@@ -72,12 +72,10 @@ impl gfx::DrawCmd for &Sprite {
 }
 
 struct Game {
-
 	sprite: Sprite,
 	canvas: gfx::Canvas,
 	effect: gfx::Shader,
 	pix_size: f32,
-
 }
 
 impl app::State for Game {

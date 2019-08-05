@@ -63,7 +63,7 @@ impl<'a> DrawCmd for Sprite<'a> {
 		ctx.push();
 		ctx.scale(scale);
 		ctx.translate(self.offset * -0.5);
-		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.texture_origin, self.flip))?;
+		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.quad_origin, self.flip))?;
 		ctx.pop()?;
 
 		return Ok(());

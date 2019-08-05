@@ -112,7 +112,7 @@ pub struct Ctx {
 
 	// gfx
 	pub(self) origin: gfx::Origin,
-	pub(self) texture_origin: gfx::Origin,
+	pub(self) quad_origin: gfx::Origin,
 
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
@@ -270,7 +270,7 @@ impl Ctx {
 
 			gl: gl,
 			origin: conf.origin,
-			texture_origin: conf.texture_origin,
+			quad_origin: conf.quad_origin,
 			batched_renderer: batched_renderer,
 
 			proj_2d: proj_2d,
@@ -478,8 +478,8 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn texture_origin(mut self, o: Origin) -> Self {
-		self.conf.texture_origin = o;
+	pub fn quad_origin(mut self, o: Origin) -> Self {
+		self.conf.quad_origin = o;
 		return self;
 	}
 
@@ -510,7 +510,7 @@ pub struct Conf {
 	pub cursor_locked: bool,
 	pub clear_color: Color,
 	pub origin: Origin,
-	pub texture_origin: Origin,
+	pub quad_origin: Origin,
 	pub fps_cap: Option<u16>,
 }
 
@@ -549,7 +549,7 @@ impl Default for Conf {
 			cursor_locked: false,
 			clear_color: color!(0, 0, 0, 1),
 			origin: Origin::Center,
-			texture_origin: Origin::Center,
+			quad_origin: Origin::Center,
 			fps_cap: Some(60),
 		};
 	}
