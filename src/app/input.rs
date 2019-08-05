@@ -140,6 +140,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	let mut mouse_wheel = None;
 	let mut mouse_delta = None;
 	let mut text_input = None;
+	let mut resized = None;
 	let mut close = false;
 
 	ctx.events_loop.poll_events(|e| {
@@ -169,6 +170,10 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 				ReceivedCharacter(ch) => {
 					text_input.get_or_insert(String::new()).push(ch);
+				},
+
+				Resized(size) => {
+					resized = Some(size);
 				},
 
 				CloseRequested => close = true,

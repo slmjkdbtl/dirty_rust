@@ -29,6 +29,7 @@ default = [
 	"http",
 	"term",
 	"geom",
+# 	"ui",
 
 	# features
 # 	"ase",
@@ -92,6 +93,7 @@ texpack = [
 ]
 
 gl3 = []
+ui = []
 
 [dependencies]
 rand = "0.7"

@@ -104,20 +104,8 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 // 		})?);
 // 	})?;
 
-	fs.set("read_async", ctx.create_function(|_, (path): (String)| {
-		return Ok(thread::exec(move || {
-			return fs::read(&path).ok();
-		}));
-	})?)?;
-
 	fs.set("read_str", ctx.create_function(|_, (path): (String)| {
 		return Ok(fs::read_str(&path)?);
-	})?)?;
-
-	fs.set("read_str_async", ctx.create_function(|_, (path): (String)| {
-		return Ok(thread::exec(move || {
-			return fs::read_str(&path).ok();
-		}));
 	})?)?;
 
 	fs.set("basename", ctx.create_function(|_, (path): (String)| {
@@ -438,12 +426,6 @@ fn bind_audio(ctx: &Context) -> Result<()> {
 
 	audio.set("read", ctx.create_function(|_, (p): (String)| {
 		return Ok(audio::Sound::from_file(&p)?);
-	})?)?;
-
-	audio.set("read_async", ctx.create_function(|_, (path): (String)| {
-		return Ok(thread::exec(move || {
-			return audio::Sound::from_file(&path).ok();
-		}));
 	})?)?;
 
 	ctx.add_module("audio", audio)?;
@@ -861,34 +843,9 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 
 }
 
-fn bind_thread(ctx: &Context) -> Result<()> {
-
-	let globals = ctx.globals();
-
-	impl<'a, T: Send + Clone + 'static + for<'lua> ToLua<'lua>> UserData for thread::Task<T> {
-
-		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-
-			methods.add_method_mut("poll", |_, t: &mut thread::Task<T>, (): ()| {
-				return Ok(t.poll());
-			});
-
-		}
-
-	}
-
-	globals.set("sleep", ctx.create_function(|_, (t): (u64)| {
-		return Ok(std::thread::sleep(std::time::Duration::from_millis(t)));
-	})?)?;
-
-	return Ok(());
-
-}
-
 fn bind(ctx: &Context) -> Result<()> {
 
 	bind_vec(&ctx)?;
-	bind_thread(&ctx)?;
 
 	#[cfg(feature = "fs")]
 	bind_fs(&ctx)?;

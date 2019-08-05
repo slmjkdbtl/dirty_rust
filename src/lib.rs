@@ -9,7 +9,7 @@
 #![deny(clippy::implicit_return)]
 
 pub mod math;
-pub mod thread;
+pub mod task;
 
 #[cfg(feature = "app")]
 pub mod app;

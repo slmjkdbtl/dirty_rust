@@ -105,6 +105,7 @@ impl app::State for Game {
 		self.sprite.next();
 
 		ctx.draw_on(&self.canvas, |ctx| {
+			ctx.clear();
 			ctx.draw(&self.sprite)?;
 			return Ok(());
 		})?;
@@ -136,6 +137,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
+		.resizable(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}
