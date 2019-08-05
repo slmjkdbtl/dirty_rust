@@ -232,7 +232,6 @@ pub(super) fn flush(ctx: &mut Ctx) {
 	if let Some(tex) = &ctx.cur_tex {
 
 		tex.handle.bind();
-		ctx.cur_shader_2d.send("proj", ctx.proj_2d);
 		ctx.batched_renderer.flush(&ctx.gl, &ctx.cur_shader_2d.handle);
 		tex.handle.unbind();
 		ctx.draw_calls += 1;
@@ -324,6 +323,7 @@ impl Gfx for Ctx {
 
 		flush(self);
 		self.cur_shader_2d = shader.clone();
+		self.cur_shader_2d.send("proj", self.proj_2d);
 		f(self)?;
 		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
