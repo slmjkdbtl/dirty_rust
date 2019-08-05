@@ -153,11 +153,8 @@ impl<V: VertexLayout> Renderer<V> {
 
 	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
 
-		let vbuf = VertexBuffer::<V>::new(&device, verts.len() / V::STRIDE, BufferUsage::Static)?;
-		let ibuf = IndexBuffer::new(&device, indices.len(), BufferUsage::Static)?;
-
-		vbuf.data(0, &verts);
-		ibuf.data(0, &indices);
+		let vbuf = VertexBuffer::<V>::init(&device, BufferUsage::Static, &verts)?;
+		let ibuf = IndexBuffer::init(&device, BufferUsage::Static, &indices)?;
 
 		#[cfg(feature="gl3")]
 		let vao = VertexArray::init(&device, &vbuf)?;
@@ -218,7 +215,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 			.collect();
 
-		let vbuf = VertexBuffer::new(&device, S::COUNT * max, BufferUsage::Dynamic)?;
+		let vbuf = VertexBuffer::new(&device, vert_count * vert_stride * max, BufferUsage::Dynamic)?;
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Static)?;
 
 		ibuf.data(0, &indices_batch);
@@ -473,7 +470,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 			buf.ctx.buffer_data_size(
 				glow::ARRAY_BUFFER,
-				(count * V::STRIDE * mem::size_of::<f32>()) as i32,
+				(count * mem::size_of::<f32>()) as i32,
 				usage.into(),
 			);
 
@@ -482,6 +479,14 @@ impl<V: VertexLayout> VertexBuffer<V> {
 			return Ok(buf);
 
 		}
+
+	}
+
+	pub fn init(device: &Device, usage: BufferUsage, data: &[f32]) -> Result<Self> {
+
+		let buf = Self::new(device, data.len(), usage)?;
+		buf.data(0, data);
+		return Ok(buf);
 
 	}
 
@@ -522,7 +527,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	// TODO: change this to take V
+	// TODO: change this to take V?
 	pub fn data(&self, offset: usize, data: &[f32]) {
 
 		unsafe {
@@ -594,6 +599,14 @@ impl IndexBuffer {
 			return Ok(buf);
 
 		}
+
+	}
+
+	pub fn init(device: &Device, usage: BufferUsage, data: &[u32]) -> Result<Self> {
+
+		let buf = Self::new(device, data.len(), usage)?;
+		buf.data(0, data);
+		return Ok(buf);
 
 	}
 
@@ -708,6 +721,14 @@ impl Texture {
 			return Ok(tex);
 
 		}
+
+	}
+
+	pub fn init(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
+
+		let tex = Self::new(device, width, height)?;
+		tex.data(0, 0, width, height, data);
+		return Ok(tex);
 
 	}
 

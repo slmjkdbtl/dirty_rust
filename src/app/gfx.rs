@@ -381,9 +381,7 @@ impl Texture {
 
 		let w = img.width() as i32;
 		let h = img.height() as i32;
-		let handle = gl::Texture::new(&ctx.gl, w, h)?;
-
-		handle.data(0, 0, w, h, &img.into_raw());
+		let handle = gl::Texture::init(&ctx.gl, w, h, &img.into_raw())?;
 
 		return Ok(Self::from_handle(handle, w as u32, h as u32));
 
@@ -401,8 +399,7 @@ impl Texture {
 
 	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
 
-		let handle = gl::Texture::new(&ctx.gl, w as i32, h as i32)?;
-		handle.data(0, 0, w as i32, h as i32, &pixels);
+		let handle = gl::Texture::init(&ctx.gl, w as i32, h as i32, &pixels)?;
 		return Ok(Self::from_handle(handle, w, h));
 
 	}
@@ -670,7 +667,7 @@ impl Model {
 		let count = positions.len() / 3;
 
 		// TODO: calculate normals
-		let mut queue = Vec::with_capacity(count * Vertex3D::STRIDE);
+		let mut verts = Vec::with_capacity(count * Vertex3D::STRIDE);
 
 		for i in 0..count {
 
@@ -682,11 +679,11 @@ impl Model {
 			let nz = normals.get(i * 3 + 2).unwrap_or(&0.0);
 			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz));
 
-			vert.push(&mut queue);
+			vert.push(&mut verts);
 
 		}
 
-		let renderer = gl::Renderer::new(&ctx.gl, &queue, indices)?;
+		let renderer = gl::Renderer::new(&ctx.gl, &verts, indices)?;
 
 		return Ok(Self {
 			renderer: Rc::new(renderer),
