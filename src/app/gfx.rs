@@ -322,6 +322,7 @@ impl Gfx for Ctx {
 	// TODO: user shader black screen
 	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
+		flush(self);
 		self.cur_shader_2d = shader.clone();
 		f(self)?;
 		flush(self);
@@ -564,22 +565,20 @@ impl Canvas {
 pub struct Vertex3D {
 	pos: Vec3,
 	normal: Vec3,
-	color: Color,
 }
 
 impl Vertex3D {
-	fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
+	fn new(pos: Vec3, normal: Vec3) -> Self {
 		return Self {
 			pos: pos,
 			normal: normal,
-			color: color,
 		};
 	}
 }
 
 impl VertexLayout for Vertex3D {
 
-	const STRIDE: usize = 10;
+	const STRIDE: usize = 6;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
@@ -589,10 +588,6 @@ impl VertexLayout for Vertex3D {
 			self.normal.x,
 			self.normal.y,
 			self.normal.z,
-			self.color.r,
-			self.color.g,
-			self.color.b,
-			self.color.a,
 		]);
 	}
 
@@ -601,7 +596,6 @@ impl VertexLayout for Vertex3D {
 		return gl::VertexAttrGroup::build()
 			.add("pos", 3)
 			.add("normal", 3)
-			.add("color", 4)
 			;
 
 	}
@@ -649,10 +643,9 @@ impl Camera {
 
 }
 
+#[derive(Clone)]
 pub struct Model {
-	pub(super) vbuf: gl::VertexBuffer<Vertex3D>,
-	pub(super) ibuf: gl::IndexBuffer,
-	pub(super) len: usize,
+	pub(super) renderer: Rc<gl::Renderer<Vertex3D>>,
 }
 
 impl Model {
@@ -667,9 +660,6 @@ impl Model {
 		let count = positions.len() / 3;
 
 		// TODO: calculate normals
-
-		let vbuf = gl::VertexBuffer::<Vertex3D>::new(&ctx.gl, count, gl::BufferUsage::Static)?;
-		let ibuf = gl::IndexBuffer::new(&ctx.gl, mesh.indices.len(), gl::BufferUsage::Static)?;
 		let mut queue = Vec::with_capacity(count * Vertex3D::STRIDE);
 
 		for i in 0..count {
@@ -680,19 +670,16 @@ impl Model {
 			let nx = normals.get(i * 3 + 0).unwrap_or(&0.0);
 			let ny = normals.get(i * 3 + 1).unwrap_or(&0.0);
 			let nz = normals.get(i * 3 + 2).unwrap_or(&0.0);
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz), color!(1));
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz));
 
 			vert.push(&mut queue);
 
 		}
 
-		vbuf.data(0, &queue);
-		ibuf.data(0, &indices);
+		let renderer = gl::Renderer::new(&ctx.gl, &queue, indices)?;
 
 		return Ok(Self {
-			vbuf: vbuf,
-			ibuf: ibuf,
-			len: mesh.indices.len(),
+			renderer: Rc::new(renderer),
 		});
 
 	}

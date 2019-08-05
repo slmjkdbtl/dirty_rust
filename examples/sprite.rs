@@ -102,13 +102,14 @@ impl app::State for Game {
 
 		self.sprite.next();
 
-		ctx.draw_on(&self.canvas, |ctx| {
-			ctx.draw(&self.sprite)?;
-			return Ok(());
-		})?;
+// 		ctx.draw_on(&self.canvas, |ctx| {
+// 			ctx.draw(&self.sprite)?;
+// 			return Ok(());
+// 		})?;
 
+		ctx.draw(&self.sprite)?;
 // 		ctx.draw_with(&self.effect, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas))?;
+// 			ctx.draw(&self.sprite)?;
 // 			return Ok(());
 // 		})?;
 

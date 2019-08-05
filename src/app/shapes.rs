@@ -329,12 +329,21 @@ impl<'a> DrawCmd for Canvas<'a> {
 
 pub struct Model<'a> {
 	model: &'a gfx::Model,
+	color: Color,
 }
 
 pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
 	return Model {
 		model: m,
+		color: color!(1),
 	};
+}
+
+impl<'a> Model<'a> {
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
+		return self;
+	}
 }
 
 impl<'a> DrawCmd for Model<'a> {
@@ -342,8 +351,9 @@ impl<'a> DrawCmd for Model<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.cur_shader_3d.send("model", ctx.transform);
-		#[cfg(not(feature = "gl3"))]
-		ctx.gl.draw(&self.model.vbuf, &self.model.ibuf, &ctx.cur_shader_3d.handle, self.model.len as u32, gl::DrawMode::Triangle);
+		ctx.cur_shader_3d.send("color", self.color);
+		self.model.renderer.draw(&ctx.gl, &ctx.cur_shader_3d.handle);
+		ctx.cur_shader_3d.send("color", color!(1));
 
 		return Ok(());
 

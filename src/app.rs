@@ -78,6 +78,7 @@ const DEFAULT_FONT_COLS: usize = 32;
 const DEFAULT_FONT_ROWS: usize = 8;
 const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
 
+// TODO: make this lighter
 /// Manages Ctx
 pub struct Ctx {
 
@@ -90,6 +91,7 @@ pub struct Ctx {
 
 	// input
 	pub(self) key_state: HashMap<Key, ButtonState>,
+	pub(self) rpressed_key: Option<Key>,
 	pub(self) mouse_state: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Pos,
 	pub(self) mouse_delta: Option<Pos>,
@@ -249,6 +251,7 @@ impl Ctx {
 			fps_counter: FPSCounter::new(),
 
 			key_state: HashMap::new(),
+			rpressed_key: None,
 			mouse_state: HashMap::new(),
 			mouse_pos: Pos::new(0, 0),
 			mouse_delta: None,
