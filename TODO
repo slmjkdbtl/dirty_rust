@@ -4,7 +4,6 @@
 - fix fullscreen framebuffer weirdness
 - integrate truetype font with shape
 - calculate vertex normals
-- inverse matrix
 - text wrapping
 - fix ttf flashing first frame
 
@@ -12,8 +11,10 @@
 - http less allocation / copying
 - gamepads
 - ketos
+- python
 - use rustls instead of native-tls
 - clearer error messages
+- asset manager
 - better http response api
 - add some dirty::CONSTANTs
 - use Future on assets
@@ -35,4 +36,5 @@
 - 3d camera
 - basic truetype support
 - custom shader
+- inverse matrix
 

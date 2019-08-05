@@ -605,3 +605,24 @@ impl FPSCounter {
 
 }
 
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum Platform {
+	Mobile,
+	Desktop,
+	Web,
+	Unknown,
+}
+
+pub fn platform() -> Platform {
+
+	#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+	return Platform::Desktop;
+	#[cfg(any(target_os = "ios", target_os = "android"))]
+	return Platform::Mobile;
+	#[cfg(target_arch = "wasm32")]
+	return Platform::Web;
+
+	return Platform::Unknown;
+
+}
+
