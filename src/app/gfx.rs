@@ -38,8 +38,8 @@ pub trait Gfx {
 	fn reset(&mut self);
 
 	// TODO
-	fn look(&mut self, yaw: f32, pitch: f32);
-	fn pos(&mut self, pos: Vec3);
+	fn cam_look(&mut self, yaw: f32, pitch: f32);
+	fn cam_pos(&mut self, pos: Vec3);
 
 }
 
@@ -232,6 +232,7 @@ pub(super) fn flush(ctx: &mut Ctx) {
 	if let Some(tex) = &ctx.cur_tex {
 
 		tex.handle.bind();
+		ctx.cur_shader_2d.send("proj", ctx.proj_2d);
 		ctx.batched_renderer.flush(&ctx.gl, &ctx.cur_shader_2d.handle);
 		tex.handle.unbind();
 		ctx.draw_calls += 1;
@@ -319,7 +320,6 @@ impl Gfx for Ctx {
 
 	}
 
-	// TODO: user shader black screen
 	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
 
 		flush(self);
@@ -337,14 +337,14 @@ impl Gfx for Ctx {
 	}
 
 	// TODO
-	fn look(&mut self, yaw: f32, pitch: f32) {
+	fn cam_look(&mut self, yaw: f32, pitch: f32) {
 		self.cam_3d.set_angle(yaw, pitch);
-		self.default_shader_3d.send("view", self.cam_3d.as_mat());
+		self.cur_shader_3d.send("view", self.cam_3d.as_mat());
 	}
 
-	fn pos(&mut self, pos: Vec3) {
+	fn cam_pos(&mut self, pos: Vec3) {
 		self.cam_3d.set_pos(pos);
-		self.default_shader_3d.send("view", self.cam_3d.as_mat());
+		self.cur_shader_3d.send("view", self.cam_3d.as_mat());
 	}
 
 }

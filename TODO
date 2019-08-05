@@ -1,13 +1,12 @@
 # wengwengweng
 
 == DOING
-- custom shader
 - better gl abstraction
 - fix fullscreen framebuffer weirdness
 - integrate truetype font with shape
 - calculate vertex normals
 - inverse matrix
-- imgui integration
+- text wrapping
 
 == TODO
 - http less allocation / copying
@@ -18,6 +17,7 @@
 - better http response api
 - add some dirty::CONSTANTs
 - use Future on assets
+- imgui integration
 
 == DONE
 - refactor http
@@ -34,4 +34,5 @@
 - move color to shape parameter
 - 3d camera
 - basic truetype support
+- custom shader
 

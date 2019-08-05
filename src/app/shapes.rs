@@ -77,9 +77,14 @@ pub struct Text<'a> {
 	font: Option<&'a gfx::Font>,
 	color: Color,
 	offset: Vec2,
+	wrap: Option<u32>,
 }
 
 impl<'a> Text<'a> {
+	pub fn text(mut self, txt: &'a str) -> Self {
+		self.txt = txt;
+		return self;
+	}
 	pub fn font(mut self, font: &'a gfx::Font) -> Self {
 		self.font = Some(font);
 		return self;
@@ -92,6 +97,10 @@ impl<'a> Text<'a> {
 		self.offset = offset;
 		return self;
 	}
+	pub fn wrap(mut self, wrap: u32) -> Self {
+		self.wrap = Some(wrap);
+		return self;
+	}
 }
 
 pub fn text<'a>(txt: &'a str) -> Text<'a> {
@@ -100,6 +109,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 		font: None,
 		offset: vec2!(0),
 		color: color!(1),
+		wrap: None,
 	};
 }
 

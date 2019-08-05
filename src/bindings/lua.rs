@@ -288,6 +288,10 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(ctx.key_pressed(input::str_to_key(&k).ok_or(Error::Input)?));
 			});
 
+			methods.add_method("key_rpressed", |_, ctx, (k): (String)| {
+				return Ok(ctx.key_rpressed(input::str_to_key(&k).ok_or(Error::Input)?));
+			});
+
 			methods.add_method("key_down", |_, ctx, (k): (String)| {
 				return Ok(ctx.key_down(input::str_to_key(&k).ok_or(Error::Input)?));
 			});
@@ -345,12 +349,10 @@ fn bind_app(ctx: &Context) -> Result<()> {
 
 		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 
-			use app::*;
-
 			methods.add_method_mut("init", |ctx, app, (cb): (Function)| {
 				ctx.scope(|s| -> rlua::Result<()> {
 					return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(app)?)?);
-				});
+				})?;
 				return Ok(());
 			});
 
@@ -358,7 +360,7 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(app.run(|c| {
 					ctx.scope(|s| -> rlua::Result<()> {
 						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
-					});
+					})?;
 					return Ok(());
 				})?);
 			});
@@ -785,12 +787,55 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 
 	}
 
-	impl UserData for Vec3 {}
+	impl UserData for Vec3 {
+
+		fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+
+			methods.add_meta_method(MetaMethod::Index, |_, this, key: String| {
+				match key.as_ref() {
+					"x" => Ok(this.x),
+					"y" => Ok(this.y),
+					"z" => Ok(this.z),
+					_ => Err(Error::Lua.into()),
+				}
+			});
+
+			methods.add_meta_method(MetaMethod::Mul, |_, this, s: f32| {
+				return Ok(*this * s);
+			});
+
+			methods.add_meta_method(MetaMethod::Div, |_, this, s: f32| {
+				return Ok(*this / s);
+			});
+
+			methods.add_meta_method(MetaMethod::Add, |_, this, other: Vec3| {
+				return Ok(*this + other);
+			});
+
+			methods.add_meta_method(MetaMethod::Sub, |_, this, other: Vec3| {
+				return Ok(*this - other);
+			});
+
+			methods.add_meta_method(MetaMethod::Unm, |_, this, _: ()| {
+				return Ok(-*this);
+			});
+
+			methods.add_meta_method(MetaMethod::Eq, |_, this, other: Vec3| {
+				return Ok(*this == other);
+			});
+
+			methods.add_meta_method(MetaMethod::ToString, |_, this, _: ()| {
+				return Ok(format!("{}", this));
+			});
+
+		}
+
+	}
+
 	impl UserData for Vec4 {}
 	impl UserData for Mat4 {}
 	impl UserData for Color {}
 	impl UserData for Quad {}
-	impl UserData for app::window::Pos {}
 
 	globals.set("vec2", ctx.create_function(|_, (x, y): (f32, f32)| {
 		return Ok(vec2!(x, y));
