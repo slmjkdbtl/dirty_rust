@@ -27,6 +27,9 @@ doc crate="dirty":
 update:
 	cargo update
 
+bloat:
+	cargo bloat --release --crates
+
 loc:
 	loc
 

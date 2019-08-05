@@ -160,9 +160,7 @@ impl<V: VertexLayout> Renderer<V> {
 		ibuf.data(0, &indices);
 
 		#[cfg(feature="gl3")]
-		let vao = VertexArray::new(&device)?;
-		#[cfg(feature="gl3")]
-		vao.attr(&vbuf);
+		let vao = VertexArray::init(&device, &vbuf)?;
 
 		return Ok(Self {
 			vbuf: vbuf,
@@ -228,9 +226,7 @@ impl<S: Shape> BatchedRenderer<S> {
 		let queue = Vec::with_capacity(max_vertices);
 
 		#[cfg(feature="gl3")]
-		let vao = VertexArray::new(&device)?;
-		#[cfg(feature="gl3")]
-		vao.attr(&vbuf);
+		let vao = VertexArray::init(&device, &vbuf)?;
 
 		return Ok(Self {
 			vbuf: vbuf,
@@ -391,6 +387,14 @@ impl VertexArray {
 		unsafe {
 			self.ctx.bind_vertex_array(None);
 		}
+	}
+
+	pub fn init<V: VertexLayout>(device: &Device, vbuf: &VertexBuffer<V>) -> Result<Self> {
+
+		let vao = Self::new(device)?;
+		vao.attr(vbuf);
+		return Ok(vao);
+
 	}
 
 	pub fn attr<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>) {

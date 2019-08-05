@@ -16,7 +16,7 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		ctx.pos(vec3!(0, 0, 60));
+		ctx.cam_pos(vec3!(0, 0, 60));
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
@@ -36,8 +36,8 @@ impl app::State for Game {
 		ctx.rotate3d(ctx.time(), vec3!(0, 1, 0));
 		ctx.scale3d(vec3!(4, 4, 4));
 		ctx.draw(shapes::model(&self.model).color(color!(0, 0, 1, 1)))?;
-		ctx.pos(self.pos);
-		ctx.look(self.rx.to_radians(), self.ry.to_radians());
+		ctx.cam_pos(self.pos);
+		ctx.cam_look(self.rx.to_radians(), self.ry.to_radians());
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		if ctx.key_down(Key::W) {
