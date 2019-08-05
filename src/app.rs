@@ -78,6 +78,11 @@ const DEFAULT_FONT_COLS: usize = 32;
 const DEFAULT_FONT_ROWS: usize = 8;
 const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
 
+// const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/proggy.png");
+// const DEFAULT_FONT_COLS: usize = 95;
+// const DEFAULT_FONT_ROWS: usize = 1;
+// const DEFAULT_FONT_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
+
 // TODO: make this lighter
 /// Manages Ctx
 pub struct Ctx {

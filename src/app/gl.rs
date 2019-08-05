@@ -210,15 +210,13 @@ impl<S: Shape> BatchedRenderer<S> {
 		let indices_batch: Vec<u32> = indices
 			.iter()
 			.cycle()
-			.take(max * indices.len())
+			.take(max_indices)
 			.enumerate()
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
 			.collect();
 
 		let vbuf = VertexBuffer::new(&device, vert_count * vert_stride * max, BufferUsage::Dynamic)?;
 		let ibuf = IndexBuffer::init(&device, &indices_batch)?;
-
-		let queue = Vec::with_capacity(max_vertices);
 
 		#[cfg(feature="gl3")]
 		let vao = VertexArray::init(&device, &vbuf)?;
@@ -228,7 +226,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			ibuf: ibuf,
 			#[cfg(feature="gl3")]
 			vao: vao,
-			queue: queue,
+			queue: Vec::with_capacity(max_vertices),
 			shape: PhantomData,
 		});
 

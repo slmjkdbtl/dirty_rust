@@ -515,6 +515,7 @@ impl Shader {
 
 }
 
+// TODO: fix fullscreen framebuffer weirdness
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
 
@@ -820,6 +821,11 @@ impl TrueTypeFont {
 
 	}
 
+}
+
+pub(super) enum ActiveShader {
+	Default,
+	User(Shader),
 }
 
 pub trait DrawCmd {

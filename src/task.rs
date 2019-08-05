@@ -4,6 +4,10 @@
 
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
+use std::future::Future;
+use std::task::Context;
+use std::task::Poll;
+use std::pin::Pin;
 use std::thread;
 
 pub struct Pool {
@@ -56,14 +60,18 @@ impl<T> Task<T> {
 		};
 	}
 
-	pub fn poll(&mut self) -> Option<T> {
+}
 
+impl<T> Future for Task<T> {
+
+	type Output = T;
+
+	fn poll(self: Pin<&mut Self>, _: &mut Context) -> Poll<Self::Output> {
 		if let Ok(data) = self.rx.try_recv() {
-			return Some(data);
+			return Poll::Ready(data);
 		} else {
-			return None;
+			return Poll::Pending;
 		}
-
 	}
 
 }
