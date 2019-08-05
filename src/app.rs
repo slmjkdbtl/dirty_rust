@@ -206,8 +206,7 @@ impl Ctx {
 
 		let batched_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
 
-		let mut empty_tex = gl::Texture::new(&gl, 1, 1)?;
-		empty_tex.data(0, 0, 1, 1, &[255, 255, 255, 255]);
+		let empty_tex = gl::Texture::init(&gl, 1, 1, &[255; 4])?;
 		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
 
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
@@ -231,8 +230,7 @@ impl Ctx {
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_width = font_img.width();
 		let font_height = font_img.height();
-		let font_tex = gl::Texture::new(&gl, font_img.width() as i32, font_img.height() as i32)?;
-		font_tex.data(0, 0, font_width as i32, font_height as i32, &font_img.into_raw());
+		let font_tex = gl::Texture::init(&gl, font_width as i32, font_height as i32, &font_img.into_raw())?;
 		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
 
 		let font = gfx::Font::from_tex(
@@ -257,12 +255,13 @@ impl Ctx {
 			mouse_delta: None,
 			scroll_delta: None,
 			text_input: None,
-			fullscreen: conf.fullscreen,
-			cursor_hidden: conf.cursor_hidden,
-			cursor_locked: conf.cursor_locked,
+
 			title: conf.title.to_owned(),
 			width: conf.width,
 			height: conf.height,
+			fullscreen: conf.fullscreen,
+			cursor_hidden: conf.cursor_hidden,
+			cursor_locked: conf.cursor_locked,
 
 			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
