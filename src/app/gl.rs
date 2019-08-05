@@ -139,10 +139,14 @@ impl Device {
 }
 
 pub struct Renderer<V: VertexLayout> {
+
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
+	#[cfg(feature="gl3")]
+	vao: VertexArray,
 	count: usize,
 	vertex: PhantomData<V>,
+
 }
 
 impl<V: VertexLayout> Renderer<V> {
@@ -155,9 +159,16 @@ impl<V: VertexLayout> Renderer<V> {
 		vbuf.data(0, &verts);
 		ibuf.data(0, &indices);
 
+		#[cfg(feature="gl3")]
+		let vao = VertexArray::new(&device)?;
+		#[cfg(feature="gl3")]
+		vao.attr(&vbuf);
+
 		return Ok(Self {
 			vbuf: vbuf,
 			ibuf: ibuf,
+			#[cfg(feature="gl3")]
+			vao: vao,
 			count: indices.len(),
 			vertex: PhantomData,
 		});
@@ -165,7 +176,17 @@ impl<V: VertexLayout> Renderer<V> {
 	}
 
 	pub fn draw(&self, device: &Device, program: &Program) {
-		device.draw(&self.vbuf, &self.ibuf, &program, self.count as u32, DrawMode::Triangle);
+		device.draw(
+			#[cfg(feature="gl3")]
+			&self.vao,
+			#[cfg(not(feature="gl3"))]
+			&self.vbuf,
+			&self.ibuf,
+			&program,
+			self.count as u32,
+			DrawMode::Triangle,
+		);
+
 	}
 
 }
@@ -243,17 +264,10 @@ impl<S: Shape> BatchedRenderer<S> {
 
 		self.vbuf.data(0, &self.queue);
 
-		#[cfg(feature="gl3")]
 		device.draw(
+			#[cfg(feature="gl3")]
 			&self.vao,
-			&self.ibuf,
-			&program,
-			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
-			DrawMode::Triangle,
-		);
-
-		#[cfg(not(feature="gl3"))]
-		device.draw(
+			#[cfg(not(feature="gl3"))]
 			&self.vbuf,
 			&self.ibuf,
 			&program,
