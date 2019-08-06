@@ -21,12 +21,19 @@ pub use gl::UniformType;
 
 pub trait Gfx {
 
+	// clearing
 	fn clear_color(&self, c: Color);
 	fn clear(&self);
+
+	// stats
 	fn draw_calls(&self) -> usize;
+
+	// drawing
 	fn draw(&mut self, t: impl DrawCmd) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_with(&mut self, shader: &Shader, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
+
+	// transform
 	fn push(&mut self);
 	fn pop(&mut self) -> Result<()>;
 	fn translate(&mut self, pos: Vec2);
@@ -36,12 +43,16 @@ pub trait Gfx {
 	fn rotate3d(&mut self, angle: f32, axis: Vec3);
 	fn scale3d(&mut self, scale: Vec3);
 	fn matrix(&self) -> Mat4;
-	fn apply_matrix(&mut self, m: Mat4);
+	fn apply(&mut self, m: Mat4);
 	fn reset(&mut self);
 
-	// TODO
+	// stencil
+	fn stencil(&mut self, func: impl FnOnce(&mut Self), draw: impl FnOnce(&mut Self)) -> Result<()>;
+
+	// camera
 	fn cam_look(&mut self, yaw: f32, pitch: f32);
 	fn cam_pos(&mut self, pos: Vec3);
+	fn cam_front(&self) -> Vec3;
 
 }
 
@@ -293,7 +304,7 @@ impl Gfx for Ctx {
 		return self.transform;
 	}
 
-	fn apply_matrix(&mut self, m: Mat4) {
+	fn apply(&mut self, m: Mat4) {
 		self.transform = m;
 	}
 
@@ -349,6 +360,15 @@ impl Gfx for Ctx {
 
 	}
 
+	fn stencil(&mut self, func: impl FnOnce(&mut Self), draw: impl FnOnce(&mut Self)) -> Result<()> {
+
+		self.gl.enable(gl::Capability::StencilTest);
+		self.gl.stencil_mask(0xff);
+
+		return Ok(());
+
+	}
+
 	// TODO
 	fn cam_look(&mut self, yaw: f32, pitch: f32) {
 		self.cam_3d.set_angle(yaw, pitch);
@@ -358,6 +378,10 @@ impl Gfx for Ctx {
 	fn cam_pos(&mut self, pos: Vec3) {
 		self.cam_3d.set_pos(pos);
 		self.cur_shader_3d.send("view", self.cam_3d.as_mat());
+	}
+
+	fn cam_front(&self) -> Vec3 {
+		return self.cam_3d.front;
 	}
 
 }
@@ -644,9 +668,9 @@ impl Camera {
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
-		self.front.x = pitch.cos() * (yaw - 90f32.to_radians()).cos();
+		self.front.x = pitch.cos() * (yaw + 90f32.to_radians()).cos();
 		self.front.y = pitch.sin();
-		self.front.z = pitch.cos() * (yaw - 90f32.to_radians()).sin();
+		self.front.z = pitch.cos() * (yaw + 90f32.to_radians()).sin();
 		self.front = self.front.unit();
 
 	}

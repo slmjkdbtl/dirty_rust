@@ -6,6 +6,7 @@
 - text wrapping
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
+- stencil buffer
 
 == TODO
 - http less allocation / copying

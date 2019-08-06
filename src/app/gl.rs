@@ -130,11 +130,18 @@ impl Device {
 		}
 	}
 
-    pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
-        unsafe {
-            self.ctx.viewport(x, y, width, height);
-        }
-    }
+	pub fn stencil_mask(&self, m: u32) {
+		unsafe {
+			self.ctx.stencil_mask(m);
+			self.ctx.stencil_func(glow::EQUAL, 1, 0xff);
+		}
+	}
+
+	pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
+		unsafe {
+			self.ctx.viewport(x, y, width, height);
+		}
+	}
 
 }
 
@@ -927,6 +934,12 @@ impl Framebuffer {
 			let ctx = device.ctx.clone();
 			let id = ctx.create_framebuffer()?;
 
+// 			let rbo = ctx.create_renderbuffer()?;
+
+// 			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
+// 			ctx.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, width, height);
+// 			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
+
 			let fbuf = Self {
 				ctx: ctx,
 				id: id,
@@ -941,6 +954,13 @@ impl Framebuffer {
 				Some(tex.id),
 				0,
 			);
+
+// 			fbuf.ctx.framebuffer_renderbuffer(
+// 				glow::FRAMEBUFFER,
+// 				glow::DEPTH_STENCIL_ATTACHMENT,
+// 				glow::RENDERBUFFER,
+// 				Some(rbo),
+// 			);
 
 			fbuf.unbind();
 
