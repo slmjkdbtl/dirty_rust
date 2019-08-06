@@ -112,14 +112,22 @@ impl app::State for Game {
 
 		self.sprite.next();
 
-// 		ctx.draw_on(&self.canvas, |ctx| {
-// 			ctx.clear();
-// 			ctx.draw(&self.sprite)?;
-// 			return Ok(());
-// 		})?;
+		ctx.draw_on(&self.canvas, |ctx| {
+			ctx.clear();
+			ctx.draw(&self.sprite)?;
+			return Ok(());
+		})?;
 
-// 		ctx.draw_with(&self.effect, |ctx| {
-// 			ctx.draw(shapes::canvas(&self.canvas))?;
+		ctx.draw_with(&self.effect, |ctx| {
+			ctx.draw(shapes::canvas(&self.canvas))?;
+			return Ok(());
+		})?;
+
+// 		ctx.draw_masked(|ctx| {
+// 			ctx.draw(shapes::rect(100.0, 100.0))?;
+// 			return Ok(());
+// 		}, |ctx| {
+// 			ctx.draw(&self.sprite)?;
 // 			return Ok(());
 // 		})?;
 
@@ -127,6 +135,10 @@ impl app::State for Game {
 		self.effect.send("size", self.pix_size);
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+
+		if ctx.key_pressed(Key::Space) {
+			self.canvas.capture("test.png");
+		}
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();
