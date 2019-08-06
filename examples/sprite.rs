@@ -110,16 +110,22 @@ impl app::State for Game {
 			return Ok(());
 		})?;
 
-		ctx.draw_with(&self.effect, |ctx| {
+		ctx.draw(shapes::rect(200.0, 200.0))?;
+
+// 		ctx.draw_with(&self.effect, |ctx| {
 // 			ctx.draw(&self.sprite)?;
 			ctx.draw(shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+// 			return Ok(());
+// 		})?;
 
 		self.pix_size = rand!() / 100.0;
 		self.effect.send("size", self.pix_size);
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+
+		if ctx.key_pressed(Key::Space) {
+			self.canvas.capture("test.png");
+		}
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();
@@ -138,7 +144,6 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.resizable(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}
