@@ -6,6 +6,7 @@
 - text wrapping
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
+- make gl lib stateless
 
 == TODO
 - http less allocation / copying
@@ -38,4 +39,5 @@
 - custom shader
 - inverse matrix
 - fix fullscreen framebuffer weirdness
+- stencil buffer
 

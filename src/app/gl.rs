@@ -62,7 +62,7 @@ impl Device {
 	}
 
 	#[cfg(feature="gl3")]
-	pub fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
+	fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
 
 		vao.bind();
 		ibuf.bind();
@@ -79,7 +79,7 @@ impl Device {
 	}
 
 	#[cfg(not(feature="gl3"))]
-	pub fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
+	fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
 
 		program.bind();
 		vbuf.bind();
@@ -126,15 +126,39 @@ impl Device {
 
 	pub fn clear(&self) {
 		unsafe {
-			self.ctx.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+			self.ctx.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT | glow::STENCIL_BUFFER_BIT);
 		}
 	}
 
-    pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
-        unsafe {
-            self.ctx.viewport(x, y, width, height);
-        }
-    }
+	pub fn clear_stencil(&self) {
+		unsafe {
+			self.ctx.clear_stencil(0);
+		}
+	}
+
+	pub fn stencil_op(&self, sfail: StencilOp, dpfail: StencilOp, dppass: StencilOp) {
+		unsafe {
+			self.ctx.stencil_op(sfail.into(), dpfail.into(), dppass.into());
+		}
+	}
+
+	pub fn stencil_mask(&self, m: u32) {
+		unsafe {
+			self.ctx.stencil_mask(m);
+		}
+	}
+
+	pub fn stencil_func(&self, f: StencilFunc, rf: i32, m: u32) {
+		unsafe {
+			self.ctx.stencil_func(f.into(), rf, m);
+		}
+	}
+
+	pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
+		unsafe {
+			self.ctx.viewport(x, y, width, height);
+		}
+	}
 
 }
 
@@ -145,6 +169,7 @@ pub struct Renderer<V: VertexLayout> {
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	count: usize,
+	mode: DrawMode,
 	vertex: PhantomData<V>,
 
 }
@@ -165,6 +190,7 @@ impl<V: VertexLayout> Renderer<V> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			count: indices.len(),
+			mode: DrawMode::Triangle,
 			vertex: PhantomData,
 		});
 
@@ -179,7 +205,7 @@ impl<V: VertexLayout> Renderer<V> {
 			&self.ibuf,
 			&program,
 			self.count as u32,
-			DrawMode::Triangle,
+			self.mode,
 		);
 
 	}
@@ -193,6 +219,7 @@ pub struct BatchedRenderer<S: Shape> {
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	queue: Vec<f32>,
+	mode: DrawMode,
 	shape: PhantomData<S>,
 
 }
@@ -227,6 +254,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			queue: Vec::with_capacity(max_vertices),
+			mode: DrawMode::Triangle,
 			shape: PhantomData,
 		});
 
@@ -261,7 +289,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			&self.ibuf,
 			&program,
 			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
-			DrawMode::Triangle,
+			self.mode,
 		);
 
 		self.queue.clear();
@@ -345,7 +373,7 @@ pub struct VertexAttr {
 
 }
 
-pub struct VertexArray {
+struct VertexArray {
 	ctx: Rc<GLCtx>,
 	id: VertexArrayID,
 }
@@ -435,7 +463,7 @@ impl PartialEq for VertexArray {
 	}
 }
 
-pub struct VertexBuffer<V: VertexLayout> {
+struct VertexBuffer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
 	id: BufferID,
@@ -662,7 +690,7 @@ pub struct Texture {
 
 impl Texture {
 
-	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
+	pub fn new(device: &Device, width: u32, height: u32) -> Result<Self> {
 
 		unsafe {
 
@@ -704,8 +732,8 @@ impl Texture {
 				glow::TEXTURE_2D,
 				0,
 				glow::RGBA as i32,
-				width,
-				height,
+				width as i32,
+				height as i32,
 				0,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
@@ -720,7 +748,7 @@ impl Texture {
 
 	}
 
-	pub fn init(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
+	pub fn init(device: &Device, width: u32, height: u32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(device, width, height)?;
 		tex.data(0, 0, width, height, data);
@@ -740,7 +768,7 @@ impl Texture {
 		}
 	}
 
-	pub fn data(&self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
+	pub fn data(&self, x: u32, y: u32, width: u32, height: u32, data: &[u8]) {
 
 		unsafe {
 
@@ -749,10 +777,10 @@ impl Texture {
 			self.ctx.tex_sub_image_2d_u8_slice(
 				glow::TEXTURE_2D,
 				0,
-				x,
-				y,
-				width,
-				height,
+				x as i32,
+				y as i32,
+				width as i32,
+				height as i32,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
 				Some(data),
@@ -927,6 +955,12 @@ impl Framebuffer {
 			let ctx = device.ctx.clone();
 			let id = ctx.create_framebuffer()?;
 
+			let rbo = ctx.create_renderbuffer()?;
+
+			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
+// 			ctx.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, width, height);
+			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
+
 			let fbuf = Self {
 				ctx: ctx,
 				id: id,
@@ -941,6 +975,17 @@ impl Framebuffer {
 				Some(tex.id),
 				0,
 			);
+
+// 			fbuf.ctx.framebuffer_renderbuffer(
+// 				glow::FRAMEBUFFER,
+// 				glow::DEPTH_STENCIL_ATTACHMENT,
+// 				glow::RENDERBUFFER,
+// 				Some(rbo),
+// 			);
+
+			if fbuf.ctx.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+				// ...
+			}
 
 			fbuf.unbind();
 
@@ -1040,6 +1085,26 @@ bind_enum!(BlendFac(u32) {
 	OneMinusConstantAlpha => glow::ONE_MINUS_CONSTANT_ALPHA,
 });
 
+bind_enum!(StencilOp(u32) {
+	Keep => glow::KEEP,
+	Zero => glow::ZERO,
+	Replace => glow::REPLACE,
+	Increment => glow::INCR,
+	Decrement => glow::DECR,
+	IncWrap => glow::INCR_WRAP,
+	DecWrap => glow::DECR_WRAP,
+	Invert => glow::INVERT,
+});
+
+bind_enum!(StencilFunc(u32) {
+	Always => glow::ALWAYS,
+	Never => glow::NEVER,
+	Equal => glow::EQUAL,
+	NotEqual => glow::NOTEQUAL,
+	Less => glow::LESS,
+	Greater => glow::GREATER,
+});
+
 bind_enum!(DrawMode(u32) {
 	Point => glow::POINT,
 	Line => glow::LINE,
@@ -1055,7 +1120,6 @@ bind_enum!(ShaderType(u32) {
 });
 
 bind_enum!(DepthFunc(u32) {
-
 	Never => glow::NEVER,
 	Less => glow::LESS,
 	Equal => glow::EQUAL,
@@ -1064,7 +1128,6 @@ bind_enum!(DepthFunc(u32) {
 	NotEqual => glow::NOTEQUAL,
 	GreaterOrEqual => glow::GEQUAL,
 	Always => glow::ALWAYS,
-
 });
 
 pub enum UniformType {

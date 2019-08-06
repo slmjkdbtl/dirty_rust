@@ -33,55 +33,7 @@ use gfx::Origin;
 
 const MAX_DRAWS: usize = 65536;
 
-#[cfg(feature="gl3")]
-const TEMPLATE_2D_VERT: &str = include_str!("res/2d_template_330.vert");
-#[cfg(feature="gl3")]
-const TEMPLATE_2D_FRAG: &str = include_str!("res/2d_template_330.frag");
-
-#[cfg(feature="gl3")]
-const DEFAULT_2D_VERT: &str = include_str!("res/2d_default_330.vert");
-#[cfg(feature="gl3")]
-const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default_330.frag");
-
-#[cfg(not(feature="gl3"))]
-const TEMPLATE_2D_VERT: &str = include_str!("res/2d_template.vert");
-#[cfg(not(feature="gl3"))]
-const TEMPLATE_2D_FRAG: &str = include_str!("res/2d_template.frag");
-
-#[cfg(not(feature="gl3"))]
-const DEFAULT_2D_VERT: &str = include_str!("res/2d_default.vert");
-#[cfg(not(feature="gl3"))]
-const DEFAULT_2D_FRAG: &str = include_str!("res/2d_default.frag");
-
-#[cfg(feature="gl3")]
-const TEMPLATE_3D_VERT: &str = include_str!("res/3d_template_330.vert");
-#[cfg(feature="gl3")]
-const TEMPLATE_3D_FRAG: &str = include_str!("res/3d_template_330.frag");
-
-#[cfg(feature="gl3")]
-const DEFAULT_3D_VERT: &str = include_str!("res/3d_default_330.vert");
-#[cfg(feature="gl3")]
-const DEFAULT_3D_FRAG: &str = include_str!("res/3d_default_330.frag");
-
-#[cfg(not(feature="gl3"))]
-const TEMPLATE_3D_VERT: &str = include_str!("res/3d_template.vert");
-#[cfg(not(feature="gl3"))]
-const TEMPLATE_3D_FRAG: &str = include_str!("res/3d_template.frag");
-
-#[cfg(not(feature="gl3"))]
-const DEFAULT_3D_VERT: &str = include_str!("res/3d_default.vert");
-#[cfg(not(feature="gl3"))]
-const DEFAULT_3D_FRAG: &str = include_str!("res/3d_default.frag");
-
-const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/CP437.png");
-const DEFAULT_FONT_COLS: usize = 32;
-const DEFAULT_FONT_ROWS: usize = 8;
-const DEFAULT_FONT_CHARS: &str = r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##;
-
-// const DEFAULT_FONT_IMG: &[u8] = include_bytes!("res/proggy.png");
-// const DEFAULT_FONT_COLS: usize = 95;
-// const DEFAULT_FONT_ROWS: usize = 1;
-// const DEFAULT_FONT_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
+include!("res/resources.rs");
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -204,6 +156,7 @@ impl Ctx {
 
 		gl.enable(gl::Capability::Blend);
 		gl.enable(gl::Capability::DepthTest);
+// 		gl.enable(gl::Capability::CullFace);
 		gl.blend_func_sep(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha, gl::BlendFac::One, gl::BlendFac::OneMinusSourceAlpha);
 		gl.depth_func(gl::DepthFunc::LessOrEqual);
 		gl.clear_color(conf.clear_color);
@@ -235,7 +188,7 @@ impl Ctx {
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_width = font_img.width();
 		let font_height = font_img.height();
-		let font_tex = gl::Texture::init(&gl, font_width as i32, font_height as i32, &font_img.into_raw())?;
+		let font_tex = gl::Texture::init(&gl, font_width, font_height, &font_img.into_raw())?;
 		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
 
 		let font = gfx::Font::from_tex(
@@ -400,9 +353,13 @@ impl Launcher {
 		let mut ctx = Ctx::new(self.conf)?;
 		let mut s = S::init(&mut ctx)?;
 
-		return ctx.run(|c| {
+		ctx.run(|c| {
 			return s.run(c);
-		});
+		})?;
+
+		s.quit(&mut ctx)?;
+
+		return Ok(());
 
 	}
 

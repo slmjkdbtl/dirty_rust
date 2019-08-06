@@ -176,6 +176,10 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 					resized = Some(size);
 				},
 
+				Touch(touch) => {
+					// ...
+				},
+
 				CloseRequested => close = true,
 
 				_ => {},
