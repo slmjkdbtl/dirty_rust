@@ -11,6 +11,7 @@ struct Sprite {
 	frames: Vec<Quad>,
 	cur_frame: usize,
 	looping: bool,
+	color: Color,
 
 }
 
@@ -22,6 +23,7 @@ impl Sprite {
 			frames: vec![quad!(0, 0, 1, 1)],
 			cur_frame: 0,
 			looping: true,
+			color: color!(),
 		};
 	}
 
@@ -60,6 +62,11 @@ impl Sprite {
 		}
 	}
 
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+
 }
 
 impl gfx::DrawCmd for &Sprite {
@@ -67,6 +74,7 @@ impl gfx::DrawCmd for &Sprite {
 		return ctx.draw(
 			shapes::sprite(&self.tex)
 				.quad(self.frames[self.cur_frame])
+				.color(self.color)
 		);
 	}
 }
@@ -104,17 +112,16 @@ impl app::State for Game {
 
 		self.sprite.next();
 
-		ctx.draw_on(&self.canvas, |ctx| {
-			ctx.clear();
-			ctx.draw(&self.sprite)?;
-			return Ok(());
-		})?;
-
-		ctx.draw_with(&self.effect, |ctx| {
+// 		ctx.draw_on(&self.canvas, |ctx| {
+// 			ctx.clear();
 // 			ctx.draw(&self.sprite)?;
-			ctx.draw(shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+// 			return Ok(());
+// 		})?;
+
+// 		ctx.draw_with(&self.effect, |ctx| {
+// 			ctx.draw(shapes::canvas(&self.canvas))?;
+// 			return Ok(());
+// 		})?;
 
 		self.pix_size = rand!() / 100.0;
 		self.effect.send("size", self.pix_size);
@@ -138,7 +145,6 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.resizable(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}

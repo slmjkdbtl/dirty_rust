@@ -21,12 +21,20 @@ pub use gl::UniformType;
 
 pub trait Gfx {
 
+	// clearing
 	fn clear_color(&self, c: Color);
 	fn clear(&self);
+
+	// stats
 	fn draw_calls(&self) -> usize;
+
+	// drawing
 	fn draw(&mut self, t: impl DrawCmd) -> Result<()>;
-	fn draw_on(&mut self, canvas: &Canvas, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_with(&mut self, shader: &Shader, f: impl FnMut(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+
+	// transform
 	fn push(&mut self);
 	fn pop(&mut self) -> Result<()>;
 	fn translate(&mut self, pos: Vec2);
@@ -36,12 +44,13 @@ pub trait Gfx {
 	fn rotate3d(&mut self, angle: f32, axis: Vec3);
 	fn scale3d(&mut self, scale: Vec3);
 	fn matrix(&self) -> Mat4;
-	fn apply_matrix(&mut self, m: Mat4);
+	fn apply(&mut self, m: Mat4);
 	fn reset(&mut self);
 
-	// TODO
+	// camera
 	fn cam_look(&mut self, yaw: f32, pitch: f32);
 	fn cam_pos(&mut self, pos: Vec3);
+	fn cam_front(&self) -> Vec3;
 
 }
 
@@ -293,7 +302,7 @@ impl Gfx for Ctx {
 		return self.transform;
 	}
 
-	fn apply_matrix(&mut self, m: Mat4) {
+	fn apply(&mut self, m: Mat4) {
 		self.transform = m;
 	}
 
@@ -305,7 +314,7 @@ impl Gfx for Ctx {
 		return thing.draw(self);
 	}
 
-	fn draw_on(&mut self, canvas: &Canvas, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
+	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Ctx) -> Result<()>) -> Result<()> {
 
 		let mut flipped_proj = self.proj_2d.clone();
 
@@ -336,7 +345,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw_with(&mut self, shader: &Shader, mut f: impl FnMut(&mut Ctx) -> Result<()>) -> Result<()> {
+	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Ctx) -> Result<()>) -> Result<()> {
 
 		flush(self);
 		self.cur_shader_2d = shader.clone();
@@ -344,6 +353,25 @@ impl Gfx for Ctx {
 		f(self)?;
 		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
+
+		return Ok(());
+
+	}
+
+	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		flush(self);
+		self.gl.clear_stencil();
+		self.gl.enable(gl::Capability::StencilTest);
+		self.gl.stencil_func(gl::StencilFunc::Never, 1, 0xff);
+		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
+		mask(self)?;
+		flush(self);
+		self.gl.stencil_func(gl::StencilFunc::Equal, 1, 0xff);
+		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
+		draw(self)?;
+		flush(self);
+		self.gl.disable(gl::Capability::StencilTest);
 
 		return Ok(());
 
@@ -358,6 +386,10 @@ impl Gfx for Ctx {
 	fn cam_pos(&mut self, pos: Vec3) {
 		self.cam_3d.set_pos(pos);
 		self.cur_shader_3d.send("view", self.cam_3d.as_mat());
+	}
+
+	fn cam_front(&self) -> Vec3 {
+		return self.cam_3d.front;
 	}
 
 }
@@ -382,8 +414,8 @@ impl Texture {
 	#[cfg(feature = "img")]
 	pub fn from_image(ctx: &Ctx, img: Image) -> Result<Self> {
 
-		let w = img.width() as i32;
-		let h = img.height() as i32;
+		let w = img.width();
+		let h = img.height();
 		let handle = gl::Texture::init(&ctx.gl, w, h, &img.into_raw())?;
 
 		return Ok(Self::from_handle(handle, w as u32, h as u32));
@@ -402,7 +434,7 @@ impl Texture {
 
 	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
 
-		let handle = gl::Texture::init(&ctx.gl, w as i32, h as i32, &pixels)?;
+		let handle = gl::Texture::init(&ctx.gl, w, h, &pixels)?;
 		return Ok(Self::from_handle(handle, w, h));
 
 	}
@@ -418,7 +450,7 @@ impl Texture {
 	pub fn data(&mut self, x: u32, y: u32, width: u32, height: u32, data: &[u8]) {
 		self.width = width;
 		self.height = height;
-		self.handle.data(x as i32, y as i32, width as i32, height as i32, data);
+		self.handle.data(x, y, width, height, data);
 	}
 
 }
@@ -575,20 +607,22 @@ impl Canvas {
 pub struct Vertex3D {
 	pos: Vec3,
 	normal: Vec3,
+	color: Color,
 }
 
 impl Vertex3D {
-	fn new(pos: Vec3, normal: Vec3) -> Self {
+	fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
 		return Self {
 			pos: pos,
 			normal: normal,
+			color: color,
 		};
 	}
 }
 
 impl VertexLayout for Vertex3D {
 
-	const STRIDE: usize = 6;
+	const STRIDE: usize = 10;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
@@ -598,6 +632,10 @@ impl VertexLayout for Vertex3D {
 			self.normal.x,
 			self.normal.y,
 			self.normal.z,
+			self.color.r,
+			self.color.g,
+			self.color.b,
+			self.color.a,
 		]);
 	}
 
@@ -606,6 +644,7 @@ impl VertexLayout for Vertex3D {
 		return gl::VertexAttrGroup::build()
 			.add("pos", 3)
 			.add("normal", 3)
+			.add("color", 4)
 			;
 
 	}
@@ -644,9 +683,9 @@ impl Camera {
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
-		self.front.x = pitch.cos() * (yaw - 90f32.to_radians()).cos();
+		self.front.x = pitch.cos() * (yaw + 90f32.to_radians()).cos();
 		self.front.y = pitch.sin();
-		self.front.z = pitch.cos() * (yaw - 90f32.to_radians()).sin();
+		self.front.z = pitch.cos() * (yaw + 90f32.to_radians()).sin();
 		self.front = self.front.unit();
 
 	}
@@ -680,7 +719,7 @@ impl Model {
 			let nx = normals.get(i * 3 + 0).unwrap_or(&0.0);
 			let ny = normals.get(i * 3 + 1).unwrap_or(&0.0);
 			let nz = normals.get(i * 3 + 2).unwrap_or(&0.0);
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz));
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz), color!(rand!(), rand!(), rand!(), 1));
 
 			vert.push(&mut verts);
 
@@ -738,7 +777,7 @@ impl TrueTypeFont {
 		let font_cache = GlyphBrushBuilder::using_font_bytes(bytes).build();
 
 		let (width, height) = font_cache.texture_dimensions();
-		let font_cache_texture = gl::Texture::new(&ctx.gl, width as i32, height as i32)?;
+		let font_cache_texture = gl::Texture::new(&ctx.gl, width, height)?;
 
 		return Ok(Self {
 			cache: font_cache,
