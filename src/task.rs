@@ -4,10 +4,6 @@
 
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
-use std::future::Future;
-use std::task::Context;
-use std::task::Poll;
-use std::pin::Pin;
 use std::thread;
 
 pub struct Pool {
@@ -42,14 +38,13 @@ pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(f: F) 
 		tx.send(f());
 	});
 
-	t.join();
-
 	return Task::new(rx);
 
 }
 
 pub struct Task<T> {
 	rx: Receiver<T>,
+	data: Option<T>,
 }
 
 impl<T> Task<T> {
@@ -57,22 +52,25 @@ impl<T> Task<T> {
 	pub fn new(rx: Receiver<T>) -> Self {
 		return Self {
 			rx: rx,
+			data: None,
 		};
+	}
+
+	pub fn get(&mut self) -> &Option<T> {
+		if let Ok(data) = self.rx.try_recv() {
+			self.data = Some(data);
+		}
+		return &self.data;
 	}
 
 }
 
-impl<T> Future for Task<T> {
-
-	type Output = T;
-
-	fn poll(self: Pin<&mut Self>, _: &mut Context) -> Poll<Self::Output> {
-		if let Ok(data) = self.rx.try_recv() {
-			return Poll::Ready(data);
-		} else {
-			return Poll::Pending;
-		}
+#[macro_export]
+macro_rules! task {
+	($val:expr) => {
+		task::exec(|| {
+			return $val;
+		})
 	}
-
 }
 
