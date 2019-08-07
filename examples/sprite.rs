@@ -112,6 +112,11 @@ impl app::State for Game {
 
 		self.sprite.next();
 
+		ctx.push();
+		ctx.translate(vec2!(-120));
+		ctx.draw(shapes::text(&format!("{}", ctx.fps())))?;
+		ctx.pop()?;
+
 		ctx.draw_on(&self.canvas, |ctx| {
 			ctx.clear();
 			ctx.draw(&self.sprite)?;
@@ -135,10 +140,6 @@ impl app::State for Game {
 		self.effect.send("size", self.pix_size);
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-		if ctx.key_pressed(Key::Space) {
-			self.canvas.capture("test.png");
-		}
 
 		if ctx.key_pressed(Key::F) {
 			ctx.toggle_fullscreen();

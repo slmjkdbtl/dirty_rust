@@ -50,20 +50,16 @@ impl<'a> DrawCmd for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let wrapped_tex = Some(self.tex.clone());
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
-
-		if ctx.cur_tex != wrapped_tex {
-			if ctx.cur_tex.is_some() {
-				gfx::flush(ctx);
-			}
-			ctx.cur_tex = wrapped_tex;
-		}
 
 		ctx.push();
 		ctx.scale(scale);
 		ctx.translate(self.offset * -0.5);
-		ctx.batched_renderer.push(gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.quad_origin, self.flip))?;
+
+		let shape = gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.quad_origin, self.flip);
+
+		ctx.quad_renderer.push_textured(&ctx.gl, shape, &self.tex.handle, &ctx.cur_shader_2d.handle)?;
+
 		ctx.pop()?;
 
 		return Ok(());

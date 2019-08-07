@@ -76,9 +76,8 @@ pub struct Ctx {
 	pub(self) cam_3d: gfx::Camera,
 
 	pub(self) gl: gl::Device,
-	pub(self) batched_renderer: gl::BatchedRenderer<gfx::QuadShape>,
+	pub(self) quad_renderer: gl::BatchedRenderer<gfx::QuadShape>,
 
-	pub(self) cur_tex: Option<gfx::Texture>,
 	pub(self) empty_tex: gfx::Texture,
 
 	pub(self) default_shader_2d: gfx::Shader,
@@ -157,12 +156,12 @@ impl Ctx {
 		gl.enable(gl::Capability::Blend);
 		gl.enable(gl::Capability::DepthTest);
 // 		gl.enable(gl::Capability::CullFace);
-		gl.blend_func_sep(gl::BlendFac::SourceAlpha, gl::BlendFac::OneMinusSourceAlpha, gl::BlendFac::One, gl::BlendFac::OneMinusSourceAlpha);
-		gl.depth_func(gl::DepthFunc::LessOrEqual);
-		gl.clear_color(conf.clear_color);
-		gl.clear();
+		gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
+		gl.depth_func(gl::Cmp::LessOrEqual);
+		gl.clear_color(color!(0, 0, 0, 1));
+		gl.clear(gl::Buffer::Color);
 
-		let batched_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
+		let quad_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
 
 		let empty_tex = gl::Texture::init(&gl, 1, 1, &[255; 4])?;
 		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
@@ -228,13 +227,12 @@ impl Ctx {
 			gl: gl,
 			origin: conf.origin,
 			quad_origin: conf.quad_origin,
-			batched_renderer: batched_renderer,
+			quad_renderer: quad_renderer,
 
 			proj_2d: proj_2d,
 			proj_3d: proj_3d,
 			cam_3d: cam_3d,
 
-			cur_tex: None,
 			empty_tex: empty_tex,
 
 			default_shader_2d: shader_2d.clone(),
@@ -429,11 +427,6 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn clear_color(mut self, c: Color) -> Self {
-		self.conf.clear_color = c;
-		return self;
-	}
-
 	pub fn origin(mut self, o: Origin) -> Self {
 		self.conf.origin = o;
 		return self;
@@ -469,7 +462,6 @@ pub struct Conf {
 	pub titlebar_transparent: bool,
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
-	pub clear_color: Color,
 	pub origin: Origin,
 	pub quad_origin: Origin,
 	pub fps_cap: Option<u16>,
@@ -508,7 +500,6 @@ impl Default for Conf {
 			titlebar_transparent: false,
 			cursor_hidden: false,
 			cursor_locked: false,
-			clear_color: color!(0, 0, 0, 1),
 			origin: Origin::Center,
 			quad_origin: Origin::Center,
 			fps_cap: Some(60),

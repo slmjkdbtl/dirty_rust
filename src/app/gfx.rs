@@ -22,8 +22,7 @@ pub use gl::UniformType;
 pub trait Gfx {
 
 	// clearing
-	fn clear_color(&self, c: Color);
-	fn clear(&self);
+	fn clear(&mut self);
 
 	// stats
 	fn draw_calls(&self) -> usize;
@@ -54,211 +53,16 @@ pub trait Gfx {
 
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum Flip {
-	None,
-	X,
-	Y,
-	XY,
-}
-
-pub(super) struct QuadShape {
-	pub transform: Mat4,
-	pub quad: Quad,
-	pub color: Color,
-	pub origin: Origin,
-	pub flip: Flip,
-}
-
-impl QuadShape {
-	pub fn new(t: Mat4, q: Quad, c: Color, o: Origin, f: Flip) -> Self {
-		return Self {
-			transform: t,
-			quad: q,
-			color: c,
-			origin: o,
-			flip: f,
-		};
-	}
-}
-
-impl Shape for QuadShape {
-
-	type Vertex = Vertex2D;
-	const COUNT: usize = 4;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-
-		let t = self.transform;
-		let q = self.quad;
-		let c = self.color;
-		let offset = self.origin.as_pt() * 0.5;
-		let p1 = t * (vec2!(-0.5, 0.5) - offset);
-		let p2 = t * (vec2!(0.5, 0.5) - offset);
-		let p3 = t * (vec2!(0.5, -0.5) - offset);
-		let p4 = t * (vec2!(-0.5, -0.5) - offset);
-
-		let mut u1 = vec2!(q.x, q.y + q.h);
-		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
-		let mut u3 = vec2!(q.x + q.w, q.y);
-		let mut u4 = vec2!(q.x, q.y);
-
-		match self.flip {
-			Flip::X => {
-				mem::swap(&mut u1, &mut u2);
-				mem::swap(&mut u4, &mut u3);
-			},
-			Flip::Y => {
-				mem::swap(&mut u2, &mut u3);
-				mem::swap(&mut u1, &mut u4);
-			},
-			Flip::XY => {
-				mem::swap(&mut u2, &mut u4);
-				mem::swap(&mut u1, &mut u3);
-			},
-			_ => {},
-		}
-
-		Self::Vertex::new(p1, u1, c).push(queue);
-		Self::Vertex::new(p2, u2, c).push(queue);
-		Self::Vertex::new(p3, u3, c).push(queue);
-		Self::Vertex::new(p4, u4, c).push(queue);
-
-	}
-
-	fn indices() -> Vec<u32> {
-		return vec![0, 1, 3, 1, 2, 3];
-	}
-
-}
-
-pub(super) struct Vertex2D {
-	pos: Vec2,
-	uv: Vec2,
-	color: Color,
-}
-
-impl Vertex2D {
-	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
-		return Self {
-			pos: pos,
-			uv: uv,
-			color: color,
-		};
-	}
-}
-
-impl VertexLayout for Vertex2D {
-
-	const STRIDE: usize = 8;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-		queue.extend_from_slice(&[
-			self.pos.x,
-			self.pos.y,
-			self.uv.x,
-			self.uv.y,
-			self.color.r,
-			self.color.g,
-			self.color.b,
-			self.color.a,
-		]);
-	}
-
-	fn attrs() -> gl::VertexAttrGroup {
-
-		return gl::VertexAttrGroup::build()
-			.add("pos", 2)
-			.add("uv", 2)
-			.add("color", 4)
-			;
-
-	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Hash)]
-pub enum Origin {
-	Center,
-	TopLeft,
-	BottomLeft,
-	TopRight,
-	BottomRight,
-}
-
-impl Origin {
-
-	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
-
-		let w = w as f32;
-		let h = h as f32;
-
-		return match self {
-			Origin::Center => math::ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, -1.0, 1.0),
-			Origin::TopLeft => math::ortho(0.0, w, h, 0.0, -1.0, 1.0),
-			Origin::BottomLeft => math::ortho(0.0, w, 0.0, -h, -1.0, 1.0),
-			Origin::TopRight => math::ortho(-w, 0.0, h, 0.0, -1.0, 1.0),
-			Origin::BottomRight => math::ortho(-w, 0.0, 0.0, -h, -1.0, 1.0),
-		};
-
-	}
-
-	pub fn as_pt(&self) -> Vec2 {
-		return match self {
-			Origin::Center => vec2!(0, 0),
-			Origin::TopLeft => vec2!(-1, -1),
-			Origin::BottomLeft => vec2!(-1, 1),
-			Origin::TopRight => vec2!(1, -1),
-			Origin::BottomRight => vec2!(1, 1),
-		};
-	}
-
-}
-
-pub(super) fn origin(ctx: &app::Ctx) -> Origin {
-	return ctx.origin;
-}
-
-pub(super) fn begin(ctx: &mut Ctx) {
-
-	ctx.draw_calls_last = ctx.draw_calls;
-	ctx.draw_calls = 0;
-	ctx.clear();
-
-}
-
-pub(super) fn end(ctx: &mut Ctx) {
-
-	flush(ctx);
-	ctx.transform = Mat4::identity();
-	ctx.transform_stack.clear();
-
-}
-
-pub(super) fn flush(ctx: &mut Ctx) {
-
-	if ctx.batched_renderer.empty() {
-		return;
-	}
-
-	if let Some(tex) = &ctx.cur_tex {
-
-		tex.handle.bind();
-		ctx.batched_renderer.flush(&ctx.gl, &ctx.cur_shader_2d.handle);
-		tex.handle.unbind();
-		ctx.draw_calls += 1;
-
-	}
-
-}
-
 impl Gfx for Ctx {
 
-	fn clear_color(&self, c: Color) {
-		self.gl.clear_color(c);
-	}
+	// TODO: only clear current framebuffer
+	fn clear(&mut self) {
 
-	fn clear(&self) {
-		self.gl.clear();
+		flush(self);
+		self.gl.clear(gl::Buffer::Color);
+		self.gl.clear(gl::Buffer::Depth);
+		self.gl.clear(gl::Buffer::Stencil);
+
 	}
 
 	fn draw_calls(&self) -> usize {
@@ -361,13 +165,13 @@ impl Gfx for Ctx {
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
-		self.gl.clear_stencil();
+		self.gl.clear(gl::Buffer::Stencil);
 		self.gl.enable(gl::Capability::StencilTest);
-		self.gl.stencil_func(gl::StencilFunc::Never, 1, 0xff);
+		self.gl.stencil_func(gl::Cmp::Never);
 		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
 		mask(self)?;
 		flush(self);
-		self.gl.stencil_func(gl::StencilFunc::Equal, 1, 0xff);
+		self.gl.stencil_func(gl::Cmp::Equal);
 		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
 		draw(self)?;
 		flush(self);
@@ -394,9 +198,246 @@ impl Gfx for Ctx {
 
 }
 
+pub(super) fn origin(ctx: &app::Ctx) -> Origin {
+	return ctx.origin;
+}
+
+pub(super) fn begin(ctx: &mut Ctx) {
+
+	ctx.draw_calls_last = ctx.draw_calls;
+	ctx.draw_calls = 0;
+	ctx.clear();
+
+}
+
+pub(super) fn end(ctx: &mut Ctx) {
+
+	flush(ctx);
+	ctx.transform = Mat4::identity();
+	ctx.transform_stack.clear();
+
+}
+
+pub(super) fn flush(ctx: &mut Ctx) {
+
+	if ctx.quad_renderer.empty() {
+		return;
+	}
+
+	ctx.quad_renderer.flush(&ctx.gl, &ctx.cur_shader_2d.handle);
+
+}
+
+pub(super) struct Vertex2D {
+	pos: Vec2,
+	uv: Vec2,
+	color: Color,
+}
+
+impl Vertex2D {
+	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
+		return Self {
+			pos: pos,
+			uv: uv,
+			color: color,
+		};
+	}
+}
+
+impl VertexLayout for Vertex2D {
+
+	const STRIDE: usize = 8;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+		queue.extend_from_slice(&[
+			self.pos.x,
+			self.pos.y,
+			self.uv.x,
+			self.uv.y,
+			self.color.r,
+			self.color.g,
+			self.color.b,
+			self.color.a,
+		]);
+	}
+
+	fn attrs() -> gl::VertexAttrGroup {
+
+		return gl::VertexAttrGroup::build()
+			.add("pos", 2)
+			.add("uv", 2)
+			.add("color", 4)
+			;
+
+	}
+}
+
+pub(super) struct Vertex3D {
+	pos: Vec3,
+	normal: Vec3,
+	color: Color,
+}
+
+impl Vertex3D {
+	fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
+		return Self {
+			pos: pos,
+			normal: normal,
+			color: color,
+		};
+	}
+}
+
+impl VertexLayout for Vertex3D {
+
+	const STRIDE: usize = 10;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+		queue.extend_from_slice(&[
+			self.pos.x,
+			self.pos.y,
+			self.pos.z,
+			self.normal.x,
+			self.normal.y,
+			self.normal.z,
+			self.color.r,
+			self.color.g,
+			self.color.b,
+			self.color.a,
+		]);
+	}
+
+	fn attrs() -> gl::VertexAttrGroup {
+
+		return gl::VertexAttrGroup::build()
+			.add("pos", 3)
+			.add("normal", 3)
+			.add("color", 4)
+			;
+
+	}
+
+}
+
+pub(super) struct QuadShape {
+	pub transform: Mat4,
+	pub quad: Quad,
+	pub color: Color,
+	pub origin: Origin,
+	pub flip: Flip,
+}
+
+impl QuadShape {
+	pub fn new(t: Mat4, q: Quad, c: Color, o: Origin, f: Flip) -> Self {
+		return Self {
+			transform: t,
+			quad: q,
+			color: c,
+			origin: o,
+			flip: f,
+		};
+	}
+}
+
+impl Shape for QuadShape {
+
+	type Vertex = Vertex2D;
+	const COUNT: usize = 4;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+
+		let t = self.transform;
+		let q = self.quad;
+		let c = self.color;
+		let offset = self.origin.as_pt() * 0.5;
+		let p1 = t * (vec2!(-0.5, 0.5) - offset);
+		let p2 = t * (vec2!(0.5, 0.5) - offset);
+		let p3 = t * (vec2!(0.5, -0.5) - offset);
+		let p4 = t * (vec2!(-0.5, -0.5) - offset);
+
+		let mut u1 = vec2!(q.x, q.y + q.h);
+		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u3 = vec2!(q.x + q.w, q.y);
+		let mut u4 = vec2!(q.x, q.y);
+
+		match self.flip {
+			Flip::X => {
+				mem::swap(&mut u1, &mut u2);
+				mem::swap(&mut u4, &mut u3);
+			},
+			Flip::Y => {
+				mem::swap(&mut u2, &mut u3);
+				mem::swap(&mut u1, &mut u4);
+			},
+			Flip::XY => {
+				mem::swap(&mut u2, &mut u4);
+				mem::swap(&mut u1, &mut u3);
+			},
+			_ => {},
+		}
+
+		Self::Vertex::new(p1, u1, c).push(queue);
+		Self::Vertex::new(p2, u2, c).push(queue);
+		Self::Vertex::new(p3, u3, c).push(queue);
+		Self::Vertex::new(p4, u4, c).push(queue);
+
+	}
+
+	fn indices() -> Vec<u32> {
+		return vec![0, 1, 3, 1, 2, 3];
+	}
+
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum Flip {
+	None,
+	X,
+	Y,
+	XY,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
+pub enum Origin {
+	Center,
+	TopLeft,
+	BottomLeft,
+	TopRight,
+	BottomRight,
+}
+
+impl Origin {
+
+	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
+
+		let w = w as f32;
+		let h = h as f32;
+
+		return match self {
+			Origin::Center => math::ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, -1.0, 1.0),
+			Origin::TopLeft => math::ortho(0.0, w, h, 0.0, -1.0, 1.0),
+			Origin::BottomLeft => math::ortho(0.0, w, 0.0, -h, -1.0, 1.0),
+			Origin::TopRight => math::ortho(-w, 0.0, h, 0.0, -1.0, 1.0),
+			Origin::BottomRight => math::ortho(-w, 0.0, 0.0, -h, -1.0, 1.0),
+		};
+
+	}
+
+	pub fn as_pt(&self) -> Vec2 {
+		return match self {
+			Origin::Center => vec2!(0, 0),
+			Origin::TopLeft => vec2!(-1, -1),
+			Origin::BottomLeft => vec2!(-1, 1),
+			Origin::TopRight => vec2!(1, -1),
+			Origin::BottomRight => vec2!(1, 1),
+		};
+	}
+
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Texture {
-	handle: Rc<gl::Texture>,
+	pub(super) handle: Rc<gl::Texture>,
 	width: u32,
 	height: u32,
 }
@@ -599,53 +640,6 @@ impl Canvas {
 		)?;
 
 		return Ok(());
-
-	}
-
-}
-
-pub struct Vertex3D {
-	pos: Vec3,
-	normal: Vec3,
-	color: Color,
-}
-
-impl Vertex3D {
-	fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
-		return Self {
-			pos: pos,
-			normal: normal,
-			color: color,
-		};
-	}
-}
-
-impl VertexLayout for Vertex3D {
-
-	const STRIDE: usize = 10;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-		queue.extend_from_slice(&[
-			self.pos.x,
-			self.pos.y,
-			self.pos.z,
-			self.normal.x,
-			self.normal.y,
-			self.normal.z,
-			self.color.r,
-			self.color.g,
-			self.color.b,
-			self.color.a,
-		]);
-	}
-
-	fn attrs() -> gl::VertexAttrGroup {
-
-		return gl::VertexAttrGroup::build()
-			.add("pos", 3)
-			.add("normal", 3)
-			.add("color", 4)
-			;
 
 	}
 

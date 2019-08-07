@@ -26,9 +26,9 @@ default = [
 	"app",
 	"img",
 	"audio",
-	"http",
-	"term",
-	"geom",
+# 	"http",
+# 	"term",
+# 	"geom",
 # 	"assets",
 # 	"ui",
 

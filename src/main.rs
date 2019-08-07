@@ -10,6 +10,7 @@ const DEFAULT_FILE: &'static str = "main.lua";
 #[cfg(feature = "python")]
 const DEFAULT_FILE: &'static str = "main.py";
 
+#[cfg(any(feature = "lua", feature = "python"))]
 fn run(path: Option<impl AsRef<Path>>, args: Option<&[String]>) {
 
 	#[cfg(feature = "lua")]
@@ -39,12 +40,16 @@ fn run(path: Option<impl AsRef<Path>>, args: Option<&[String]>) {
 
 fn main() {
 
-	let args = env::args().collect::<Vec<String>>();
+	#[cfg(any(feature = "lua", feature = "python"))] {
 
-	if let Some(action) = args.get(1) {
-		run(Some(action), Some(&args[2..args.len()]));
-	} else {
-		run(None as Option<&str>, None);
+		let args = env::args().collect::<Vec<String>>();
+
+		if let Some(action) = args.get(1) {
+			run(Some(action), Some(&args[2..args.len()]));
+		} else {
+			run(None as Option<&str>, None);
+		}
+
 	}
 
 }
