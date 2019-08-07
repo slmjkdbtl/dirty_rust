@@ -121,6 +121,7 @@ impl From<gilrs::Error> for Error {
 	}
 }
 
+#[cfg(feature = "img")]
 impl From<tobj::LoadError> for Error {
 	fn from(_: tobj::LoadError) -> Self {
 		return Error::ObjLoad;

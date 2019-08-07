@@ -55,7 +55,7 @@ impl Device {
 		}
 	}
 
-	pub fn depth_func(&self, f: DepthFunc) {
+	pub fn depth_func(&self, f: Cmp) {
 		unsafe {
 			self.ctx.depth_func(f.into());
 		}
@@ -124,15 +124,9 @@ impl Device {
 		}
 	}
 
-	pub fn clear(&self) {
+	pub fn clear(&self, buf: Buffer) {
 		unsafe {
-			self.ctx.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT | glow::STENCIL_BUFFER_BIT);
-		}
-	}
-
-	pub fn clear_stencil(&self) {
-		unsafe {
-			self.ctx.clear_stencil(0);
+			self.ctx.clear(buf.into());
 		}
 	}
 
@@ -148,9 +142,9 @@ impl Device {
 		}
 	}
 
-	pub fn stencil_func(&self, f: StencilFunc, rf: i32, m: u32) {
+	pub fn stencil_func(&self, f: Cmp) {
 		unsafe {
-			self.ctx.stencil_func(f.into(), rf, m);
+			self.ctx.stencil_func(f.into(), 1, 0xff);
 		}
 	}
 
@@ -220,6 +214,7 @@ pub struct BatchedRenderer<S: Shape> {
 	vao: VertexArray,
 	queue: Vec<f32>,
 	mode: DrawMode,
+	cur_texture: Option<Texture>,
 	shape: PhantomData<S>,
 
 }
@@ -255,19 +250,37 @@ impl<S: Shape> BatchedRenderer<S> {
 			vao: vao,
 			queue: Vec::with_capacity(max_vertices),
 			mode: DrawMode::Triangle,
+			cur_texture: None,
 			shape: PhantomData,
 		});
 
 	}
 
-	pub fn push(&mut self, mesh: S) -> Result<()> {
+	pub fn push(&mut self, shape: S) -> Result<()> {
 
 		if self.queue.len() >= self.queue.capacity() {
 			self.queue.clear();
 			return Err(Error::MaxDraw);
 		}
 
-		mesh.push(&mut self.queue);
+		shape.push(&mut self.queue);
+
+		return Ok(());
+
+	}
+
+	pub fn push_textured(&mut self, device: &Device, shape: S, tex: &Texture, program: &Program) -> Result<()> {
+
+		let wrapped_tex = Some(tex.clone());
+
+		if self.cur_texture != wrapped_tex {
+			if self.cur_texture.is_some() {
+				self.flush(device, program);
+			}
+			self.cur_texture = wrapped_tex;
+		}
+
+		self.push(shape)?;
 
 		return Ok(());
 
@@ -281,6 +294,10 @@ impl<S: Shape> BatchedRenderer<S> {
 
 		self.vbuf.data(0, &self.queue);
 
+		if let Some(tex) = &self.cur_texture {
+			tex.bind();
+		}
+
 		device.draw(
 			#[cfg(feature="gl3")]
 			&self.vao,
@@ -291,6 +308,12 @@ impl<S: Shape> BatchedRenderer<S> {
 			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
 			self.mode,
 		);
+
+		if let Some(tex) = &self.cur_texture {
+			tex.unbind();
+		}
+
+		self.cur_texture = None;
 
 		self.queue.clear();
 
@@ -319,6 +342,7 @@ pub trait VertexLayout {
 
 }
 
+#[derive(Clone)]
 pub struct VertexAttrGroup {
 	attrs: Vec<VertexAttr>,
 	cur_offset: usize,
@@ -373,6 +397,7 @@ pub struct VertexAttr {
 
 }
 
+#[derive(Clone)]
 struct VertexArray {
 	ctx: Rc<GLCtx>,
 	id: VertexArrayID,
@@ -463,6 +488,7 @@ impl PartialEq for VertexArray {
 	}
 }
 
+#[derive(Clone)]
 struct VertexBuffer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
@@ -589,6 +615,7 @@ impl<V: VertexLayout> PartialEq for VertexBuffer<V> {
 	}
 }
 
+#[derive(Clone)]
 pub struct IndexBuffer {
 
 	ctx: Rc<GLCtx>,
@@ -683,6 +710,7 @@ impl PartialEq for IndexBuffer {
 	}
 }
 
+#[derive(Clone)]
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
@@ -707,13 +735,13 @@ impl Texture {
 			tex.ctx.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_WRAP_S,
-				glow::REPEAT as i32
+				glow::CLAMP_TO_EDGE as i32
 			);
 
 			tex.ctx.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_WRAP_T,
-				glow::REPEAT as i32
+				glow::CLAMP_TO_EDGE as i32
 			);
 
 			tex.ctx.tex_parameter_i32(
@@ -822,7 +850,7 @@ impl Texture {
 impl Drop for Texture {
 	fn drop(&mut self) {
 		unsafe {
-			self.ctx.delete_texture(self.id);
+// 			self.ctx.delete_texture(self.id);
 		}
 	}
 }
@@ -833,6 +861,7 @@ impl PartialEq for Texture {
 	}
 }
 
+#[derive(Clone)]
 pub struct Program {
 	ctx: Rc<GLCtx>,
 	id: ProgramID,
@@ -939,6 +968,7 @@ impl PartialEq for Program {
 	}
 }
 
+#[derive(Clone)]
 pub struct Framebuffer {
 
 	ctx: Rc<GLCtx>,
@@ -957,6 +987,7 @@ impl Framebuffer {
 
 			let rbo = ctx.create_renderbuffer()?;
 
+			// TODO: do this
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
 // 			ctx.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, width, height);
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
@@ -1070,15 +1101,15 @@ bind_enum!(Capability(u32) {
 bind_enum!(BlendFac(u32) {
 	Zero => glow::ZERO,
 	One => glow::ONE,
-	SourceColor => glow::SRC_COLOR,
-	OneMinusSourceColor => glow::ONE_MINUS_SRC_COLOR,
-	DestinationColor => glow::DST_COLOR,
-	OneMinusDestinationColor => glow::ONE_MINUS_DST_COLOR,
-	SourceAlpha => glow::SRC_ALPHA,
-	OneMinusSourceAlpha => glow::ONE_MINUS_SRC_ALPHA,
-	DestinationAlpha => glow::DST_ALPHA,
-	OneMinusDestinationAlpha => glow::ONE_MINUS_DST_ALPHA,
-	SourceAlphaSaturate => glow::SRC_ALPHA_SATURATE,
+	SrcColor => glow::SRC_COLOR,
+	OneMinusSrcColor => glow::ONE_MINUS_SRC_COLOR,
+	DestColor => glow::DST_COLOR,
+	OneMinusDestColor => glow::ONE_MINUS_DST_COLOR,
+	SrcAlpha => glow::SRC_ALPHA,
+	OneMinusSrcAlpha => glow::ONE_MINUS_SRC_ALPHA,
+	DestAlpha => glow::DST_ALPHA,
+	OneMinusDestAlpha => glow::ONE_MINUS_DST_ALPHA,
+	SrcAlphaSaturate => glow::SRC_ALPHA_SATURATE,
 	ConstantColor => glow::CONSTANT_COLOR,
 	OneMinusConstantColor => glow::ONE_MINUS_CONSTANT_COLOR,
 	ConstantAlpha => glow::CONSTANT_ALPHA,
@@ -1096,13 +1127,21 @@ bind_enum!(StencilOp(u32) {
 	Invert => glow::INVERT,
 });
 
-bind_enum!(StencilFunc(u32) {
-	Always => glow::ALWAYS,
+bind_enum!(Buffer(u32) {
+	Color => glow::COLOR_BUFFER_BIT,
+	Stencil => glow::STENCIL_BUFFER_BIT,
+	Depth => glow::DEPTH_BUFFER_BIT,
+});
+
+bind_enum!(Cmp(u32) {
 	Never => glow::NEVER,
+	Less => glow::LESS,
+	LessOrEqual => glow::LEQUAL,
+	Greater => glow::GREATER,
+	GreaterOrEqual => glow::GEQUAL,
 	Equal => glow::EQUAL,
 	NotEqual => glow::NOTEQUAL,
-	Less => glow::LESS,
-	Greater => glow::GREATER,
+	Always => glow::ALWAYS,
 });
 
 bind_enum!(DrawMode(u32) {
@@ -1117,17 +1156,6 @@ bind_enum!(DrawMode(u32) {
 bind_enum!(ShaderType(u32) {
 	Vertex => glow::VERTEX_SHADER,
 	Fragment => glow::FRAGMENT_SHADER,
-});
-
-bind_enum!(DepthFunc(u32) {
-	Never => glow::NEVER,
-	Less => glow::LESS,
-	Equal => glow::EQUAL,
-	LessOrEqual => glow::LEQUAL,
-	Greater => glow::GREATER,
-	NotEqual => glow::NOTEQUAL,
-	GreaterOrEqual => glow::GEQUAL,
-	Always => glow::ALWAYS,
 });
 
 pub enum UniformType {

@@ -194,7 +194,6 @@ fn bind_app(ctx: &Context) -> Result<()> {
 			set!(t["titlebar_transparent"] -> conf::titlebar_transparent);
 			set!(t["cursor_hidden"] -> conf::cursor_hidden);
 			set!(t["cursor_locked"] -> conf::cursor_locked);
-			set!(t["clear_color"] -> conf::clear_color);
 
 			return Ok(conf);
 
@@ -293,11 +292,7 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(pos);
 			});
 
-			methods.add_method("clear_color", |_, ctx, (c): (math::Color)| {
-				return Ok(ctx.clear_color(c));
-			});
-
-			methods.add_method("clear", |_, ctx, ()| {
+			methods.add_method_mut("clear", |_, ctx, ()| {
 				return Ok(ctx.clear());
 			});
 

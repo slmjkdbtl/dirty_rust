@@ -7,6 +7,7 @@
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
 - make gl lib stateless
+- clear() only clears current framebuffer
 
 == TODO
 - http less allocation / copying
