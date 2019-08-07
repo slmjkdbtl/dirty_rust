@@ -61,41 +61,6 @@ impl Device {
 		}
 	}
 
-	#[cfg(feature="gl3")]
-	fn draw(&self, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
-
-		vao.bind();
-		ibuf.bind();
-		program.bind();
-
-		unsafe {
-			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-		}
-
-		program.unbind();
-		ibuf.unbind();
-		vao.unbind();
-
-	}
-
-	#[cfg(not(feature="gl3"))]
-	fn draw<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
-
-		program.bind();
-		vbuf.bind();
-		vbuf.bind_attrs(program);
-		ibuf.bind();
-
-		unsafe {
-			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-		}
-
-		ibuf.unbind();
-		vbuf.unbind();
-		program.unbind();
-
-	}
-
 	pub fn get_error(&self) -> Result<()> {
 
 		unsafe {
@@ -156,8 +121,44 @@ impl Device {
 
 }
 
+#[cfg(feature="gl3")]
+fn draw(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
+
+	vao.bind();
+	ibuf.bind();
+	program.bind();
+
+	unsafe {
+		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+	}
+
+	program.unbind();
+	ibuf.unbind();
+	vao.unbind();
+
+}
+
+#[cfg(not(feature="gl3"))]
+fn draw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
+
+	program.bind();
+	vbuf.bind();
+	vbuf.bind_attrs(program);
+	ibuf.bind();
+
+	unsafe {
+		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+	}
+
+	ibuf.unbind();
+	vbuf.unbind();
+	program.unbind();
+
+}
+
 pub struct Renderer<V: VertexLayout> {
 
+	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	#[cfg(feature="gl3")]
@@ -179,6 +180,7 @@ impl<V: VertexLayout> Renderer<V> {
 		let vao = VertexArray::init(&device, &vbuf)?;
 
 		return Ok(Self {
+			ctx: device.ctx.clone(),
 			vbuf: vbuf,
 			ibuf: ibuf,
 			#[cfg(feature="gl3")]
@@ -190,8 +192,9 @@ impl<V: VertexLayout> Renderer<V> {
 
 	}
 
-	pub fn draw(&self, device: &Device, program: &Program) {
-		device.draw(
+	pub fn draw(&self, program: &Program) {
+		draw(
+			&self.ctx,
 			#[cfg(feature="gl3")]
 			&self.vao,
 			#[cfg(not(feature="gl3"))]
@@ -208,6 +211,7 @@ impl<V: VertexLayout> Renderer<V> {
 
 pub struct BatchedRenderer<S: Shape> {
 
+	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<S::Vertex>,
 	ibuf: IndexBuffer,
 	#[cfg(feature="gl3")]
@@ -215,6 +219,7 @@ pub struct BatchedRenderer<S: Shape> {
 	queue: Vec<f32>,
 	mode: DrawMode,
 	cur_texture: Option<Texture>,
+	pub cur_program: Option<Program>,
 	shape: PhantomData<S>,
 
 }
@@ -244,6 +249,7 @@ impl<S: Shape> BatchedRenderer<S> {
 		let vao = VertexArray::init(&device, &vbuf)?;
 
 		return Ok(Self {
+			ctx: device.ctx.clone(),
 			vbuf: vbuf,
 			ibuf: ibuf,
 			#[cfg(feature="gl3")]
@@ -251,12 +257,31 @@ impl<S: Shape> BatchedRenderer<S> {
 			queue: Vec::with_capacity(max_vertices),
 			mode: DrawMode::Triangle,
 			cur_texture: None,
+			cur_program: None,
 			shape: PhantomData,
 		});
 
 	}
 
-	pub fn push(&mut self, shape: S) -> Result<()> {
+	pub fn push(&mut self, shape: S, program: &Program, tex: &Texture) -> Result<()> {
+
+		if let Some(cur_tex) = &self.cur_texture {
+			if cur_tex != tex {
+				self.flush();
+				self.cur_texture = Some(tex.clone());
+			}
+		} else {
+			self.cur_texture = Some(tex.clone());
+		}
+
+		if let Some(cur_program) = &self.cur_program {
+			if cur_program != program {
+				self.flush();
+				self.cur_program = Some(program.clone());
+			}
+		} else {
+			self.cur_program = Some(program.clone());
+		}
 
 		if self.queue.len() >= self.queue.capacity() {
 			self.queue.clear();
@@ -269,28 +294,16 @@ impl<S: Shape> BatchedRenderer<S> {
 
 	}
 
-	pub fn push_textured(&mut self, device: &Device, shape: S, tex: &Texture, program: &Program) -> Result<()> {
-
-		let wrapped_tex = Some(tex.clone());
-
-		if self.cur_texture != wrapped_tex {
-			if self.cur_texture.is_some() {
-				self.flush(device, program);
-			}
-			self.cur_texture = wrapped_tex;
-		}
-
-		self.push(shape)?;
-
-		return Ok(());
-
-	}
-
-	pub fn flush(&mut self, device: &Device, program: &Program) {
+	pub fn flush(&mut self) {
 
 		if self.empty() {
 			return;
 		}
+
+		let program = match &self.cur_program {
+			Some(p) => p,
+			None => return,
+		};
 
 		self.vbuf.data(0, &self.queue);
 
@@ -298,7 +311,8 @@ impl<S: Shape> BatchedRenderer<S> {
 			tex.bind();
 		}
 
-		device.draw(
+		draw(
+			&self.ctx,
 			#[cfg(feature="gl3")]
 			&self.vao,
 			#[cfg(not(feature="gl3"))]
@@ -314,13 +328,17 @@ impl<S: Shape> BatchedRenderer<S> {
 		}
 
 		self.cur_texture = None;
-
+		self.cur_program = None;
 		self.queue.clear();
 
 	}
 
 	pub fn empty(&self) -> bool {
 		return self.queue.is_empty();
+	}
+
+	pub fn frame_end(&mut self) {
+		self.flush();
 	}
 
 }
@@ -342,7 +360,7 @@ pub trait VertexLayout {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct VertexAttrGroup {
 	attrs: Vec<VertexAttr>,
 	cur_offset: usize,
@@ -388,7 +406,7 @@ impl<'a> IntoIterator for &'a VertexAttrGroup {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct VertexAttr {
 
 	name: String,
@@ -397,7 +415,7 @@ pub struct VertexAttr {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct VertexArray {
 	ctx: Rc<GLCtx>,
 	id: VertexArrayID,
@@ -488,7 +506,7 @@ impl PartialEq for VertexArray {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct VertexBuffer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
@@ -615,7 +633,7 @@ impl<V: VertexLayout> PartialEq for VertexBuffer<V> {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IndexBuffer {
 
 	ctx: Rc<GLCtx>,
@@ -710,7 +728,7 @@ impl PartialEq for IndexBuffer {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
@@ -847,6 +865,7 @@ impl Texture {
 
 }
 
+// TODO
 impl Drop for Texture {
 	fn drop(&mut self) {
 		unsafe {
@@ -861,7 +880,7 @@ impl PartialEq for Texture {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Program {
 	ctx: Rc<GLCtx>,
 	id: ProgramID,
@@ -954,10 +973,11 @@ impl Program {
 
 }
 
+// TODO
 impl Drop for Program {
 	fn drop(&mut self) {
 		unsafe {
-			self.ctx.delete_program(self.id);
+// 			self.ctx.delete_program(self.id);
 		}
 	}
 }
@@ -968,7 +988,7 @@ impl PartialEq for Program {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Framebuffer {
 
 	ctx: Rc<GLCtx>,
