@@ -112,11 +112,6 @@ impl app::State for Game {
 
 		self.sprite.next();
 
-		ctx.push();
-		ctx.translate(vec2!(-120));
-		ctx.draw(shapes::text(&format!("{}", ctx.fps())))?;
-		ctx.pop()?;
-
 		ctx.draw_on(&self.canvas, |ctx| {
 			ctx.clear();
 			ctx.draw(&self.sprite)?;

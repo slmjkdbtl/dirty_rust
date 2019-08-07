@@ -118,7 +118,7 @@ impl Gfx for Ctx {
 		return thing.draw(self);
 	}
 
-	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Ctx) -> Result<()>) -> Result<()> {
+	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let mut flipped_proj = self.proj_2d.clone();
 
@@ -149,12 +149,12 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Ctx) -> Result<()>) -> Result<()> {
+	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		flush(self);
 		self.cur_shader_2d = shader.clone();
 		self.cur_shader_2d.send("proj", self.proj_2d);
 		f(self)?;
+		// TODO: why is this flush necessary?
 		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
 
@@ -219,13 +219,7 @@ pub(super) fn end(ctx: &mut Ctx) {
 }
 
 pub(super) fn flush(ctx: &mut Ctx) {
-
-	if ctx.quad_renderer.empty() {
-		return;
-	}
-
-	ctx.quad_renderer.flush(&ctx.gl, &ctx.cur_shader_2d.handle);
-
+	ctx.quad_renderer.flush();
 }
 
 pub(super) struct Vertex2D {
