@@ -32,6 +32,7 @@ pub enum Error {
 	Font,
 	ObjLoad,
 	Input,
+	TexPack,
 	OpenGL(String),
 	Misc(String),
 }
@@ -66,6 +67,7 @@ impl fmt::Display for Error {
 			Error::ObjLoad => write!(f, "failed to load obj"),
 			Error::Font => write!(f, "font error"),
 			Error::Input => write!(f, "input error"),
+			Error::TexPack => write!(f, "texture packing error"),
 			Error::OpenGL(s) => write!(f, "error: {}", s),
 			Error::Misc(s) => write!(f, "error: {}", s),
 		};
@@ -77,6 +79,36 @@ impl std::error::Error for Error {}
 impl From<std::io::Error> for Error {
 	fn from(_: std::io::Error) -> Self {
 		return Error::IO;
+	}
+}
+
+impl From<std::sync::mpsc::TryRecvError> for Error {
+	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
+		return Error::Thread;
+	}
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+	fn from(_: std::string::FromUtf8Error) -> Self {
+		return Error::FromUtf8;
+	}
+}
+
+impl From<String> for Error {
+	fn from(s: String) -> Self {
+		return Error::Misc(s);
+	}
+}
+
+impl From<std::ffi::OsString> for Error {
+	fn from(s: std::ffi::OsString) -> Self {
+		return Error::Misc(String::new());
+	}
+}
+
+impl From<()> for Error {
+	fn from(_: ()) -> Self {
+		return Error::Misc(String::new());
 	}
 }
 
@@ -105,12 +137,6 @@ impl From<glutin::ContextError> for Error {
 impl From<rodio::decoder::DecoderError> for Error {
 	fn from(_: rodio::decoder::DecoderError) -> Self {
 		return Error::Audio;
-	}
-}
-
-impl From<std::sync::mpsc::TryRecvError> for Error {
-	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
-		return Error::Thread;
 	}
 }
 
@@ -166,30 +192,6 @@ impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 impl From<serde_json::error::Error> for Error {
 	fn from(_: serde_json::error::Error) -> Self {
 		return Error::Parse;
-	}
-}
-
-impl From<std::string::FromUtf8Error> for Error {
-	fn from(_: std::string::FromUtf8Error) -> Self {
-		return Error::FromUtf8;
-	}
-}
-
-impl From<String> for Error {
-	fn from(s: String) -> Self {
-		return Error::Misc(s);
-	}
-}
-
-impl From<std::ffi::OsString> for Error {
-	fn from(s: std::ffi::OsString) -> Self {
-		return Error::Misc(String::new());
-	}
-}
-
-impl From<()> for Error {
-	fn from(_: ()) -> Self {
-		return Error::Misc(String::new());
 	}
 }
 

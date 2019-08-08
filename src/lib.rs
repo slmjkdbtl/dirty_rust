@@ -38,6 +38,9 @@ pub mod assets;
 #[cfg(feature = "ase")]
 pub mod ase;
 
+#[cfg(feature = "texpack")]
+pub mod texpack;
+
 mod bindings;
 
 #[cfg(feature = "lua")]

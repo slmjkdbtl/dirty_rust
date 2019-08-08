@@ -55,7 +55,6 @@ pub trait Gfx {
 
 impl Gfx for Ctx {
 
-	// TODO: only clear current framebuffer
 	fn clear(&mut self) {
 
 		flush(self);
@@ -120,29 +119,25 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let mut flipped_proj = self.proj_2d.clone();
-
-		if let Some(val) = flipped_proj.get_mut(1, 1) {
-			*val = -*val;
-		}
-
-		if let Some(val) = flipped_proj.get_mut(3, 1) {
-			*val = -*val;
-		}
+		let flipped_proj_2d = flip_matrix(&self.proj_2d);
+		let flipped_proj_3d = flip_matrix(&self.proj_3d);
 
 		flush(self);
 		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 
 		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
+		// TODO: what if shader is changed in callback?
 		canvas.handle.with(|| -> Result<()> {
 
-			self.cur_shader_2d.send("proj", flipped_proj);
+			self.cur_shader_2d.send("proj", flipped_proj_2d);
+			self.cur_shader_3d.send("proj", flipped_proj_3d);
 			self.push();
 			self.reset();
 			f(self)?;
 			self.pop()?;
 			flush(self);
 			self.cur_shader_2d.send("proj", self.proj_2d);
+			self.cur_shader_3d.send("proj", self.proj_3d);
 
 			return Ok(());
 
@@ -200,6 +195,22 @@ impl Gfx for Ctx {
 	fn cam_front(&self) -> Vec3 {
 		return self.cam_3d.front;
 	}
+
+}
+
+fn flip_matrix(m: &Mat4) -> Mat4 {
+
+	let mut nm = m.clone();
+
+	if let Some(val) = nm.get_mut(1, 1) {
+		*val = -*val;
+	}
+
+	if let Some(val) = nm.get_mut(3, 1) {
+		*val = -*val;
+	}
+
+	return nm;
 
 }
 
