@@ -186,7 +186,7 @@ impl<V: VertexLayout> Renderer<V> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			count: indices.len(),
-			mode: DrawMode::Triangle,
+			mode: DrawMode::Triangles,
 			vertex: PhantomData,
 		});
 
@@ -255,7 +255,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			queue: Vec::with_capacity(max_vertices),
-			mode: DrawMode::Triangle,
+			mode: DrawMode::Triangles,
 			cur_texture: None,
 			cur_program: None,
 			shape: PhantomData,
@@ -1058,6 +1058,10 @@ impl Framebuffer {
 				return Err(Error::OpenGL("failed to create framebuffer".to_owned()));
 			}
 
+			device.clear(Buffer::Color);
+			device.clear(Buffer::Depth);
+			device.clear(Buffer::Stencil);
+
 			fbuf.unbind();
 
 			return Ok(fbuf);
@@ -1181,6 +1185,12 @@ bind_enum!(StencilOp(u32) {
 	Invert => glow::INVERT,
 });
 
+bind_enum!(Face(u32) {
+	Front => glow::FRONT,
+	Back => glow::BACK,
+	FrontAndBack => glow::FRONT_AND_BACK,
+});
+
 bind_enum!(Buffer(u32) {
 	Color => glow::COLOR_BUFFER_BIT,
 	Stencil => glow::STENCIL_BUFFER_BIT,
@@ -1201,7 +1211,7 @@ bind_enum!(Cmp(u32) {
 bind_enum!(DrawMode(u32) {
 	Point => glow::POINT,
 	Line => glow::LINE,
-	Triangle => glow::TRIANGLES,
+	Triangles => glow::TRIANGLES,
 	LineStrip => glow::LINE_STRIP,
 	TriangleFan => glow::TRIANGLE_FAN,
 	TriangleStrip => glow::TRIANGLE_STRIP,
