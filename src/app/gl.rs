@@ -113,9 +113,9 @@ impl Device {
 		}
 	}
 
-	pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
+	pub fn viewport(&self, x: u32, y: u32, width: u32, height: u32) {
 		unsafe {
-			self.ctx.viewport(x, y, width, height);
+			self.ctx.viewport(x as i32, y as i32, width as i32, height as i32);
 		}
 	}
 
@@ -441,13 +441,13 @@ impl VertexArray {
 
 	}
 
-	pub fn bind(&self) {
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_vertex_array(Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_vertex_array(None);
 		}
@@ -558,19 +558,19 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	pub fn bind(&self) {
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, None);
 		}
 	}
 
-	pub fn bind_attrs(&self, program: &Program) {
+	fn bind_attrs(&self, program: &Program) {
 
 		unsafe {
 
@@ -679,13 +679,13 @@ impl IndexBuffer {
 
 	}
 
-	pub fn bind(&self) {
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
 		}
@@ -732,6 +732,8 @@ impl PartialEq for IndexBuffer {
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
+	width: u32,
+	height: u32,
 }
 
 impl Texture {
@@ -746,6 +748,8 @@ impl Texture {
 			let tex = Self {
 				ctx: ctx,
 				id: id,
+				width: width,
+				height: height,
 			};
 
 			tex.bind();
@@ -802,13 +806,13 @@ impl Texture {
 
 	}
 
-	pub fn bind(&self) {
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, None);
 		}
@@ -959,13 +963,23 @@ impl Program {
 
 	}
 
-	pub fn bind(&self) {
+	pub fn with(&self, f: impl FnOnce()) {
+
+		unsafe {
+			self.ctx.use_program(Some(self.id));
+			f();
+			self.ctx.use_program(None);
+		}
+
+	}
+
+	fn bind(&self) {
 		unsafe {
 			self.ctx.use_program(Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.use_program(None);
 		}
@@ -1007,9 +1021,15 @@ impl Framebuffer {
 
 			let rbo = ctx.create_renderbuffer()?;
 
-			// TODO: do this
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
-// 			ctx.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, width, height);
+
+			ctx.renderbuffer_storage(
+				glow::RENDERBUFFER,
+				glow::DEPTH24_STENCIL8,
+				tex.width as i32,
+				tex.height as i32
+			);
+
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
 
 			let fbuf = Self {
@@ -1027,15 +1047,15 @@ impl Framebuffer {
 				0,
 			);
 
-// 			fbuf.ctx.framebuffer_renderbuffer(
-// 				glow::FRAMEBUFFER,
-// 				glow::DEPTH_STENCIL_ATTACHMENT,
-// 				glow::RENDERBUFFER,
-// 				Some(rbo),
-// 			);
+			fbuf.ctx.framebuffer_renderbuffer(
+				glow::FRAMEBUFFER,
+				glow::DEPTH_STENCIL_ATTACHMENT,
+				glow::RENDERBUFFER,
+				Some(rbo),
+			);
 
 			if fbuf.ctx.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-				// ...
+				return Err(Error::OpenGL("failed to create framebuffer".to_owned()));
 			}
 
 			fbuf.unbind();
@@ -1045,13 +1065,27 @@ impl Framebuffer {
 		}
 	}
 
-	pub fn bind(&self) {
+	pub fn with<R>(&self, f: impl FnOnce() -> R) -> R {
+
+		unsafe {
+
+			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
+			let r = f();
+			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, None);
+
+			return r;
+
+		}
+
+	}
+
+	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
 		}
 	}
 
-	pub fn unbind(&self) {
+	fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, None);
 		}

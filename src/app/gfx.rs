@@ -131,19 +131,24 @@ impl Gfx for Ctx {
 		}
 
 		flush(self);
-		canvas.handle.bind();
-		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
-		self.gl.viewport(0, 0, canvas.width() as i32, canvas.height() as i32);
-		self.cur_shader_2d.send("proj", flipped_proj);
-		self.push();
-		self.reset();
-		f(self)?;
-		self.pop()?;
-		flush(self);
-		self.cur_shader_2d.send("proj", self.proj_2d);
+		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 
-		canvas.handle.unbind();
-		self.gl.viewport(0, 0, self.width() as i32 * self.dpi() as i32, self.height() as i32 * self.dpi() as i32);
+		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
+		canvas.handle.with(|| -> Result<()> {
+
+			self.cur_shader_2d.send("proj", flipped_proj);
+			self.push();
+			self.reset();
+			f(self)?;
+			self.pop()?;
+			flush(self);
+			self.cur_shader_2d.send("proj", self.proj_2d);
+
+			return Ok(());
+
+		})?;
+
+		self.gl.viewport(0, 0, self.width() * self.dpi() as u32, self.height() * self.dpi() as u32);
 
 		return Ok(());
 

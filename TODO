@@ -7,7 +7,7 @@
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
 - make gl lib stateless
-- clear() only clears current framebuffer
+- pass Event to State::run
 
 == TODO
 - http less allocation / copying
@@ -41,4 +41,5 @@
 - inverse matrix
 - fix fullscreen framebuffer weirdness
 - stencil buffer
+- support stencil in framebuffer
 
