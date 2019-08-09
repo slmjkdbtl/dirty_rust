@@ -18,7 +18,6 @@ impl app::State for Game {
 		shader.send("time", ctx.time());
 		shader.send("mouse", vec2!(ctx.mouse_pos().x, ctx.mouse_pos().y));
 		shader.send("resolution", vec2!(ctx.width(), ctx.height()));
-		shader.send("zoom", 12.0);
 
 		return Ok(Self {
 
@@ -37,6 +36,7 @@ impl app::State for Game {
 		})?;
 
 		self.shader.send("time", ctx.time());
+		self.shader.send("mouse", vec2!(ctx.mouse_pos().x, ctx.mouse_pos().y) / 640.0);
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 

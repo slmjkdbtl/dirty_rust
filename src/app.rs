@@ -1,6 +1,5 @@
 // wengwengweng
 
-mod gl;
 pub mod gfx;
 pub mod input;
 pub mod window;

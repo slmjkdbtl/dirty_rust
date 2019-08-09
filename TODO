@@ -10,6 +10,7 @@
 - pass Event to State::run
 - expose more flexible stencil api
 - track draw calls
+- higer level gl stencil abstraction
 
 == TODO
 - http less allocation / copying
@@ -45,4 +46,5 @@
 - stencil buffer
 - support stencil in framebuffer
 - flipped projection 3d in framebuffer
+- split gl into modules
 
