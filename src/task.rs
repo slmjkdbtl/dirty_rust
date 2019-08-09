@@ -24,7 +24,7 @@ impl Pool {
 			tx.send(f());
 		});
 
-		return Task::new(rx);
+		return Task::from_rx(rx);
 
 	}
 
@@ -38,7 +38,7 @@ pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(f: F) 
 		tx.send(f());
 	});
 
-	return Task::new(rx);
+	return Task::from_rx(rx);
 
 }
 
@@ -49,7 +49,7 @@ pub struct Task<T> {
 
 impl<T> Task<T> {
 
-	pub fn new(rx: Receiver<T>) -> Self {
+	fn from_rx(rx: Receiver<T>) -> Self {
 		return Self {
 			rx: rx,
 			data: None,

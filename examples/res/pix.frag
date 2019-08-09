@@ -1,6 +1,7 @@
 // wengwengweng
 
 uniform float size;
+uniform vec2 dimension;
 
 // TODO: make size be screen pixel size instead of normalized screen coord
 vec4 frag(sampler2D tex, vec2 uv) {
@@ -9,9 +10,10 @@ vec4 frag(sampler2D tex, vec2 uv) {
 		return texture2D(tex, uv);
 	}
 
-	float x = floor(uv.x / size + 0.5);
-	float y = floor(uv.y / size + 0.5);
-	vec4 c = texture2D(tex, vec2(x, y) * size);
+	vec2 nsize = vec2(size / dimension.x, size / dimension.y);
+	float x = floor(uv.x / nsize.x + 0.5);
+	float y = floor(uv.y / nsize.y + 0.5);
+	vec4 c = texture2D(tex, vec2(x, y) * nsize);
 
 	return c;
 

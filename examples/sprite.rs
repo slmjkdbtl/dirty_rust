@@ -98,6 +98,7 @@ impl app::State for Game {
 		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
 		effect.send("size", 0.0);
+		effect.send("dimension", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
 			sprite: sprite,
@@ -131,7 +132,7 @@ impl app::State for Game {
 // 			return Ok(());
 // 		})?;
 
-		self.pix_size = rand!() / 100.0;
+		self.pix_size = rand!() * 6.0;
 		self.effect.send("size", self.pix_size);
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
