@@ -8,9 +8,18 @@
 
 #![deny(clippy::implicit_return)]
 
+macro_rules! export {
+	($name:ident) => {
+		mod $name;
+		pub use $name::*;
+	}
+}
+
 pub mod math;
 pub mod task;
 
+#[cfg(feature = "app")]
+pub mod gl;
 #[cfg(feature = "app")]
 pub mod app;
 

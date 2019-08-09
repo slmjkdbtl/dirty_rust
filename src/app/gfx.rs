@@ -19,6 +19,7 @@ use gl::Shape;
 pub use gl::UniformValue;
 pub use gl::UniformType;
 pub use gl::FilterMode;
+pub use gl::Cmp;
 
 pub trait Gfx {
 
@@ -33,7 +34,7 @@ pub trait Gfx {
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_masked_inverse(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// transform
 	fn push(&mut self);
@@ -165,34 +166,33 @@ impl Gfx for Ctx {
 	}
 
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		flush(self);
-		self.gl.clear(gl::Buffer::Stencil);
-		self.gl.enable(gl::Capability::StencilTest);
-		self.gl.stencil_func(gl::Cmp::Never);
-		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
-		mask(self)?;
-		flush(self);
-		self.gl.stencil_func(gl::Cmp::Equal);
-		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
-		draw(self)?;
-		flush(self);
-		self.gl.disable(gl::Capability::StencilTest);
-
-		return Ok(());
-
+		return self.draw_masked_ex(Cmp::Never, Cmp::Equal, mask, draw);
 	}
 
-	fn draw_masked_inverse(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	// TODO: use gl::StencilDraw
+	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+// 		let d1 = gl::StencilDraw {
+// 			ops: gl::StencilOps {
+// 				sfail: gl::StencilOp::Replace,
+// 				dpfail: gl::StencilOp::Replace,
+// 				dppass: gl::StencilOp::Replace,
+// 			},
+// 			func: gl::StencilFunc {
+// 				cmp: gl::Cmp::Never,
+// 				rf: 1,
+// 				mask: 0xff,
+// 			},
+// 		};
 
 		flush(self);
 		self.gl.clear(gl::Buffer::Stencil);
 		self.gl.enable(gl::Capability::StencilTest);
-		self.gl.stencil_func(gl::Cmp::Never);
+		self.gl.stencil_func(f1);
 		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
 		mask(self)?;
 		flush(self);
-		self.gl.stencil_func(gl::Cmp::NotEqual);
+		self.gl.stencil_func(f2);
 		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
 		draw(self)?;
 		flush(self);
