@@ -81,9 +81,6 @@ impl gfx::DrawCmd for &Sprite {
 
 struct Game {
 	sprite: Sprite,
-	canvas: gfx::Canvas,
-	effect: gfx::Shader,
-	pix_size: f32,
 }
 
 impl app::State for Game {
@@ -95,16 +92,8 @@ impl app::State for Game {
 
 		sprite.slice(4, 1);
 
-		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
-
-		effect.send("size", 0.0);
-		effect.send("dimension", vec2!(ctx.width(), ctx.height()));
-
 		return Ok(Self {
 			sprite: sprite,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
-			effect: effect,
-			pix_size: 0.0,
 		});
 
 	}
@@ -112,28 +101,7 @@ impl app::State for Game {
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		self.sprite.next();
-
-		ctx.draw_on(&self.canvas, |ctx| {
-			ctx.clear();
-			ctx.draw(&self.sprite)?;
-			return Ok(());
-		})?;
-
-		ctx.draw_with(&self.effect, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
-
-// 		ctx.draw_masked(|ctx| {
-// 			ctx.draw(shapes::rect(100.0, 100.0))?;
-// 			return Ok(());
-// 		}, |ctx| {
-// 			ctx.draw(&self.sprite)?;
-// 			return Ok(());
-// 		})?;
-
-		self.pix_size = rand!() * 6.0;
-		self.effect.send("size", self.pix_size);
+		ctx.draw(&self.sprite)?;
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 

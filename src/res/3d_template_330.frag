@@ -13,6 +13,12 @@ uniform vec4 color;
 ###REPLACE###
 
 void main() {
+
 	frag_color = v_color;
+
+	if (frag_color.a == 0.0) {
+		discard;
+	}
+
 }
 
