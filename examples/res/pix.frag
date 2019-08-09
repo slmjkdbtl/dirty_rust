@@ -3,7 +3,6 @@
 uniform float size;
 uniform vec2 dimension;
 
-// TODO: make size be screen pixel size instead of normalized screen coord
 vec4 frag(sampler2D tex, vec2 uv) {
 
 	if (size == 0.0) {

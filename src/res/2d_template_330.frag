@@ -12,6 +12,12 @@ out vec4 frag_color;
 ###REPLACE###
 
 void main() {
+
 	frag_color = frag(tex, v_uv) * v_color;
+
+	if (frag_color.a == 0.0) {
+		discard;
+	}
+
 }
 

@@ -8,6 +8,12 @@ uniform sampler2D tex;
 ###REPLACE###
 
 void main() {
+
 	gl_FragColor = frag(tex, v_uv) * v_color;
+
+	if (gl_FragColor.a == 0.0) {
+		discard;
+	}
+
 }
 

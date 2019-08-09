@@ -9,6 +9,12 @@ uniform vec4 color;
 ###REPLACE###
 
 void main() {
+
 	gl_FragColor = v_color;
+
+	if (gl_FragColor.a == 0.0) {
+		discard;
+	}
+
 }
 
