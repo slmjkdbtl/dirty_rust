@@ -23,11 +23,16 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		ctx.scale(vec2!(2));
+
 		ctx.draw_masked(|ctx| {
 			ctx.draw(shapes::sprite(&self.tex))?;
 			return Ok(());
 		}, |ctx| {
+			ctx.push();
+			ctx.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0));
 			ctx.draw(shapes::sprite(&self.tex2))?;
+			ctx.pop()?;
 			return Ok(());
 		})?;
 

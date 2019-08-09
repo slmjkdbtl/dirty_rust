@@ -32,6 +32,7 @@ pub trait Gfx {
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_masked_inverse(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// transform
 	fn push(&mut self);
@@ -172,6 +173,25 @@ impl Gfx for Ctx {
 		mask(self)?;
 		flush(self);
 		self.gl.stencil_func(gl::Cmp::Equal);
+		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
+		draw(self)?;
+		flush(self);
+		self.gl.disable(gl::Capability::StencilTest);
+
+		return Ok(());
+
+	}
+
+	fn draw_masked_inverse(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		flush(self);
+		self.gl.clear(gl::Buffer::Stencil);
+		self.gl.enable(gl::Capability::StencilTest);
+		self.gl.stencil_func(gl::Cmp::Never);
+		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
+		mask(self)?;
+		flush(self);
+		self.gl.stencil_func(gl::Cmp::NotEqual);
 		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
 		draw(self)?;
 		flush(self);
