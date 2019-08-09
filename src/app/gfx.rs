@@ -18,6 +18,7 @@ use gl::Shape;
 
 pub use gl::UniformValue;
 pub use gl::UniformType;
+pub use gl::FilterMode;
 
 pub trait Gfx {
 
@@ -232,10 +233,6 @@ fn flip_matrix(m: &Mat4) -> Mat4 {
 
 	return nm;
 
-}
-
-pub(super) fn origin(ctx: &app::Ctx) -> Origin {
-	return ctx.origin;
 }
 
 pub(super) fn begin(ctx: &mut Ctx) {
@@ -489,6 +486,8 @@ impl Texture {
 		let h = img.height();
 		let handle = gl::Texture::init(&ctx.gl, w, h, &img.into_raw())?;
 
+		handle.filter(ctx.conf.texture_filter);
+
 		return Ok(Self::from_handle(handle, w as u32, h as u32));
 
 	}
@@ -506,6 +505,7 @@ impl Texture {
 	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::init(&ctx.gl, w, h, &pixels)?;
+		handle.filter(ctx.conf.texture_filter);
 		return Ok(Self::from_handle(handle, w, h));
 
 	}

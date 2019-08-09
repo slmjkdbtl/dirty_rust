@@ -9,6 +9,7 @@
 - make gl lib stateless
 - pass Event to State::run
 - expose more flexible stencil api
+- track draw calls
 
 == TODO
 - http less allocation / copying

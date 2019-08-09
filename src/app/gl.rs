@@ -806,6 +806,30 @@ impl Texture {
 
 	}
 
+	pub fn filter(&self, f: FilterMode) {
+
+		unsafe {
+
+			self.bind();
+
+			self.ctx.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_MIN_FILTER,
+				f.into(),
+			);
+
+			self.ctx.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_MAG_FILTER,
+				f.into(),
+			);
+
+			self.unbind();
+
+		}
+
+	}
+
 	fn bind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, Some(self.id));

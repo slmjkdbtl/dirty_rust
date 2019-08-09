@@ -2,39 +2,41 @@
 
 use dirty::*;
 use dirty::app::*;
-use dirty::math::*;
 use input::Key;
 
 struct Game {
-	tex: gfx::Texture,
-	tex2: gfx::Texture,
+	canvas: gfx::Canvas,
+	shader: gfx::Shader,
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
+		let shader = gfx::Shader::effect(ctx, include_str!("res/twist.frag"))?;
+
+		shader.send("time", ctx.time());
+		shader.send("mouse", vec2!(ctx.mouse_pos().x, ctx.mouse_pos().y));
+		shader.send("resolution", vec2!(ctx.width(), ctx.height()));
+		shader.send("zoom", 12.0);
+
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/blob.png"))?,
-			tex2: gfx::Texture::from_bytes(ctx, include_bytes!("res/gradient.png"))?,
+
+			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			shader: shader,
+
 		});
 
 	}
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.scale(vec2!(2));
-
-		ctx.draw_masked(|ctx| {
-			ctx.draw(shapes::sprite(&self.tex))?;
-			return Ok(());
-		}, |ctx| {
-			ctx.push();
-			ctx.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0));
-			ctx.draw(shapes::sprite(&self.tex2))?;
-			ctx.pop()?;
+		ctx.draw_with(&self.shader, |ctx| {
+			ctx.draw(shapes::canvas(&self.canvas))?;
 			return Ok(());
 		})?;
+
+		self.shader.send("time", ctx.time());
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
@@ -55,11 +57,9 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.texture_filter(gfx::FilterMode::Linear)
 		.run::<Game>() {
 		println!("{}", err);
 	}
 
 }
-
 

@@ -39,11 +39,12 @@ include!("res/resources.rs");
 /// Manages Ctx
 pub struct Ctx {
 
+	pub(self) conf: Conf,
+
 	// lifecycle
 	pub(self) quit: bool,
 	pub(self) dt: f32,
 	pub(self) time: f32,
-	pub(self) fps_cap: Option<u16>,
 	pub(self) fps_counter: FPSCounter,
 
 	// input
@@ -68,9 +69,6 @@ pub struct Ctx {
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
-	pub(self) origin: gfx::Origin,
-	pub(self) quad_origin: gfx::Origin,
-
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
@@ -202,7 +200,6 @@ impl Ctx {
 			quit: false,
 			dt: 0.0,
 			time: 0.0,
-			fps_cap: conf.fps_cap,
 			fps_counter: FPSCounter::new(),
 
 			key_state: HashMap::new(),
@@ -225,8 +222,6 @@ impl Ctx {
 			gamepad_ctx: Gilrs::new()?,
 
 			gl: gl,
-			origin: conf.origin,
-			quad_origin: conf.quad_origin,
 			quad_renderer: quad_renderer,
 
 			proj_2d: proj_2d,
@@ -248,13 +243,15 @@ impl Ctx {
 			transform: Mat4::identity(),
 			transform_stack: Vec::with_capacity(4),
 
+			conf: conf,
+
 		};
 
-		if conf.cursor_hidden {
+		if ctx.conf.cursor_hidden {
 			ctx.set_cursor_hidden(true);
 		}
 
-		if conf.cursor_locked {
+		if ctx.conf.cursor_locked {
 			ctx.set_cursor_locked(true)?;
 		}
 
@@ -281,7 +278,7 @@ impl Ctx {
 				break 'run;
 			}
 
-			if let Some(fps_cap) = self.fps_cap {
+			if let Some(fps_cap) = self.conf.fps_cap {
 
 				let real_dt = start_time.elapsed().as_millis();
 				let expected_dt = (1000.0 / fps_cap as f32) as u128;
@@ -427,6 +424,11 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
+		self.conf.fps_cap = f;
+		return self;
+	}
+
 	pub fn origin(mut self, o: Origin) -> Self {
 		self.conf.origin = o;
 		return self;
@@ -437,8 +439,8 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
-		self.conf.fps_cap = f;
+	pub fn texture_filter(mut self, f: gfx::FilterMode) -> Self {
+		self.conf.texture_filter = f;
 		return self;
 	}
 
@@ -462,9 +464,10 @@ pub struct Conf {
 	pub titlebar_transparent: bool,
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
+	pub fps_cap: Option<u16>,
 	pub origin: Origin,
 	pub quad_origin: Origin,
-	pub fps_cap: Option<u16>,
+	pub texture_filter: gfx::FilterMode,
 }
 
 impl Conf {
@@ -500,9 +503,10 @@ impl Default for Conf {
 			titlebar_transparent: false,
 			cursor_hidden: false,
 			cursor_locked: false,
+			fps_cap: Some(60),
 			origin: Origin::Center,
 			quad_origin: Origin::Center,
-			fps_cap: Some(60),
+			texture_filter: gfx::FilterMode::Nearest,
 		};
 	}
 
