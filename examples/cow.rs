@@ -23,7 +23,8 @@ impl app::State for Game {
 
 		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
-		effect.send("size", 0.01);
+		effect.send("size", 6.0);
+		effect.send("dimension", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
@@ -66,8 +67,8 @@ impl app::State for Game {
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
-		self.pix_size = rand!() / 32.0;
-		self.effect.send("size", self.pix_size);
+// 		self.pix_size = rand!() * 12.0;
+// 		self.effect.send("size", self.pix_size);
 
 		if let Some(delta) = ctx.mouse_delta() {
 
