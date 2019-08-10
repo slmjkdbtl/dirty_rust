@@ -80,7 +80,7 @@ bind_enum!(Face(u32) {
 	FrontAndBack => glow::FRONT_AND_BACK,
 });
 
-bind_enum!(Buffer(u32) {
+bind_enum!(Surface(u32) {
 	Color => glow::COLOR_BUFFER_BIT,
 	Stencil => glow::STENCIL_BUFFER_BIT,
 	Depth => glow::DEPTH_BUFFER_BIT,
@@ -98,12 +98,12 @@ bind_enum!(Cmp(u32) {
 });
 
 bind_enum!(DrawMode(u32) {
-	Point => glow::POINT,
-	Line => glow::LINE,
+	Points => glow::POINT,
+	Lines => glow::LINE,
 	Triangles => glow::TRIANGLES,
-	LineStrip => glow::LINE_STRIP,
-	TriangleFan => glow::TRIANGLE_FAN,
-	TriangleStrip => glow::TRIANGLE_STRIP,
+	LineStrips => glow::LINE_STRIP,
+	TriangleFans => glow::TRIANGLE_FAN,
+	TriangleStrips => glow::TRIANGLE_STRIP,
 });
 
 bind_enum!(ShaderType(u32) {
