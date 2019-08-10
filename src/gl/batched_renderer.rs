@@ -27,6 +27,7 @@ pub struct BatchedRenderer<S: Shape> {
 	mode: DrawMode,
 	cur_texture: Option<Texture>,
 	cur_program: Option<Program>,
+	draw_count: usize,
 	shape: PhantomData<S>,
 
 }
@@ -65,20 +66,24 @@ impl<S: Shape> BatchedRenderer<S> {
 			mode: DrawMode::Triangles,
 			cur_texture: None,
 			cur_program: None,
+			draw_count: 0,
 			shape: PhantomData,
 		});
 
 	}
 
-	pub fn push(&mut self, shape: S, program: &Program, tex: &Texture) -> Result<()> {
+	pub fn push(&mut self, shape: S, program: &Program, otex: Option<&Texture>) -> Result<()> {
 
-		if let Some(cur_tex) = &self.cur_texture {
-			if cur_tex != tex {
+		if let Some(tex) = otex {
+			if let Some(cur_tex) = &self.cur_texture {
+				if cur_tex != tex {
+					self.flush();
+					self.cur_texture = Some(tex.clone());
+				}
+			} else {
 				self.flush();
 				self.cur_texture = Some(tex.clone());
 			}
-		} else {
-			self.cur_texture = Some(tex.clone());
 		}
 
 		if let Some(cur_program) = &self.cur_program {
@@ -137,6 +142,7 @@ impl<S: Shape> BatchedRenderer<S> {
 		self.cur_texture = None;
 		self.cur_program = None;
 		self.queue.clear();
+		self.draw_count += 1;
 
 	}
 
@@ -146,6 +152,19 @@ impl<S: Shape> BatchedRenderer<S> {
 
 	pub fn frame_end(&mut self) {
 		self.flush();
+	}
+
+	pub fn clear(&mut self) {
+
+		self.cur_texture = None;
+		self.cur_program = None;
+		self.queue.clear();
+		self.draw_count = 0;
+
+	}
+
+	pub fn draw_count(&self) -> usize {
+		return self.draw_count;
 	}
 
 }

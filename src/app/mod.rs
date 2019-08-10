@@ -32,7 +32,7 @@ use gfx::Origin;
 
 const MAX_DRAWS: usize = 65536;
 
-include!("res/resources.rs");
+include!("../res/resources.rs");
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -156,7 +156,6 @@ impl Ctx {
 		gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 		gl.depth_func(gl::Cmp::LessOrEqual);
 		gl.clear_color(color!(0, 0, 0, 1));
-		gl.clear(gl::Buffer::Color);
 
 		let quad_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
 
@@ -254,6 +253,7 @@ impl Ctx {
 			ctx.set_cursor_locked(true)?;
 		}
 
+		ctx.clear();
 		window::swap(&ctx)?;
 
 		return Ok(ctx);

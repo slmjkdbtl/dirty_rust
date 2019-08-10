@@ -61,9 +61,9 @@ impl Gfx for Ctx {
 	fn clear(&mut self) {
 
 		flush(self);
-		self.gl.clear(gl::Buffer::Color);
-		self.gl.clear(gl::Buffer::Depth);
-		self.gl.clear(gl::Buffer::Stencil);
+		self.gl.clear(gl::Surface::Color);
+		self.gl.clear(gl::Surface::Depth);
+		self.gl.clear(gl::Surface::Stencil);
 
 	}
 
@@ -186,7 +186,7 @@ impl Gfx for Ctx {
 // 		};
 
 		flush(self);
-		self.gl.clear(gl::Buffer::Stencil);
+		self.gl.clear(gl::Surface::Stencil);
 		self.gl.enable(gl::Capability::StencilTest);
 		self.gl.stencil_func(f1);
 		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
@@ -248,6 +248,8 @@ pub(super) fn end(ctx: &mut Ctx) {
 	flush(ctx);
 	ctx.transform = Mat4::identity();
 	ctx.transform_stack.clear();
+	ctx.draw_calls += ctx.quad_renderer.draw_count();
+	ctx.quad_renderer.clear();
 
 }
 

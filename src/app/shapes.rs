@@ -58,7 +58,7 @@ impl<'a> DrawCmd for Sprite<'a> {
 
 		let shape = gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
-		ctx.quad_renderer.push(shape, &ctx.cur_shader_2d.handle, &self.tex.handle)?;
+		ctx.quad_renderer.push(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
 
 		ctx.pop()?;
 
@@ -358,6 +358,7 @@ impl<'a> DrawCmd for Model<'a> {
 
 		ctx.cur_shader_3d.send("model", ctx.transform);
 		ctx.cur_shader_3d.send("color", self.color);
+		ctx.draw_calls += 1;
 		self.model.renderer.draw(&ctx.cur_shader_3d.handle);
 		ctx.cur_shader_3d.send("color", color!(1));
 

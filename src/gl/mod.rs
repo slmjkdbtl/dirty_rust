@@ -9,6 +9,7 @@ export!(fbuf);
 export!(attr);
 export!(vao);
 export!(uniform);
+export!(stencil);
 export!(renderer);
 export!(batched_renderer);
 
@@ -27,6 +28,8 @@ type BufferID = <GLCtx as Context>::Buffer;
 type ProgramID = <GLCtx as Context>::Program;
 type FramebufferID = <GLCtx as Context>::Framebuffer;
 type VertexArrayID = <GLCtx as Context>::VertexArray;
+
+// TODO: clean up this mess
 
 pub struct Device {
 	ctx: Rc<GLCtx>,
@@ -100,7 +103,7 @@ impl Device {
 		}
 	}
 
-	pub fn clear(&self, buf: Buffer) {
+	pub fn clear(&self, buf: Surface) {
 		unsafe {
 			self.ctx.clear(buf.into());
 		}
@@ -108,7 +111,7 @@ impl Device {
 
 	pub fn stencil<F: Fn()>(&self, ops: &[StencilDraw<F>]) {
 
-		self.clear(Buffer::Stencil);
+		self.clear(Surface::Stencil);
 		self.enable(Capability::StencilTest);
 
 		unsafe {
@@ -141,24 +144,6 @@ impl Device {
 		}
 	}
 
-}
-
-pub struct StencilOps {
-	sfail: StencilOp,
-	dpfail: StencilOp,
-	dppass: StencilOp,
-}
-
-pub struct StencilFunc {
-	cmp: Cmp,
-	rf: i32,
-	mask: u32,
-}
-
-pub struct StencilDraw<F: Fn()> {
-	ops: StencilOps,
-	func: StencilFunc,
-	draw: F,
 }
 
 #[cfg(feature="gl3")]

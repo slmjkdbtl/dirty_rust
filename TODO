@@ -9,8 +9,11 @@
 - make gl lib stateless
 - pass Event to State::run
 - expose more flexible stencil api
-- track draw calls
 - higer level gl stencil abstraction
+- 3d primitives
+- error report location
+- test Drop on Clone
+- clearer shader variable prefixes
 
 == TODO
 - http less allocation / copying
@@ -47,4 +50,5 @@
 - support stencil in framebuffer
 - flipped projection 3d in framebuffer
 - split gl into modules
+- track draw calls
 
