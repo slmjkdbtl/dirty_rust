@@ -74,6 +74,7 @@ pub struct Ctx {
 
 	pub(self) gl: gl::Device,
 	pub(self) quad_renderer: gl::BatchedRenderer<gfx::QuadShape>,
+	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 
 	pub(self) empty_tex: gfx::Texture,
 
@@ -157,8 +158,6 @@ impl Ctx {
 		gl.depth_func(gl::Cmp::LessOrEqual);
 		gl.clear_color(color!(0, 0, 0, 1));
 
-		let quad_renderer = gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?;
-
 		let empty_tex = gl::Texture::init(&gl, 1, 1, &[255; 4])?;
 		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
 
@@ -219,8 +218,9 @@ impl Ctx {
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: Gilrs::new()?,
 
+			quad_renderer: gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?,
+			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
 			gl: gl,
-			quad_renderer: quad_renderer,
 
 			proj_2d: proj_2d,
 			proj_3d: proj_3d,

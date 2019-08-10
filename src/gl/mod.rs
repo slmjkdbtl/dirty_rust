@@ -38,11 +38,9 @@ pub struct Device {
 impl Device {
 
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
-
 		return Self {
 			ctx: Rc::new(GLCtx::from_loader_function(f)),
 		};
-
 	}
 
 	pub fn enable(&self, cap: Capability) {
@@ -135,6 +133,18 @@ impl Device {
 	pub fn stencil_func(&self, f: Cmp) {
 		unsafe {
 			self.ctx.stencil_func(f.into(), 1, 0xff);
+		}
+	}
+
+	pub fn cull_face(&self, face: Face) {
+		unsafe {
+			self.ctx.cull_face(face.into());
+		}
+	}
+
+	pub fn front_face(&self, dir: Dir) {
+		unsafe {
+			self.ctx.front_face(dir.into());
 		}
 	}
 
