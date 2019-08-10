@@ -14,7 +14,10 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(shapes::text("yo"))?;
+		ctx.translate_3d(vec3!(0, 0, 3));
+		ctx.rotate_y(ctx.time());
+		ctx.rotate_z(ctx.time());
+		ctx.draw(shapes::cube())?;
 
 		if ctx.key_pressed(Key::Escape) {
 			ctx.quit();

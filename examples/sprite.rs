@@ -79,6 +79,15 @@ impl gfx::DrawCmd for &Sprite {
 	}
 }
 
+#[derive(Clone)]
+struct Test;
+
+impl Drop for Test {
+	fn drop(&mut self) {
+		println!("yo");
+	}
+}
+
 struct Game {
 	sprite: Sprite,
 }
@@ -125,6 +134,8 @@ fn main() {
 		.run::<Game>() {
 		println!("{}", err);
 	}
+
+// 	let a = Test;
 
 }
 

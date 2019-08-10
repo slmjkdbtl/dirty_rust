@@ -42,9 +42,11 @@ pub trait Gfx {
 	fn translate(&mut self, pos: Vec2);
 	fn rotate(&mut self, angle: f32);
 	fn scale(&mut self, scale: Vec2);
-	fn translate3d(&mut self, pos: Vec3);
-	fn rotate3d(&mut self, angle: f32, axis: Vec3);
-	fn scale3d(&mut self, scale: Vec3);
+	fn translate_3d(&mut self, pos: Vec3);
+	fn rotate_x(&mut self, angle: f32);
+	fn rotate_y(&mut self, angle: f32);
+	fn rotate_z(&mut self, angle: f32);
+	fn scale_3d(&mut self, scale: Vec3);
 	fn matrix(&self) -> Mat4;
 	fn apply(&mut self, m: Mat4);
 	fn reset(&mut self);
@@ -92,15 +94,23 @@ impl Gfx for Ctx {
 		self.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
 	}
 
-	fn translate3d(&mut self, pos: Vec3) {
+	fn translate_3d(&mut self, pos: Vec3) {
 		self.transform *= Mat4::translate(pos);
 	}
 
-	fn rotate3d(&mut self, angle: f32, axis: Vec3) {
-		self.transform *= Mat4::rotate(angle, axis);
+	fn rotate_x(&mut self, angle: f32) {
+		self.transform *= Mat4::rotate(angle, vec3!(1, 0, 0));
 	}
 
-	fn scale3d(&mut self, scale: Vec3) {
+	fn rotate_y(&mut self, angle: f32) {
+		self.transform *= Mat4::rotate(angle, vec3!(0, 1, 0));
+	}
+
+	fn rotate_z(&mut self, angle: f32) {
+		self.transform *= Mat4::rotate(angle, vec3!(0, 0, 1));
+	}
+
+	fn scale_3d(&mut self, scale: Vec3) {
 		self.transform *= Mat4::scale(scale);
 	}
 
@@ -257,7 +267,7 @@ pub(super) fn flush(ctx: &mut Ctx) {
 	ctx.quad_renderer.flush();
 }
 
-pub(super) struct Vertex2D {
+pub struct Vertex2D {
 	pos: Vec2,
 	uv: Vec2,
 	color: Color,
@@ -301,7 +311,7 @@ impl VertexLayout for Vertex2D {
 	}
 }
 
-pub(super) struct Vertex3D {
+pub struct Vertex3D {
 	pos: Vec3,
 	normal: Vec3,
 	color: Color,
@@ -773,6 +783,45 @@ impl Model {
 
 	pub fn from_obj_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_tobj(ctx, tobj::load_obj(path.as_ref()));
+	}
+
+}
+
+pub(super) struct CubeShape;
+
+impl Shape for CubeShape {
+
+	type Vertex = Vertex3D;
+	const COUNT: usize = 8;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+
+		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec3!(), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec3!(), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec3!(), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec3!(), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec3!(), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec3!(), color!(1, 1, 1, 1)).push(queue);
+
+	}
+
+	fn indices() -> Vec<u32> {
+		return vec![
+			0, 1, 2,
+			2, 3, 0,
+			1, 5, 6,
+			6, 2, 1,
+			7, 6, 5,
+			5, 4, 7,
+			4, 0, 3,
+			3, 7, 4,
+			4, 5, 1,
+			1, 0, 4,
+			3, 2, 6,
+			6, 7, 3,
+		];
 	}
 
 }

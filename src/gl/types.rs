@@ -80,6 +80,11 @@ bind_enum!(Face(u32) {
 	FrontAndBack => glow::FRONT_AND_BACK,
 });
 
+bind_enum!(Dir(u32) {
+	Clockwise => glow::CW,
+	CounterClockwise => glow::CCW,
+});
+
 bind_enum!(Surface(u32) {
 	Color => glow::COLOR_BUFFER_BIT,
 	Stencil => glow::STENCIL_BUFFER_BIT,

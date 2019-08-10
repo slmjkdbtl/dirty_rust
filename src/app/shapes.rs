@@ -368,3 +368,23 @@ impl<'a> DrawCmd for Model<'a> {
 
 }
 
+pub struct Cube;
+
+pub fn cube() -> Cube {
+	return Cube;
+}
+
+impl DrawCmd for Cube {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		ctx.cur_shader_3d.send("model", ctx.transform);
+		ctx.draw_calls += 1;
+		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle);
+
+		return Ok(());
+
+	}
+
+}
+
