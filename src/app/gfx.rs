@@ -503,7 +503,7 @@ impl Origin {
 			Center => vec2!(0, 0),
 			Right => vec2!(1, 0),
 			BottomLeft => vec2!(-1, 1),
-			Bottom => vec2!(0, -1),
+			Bottom => vec2!(0, 1),
 			BottomRight => vec2!(1, 1),
 		};
 
@@ -512,13 +512,13 @@ impl Origin {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Texture {
+pub struct Tex2D {
 	pub(super) handle: Rc<gl::Texture>,
 	width: u32,
 	height: u32,
 }
 
-impl Texture {
+impl Tex2D {
 
 	pub(super) fn from_handle(handle: gl::Texture, w: u32, h: u32) -> Self {
 		return Self {
@@ -579,7 +579,7 @@ impl Texture {
 #[derive(Clone, PartialEq)]
 pub struct Font {
 
-	pub(super) tex: gfx::Texture,
+	pub(super) tex: Tex2D,
 	pub(super) map: HashMap<char, Quad>,
 	pub(super) quad_size: Vec2,
 	grid_width: u32,
@@ -590,7 +590,7 @@ pub struct Font {
 impl Font {
 
 	/// creat a bitmap font from a texture, and grid of characters
-	pub fn from_tex(tex: gfx::Texture, cols: usize, rows: usize, chars: &str) -> Result<Self> {
+	pub fn from_tex(tex: Tex2D, cols: usize, rows: usize, chars: &str) -> Result<Self> {
 
 		let mut map = HashMap::new();
 		let quad_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
@@ -674,7 +674,7 @@ impl Shader {
 pub struct Canvas {
 
 	handle: Rc<gl::Framebuffer>,
-	pub(super) tex: Texture,
+	pub(super) tex: Tex2D,
 
 }
 
@@ -686,7 +686,7 @@ impl Canvas {
 		let tw = (width as f64 * dpi) as u32;
 		let th = (height as f64 * dpi) as u32;
 		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
-		let tex = Texture::from_pixels(&ctx, tw, th, &pixels)?;
+		let tex = Tex2D::from_pixels(&ctx, tw, th, &pixels)?;
 		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle)?;
 
 		return Ok(Self {
@@ -877,7 +877,7 @@ struct FontQuad {
 
 pub struct TrueTypeFont {
 	cache: GlyphBrush<'static, FontQuad>,
-	tex: Texture,
+	tex: Tex2D,
 	quads: Vec<FontQuad>,
 	size: f32,
 }
@@ -893,7 +893,7 @@ impl TrueTypeFont {
 
 		return Ok(Self {
 			cache: font_cache,
-			tex: Texture::from_handle(font_cache_texture, width, height),
+			tex: Tex2D::from_handle(font_cache_texture, width, height),
 			quads: Vec::with_capacity(64),
 			size: size,
 		})

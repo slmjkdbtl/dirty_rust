@@ -7,7 +7,7 @@ use input::Key;
 
 struct Sprite {
 
-	tex: gfx::Texture,
+	tex: gfx::Tex2D,
 	frames: Vec<Quad>,
 	cur_frame: usize,
 	looping: bool,
@@ -17,7 +17,7 @@ struct Sprite {
 
 impl Sprite {
 
-	pub fn new(tex: gfx::Texture) -> Self {
+	pub fn new(tex: gfx::Tex2D) -> Self {
 		return Self {
 			tex: tex,
 			frames: vec![quad!(0, 0, 1, 1)],
@@ -96,7 +96,7 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/car.png"))?;
+		let tex = gfx::Tex2D::from_bytes(ctx, include_bytes!("res/car.png"))?;
 		let mut sprite = Sprite::new(tex);
 
 		sprite.slice(4, 1);
