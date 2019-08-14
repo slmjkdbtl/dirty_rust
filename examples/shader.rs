@@ -2,10 +2,10 @@
 
 use dirty::*;
 use dirty::app::*;
+use gfx::Coord;
 use input::Key;
 
 struct Game {
-	canvas: gfx::Canvas,
 	shader: gfx::Shader,
 }
 
@@ -20,10 +20,7 @@ impl app::State for Game {
 		shader.send("resolution", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
-
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			shader: shader,
-
 		});
 
 	}
@@ -31,7 +28,7 @@ impl app::State for Game {
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_with(&self.shader, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas))?;
+			ctx.draw(shapes::rect(ctx.coord(Coord::TopLeft) + vec2!(48), ctx.coord(Coord::BottomRight) - vec2!(48)))?;
 			return Ok(());
 		})?;
 

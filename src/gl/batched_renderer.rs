@@ -7,15 +7,6 @@ use crate::Result;
 
 type GLCtx = glow::native::Context;
 
-pub trait Shape {
-
-	type Vertex: VertexLayout;
-	const COUNT: usize;
-	fn push(&self, queue: &mut Vec<f32>);
-	fn indices() -> Vec<u32>;
-
-}
-
 pub struct BatchedRenderer<S: Shape> {
 
 	ctx: Rc<GLCtx>,
@@ -24,7 +15,7 @@ pub struct BatchedRenderer<S: Shape> {
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	queue: Vec<f32>,
-	mode: DrawMode,
+	prim: Primitive,
 	cur_texture: Option<Texture>,
 	cur_program: Option<Program>,
 	draw_count: usize,
@@ -63,7 +54,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			queue: Vec::with_capacity(max_vertices),
-			mode: DrawMode::Triangles,
+			prim: Primitive::Triangles,
 			cur_texture: None,
 			cur_program: None,
 			draw_count: 0,
@@ -132,7 +123,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			&self.ibuf,
 			&program,
 			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
-			self.mode,
+			self.prim,
 		);
 
 		if let Some(tex) = &self.cur_texture {

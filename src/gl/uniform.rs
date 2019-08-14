@@ -7,6 +7,10 @@ pub enum UniformType {
 	F2(f32, f32),
 	F3(f32, f32, f32),
 	F4(f32, f32, f32, f32),
+	I1(i32),
+	I2(i32, i32),
+	I3(i32, i32, i32),
+	I4(i32, i32, i32, i32),
 	Mat4([f32; 16]),
 }
 
@@ -35,6 +39,30 @@ impl UniformValue for [f32; 3] {
 impl UniformValue for [f32; 4] {
 	fn get(&self) -> UniformType {
 		return UniformType::F4(self[0], self[1], self[2], self[3]);
+	}
+}
+
+impl UniformValue for i32 {
+	fn get(&self) -> UniformType {
+		return UniformType::I1(*self);
+	}
+}
+
+impl UniformValue for [i32; 2] {
+	fn get(&self) -> UniformType {
+		return UniformType::I2(self[0], self[1]);
+	}
+}
+
+impl UniformValue for [i32; 3] {
+	fn get(&self) -> UniformType {
+		return UniformType::I3(self[0], self[1], self[2]);
+	}
+}
+
+impl UniformValue for [i32; 4] {
+	fn get(&self) -> UniformType {
+		return UniformType::I4(self[0], self[1], self[2], self[3]);
 	}
 }
 

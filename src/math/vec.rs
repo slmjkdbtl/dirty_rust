@@ -37,7 +37,7 @@ macro_rules! gen_vec {
 					};
 
 					($v:expr) => {
-						crate::math::$name::all($v as $type);
+						crate::math::$name { $($member: $v as $type),+ };
 					};
 
 					($d($v:expr),*$d(,)?) => {
@@ -67,13 +67,6 @@ macro_rules! gen_vec {
 				};
 			}
 
-			/// initialize with same value on all fields
-			pub fn all(x: $type) -> Self {
-				return Self {
-					$($member: x),+
-				}
-			}
-
 		}
 
 		impl ops::Mul<$name> for $name {
@@ -88,27 +81,13 @@ macro_rules! gen_vec {
 
 		}
 
-		impl AsRef<[$type; $count]> for $name {
-			fn as_ref(&self) -> &[$type; $count] {
-				unsafe {
-					return mem::transmute(self);
-				}
-			}
-		}
-
-		impl From<[$type; $count]> for $name {
-			fn from(t: [$type; $count]) -> Self {
-				unsafe {
-					return mem::transmute(t);
-				}
-			}
-		}
-
 		impl Into<[$type; $count]> for $name {
 			fn into(self) -> [$type; $count] {
-				unsafe {
-					return std::mem::transmute(self);
-				}
+				return [
+					$(
+						self.$member,
+					)+
+				];
 			}
 		}
 
@@ -188,17 +167,17 @@ impl Vec2 {
 	}
 
 	/// dot product of 2 vectors
-	pub fn dot(&self, other: Self) -> f32 {
+	pub fn dot(self, other: Self) -> f32 {
 		return self.x * other.x + self.y * other.y;
 	}
 
 	/// get angle between 2 vectors
-	pub fn angle(&self, other: Self) -> f32 {
+	pub fn angle(self, other: Self) -> f32 {
 		return (other.y - self.y).atan2(other.x - self.x);
 	}
 
 	/// get distance between another vector
-	pub fn dis(&self, other: Self) -> f32 {
+	pub fn dis(self, other: Self) -> f32 {
 		return ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt();
 	}
 

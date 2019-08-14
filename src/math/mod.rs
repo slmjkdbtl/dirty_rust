@@ -4,12 +4,15 @@
 
 #[macro_use]
 mod vec;
+#[macro_use]
 mod mat;
 #[macro_use]
 mod rand;
+mod tween;
 
-pub use self::vec::*;
-pub use self::mat::*;
+pub use vec::*;
+pub use mat::*;
+pub use tween::*;
 pub use self::rand::*;
 
 /// clamp a number within range
@@ -56,12 +59,12 @@ pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) 
 	let ty = -(top + bottom) / (top - bottom);
 	let tz = -(far + near) / (far - near);
 
-	return Mat4::new([
+	return mat4!(
 		2.0 / (right - left), 0.0, 0.0, 0.0,
 		0.0, 2.0 / (top - bottom), 0.0, 0.0,
 		0.0, 0.0, 2.0 / (near - far), 0.0,
 		tx, ty, tz, 1.0,
-	]);
+	);
 
 }
 
@@ -70,12 +73,12 @@ pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 
 	let f = 1.0 / (fov / 2.0).tan();
 
-	return Mat4::new([
+	return mat4!(
 		f / aspect, 0.0, 0.0, 0.0,
 		0.0, f, 0.0, 0.0,
 		0.0, 0.0, (far + near) / (far - near), 1.0,
 		0.0, 0.0, -(2.0 * far * near) / (far - near), 0.0,
-	])
+	);
 
 }
 
@@ -86,12 +89,12 @@ pub fn lookat(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
 	let x = up.cross(z).unit();
 	let y = z.cross(x);
 
-	return Mat4::new([
+	return mat4!(
 		x.x, y.x, z.x, 0.0,
 		x.y, y.y, z.y, 0.0,
 		x.z, y.z, z.z, 0.0,
 		-x.dot(eye), -y.dot(eye), -z.dot(eye), 1.0,
-	]);
+	);
 
 }
 

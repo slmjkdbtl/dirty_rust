@@ -15,7 +15,7 @@ pub struct Renderer<V: VertexLayout> {
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	count: usize,
-	mode: DrawMode,
+	prim: Primitive,
 	vertex: PhantomData<V>,
 
 }
@@ -37,7 +37,7 @@ impl<V: VertexLayout> Renderer<V> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			count: indices.len(),
-			mode: DrawMode::Triangles,
+			prim: Primitive::Triangles,
 			vertex: PhantomData,
 		});
 
@@ -61,7 +61,7 @@ impl<V: VertexLayout> Renderer<V> {
 			&self.ibuf,
 			&program,
 			self.count as u32,
-			self.mode,
+			self.prim,
 		);
 
 	}
