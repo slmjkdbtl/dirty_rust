@@ -7,6 +7,7 @@ use input::Key;
 struct Effect {
 	name: String,
 	shader: gfx::Shader,
+	param: Option<(String, Box<dyn gfx::UniformValue>)>,
 }
 
 impl Effect {
@@ -14,6 +15,7 @@ impl Effect {
 		return Self {
 			name: name.to_owned(),
 			shader: shader,
+			param: None,
 		};
 	}
 }
@@ -35,7 +37,7 @@ impl app::State for Game {
 
 		let blur = gfx::Shader::effect(ctx, include_str!("res/blur.frag"))?;
 
-		blur.send("radius", 24.0);
+		blur.send("radius", 12.0);
 		blur.send("dimension", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
@@ -77,7 +79,7 @@ impl app::State for Game {
 				return Ok(());
 			})?;
 
-			draw_label(ctx, &format!("cur effect: {}", self.effects[cur_effect].name), color!(0, 0, 1, 1))?;
+			draw_label(ctx, &format!("cur effect: {}", self.effects[cur_effect].name), color!(0, 1, 1, 1))?;
 
 		} else {
 
