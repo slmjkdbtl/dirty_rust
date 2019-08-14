@@ -53,7 +53,7 @@ pub trait Gfx {
 
 	// coord
 	// TODO: change name
-	fn coord(&self, coord: Coord) -> Vec2;
+	fn coord(&self, coord: Origin) -> Vec2;
 
 	// camera
 	fn cam_look(&mut self, yaw: f32, pitch: f32);
@@ -218,7 +218,7 @@ impl Gfx for Ctx {
 	}
 
 	// TODO: change name
-	fn coord(&self, coord: Coord) -> Vec2 {
+	fn coord(&self, coord: Origin) -> Vec2 {
 
 		let w = self.width();
 		let h = self.height();
@@ -455,50 +455,6 @@ pub enum Flip {
 
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub enum Origin {
-	Center,
-	TopLeft,
-	BottomLeft,
-	TopRight,
-	BottomRight,
-}
-
-impl Origin {
-
-	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
-
-		use Origin::*;
-
-		let w = w as f32;
-		let h = h as f32;
-
-		return match self {
-			Center => math::ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, -1.0, 1.0),
-			TopLeft => math::ortho(0.0, w, h, 0.0, -1.0, 1.0),
-			BottomLeft => math::ortho(0.0, w, 0.0, -h, -1.0, 1.0),
-			TopRight => math::ortho(-w, 0.0, h, 0.0, -1.0, 1.0),
-			BottomRight => math::ortho(-w, 0.0, 0.0, -h, -1.0, 1.0),
-		};
-
-	}
-
-	pub fn as_pt(&self) -> Vec2 {
-
-		use Origin::*;
-
-		return match self {
-			Center => vec2!(0, 0),
-			TopLeft => vec2!(-1, -1),
-			BottomLeft => vec2!(-1, 1),
-			TopRight => vec2!(1, -1),
-			BottomRight => vec2!(1, 1),
-		};
-
-	}
-
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Hash)]
-pub enum Coord {
 	TopLeft,
 	Top,
 	TopRight,
@@ -510,11 +466,34 @@ pub enum Coord {
 	BottomRight,
 }
 
-impl Coord {
+impl Origin {
+
+	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
+
+		use Origin::*;
+
+		let w = w as f32;
+		let h = h as f32;
+		let near = -1.0;
+		let far = 1.0;
+
+		return match self {
+			TopLeft => ortho(0.0, w, h, 0.0, near, far),
+			Top => ortho(-w / 2.0, w / 2.0, h, 0.0, near, far),
+			TopRight => ortho(-w, 0.0, h, 0.0, near, far),
+			Left => ortho(0.0, w, h / 2.0, -h / 2.0, near, far),
+			Center => ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, near, far),
+			Right => ortho(-w, 0.0, h / 2.0, -h / 2.0, near, far),
+			BottomLeft => ortho(0.0, w, 0.0, -h, near, far),
+			Bottom => ortho(-w / 2.0, w / 2.0, 0.0, -h, near, far),
+			BottomRight => ortho(-w, 0.0, 0.0, -h, near, far),
+		};
+
+	}
 
 	pub fn as_pt(&self) -> Vec2 {
 
-		use Coord::*;
+		use Origin::*;
 
 		return match self {
 			TopLeft => vec2!(-1, -1),
