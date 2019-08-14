@@ -6,8 +6,8 @@ use dirty::math::*;
 use input::Key;
 
 struct Game {
+	mask: gfx::Texture,
 	tex: gfx::Texture,
-	tex2: gfx::Texture,
 }
 
 impl app::State for Game {
@@ -15,8 +15,8 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/blob.png"))?,
-			tex2: gfx::Texture::from_bytes(ctx, include_bytes!("res/gradient.png"))?,
+			mask: gfx::Texture::from_bytes(ctx, include_bytes!("res/blob.png"))?,
+			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/gradient.png"))?,
 		});
 
 	}
@@ -26,12 +26,12 @@ impl app::State for Game {
 		ctx.scale(vec2!(2));
 
 		ctx.draw_masked(|ctx| {
-			ctx.draw(shapes::sprite(&self.tex))?;
+			ctx.draw(shapes::sprite(&self.mask))?;
 			return Ok(());
 		}, |ctx| {
 			ctx.push();
 			ctx.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0));
-			ctx.draw(shapes::sprite(&self.tex2))?;
+			ctx.draw(shapes::sprite(&self.tex))?;
 			ctx.pop()?;
 			return Ok(());
 		})?;
