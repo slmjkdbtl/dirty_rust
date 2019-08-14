@@ -51,6 +51,10 @@ pub trait Gfx {
 	fn apply(&mut self, m: Mat4);
 	fn reset(&mut self);
 
+	// coord
+	// TODO: change name
+	fn coord(&self, coord: Coord) -> Vec2;
+
 	// camera
 	fn cam_look(&mut self, yaw: f32, pitch: f32);
 	fn cam_pos(&mut self, pos: Vec3);
@@ -200,6 +204,7 @@ impl Gfx for Ctx {
 		self.gl.enable(gl::Capability::StencilTest);
 		self.gl.stencil_func(f1);
 		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
+
 		mask(self)?;
 		flush(self);
 		self.gl.stencil_func(f2);
@@ -209,6 +214,18 @@ impl Gfx for Ctx {
 		self.gl.disable(gl::Capability::StencilTest);
 
 		return Ok(());
+
+	}
+
+	// TODO: change name
+	fn coord(&self, coord: Coord) -> Vec2 {
+
+		let w = self.width();
+		let h = self.height();
+		let orig_pt = self.conf.origin.as_pt();
+		let coord_pt = coord.as_pt();
+
+		return (coord_pt - orig_pt) / 2.0 * vec2!(w, h);
 
 	}
 
@@ -449,27 +466,68 @@ impl Origin {
 
 	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
 
+		use Origin::*;
+
 		let w = w as f32;
 		let h = h as f32;
 
 		return match self {
-			Origin::Center => math::ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, -1.0, 1.0),
-			Origin::TopLeft => math::ortho(0.0, w, h, 0.0, -1.0, 1.0),
-			Origin::BottomLeft => math::ortho(0.0, w, 0.0, -h, -1.0, 1.0),
-			Origin::TopRight => math::ortho(-w, 0.0, h, 0.0, -1.0, 1.0),
-			Origin::BottomRight => math::ortho(-w, 0.0, 0.0, -h, -1.0, 1.0),
+			Center => math::ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, -1.0, 1.0),
+			TopLeft => math::ortho(0.0, w, h, 0.0, -1.0, 1.0),
+			BottomLeft => math::ortho(0.0, w, 0.0, -h, -1.0, 1.0),
+			TopRight => math::ortho(-w, 0.0, h, 0.0, -1.0, 1.0),
+			BottomRight => math::ortho(-w, 0.0, 0.0, -h, -1.0, 1.0),
 		};
 
 	}
 
 	pub fn as_pt(&self) -> Vec2 {
+
+		use Origin::*;
+
 		return match self {
-			Origin::Center => vec2!(0, 0),
-			Origin::TopLeft => vec2!(-1, -1),
-			Origin::BottomLeft => vec2!(-1, 1),
-			Origin::TopRight => vec2!(1, -1),
-			Origin::BottomRight => vec2!(1, 1),
+			Center => vec2!(0, 0),
+			TopLeft => vec2!(-1, -1),
+			BottomLeft => vec2!(-1, 1),
+			TopRight => vec2!(1, -1),
+			BottomRight => vec2!(1, 1),
 		};
+
+	}
+
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
+pub enum Coord {
+	TopLeft,
+	Top,
+	TopRight,
+	Left,
+	Center,
+	Right,
+	BottomLeft,
+	Bottom,
+	BottomRight,
+}
+
+impl Coord {
+
+	pub fn as_pt(&self) -> Vec2 {
+
+		use Coord::*;
+
+		return match self {
+			TopLeft => vec2!(-1, -1),
+			Top => vec2!(0, -1),
+			TopRight => vec2!(1, -1),
+			Left => vec2!(-1, 0),
+			Center => vec2!(0, 0),
+			Right => vec2!(1, 0),
+			BottomLeft => vec2!(-1, 1),
+			Bottom => vec2!(0, -1),
+			BottomRight => vec2!(1, 1),
+		};
+
 	}
 
 }

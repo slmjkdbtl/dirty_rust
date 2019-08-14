@@ -21,13 +21,21 @@ fn pair<T, F: FnMut(&T, &T)>(list: &[T], mut f: F) {
 
 }
 
-/// check collision between 2 rectangles
-pub fn rect_rect(r1: Quad, r2: Quad) -> bool {
-	return r1.x <= r2.x && r1.x + r1.w >= r2.x && r1.y <= r2.y && r1.y + r1.h >= r2.y;
+// TODO: use (Vec2, Vec2) for rects
+fn rect_rect(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2) -> bool {
+	return p1.x <= p3.x && p2.x >= p4.x && p1.y <= p3.y && p2.y >= p4.y;
 }
 
-/// check collision between 2 lines
-pub fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
+// TODO
+fn rect_circle(p1: Vec2, p2: Vec2, center: Vec2, radius: f32) -> bool {
+	return false;
+}
+
+fn circle_circle(c1: Vec2, r1: f32, c2: Vec2, r2: f32) -> bool {
+	return r1 + r2 < Vec2::dis(c1, c2);
+}
+
+fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 	let (p1, p2) = l1;
 	let (p3, p4) = l2;
@@ -39,13 +47,7 @@ pub fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 }
 
-// TODO: do this
-pub fn line_ray(l: (Vec2, Vec2), r: Ray) -> bool {
-	unimplemented!();
-}
-
-/// check collision between a line and a polygon
-pub fn line_poly(line: (Vec2, Vec2), poly: &[Vec2]) -> bool {
+fn line_poly(line: (Vec2, Vec2), poly: &[Vec2]) -> bool {
 
 	assert!(poly.len() >= 3, "invalid polygon");
 
@@ -62,8 +64,7 @@ pub fn line_poly(line: (Vec2, Vec2), poly: &[Vec2]) -> bool {
 
 }
 
-/// check collision between 2 polygons
-pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
+fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 
 	assert!(poly1.len() >= 3, "invalid polygon");
 	assert!(poly2.len() >= 3, "invalid polygon");
@@ -81,13 +82,11 @@ pub fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 
 }
 
-/// check if a point is side a rect
-pub fn point_rect(p: Vec2, rect: Quad) -> bool {
+fn point_rect(p: Vec2, rect: Quad) -> bool {
 	return p.x >= rect.x && p.x <= rect.x + rect.w && p.y >= rect.y && p.y <= rect.y + rect.h;
 }
 
-/// check if a point is side a polygon
-pub fn point_poly(p: Vec2, poly: &[Vec2]) -> bool {
+fn point_poly(p: Vec2, poly: &[Vec2]) -> bool {
 
 	assert!(poly.len() >= 3, "invalid polygon");
 
@@ -180,17 +179,53 @@ pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 	unimplemented!();
 }
 
-pub struct Ray {
-	pub pt: Vec2,
-	pub angle: f32,
+#[derive(Clone, Debug)]
+pub enum Shape2D {
+	Point(Vec2),
+	Circle(Vec2, f32),
+	Rect(Vec2, Vec2),
+	Line(Vec2, Vec2),
+	Polygon(Vec<Vec2>),
+	Ray(Vec2, f32),
 }
 
-impl Ray {
-	pub fn new(pt: Vec2, angle: f32) -> Self {
-		return Self {
-			pt: pt,
-			angle: angle,
-		};
+impl From<&[Vec2]> for Shape2D {
+	fn from(pts: &[Vec2]) -> Shape2D {
+		return Shape2D::Polygon(pts.to_owned());
 	}
+}
+
+pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
+
+	use Shape2D::*;
+
+	match s1 {
+		Circle(center, radius) => {
+			match s2 {
+				Circle(center2, radius2) => {
+					return circle_circle(center, radius, center2, radius2);
+				}
+				Rect(p1, p2) => {
+					return rect_circle(p1, p2, center, radius);
+				}
+				Point(pt) => {
+					// ...
+				}
+				Line(p1, p2) => {
+					// ...
+				}
+				Polygon(verts) => {
+					// ...
+				}
+				Ray(pt, angle) => {
+					// ...
+				}
+			}
+		}
+		_ => {},
+	}
+
+	return false;
+
 }
 

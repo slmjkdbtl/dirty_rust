@@ -18,6 +18,15 @@ pub trait VertexLayout {
 
 }
 
+pub trait Shape {
+
+	type Vertex: VertexLayout;
+	const COUNT: usize;
+	fn push(&self, queue: &mut Vec<f32>);
+	fn indices() -> Vec<u32>;
+
+}
+
 #[derive(Clone, Debug)]
 pub struct VertexBuffer<V: VertexLayout> {
 

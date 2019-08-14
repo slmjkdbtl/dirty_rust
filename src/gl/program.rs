@@ -80,6 +80,10 @@ impl Program {
 				F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
 				F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
 				F4(f1, f2, f3, f4) => self.ctx.uniform_4_f32(loc, f1, f2, f3, f4),
+				I1(i) => self.ctx.uniform_1_i32(loc, i),
+				I2(i1, i2) => self.ctx.uniform_2_i32(loc, i1, i2),
+				I3(i1, i2, i3) => self.ctx.uniform_3_i32(loc, i1, i2, i3),
+				I4(i1, i2, i3, i4) => self.ctx.uniform_4_i32(loc, i1, i2, i3, i4),
 				Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
 			}
 

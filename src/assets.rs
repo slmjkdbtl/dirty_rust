@@ -1,6 +1,0 @@
-// wengwengweng
-
-pub struct Loader {
-	// ...
-}
-

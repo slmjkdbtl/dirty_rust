@@ -154,6 +154,8 @@ fn bind_fs(ctx: &Context) -> Result<()> {
 
 }
 
+unsafe impl Send for app::Ctx {}
+
 #[cfg(feature = "app")]
 fn bind_app(ctx: &Context) -> Result<()> {
 

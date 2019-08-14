@@ -102,7 +102,7 @@ bind_enum!(Cmp(u32) {
 	Always => glow::ALWAYS,
 });
 
-bind_enum!(DrawMode(u32) {
+bind_enum!(Primitive(u32) {
 	Points => glow::POINT,
 	Lines => glow::LINE,
 	Triangles => glow::TRIANGLES,

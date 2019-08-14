@@ -157,7 +157,7 @@ impl Device {
 }
 
 #[cfg(feature="gl3")]
-fn draw(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
+fn draw(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: Primitive) {
 
 	vao.bind();
 	ibuf.bind();
@@ -174,7 +174,7 @@ fn draw(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, c
 }
 
 #[cfg(not(feature="gl3"))]
-fn draw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: DrawMode) {
+fn draw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: Primitive) {
 
 	program.bind();
 	vbuf.bind();

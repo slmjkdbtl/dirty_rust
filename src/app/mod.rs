@@ -94,8 +94,6 @@ pub struct Ctx {
 
 }
 
-unsafe impl Send for Ctx {}
-
 impl Ctx {
 
 	pub(super) fn new(conf: app::Conf) -> Result<Self> {

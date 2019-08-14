@@ -196,7 +196,7 @@ impl DrawCmd for Line {
 		ctx.push();
 		ctx.translate(self.p1);
 		ctx.rotate(rot);
-		ctx.draw(rect(len, self.width).color(self.color))?;
+		ctx.draw(Rect::from_size(len, self.width).color(self.color))?;
 		ctx.pop()?;
 
 		return Ok(());
@@ -206,21 +206,15 @@ impl DrawCmd for Line {
 }
 
 pub struct Rect {
-	width: f32,
-	height: f32,
+	p1: Vec2,
+	p2: Vec2,
 	radius: f32,
 	stroke: Option<f32>,
 	color: Color,
 }
 
-pub fn rect(w: f32, h: f32) -> Rect {
-	return Rect {
-		width: w,
-		height: h,
-		radius: 0.0,
-		stroke: None,
-		color: color!(1),
-	};
+pub fn rect(p1: Vec2, p2: Vec2) -> Rect {
+	return Rect::new(p1, p2);
 }
 
 impl Rect {
@@ -236,14 +230,31 @@ impl Rect {
 		self.color = color;
 		return self;
 	}
+	pub fn new(p1: Vec2, p2: Vec2) -> Self {
+		return Rect {
+			p1: p1,
+			p2: p2,
+			radius: 0.0,
+			stroke: None,
+			color: color!(1),
+		};
+	}
+	pub fn from_size(w: f32, h: f32) -> Self {
+		return Self::new(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
+	}
 }
 
 impl DrawCmd for Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
+		let center = (self.p1 + self.p2) / 2.0;
+		let width = self.p2.x - self.p1.x;
+		let height = self.p2.y - self.p1.y;
+
 		ctx.push();
-		ctx.scale(vec2!(self.width, self.height));
+		ctx.translate(center);
+		ctx.scale(vec2!(width, height));
 		ctx.draw(sprite(&ctx.empty_tex.clone()).color(self.color))?;
 		ctx.pop()?;
 
@@ -289,7 +300,7 @@ impl<'a> DrawCmd for Points<'a> {
 		for pt in self.pts {
 			ctx.push();
 			ctx.translate(*pt);
-			ctx.draw(rect(self.size, self.size).color(self.color))?;
+			ctx.draw(Rect::from_size(self.size, self.size).color(self.color))?;
 			ctx.pop()?;
 		}
 
