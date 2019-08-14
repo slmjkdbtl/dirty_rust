@@ -76,7 +76,7 @@ pub struct Ctx {
 	pub(self) quad_renderer: gl::BatchedRenderer<gfx::QuadShape>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 
-	pub(self) empty_tex: gfx::Texture,
+	pub(self) empty_tex: gfx::Tex2D,
 
 	pub(self) default_shader_2d: gfx::Shader,
 	pub(self) cur_shader_2d: gfx::Shader,
@@ -157,7 +157,7 @@ impl Ctx {
 		gl.clear_color(color!(0, 0, 0, 1));
 
 		let empty_tex = gl::Texture::init(&gl, 1, 1, &[255; 4])?;
-		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
+		let empty_tex = gfx::Tex2D::from_handle(empty_tex, 1, 1);
 
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
@@ -181,7 +181,7 @@ impl Ctx {
 		let font_width = font_img.width();
 		let font_height = font_img.height();
 		let font_tex = gl::Texture::init(&gl, font_width, font_height, &font_img.into_raw())?;
-		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
+		let font_tex = gfx::Tex2D::from_handle(font_tex, font_width, font_height);
 
 		let font = gfx::Font::from_tex(
 			font_tex,

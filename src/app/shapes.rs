@@ -4,7 +4,7 @@ use super::*;
 use gfx::DrawCmd;
 
 pub struct Sprite<'a> {
-	tex: &'a gfx::Texture,
+	tex: &'a gfx::Tex2D,
 	quad: Quad,
 	offset: Vec2,
 	radius: f32,
@@ -35,7 +35,7 @@ impl<'a> Sprite<'a> {
 	}
 }
 
-pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
+pub fn sprite<'a>(tex: &'a gfx::Tex2D) -> Sprite<'a> {
 	return Sprite {
 		tex: tex,
 		quad: quad!(0, 0, 1, 1),

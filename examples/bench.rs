@@ -9,7 +9,7 @@ const GATE: u16 = 54;
 
 struct Game {
 
-	tex: gfx::Texture,
+	tex: gfx::Tex2D,
 	count: usize,
 	started: bool,
 	done: bool,
@@ -21,7 +21,7 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
+			tex: gfx::Tex2D::from_bytes(ctx, include_bytes!("res/icon.png"))?,
 			count: 0,
 			done: false,
 			started: false,

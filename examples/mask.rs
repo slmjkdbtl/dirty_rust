@@ -2,12 +2,11 @@
 
 use dirty::*;
 use dirty::app::*;
-use dirty::math::*;
 use input::Key;
 
 struct Game {
-	mask: gfx::Texture,
-	tex: gfx::Texture,
+	mask: gfx::Tex2D,
+	tex: gfx::Tex2D,
 }
 
 impl app::State for Game {
@@ -15,8 +14,8 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			mask: gfx::Texture::from_bytes(ctx, include_bytes!("res/blob.png"))?,
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/gradient.png"))?,
+			mask: gfx::Tex2D::from_bytes(ctx, include_bytes!("res/blob.png"))?,
+			tex: gfx::Tex2D::from_bytes(ctx, include_bytes!("res/gradient.png"))?,
 		});
 
 	}
@@ -55,7 +54,6 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.texture_filter(gfx::FilterMode::Linear)
 		.run::<Game>() {
 		println!("{}", err);
 	}
