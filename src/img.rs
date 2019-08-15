@@ -40,16 +40,16 @@ impl Image {
 
 	}
 
-	pub fn from_pixels(w: u32, h: u32, pixels: &[u8]) -> Self {
+	pub fn from_pixels(w: i32, h: i32, pixels: &[u8]) -> Self {
 		unimplemented!();
 	}
 
-	pub fn width(&self) -> u32 {
-		return self.handle.width();
+	pub fn width(&self) -> i32 {
+		return self.handle.width() as i32;
 	}
 
-	pub fn height(&self) -> u32 {
-		return self.handle.height();
+	pub fn height(&self) -> i32 {
+		return self.handle.height() as i32;
 	}
 
 	pub fn write(&self, path: impl AsRef<Path>) -> Result<()> {

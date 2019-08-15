@@ -32,14 +32,17 @@ pub mod img;
 #[cfg(feature = "audio")]
 pub mod audio;
 
+#[cfg(feature = "geom")]
+pub mod geom;
+
+#[cfg(feature = "physics")]
+pub mod physics;
+
 #[cfg(feature = "http")]
 pub mod http;
 
 #[cfg(feature = "term")]
 pub mod term;
-
-#[cfg(feature = "geom")]
-pub mod geom;
 
 #[cfg(feature = "serial")]
 pub mod serial;

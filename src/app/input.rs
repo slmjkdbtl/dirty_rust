@@ -268,8 +268,8 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	}
 
 	if let Some(size) = resized {
-		ctx.width = size.width as u32;
-		ctx.height = size.height as u32;
+		ctx.width = size.width as i32;
+		ctx.height = size.height as i32;
 	}
 
 	ctx.text_input = text_input;

@@ -14,13 +14,13 @@ type TextureID = <GLCtx as Context>::Texture;
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	pub(super) id: TextureID,
-	pub(super) width: u32,
-	pub(super) height: u32,
+	pub(super) width: i32,
+	pub(super) height: i32,
 }
 
 impl Texture {
 
-	pub fn new(device: &Device, width: u32, height: u32) -> Result<Self> {
+	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
 
 		unsafe {
 
@@ -80,7 +80,7 @@ impl Texture {
 
 	}
 
-	pub fn init(device: &Device, width: u32, height: u32, data: &[u8]) -> Result<Self> {
+	pub fn init(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(device, width, height)?;
 		tex.data(0, 0, width, height, data);
@@ -124,7 +124,7 @@ impl Texture {
 		}
 	}
 
-	pub fn data(&self, x: u32, y: u32, width: u32, height: u32, data: &[u8]) {
+	pub fn data(&self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
 
 		unsafe {
 
@@ -148,7 +148,7 @@ impl Texture {
 
 	}
 
-	pub fn get_data(&self, width: u32, height: u32) -> Vec<u8> {
+	pub fn get_data(&self, width: i32, height: i32) -> Vec<u8> {
 
 		let size = (width * height * 4) as usize;
 		let pixels = vec![0.0 as u8; size];

@@ -148,9 +148,9 @@ impl Device {
 		}
 	}
 
-	pub fn viewport(&self, x: u32, y: u32, width: u32, height: u32) {
+	pub fn viewport(&self, x: i32, y: i32, width: i32, height: i32) {
 		unsafe {
-			self.ctx.viewport(x as i32, y as i32, width as i32, height as i32);
+			self.ctx.viewport(x, y, width, height);
 		}
 	}
 

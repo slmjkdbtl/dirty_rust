@@ -6,7 +6,7 @@ uniform vec2 resolution;
 
 vec4 frag(sampler2D tex, vec2 uv) {
 
-	if (radius <= 0.0) {
+	if (radius <= 1.0) {
 		return texture2D(tex, uv);
 	}
 

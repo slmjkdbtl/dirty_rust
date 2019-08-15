@@ -124,7 +124,7 @@ impl<'a> DrawCmd for Text<'a> {
 		let len = self.txt.len();
 		let gw = font.width();
 		let gh = font.height();
-		let tw = font.width() * len as u32;
+		let tw = font.width() * len as i32;
 		let th = gh;
 		let w = font.quad_size.x * font.tex.width() as f32;
 		let h = font.quad_size.y * font.tex.height() as f32;
