@@ -22,8 +22,8 @@ pub trait Window {
 	fn toggle_cursor_locked(&mut self) -> Result<()>;
 	fn set_title(&mut self, t: &str);
 	fn dpi(&self) -> f64;
-	fn width(&self) -> u32;
-	fn height(&self) -> u32;
+	fn width(&self) -> i32;
+	fn height(&self) -> i32;
 
 }
 
@@ -86,11 +86,11 @@ impl Window for Ctx {
 		return self.windowed_ctx.window().get_hidpi_factor();
 	}
 
-	fn width(&self) -> u32 {
+	fn width(&self) -> i32 {
 		return self.width;
 	}
 
-	fn height(&self) -> u32 {
+	fn height(&self) -> i32 {
 		return self.height;
 	}
 }

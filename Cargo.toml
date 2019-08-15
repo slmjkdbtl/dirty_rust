@@ -30,6 +30,7 @@ default = [
 	"http",
 	"term",
 	"geom",
+	"physics",
 # 	"serial",
 # 	"ui",
 
@@ -73,6 +74,8 @@ img = [
 audio = [
 	"rodio",
 ]
+
+physics = []
 
 http = [
 	"url",

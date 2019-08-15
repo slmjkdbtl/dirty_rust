@@ -1,14 +1,26 @@
 # wengwengweng
 
 == DOING
+- make gl lib stateless
+
+== TODO
+- http less allocation / copying
+- gamepad
+- ketos bindings
+- python bindings
+- forge bindings
+- use rustls instead of native-tls
+- clearer error messages
+- better http response api
+- add some dirty::CONSTANTs
+- use Future on assets
+- imgui integration
 - integrate truetype font with shape
 - calculate vertex normals
 - text wrapping
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
-- make gl lib stateless
 - pass Event to State::run
-- expose more flexible stencil api
 - higer level gl stencil abstraction
 - 3d primitives
 - error report location
@@ -16,19 +28,6 @@
 - clearer shader variable prefixes
 - 3d texture
 - tween functions
-
-== TODO
-- http less allocation / copying
-- gamepads
-- ketos
-- python
-- use rustls instead of native-tls
-- clearer error messages
-- asset manager
-- better http response api
-- add some dirty::CONSTANTs
-- use Future on assets
-- imgui integration
 
 == DONE
 - refactor http

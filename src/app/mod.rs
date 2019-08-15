@@ -60,8 +60,8 @@ pub struct Ctx {
 	pub(self) fullscreen: bool,
 	pub(self) cursor_hidden: bool,
 	pub(self) cursor_locked: bool,
-	pub(self) width: u32,
-	pub(self) height: u32,
+	pub(self) width: i32,
+	pub(self) height: i32,
 
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(self) events_loop: glutin::EventsLoop,
@@ -152,6 +152,7 @@ impl Ctx {
 		gl.enable(gl::Capability::Blend);
 		gl.enable(gl::Capability::DepthTest);
 // 		gl.enable(gl::Capability::CullFace);
+// 		gl.cull_face(gl::Face::Back);
 		gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 		gl.depth_func(gl::Cmp::LessOrEqual);
 		gl.clear_color(color!(0, 0, 0, 1));
@@ -360,7 +361,7 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn size(mut self, w: u32, h: u32) -> Self {
+	pub fn size(mut self, w: i32, h: i32) -> Self {
 		self.conf.width = w;
 		self.conf.height = h;
 		return self;
@@ -445,8 +446,8 @@ impl Launcher {
 
 #[derive(Clone, Debug)]
 pub struct Conf {
-	pub width: u32,
-	pub height: u32,
+	pub width: i32,
+	pub height: i32,
 	pub title: String,
 	pub hidpi: bool,
 	pub resizable: bool,
@@ -469,7 +470,7 @@ pub struct Conf {
 
 impl Conf {
 
-	pub fn basic(title: &str, width: u32, height: u32) -> Self {
+	pub fn basic(title: &str, width: i32, height: i32) -> Self {
 		return Self {
 			title: String::from(title),
 			width: width,

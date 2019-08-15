@@ -160,7 +160,7 @@ impl Gfx for Ctx {
 
 		})?;
 
-		self.gl.viewport(0, 0, self.width() * self.dpi() as u32, self.height() * self.dpi() as u32);
+		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 
 		return Ok(());
 
@@ -468,7 +468,7 @@ pub enum Origin {
 
 impl Origin {
 
-	pub fn to_ortho(&self, w: u32, h: u32) -> Mat4 {
+	pub fn to_ortho(&self, w: i32, h: i32) -> Mat4 {
 
 		use Origin::*;
 
@@ -514,13 +514,13 @@ impl Origin {
 #[derive(Clone, PartialEq)]
 pub struct Tex2D {
 	pub(super) handle: Rc<gl::Texture>,
-	width: u32,
-	height: u32,
+	width: i32,
+	height: i32,
 }
 
 impl Tex2D {
 
-	pub(super) fn from_handle(handle: gl::Texture, w: u32, h: u32) -> Self {
+	pub(super) fn from_handle(handle: gl::Texture, w: i32, h: i32) -> Self {
 		return Self {
 			handle: Rc::new(handle),
 			width: w,
@@ -537,7 +537,7 @@ impl Tex2D {
 
 		handle.filter(ctx.conf.texture_filter);
 
-		return Ok(Self::from_handle(handle, w as u32, h as u32));
+		return Ok(Self::from_handle(handle, w as i32, h as i32));
 
 	}
 
@@ -551,7 +551,7 @@ impl Tex2D {
 		return Self::from_image(ctx, Image::from_bytes(data)?);
 	}
 
-	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
+	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::init(&ctx.gl, w, h, &pixels)?;
 		handle.filter(ctx.conf.texture_filter);
@@ -559,15 +559,15 @@ impl Tex2D {
 
 	}
 
-	pub fn width(&self) -> u32 {
+	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
-	pub fn height(&self) -> u32 {
+	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
-	pub fn data(&mut self, x: u32, y: u32, width: u32, height: u32, data: &[u8]) {
+	pub fn data(&mut self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
 		self.width = width;
 		self.height = height;
 		self.handle.data(x, y, width, height, data);
@@ -582,8 +582,8 @@ pub struct Font {
 	pub(super) tex: Tex2D,
 	pub(super) map: HashMap<char, Quad>,
 	pub(super) quad_size: Vec2,
-	grid_width: u32,
-	grid_height: u32,
+	grid_width: i32,
+	grid_height: i32,
 
 }
 
@@ -619,20 +619,20 @@ impl Font {
 			tex: tex,
 			map: map,
 			quad_size: quad_size,
-			grid_width: tw as u32 / cols as u32,
-			grid_height: th as u32 / rows as u32,
+			grid_width: tw as i32 / cols as i32,
+			grid_height: th as i32 / rows as i32,
 
 		});
 
 	}
 
 	/// get current font width for string
-	pub fn width(&self) -> u32 {
+	pub fn width(&self) -> i32 {
 		return self.grid_width;
 	}
 
 	/// get current text height
-	pub fn height(&self) -> u32 {
+	pub fn height(&self) -> i32 {
 		return self.grid_height;
 	}
 
@@ -680,11 +680,11 @@ pub struct Canvas {
 
 impl Canvas {
 
-	pub fn new(ctx: &Ctx, width: u32, height: u32) -> Result<Self> {
+	pub fn new(ctx: &Ctx, width: i32, height: i32) -> Result<Self> {
 
 		let dpi = ctx.dpi();
-		let tw = (width as f64 * dpi) as u32;
-		let th = (height as f64 * dpi) as u32;
+		let tw = (width as f64 * dpi) as i32;
+		let th = (height as f64 * dpi) as i32;
 		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
 		let tex = Tex2D::from_pixels(&ctx, tw, th, &pixels)?;
 		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle)?;
@@ -696,11 +696,11 @@ impl Canvas {
 
 	}
 
-	pub fn width(&self) -> u32 {
+	pub fn width(&self) -> i32 {
 		return self.tex.width();
 	}
 
-	pub fn height(&self) -> u32 {
+	pub fn height(&self) -> i32 {
 		return self.tex.height();
 	}
 
@@ -889,11 +889,11 @@ impl TrueTypeFont {
 		let font_cache = GlyphBrushBuilder::using_font_bytes(bytes).build();
 
 		let (width, height) = font_cache.texture_dimensions();
-		let font_cache_texture = gl::Texture::new(&ctx.gl, width, height)?;
+		let font_cache_texture = gl::Texture::new(&ctx.gl, width as i32, height as i32)?;
 
 		return Ok(Self {
 			cache: font_cache,
-			tex: Tex2D::from_handle(font_cache_texture, width, height),
+			tex: Tex2D::from_handle(font_cache_texture, width as i32, height as i32),
 			quads: Vec::with_capacity(64),
 			size: size,
 		})
@@ -925,10 +925,10 @@ impl TrueTypeFont {
 			}
 
 			tex.data(
-				rect.min.x,
-				rect.min.y,
-				rect.width(),
-				rect.height(),
+				rect.min.x as i32,
+				rect.min.y as i32,
+				rect.width() as i32,
+				rect.height() as i32,
 				&padded_data,
 			);
 
