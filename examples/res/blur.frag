@@ -1,28 +1,23 @@
 // wengwengweng
 
 uniform float radius;
+uniform vec2 dir;
 uniform vec2 resolution;
 
 vec4 frag(sampler2D tex, vec2 uv) {
 
-	if (radius == 0.0) {
+	if (radius <= 0.0) {
 		return texture2D(tex, uv);
 	}
 
 	vec4 c = vec4(0.0);
-	float rx = radius / resolution.x;
-	float ry = radius / resolution.y;
-	float count = 0.0;
+	vec2 dir = normalize(dir);
 
-	// TODO: slow
-	for (float i = uv.x - rx; i < uv.x + rx; i += 1.0 / resolution.x) {
-		for (float j = uv.y - ry; j < uv.y + ry; j += 1.0 / resolution.y) {
-			count += 1.0;
-			c += texture2D(tex, vec2(i, j));
-		}
+	for (float i = -radius; i <= radius; i += 1.0) {
+		c += texture2D(tex, uv + dir * (i / resolution.x));
 	}
 
-	return c / count;
+	return c / (radius * 2.0);
 
 }
 
