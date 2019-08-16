@@ -85,8 +85,8 @@ pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
 /// construct lookat matrix
 pub fn lookat(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
 
-	let z = (center - eye).unit();
-	let x = up.cross(z).unit();
+	let z = (center - eye).normalize();
+	let x = up.cross(z).normalize();
 	let y = z.cross(x);
 
 	return mat4!(

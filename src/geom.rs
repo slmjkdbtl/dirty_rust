@@ -7,22 +7,6 @@
 use crate::*;
 use crate::math::*;
 
-fn pair<T, F: FnMut(&T, &T)>(list: &[T], mut f: F) {
-
-	for i in 0..list.len() {
-
-		let e1 = &list[i];
-
-		if let Some(e2) = list.get(i + 1) {
-			f(e1, e2);
-		} else {
-			f(e1, &list[0]);
-		}
-
-	}
-
-}
-
 fn rect_rect(r1: (Vec2, Vec2), r2: (Vec2, Vec2)) -> bool {
 
 	let (p1, p2) = r1;
@@ -135,36 +119,45 @@ fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 fn line_poly(line: (Vec2, Vec2), poly: &[Vec2]) -> bool {
 
-	assert!(poly.len() >= 3, "invalid polygon");
+	let len = poly.len();
 
-	let mut collided = false;
+	assert!(len >= 3, "invalid polygon");
 
-	pair(poly, |p3, p4| {
-		if line_line(line, (*p3, *p4)) {
-			collided = true;
-			return;
+	for i in 0..len {
+
+		let p3 = poly[i];
+		let p4 = poly[(i + 1) % len];
+
+		if line_line(line, (p3, p4)) {
+			return true;
 		}
-	});
 
-	return collided;
+	}
+
+	return false;
 
 }
 
 fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 
-	assert!(poly1.len() >= 3, "invalid polygon");
-	assert!(poly2.len() >= 3, "invalid polygon");
+	let len1 = poly1.len();
+	let len2 = poly2.len();
 
-	let mut collided = false;
+	assert!(len1 >= 3, "invalid polygon");
+	assert!(len2 >= 3, "invalid polygon");
 
-	pair(poly1, |p1, p2| {
-		if line_poly((*p1, *p2), poly2) {
-			collided = true;
-			return;
+	for i in 0..len1 {
+
+		let p1 = poly1[i];
+		let p2 = poly1[(i + 1) % len1];
+
+		if line_poly((p1, p2), poly2) {
+			return true;
 		}
-	});
 
-	return collided;
+	}
+
+	return false;
 
 }
 
@@ -173,19 +166,23 @@ fn point_rect(pt: Vec2, rect: (Vec2, Vec2)) -> bool {
 	return pt.x >= p1.x && pt.x <= p2.x && pt.y >= p1.y && pt.y <= p2.y;
 }
 
-fn point_poly(p: Vec2, poly: &[Vec2]) -> bool {
+fn point_poly(pt: Vec2, poly: &[Vec2]) -> bool {
 
-	assert!(poly.len() >= 3, "invalid polygon");
-
+	let len = poly.len();
 	let mut has = false;
 
-	pair(poly, |p1, p2| {
+	assert!(len >= 3, "invalid polygon");
 
-		if ((p1.y > p.y && p2.y < p.y) || (p1.y < p.y && p2.y > p.y)) && (p.x < (p2.x - p1.x) * (p.y - p1.y) / (p2.y - p1.y) + p1.x) {
+	for i in 0..len {
+
+		let p1 = poly[i];
+		let p2 = poly[(i + 1) % len];
+
+		if ((p1.y > pt.y && p2.y < pt.y) || (p1.y < pt.y && p2.y > pt.y)) && (pt.x < (p2.x - p1.x) * (pt.y - p1.y) / (p2.y - p1.y) + p1.x) {
 			has = !has;
 		}
 
-	});
+	}
 
 	return has;
 
@@ -200,10 +197,16 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 	let get_axis = |poly: &[Vec2]| {
 
 		let mut normals = Vec::with_capacity(poly.len());
+		let len = poly.len();
 
-		pair(poly, |p1, p2| {
-			normals.push((*p1 - *p2).normal().unit());
-		});
+		for i in 0..len {
+
+			let p1 = poly[i];
+			let p2 = poly[(i + 1) % len];
+
+			normals.push((p1 - p2).normal().normalize());
+
+		}
 
 		return normals;
 
@@ -277,8 +280,8 @@ pub enum Shape2D {
 }
 
 impl From<&[Vec2]> for Shape2D {
-	fn from(pts: &[Vec2]) -> Shape2D {
-		return Shape2D::Polygon(pts.to_owned());
+	fn from(pts: &[Vec2]) -> Self {
+		return Self::Polygon(pts.to_owned());
 	}
 }
 

@@ -16,7 +16,6 @@
 - use Future on assets
 - imgui integration
 - integrate truetype font with shape
-- calculate vertex normals
 - text wrapping
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
@@ -52,4 +51,5 @@
 - flipped projection 3d in framebuffer
 - split gl into modules
 - track draw calls
+- calculate vertex normals
 

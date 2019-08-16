@@ -19,7 +19,7 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		ctx.cam_pos(vec3!(0, 0, -60));
+		ctx.cam_pos(vec3!(0, 0, -240));
 
 		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
@@ -27,8 +27,8 @@ impl app::State for Game {
 		effect.send("dimension", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
-			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			pos: vec3!(0, 0, -60),
+			model: gfx::Model::from_obj(ctx, include_str!("res/teapot.obj"))?,
+			pos: vec3!(0, 0, -240),
 			effect: effect,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			rx: 0.0,
@@ -40,7 +40,7 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let move_speed = 60.0;
+		let move_speed = 120.0;
 		let rot_speed = 0.15;
 
 		ctx.draw_on(&self.canvas, |ctx| {
@@ -49,7 +49,6 @@ impl app::State for Game {
 			ctx.push();
 			ctx.translate_3d(vec3!(0, 0, 0));
 			ctx.rotate_y(ctx.time());
-			ctx.scale_3d(vec3!(4, 4, 4));
 			ctx.draw(shapes::model(&self.model))?;
 			ctx.pop()?;
 
@@ -96,11 +95,11 @@ impl app::State for Game {
 		}
 
 		if ctx.key_down(Key::A) {
-			self.pos += ctx.cam_front().cross(vec3!(0, 1, 0)).unit() * ctx.dt() * move_speed;
+			self.pos += ctx.cam_front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * move_speed;
 		}
 
 		if ctx.key_down(Key::D) {
-			self.pos -= ctx.cam_front().cross(vec3!(0, 1, 0)).unit() * ctx.dt() * move_speed;
+			self.pos -= ctx.cam_front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * move_speed;
 		}
 
 		if ctx.key_pressed(Key::F) {

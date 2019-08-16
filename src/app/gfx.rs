@@ -759,7 +759,7 @@ impl Camera {
 		self.front.x = pitch.cos() * (yaw + 90f32.to_radians()).cos();
 		self.front.y = pitch.sin();
 		self.front.z = pitch.cos() * (yaw + 90f32.to_radians()).sin();
-		self.front = self.front.unit();
+		self.front = self.front.normalize();
 
 	}
 
@@ -777,22 +777,39 @@ impl Model {
 		let (models, mtls) = tobj?;
 		let mesh = &models.get(0).ok_or(Error::ObjLoad)?.mesh;
 		let positions = &mesh.positions;
-		let normals = &mesh.normals;
 		let indices = &mesh.indices;
-		let count = positions.len() / 3;
+		let vert_count = positions.len() / 3;
+		let tri_count = indices.len() / 3;
+		let mut normals = vec![vec3!(0); vert_count];
 
-		// TODO: calculate normals
-		let mut verts = Vec::with_capacity(count * Vertex3D::STRIDE);
+		for i in 0..tri_count {
 
-		for i in 0..count {
+			let i1 = indices[i * 3] as usize;
+			let i2 = indices[i * 3 + 1] as usize;
+			let i3 = indices[i * 3 + 2] as usize;
+			let v1 = vec3!(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
+			let v2 = vec3!(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
+			let v3 = vec3!(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
+			let normal = Vec3::cross((v3 - v1), (v2 - v1)).normalize();
+
+			normals[i1] += normal;
+			normals[i2] += normal;
+			normals[i3] += normal;
+
+		}
+
+		for n in &mut normals {
+			*n = n.normalize();
+		}
+
+		let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
+
+		for i in 0..vert_count {
 
 			let vx = positions[i * 3 + 0];
 			let vy = positions[i * 3 + 1];
 			let vz = positions[i * 3 + 2];
-			let nx = normals.get(i * 3 + 0).unwrap_or(&0.0);
-			let ny = normals.get(i * 3 + 1).unwrap_or(&0.0);
-			let nz = normals.get(i * 3 + 2).unwrap_or(&0.0);
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec3!(*nx, *ny, *nz), color!(rand!(), rand!(), rand!(), 1));
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), normals[i], color!(rand!(), rand!(), rand!(), 1));
 
 			vert.push(&mut verts);
 

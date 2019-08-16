@@ -157,7 +157,7 @@ impl Vec2 {
 	}
 
 	/// normalize vector
-	pub fn unit(&self) -> Self {
+	pub fn normalize(&self) -> Self {
 		return self.clone() / self.mag();
 	}
 
@@ -191,17 +191,17 @@ impl Vec3 {
 	}
 
 	/// normalize vector
-	pub fn unit(&self) -> Self {
+	pub fn normalize(&self) -> Self {
 		return self.clone() / self.mag();
 	}
 
 	/// dot product
-	pub fn dot(&self, other: Self) -> f32 {
+	pub fn dot(self, other: Self) -> f32 {
 		return self.x * other.x + self.y * other.y + self.z * other.z;
 	}
 
 	/// cross product
-	pub fn cross(&self, other: Self) -> Self {
+	pub fn cross(self, other: Self) -> Self {
 		return vec3!(
 			(self.y * other.z) - (self.z * other.y),
 			(self.z * other.x) - (self.x * other.z),
