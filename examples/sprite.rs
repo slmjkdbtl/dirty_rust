@@ -11,7 +11,6 @@ struct Sprite {
 	frames: Vec<Quad>,
 	cur_frame: usize,
 	looping: bool,
-	color: Color,
 
 }
 
@@ -23,7 +22,6 @@ impl Sprite {
 			frames: vec![quad!(0, 0, 1, 1)],
 			cur_frame: 0,
 			looping: true,
-			color: color!(),
 		};
 	}
 
@@ -62,11 +60,6 @@ impl Sprite {
 		}
 	}
 
-	pub fn color(mut self, c: Color) -> Self {
-		self.color = c;
-		return self;
-	}
-
 }
 
 impl gfx::DrawCmd for &Sprite {
@@ -74,17 +67,7 @@ impl gfx::DrawCmd for &Sprite {
 		return ctx.draw(
 			shapes::sprite(&self.tex)
 				.quad(self.frames[self.cur_frame])
-				.color(self.color)
 		);
-	}
-}
-
-#[derive(Clone)]
-struct Test;
-
-impl Drop for Test {
-	fn drop(&mut self) {
-		println!("yo");
 	}
 }
 
