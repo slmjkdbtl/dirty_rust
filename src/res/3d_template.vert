@@ -19,7 +19,7 @@ void main() {
 	vec3 world_pos = (model * vec4(pos, 1.0)).xyz;
 
 // 	vec3 unit_normal = normalize((model * vec4(normal, 1.0)).xyz);
-// 	vec3 unit_light_dir = normalize(vec3(0, -240, 0) - world_pos);
+// 	vec3 unit_light_dir = normalize(vec3(0, 240, 0) - world_pos);
 
 // 	v_brightness = max(dot(unit_normal, unit_light_dir), 0.05);
 // 	v_uv = uv;

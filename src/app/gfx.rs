@@ -232,12 +232,12 @@ impl Gfx for Ctx {
 	// TODO
 	fn cam_look(&mut self, yaw: f32, pitch: f32) {
 		self.cam_3d.set_angle(yaw, pitch);
-		self.cur_shader_3d.send("view", self.cam_3d.as_mat());
+		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
 	}
 
 	fn cam_pos(&mut self, pos: Vec3) {
 		self.cam_3d.set_pos(pos);
-		self.cur_shader_3d.send("view", self.cam_3d.as_mat());
+		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
 	}
 
 	fn cam_front(&self) -> Vec3 {
@@ -746,8 +746,8 @@ impl Camera {
 
 	}
 
-	pub(super) fn as_mat(&self) -> Mat4 {
-		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+	pub fn front(&self) -> Vec3 {
+		return self.front;
 	}
 
 	pub fn set_pos(&mut self, pos: Vec3) {
@@ -763,6 +763,40 @@ impl Camera {
 
 	}
 
+	pub(super) fn get_lookat_matrix(&self) -> Mat4 {
+		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+	}
+
+}
+
+fn get_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
+
+	let vert_count = pos.len() / 3;
+	let tri_count = indices.len() / 3;
+	let mut normals = vec![vec3!(0); vert_count];
+
+	for i in 0..tri_count {
+
+		let i1 = indices[i * 3] as usize;
+		let i2 = indices[i * 3 + 1] as usize;
+		let i3 = indices[i * 3 + 2] as usize;
+		let v1 = vec3!(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
+		let v2 = vec3!(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
+		let v3 = vec3!(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+		let normal = Vec3::cross((v3 - v1), (v2 - v1)).normalize();
+
+		normals[i1] += normal;
+		normals[i2] += normal;
+		normals[i3] += normal;
+
+	}
+
+	for n in &mut normals {
+		*n = n.normalize();
+	}
+
+	return normals;
+
 }
 
 #[derive(Clone)]
@@ -774,34 +808,12 @@ impl Model {
 
 	fn from_tobj(ctx: &Ctx, tobj: tobj::LoadResult) -> Result<Self> {
 
-		let (models, mtls) = tobj?;
+		let (models, _) = tobj?;
 		let mesh = &models.get(0).ok_or(Error::ObjLoad)?.mesh;
 		let positions = &mesh.positions;
 		let indices = &mesh.indices;
 		let vert_count = positions.len() / 3;
-		let tri_count = indices.len() / 3;
-		let mut normals = vec![vec3!(0); vert_count];
-
-		for i in 0..tri_count {
-
-			let i1 = indices[i * 3] as usize;
-			let i2 = indices[i * 3 + 1] as usize;
-			let i3 = indices[i * 3 + 2] as usize;
-			let v1 = vec3!(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
-			let v2 = vec3!(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
-			let v3 = vec3!(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
-			let normal = Vec3::cross((v3 - v1), (v2 - v1)).normalize();
-
-			normals[i1] += normal;
-			normals[i2] += normal;
-			normals[i3] += normal;
-
-		}
-
-		for n in &mut normals {
-			*n = n.normalize();
-		}
-
+		let normals = get_vertex_normals(&positions, &indices);
 		let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
 
 		for i in 0..vert_count {
@@ -850,14 +862,23 @@ impl Shape for CubeShape {
 
 	fn push(&self, queue: &mut Vec<f32>) {
 
-		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec3!(), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec3!(), color!(1, 1, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec3!(), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec3!(), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec3!(), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec3!(), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(0.33, 0.33, -0.66), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(-0.66, 0.66, -0.33), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec3!(-0.33, -0.33, -0.66), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec3!(0.66, -0.66, -0.33), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec3!(0.66, 0.66, 0.33), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec3!(-0.33, 0.33, 0.66), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec3!(-0.66, -0.66, 0.33), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec3!(0.33, -0.33, 0.66), color!(1, 1, 1, 1)).push(queue);
+
+// 		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(0.33, 0.33, -0.66), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(-0.66, 0.66, -0.33), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec3!(-0.33, -0.33, -0.66), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec3!(0.66, -0.66, -0.33), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec3!(0.66, 0.66, 0.33), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec3!(-0.33, 0.33, 0.66), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec3!(-0.66, -0.66, 0.33), color!(1)).push(queue);
+// 		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec3!(0.33, -0.33, 0.66), color!(1)).push(queue);
 
 	}
 

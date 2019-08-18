@@ -1,6 +1,6 @@
 // wengwengweng
 
-use dirty::*;
+use dirty::http;
 
 fn main() {
 
@@ -13,4 +13,4 @@ fn main() {
 		},
 	};
 
- }
+}

@@ -1,7 +1,6 @@
 # wengwengweng
 
 == DOING
-- make gl lib stateless
 
 == TODO
 - http less allocation / copying
@@ -27,6 +26,14 @@
 - clearer shader variable prefixes
 - 3d texture
 - tween functions
+- use time struct for App::dt() and App::time()
+- rubiks cube example
+- noise function
+- rect stroke
+- circle
+- sphere
+- make gl lib stateless
+- flush batched renderer when shader uniform is sent
 
 == DONE
 - refactor http
