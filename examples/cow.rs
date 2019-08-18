@@ -12,14 +12,13 @@ struct Game {
 	ry: f32,
 	effect: gfx::Shader,
 	canvas: gfx::Canvas,
-	pix_size: f32,
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		ctx.cam_pos(vec3!(0, 0, -240));
+		ctx.cam_pos(vec3!(0, 0, -320));
 
 		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
@@ -28,19 +27,18 @@ impl app::State for Game {
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/teapot.obj"))?,
-			pos: vec3!(0, 0, -240),
+			pos: vec3!(0, 0, -320),
 			effect: effect,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			rx: 0.0,
 			ry: 0.0,
-			pix_size: 0.0,
 		});
 
 	}
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let move_speed = 120.0;
+		let move_speed = 160.0;
 		let rot_speed = 0.15;
 
 		ctx.draw_on(&self.canvas, |ctx| {
@@ -65,9 +63,6 @@ impl app::State for Game {
 		ctx.cam_look(self.rx.to_radians(), self.ry.to_radians());
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-// 		self.pix_size = rand!() * 12.0;
-// 		self.effect.send("size", self.pix_size);
 
 		if let Some(delta) = ctx.mouse_delta() {
 

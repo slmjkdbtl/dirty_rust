@@ -248,18 +248,20 @@ impl DrawCmd for Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let center = (self.p1 + self.p2) / 2.0;
-		let width = self.p2.x - self.p1.x;
-		let height = self.p2.y - self.p1.y;
-
-		ctx.push();
-		ctx.translate(center);
-		ctx.scale(vec2!(width, height));
-		ctx.draw(sprite(&ctx.empty_tex.clone()).color(self.color))?;
-		ctx.pop()?;
-
 		if let Some(stroke) = self.stroke {
-			unimplemented!();
+			// ...
+		} else {
+
+			let center = (self.p1 + self.p2) / 2.0;
+			let width = self.p2.x - self.p1.x;
+			let height = self.p2.y - self.p1.y;
+
+			ctx.push();
+			ctx.translate(center);
+			ctx.scale(vec2!(width, height));
+			ctx.draw(sprite(&ctx.empty_tex.clone()).color(self.color))?;
+			ctx.pop()?;
+
 		}
 
 		return Ok(());

@@ -55,9 +55,12 @@ impl app::State for Game {
 		blur.send("dir", vec2!(1, 0));
 		blur.send("dimension", vec2!(ctx.width(), ctx.height()));
 
+		let invert = gfx::Shader::effect(ctx, include_str!("res/invert.frag"))?;
+
 		let effects = vec![
 			Effect::new("pixlate", pixelate, Some(Param::new("size", 32.0))),
 			Effect::new("blur", blur, Some(Param::new("radius", 24.0))),
+			Effect::new("invert", invert, None),
 		];
 
 		return Ok(Self {
@@ -97,7 +100,7 @@ impl app::State for Game {
 
 			if let Some(effect) = self.effects.get(cur_effect) {
 
-				ctx.draw(shapes::text(&format!("cur effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
+				ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
 
 				if let Some(param) = &effect.param {
 

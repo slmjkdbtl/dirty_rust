@@ -176,7 +176,7 @@ impl Ctx {
 		let cam_3d = gfx::Camera::new(vec3!(), 0.0, 0.0);
 
 		shader_3d.send("proj", proj_3d.clone());
-		shader_3d.send("view", cam_3d.as_mat());
+		shader_3d.send("view", cam_3d.get_lookat_matrix());
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_width = font_img.width();

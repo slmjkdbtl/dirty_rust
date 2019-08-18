@@ -66,6 +66,19 @@ $ dirty frog.lua
 
 If no argument is provided, it'll search for `main.lua`
 
+### examples
+
+- **window** basic window and a cube
+- **conf** window / graphics configs
+- **sprite** a 2d animating sprite
+- **effect** custom shader effects
+- **cow** displaying 3d models from obj files
+- **mask** simple stencil mask
+- **ttf** drawing text with truetype fonts
+- **geom** basic geomatry / collision detections
+- **request** making an http/https request
+- **server** a simple http server
+
 ### facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
 
