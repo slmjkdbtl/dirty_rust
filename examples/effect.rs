@@ -44,27 +44,30 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
+		let tex = gfx::Tex2D::from_bytes(ctx, include_bytes!("res/dedede.png"))?;
 		let pixelate = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
 		pixelate.send("size", 32.0);
-		pixelate.send("dimension", vec2!(ctx.width(), ctx.height()));
+		pixelate.send("dimension", vec2!(tex.width(), tex.height()));
 
 		let blur = gfx::Shader::effect(ctx, include_str!("res/blur.frag"))?;
 
 		blur.send("radius", 24.0);
 		blur.send("dir", vec2!(1, 0));
-		blur.send("dimension", vec2!(ctx.width(), ctx.height()));
+		blur.send("dimension", vec2!(tex.width(), tex.height()));
 
+		let grayscale = gfx::Shader::effect(ctx, include_str!("res/grayscale.frag"))?;
 		let invert = gfx::Shader::effect(ctx, include_str!("res/invert.frag"))?;
 
 		let effects = vec![
 			Effect::new("pixlate", pixelate, Some(Param::new("size", 32.0))),
 			Effect::new("blur", blur, Some(Param::new("radius", 24.0))),
+			Effect::new("grayscale", grayscale, None),
 			Effect::new("invert", invert, None),
 		];
 
 		return Ok(Self {
-			tex: gfx::Tex2D::from_bytes(ctx, include_bytes!("../icon.png"))?,
+			tex: tex,
 			cur_effect: None,
 			effects: effects,
 		});
@@ -76,7 +79,8 @@ impl app::State for Game {
 		let draw_icon = |ctx: &mut app::Ctx| -> Result<()> {
 
 			ctx.push();
-			ctx.scale(vec2!(2));
+			ctx.translate(vec2!(0, -24));
+			ctx.scale(vec2!(0.5));
 			ctx.draw(shapes::sprite(&self.tex))?;
 			ctx.pop()?;
 
@@ -106,7 +110,7 @@ impl app::State for Game {
 
 					ctx.translate(vec2!(0, 20));
 					ctx.scale(vec2!(0.8));
-					ctx.draw(shapes::text(&format!("{}: {}", param.name, param.value)))?;
+					ctx.draw(shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)))?;
 
 				}
 

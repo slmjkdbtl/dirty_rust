@@ -34,6 +34,9 @@
 - sphere
 - make gl lib stateless
 - flush batched renderer when shader uniform is sent
+- framebuffer get and set individual pixels and pixel arrays
+- curve
+- image resizing
 
 == DONE
 - refactor http
@@ -59,4 +62,5 @@
 - split gl into modules
 - track draw calls
 - calculate vertex normals
+- image get and set individual pixels and pixel arrays
 

@@ -529,7 +529,7 @@ impl Tex2D {
 	}
 
 	#[cfg(feature = "img")]
-	pub fn from_image(ctx: &Ctx, img: Image) -> Result<Self> {
+	pub fn from_img(ctx: &Ctx, img: Image) -> Result<Self> {
 
 		let w = img.width();
 		let h = img.height();
@@ -543,14 +543,15 @@ impl Tex2D {
 
 	#[cfg(feature = "img")]
 	pub fn from_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
-		return Self::from_image(ctx, Image::from_file(path)?);
+		return Self::from_img(ctx, Image::from_file(path)?);
 	}
 
 	#[cfg(feature = "img")]
 	pub fn from_bytes(ctx: &Ctx, data: &[u8]) -> Result<Self> {
-		return Self::from_image(ctx, Image::from_bytes(data)?);
+		return Self::from_img(ctx, Image::from_bytes(data)?);
 	}
 
+	// TODO: use Color
 	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::init(&ctx.gl, w, h, &pixels)?;
