@@ -59,12 +59,12 @@ fn main() {
 
 ### cli
 
-The `dirty` binary is for running lua scripts
+The `dirty` binary is for running scripts
 ```sh
 $ dirty frog.lua
 ```
 
-If no argument is provided, it'll search for `main.lua`
+If no argument is provided, it'll search for `main.{lua,py}`
 
 ### examples
 
@@ -76,6 +76,7 @@ If no argument is provided, it'll search for `main.lua`
 - **mask** simple stencil mask
 - **ttf** drawing text with truetype fonts
 - **geom** basic geomatry / collision detections
+- **dither** image processing
 - **request** making an http/https request
 - **server** a simple http server
 

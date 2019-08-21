@@ -9,7 +9,9 @@ use crate::fs;
 #[cfg(not(feature = "fs"))]
 use std::fs;
 
+use crate::math::Color;
 use crate::Result;
+use crate::Error;
 
 pub use image::ImageFormat as Format;
 
@@ -40,10 +42,6 @@ impl Image {
 
 	}
 
-	pub fn from_pixels(w: i32, h: i32, pixels: &[u8]) -> Self {
-		unimplemented!();
-	}
-
 	pub fn width(&self) -> i32 {
 		return self.handle.width() as i32;
 	}
@@ -56,9 +54,50 @@ impl Image {
 		return Ok(self.handle.save(path)?);
 	}
 
+	pub fn get(&self, x: i32, y: i32) -> Option<Color> {
+
+		if x < 0 || x > self.width() - 1 || y < 0 || y > self.height() - 1 {
+			return None;
+		}
+
+		return Some(self.handle.get_pixel(x as u32, y as u32).into());
+
+	}
+
+	pub fn set(&mut self, x: i32, y: i32, c: Color) -> Result<()> {
+
+		if x < 0 || x > self.width() - 1 || y < 0 || y > self.height() - 1 {
+			return Err(Error::Image);
+		}
+
+		return Ok(self.handle.put_pixel(x as u32, y as u32, c.into()));
+
+	}
+
+	pub fn resize(&mut self) -> Result<()> {
+		unimplemented!();
+	}
+
 	pub fn into_raw(self) -> Vec<u8> {
 		return self.handle.into_raw();
 	}
 
+}
+
+impl From<&image::Rgba<u8>> for Color {
+	fn from(c: &image::Rgba<u8>) -> Color {
+		return Color::new(
+			c.0[0] as f32 / 255.0,
+			c.0[1] as f32 / 255.0,
+			c.0[2] as f32 / 255.0,
+			c.0[3] as f32 / 255.0,
+		);
+	}
+}
+
+impl From<Color> for image::Rgba<u8> {
+	fn from(c: Color) -> image::Rgba<u8> {
+		return image::Rgba(c.to_rgba());
+	}
 }
 

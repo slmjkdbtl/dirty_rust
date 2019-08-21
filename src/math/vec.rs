@@ -235,14 +235,37 @@ impl Color {
 
 	pub fn to_rgba(&self) -> [u8; 4] {
 
-		let r = (self.r * 255.0) as u8;
-		let g = (self.g * 255.0) as u8;
-		let b = (self.b * 255.0) as u8;
-		let a = (self.a * 255.0) as u8;
-
-		return [r, g, b, a];
+		return [
+			(self.r * 255.0) as u8,
+			(self.g * 255.0) as u8,
+			(self.b * 255.0) as u8,
+			(self.a * 255.0) as u8,
+		];
 
 	}
 
+	pub fn brightness(&self) -> f32 {
+		return (self.r + self.g + self.b) / 3.0;
+	}
+
+	pub fn lighten(self, v: f32) -> Self {
+		return self + color!(v, v, v, 0);
+	}
+
+	pub fn darken(self, v: f32) -> Self {
+		return self - color!(v, v, v, 0);
+	}
+
+}
+
+impl From<Color> for [u8; 4] {
+	fn from(c: Color) -> [u8; 4] {
+		return [
+			(c.r * 255.0) as u8,
+			(c.g * 255.0) as u8,
+			(c.b * 255.0) as u8,
+			(c.a * 255.0) as u8,
+		];
+	}
 }
 
