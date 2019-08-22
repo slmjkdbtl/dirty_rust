@@ -3,8 +3,6 @@
 //! Window & Graphics
 
 use glutin::dpi::*;
-use glutin::event::*;
-use glutin::window::Fullscreen;
 use derive_more::*;
 
 use super::*;
@@ -36,7 +34,7 @@ impl Window for Ctx {
 		let window = self.windowed_ctx.window();
 
 		if b {
-			window.set_fullscreen(Some(Fullscreen::Borderless(window.primary_monitor())));
+			window.set_fullscreen(Some(window.get_current_monitor()));
 			self.fullscreen = true;
 		} else {
 			window.set_fullscreen(None);
@@ -46,7 +44,7 @@ impl Window for Ctx {
 	}
 
 	fn is_fullscreen(&self) -> bool {
-		return self.windowed_ctx.window().fullscreen().is_some();
+		return self.windowed_ctx.window().get_fullscreen().is_some();
 	}
 
 	fn toggle_fullscreen(&mut self) {
@@ -54,7 +52,7 @@ impl Window for Ctx {
 	}
 
 	fn set_cursor_hidden(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_visible(!b);
+		self.windowed_ctx.window().hide_cursor(b);
 		self.cursor_hidden = b;
 	}
 
@@ -67,7 +65,7 @@ impl Window for Ctx {
 	}
 
 	fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
-		self.windowed_ctx.window().set_cursor_grab(b)?;
+		self.windowed_ctx.window().grab_cursor(b)?;
 		self.cursor_locked = b;
 		return Ok(());
 	}
@@ -85,7 +83,7 @@ impl Window for Ctx {
 	}
 
 	fn dpi(&self) -> f64 {
-		return self.windowed_ctx.window().hidpi_factor();
+		return self.windowed_ctx.window().get_hidpi_factor();
 	}
 
 	fn width(&self) -> i32 {
@@ -141,8 +139,9 @@ impl From<Pos> for LogicalPosition {
 	}
 }
 
-impl From<MouseScrollDelta> for Pos {
-	fn from(delta: MouseScrollDelta) -> Self {
+impl From<glutin::MouseScrollDelta> for Pos {
+	fn from(delta: glutin::MouseScrollDelta) -> Self {
+		use glutin::MouseScrollDelta;
 		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
 				let (x, y): (i32, i32) = pos.into();
@@ -178,4 +177,3 @@ impl From<LogicalPosition> for Vec2 {
 		};
 	}
 }
-
