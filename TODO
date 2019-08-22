@@ -39,6 +39,8 @@
 - image resizing
 - gradient
 - remove redundant window conf
+- app error manangement
+- fix input lag
 
 == DONE
 - refactor http
