@@ -133,13 +133,6 @@ impl From<glutin::ContextError> for Error {
 	}
 }
 
-#[cfg(feature = "app")]
-impl From<glutin::error::ExternalError> for Error {
-	fn from(_: glutin::error::ExternalError) -> Self {
-		return Error::Window;
-	}
-}
-
 #[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {
 	fn from(_: rodio::decoder::DecoderError) -> Self {
@@ -162,8 +155,8 @@ impl From<tobj::LoadError> for Error {
 }
 
 #[cfg(feature = "app")]
-impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::window::Window>, glutin::ContextError)> for Error {
-	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::window::Window>, glutin::ContextError)) -> Self {
+impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
+	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
 		return Error::Window;
 	}
 }

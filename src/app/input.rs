@@ -2,11 +2,10 @@
 
 use std::collections::HashSet;
 
-use glutin::event::*;
-
-pub use glutin::event::ModifiersState as Mod;
-pub use glutin::event::VirtualKeyCode as Key;
-pub use glutin::event::MouseButton as Mouse;
+use glutin::ElementState;
+pub use glutin::ModifiersState as Mod;
+pub use glutin::VirtualKeyCode as Key;
+pub use glutin::MouseButton as Mouse;
 
 use super::*;
 use crate::*;
@@ -112,8 +111,7 @@ impl Input for app::Ctx {
 
 }
 
-// TODO: input lag??
-pub(super) fn poll(ctx: &mut app::Ctx, event: Event<()>) -> Result<()> {
+pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	for state in ctx.key_state.values_mut() {
 		if state == &ButtonState::Pressed {
@@ -136,108 +134,142 @@ pub(super) fn poll(ctx: &mut app::Ctx, event: Event<()>) -> Result<()> {
 	ctx.text_input = None;
 	ctx.rpressed_key = None;
 
+	let mut keyboard_input = None;
+	let mut mouse_input = None;
+	let mut cursor_moved = None;
+	let mut mouse_wheel = None;
+	let mut mouse_delta = None;
 	let mut text_input = None;
+	let mut resized = None;
 	let mut close = false;
 
-	use WindowEvent::*;
+	ctx.events_loop.poll_events(|e| {
 
-	match event {
+		use glutin::Event::*;
+		use glutin::WindowEvent::*;
 
-		Event::WindowEvent { event, .. } => match event {
+		match e {
 
-			KeyboardInput { input, .. } => {
+			WindowEvent { event, .. } => match event {
 
-				if let Some(kc) = input.virtual_keycode {
+				KeyboardInput { input, .. } => {
+					keyboard_input = Some(input);
+				},
 
-					match input.state {
+				MouseInput { button, state, .. } => {
+					mouse_input = Some((button, state));
+				},
 
-						ElementState::Pressed => {
+				CursorMoved { position, .. } => {
+					cursor_moved = Some(position);
+				},
 
-							ctx.rpressed_key = Some(kc);
+				MouseWheel { delta, .. } => {
+					mouse_wheel = Some(delta);
+				},
 
-							if ctx.key_up(kc) || ctx.key_released(kc) {
-								ctx.key_state.insert(kc, ButtonState::Pressed);
-							}
+				ReceivedCharacter(ch) => {
+					text_input.get_or_insert(String::new()).push(ch);
+				},
 
-						},
+				Resized(size) => {
+					resized = Some(size);
+				},
 
-						ElementState::Released => {
-							if ctx.key_down(kc) || ctx.key_pressed(kc) {
-								ctx.key_state.insert(kc, ButtonState::Released);
-							}
-						},
+				Touch(touch) => {
+					// ...
+				},
 
-					}
+				CloseRequested => close = true,
 
-				}
-
-			},
-
-			MouseInput { button, state, .. } => {
-
-				match state {
-					ElementState::Pressed => {
-						if ctx.mouse_up(button) || ctx.mouse_released(button) {
-							ctx.mouse_state.insert(button, ButtonState::Pressed);
-						}
-					},
-					ElementState::Released => {
-						if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
-							ctx.mouse_state.insert(button, ButtonState::Released);
-						}
-					},
-				}
+				_ => {},
 
 			},
 
-			CursorMoved { position, .. } => {
-
-				let pos: Pos = position.into();
-
-				ctx.mouse_delta = Some((pos - ctx.mouse_pos).into());
-				ctx.mouse_pos = pos;
-
+			DeviceEvent { event, .. } => match event {
+				glutin::DeviceEvent::MouseMotion { delta } => {
+					mouse_delta = Some(delta);
+				},
+				_ => (),
 			},
 
-			MouseWheel { delta, .. } => {
-				ctx.scroll_delta = Some(delta.into());
-			},
-
-			ReceivedCharacter(ch) => {
-				text_input.get_or_insert(String::new()).push(ch);
-			},
-
-			Resized(size) => {
-				ctx.width = size.width as i32;
-				ctx.height = size.height as i32;
-			},
-
-			Touch(touch) => {
-				// ...
-			},
-
-			CloseRequested => close = true,
 			_ => {},
 
-		},
+		};
 
-		Event::DeviceEvent { event, .. } => match event {
-			DeviceEvent::MouseMotion { delta } => {
-				ctx.mouse_delta = Some(Pos {
-					x: delta.0 as i32,
-					y: delta.1 as i32,
-				});
-			},
-			_ => (),
-		},
-
-		_ => {},
-
-	};
+	});
 
 	if close {
 		ctx.quit = true;
 		return Ok(());
+	}
+
+	if let Some(input) = keyboard_input {
+
+		if let Some(kc) = input.virtual_keycode {
+
+			match input.state {
+
+				ElementState::Pressed => {
+
+					ctx.rpressed_key = Some(kc);
+
+					if ctx.key_up(kc) || ctx.key_released(kc) {
+						ctx.key_state.insert(kc, ButtonState::Pressed);
+					}
+
+				},
+
+				ElementState::Released => {
+					if ctx.key_down(kc) || ctx.key_pressed(kc) {
+						ctx.key_state.insert(kc, ButtonState::Released);
+					}
+				},
+
+			}
+
+		}
+
+	}
+
+	if let Some((button, state)) = mouse_input {
+		match state {
+			ElementState::Pressed => {
+				if ctx.mouse_up(button) || ctx.mouse_released(button) {
+					ctx.mouse_state.insert(button, ButtonState::Pressed);
+				}
+			},
+			ElementState::Released => {
+				if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+					ctx.mouse_state.insert(button, ButtonState::Released);
+				}
+			},
+		}
+	}
+
+	if let Some(pos) = cursor_moved {
+
+		let pos: Pos = pos.into();
+
+		ctx.mouse_delta = Some((pos - ctx.mouse_pos).into());
+		ctx.mouse_pos = pos;
+
+	}
+
+	if let Some(delta) = mouse_delta {
+		ctx.mouse_delta = Some(Pos {
+			x: delta.0 as i32,
+			y: delta.1 as i32,
+		});
+	}
+
+	if let Some(delta) = mouse_wheel {
+		ctx.scroll_delta = Some(delta.into());
+	}
+
+	if let Some(size) = resized {
+		ctx.width = size.width as i32;
+		ctx.height = size.height as i32;
 	}
 
 	ctx.text_input = text_input;
