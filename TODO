@@ -37,6 +37,8 @@
 - framebuffer get and set individual pixels and pixel arrays
 - curve
 - image resizing
+- gradient
+- remove redundant window conf
 
 == DONE
 - refactor http
