@@ -2,10 +2,11 @@
 
 use std::collections::HashSet;
 
-use glutin::ElementState;
-pub use glutin::ModifiersState as Mod;
-pub use glutin::VirtualKeyCode as Key;
-pub use glutin::MouseButton as Mouse;
+use glutin::event::*;
+
+pub use glutin::event::ModifiersState as Mod;
+pub use glutin::event::VirtualKeyCode as Key;
+pub use glutin::event::MouseButton as Mouse;
 
 use super::*;
 use crate::*;
@@ -111,7 +112,7 @@ impl Input for app::Ctx {
 
 }
 
-pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
+pub(super) fn poll(ctx: &mut app::Ctx, event: Event<()>) -> Result<()> {
 
 	for state in ctx.key_state.values_mut() {
 		if state == &ButtonState::Pressed {
@@ -143,61 +144,56 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	let mut resized = None;
 	let mut close = false;
 
-	ctx.events_loop.poll_events(|e| {
+	use WindowEvent::*;
 
-		use glutin::Event::*;
-		use glutin::WindowEvent::*;
+	match event {
 
-		match e {
+		Event::WindowEvent { event, .. } => match event {
 
-			WindowEvent { event, .. } => match event {
-
-				KeyboardInput { input, .. } => {
-					keyboard_input = Some(input);
-				},
-
-				MouseInput { button, state, .. } => {
-					mouse_input = Some((button, state));
-				},
-
-				CursorMoved { position, .. } => {
-					cursor_moved = Some(position);
-				},
-
-				MouseWheel { delta, .. } => {
-					mouse_wheel = Some(delta);
-				},
-
-				ReceivedCharacter(ch) => {
-					text_input.get_or_insert(String::new()).push(ch);
-				},
-
-				Resized(size) => {
-					resized = Some(size);
-				},
-
-				Touch(touch) => {
-					// ...
-				},
-
-				CloseRequested => close = true,
-
-				_ => {},
-
+			KeyboardInput { input, .. } => {
+				keyboard_input = Some(input);
 			},
 
-			DeviceEvent { event, .. } => match event {
-				glutin::DeviceEvent::MouseMotion { delta } => {
-					mouse_delta = Some(delta);
-				},
-				_ => (),
+			MouseInput { button, state, .. } => {
+				mouse_input = Some((button, state));
 			},
+
+			CursorMoved { position, .. } => {
+				cursor_moved = Some(position);
+			},
+
+			MouseWheel { delta, .. } => {
+				mouse_wheel = Some(delta);
+			},
+
+			ReceivedCharacter(ch) => {
+				text_input.get_or_insert(String::new()).push(ch);
+			},
+
+			Resized(size) => {
+				resized = Some(size);
+			},
+
+			Touch(touch) => {
+				// ...
+			},
+
+			CloseRequested => close = true,
 
 			_ => {},
 
-		};
+		},
 
-	});
+		Event::DeviceEvent { event, .. } => match event {
+			DeviceEvent::MouseMotion { delta } => {
+				mouse_delta = Some(delta);
+			},
+			_ => (),
+		},
+
+		_ => {},
+
+	};
 
 	if close {
 		ctx.quit = true;

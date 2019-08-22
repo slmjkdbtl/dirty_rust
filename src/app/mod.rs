@@ -17,6 +17,9 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
+use glutin::event_loop::ControlFlow;
+use glutin::window::WindowBuilder;
+use glutin::window::Fullscreen;
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
@@ -29,6 +32,9 @@ use input::Mouse;
 use window::Pos;
 
 use gfx::Origin;
+
+type WindowedCtx = glutin::WindowedContext<glutin::PossiblyCurrent>;
+type EventLoop = glutin::event_loop::EventLoop<()>;
 
 const MAX_DRAWS: usize = 65536;
 
@@ -63,8 +69,7 @@ pub struct Ctx {
 	pub(self) width: i32,
 	pub(self) height: i32,
 
-	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	pub(self) events_loop: glutin::EventsLoop,
+	pub(self) windowed_ctx: WindowedCtx,
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
@@ -96,35 +101,34 @@ pub struct Ctx {
 
 impl Ctx {
 
-	pub(super) fn new(conf: app::Conf) -> Result<Self> {
+	pub(super) fn new(conf: app::Conf) -> Result<(Self, EventLoop)> {
 
-		let events_loop = glutin::EventsLoop::new();
+		let event_loop = EventLoop::new();
 
-		let mut window_builder = glutin::WindowBuilder::new()
+		let mut window_builder = WindowBuilder::new()
 			.with_title(conf.title.to_owned())
 			.with_resizable(conf.resizable)
-			.with_transparency(conf.transparent)
+			.with_transparent(conf.transparent)
 			.with_decorations(!conf.borderless)
 			.with_always_on_top(conf.always_on_top)
-			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-			.with_multitouch()
+			.with_inner_size(LogicalSize::new(conf.width as f64, conf.height as f64))
 			;
 
 		if conf.fullscreen {
 			window_builder = window_builder
-				.with_fullscreen(Some(events_loop.get_primary_monitor()));
+				.with_fullscreen(Some(Fullscreen::Borderless(event_loop.primary_monitor())));
 		}
 
 		#[cfg(target_os = "macos")] {
 
-			use glutin::os::macos::WindowBuilderExt;
+			use glutin::platform::macos::WindowBuilderExtMacOS;
 
 			window_builder = window_builder
 				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
 				.with_title_hidden(conf.hide_title)
 				.with_titlebar_transparent(conf.titlebar_transparent)
 				.with_fullsize_content_view(conf.fullsize_content)
-// 				.with_disallow_hidpi(!conf.hidpi)
+				.with_disallow_hidpi(!conf.hidpi)
 				;
 
 		}
@@ -142,7 +146,7 @@ impl Ctx {
 		}
 
 		let windowed_ctx = unsafe {
-			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
+			ctx_builder.build_windowed(window_builder, &event_loop)?.make_current()?
 		};
 
 		let gl = gl::Device::from_loader(|s| {
@@ -213,7 +217,6 @@ impl Ctx {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 
-			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
 			gamepad_ctx: Gilrs::new()?,
 
@@ -245,38 +248,41 @@ impl Ctx {
 		};
 
 		if ctx.conf.cursor_hidden {
-			ctx.set_cursor_hidden(true);
+// 			ctx.set_cursor_hidden(true);
 		}
 
 		if ctx.conf.cursor_locked {
-			ctx.set_cursor_locked(true)?;
+// 			ctx.set_cursor_locked(true)?;
 		}
 
 		ctx.clear();
 		window::swap(&ctx)?;
 
-		return Ok(ctx);
+		return Ok((ctx, event_loop));
 
 	}
 
-	pub(super) fn run(&mut self, mut f: impl FnMut(&mut Self) -> Result<()>) -> Result<()> {
+	pub(super) fn run(mut self, event_loop: EventLoop, mut f: impl FnMut(&mut Self) -> Result<()> + 'static) -> ! {
 
-		'run: loop {
+		event_loop.run(move |event, target, control_flow| {
+
+			let ctx = &mut self;
+
+			*control_flow = ControlFlow::Wait;
 
 			let start_time = Instant::now();
 
-			input::poll(self)?;
+			input::poll(ctx, event);
+			gfx::begin(ctx);
+			f(ctx);
+			gfx::end(ctx);
+			window::swap(ctx);
 
-			gfx::begin(self);
-			f(self)?;
-			gfx::end(self);
-			window::swap(self)?;
-
-			if self.quit {
-				break 'run;
+			if ctx.quit {
+				*control_flow = ControlFlow::Exit;
 			}
 
-			if let Some(fps_cap) = self.conf.fps_cap {
+			if let Some(fps_cap) = ctx.conf.fps_cap {
 
 				let real_dt = start_time.elapsed().as_millis();
 				let expected_dt = (1000.0 / fps_cap as f32) as u128;
@@ -287,13 +293,11 @@ impl Ctx {
 
 			}
 
-			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
-			self.time += self.dt;
-			self.fps_counter.tick(self.dt);
+			ctx.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
+			ctx.time += ctx.dt;
+			ctx.fps_counter.tick(ctx.dt);
 
-		}
-
-		return Ok(());
+		});
 
 	}
 
@@ -326,7 +330,7 @@ impl App for Ctx {
 
 }
 
-pub fn run<S: State>() -> Result<()> {
+pub fn run<S: State + 'static>() -> Result<()> {
 	return launcher().run::<S>();
 }
 
@@ -341,18 +345,14 @@ pub struct Launcher {
 
 impl Launcher {
 
-	pub fn run<S: State>(self) -> Result<()> {
+	pub fn run<S: State + 'static>(self) -> Result<()> {
 
-		let mut ctx = Ctx::new(self.conf)?;
+		let (mut ctx, event_loop) = Ctx::new(self.conf)?;
 		let mut s = S::init(&mut ctx)?;
 
-		ctx.run(|c| {
+		ctx.run(event_loop, move |c| {
 			return s.run(c);
-		})?;
-
-		s.quit(&mut ctx)?;
-
-		return Ok(());
+		});
 
 	}
 

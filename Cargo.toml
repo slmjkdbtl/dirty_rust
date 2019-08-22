@@ -19,7 +19,7 @@ exclude = ["TODO"]
 default = [
 
 	# bindings
-	"lua",
+# 	"lua",
 # 	"python",
 
 	# modules
@@ -109,7 +109,8 @@ derive_more = "0.15"
 directories = { version = "2.0", optional = true }
 glob = { version = "0.3", optional = true }
 
-glutin = { version = "0.21", optional = true }
+# TODO: use stable glutin
+glutin = { version = "0.22.0-alpha3", optional = true }
 gilrs = { version = "0.7", optional = true }
 glow = { version = "0.2", optional = true }
 glyph_brush = { version = "0.5", optional = true }
