@@ -98,8 +98,7 @@ impl app::State for Game {
 		}
 
 		if ctx.key_pressed(Key::F) {
-			dbg!(1);
-// 			ctx.toggle_fullscreen();
+			ctx.toggle_fullscreen();
 		}
 
 		if ctx.key_pressed(Key::Escape) {

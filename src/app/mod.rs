@@ -248,11 +248,11 @@ impl Ctx {
 		};
 
 		if ctx.conf.cursor_hidden {
-// 			ctx.set_cursor_hidden(true);
+			ctx.set_cursor_hidden(true);
 		}
 
 		if ctx.conf.cursor_locked {
-// 			ctx.set_cursor_locked(true)?;
+			ctx.set_cursor_locked(true)?;
 		}
 
 		ctx.clear();

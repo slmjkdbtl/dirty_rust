@@ -217,17 +217,19 @@ pub(super) fn poll(ctx: &mut app::Ctx, event: Event<()>) -> Result<()> {
 			},
 
 			CloseRequested => close = true,
-
 			_ => {},
 
 		},
 
-// 		Event::DeviceEvent { event, .. } => match event {
-// 			DeviceEvent::MouseMotion { delta } => {
-// 				mouse_delta = Some(delta);
-// 			},
-// 			_ => (),
-// 		},
+		Event::DeviceEvent { event, .. } => match event {
+			DeviceEvent::MouseMotion { delta } => {
+				ctx.mouse_delta = Some(Pos {
+					x: delta.0 as i32,
+					y: delta.1 as i32,
+				});
+			},
+			_ => (),
+		},
 
 		_ => {},
 
@@ -237,13 +239,6 @@ pub(super) fn poll(ctx: &mut app::Ctx, event: Event<()>) -> Result<()> {
 		ctx.quit = true;
 		return Ok(());
 	}
-
-// 	if let Some(delta) = mouse_delta {
-// 		ctx.mouse_delta = Some(Pos {
-// 			x: delta.0 as i32,
-// 			y: delta.1 as i32,
-// 		});
-// 	}
 
 	ctx.text_input = text_input;
 
