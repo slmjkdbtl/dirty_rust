@@ -267,9 +267,6 @@ impl Ctx {
 		event_loop.run(move |event, target, control_flow| {
 
 			let ctx = &mut self;
-
-			*control_flow = ControlFlow::Wait;
-
 			let start_time = Instant::now();
 
 			input::poll(ctx, event);
