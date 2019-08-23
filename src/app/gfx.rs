@@ -275,13 +275,13 @@ pub(super) fn end(ctx: &mut Ctx) {
 	flush(ctx);
 	ctx.transform = Mat4::identity();
 	ctx.transform_stack.clear();
-	ctx.draw_calls += ctx.quad_renderer.draw_count();
-	ctx.quad_renderer.clear();
+	ctx.draw_calls += ctx.renderer_2d.draw_count();
+	ctx.renderer_2d.clear();
 
 }
 
 pub(super) fn flush(ctx: &mut Ctx) {
-	ctx.quad_renderer.flush();
+	ctx.renderer_2d.flush();
 }
 
 pub struct Vertex2D {
@@ -291,7 +291,7 @@ pub struct Vertex2D {
 }
 
 impl Vertex2D {
-	fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
+	pub fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
 		return Self {
 			pos: pos,
 			uv: uv,
@@ -335,7 +335,7 @@ pub struct Vertex3D {
 }
 
 impl Vertex3D {
-	fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
+	pub fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
 		return Self {
 			pos: pos,
 			normal: normal,

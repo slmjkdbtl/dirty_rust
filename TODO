@@ -2,7 +2,7 @@
 
 == DOING
 - wasm
-- polygon
+- circle
 
 == TODO
 - http less allocation / copying
@@ -32,7 +32,6 @@
 - rubiks cube example
 - noise function
 - rect stroke
-- circle
 - sphere
 - make gl lib stateless
 - flush batched renderer when shader uniform is sent
@@ -70,4 +69,5 @@
 - calculate vertex normals
 - image get and set individual pixels and pixel arrays
 - make batched renderer draw arbitrary shapes
+- polygon
 

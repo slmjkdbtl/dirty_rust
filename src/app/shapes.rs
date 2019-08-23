@@ -2,6 +2,7 @@
 
 use super::*;
 use gfx::DrawCmd;
+use gl::VertexLayout;
 
 pub struct Sprite<'a> {
 	tex: &'a gfx::Tex2D,
@@ -58,7 +59,7 @@ impl<'a> DrawCmd for Sprite<'a> {
 
 		let shape = gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
-		ctx.quad_renderer.push_shape(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
+		ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
 
 		ctx.pop()?;
 
@@ -305,6 +306,57 @@ impl<'a> DrawCmd for Points<'a> {
 			ctx.draw(Rect::from_size(self.size, self.size).color(self.color))?;
 			ctx.pop()?;
 		}
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Polygon {
+	pts: Vec<Vec2>,
+	color: Color,
+}
+
+impl Polygon {
+	fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+}
+
+// TODO: calculate correct verts and indices
+pub fn polygon(pts: &[Vec2]) -> Polygon {
+
+	if pts.len() < 3 {
+		// TODO: error
+	}
+
+	return Polygon {
+		pts: pts.to_vec(),
+		color: color!(),
+	};
+
+}
+
+impl DrawCmd for Polygon {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let mut verts = Vec::new();
+		let mut indices = Vec::new();
+
+		for (i, p) in self.pts.iter().enumerate() {
+
+			gfx::Vertex2D::new(*p, vec2!(0), self.color).push(&mut verts);
+
+			if i >= 2 {
+				indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
+			}
+
+		}
+
+		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, Some(&ctx.empty_tex.handle))?;
 
 		return Ok(());
 
