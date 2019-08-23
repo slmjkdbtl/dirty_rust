@@ -347,7 +347,7 @@ impl DrawCmd for Polygon {
 
 		for (i, p) in self.pts.iter().enumerate() {
 
-			gfx::Vertex2D::new(*p, vec2!(0), self.color).push(&mut verts);
+			gfx::Vertex2D::new(ctx.transform * *p, vec2!(0), self.color).push(&mut verts);
 
 			if i >= 2 {
 				indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
@@ -406,7 +406,10 @@ impl DrawCmd for Circle {
 
 		}
 
+		ctx.push();
+		ctx.translate(self.center);
 		ctx.draw(polygon(&verts).color(self.color))?;
+		ctx.pop();
 
 		return Ok(());
 
