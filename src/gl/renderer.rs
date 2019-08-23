@@ -45,6 +45,7 @@ impl<V: VertexLayout> Renderer<V> {
 
 		let mut verts = Vec::with_capacity(S::COUNT * S::Vertex::STRIDE);
 		shape.push(&mut verts);
+
 		return Self::new(device, &verts, &S::indices());
 
 	}
