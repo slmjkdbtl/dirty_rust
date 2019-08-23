@@ -274,6 +274,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	ctx.text_input = text_input;
 
+	#[cfg(not(target_os = "ios"))]
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
 		// TODO: add gamepad input
 	}
@@ -372,4 +373,3 @@ pub(crate) fn str_to_mouse(s: &str) -> Option<Mouse> {
 		_ => None,
 	}
 }
-

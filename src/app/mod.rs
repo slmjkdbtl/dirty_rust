@@ -20,7 +20,6 @@ use std::time::Duration;
 use glutin::dpi::*;
 use glutin::Api;
 use glutin::GlRequest;
-use gilrs::Gilrs;
 
 use input::ButtonState;
 use input::Key;
@@ -65,6 +64,7 @@ pub struct Ctx {
 
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(self) events_loop: glutin::EventsLoop,
+	#[cfg(not(target_os = "ios"))]
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
@@ -215,7 +215,8 @@ impl Ctx {
 
 			events_loop: events_loop,
 			windowed_ctx: windowed_ctx,
-			gamepad_ctx: Gilrs::new()?,
+			#[cfg(not(target_os = "ios"))]
+			gamepad_ctx: gilrs::Gilrs::new()?,
 
 			quad_renderer: gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?,
 			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,

@@ -140,7 +140,7 @@ impl From<rodio::decoder::DecoderError> for Error {
 	}
 }
 
-#[cfg(feature = "app")]
+#[cfg(all(feature = "app", not(target_os = "ios")))]
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Thread;
