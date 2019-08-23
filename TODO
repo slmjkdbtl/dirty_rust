@@ -68,4 +68,5 @@
 - track draw calls
 - calculate vertex normals
 - image get and set individual pixels and pixel arrays
+- make batched renderer draw arbitrary shapes
 

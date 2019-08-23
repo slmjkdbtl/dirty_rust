@@ -11,6 +11,7 @@ pub use glutin::VirtualKeyCode as Key;
 #[cfg(not(target_arch = "wasm32"))]
 pub use glutin::MouseButton as Mouse;
 
+// TODO: input types for browser
 #[cfg(target_arch = "wasm32")]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Mod;
