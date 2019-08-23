@@ -2,7 +2,6 @@
 
 == DOING
 - wasm
-- circle
 
 == TODO
 - http less allocation / copying
@@ -70,4 +69,5 @@
 - image get and set individual pixels and pixel arrays
 - make batched renderer draw arbitrary shapes
 - polygon
+- circle
 

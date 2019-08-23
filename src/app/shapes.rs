@@ -319,13 +319,12 @@ pub struct Polygon {
 }
 
 impl Polygon {
-	fn color(mut self, c: Color) -> Self {
+	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
 		return self;
 	}
 }
 
-// TODO: calculate correct verts and indices
 pub fn polygon(pts: &[Vec2]) -> Polygon {
 
 	if pts.len() < 3 {
@@ -357,6 +356,57 @@ impl DrawCmd for Polygon {
 		}
 
 		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, Some(&ctx.empty_tex.handle))?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Circle {
+	center: Vec2,
+	radius: f32,
+	color: Color,
+	sides: usize,
+}
+
+impl Circle {
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+	pub fn sides(mut self, s: usize) -> Self {
+		self.sides = s;
+		return self;
+	}
+}
+
+pub fn circle(center: Vec2, radius: f32) -> Circle {
+	return Circle {
+		center: center,
+		radius: radius,
+		color: color!(),
+		// TODO: calculate sides
+		sides: radius as usize,
+	};
+}
+
+impl DrawCmd for Circle {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let mut verts = Vec::new();
+
+		for i in 0..self.sides {
+
+			let angle = 360.0 / self.sides as f32 * i as f32;
+			let pt = Vec2::from_angle(angle.to_radians()) * self.radius;
+
+			verts.push(pt);
+
+		}
+
+		ctx.draw(polygon(&verts).color(self.color))?;
 
 		return Ok(());
 
