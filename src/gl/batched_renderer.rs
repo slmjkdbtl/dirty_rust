@@ -47,7 +47,7 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 
 	}
 
-	pub fn push<S: Shape>(&mut self, shape: S, program: &Program, otex: Option<&Texture>) -> Result<()> {
+	pub fn push(&mut self, verts: &[f32], indices: &[u32], program: &Program, otex: Option<&Texture>) -> Result<()> {
 
 		if let Some(tex) = otex {
 			if let Some(cur_tex) = &self.cur_texture {
@@ -75,15 +75,24 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			return Err(Error::MaxDraw);
 		}
 
-		let offset = (self.vqueue.len() / S::Vertex::STRIDE) as u32;
+		let offset = (self.vqueue.len() / V::STRIDE) as u32;
 
-		let indices = S::indices()
+		let indices = indices
 			.iter()
 			.map(|i| *i + offset)
 			.collect::<Vec<u32>>();
 			;
 
 		self.iqueue.extend_from_slice(&indices);
+		self.vqueue.extend_from_slice(&verts);
+
+		return Ok(());
+
+	}
+
+	pub fn push_shape<S: Shape>(&mut self, shape: S, program: &Program, otex: Option<&Texture>) -> Result<()> {
+
+		self.push(&[], &S::indices(), program, otex)?;
 		shape.push(&mut self.vqueue);
 
 		return Ok(());
