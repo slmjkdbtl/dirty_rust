@@ -83,7 +83,7 @@ pub struct Ctx {
 	pub(self) proj_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
-	pub(self) quad_renderer: gl::BatchedRenderer<gfx::Vertex2D>,
+	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 
 	pub(self) empty_tex: gfx::Tex2D,
@@ -268,7 +268,7 @@ impl Ctx {
 			gamepad_ctx: gilrs::Gilrs::new()?,
 
 			// TODO: ???
-			quad_renderer: gl::BatchedRenderer::<gfx::Vertex2D>::new(&gl, 9999999, 9999999)?,
+			renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D>::new(&gl, 9999999, 9999999)?,
 			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
 			gl: gl,
 
