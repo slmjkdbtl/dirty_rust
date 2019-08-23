@@ -17,9 +17,14 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
+#[cfg(not(target_arch = "wasm32"))]
 use glutin::dpi::*;
+#[cfg(not(target_arch = "wasm32"))]
 use glutin::Api;
+#[cfg(not(target_arch = "wasm32"))]
 use glutin::GlRequest;
+#[cfg(target_arch = "wasm32")]
+use glow::RenderLoop;
 
 use input::ButtonState;
 use input::Key;
@@ -62,17 +67,22 @@ pub struct Ctx {
 	pub(self) width: i32,
 	pub(self) height: i32,
 
+	#[cfg(not(target_arch = "wasm32"))]
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
+	#[cfg(not(target_arch = "wasm32"))]
 	pub(self) events_loop: glutin::EventsLoop,
-	#[cfg(not(target_os = "ios"))]
+	#[cfg(target_arch = "wasm32")]
+	pub(self) render_loop: glow::web::RenderLoop,
+	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
+	pub(self) gl: gl::Device,
+
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
-	pub(self) gl: gl::Device,
 	pub(self) quad_renderer: gl::BatchedRenderer<gfx::QuadShape>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 
@@ -98,56 +108,91 @@ impl Ctx {
 
 	pub(super) fn new(conf: app::Conf) -> Result<Self> {
 
-		let events_loop = glutin::EventsLoop::new();
+		#[cfg(not(target_arch = "wasm32"))]
+		let (windowed_ctx, events_loop, gl) =  {
 
-		let mut window_builder = glutin::WindowBuilder::new()
-			.with_title(conf.title.to_owned())
-			.with_resizable(conf.resizable)
-			.with_transparency(conf.transparent)
-			.with_decorations(!conf.borderless)
-			.with_always_on_top(conf.always_on_top)
-			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-			.with_multitouch()
-			;
+			let events_loop = glutin::EventsLoop::new();
 
-		if conf.fullscreen {
-			window_builder = window_builder
-				.with_fullscreen(Some(events_loop.get_primary_monitor()));
-		}
-
-		#[cfg(target_os = "macos")] {
-
-			use glutin::os::macos::WindowBuilderExt;
-
-			window_builder = window_builder
-				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
-				.with_title_hidden(conf.hide_title)
-				.with_titlebar_transparent(conf.titlebar_transparent)
-				.with_fullsize_content_view(conf.fullsize_content)
-// 				.with_disallow_hidpi(!conf.hidpi)
+			let mut window_builder = glutin::WindowBuilder::new()
+				.with_title(conf.title.to_owned())
+				.with_resizable(conf.resizable)
+				.with_transparency(conf.transparent)
+				.with_decorations(!conf.borderless)
+				.with_always_on_top(conf.always_on_top)
+				.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
+				.with_multitouch()
 				;
 
-		}
+			if conf.fullscreen {
+				window_builder = window_builder
+					.with_fullscreen(Some(events_loop.get_primary_monitor()));
+			}
 
-		let mut ctx_builder = glutin::ContextBuilder::new()
-			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
-			;
+			#[cfg(target_os = "macos")] {
 
-		#[cfg(feature = "gl3")] {
-			ctx_builder = ctx_builder
-				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
-				.with_gl_profile(glutin::GlProfile::Core)
+				use glutin::os::macos::WindowBuilderExt;
+
+				window_builder = window_builder
+					.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
+					.with_title_hidden(conf.hide_title)
+					.with_titlebar_transparent(conf.titlebar_transparent)
+					.with_fullsize_content_view(conf.fullsize_content)
+	// 				.with_disallow_hidpi(!conf.hidpi)
+					;
+
+			}
+
+			let mut ctx_builder = glutin::ContextBuilder::new()
+				.with_vsync(conf.vsync)
+				.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
 				;
-		}
 
-		let windowed_ctx = unsafe {
-			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
+			#[cfg(feature = "gl3")] {
+				ctx_builder = ctx_builder
+					.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+					.with_gl_profile(glutin::GlProfile::Core)
+					;
+			}
+
+			let windowed_ctx = unsafe {
+				ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
+			};
+
+			let gl = gl::Device::from_loader(|s| {
+				windowed_ctx.get_proc_address(s) as *const _
+			});
+
+			(windowed_ctx, events_loop, gl)
+
 		};
 
-		let gl = gl::Device::from_loader(|s| {
-			windowed_ctx.get_proc_address(s) as *const _
-		});
+		#[cfg(target_arch = "wasm32")]
+		let (gl, render_loop) = {
+
+			use wasm_bindgen::JsCast;
+
+			let canvas = web_sys::window()
+				.ok_or(Error::Window)?
+				.document()
+				.ok_or(Error::Window)?
+				.get_element_by_id("canvas")
+				.ok_or(Error::Window)?
+				.dyn_into::<web_sys::HtmlCanvasElement>()?
+				;
+
+			let webgl2_context = canvas
+				.get_context("webgl2")?
+				.ok_or(Error::Window)?
+				.dyn_into::<web_sys::WebGl2RenderingContext>()
+				.unwrap()
+				;
+
+			let gl = gl::Device::new(webgl2_context);
+			let render_loop = glow::web::RenderLoop::from_request_animation_frame();
+
+			(gl, render_loop)
+
+		};
 
 		gl.enable(gl::Capability::Blend);
 		gl.enable(gl::Capability::DepthTest);
@@ -213,9 +258,13 @@ impl Ctx {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 
+			#[cfg(not(target_arch = "wasm32"))]
 			events_loop: events_loop,
+			#[cfg(not(target_arch = "wasm32"))]
 			windowed_ctx: windowed_ctx,
-			#[cfg(not(target_os = "ios"))]
+			#[cfg(target_arch = "wasm32")]
+			render_loop: render_loop,
+			#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 			gamepad_ctx: gilrs::Gilrs::new()?,
 
 			quad_renderer: gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?,
@@ -262,10 +311,19 @@ impl Ctx {
 
 	pub(super) fn run(&mut self, mut f: impl FnMut(&mut Self) -> Result<()>) -> Result<()> {
 
+		#[cfg(target_arch = "wasm32")]
+        self.render_loop.run(|running: &mut bool| {
+			gfx::begin(self);
+			f(self);
+			gfx::end(self);
+		});
+
+		#[cfg(not(target_arch = "wasm32"))]
 		'run: loop {
 
 			let start_time = Instant::now();
 
+			#[cfg(not(target_arch = "wasm32"))]
 			input::poll(self)?;
 
 			gfx::begin(self);

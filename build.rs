@@ -1,66 +1,112 @@
 // wengwengweng
 
 use std::env;
-use std::path::Path;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Lib {
-	Dylib,
-	Static,
-	Framework,
-}
-
-impl Lib {
-	fn as_str(&self) -> &'static str {
-		use Lib::*;
-		return match self {
-			Dylib => "dylib",
-			Static => "static",
-			Framework => "framework",
-		};
-	}
+	Dylib(&'static str),
+	Static(&'static str),
+	Framework(&'static str),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-enum Search {
-	Dependency,
-	Crate,
-	Native,
-	Framework,
-	All,
+enum Path {
+	Dependency(&'static str),
+	Crate(&'static str),
+	Native(&'static str),
+	Framework(&'static str),
+	All(&'static str),
 }
 
-impl Search {
-	fn as_str(&self) -> &'static str {
-		use Search::*;
-		return match self {
-			Dependency => "dependency",
-			Crate => "crate",
-			Native => "native",
-			Framework => "framework",
-			All => "all",
-		};
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+enum Action {
+	Link(Lib),
+	Search(Path),
+	Flags(&'static str),
+	Cfg(&'static str),
+	Env(&'static str, &'static str),
+}
+
+fn perform(ops: Action) {
+
+	use Action::*;
+
+	match ops {
+
+		Link(lib) => {
+
+			use Lib::*;
+
+			let kind;
+			let name;
+
+			match lib {
+				Static(p) => {
+					kind = "static";
+					name = p;
+				},
+				Dylib(p) => {
+					kind = "Dylib";
+					name = p;
+				},
+				Framework(p) => {
+					kind = "framework";
+					name = p;
+				},
+			}
+
+			println!("cargo:rustc-link={}={}", kind, name);
+
+		},
+
+		Search(search) => {
+
+			use Path::*;
+
+			let kind;
+			let path;
+
+			match search {
+				Dependency(p) => {
+					kind = "dependency";
+					path = p;
+				},
+				Crate(p) => {
+					kind = "crate";
+					path = p;
+				},
+				Native(p) => {
+					kind = "native";
+					path = p;
+				},
+				Framework(p) => {
+					kind = "framework";
+					path = p;
+				},
+				All(p) => {
+					kind = "all";
+					path = p;
+				},
+			}
+
+			println!("cargo:rustc-search={}={}", kind, path);
+
+		},
+
+		Flags(f) => {
+			println!("cargo:rustc-flags={}", f);
+		},
+
+		Cfg(c) => {
+			println!("cargo:rustc-cfg={}", c);
+		},
+
+		Env(k, v) => {
+			println!("cargo:rustc-env={}={}", k, v);
+		},
+
 	}
-}
 
-fn link(kind: Lib, name: &str) {
-	println!("cargo:rustc-link-lib={}={}", kind.as_str(), name);
-}
-
-fn search(kind: Search, path: impl AsRef<Path>) {
-	println!("cargo:rustc-link-search={}={}", kind.as_str(), path.as_ref().display());
-}
-
-fn flags(f: &str) {
-	println!("cargo:rustc-flags={}", f);
-}
-
-fn cfg(f: &str) {
-	println!("cargo:rustc-cfg={}", f);
-}
-
-fn env(k: &str, v: &str) {
-	println!("cargo:rustc-env={}={}", k, v);
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -106,7 +152,7 @@ fn main() {
 
 	if let Some(os) = target_os() {
 		if os == OS::IOS {
-			link(Lib::Framework, "OpenGLES");
+			perform(Action::Link(Lib::Framework("OpenGLES")));
 		}
 	}
 

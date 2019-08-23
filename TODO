@@ -1,6 +1,7 @@
 # wengwengweng
 
 == DOING
+- wasm
 
 == TODO
 - http less allocation / copying
@@ -26,21 +27,21 @@
 - clearer shader variable prefixes
 - 3d texture
 - tween functions
-- use time struct for App::dt() and App::time()
+- use time abstraction for App::dt() and App::time()
 - rubiks cube example
 - noise function
 - rect stroke
-- circle
-- sphere
+- draw circle
+- draw sphere
 - make gl lib stateless
 - flush batched renderer when shader uniform is sent
 - framebuffer get and set individual pixels and pixel arrays
-- curve
+- draw curve
 - image resizing
 - gradient
 - remove redundant window conf
 - app error manangement
-- fix input lag
+- fix input lag with glutin's EventLoop::run
 
 == DONE
 - refactor http

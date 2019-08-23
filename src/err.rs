@@ -20,6 +20,7 @@ pub enum Error {
 	Net,
 	Image,
 	Window,
+	Wasm,
 	Gamepad,
 	Audio,
 	Parse,
@@ -55,6 +56,7 @@ impl fmt::Display for Error {
 			Error::Net => write!(f, "network error"),
 			Error::Image => write!(f, "image error"),
 			Error::Window => write!(f, "window error"),
+			Error::Wasm => write!(f, "wasm error"),
 			Error::Gamepad => write!(f, "gamepad error"),
 			Error::Audio => write!(f, "audio error"),
 			Error::Parse => write!(f, "parse error"),
@@ -119,19 +121,47 @@ impl From<image::ImageError> for Error {
 	}
 }
 
-#[cfg(feature = "app")]
+#[cfg(all(feature = "app", not(target_arch = "wasm32")))]
 impl From<glutin::CreationError> for Error {
 	fn from(_: glutin::CreationError) -> Self {
 		return Error::Window;
 	}
 }
 
-#[cfg(feature = "app")]
+#[cfg(all(feature = "app", not(target_arch = "wasm32")))]
 impl From<glutin::ContextError> for Error {
 	fn from(_: glutin::ContextError) -> Self {
 		return Error::Window;
 	}
 }
+
+#[cfg(all(feature = "app", not(target_arch = "wasm32")))]
+impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
+	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
+		return Error::Window;
+	}
+}
+
+#[cfg(target_arch = "wasm32")]
+impl From<wasm_bindgen::JsValue> for Error {
+	fn from(_: wasm_bindgen::JsValue) -> Self {
+		return Error::Wasm;
+	}
+}
+
+#[cfg(target_arch = "wasm32")]
+impl From<web_sys::Element> for Error {
+	fn from(_: web_sys::Element) -> Self {
+		return Error::Wasm;
+	}
+}
+
+// #[cfg(target_arch = "wasm32")]
+// impl From<js_sys::Object> for Error {
+// 	fn from(_: js_sys::Object) -> Self {
+// 		return Error::Wasm;
+// 	}
+// }
 
 #[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {
@@ -140,7 +170,7 @@ impl From<rodio::decoder::DecoderError> for Error {
 	}
 }
 
-#[cfg(all(feature = "app", not(target_os = "ios")))]
+#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Thread;
@@ -151,13 +181,6 @@ impl From<gilrs::Error> for Error {
 impl From<tobj::LoadError> for Error {
 	fn from(_: tobj::LoadError) -> Self {
 		return Error::ObjLoad;
-	}
-}
-
-#[cfg(feature = "app")]
-impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
-	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
-		return Error::Window;
 	}
 }
 
@@ -175,14 +198,14 @@ impl From<httparse::Error> for Error {
 	}
 }
 
-#[cfg(feature = "http")]
+#[cfg(all(feature = "http", not(target_arch = "wasm32")))]
 impl From<native_tls::Error> for Error {
 	fn from(_: native_tls::Error) -> Self {
 		return Error::Net;
 	}
 }
 
-#[cfg(feature = "http")]
+#[cfg(all(feature = "http", not(target_arch = "wasm32")))]
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
 		return Error::Net;

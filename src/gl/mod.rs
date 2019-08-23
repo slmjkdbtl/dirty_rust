@@ -23,23 +23,29 @@ use crate::Error;
 use crate::Result;
 use crate::math::*;
 
-type GLCtx = glow::native::Context;
-type BufferID = <GLCtx as Context>::Buffer;
-type ProgramID = <GLCtx as Context>::Program;
-type FramebufferID = <GLCtx as Context>::Framebuffer;
-type VertexArrayID = <GLCtx as Context>::VertexArray;
-
-// TODO: clean up this mess
+#[cfg(not(target_arch = "wasm32"))]
+pub(self) type GLCtx = glow::native::Context;
+#[cfg(target_arch = "wasm32")]
+pub(self) type GLCtx = glow::web::Context;
 
 pub struct Device {
 	ctx: Rc<GLCtx>,
 }
 
+// TODO: clean up this mess
 impl Device {
 
+	#[cfg(not(target_arch = "wasm32"))]
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
 		return Self {
 			ctx: Rc::new(GLCtx::from_loader_function(f)),
+		};
+	}
+
+	#[cfg(target_arch = "wasm32")]
+	pub fn new(ctx: web_sys::WebGl2RenderingContext) -> Self {
+		return Self {
+			ctx: Rc::new(GLCtx::from_webgl2_context(ctx)),
 		};
 	}
 

@@ -2,6 +2,7 @@
 
 //! Window & Graphics
 
+#[cfg(not(target_arch = "wasm32"))]
 use glutin::dpi::*;
 use derive_more::*;
 
@@ -31,19 +32,26 @@ impl Window for Ctx {
 
 	fn set_fullscreen(&mut self, b: bool) {
 
-		let window = self.windowed_ctx.window();
+		#[cfg(not(target_arch = "wasm32"))] {
 
-		if b {
-			window.set_fullscreen(Some(window.get_current_monitor()));
-			self.fullscreen = true;
-		} else {
-			window.set_fullscreen(None);
-			self.fullscreen = false;
+			let window = self.windowed_ctx.window();
+
+			if b {
+				window.set_fullscreen(Some(window.get_current_monitor()));
+				self.fullscreen = true;
+			} else {
+				window.set_fullscreen(None);
+				self.fullscreen = false;
+			}
+
 		}
 
 	}
 
 	fn is_fullscreen(&self) -> bool {
+		#[cfg(target_arch = "wasm32")]
+		return false;
+		#[cfg(not(target_arch = "wasm32"))]
 		return self.windowed_ctx.window().get_fullscreen().is_some();
 	}
 
@@ -52,8 +60,10 @@ impl Window for Ctx {
 	}
 
 	fn set_cursor_hidden(&mut self, b: bool) {
-		self.windowed_ctx.window().hide_cursor(b);
-		self.cursor_hidden = b;
+		#[cfg(not(target_arch = "wasm32"))] {
+			self.windowed_ctx.window().hide_cursor(b);
+			self.cursor_hidden = b;
+		}
 	}
 
 	fn is_cursor_hidden(&self) -> bool {
@@ -65,12 +75,17 @@ impl Window for Ctx {
 	}
 
 	fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
-		self.windowed_ctx.window().grab_cursor(b)?;
-		self.cursor_locked = b;
+		#[cfg(not(target_arch = "wasm32"))] {
+			self.windowed_ctx.window().grab_cursor(b)?;
+			self.cursor_locked = b;
+		}
 		return Ok(());
 	}
 
 	fn is_cursor_locked(&self) -> bool {
+		#[cfg(target_arch = "wasm32")]
+		return false;
+		#[cfg(not(target_arch = "wasm32"))]
 		return self.cursor_locked;
 	}
 
@@ -79,10 +94,14 @@ impl Window for Ctx {
 	}
 
 	fn set_title(&mut self, t: &str) {
+		#[cfg(not(target_arch = "wasm32"))]
 		self.windowed_ctx.window().set_title(t);
 	}
 
 	fn dpi(&self) -> f64 {
+		#[cfg(target_arch = "wasm32")]
+		return 1.0;
+		#[cfg(not(target_arch = "wasm32"))]
 		return self.windowed_ctx.window().get_hidpi_factor();
 	}
 
@@ -93,10 +112,13 @@ impl Window for Ctx {
 	fn height(&self) -> i32 {
 		return self.height;
 	}
+
 }
 
 pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
-	return Ok(ctx.windowed_ctx.swap_buffers()?);
+	#[cfg(not(target_arch = "wasm32"))]
+	ctx.windowed_ctx.swap_buffers()?;
+	return Ok(());
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
@@ -120,6 +142,7 @@ impl From<Pos> for Vec2 {
 	}
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<LogicalPosition> for Pos {
 	fn from(pos: LogicalPosition) -> Self {
 		let (x, y): (i32, i32) = pos.into();
@@ -130,6 +153,7 @@ impl From<LogicalPosition> for Pos {
 	}
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<Pos> for LogicalPosition {
 	fn from(pos: Pos) -> Self {
 		return Self {
@@ -139,6 +163,7 @@ impl From<Pos> for LogicalPosition {
 	}
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<glutin::MouseScrollDelta> for Pos {
 	fn from(delta: glutin::MouseScrollDelta) -> Self {
 		use glutin::MouseScrollDelta;
@@ -160,6 +185,7 @@ impl From<glutin::MouseScrollDelta> for Pos {
 	}
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<Vec2> for LogicalPosition {
 	fn from(pos: Vec2) -> Self {
 		return Self {
@@ -169,6 +195,7 @@ impl From<Vec2> for LogicalPosition {
 	}
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<LogicalPosition> for Vec2 {
 	fn from(pos: LogicalPosition) -> Self {
 		return Self {

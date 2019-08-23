@@ -41,7 +41,7 @@ pub mod physics;
 #[cfg(feature = "http")]
 pub mod http;
 
-#[cfg(all(feature = "term", not(target_os = "ios")))]
+#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 pub mod term;
 
 #[cfg(feature = "serial")]
