@@ -75,7 +75,7 @@ impl app::State for Game {
 		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
 
 		if !self.started {
-			if ctx.fps() >= 60 {
+			if ctx.fps() >= 56 {
 				self.started = true;
 			}
 		} else {

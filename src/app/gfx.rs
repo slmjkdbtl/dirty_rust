@@ -1015,11 +1015,6 @@ impl TrueTypeFont {
 
 }
 
-pub(super) enum ActiveShader {
-	Default,
-	User(Shader),
-}
-
 pub trait DrawCmd {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
 }

@@ -5,6 +5,7 @@ use std::io::Read;
 use std::net::TcpStream;
 
 use url::Url;
+#[cfg(not(target_arch = "wasm32"))]
 use native_tls::TlsConnector;
 
 use crate::Error;
@@ -157,11 +158,15 @@ impl Request {
 
 			Scheme::HTTPS => {
 
-				let connector = TlsConnector::new()?;
-				let mut stream = connector.connect(self.host(), stream)?;
+				#[cfg(not(target_arch = "wasm32"))] {
 
-				stream.write_all(&self.message())?;
-				stream.read_to_end(&mut buf)?;
+					let connector = TlsConnector::new()?;
+					let mut stream = connector.connect(self.host(), stream)?;
+
+					stream.write_all(&self.message())?;
+					stream.read_to_end(&mut buf)?;
+
+				}
 
 			},
 

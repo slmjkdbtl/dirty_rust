@@ -7,7 +7,6 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-type GLCtx = glow::native::Context;
 type FramebufferID = <GLCtx as Context>::Framebuffer;
 
 #[derive(Clone, Debug)]

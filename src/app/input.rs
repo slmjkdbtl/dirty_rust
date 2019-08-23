@@ -2,10 +2,24 @@
 
 use std::collections::HashSet;
 
+#[cfg(not(target_arch = "wasm32"))]
 use glutin::ElementState;
+#[cfg(not(target_arch = "wasm32"))]
 pub use glutin::ModifiersState as Mod;
+#[cfg(not(target_arch = "wasm32"))]
 pub use glutin::VirtualKeyCode as Key;
+#[cfg(not(target_arch = "wasm32"))]
 pub use glutin::MouseButton as Mouse;
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Mod;
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Key;
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Mouse;
 
 use super::*;
 use crate::*;
@@ -111,6 +125,7 @@ impl Input for app::Ctx {
 
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	for state in ctx.key_state.values_mut() {
@@ -274,7 +289,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	ctx.text_input = text_input;
 
-	#[cfg(not(target_os = "ios"))]
+	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
 		// TODO: add gamepad input
 	}
@@ -283,6 +298,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn str_to_key(s: &str) -> Option<Key> {
 
 	return match s {
@@ -365,6 +381,7 @@ pub(crate) fn str_to_key(s: &str) -> Option<Key> {
 
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn str_to_mouse(s: &str) -> Option<Mouse> {
 	return match s {
 		"left" => Some(Mouse::Left),

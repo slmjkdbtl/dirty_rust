@@ -5,8 +5,6 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-type GLCtx = glow::native::Context;
-
 pub struct BatchedRenderer<S: Shape> {
 
 	ctx: Rc<GLCtx>,
