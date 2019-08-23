@@ -138,6 +138,8 @@ impl Request {
 
 	}
 
+	// TODO: move this to outside
+	// TODO: browser
 	pub fn send(&mut self, data: Option<&[u8]>) -> Result<Response> {
 
 		if let Some(data) = data {

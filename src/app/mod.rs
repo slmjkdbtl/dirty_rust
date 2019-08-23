@@ -83,7 +83,7 @@ pub struct Ctx {
 	pub(self) proj_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
-	pub(self) quad_renderer: gl::BatchedRenderer<gfx::QuadShape>,
+	pub(self) quad_renderer: gl::BatchedRenderer<gfx::Vertex2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 
 	pub(self) empty_tex: gfx::Tex2D,
@@ -267,7 +267,7 @@ impl Ctx {
 			#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 			gamepad_ctx: gilrs::Gilrs::new()?,
 
-			quad_renderer: gl::BatchedRenderer::<gfx::QuadShape>::new(&gl, MAX_DRAWS)?,
+			quad_renderer: gl::BatchedRenderer::<gfx::Vertex2D>::new(&gl, 9999999, 9999999)?,
 			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
 			gl: gl,
 
@@ -311,12 +311,13 @@ impl Ctx {
 
 	pub(super) fn run(&mut self, mut f: impl FnMut(&mut Self) -> Result<()>) -> Result<()> {
 
-		#[cfg(target_arch = "wasm32")]
-        self.render_loop.run(|running: &mut bool| {
-			gfx::begin(self);
-			f(self);
-			gfx::end(self);
-		});
+		// TODO: render loop
+// 		#[cfg(target_arch = "wasm32")]
+//         self.render_loop.run(|running: &mut bool| {
+// 			gfx::begin(self);
+// 			f(self);
+// 			gfx::end(self);
+// 		});
 
 		#[cfg(not(target_arch = "wasm32"))]
 		'run: loop {

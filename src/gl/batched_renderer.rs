@@ -5,42 +5,28 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-pub struct BatchedRenderer<S: Shape> {
+pub struct BatchedRenderer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
-	vbuf: VertexBuffer<S::Vertex>,
+	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
-	queue: Vec<f32>,
+	vqueue: Vec<f32>,
+	iqueue: Vec<u32>,
 	prim: Primitive,
 	cur_texture: Option<Texture>,
 	cur_program: Option<Program>,
 	draw_count: usize,
-	shape: PhantomData<S>,
 
 }
 
-impl<S: Shape> BatchedRenderer<S> {
+impl<V: VertexLayout> BatchedRenderer<V> {
 
-	pub fn new(device: &Device, max: usize) -> Result<Self> {
+	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
-		let indices = S::indices();
-		let vert_count = S::COUNT;
-		let vert_stride = S::Vertex::STRIDE;
-		let max_vertices = max * vert_stride * vert_count;
-		let max_indices = max * indices.len();
-
-		let indices_batch: Vec<u32> = indices
-			.iter()
-			.cycle()
-			.take(max_indices)
-			.enumerate()
-			.map(|(i, vertex)| vertex + i as u32 / 6 * 4)
-			.collect();
-
-		let vbuf = VertexBuffer::new(&device, vert_count * vert_stride * max, BufferUsage::Dynamic)?;
-		let ibuf = IndexBuffer::init(&device, &indices_batch)?;
+		let vbuf = VertexBuffer::new(&device, max_vertices, BufferUsage::Dynamic)?;
+		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
 		#[cfg(feature="gl3")]
 		let vao = VertexArray::init(&device, &vbuf)?;
@@ -51,17 +37,17 @@ impl<S: Shape> BatchedRenderer<S> {
 			ibuf: ibuf,
 			#[cfg(feature="gl3")]
 			vao: vao,
-			queue: Vec::with_capacity(max_vertices),
+			vqueue: Vec::with_capacity(max_vertices),
+			iqueue: Vec::with_capacity(max_indices),
 			prim: Primitive::Triangles,
 			cur_texture: None,
 			cur_program: None,
 			draw_count: 0,
-			shape: PhantomData,
 		});
 
 	}
 
-	pub fn push(&mut self, shape: S, program: &Program, otex: Option<&Texture>) -> Result<()> {
+	pub fn push<S: Shape>(&mut self, shape: S, program: &Program, otex: Option<&Texture>) -> Result<()> {
 
 		if let Some(tex) = otex {
 			if let Some(cur_tex) = &self.cur_texture {
@@ -84,12 +70,21 @@ impl<S: Shape> BatchedRenderer<S> {
 			self.cur_program = Some(program.clone());
 		}
 
-		if self.queue.len() >= self.queue.capacity() {
-			self.queue.clear();
+		if self.vqueue.len() >= self.vqueue.capacity() {
+			self.vqueue.clear();
 			return Err(Error::MaxDraw);
 		}
 
-		shape.push(&mut self.queue);
+		let offset = (self.vqueue.len() / S::Vertex::STRIDE) as u32;
+
+		let indices = S::indices()
+			.iter()
+			.map(|i| *i + offset)
+			.collect::<Vec<u32>>();
+			;
+
+		self.iqueue.extend_from_slice(&indices);
+		shape.push(&mut self.vqueue);
 
 		return Ok(());
 
@@ -106,7 +101,8 @@ impl<S: Shape> BatchedRenderer<S> {
 			None => return,
 		};
 
-		self.vbuf.data(0, &self.queue);
+		self.vbuf.data(0, &self.vqueue);
+		self.ibuf.data(0, &self.iqueue);
 
 		if let Some(tex) = &self.cur_texture {
 			tex.bind();
@@ -120,7 +116,7 @@ impl<S: Shape> BatchedRenderer<S> {
 			&self.vbuf,
 			&self.ibuf,
 			&program,
-			(self.queue.len() * S::indices().len() / S::Vertex::STRIDE / S::COUNT) as u32,
+			self.iqueue.len() as u32,
 			self.prim,
 		);
 
@@ -130,13 +126,14 @@ impl<S: Shape> BatchedRenderer<S> {
 
 		self.cur_texture = None;
 		self.cur_program = None;
-		self.queue.clear();
+		self.vqueue.clear();
+		self.iqueue.clear();
 		self.draw_count += 1;
 
 	}
 
 	pub fn empty(&self) -> bool {
-		return self.queue.is_empty();
+		return self.vqueue.is_empty();
 	}
 
 	pub fn frame_end(&mut self) {
@@ -147,7 +144,8 @@ impl<S: Shape> BatchedRenderer<S> {
 
 		self.cur_texture = None;
 		self.cur_program = None;
-		self.queue.clear();
+		self.vqueue.clear();
+		self.iqueue.clear();
 		self.draw_count = 0;
 
 	}
