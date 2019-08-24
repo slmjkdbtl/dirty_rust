@@ -171,23 +171,28 @@ impl Ctx {
 
 			use wasm_bindgen::JsCast;
 
-			let canvas = web_sys::window()
+			let document = web_sys::window()
 				.ok_or(Error::Window)?
 				.document()
 				.ok_or(Error::Window)?
-				.get_element_by_id("canvas")
-				.ok_or(Error::Window)?
+				;
+
+			let canvas = document
+				.create_element("canvas")?
 				.dyn_into::<web_sys::HtmlCanvasElement>()?
 				;
 
-			let webgl2_context = canvas
+			canvas.set_attribute("width", &format!("{}", conf.width))?;
+			canvas.set_attribute("height", &format!("{}", conf.height))?;
+
+			let webgl2_ctx = canvas
 				.get_context("webgl2")?
 				.ok_or(Error::Window)?
 				.dyn_into::<web_sys::WebGl2RenderingContext>()
 				.unwrap()
 				;
 
-			let gl = gl::Device::new(webgl2_context);
+			let gl = gl::Device::new(webgl2_ctx);
 			let render_loop = glow::web::RenderLoop::from_request_animation_frame();
 
 			(gl, render_loop)

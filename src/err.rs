@@ -198,14 +198,14 @@ impl From<httparse::Error> for Error {
 	}
 }
 
-#[cfg(all(feature = "http", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "http", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 impl From<native_tls::Error> for Error {
 	fn from(_: native_tls::Error) -> Self {
 		return Error::Net;
 	}
 }
 
-#[cfg(all(feature = "http", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "http", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
 		return Error::Net;
