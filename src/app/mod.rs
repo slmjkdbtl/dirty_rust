@@ -16,6 +16,8 @@ use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
 use std::time::Duration;
+use std::ops;
+use std::fmt;
 
 #[cfg(not(target_arch = "wasm32"))]
 use glutin::dpi::*;
@@ -25,6 +27,8 @@ use glutin::Api;
 use glutin::GlRequest;
 #[cfg(target_arch = "wasm32")]
 use glow::RenderLoop;
+
+use derive_more::*;
 
 use input::ButtonState;
 use input::Key;
@@ -46,8 +50,8 @@ pub struct Ctx {
 
 	// lifecycle
 	pub(self) quit: bool,
-	pub(self) dt: f32,
-	pub(self) time: f32,
+	pub(self) dt: Time,
+	pub(self) time: Time,
 	pub(self) fps_counter: FPSCounter,
 
 	// input
@@ -192,7 +196,7 @@ impl Ctx {
 				.unwrap()
 				;
 
-			let gl = gl::Device::new(webgl2_ctx);
+			let gl = gl::Device::from_webgl2_ctx(webgl2_ctx);
 			let render_loop = glow::web::RenderLoop::from_request_animation_frame();
 
 			(gl, render_loop)
@@ -244,8 +248,8 @@ impl Ctx {
 		let mut ctx = Self {
 
 			quit: false,
-			dt: 0.0,
-			time: 0.0,
+			dt: Time::new(0.0),
+			time: Time::new(0.0),
 			fps_counter: FPSCounter::new(),
 
 			key_state: HashMap::new(),
@@ -353,7 +357,7 @@ impl Ctx {
 
 			}
 
-			self.dt = start_time.elapsed().as_millis() as f32 / 1000.0;
+			self.dt.set_inner(start_time.elapsed());
 			self.time += self.dt;
 			self.fps_counter.tick(self.dt);
 
@@ -365,11 +369,72 @@ impl Ctx {
 
 }
 
+#[derive(Copy, Clone, PartialEq, Add, AddAssign, Sub, SubAssign)]
+pub struct Time {
+	time: Duration,
+}
+
+impl Time {
+	pub fn new(s: f32) -> Self {
+		return Self {
+			time: Duration::from_millis((s * 1000.0) as u64),
+		};
+	}
+	pub fn from_millis(m: u64) -> Self {
+		return Self {
+			time: Duration::from_millis(m),
+		};
+	}
+	fn set(&mut self, s: f32) {
+		self.set_inner(Duration::from_millis((s * 1000.0) as u64));
+	}
+	fn set_inner(&mut self, d: Duration) {
+		self.time = d;
+	}
+	fn as_secs(&self) -> f32 {
+		// TODO: use as_secs_f32
+// 		return self.time.as_secs_f32();
+		return self.time.as_millis() as f32 / 1000.0;
+	}
+}
+
+impl fmt::Display for Time {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		return write!(f, "{}", self.as_secs());
+	}
+}
+
+impl fmt::Debug for Time {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		return <Time as fmt::Display>::fmt(self, f);
+	}
+}
+
+impl ops::Mul<f32> for Time {
+	type Output = f32;
+	fn mul(self, s: f32) -> f32 {
+		return self.as_secs() * s;
+	}
+}
+
+impl ops::Mul<Time> for f32 {
+	type Output = f32;
+	fn mul(self, s: Time) -> f32 {
+		return s.as_secs() * self;
+	}
+}
+
+impl From<Time> for f32 {
+	fn from(t: Time) -> f32 {
+		return t.as_secs();
+	}
+}
+
 pub trait App {
 	fn quit(&mut self);
-	fn dt(&self) -> f32;
+	fn dt(&self) -> Time;
+	fn time(&self) -> Time;
 	fn fps(&self) -> u16;
-	fn time(&self) -> f32;
 }
 
 impl App for Ctx {
@@ -378,16 +443,16 @@ impl App for Ctx {
 		self.quit = true;
 	}
 
-	fn dt(&self) -> f32 {
+	fn dt(&self) -> Time {
 		return self.dt;
+	}
+
+	fn time(&self) -> Time {
+		return self.time;
 	}
 
 	fn fps(&self) -> u16 {
 		return self.fps_counter.fps();
-	}
-
-	fn time(&self) -> f32 {
-		return self.time;
 	}
 
 }
@@ -592,7 +657,7 @@ pub trait State {
 
 pub(super) struct FPSCounter {
 	frames: usize,
-	timer: f32,
+	timer: Time,
 	fps: u16,
 }
 
@@ -601,19 +666,19 @@ impl FPSCounter {
 	fn new() -> Self {
 		return Self {
 			frames: 0,
-			timer: 0.0,
+			timer: Time::new(0.0),
 			fps: 0,
 		}
 	}
 
-	fn tick(&mut self, dt: f32) {
+	fn tick(&mut self, dt: Time) {
 
 		self.frames += 1;
 		self.timer += dt;
 
-		if self.timer >= 1.0 {
+		if self.timer.as_secs() >= 1.0 {
 			self.fps = self.frames as u16;
-			self.timer = 0.0;
+			self.timer.set(0.0);
 			self.frames = 0;
 		}
 

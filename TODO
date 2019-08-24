@@ -27,7 +27,6 @@
 - clearer shader variable prefixes
 - 3d texture
 - tween functions
-- use time abstraction for App::dt() and App::time()
 - rubiks cube example
 - noise function
 - rect stroke
@@ -71,4 +70,5 @@
 - make batched renderer draw arbitrary shapes
 - polygon
 - circle
+- use time abstraction for App::dt() and App::time()
 

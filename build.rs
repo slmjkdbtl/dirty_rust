@@ -194,7 +194,7 @@ fn target_arch() -> Option<Arch> {
 fn main() {
 
 	if let Some(os) = target_os() {
-		if os == OS::IOS {
+		if let OS::IOS = os {
 			link(Lib::Framework("OpenGLES"));
 		}
 	}
