@@ -32,6 +32,7 @@ pub struct Device {
 	ctx: Rc<GLCtx>,
 }
 
+// TODO: web
 // TODO: clean up this mess
 impl Device {
 
@@ -39,13 +40,6 @@ impl Device {
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
 		return Self {
 			ctx: Rc::new(GLCtx::from_loader_function(f)),
-		};
-	}
-
-	#[cfg(target_arch = "wasm32")]
-	pub fn from_webgl2_ctx(ctx: web_sys::WebGl2RenderingContext) -> Self {
-		return Self {
-			ctx: Rc::new(GLCtx::from_webgl2_context(ctx)),
 		};
 	}
 

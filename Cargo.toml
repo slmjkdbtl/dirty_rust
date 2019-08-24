@@ -62,8 +62,7 @@ app = [
 	"gilrs",
 	"glow",
 	"glyph_brush",
-	"web-sys",
-	"wasm-bindgen",
+	"stdweb",
 ]
 
 img = [
@@ -152,6 +151,5 @@ serial = { version = "0.4", optional = true }
 core-foundation = { version = "0.6", optional = true }
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
-web-sys = { version = "0.3", optional = true }
-wasm-bindgen = { version = "0.2", optional = true }
+stdweb = { version = "0.4", optional = true }
 
