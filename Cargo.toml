@@ -19,7 +19,7 @@ exclude = ["TODO"]
 default = [
 
 	# bindings
-	"lua",
+# 	"lua",
 # 	"python",
 
 	# modules
