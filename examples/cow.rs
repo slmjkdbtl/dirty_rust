@@ -46,7 +46,7 @@ impl app::State for Game {
 			ctx.clear();
 			ctx.push();
 			ctx.translate_3d(vec3!(0, 0, 0));
-			ctx.rotate_y(ctx.time());
+			ctx.rotate_y(ctx.time().into());
 			ctx.draw(shapes::model(&self.model))?;
 			ctx.pop()?;
 

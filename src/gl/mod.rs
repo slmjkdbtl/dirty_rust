@@ -43,7 +43,7 @@ impl Device {
 	}
 
 	#[cfg(target_arch = "wasm32")]
-	pub fn new(ctx: web_sys::WebGl2RenderingContext) -> Self {
+	pub fn from_webgl2_ctx(ctx: web_sys::WebGl2RenderingContext) -> Self {
 		return Self {
 			ctx: Rc::new(GLCtx::from_webgl2_context(ctx)),
 		};

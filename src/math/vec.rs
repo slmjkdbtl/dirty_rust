@@ -51,7 +51,7 @@ macro_rules! gen_vec {
 		}
 
 		#[allow(missing_docs)]
-		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into, Debug)]
+		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into)]
 		pub struct $name {
 			$(
 			pub $member: $type
@@ -81,6 +81,18 @@ macro_rules! gen_vec {
 
 		}
 
+		impl ops::Mul<$name> for $type {
+
+			type Output = $name;
+
+			fn mul(self, v: $name) -> $name {
+				return $name {
+					$($member: v.$member * self),+
+				};
+			}
+
+		}
+
 		impl Into<[$type; $count]> for $name {
 			fn into(self) -> [$type; $count] {
 				return [
@@ -94,6 +106,12 @@ macro_rules! gen_vec {
 		impl Default for $name {
 			fn default() -> Self {
 				return $sname!($($default),+);
+			}
+		}
+
+		impl fmt::Debug for $name {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				return <$name as fmt::Display>::fmt(self, f);
 			}
 		}
 
