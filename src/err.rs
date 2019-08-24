@@ -142,26 +142,20 @@ impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::C
 	}
 }
 
-#[cfg(target_arch = "wasm32")]
-impl From<wasm_bindgen::JsValue> for Error {
-	fn from(_: wasm_bindgen::JsValue) -> Self {
+#[cfg(all(feature = "app", target_arch = "wasm32"))]
+impl From<stdweb::web::error::InvalidCharacterError> for Error {
+	fn from(_: stdweb::web::error::InvalidCharacterError) -> Self {
 		return Error::Wasm;
 	}
 }
 
-#[cfg(target_arch = "wasm32")]
-impl From<web_sys::Element> for Error {
-	fn from(_: web_sys::Element) -> Self {
+// TODO: why this doesn't work
+#[cfg(all(feature = "app", target_arch = "wasm32"))]
+impl From<stdweb::serde::ConversionError> for Error {
+	fn from(_: stdweb::serde::ConversionError) -> Self {
 		return Error::Wasm;
 	}
 }
-
-// #[cfg(target_arch = "wasm32")]
-// impl From<js_sys::Object> for Error {
-// 	fn from(_: js_sys::Object) -> Self {
-// 		return Error::Wasm;
-// 	}
-// }
 
 #[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {

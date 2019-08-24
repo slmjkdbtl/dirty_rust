@@ -170,36 +170,37 @@ impl Ctx {
 
 		};
 
+		// TODO: wait till glow supports stdweb
 		#[cfg(target_arch = "wasm32")]
 		let (gl, render_loop) = {
 
-			use wasm_bindgen::JsCast;
+			use stdweb::web;
+			use web::IElement;
+			use web::INode;
+			use web::html_element::CanvasElement;
+			use stdweb::unstable::TryInto;
 
-			let document = web_sys::window()
-				.ok_or(Error::Window)?
-				.document()
-				.ok_or(Error::Window)?
-				;
+			let document = web::document();
 
-			let canvas = document
+			document.set_title(&conf.title);
+
+			let canvas: CanvasElement = document
 				.create_element("canvas")?
-				.dyn_into::<web_sys::HtmlCanvasElement>()?
-				;
+				.try_into()
+				.map_err(|_| Error::Wasm)?;
 
-			canvas.set_attribute("width", &format!("{}", conf.width))?;
-			canvas.set_attribute("height", &format!("{}", conf.height))?;
+			let body = document
+				.body()
+				.ok_or(Error::Wasm)?;
 
-			let webgl2_ctx = canvas
-				.get_context("webgl2")?
-				.ok_or(Error::Window)?
-				.dyn_into::<web_sys::WebGl2RenderingContext>()
-				.unwrap()
-				;
+			body.append_child(&canvas);
+			canvas.set_width(conf.width as u32);
+			canvas.set_height(conf.height as u32);
 
-			let gl = gl::Device::from_webgl2_ctx(webgl2_ctx);
+			let gl_ctx = canvas.get_context()?;
 			let render_loop = glow::web::RenderLoop::from_request_animation_frame();
 
-			(gl, render_loop)
+			((), render_loop)
 
 		};
 

@@ -443,7 +443,7 @@ impl DrawCmd for Circle {
 			ctx.draw(polygon(&verts).color(self.color))?;
 		}
 
-		ctx.pop();
+		ctx.pop()?;
 
 		return Ok(());
 
