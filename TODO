@@ -41,6 +41,7 @@
 - remove redundant window conf
 - app error manangement
 - fix input lag with glutin's EventLoop::run
+- smooth line join on polygon stroke
 
 == DONE
 - refactor http

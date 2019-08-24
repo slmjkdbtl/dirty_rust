@@ -68,11 +68,6 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			self.cur_program = Some(program.clone());
 		}
 
-		if self.vqueue.len() >= self.vqueue.capacity() {
-			self.vqueue.clear();
-			return Err(Error::MaxDraw);
-		}
-
 		let offset = (self.vqueue.len() / V::STRIDE) as u32;
 
 		let indices = indices
@@ -81,8 +76,18 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			.collect::<Vec<u32>>();
 			;
 
-		self.iqueue.extend_from_slice(&indices);
+		if self.vqueue.len() + verts.len() >= self.vqueue.capacity() {
+			self.vqueue.clear();
+			return Err(Error::MaxDraw);
+		}
+
+		if self.iqueue.len() + indices.len() >= self.iqueue.capacity() {
+			self.iqueue.clear();
+			return Err(Error::MaxDraw);
+		}
+
 		self.vqueue.extend_from_slice(&verts);
+		self.iqueue.extend_from_slice(&indices);
 
 		return Ok(());
 

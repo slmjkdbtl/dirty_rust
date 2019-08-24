@@ -160,45 +160,73 @@ impl<'a> DrawCmd for Text<'a> {
 
 }
 
-pub struct Line {
-	p1: Vec2,
-	p2: Vec2,
-	width: f32,
+pub struct Polygon {
+	pts: Vec<Vec2>,
 	color: Color,
+	stroke: Option<f32>,
 }
 
-impl Line {
-	pub fn width(mut self, w: f32) -> Self {
-		self.width = w;
+impl Polygon {
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
 		return self;
 	}
-	pub fn color(mut self, color: Color) -> Self {
-		self.color = color;
-		return self;
+	pub fn stroke(mut self, s: f32) -> Self {
+		self.stroke = Some(s);
+		return self
 	}
 }
 
-pub fn line(p1: Vec2, p2: Vec2) -> Line {
-	return Line {
-		p1: p1,
-		p2: p2,
-		width: 1.0,
-		color: color!(1),
+pub fn polygon(pts: &[Vec2]) -> Polygon {
+
+	return Polygon {
+		pts: pts.to_vec(),
+		color: color!(),
+		stroke: None,
 	};
+
 }
 
-impl DrawCmd for Line {
+impl DrawCmd for Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let len = ((self.p2.x - self.p1.x).powi(2) + (self.p2.y - self.p1.y).powi(2)).sqrt();
-		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
+		let len = self.pts.len();
 
-		ctx.push();
-		ctx.translate(self.p1);
-		ctx.rotate(rot);
-		ctx.draw(Rect::from_size(len, self.width).color(self.color))?;
-		ctx.pop()?;
+		if len < 3 {
+			return Ok(());
+		}
+
+		if let Some(stroke) = self.stroke {
+
+			// TODO: smooth line join
+			for i in 0..len {
+
+				let p1 = self.pts[i];
+				let p2 = self.pts[(i + 1) % len];
+
+				ctx.draw(line(p1, p2).width(stroke).color(self.color))?;
+
+			}
+
+		} else {
+
+			let mut verts = Vec::new();
+			let mut indices = Vec::new();
+
+			for (i, p) in self.pts.iter().enumerate() {
+
+				gfx::Vertex2D::new(ctx.transform * *p, vec2!(0), self.color).push(&mut verts);
+
+				if i >= 2 {
+					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
+				}
+
+			}
+
+			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, Some(&ctx.empty_tex.handle))?;
+
+		}
 
 		return Ok(());
 
@@ -249,21 +277,65 @@ impl DrawCmd for Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
+		let pts = [
+			self.p1,
+			vec2!(self.p2.x, self.p1.y),
+			self.p2,
+			vec2!(self.p1.x, self.p2.y),
+		];
+
 		if let Some(stroke) = self.stroke {
-			// ...
+			ctx.draw(polygon(&pts).color(self.color).stroke(stroke))?;
 		} else {
-
-			let center = (self.p1 + self.p2) / 2.0;
-			let width = self.p2.x - self.p1.x;
-			let height = self.p2.y - self.p1.y;
-
-			ctx.push();
-			ctx.translate(center);
-			ctx.scale(vec2!(width, height));
-			ctx.draw(sprite(&ctx.empty_tex.clone()).color(self.color))?;
-			ctx.pop()?;
-
+			ctx.draw(polygon(&pts).color(self.color))?;
 		}
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Line {
+	p1: Vec2,
+	p2: Vec2,
+	width: f32,
+	color: Color,
+}
+
+impl Line {
+	pub fn width(mut self, w: f32) -> Self {
+		self.width = w;
+		return self;
+	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
+		return self;
+	}
+}
+
+pub fn line(p1: Vec2, p2: Vec2) -> Line {
+	return Line {
+		p1: p1,
+		p2: p2,
+		width: 1.0,
+		color: color!(1),
+	};
+}
+
+impl DrawCmd for Line {
+
+	// TODO: clean
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let len = (self.p2 - self.p1).mag();
+		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
+
+		ctx.push();
+		ctx.translate(self.p1 + (self.p2 - self.p1) * 0.5);
+		ctx.rotate(rot);
+		ctx.draw(Rect::from_size(len, self.width).color(self.color))?;
+		ctx.pop()?;
 
 		return Ok(());
 
@@ -313,61 +385,12 @@ impl<'a> DrawCmd for Points<'a> {
 
 }
 
-pub struct Polygon {
-	pts: Vec<Vec2>,
-	color: Color,
-}
-
-impl Polygon {
-	pub fn color(mut self, c: Color) -> Self {
-		self.color = c;
-		return self;
-	}
-}
-
-pub fn polygon(pts: &[Vec2]) -> Polygon {
-
-	if pts.len() < 3 {
-		// TODO: error
-	}
-
-	return Polygon {
-		pts: pts.to_vec(),
-		color: color!(),
-	};
-
-}
-
-impl DrawCmd for Polygon {
-
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		let mut verts = Vec::new();
-		let mut indices = Vec::new();
-
-		for (i, p) in self.pts.iter().enumerate() {
-
-			gfx::Vertex2D::new(ctx.transform * *p, vec2!(0), self.color).push(&mut verts);
-
-			if i >= 2 {
-				indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
-			}
-
-		}
-
-		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, Some(&ctx.empty_tex.handle))?;
-
-		return Ok(());
-
-	}
-
-}
-
 pub struct Circle {
 	center: Vec2,
 	radius: f32,
 	color: Color,
 	sides: usize,
+	stroke: Option<f32>,
 }
 
 impl Circle {
@@ -379,6 +402,10 @@ impl Circle {
 		self.sides = s;
 		return self;
 	}
+	pub fn stroke(mut self, s: f32) -> Self {
+		self.stroke = Some(s);
+		return self
+	}
 }
 
 pub fn circle(center: Vec2, radius: f32) -> Circle {
@@ -388,6 +415,7 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 		color: color!(),
 		// TODO: calculate sides
 		sides: radius as usize,
+		stroke: None,
 	};
 }
 
@@ -408,7 +436,13 @@ impl DrawCmd for Circle {
 
 		ctx.push();
 		ctx.translate(self.center);
-		ctx.draw(polygon(&verts).color(self.color))?;
+
+		if let Some(stroke) = self.stroke {
+			ctx.draw(polygon(&verts).color(self.color).stroke(stroke))?;
+		} else {
+			ctx.draw(polygon(&verts).color(self.color))?;
+		}
+
 		ctx.pop();
 
 		return Ok(());
