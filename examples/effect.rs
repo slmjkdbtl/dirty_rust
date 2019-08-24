@@ -74,6 +74,82 @@ impl app::State for Game {
 
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+
+			KeyPress(k) => {
+
+				if *k == Key::Left || *k == Key::A {
+					if let Some(cur_effect) = self.cur_effect {
+						if cur_effect > 0 {
+							self.cur_effect = Some(cur_effect - 1);
+						} else {
+							self.cur_effect = None;
+						}
+					} else {
+						if !self.effects.is_empty() {
+							self.cur_effect = Some(self.effects.len() - 1);
+						}
+					}
+				}
+
+				if *k == Key::Right || *k == Key::D {
+					if let Some(cur_effect) = self.cur_effect {
+						if cur_effect < self.effects.len() - 1 {
+							self.cur_effect = Some(cur_effect + 1);
+						} else {
+							self.cur_effect = None;
+						}
+					} else {
+						if !self.effects.is_empty() {
+							self.cur_effect = Some(0);
+						}
+					}
+				}
+
+				if *k == Key::Escape {
+					ctx.quit();
+				}
+
+			},
+
+			KeyDown(k) => {
+
+				if *k == Key::Up || *k == Key::W {
+					if let Some(cur_effect) = self.cur_effect {
+						if let Some(effect) = self.effects.get_mut(cur_effect) {
+							if let Some(param) = &mut effect.param {
+								param.value = param.value + ctx.dt() * 24.0;
+								effect.shader.send(&param.name, param.value);
+							}
+						}
+					}
+				}
+
+				if *k == Key::Down || *k == Key::S {
+					if let Some(cur_effect) = self.cur_effect {
+						if let Some(effect) = self.effects.get_mut(cur_effect) {
+							if let Some(param) = &mut effect.param {
+								param.value = param.value - ctx.dt() * 24.0;
+								effect.shader.send(&param.name, param.value);
+							}
+						}
+					}
+				}
+
+			}
+
+			_ => {},
+
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let draw_icon = |ctx: &mut app::Ctx| -> Result<()> {
@@ -121,60 +197,6 @@ impl app::State for Game {
 		}
 
 		ctx.pop()?;
-
-		if ctx.key_pressed(Key::Left) || ctx.key_pressed(Key::A) {
-			if let Some(cur_effect) = self.cur_effect {
-				if cur_effect > 0 {
-					self.cur_effect = Some(cur_effect - 1);
-				} else {
-					self.cur_effect = None;
-				}
-			} else {
-				if !self.effects.is_empty() {
-					self.cur_effect = Some(self.effects.len() - 1);
-				}
-			}
-		}
-
-		if ctx.key_pressed(Key::Right) || ctx.key_pressed(Key::D) {
-			if let Some(cur_effect) = self.cur_effect {
-				if cur_effect < self.effects.len() - 1 {
-					self.cur_effect = Some(cur_effect + 1);
-				} else {
-					self.cur_effect = None;
-				}
-			} else {
-				if !self.effects.is_empty() {
-					self.cur_effect = Some(0);
-				}
-			}
-		}
-
-		if ctx.key_down(Key::Up) || ctx.key_down(Key::W) {
-			if let Some(cur_effect) = self.cur_effect {
-				if let Some(effect) = self.effects.get_mut(cur_effect) {
-					if let Some(param) = &mut effect.param {
-						param.value = param.value + ctx.dt() * 24.0;
-						effect.shader.send(&param.name, param.value);
-					}
-				}
-			}
-		}
-
-		if ctx.key_down(Key::Down) || ctx.key_down(Key::S) {
-			if let Some(cur_effect) = self.cur_effect {
-				if let Some(effect) = self.effects.get_mut(cur_effect) {
-					if let Some(param) = &mut effect.param {
-						param.value = param.value - ctx.dt() * 24.0;
-						effect.shader.send(&param.name, param.value);
-					}
-				}
-			}
-		}
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		return Ok(());
 

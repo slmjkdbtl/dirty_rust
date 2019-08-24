@@ -16,13 +16,26 @@ impl app::State for Game {
 		});
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+			KeyPress(k) => {
+				if *k == Key::Escape {
+					ctx.quit();
+				}
+			},
+			_ => {},
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		self.font.draw(ctx, "营养过剩")?;
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		return Ok(());
 

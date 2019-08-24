@@ -9,7 +9,6 @@ use crate::*;
 use crate::math::*;
 
 pub use gfx::Gfx;
-pub use input::Input;
 pub use window::Window;
 
 use std::collections::HashMap;
@@ -56,12 +55,8 @@ pub struct Ctx {
 
 	// input
 	pub(self) key_state: HashMap<Key, ButtonState>,
-	pub(self) rpressed_key: Option<Key>,
 	pub(self) mouse_state: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Pos,
-	pub(self) mouse_delta: Option<Pos>,
-	pub(self) scroll_delta: Option<Pos>,
-	pub(self) text_input: Option<String>,
 
 	// window
 	pub(self) title: String,
@@ -254,12 +249,8 @@ impl Ctx {
 			fps_counter: FPSCounter::new(),
 
 			key_state: HashMap::new(),
-			rpressed_key: None,
 			mouse_state: HashMap::new(),
 			mouse_pos: Pos::new(0, 0),
-			mouse_delta: None,
-			scroll_delta: None,
-			text_input: None,
 
 			title: conf.title.to_owned(),
 			width: conf.width,
@@ -320,7 +311,7 @@ impl Ctx {
 
 	}
 
-	pub(super) fn run(&mut self, mut f: impl FnMut(&mut Self) -> Result<()>) -> Result<()> {
+	pub(super) fn run(&mut self, s: &mut impl State) -> Result<()> {
 
 		// TODO: render loop
 // 		#[cfg(target_arch = "wasm32")]
@@ -335,11 +326,12 @@ impl Ctx {
 
 			let start_time = Instant::now();
 
-			#[cfg(not(target_arch = "wasm32"))]
-			input::poll(self)?;
+			for e in &input::poll(self)? {
+				s.event(self, e)?;
+			}
 
 			gfx::begin(self);
-			f(self)?;
+			s.run(self)?;
 			gfx::end(self);
 			window::swap(self)?;
 
@@ -431,6 +423,12 @@ impl From<Time> for f32 {
 	}
 }
 
+impl gfx::UniformValue for Time {
+	fn get(&self) -> gfx::UniformType {
+		return gfx::UniformType::F1(self.as_secs());
+	}
+}
+
 pub trait App {
 	fn quit(&mut self);
 	fn dt(&self) -> Time;
@@ -478,10 +476,7 @@ impl Launcher {
 		let mut ctx = Ctx::new(self.conf)?;
 		let mut s = S::init(&mut ctx)?;
 
-		ctx.run(|c| {
-			return s.run(c);
-		})?;
-
+		ctx.run(&mut s)?;
 		s.quit(&mut ctx)?;
 
 		return Ok(());
@@ -645,6 +640,10 @@ impl Default for Conf {
 pub trait State {
 
 	fn init(_: &mut Ctx) -> Result<Self> where Self: Sized;
+
+	fn event(&mut self, _: &mut Ctx, _: &input::Event) -> Result<()> {
+		return Ok(());
+	}
 
 	fn run(&mut self, _: &mut Ctx) -> Result<()> {
 		return Ok(());

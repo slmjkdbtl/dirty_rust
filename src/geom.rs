@@ -105,6 +105,7 @@ fn circle_circle(c1: (Vec2, f32), c2: (Vec2, f32)) -> bool {
 
 }
 
+// TODO: understand this
 fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 	let (p1, p2) = l1;
@@ -166,6 +167,7 @@ fn point_rect(pt: Vec2, rect: (Vec2, Vec2)) -> bool {
 	return pt.x >= p1.x && pt.x <= p2.x && pt.y >= p1.y && pt.y <= p2.y;
 }
 
+// TODO
 fn point_poly(pt: Vec2, poly: &[Vec2]) -> bool {
 
 	let len = poly.len();
@@ -188,6 +190,7 @@ fn point_poly(pt: Vec2, poly: &[Vec2]) -> bool {
 
 }
 
+// TODO: clean
 /// perform sat collision detection on 2 polygons
 pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 

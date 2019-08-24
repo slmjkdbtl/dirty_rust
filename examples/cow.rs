@@ -36,10 +36,77 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
 
 		let move_speed = 160.0;
 		let rot_speed = 0.15;
+
+		match e {
+
+			KeyPress(k) => {
+				if *k == Key::Escape {
+					ctx.quit();
+				}
+				if *k == Key::F {
+					ctx.toggle_fullscreen();
+				}
+			},
+
+			KeyDown(k) => {
+
+				if *k == Key::W {
+					self.pos += ctx.cam_front() * ctx.dt() * move_speed;
+				}
+
+				if *k == Key::S {
+					self.pos -= ctx.cam_front() * ctx.dt() * move_speed;
+				}
+
+				if *k == Key::A {
+					self.pos += ctx.cam_front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * move_speed;
+				}
+
+				if *k == Key::D {
+					self.pos -= ctx.cam_front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * move_speed;
+				}
+
+			},
+
+			MouseMove(delta) => {
+
+				let md: Vec2 = (*delta).into();
+
+				self.rx -= md.x * rot_speed;
+				self.ry -= md.y * rot_speed;
+
+				if self.ry > 48.0 {
+					self.ry = 48.0;
+				}
+
+				if self.ry < -48.0 {
+					self.ry = -48.0;
+				}
+
+			},
+
+			GamepadPress(id, button) => {
+
+				dbg!(id);
+				dbg!(button);
+
+			},
+
+			_ => {},
+
+		}
+
+		return Ok(());
+
+	}
+
+	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_on(&self.canvas, |ctx| {
 
@@ -63,47 +130,6 @@ impl app::State for Game {
 		ctx.cam_look(self.rx.to_radians(), self.ry.to_radians());
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-		if let Some(delta) = ctx.mouse_delta() {
-
-			let md: Vec2 = delta.into();
-
-			self.rx -= md.x * rot_speed;
-			self.ry -= md.y * rot_speed;
-
-			if self.ry > 48.0 {
-				self.ry = 48.0;
-			}
-
-			if self.ry < -48.0 {
-				self.ry = -48.0;
-			}
-
-		}
-
-		if ctx.key_down(Key::W) {
-			self.pos += ctx.cam_front() * ctx.dt() * move_speed;
-		}
-
-		if ctx.key_down(Key::S) {
-			self.pos -= ctx.cam_front() * ctx.dt() * move_speed;
-		}
-
-		if ctx.key_down(Key::A) {
-			self.pos += ctx.cam_front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * move_speed;
-		}
-
-		if ctx.key_down(Key::D) {
-			self.pos -= ctx.cam_front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * move_speed;
-		}
-
-		if ctx.key_pressed(Key::F) {
-			ctx.toggle_fullscreen();
-		}
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		return Ok(());
 

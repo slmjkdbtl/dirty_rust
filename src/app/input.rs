@@ -1,7 +1,5 @@
 // wengwengweng
 
-use std::collections::HashSet;
-
 #[cfg(not(target_arch = "wasm32"))]
 use glutin::ElementState;
 #[cfg(not(target_arch = "wasm32"))]
@@ -10,6 +8,12 @@ pub use glutin::ModifiersState as Mod;
 pub use glutin::VirtualKeyCode as Key;
 #[cfg(not(target_arch = "wasm32"))]
 pub use glutin::MouseButton as Mouse;
+#[cfg(not(target_arch = "wasm32"))]
+pub use gilrs::ev::Button as GamepadButton;
+#[cfg(not(target_arch = "wasm32"))]
+pub use gilrs::ev::Axis as GamepadAxis;
+#[cfg(not(target_arch = "wasm32"))]
+pub use gilrs::GamepadId as GamepadID;
 
 // TODO: input types for browser
 #[cfg(target_arch = "wasm32")]
@@ -26,24 +30,25 @@ use super::*;
 use crate::*;
 use window::Pos;
 
-pub trait Input {
-
-	fn down_keys(&self) -> HashSet<Key>;
-	fn rpressed_key(&self) -> Option<Key>;
-	fn key_down(&self, key: Key) -> bool;
-	fn key_pressed(&self, key: Key) -> bool;
-	fn key_released(&self, key: Key) -> bool;
-	fn key_up(&self, key: Key) -> bool;
-	fn key_rpressed(&self, key: Key) -> bool;
-	fn mouse_down(&self, mouse: Mouse) -> bool;
-	fn mouse_pressed(&self, mouse: Mouse) -> bool;
-	fn mouse_released(&self, mouse: Mouse) -> bool;
-	fn mouse_up(&self, mouse: Mouse) -> bool;
-	fn mouse_pos(&self) -> Pos;
-	fn mouse_delta(&self) -> Option<Pos>;
-	fn scroll_delta(&self) -> Option<Pos>;
-	fn text_input(&self) -> Option<String>;
-
+pub enum Event {
+	KeyDown(Key),
+	KeyPress(Key),
+	KeyPressRepeat(Key),
+	KeyRelease(Key),
+	MouseDown(Mouse),
+	MousePress(Mouse),
+	MouseRelease(Mouse),
+	MouseMove(Pos),
+	Scroll(Pos),
+	TextInput(String),
+	GamepadPress(GamepadID, GamepadButton),
+	GamepadPressRepeat(GamepadID, GamepadButton),
+	GamepadRelease(GamepadID, GamepadButton),
+	GamepadDown(GamepadID, GamepadButton),
+	GamepadAxis(GamepadID, GamepadAxis, f32),
+	GamepadConnect(GamepadID),
+	GamepadDisconnect(GamepadID),
+	Resize(u32, u32),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -54,80 +59,41 @@ pub(super) enum ButtonState {
 	Released,
 }
 
-impl Input for app::Ctx {
-
-	fn down_keys(&self) -> HashSet<Key> {
-
-		use ButtonState::*;
-
-		return self.key_state
-			.iter()
-			.filter(|(_, &state)| state == Down || state == Pressed)
-			.map(|(key, _)| *key)
-			.collect();
-
-	}
-
-	fn rpressed_key(&self) -> Option<Key> {
-		return self.rpressed_key;
-	}
-
-	fn key_down(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Down) || self.key_pressed(key);
-	}
-
-	fn key_pressed(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Pressed);
-	}
-
-	fn key_released(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Released);
-	}
-
-	fn key_up(&self, key: Key) -> bool {
-		return self.key_state.get(&key) == Some(&ButtonState::Up) || self.key_state.get(&key).is_none();
-	}
-
-	fn key_rpressed(&self, key: Key) -> bool {
-		return self.rpressed_key == Some(key);
-	}
-
-	fn mouse_down(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Down) || self.mouse_pressed(mouse);
-	}
-
-	fn mouse_pressed(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Pressed);
-	}
-
-	fn mouse_released(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Released);
-	}
-
-	fn mouse_up(&self, mouse: Mouse) -> bool {
-		return self.mouse_state.get(&mouse) == Some(&ButtonState::Up) || self.mouse_state.get(&mouse).is_none();
-	}
-
-	fn mouse_pos(&self) -> Pos {
-		return self.mouse_pos;
-	}
-
-	fn mouse_delta(&self) -> Option<Pos> {
-		return self.mouse_delta;
-	}
-
-	fn scroll_delta(&self) -> Option<Pos> {
-		return self.scroll_delta;
-	}
-
-	fn text_input(&self) -> Option<String> {
-		return self.text_input.clone();
-	}
-
+fn key_down(ctx: &app::Ctx, key: Key) -> bool {
+	return ctx.key_state.get(&key) == Some(&ButtonState::Down) || key_pressed(ctx, key);
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
+fn key_pressed(ctx: &app::Ctx, key: Key) -> bool {
+	return ctx.key_state.get(&key) == Some(&ButtonState::Pressed);
+}
+
+fn key_released(ctx: &app::Ctx, key: Key) -> bool {
+	return ctx.key_state.get(&key) == Some(&ButtonState::Released);
+}
+
+fn key_up(ctx: &app::Ctx, key: Key) -> bool {
+	return ctx.key_state.get(&key) == Some(&ButtonState::Up) || ctx.key_state.get(&key).is_none();
+}
+
+fn mouse_down(ctx: &app::Ctx, mouse: Mouse) -> bool {
+	return ctx.mouse_state.get(&mouse) == Some(&ButtonState::Down) || mouse_pressed(ctx, mouse);
+}
+
+fn mouse_pressed(ctx: &app::Ctx, mouse: Mouse) -> bool {
+	return ctx.mouse_state.get(&mouse) == Some(&ButtonState::Pressed);
+}
+
+fn mouse_released(ctx: &app::Ctx, mouse: Mouse) -> bool {
+	return ctx.mouse_state.get(&mouse) == Some(&ButtonState::Released);
+}
+
+fn mouse_up(ctx: &app::Ctx, mouse: Mouse) -> bool {
+	return ctx.mouse_state.get(&mouse) == Some(&ButtonState::Up) || ctx.mouse_state.get(&mouse).is_none();
+}
+
+pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
+
+	let mut events = vec![];
 
 	for state in ctx.key_state.values_mut() {
 		if state == &ButtonState::Pressed {
@@ -144,11 +110,6 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 			*state = ButtonState::Up;
 		}
 	}
-
-	ctx.mouse_delta = None;
-	ctx.scroll_delta = None;
-	ctx.text_input = None;
-	ctx.rpressed_key = None;
 
 	let mut keyboard_input = None;
 	let mut mouse_input = None;
@@ -217,7 +178,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 	if close {
 		ctx.quit = true;
-		return Ok(());
+		return Ok(events);
 	}
 
 	if let Some(input) = keyboard_input {
@@ -228,17 +189,19 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 
 				ElementState::Pressed => {
 
-					ctx.rpressed_key = Some(kc);
+					events.push(Event::KeyPressRepeat(kc));
 
-					if ctx.key_up(kc) || ctx.key_released(kc) {
+					if key_up(ctx, kc) || key_released(ctx, kc) {
 						ctx.key_state.insert(kc, ButtonState::Pressed);
+						events.push(Event::KeyPress(kc));
 					}
 
 				},
 
 				ElementState::Released => {
-					if ctx.key_down(kc) || ctx.key_pressed(kc) {
+					if key_down(ctx, kc) || key_pressed(ctx, kc) {
 						ctx.key_state.insert(kc, ButtonState::Released);
+						events.push(Event::KeyRelease(kc));
 					}
 				},
 
@@ -251,51 +214,85 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 	if let Some((button, state)) = mouse_input {
 		match state {
 			ElementState::Pressed => {
-				if ctx.mouse_up(button) || ctx.mouse_released(button) {
+				if mouse_up(ctx, button) || mouse_released(ctx, button) {
 					ctx.mouse_state.insert(button, ButtonState::Pressed);
+					events.push(Event::MousePress(button));
 				}
 			},
 			ElementState::Released => {
-				if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+				if mouse_down(ctx, button) || mouse_pressed(ctx, button) {
 					ctx.mouse_state.insert(button, ButtonState::Released);
+					events.push(Event::MouseRelease(button));
 				}
 			},
 		}
 	}
 
 	if let Some(pos) = cursor_moved {
-
-		let pos: Pos = pos.into();
-
-		ctx.mouse_delta = Some((pos - ctx.mouse_pos).into());
-		ctx.mouse_pos = pos;
-
+		ctx.mouse_pos = pos.into();
 	}
 
 	if let Some(delta) = mouse_delta {
-		ctx.mouse_delta = Some(Pos {
+		events.push(Event::MouseMove(Pos {
 			x: delta.0 as i32,
 			y: delta.1 as i32,
-		});
+		}));
 	}
 
 	if let Some(delta) = mouse_wheel {
-		ctx.scroll_delta = Some(delta.into());
+		events.push(Event::Scroll(delta.into()));
 	}
 
 	if let Some(size) = resized {
 		ctx.width = size.width as i32;
 		ctx.height = size.height as i32;
+		events.push(Event::Resize(ctx.width as u32, ctx.height as u32));
 	}
 
-	ctx.text_input = text_input;
+	if let Some(text) = text_input {
+		events.push(Event::TextInput(text));
+	}
+
+	ctx.key_state
+		.iter()
+		.filter(|(_, &state)| state == ButtonState::Down || state == ButtonState::Pressed)
+		.for_each(|(k, _)| {
+			events.push(Event::KeyDown(*k));
+		});
 
 	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
-		// TODO: add gamepad input
+
+		use gilrs::ev::EventType::*;
+
+		match event {
+
+			ButtonPressed(button, ..) => {
+				events.push(Event::GamepadPress(id, button));
+			},
+			ButtonRepeated(button, ..) => {
+				events.push(Event::GamepadPressRepeat(id, button));
+			},
+			ButtonReleased(button, ..) => {
+				events.push(Event::GamepadRelease(id, button));
+			},
+			ButtonChanged(..) => {},
+			AxisChanged(axis, val, ..) => {
+				events.push(Event::GamepadAxis(id, axis, val));
+			},
+			Connected => {
+				events.push(Event::GamepadConnect(id));
+			},
+			Disconnected => {
+				events.push(Event::GamepadDisconnect(id));
+			},
+			Dropped => {},
+
+		}
+
 	}
 
-	return Ok(());
+	return Ok(events);
 
 }
 

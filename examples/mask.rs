@@ -20,6 +20,23 @@ impl app::State for Game {
 
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+			KeyPress(k) => {
+				if *k == Key::Escape {
+					ctx.quit();
+				}
+			},
+			_ => {},
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.scale(vec2!(2));
@@ -36,14 +53,6 @@ impl app::State for Game {
 		})?;
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-		if ctx.key_pressed(Key::F) {
-			ctx.toggle_fullscreen();
-		}
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		return Ok(());
 
