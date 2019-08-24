@@ -12,20 +12,33 @@ impl app::State for Game {
 		return Ok(Self);
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+			KeyPress(k) => {
+				if *k == Key::Escape {
+					ctx.quit();
+				}
+			},
+			_ => {},
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push();
 		ctx.translate_3d(vec3!(0, 0, 3));
-		ctx.rotate_y(ctx.time());
-		ctx.rotate_z(ctx.time());
+		ctx.rotate_y(ctx.time().into());
+		ctx.rotate_z(ctx.time().into());
 		ctx.draw(shapes::cube())?;
 		ctx.pop()?;
 
 		ctx.draw(shapes::text("yo"))?;
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		return Ok(());
 

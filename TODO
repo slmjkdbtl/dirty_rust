@@ -2,10 +2,11 @@
 
 == DOING
 - wasm
+- gradient
+- custom input button types
 
 == TODO
 - http less allocation / copying
-- gamepad
 - ketos bindings
 - python bindings
 - forge bindings
@@ -19,7 +20,6 @@
 - text wrapping
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
-- pass Event to State::run
 - higer level gl stencil abstraction
 - 3d primitives
 - error report location
@@ -36,7 +36,6 @@
 - framebuffer get and set individual pixels and pixel arrays
 - draw curve
 - image resizing
-- gradient
 - remove redundant window conf
 - app error manangement
 - fix input lag with glutin's EventLoop::run
@@ -72,4 +71,6 @@
 - polygon
 - circle
 - use time abstraction for App::dt() and App::time()
+- pass Event to State::event instead of input calls
+- gamepad
 

@@ -25,6 +25,26 @@ impl app::State for Game {
 
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+			KeyPress(k) => {
+				if *k == Key::Escape {
+					ctx.quit();
+				}
+				if *k == Key::F {
+					ctx.toggle_fullscreen();
+				}
+			},
+			_ => {},
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_with(&self.shader, |ctx| {
@@ -34,16 +54,6 @@ impl app::State for Game {
 
 		self.shader.send("time", ctx.time());
 		self.shader.send("mouse", vec2!(ctx.mouse_pos().x, ctx.mouse_pos().y) / 640.0);
-
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-		if ctx.key_pressed(Key::F) {
-			ctx.toggle_fullscreen();
-		}
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		return Ok(());
 

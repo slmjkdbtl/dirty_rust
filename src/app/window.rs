@@ -25,6 +25,7 @@ pub trait Window {
 	fn dpi(&self) -> f64;
 	fn width(&self) -> i32;
 	fn height(&self) -> i32;
+	fn mouse_pos(&self) -> Pos;
 
 }
 
@@ -111,6 +112,10 @@ impl Window for Ctx {
 
 	fn height(&self) -> i32 {
 		return self.height;
+	}
+
+	fn mouse_pos(&self) -> Pos {
+		return self.mouse_pos;
 	}
 
 }
