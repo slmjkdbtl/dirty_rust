@@ -53,12 +53,16 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.push();
-		ctx.translate_3d(vec3!(0, 0, 3));
-		ctx.rotate_y(ctx.time().into());
-		ctx.rotate_z(ctx.time().into());
-		ctx.draw(shapes::cube())?;
-		ctx.pop()?;
+		use gfx::Transform::*;
+
+		ctx.push(&[
+			Translate3D(vec3!(0, 0, 3)),
+			RotateY(ctx.time().into()),
+			RotateZ(ctx.time().into())
+		], |ctx| {
+			ctx.draw(shapes::cube())?;
+			return Ok(());
+		});
 
 		ctx.draw(shapes::text("yo"))?;
 

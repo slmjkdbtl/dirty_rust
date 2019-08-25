@@ -47,6 +47,8 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		use gfx::Transform::*;
+
 		let w = ctx.width() as i32;
 		let h = ctx.height() as i32;
 
@@ -55,29 +57,30 @@ impl app::State for Game {
 			if !self.done {
 
 				for _ in 0..self.count {
-
-					ctx.push();
-					ctx.translate(vec2!(rand!(-w / 2, w / 2), rand!(-h / 2, h / 2)));
-					ctx.draw(shapes::sprite(&self.tex))?;
-					ctx.pop()?;
-
+					ctx.push(&[
+						Translate(vec2!(rand!(-w / 2, w / 2), rand!(-h / 2, h / 2)))
+					], |ctx| {
+						return ctx.draw(shapes::sprite(&self.tex));
+					})?;
 				}
 
 			} else {
 
-				ctx.push();
-				ctx.scale(vec2!(6));
-				ctx.draw(shapes::text(&format!("{}", self.count)))?;
-				ctx.pop()?;
+				ctx.push(&[
+					Scale(vec2!(6)),
+				], |ctx| {
+					return ctx.draw(shapes::text(&format!("{}", self.count)));
+				})?;
 
 			}
 
 		} else {
 
-			ctx.push();
-			ctx.scale(vec2!(2));
-			ctx.draw(shapes::text("waiting..."))?;
-			ctx.pop()?;
+			ctx.push(&[
+				Scale(vec2!(2)),
+			], |ctx| {
+				return ctx.draw(shapes::text("waiting..."));
+			})?;
 
 		}
 

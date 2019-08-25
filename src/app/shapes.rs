@@ -2,6 +2,7 @@
 
 use super::*;
 use gfx::DrawCmd;
+use gfx::Transform::*;
 use gl::VertexLayout;
 
 pub struct Sprite<'a> {
@@ -53,15 +54,20 @@ impl<'a> DrawCmd for Sprite<'a> {
 
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
 
-		ctx.push();
-		ctx.scale(scale);
-		ctx.translate(self.offset * -0.5);
+		ctx.push(&[
 
-		let shape = gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.conf.quad_origin, self.flip);
+			Scale(scale),
+			Translate(self.offset * -0.5),
 
-		ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
+		], |ctx| {
 
-		ctx.pop()?;
+			let shape = gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.conf.quad_origin, self.flip);
+
+			ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
+
+			return Ok(());
+
+		})?;
 
 		return Ok(());
 
@@ -133,26 +139,27 @@ impl<'a> DrawCmd for Text<'a> {
 		let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
 		let offset = offset + self.offset * vec2!(tw, th) * -0.5;
 
-		ctx.push();
-		ctx.translate(offset);
-
 		for (i, ch) in self.txt.chars().enumerate() {
 
 			let x = i as f32 * w;
 
-			if ch != ' ' {
+			ctx.push(&[
+				Translate(offset + vec2!(x, 0))
+			], |ctx| {
 
-				if let Some(quad) = font.map.get(&ch) {
-					ctx.draw(sprite(&tex).quad(*quad).color(self.color))?;
+				if ch != ' ' {
+
+					if let Some(quad) = font.map.get(&ch) {
+						ctx.draw(sprite(&tex).quad(*quad).color(self.color))?;
+					}
+
 				}
 
-			}
+				return Ok(());
 
-			ctx.translate(vec2!(w, 0));
+			})?;
 
 		}
-
-		ctx.pop()?;
 
 		return Ok(());
 
@@ -331,11 +338,12 @@ impl DrawCmd for Line {
 		let len = (self.p2 - self.p1).mag();
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
 
-		ctx.push();
-		ctx.translate(self.p1 + (self.p2 - self.p1) * 0.5);
-		ctx.rotate(rot);
-		ctx.draw(Rect::from_size(len, self.width).color(self.color))?;
-		ctx.pop()?;
+		ctx.push(&[
+			Translate(self.p1 + (self.p2 - self.p1) * 0.5),
+			Rotate(rot),
+		], |ctx| {
+			return ctx.draw(Rect::from_size(len, self.width).color(self.color));
+		})?;
 
 		return Ok(());
 
@@ -373,10 +381,11 @@ impl<'a> DrawCmd for Points<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		for pt in self.pts {
-			ctx.push();
-			ctx.translate(*pt);
-			ctx.draw(Rect::from_size(self.size, self.size).color(self.color))?;
-			ctx.pop()?;
+			ctx.push(&[
+				Translate(*pt)
+			], |ctx| {
+				return ctx.draw(Rect::from_size(self.size, self.size).color(self.color));
+			})?;
 		}
 
 		return Ok(());
@@ -434,16 +443,19 @@ impl DrawCmd for Circle {
 
 		}
 
-		ctx.push();
-		ctx.translate(self.center);
+		ctx.push(&[
+			Translate(self.center)
+		], |ctx| {
 
-		if let Some(stroke) = self.stroke {
-			ctx.draw(polygon(&verts).color(self.color).stroke(stroke))?;
-		} else {
-			ctx.draw(polygon(&verts).color(self.color))?;
-		}
+			if let Some(stroke) = self.stroke {
+				ctx.draw(polygon(&verts).color(self.color).stroke(stroke))?;
+			} else {
+				ctx.draw(polygon(&verts).color(self.color))?;
+			}
 
-		ctx.pop()?;
+			return Ok(());
+
+		})?;
 
 		return Ok(());
 
@@ -474,10 +486,11 @@ impl<'a> DrawCmd for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.push();
-		ctx.scale(vec2!(1.0 / ctx.dpi() as f32));
-		ctx.draw(sprite(&self.canvas.tex).color(self.color))?;
-		ctx.pop()?;
+		ctx.push(&[
+			Scale(vec2!(1.0 / ctx.dpi() as f32))
+		], |ctx| {
+			return ctx.draw(sprite(&self.canvas.tex).color(self.color));
+		})?;
 
 		return Ok(());
 

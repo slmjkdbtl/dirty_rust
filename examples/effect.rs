@@ -152,13 +152,16 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		use gfx::Transform::*;
+
 		let draw_icon = |ctx: &mut app::Ctx| -> Result<()> {
 
-			ctx.push();
-			ctx.translate(vec2!(0, -24));
-			ctx.scale(vec2!(0.5));
-			ctx.draw(shapes::sprite(&self.tex))?;
-			ctx.pop()?;
+			ctx.push(&[
+				Translate(vec2!(0, -24)),
+				Scale(vec2!(0.5)),
+			], |ctx| {
+				return ctx.draw(shapes::sprite(&self.tex));
+			})?;
 
 			return Ok(());
 
@@ -173,30 +176,38 @@ impl app::State for Game {
 			draw_icon(ctx)?;
 		}
 
-		ctx.push();
-		ctx.translate(ctx.coord(gfx::Origin::Bottom) - vec2!(0, 48));
+		ctx.push(&[
 
-		if let Some(cur_effect) = self.cur_effect {
+			Translate(ctx.coord(gfx::Origin::Bottom) - vec2!(0, 64)),
 
-			if let Some(effect) = self.effects.get(cur_effect) {
+		], |ctx| {
 
-				ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
+			if let Some(cur_effect) = self.cur_effect {
 
-				if let Some(param) = &effect.param {
+				if let Some(effect) = self.effects.get(cur_effect) {
 
-					ctx.translate(vec2!(0, 20));
-					ctx.scale(vec2!(0.8));
-					ctx.draw(shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)))?;
+					ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
+
+					if let Some(param) = &effect.param {
+
+						ctx.push(&[
+							Translate(vec2!(0, 16)),
+							Scale(vec2!(0.8)),
+						], |ctx| {
+							return ctx.draw(shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)));
+						})?;
+
+					}
 
 				}
 
+			} else {
+				ctx.draw(shapes::text("no effect"))?;
 			}
 
-		} else {
-			ctx.draw(shapes::text("no effect"))?;
-		}
+			return Ok(());
 
-		ctx.pop()?;
+		})?;
 
 		return Ok(());
 

@@ -73,4 +73,5 @@
 - pass Event to State::event instead of input calls
 - gamepad
 - custom input button types
+- stateless gfx transform api
 

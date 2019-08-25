@@ -37,19 +37,7 @@ pub trait Gfx {
 	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// transform
-	fn push(&mut self);
-	fn pop(&mut self) -> Result<()>;
-	fn translate(&mut self, pos: Vec2);
-	fn rotate(&mut self, angle: f32);
-	fn scale(&mut self, scale: Vec2);
-	fn translate_3d(&mut self, pos: Vec3);
-	fn rotate_x(&mut self, angle: f32);
-	fn rotate_y(&mut self, angle: f32);
-	fn rotate_z(&mut self, angle: f32);
-	fn scale_3d(&mut self, scale: Vec3);
-	fn matrix(&self) -> Mat4;
-	fn apply(&mut self, m: Mat4);
-	fn reset(&mut self);
+	fn push(&mut self, transforms: &[Transform], f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// coord
 	// TODO: change name
@@ -60,6 +48,18 @@ pub trait Gfx {
 	fn cam_pos(&mut self, pos: Vec3);
 	fn cam_front(&self) -> Vec3;
 
+}
+
+pub enum Transform {
+	Translate(Vec2),
+	Scale(Vec2),
+	Rotate(f32),
+	Translate3D(Vec3),
+	Scale3D(Vec3),
+	RotateX(f32),
+	RotateY(f32),
+	RotateZ(f32),
+	Reset,
 }
 
 impl Gfx for Ctx {
@@ -77,57 +77,49 @@ impl Gfx for Ctx {
 		return self.draw_calls_last;
 	}
 
-	fn push(&mut self) {
+	fn push(&mut self, transforms: &[Transform], f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
 		self.transform_stack.push(self.transform.clone());
-	}
 
-	fn pop(&mut self) -> Result<()> {
+		use Transform::*;
+
+		for t in transforms {
+			match t {
+				Translate(pos) => {
+					self.transform *= Mat4::translate(vec3!(pos.x, pos.y, 0));
+				},
+				Scale(scale) => {
+					self.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
+				},
+				Rotate(angle) => {
+					self.transform *= Mat4::rotate(*angle, vec3!(0, 0, 1));
+				},
+				Translate3D(pos) => {
+					self.transform *= Mat4::translate(*pos);
+				},
+				Scale3D(scale) => {
+					self.transform *= Mat4::scale(*scale);
+				},
+				RotateX(angle) => {
+					self.transform *= Mat4::rotate(*angle, vec3!(1, 0, 0));
+				},
+				RotateY(angle) => {
+					self.transform *= Mat4::rotate(*angle, vec3!(0, 1, 0));
+				},
+				RotateZ(angle) => {
+					self.transform *= Mat4::rotate(*angle, vec3!(0, 0, 1));
+				},
+				Reset => {
+					self.transform = Mat4::identity();
+				}
+			}
+		}
+
+		f(self)?;
 		self.transform = self.transform_stack.pop().ok_or(Error::GfxPop)?;
+
 		return Ok(());
-	}
 
-	fn translate(&mut self, pos: Vec2) {
-		self.transform *= Mat4::translate(vec3!(pos.x, pos.y, 0));
-	}
-
-	fn rotate(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, vec3!(0, 0, 1));
-	}
-
-	fn scale(&mut self, scale: Vec2) {
-		self.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
-	}
-
-	fn translate_3d(&mut self, pos: Vec3) {
-		self.transform *= Mat4::translate(pos);
-	}
-
-	fn rotate_x(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, vec3!(1, 0, 0));
-	}
-
-	fn rotate_y(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, vec3!(0, 1, 0));
-	}
-
-	fn rotate_z(&mut self, angle: f32) {
-		self.transform *= Mat4::rotate(angle, vec3!(0, 0, 1));
-	}
-
-	fn scale_3d(&mut self, scale: Vec3) {
-		self.transform *= Mat4::scale(scale);
-	}
-
-	fn matrix(&self) -> Mat4 {
-		return self.transform;
-	}
-
-	fn apply(&mut self, m: Mat4) {
-		self.transform = m;
-	}
-
-	fn reset(&mut self) {
-		self.transform = Mat4::identity();
 	}
 
 	fn draw(&mut self, thing: impl DrawCmd) -> Result<()> {
@@ -148,10 +140,10 @@ impl Gfx for Ctx {
 
 			self.cur_shader_2d.send("proj", flipped_proj_2d);
 			self.cur_shader_3d.send("proj", flipped_proj_3d);
-			self.push();
-			self.reset();
-			f(self)?;
-			self.pop()?;
+			self.push(&[Transform::Reset], |ctx| {
+				f(ctx)?;
+				return Ok(());
+			});
 			flush(self);
 			self.cur_shader_2d.send("proj", self.proj_2d);
 			self.cur_shader_3d.send("proj", self.proj_3d);
@@ -999,12 +991,11 @@ impl TrueTypeFont {
 			}
 
 			for q in &self.quads {
-
-				ctx.push();
-				ctx.translate(q.pos);
-				ctx.draw(shapes::sprite(&tex).quad(q.quad))?;
-				ctx.pop()?;
-
+				ctx.push(&[
+					Transform::Translate(q.pos)
+				], |ctx| {
+					return ctx.draw(shapes::sprite(&tex).quad(q.quad));
+				});
 			}
 
 		}

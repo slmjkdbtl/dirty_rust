@@ -120,14 +120,17 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		use gfx::Transform::*;
+
 		ctx.draw_on(&self.canvas, |ctx| {
 
 			ctx.clear();
-			ctx.push();
-			ctx.translate_3d(vec3!(0, 0, 0));
-			ctx.rotate_y(ctx.time().into());
-			ctx.draw(shapes::model(&self.model))?;
-			ctx.pop()?;
+
+			ctx.push(&[
+				RotateY(ctx.time().into()),
+			], |ctx| {
+				return ctx.draw(shapes::model(&self.model));
+			})?;
 
 			return Ok(());
 

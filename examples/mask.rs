@@ -39,17 +39,28 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.scale(vec2!(2));
+		use gfx::Transform::*;
 
-		ctx.draw_masked(|ctx| {
-			ctx.draw(shapes::sprite(&self.mask))?;
+		ctx.push(&[
+
+			Scale(vec2!(2))
+
+		], |ctx| {
+
+			ctx.draw_masked(|ctx| {
+				ctx.draw(shapes::sprite(&self.mask))?;
+				return Ok(());
+			}, |ctx| {
+				ctx.push(&[
+					Translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
+				], |ctx| {
+					return ctx.draw(shapes::sprite(&self.tex));
+				})?;
+				return Ok(());
+			})?;
+
 			return Ok(());
-		}, |ctx| {
-			ctx.push();
-			ctx.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0));
-			ctx.draw(shapes::sprite(&self.tex))?;
-			ctx.pop()?;
-			return Ok(());
+
 		})?;
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
