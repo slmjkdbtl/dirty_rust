@@ -110,7 +110,7 @@ impl app::State for Game {
 					}
 				}
 
-				if *k == Key::Escape {
+				if *k == Key::Esc {
 					ctx.quit();
 				}
 

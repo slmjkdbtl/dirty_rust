@@ -32,12 +32,12 @@ use derive_more::*;
 use input::ButtonState;
 use input::Key;
 use input::Mouse;
+use input::GamepadID;
+use input::GamepadButton;
 
 use window::Pos;
 
 use gfx::Origin;
-
-const MAX_DRAWS: usize = 65536;
 
 include!("../res/resources.rs");
 
@@ -54,9 +54,11 @@ pub struct Ctx {
 	pub(self) fps_counter: FPSCounter,
 
 	// input
-	pub(self) key_state: HashMap<Key, ButtonState>,
-	pub(self) mouse_state: HashMap<Mouse, ButtonState>,
+	pub(self) key_states: HashMap<Key, ButtonState>,
+	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Pos,
+	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 
 	// window
 	pub(self) title: String,
@@ -248,9 +250,11 @@ impl Ctx {
 			time: Time::new(0.0),
 			fps_counter: FPSCounter::new(),
 
-			key_state: HashMap::new(),
-			mouse_state: HashMap::new(),
+			key_states: HashMap::new(),
+			mouse_states: HashMap::new(),
 			mouse_pos: Pos::new(0, 0),
+			gamepad_button_states: HashMap::new(),
+			gamepad_axis_pos: HashMap::new(),
 
 			title: conf.title.to_owned(),
 			width: conf.width,
@@ -362,6 +366,7 @@ impl Ctx {
 
 }
 
+// TODO: more powerful
 #[derive(Copy, Clone, PartialEq, Add, AddAssign, Sub, SubAssign)]
 pub struct Time {
 	time: Duration,

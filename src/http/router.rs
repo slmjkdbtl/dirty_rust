@@ -3,7 +3,7 @@
 use super::*;
 
 pub struct Router {
-	handlers: Vec<Box<Fn(&Request) -> Option<Response>>>,
+	handlers: Vec<Box<dyn Fn(&Request) -> Option<Response>>>,
 }
 
 unsafe impl Send for Router {}
