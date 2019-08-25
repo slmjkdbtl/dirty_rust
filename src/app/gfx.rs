@@ -116,12 +116,11 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
+		flush(self);
 		self.proj_2d = flip_matrix(&self.proj_2d);
 		self.proj_3d = flip_matrix(&self.proj_3d);
 		self.cur_shader_2d.send("proj", self.proj_2d);
 		self.cur_shader_3d.send("proj", self.proj_3d);
-
-		flush(self);
 		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 
 		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
@@ -134,12 +133,11 @@ impl Gfx for Ctx {
 				return f(ctx);
 			})?;
 
-			flush(self);
-
 			return Ok(());
 
 		})?;
 
+		flush(self);
 		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 		self.proj_2d = flip_matrix(&self.proj_2d);
 		self.proj_3d = flip_matrix(&self.proj_3d);
