@@ -106,7 +106,7 @@ impl app::State for Game {
 				}
 
 				self.blur_effect.send("dir", md.normalize());
-				self.motion = md.mag();
+				self.motion = md.mag() * 0.5;
 
 			},
 
@@ -137,12 +137,12 @@ impl app::State for Game {
 		})?;
 
 // 		ctx.draw_on(&self.canvas2, |ctx| {
-			ctx.draw_with(&self.pixel_effect, |ctx| {
+			ctx.draw_with(&self.blur_effect, |ctx| {
 				ctx.draw(shapes::canvas(&self.canvas))?;
 				return Ok(());
 			})?;
-// 			return Ok(());
-// 		});
+			return Ok(());
+// 		})?;
 
 // 		ctx.draw_with(&self.pixel_effect, |ctx| {
 // 			ctx.draw(shapes::canvas(&self.canvas2))?;

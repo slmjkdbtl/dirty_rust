@@ -23,6 +23,10 @@ impl<'a> Sprite<'a> {
 		self.color = color;
 		return self;
 	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
+		return self;
+	}
 	pub fn offset(mut self, offset: Vec2) -> Self {
 		self.offset = offset;
 		return self;
@@ -94,6 +98,10 @@ impl<'a> Text<'a> {
 	}
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
+		return self;
+	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
 		return self;
 	}
 	pub fn offset(mut self, offset: Vec2) -> Self {
@@ -176,6 +184,10 @@ pub struct Polygon {
 impl Polygon {
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
+		return self;
+	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
 		return self;
 	}
 	pub fn stroke(mut self, s: f32) -> Self {
@@ -266,6 +278,10 @@ impl Rect {
 		self.color = color;
 		return self;
 	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
+		return self;
+	}
 	pub fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Rect {
 			p1: p1,
@@ -319,6 +335,10 @@ impl Line {
 		self.color = color;
 		return self;
 	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
+		return self;
+	}
 }
 
 pub fn line(p1: Vec2, p2: Vec2) -> Line {
@@ -366,6 +386,10 @@ impl<'a> Points<'a> {
 		self.color = color;
 		return self;
 	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
+		return self;
+	}
 }
 
 pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
@@ -405,6 +429,10 @@ pub struct Circle {
 impl Circle {
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
+		return self;
+	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
 		return self;
 	}
 	pub fn sides(mut self, s: usize) -> Self {
@@ -480,6 +508,10 @@ impl<'a> Canvas<'a> {
 		self.color = color;
 		return self;
 	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
+		return self;
+	}
 }
 
 impl<'a> DrawCmd for Canvas<'a> {
@@ -513,6 +545,10 @@ pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
 impl<'a> Model<'a> {
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
+		return self;
+	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
 		return self;
 	}
 }
