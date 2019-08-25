@@ -15,6 +15,16 @@ macro_rules! export {
 	}
 }
 
+macro_rules! hashmap {
+	($($key:ident => $val:expr),*$(,)?) => {
+		let mut _tmp_map = std::collections::HashMap::new();
+		$(
+			_tmp_map.insert($key, $val);
+		)*
+		_tmp_map
+	}
+}
+
 pub mod math;
 pub mod task;
 

@@ -34,13 +34,33 @@ impl app::State for Game {
 		return Ok(Self);
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+			KeyPress(k) => {
+				if *k == Key::Esc {
+					ctx.quit();
+				}
+			},
+			_ => {},
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(shapes::text("yo"))?;
+		ctx.push();
+		ctx.translate_3d(vec3!(0, 0, 3));
+		ctx.rotate_y(ctx.time().into());
+		ctx.rotate_z(ctx.time().into());
+		ctx.draw(shapes::cube())?;
+		ctx.pop()?;
 
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
+		ctx.draw(shapes::text("yo"))?;
 
 		return Ok(());
 
@@ -49,11 +69,9 @@ impl app::State for Game {
 }
 
 fn main() {
-
 	if let Err(err) = app::run::<Game>() {
 		println!("{}", err);
 	}
-
 }
 ```
 

@@ -28,18 +28,27 @@ impl app::State for Game {
 		});
 	}
 
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+
+		use input::Event::*;
+
+		match e {
+			KeyPress(k) => {
+				if *k == Key::Esc {
+					ctx.quit();
+				}
+			},
+			_ => {},
+		}
+
+		return Ok(());
+
+	}
+
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let w = ctx.width() as i32;
 		let h = ctx.height() as i32;
-
-		if ctx.key_pressed(Key::F) {
-			ctx.toggle_fullscreen();
-		}
-
-		if ctx.key_pressed(Key::Escape) {
-			ctx.quit();
-		}
 
 		if self.started {
 

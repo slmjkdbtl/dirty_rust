@@ -10,8 +10,11 @@ struct Game {
 	pos: Vec3,
 	rx: f32,
 	ry: f32,
-	effect: gfx::Shader,
+	pixel_effect: gfx::Shader,
+	blur_effect: gfx::Shader,
 	canvas: gfx::Canvas,
+	canvas2: gfx::Canvas,
+	motion: f32,
 }
 
 impl app::State for Game {
@@ -20,18 +23,27 @@ impl app::State for Game {
 
 		ctx.cam_pos(vec3!(0, 0, -320));
 
-		let effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
+		let pixel_effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
-		effect.send("size", 6.0);
-		effect.send("dimension", vec2!(ctx.width(), ctx.height()));
+		pixel_effect.send("size", 6.0);
+		pixel_effect.send("dimension", vec2!(ctx.width(), ctx.height()));
+
+		let blur_effect = gfx::Shader::effect(ctx, include_str!("res/blur.frag"))?;
+
+		blur_effect.send("dir", vec2!(1, 0));
+		blur_effect.send("radius", 12.0);
+		blur_effect.send("resolution", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/teapot.obj"))?,
 			pos: vec3!(0, 0, -320),
-			effect: effect,
+			pixel_effect: pixel_effect,
+			blur_effect: blur_effect,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			canvas2: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			rx: 0.0,
 			ry: 0.0,
+			motion: 0.0,
 		});
 
 	}
@@ -43,10 +55,14 @@ impl app::State for Game {
 		let move_speed = 160.0;
 		let rot_speed = 0.15;
 
+		self.motion = math::lerp(self.motion, 0.0, ctx.dt().into());
+		self.blur_effect.send("radius", self.motion);
+// 		self.blur_effect.send("radius", md.mag());
+
 		match e {
 
 			KeyPress(k) => {
-				if *k == Key::Escape {
+				if *k == Key::Esc {
 					ctx.quit();
 				}
 				if *k == Key::F {
@@ -89,12 +105,8 @@ impl app::State for Game {
 					self.ry = -48.0;
 				}
 
-			},
-
-			GamepadPress(id, button) => {
-
-				dbg!(id);
-				dbg!(button);
+				self.blur_effect.send("dir", md.normalize());
+				self.motion = md.mag();
 
 			},
 
@@ -121,10 +133,18 @@ impl app::State for Game {
 
 		})?;
 
-		ctx.draw_with(&self.effect, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+// 		ctx.draw_on(&self.canvas2, |ctx| {
+			ctx.draw_with(&self.pixel_effect, |ctx| {
+				ctx.draw(shapes::canvas(&self.canvas))?;
+				return Ok(());
+			})?;
+// 			return Ok(());
+// 		});
+
+// 		ctx.draw_with(&self.pixel_effect, |ctx| {
+// 			ctx.draw(shapes::canvas(&self.canvas2))?;
+// 			return Ok(());
+// 		})?;
 
 		ctx.cam_pos(self.pos);
 		ctx.cam_look(self.rx.to_radians(), self.ry.to_radians());

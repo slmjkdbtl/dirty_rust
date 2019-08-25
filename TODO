@@ -3,7 +3,6 @@
 == DOING
 - wasm
 - gradient
-- custom input button types
 
 == TODO
 - http less allocation / copying
@@ -73,4 +72,5 @@
 - use time abstraction for App::dt() and App::time()
 - pass Event to State::event instead of input calls
 - gamepad
+- custom input button types
 
