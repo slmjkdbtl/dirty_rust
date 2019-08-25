@@ -31,7 +31,6 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.scale(vec2!(12));
 		ctx.draw(shapes::text("yo"))?;
 
 		return Ok(());

@@ -55,10 +55,6 @@ impl app::State for Game {
 		let move_speed = 160.0;
 		let rot_speed = 0.15;
 
-		self.motion = math::lerp(self.motion, 0.0, ctx.dt().into());
-		self.blur_effect.send("radius", self.motion);
-// 		self.blur_effect.send("radius", md.mag());
-
 		match e {
 
 			KeyPress(k) => {
@@ -106,7 +102,7 @@ impl app::State for Game {
 				}
 
 				self.blur_effect.send("dir", md.normalize());
-				self.motion = md.mag() * 0.5;
+				self.motion = math::clamp(md.mag() * 0.5, 0.0, 9.0);
 
 			},
 
@@ -122,6 +118,9 @@ impl app::State for Game {
 
 		use gfx::Transform::*;
 
+		self.motion = math::lerp(self.motion, 0.0, ctx.dt() * 6.0);
+		self.blur_effect.send("radius", self.motion);
+
 		ctx.draw_on(&self.canvas, |ctx| {
 
 			ctx.clear();
@@ -136,18 +135,18 @@ impl app::State for Game {
 
 		})?;
 
-// 		ctx.draw_on(&self.canvas2, |ctx| {
+		ctx.draw_on(&self.canvas2, |ctx| {
 			ctx.draw_with(&self.blur_effect, |ctx| {
 				ctx.draw(shapes::canvas(&self.canvas))?;
 				return Ok(());
 			})?;
 			return Ok(());
-// 		})?;
+		})?;
 
-// 		ctx.draw_with(&self.pixel_effect, |ctx| {
-// 			ctx.draw(shapes::canvas(&self.canvas2))?;
-// 			return Ok(());
-// 		})?;
+		ctx.draw_with(&self.pixel_effect, |ctx| {
+			ctx.draw(shapes::canvas(&self.canvas2))?;
+			return Ok(());
+		})?;
 
 		ctx.cam_pos(self.pos);
 		ctx.cam_look(self.rx.to_radians(), self.ry.to_radians());

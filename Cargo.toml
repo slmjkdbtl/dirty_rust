@@ -33,6 +33,7 @@ default = [
 	"term",
 # 	"serial",
 # 	"ui",
+# 	"ecs",
 
 	# features
 # 	"ase",
@@ -97,6 +98,8 @@ geom = []
 texpack = [
 	"guillotiere",
 ]
+
+ecs = []
 
 gl3 = []
 ui = []

@@ -12,6 +12,8 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
+		// TODO: fix dither algorithm
+
 		let mut img = img::Image::from_bytes(include_bytes!("res/dedede.png"))?;
 
 		for y in 0..img.height() {
@@ -85,8 +87,13 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.scale(vec2!(0.75));
-		ctx.draw(shapes::sprite(&self.tex))?;
+		use gfx::Transform::*;
+
+		ctx.push(&[
+			Scale(vec2!(0.75)),
+		], |ctx| {
+			return ctx.draw(shapes::sprite(&self.tex));
+		})?;
 
 		return Ok(());
 

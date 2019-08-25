@@ -14,6 +14,7 @@ personal toolkit for things
 - **ase** Load Aseprite Spritesheets
 
 All the modules can be configured with cargo feature:
+
 ```toml
 default = [ "fs", "app", "img", "audio", ]
 ```
@@ -21,6 +22,7 @@ All the modules can be used with lua or as rust modules, toggle with `lua` featu
 
 ### example
 here's a minimal window setup:
+
 ```rust
 use dirty::*;
 use dirty::app::*;
@@ -82,6 +84,7 @@ fn main() {
 ### cli
 
 The `dirty` binary is for running scripts
+
 ```sh
 $ dirty frog.lua
 ```

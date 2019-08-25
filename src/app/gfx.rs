@@ -50,18 +50,6 @@ pub trait Gfx {
 
 }
 
-pub enum Transform {
-	Translate(Vec2),
-	Scale(Vec2),
-	Rotate(f32),
-	Translate3D(Vec3),
-	Scale3D(Vec3),
-	RotateX(f32),
-	RotateY(f32),
-	RotateZ(f32),
-	Reset,
-}
-
 impl Gfx for Ctx {
 
 	fn clear(&mut self) {
@@ -128,9 +116,10 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		// TODO: don't flip when other canvas active
-		let flipped_proj_2d = flip_matrix(&self.proj_2d);
-		let flipped_proj_3d = flip_matrix(&self.proj_3d);
+		self.proj_2d = flip_matrix(&self.proj_2d);
+		self.proj_3d = flip_matrix(&self.proj_3d);
+		self.cur_shader_2d.send("proj", self.proj_2d);
+		self.cur_shader_3d.send("proj", self.proj_3d);
 
 		flush(self);
 		self.gl.viewport(0, 0, canvas.width(), canvas.height());
@@ -139,9 +128,6 @@ impl Gfx for Ctx {
 		// TODO: what if shader is changed in callback?
 		canvas.handle.with(|| -> Result<()> {
 
-			self.cur_shader_2d.send("proj", flipped_proj_2d);
-			self.cur_shader_3d.send("proj", flipped_proj_3d);
-
 			self.push(&[
 				Transform::Reset
 			], |ctx| {
@@ -149,14 +135,16 @@ impl Gfx for Ctx {
 			})?;
 
 			flush(self);
-			self.cur_shader_2d.send("proj", self.proj_2d);
-			self.cur_shader_3d.send("proj", self.proj_3d);
 
 			return Ok(());
 
 		})?;
 
 		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
+		self.proj_2d = flip_matrix(&self.proj_2d);
+		self.proj_3d = flip_matrix(&self.proj_3d);
+		self.cur_shader_2d.send("proj", self.proj_2d);
+		self.cur_shader_3d.send("proj", self.proj_3d);
 
 		return Ok(());
 
@@ -279,6 +267,20 @@ pub(super) fn end(ctx: &mut Ctx) {
 pub(super) fn flush(ctx: &mut Ctx) {
 	ctx.renderer_2d.flush();
 }
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Transform {
+	Translate(Vec2),
+	Scale(Vec2),
+	Rotate(f32),
+	Translate3D(Vec3),
+	Scale3D(Vec3),
+	RotateX(f32),
+	RotateY(f32),
+	RotateZ(f32),
+	Reset,
+}
+
 
 pub struct Vertex2D {
 	pos: Vec2,
