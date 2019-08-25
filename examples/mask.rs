@@ -48,15 +48,13 @@ impl app::State for Game {
 		], |ctx| {
 
 			ctx.draw_masked(|ctx| {
-				ctx.draw(shapes::sprite(&self.mask))?;
-				return Ok(());
+				return ctx.draw(shapes::sprite(&self.mask));
 			}, |ctx| {
-				ctx.push(&[
+				return ctx.push(&[
 					Translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
 				], |ctx| {
 					return ctx.draw(shapes::sprite(&self.tex));
-				})?;
-				return Ok(());
+				});
 			})?;
 
 			return Ok(());

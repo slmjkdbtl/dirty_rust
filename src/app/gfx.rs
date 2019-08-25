@@ -128,6 +128,7 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
+		// TODO: don't flip when other canvas active
 		let flipped_proj_2d = flip_matrix(&self.proj_2d);
 		let flipped_proj_3d = flip_matrix(&self.proj_3d);
 
@@ -140,10 +141,13 @@ impl Gfx for Ctx {
 
 			self.cur_shader_2d.send("proj", flipped_proj_2d);
 			self.cur_shader_3d.send("proj", flipped_proj_3d);
-			self.push(&[Transform::Reset], |ctx| {
-				f(ctx)?;
-				return Ok(());
-			});
+
+			self.push(&[
+				Transform::Reset
+			], |ctx| {
+				return f(ctx);
+			})?;
+
 			flush(self);
 			self.cur_shader_2d.send("proj", self.proj_2d);
 			self.cur_shader_3d.send("proj", self.proj_3d);
@@ -995,7 +999,7 @@ impl TrueTypeFont {
 					Transform::Translate(q.pos)
 				], |ctx| {
 					return ctx.draw(shapes::sprite(&tex).quad(q.quad));
-				});
+				})?;
 			}
 
 		}
