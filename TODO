@@ -3,7 +3,6 @@
 == DOING
 - wasm
 - gradient
-- nested canvas don't flip
 
 == TODO
 - http less allocation / copying
@@ -75,4 +74,5 @@
 - gamepad
 - custom input button types
 - stateless gfx transform api
+- nested canvas flip again
 
