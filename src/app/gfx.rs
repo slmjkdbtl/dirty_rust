@@ -43,13 +43,10 @@ pub trait Gfx {
 	fn push(&mut self, transforms: &[Transform], f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// coord
-	// TODO: change name
 	fn coord(&self, coord: Origin) -> Vec2;
 
 	// camera
-	fn cam_look(&mut self, yaw: f32, pitch: f32);
-	fn cam_pos(&mut self, pos: Vec3);
-	fn cam_front(&self) -> Vec3;
+	fn use_cam(&mut self, cam: &Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 }
 
@@ -213,7 +210,6 @@ impl Gfx for Ctx {
 
 	}
 
-	// TODO: change name
 	fn coord(&self, coord: Origin) -> Vec2 {
 
 		let w = self.width();
@@ -225,20 +221,24 @@ impl Gfx for Ctx {
 
 	}
 
-	// TODO
-	fn cam_look(&mut self, yaw: f32, pitch: f32) {
-		self.cam_3d.set_angle(yaw, pitch);
-		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
+	fn use_cam(&mut self, cam: &Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+		self.cur_shader_3d.send("view", cam.get_lookat_matrix());
+		return f(self);
 	}
 
-	fn cam_pos(&mut self, pos: Vec3) {
-		self.cam_3d.set_pos(pos);
-		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
-	}
+// 	fn cam_look(&mut self, yaw: f32, pitch: f32) {
+// 		self.cam_3d.set_angle(yaw, pitch);
+// 		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
+// 	}
 
-	fn cam_front(&self) -> Vec3 {
-		return self.cam_3d.front;
-	}
+// 	fn cam_pos(&mut self, pos: Vec3) {
+// 		self.cam_3d.set_pos(pos);
+// 		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
+// 	}
+
+// 	fn cam_front(&self) -> Vec3 {
+// 		return self.cam_3d.front;
+// 	}
 
 }
 
@@ -736,9 +736,11 @@ impl Canvas {
 }
 
 #[derive(Clone)]
-pub(super) struct Camera {
+pub struct Camera {
 	front: Vec3,
 	pos: Vec3,
+	yaw: f32,
+	pitch: f32,
 }
 
 impl Camera {
@@ -746,8 +748,10 @@ impl Camera {
 	pub fn new(pos: Vec3, yaw: f32, pitch: f32) -> Self {
 
 		let mut c = Self {
-			front: vec3!(),
 			pos: vec3!(),
+			front: vec3!(),
+			yaw: 0.0,
+			pitch: 0.0,
 		};
 
 		c.set_pos(pos);
@@ -757,21 +761,37 @@ impl Camera {
 
 	}
 
-	pub fn front(&self) -> Vec3 {
-		return self.front;
-	}
-
 	pub fn set_pos(&mut self, pos: Vec3) {
 		self.pos = pos;
 	}
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
-		self.front.x = pitch.cos() * (yaw + 90f32.to_radians()).cos();
-		self.front.y = pitch.sin();
-		self.front.z = pitch.cos() * (yaw + 90f32.to_radians()).sin();
-		self.front = self.front.normalize();
+		self.yaw = yaw;
+		self.pitch = pitch;
 
+		self.front = vec3!(
+			self.pitch.cos() * (self.yaw + 90f32.to_radians()).cos(),
+			self.pitch.sin(),
+			self.pitch.cos() * (self.yaw + 90f32.to_radians()).sin(),
+		).normalize();
+
+	}
+
+	pub fn front(&self) -> Vec3 {
+		return self.front;
+	}
+
+	pub fn pos(&self) -> Vec3 {
+		return self.pos;
+	}
+
+	pub fn yaw(&self) -> f32 {
+		return self.yaw;
+	}
+
+	pub fn pitch(&self) -> f32 {
+		return self.pitch;
 	}
 
 	pub(super) fn get_lookat_matrix(&self) -> Mat4 {

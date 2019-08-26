@@ -2,7 +2,6 @@
 
 == DOING
 - wasm
-- more testing on masked, shader, canvas, and batched renderers
 
 == TODO
 - http less allocation / copying
@@ -77,4 +76,6 @@
 - nested canvas flip again
 - remove redundant window conf
 - clear_ex
+- more testing on masked, shader, canvas, and batched renderers
+- Gfx::use_cam instead of Gfx::cam_pos & Gfx::cam_look
 
