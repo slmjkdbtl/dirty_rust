@@ -61,8 +61,6 @@ impl app::State for Game {
 
 		})?;
 
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
 		return Ok(());
 
 	}

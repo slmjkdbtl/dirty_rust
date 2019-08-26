@@ -137,7 +137,7 @@ impl Ctx {
 					.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
 					.with_title_hidden(conf.hide_title)
 					.with_titlebar_transparent(conf.titlebar_transparent)
-					.with_fullsize_content_view(conf.fullsize_content)
+					.with_fullsize_content_view(conf.titlebar_transparent)
 	// 				.with_disallow_hidpi(!conf.hidpi)
 					;
 
@@ -207,7 +207,7 @@ impl Ctx {
 // 		gl.cull_face(gl::Face::Back);
 		gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 		gl.depth_func(gl::Cmp::LessOrEqual);
-		gl.clear_color(color!(0, 0, 0, 1));
+		gl.clear_color(conf.clear_color);
 
 		let empty_tex = gl::Texture::init(&gl, 1, 1, &[255; 4])?;
 		let empty_tex = gfx::Tex2D::from_handle(empty_tex, 1, 1);
@@ -544,6 +544,11 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn titlebar_transparent(mut self, b: bool) -> Self {
+		self.conf.titlebar_transparent = b;
+		return self;
+	}
+
 	pub fn transparent(mut self, b: bool) -> Self {
 		self.conf.transparent = b;
 		return self;
@@ -556,6 +561,11 @@ impl Launcher {
 
 	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
 		self.conf.fps_cap = f;
+		return self;
+	}
+
+	pub fn clear_color(mut self, c: Color) -> Self {
+		self.conf.clear_color = c;
 		return self;
 	}
 
@@ -590,11 +600,11 @@ pub struct Conf {
 	pub vsync: bool,
 	pub hide_title: bool,
 	pub hide_titlebar_buttons: bool,
-	pub fullsize_content: bool,
 	pub titlebar_transparent: bool,
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
 	pub fps_cap: Option<u16>,
+	pub clear_color: Color,
 	pub origin: Origin,
 	pub quad_origin: Origin,
 	pub texture_filter: gfx::FilterMode,
@@ -627,13 +637,13 @@ impl Default for Conf {
 			borderless: false,
 			transparent: false,
 			vsync: true,
-			fullsize_content: false,
 			hide_title: false,
 			hide_titlebar_buttons: false,
 			titlebar_transparent: false,
 			cursor_hidden: false,
 			cursor_locked: false,
 			fps_cap: Some(60),
+			clear_color: color!(0, 0, 0, 1),
 			origin: Origin::Center,
 			quad_origin: Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,

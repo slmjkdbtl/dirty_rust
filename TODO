@@ -2,7 +2,7 @@
 
 == DOING
 - wasm
-- gradient
+- more testing on masked, shader, canvas, and batched renderers
 
 == TODO
 - http less allocation / copying
@@ -35,11 +35,11 @@
 - framebuffer get and set individual pixels and pixel arrays
 - draw curve
 - image resizing
-- remove redundant window conf
 - app error manangement
 - fix input lag with glutin's EventLoop::run
 - smooth line join on polygon stroke
 - no warnings
+- gradient
 
 == DONE
 - refactor http
@@ -75,4 +75,6 @@
 - custom input button types
 - stateless gfx transform api
 - nested canvas flip again
+- remove redundant window conf
+- clear_ex
 

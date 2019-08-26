@@ -24,6 +24,8 @@ All the modules can be used with lua or as rust modules, toggle with `lua` featu
 here's a minimal window setup:
 
 ```rust
+// wengwengweng
+
 use dirty::*;
 use dirty::app::*;
 use input::Key;
@@ -62,9 +64,8 @@ impl app::State for Game {
 			RotateY(ctx.time().into()),
 			RotateZ(ctx.time().into())
 		], |ctx| {
-			ctx.draw(shapes::cube())?;
-			return Ok(());
-		});
+			return ctx.draw(shapes::cube());
+		})?;
 
 		ctx.draw(shapes::text("yo"))?;
 
@@ -79,6 +80,7 @@ fn main() {
 		println!("{}", err);
 	}
 }
+
 ```
 
 ### cli
