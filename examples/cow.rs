@@ -11,39 +11,27 @@ struct Game {
 	rx: f32,
 	ry: f32,
 	pixel_effect: gfx::Shader,
-	blur_effect: gfx::Shader,
 	canvas: gfx::Canvas,
-	canvas2: gfx::Canvas,
-	motion: f32,
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		ctx.cam_pos(vec3!(0, 0, -320));
+		ctx.cam_pos(vec3!(0, 0, -12));
 
 		let pixel_effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
 		pixel_effect.send("size", 6.0);
 		pixel_effect.send("dimension", vec2!(ctx.width(), ctx.height()));
 
-		let blur_effect = gfx::Shader::effect(ctx, include_str!("res/blur.frag"))?;
-
-		blur_effect.send("dir", vec2!(1, 0));
-		blur_effect.send("radius", 12.0);
-		blur_effect.send("resolution", vec2!(ctx.width(), ctx.height()));
-
 		return Ok(Self {
-			model: gfx::Model::from_obj(ctx, include_str!("res/teapot.obj"))?,
-			pos: vec3!(0, 0, -320),
+			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
+			pos: vec3!(0, 0, -12),
 			pixel_effect: pixel_effect,
-			blur_effect: blur_effect,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
-			canvas2: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			rx: 0.0,
 			ry: 0.0,
-			motion: 0.0,
 		});
 
 	}
@@ -52,7 +40,7 @@ impl app::State for Game {
 
 		use input::Event::*;
 
-		let move_speed = 160.0;
+		let move_speed = 16.0;
 		let rot_speed = 0.15;
 
 		match e {
@@ -101,9 +89,6 @@ impl app::State for Game {
 					self.ry = -48.0;
 				}
 
-				self.blur_effect.send("dir", md.normalize());
-				self.motion = math::clamp(md.mag() * 0.5, 0.0, 9.0);
-
 			},
 
 			_ => {},
@@ -118,12 +103,9 @@ impl app::State for Game {
 
 		use gfx::Transform::*;
 
-		self.motion = math::lerp(self.motion, 0.0, ctx.dt() * 6.0);
-		self.blur_effect.send("radius", self.motion);
-
 		ctx.draw_on(&self.canvas, |ctx| {
 
-			ctx.clear();
+			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.push(&[
 				RotateY(ctx.time().into()),
@@ -135,16 +117,8 @@ impl app::State for Game {
 
 		})?;
 
-		ctx.draw_on(&self.canvas2, |ctx| {
-			ctx.draw_with(&self.blur_effect, |ctx| {
-				ctx.draw(shapes::canvas(&self.canvas))?;
-				return Ok(());
-			})?;
-			return Ok(());
-		})?;
-
 		ctx.draw_with(&self.pixel_effect, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas2))?;
+			ctx.draw(shapes::canvas(&self.canvas))?;
 			return Ok(());
 		})?;
 

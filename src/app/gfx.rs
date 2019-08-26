@@ -19,12 +19,15 @@ use gl::Shape;
 pub use gl::UniformValue;
 pub use gl::UniformType;
 pub use gl::FilterMode;
+pub use gl::Surface;
 pub use gl::Cmp;
 
 pub trait Gfx {
 
 	// clearing
 	fn clear(&mut self);
+	fn clear_ex(&mut self, s: Surface);
+	fn clear_color(&self, c: Color);
 
 	// stats
 	fn draw_calls(&self) -> usize;
@@ -55,10 +58,21 @@ impl Gfx for Ctx {
 	fn clear(&mut self) {
 
 		flush(self);
-		self.gl.clear(gl::Surface::Color);
-		self.gl.clear(gl::Surface::Depth);
-		self.gl.clear(gl::Surface::Stencil);
+		self.gl.clear(Surface::Color);
+		self.gl.clear(Surface::Depth);
+		self.gl.clear(Surface::Stencil);
 
+	}
+
+	fn clear_ex(&mut self, s: Surface) {
+
+		flush(self);
+		self.gl.clear(s);
+
+	}
+
+	fn clear_color(&self, c: Color) {
+		self.gl.clear_color(c);
 	}
 
 	fn draw_calls(&self) -> usize {
