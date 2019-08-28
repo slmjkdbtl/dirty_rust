@@ -1,23 +1,12 @@
 // wengwengweng
 
-use std::path::PathBuf;
 use std::fmt;
 
 #[derive(Debug, Clone)]
 pub enum Error {
-	FileWrite(PathBuf),
-	FileRead(PathBuf),
-	FileBasename(PathBuf),
-	FileExt(PathBuf),
-	FileCopy(PathBuf, PathBuf),
-	FileRemove(PathBuf),
-	Rename(PathBuf),
-	DirRead(PathBuf),
-	DirRemove(PathBuf),
-	Mkdir(PathBuf),
-	GetDataDir,
+	Fs(String),
 	IO,
-	Net,
+	Net(String),
 	Image,
 	Window,
 	Wasm,
@@ -40,19 +29,9 @@ pub enum Error {
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		return match self {
-			Error::FileWrite(p) => write!(f, "failed to write {}", p.display()),
-			Error::FileRead(p) => write!(f, "failed to read {}", p.display()),
-			Error::FileBasename(p) => write!(f, "failed to get basename for {}", p.display()),
-			Error::FileExt(p) => write!(f, "failed to get extension for {}", p.display()),
-			Error::FileCopy(p1, p2) => write!(f, "failed to copy {} to {}", p1.display(), p2.display()),
-			Error::FileRemove(p) => write!(f, "failed to remove file {}", p.display()),
-			Error::DirRemove(p) => write!(f, "failed to remove dir {}", p.display()),
-			Error::DirRead(p) => write!(f, "failed to read dir {}", p.display()),
-			Error::Mkdir(p) => write!(f, "failed to create directory {}", p.display()),
-			Error::Rename(p) => write!(f, "failed to rename {}", p.display()),
-			Error::GetDataDir => write!(f, "failed to get data dir"),
+			Error::Fs(s) => write!(f, "fs error: {}", s),
 			Error::IO => write!(f, "io error"),
-			Error::Net => write!(f, "network error"),
+			Error::Net(s) => write!(f, "network error: {}", s),
 			Error::Image => write!(f, "image error"),
 			Error::Window => write!(f, "window error"),
 			Error::Wasm => write!(f, "wasm error"),
@@ -179,7 +158,7 @@ impl From<tobj::LoadError> for Error {
 #[cfg(feature = "http")]
 impl From<url::ParseError> for Error {
 	fn from(_: url::ParseError) -> Self {
-		return Error::Net;
+		return Error::Net("failed to parse url".into());
 	}
 }
 
@@ -193,14 +172,14 @@ impl From<httparse::Error> for Error {
 #[cfg(all(feature = "http", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 impl From<native_tls::Error> for Error {
 	fn from(_: native_tls::Error) -> Self {
-		return Error::Net;
+		return Error::Net("tls error".into());
 	}
 }
 
 #[cfg(all(feature = "http", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
-		return Error::Net;
+		return Error::Net("tls error".into());
 	}
 }
 #[cfg(feature = "ase")]
