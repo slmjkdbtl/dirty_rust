@@ -32,7 +32,7 @@ impl FromStr for Scheme {
 		return match s {
 			"http" => Ok(Scheme::HTTP),
 			"https" => Ok(Scheme::HTTPS),
-			_ => Err(Error::Net),
+			_ => Err(Error::Net(format!("failed to parse scheme from {}", s))),
 		};
 	}
 
@@ -62,7 +62,7 @@ impl FromStr for Method {
 		return match s {
 			"GET" => Ok(Method::GET),
 			"POST" => Ok(Method::POST),
-			_ => Err(Error::Net),
+			_ => Err(Error::Net(format!("failed to parse http method from {}", s))),
 		};
 	}
 
@@ -105,7 +105,7 @@ impl FromStr for Version {
 			"HTTP/1.0" => Ok(Version::V10),
 			"HTTP/1.1" => Ok(Version::V11),
 			"HTTP/2.0" => Ok(Version::V20),
-			_ => Err(Error::Net),
+			_ => Err(Error::Net(format!("failed to parse http version from {}", s))),
 		};
 	}
 
@@ -248,12 +248,12 @@ macro_rules! gen_status {
 
 		impl Status {
 
-			pub fn from_code(code: u16) -> Option<Self> {
+			pub fn from_code(code: u16) -> Result<Self> {
 				return match code {
 					$(
-						$code => Some(Status::$name),
+						$code => Ok(Status::$name),
 					)*
-					_ => None,
+					_ => Err(Error::Net(format!("failed to get status from code {}", code))),
 				};
 			}
 

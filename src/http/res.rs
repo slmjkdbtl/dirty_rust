@@ -60,12 +60,15 @@ impl Response {
 
 		let body_pos = match res.parse(&buf)? {
 			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => return Err(Error::Net),
+			httparse::Status::Partial => return Err(Error::Net("incomplete request message".into())),
 		};
 
+		let code = res.code
+			.ok_or(Error::Net("failed to parse response status code".into()))?;
+
+		let status = Status::from_code(code)?;
+
 		let body = &buf[body_pos..];
-		let code = res.code.ok_or(Error::Net)?;
-		let status = Status::from_code(code).ok_or(Error::Net)?;
 
 		return Ok(Self {
 			body: body.to_owned(),

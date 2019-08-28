@@ -36,12 +36,19 @@ impl Request {
 
 		let body_pos = match req.parse(&buf)? {
 			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => return Err(Error::Net),
+			httparse::Status::Partial => return Err(Error::Net("incomplete request message".into())),
 		};
 
-		let method = req.method.ok_or(Error::Net)?.parse::<Method>()?;
-		let path = req.path.ok_or(Error::Net)?;
-		let version = req.version.ok_or(Error::Net)?;
+		let method = req.method
+			.ok_or(Error::Net("failed to parse request method".into()))?
+			.parse::<Method>()?;
+
+		let path = req.path
+			.ok_or(Error::Net("failed to parse request path".into()))?;
+
+		let version = req.version
+			.ok_or(Error::Net("failed to parse request version".into()))?;
+
 		let body = &buf[body_pos..];
 
 		return Ok(Self {
@@ -61,7 +68,11 @@ impl Request {
 
 		let url = Url::parse(url)?;
 		let scheme = url.scheme().parse::<Scheme>()?;
-		let host = url.host_str().ok_or(Error::Net)?;
+
+		let host = url
+			.host_str()
+			.ok_or(Error::Net("failed to get host addr from url".into()))?;
+
 		let path = url.path();
 		let mut headers = HeaderMap::new();
 
