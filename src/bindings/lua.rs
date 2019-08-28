@@ -192,7 +192,6 @@ fn bind_app(ctx: &Context) -> Result<()> {
 			set!(t["vsync"] -> conf::vsync);
 			set!(t["hide_title"] -> conf::hide_title);
 			set!(t["hide_titlebar_buttons"] -> conf::hide_titlebar_buttons);
-			set!(t["fullsize_content"] -> conf::fullsize_content);
 			set!(t["titlebar_transparent"] -> conf::titlebar_transparent);
 			set!(t["cursor_hidden"] -> conf::cursor_hidden);
 			set!(t["cursor_locked"] -> conf::cursor_locked);
@@ -209,12 +208,12 @@ fn bind_app(ctx: &Context) -> Result<()> {
 
 			use app::*;
 
-			methods.add_method("time", |_, ctx, ()| {
-				return Ok(ctx.time());
+			methods.add_method("time", |_, ctx, ()| -> rlua::Result<f32> {
+				return Ok(ctx.time().into());
 			});
 
-			methods.add_method("dt", |_, ctx, ()| {
-				return Ok(ctx.dt());
+			methods.add_method("dt", |_, ctx, ()| -> rlua::Result<f32> {
+				return Ok(ctx.dt().into());
 			});
 
 			methods.add_method("fps", |_, ctx, ()| {
@@ -273,22 +272,6 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(());
 			});
 
-			methods.add_method("key_pressed", |_, ctx, (k): (String)| {
-				return Ok(ctx.key_pressed(input::str_to_key(&k).ok_or(Error::Input)?));
-			});
-
-			methods.add_method("key_rpressed", |_, ctx, (k): (String)| {
-				return Ok(ctx.key_rpressed(input::str_to_key(&k).ok_or(Error::Input)?));
-			});
-
-			methods.add_method("key_down", |_, ctx, (k): (String)| {
-				return Ok(ctx.key_down(input::str_to_key(&k).ok_or(Error::Input)?));
-			});
-
-			methods.add_method("key_released", |_, ctx, (k): (String)| {
-				return Ok(ctx.key_released(input::str_to_key(&k).ok_or(Error::Input)?));
-			});
-
 			methods.add_method("mouse_pos", |_, ctx, ()| {
 				let pos: math::Vec2 = ctx.mouse_pos().into();
 				return Ok(pos);
@@ -306,26 +289,6 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(ctx.draw(shapes::text(&s))?);
 			});
 
-			methods.add_method_mut("push", |_, ctx, ()| {
-				return Ok(ctx.push());
-			});
-
-			methods.add_method_mut("pop", |_, ctx, ()| {
-				return Ok(ctx.pop()?);
-			});
-
-			methods.add_method_mut("translate", |_, ctx, (t): (math::Vec2)| {
-				return Ok(ctx.translate(t));
-			});
-
-			methods.add_method_mut("rotate", |_, ctx, (t): (f32)| {
-				return Ok(ctx.rotate(t));
-			});
-
-			methods.add_method_mut("scale", |_, ctx, (t): (math::Vec2)| {
-				return Ok(ctx.scale(t));
-			});
-
 		}
 
 	}
@@ -341,14 +304,14 @@ fn bind_app(ctx: &Context) -> Result<()> {
 				return Ok(());
 			});
 
-			methods.add_method_mut("run", |ctx, app, (cb): (Function)| {
-				return Ok(app.run(|c| {
-					ctx.scope(|s| -> rlua::Result<()> {
-						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
-					})?;
-					return Ok(());
-				})?);
-			});
+// 			methods.add_method_mut("run", |ctx, app, (cb): (Function)| {
+// 				return Ok(app.run(|c| {
+// 					ctx.scope(|s| -> rlua::Result<()> {
+// 						return Ok(cb.call::<_, ()>(s.create_nonstatic_userdata(c)?)?);
+// 					})?;
+// 					return Ok(());
+// 				})?);
+// 			});
 
 		}
 

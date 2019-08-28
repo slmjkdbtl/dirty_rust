@@ -33,7 +33,7 @@ pub trait Gfx {
 	fn draw_calls(&self) -> usize;
 
 	// drawing
-	fn draw(&mut self, t: impl DrawCmd) -> Result<()>;
+	fn draw(&mut self, t: impl Drawable) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
@@ -115,13 +115,16 @@ impl Gfx for Ctx {
 		}
 
 		f(self)?;
-		self.transform = self.transform_stack.pop().ok_or(Error::GfxPop)?;
+
+		self.transform = self.transform_stack
+			.pop()
+			.ok_or(Error::Gfx("failed to pop transform stack".into()))?;
 
 		return Ok(());
 
 	}
 
-	fn draw(&mut self, thing: impl DrawCmd) -> Result<()> {
+	fn draw(&mut self, thing: impl Drawable) -> Result<()> {
 		return thing.draw(self);
 	}
 
@@ -226,20 +229,6 @@ impl Gfx for Ctx {
 		return f(self);
 	}
 
-// 	fn cam_look(&mut self, yaw: f32, pitch: f32) {
-// 		self.cam_3d.set_angle(yaw, pitch);
-// 		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
-// 	}
-
-// 	fn cam_pos(&mut self, pos: Vec3) {
-// 		self.cam_3d.set_pos(pos);
-// 		self.cur_shader_3d.send("view", self.cam_3d.get_lookat_matrix());
-// 	}
-
-// 	fn cam_front(&self) -> Vec3 {
-// 		return self.cam_3d.front;
-// 	}
-
 }
 
 fn flip_matrix(m: &Mat4) -> Mat4 {
@@ -280,7 +269,7 @@ pub(super) fn flush(ctx: &mut Ctx) {
 	ctx.renderer_2d.flush();
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Transform {
 	Translate(Vec2),
 	Scale(Vec2),
@@ -455,7 +444,7 @@ impl Shape for QuadShape {
 
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Flip {
 	None,
 	X,
@@ -463,7 +452,7 @@ pub enum Flip {
 	XY,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Origin {
 	TopLeft,
 	Top,
@@ -1044,7 +1033,16 @@ impl TrueTypeFont {
 
 }
 
-pub trait DrawCmd {
+// TODO: implement bevel and miter
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum LineJoin {
+	None,
+	Round,
+	Bevel,
+	Miter,
+}
+
+pub trait Drawable {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
 }
 
