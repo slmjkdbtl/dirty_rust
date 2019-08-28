@@ -2,6 +2,7 @@
 
 == DOING
 - wasm
+- clearer error messages
 
 == TODO
 - http less allocation / copying
@@ -9,7 +10,6 @@
 - python bindings
 - forge bindings
 - use rustls instead of native-tls
-- clearer error messages
 - better http response api
 - add some dirty::CONSTANTs
 - use Future on assets
@@ -19,9 +19,8 @@
 - fix ttf flashing first frame
 - fix resize framebuffer weirdness
 - higer level gl stencil abstraction
-- 3d primitives
 - error report location
-- test Drop on Clone
+- gl::Texture and gl::Program Drop
 - clearer shader variable prefixes
 - 3d texture
 - tween functions
@@ -29,16 +28,21 @@
 - noise function
 - rect stroke
 - sphere
-- make gl lib stateless
-- flush batched renderer when shader uniform is sent
+- flush batched renderer when shader uniform is sent?
 - framebuffer get and set individual pixels and pixel arrays
 - draw curve
 - image resizing
 - app error manangement
 - fix input lag with glutin's EventLoop::run
 - smooth line join on polygon stroke
-- no warnings
+- no cargo warnings
 - gradient
+- different monitors
+- lua bindings
+- python bindings
+- vr
+- bevel and miter line join
+- ellipse
 
 == DONE
 - refactor http
@@ -78,4 +82,5 @@
 - clear_ex
 - more testing on masked, shader, canvas, and batched renderers
 - Gfx::use_cam instead of Gfx::cam_pos & Gfx::cam_look
+- line joints
 

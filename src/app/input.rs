@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use gilrs::GamepadId as GamepadID;
+#[cfg(target_arch = "wasm32")]
+pub type GamepadID = u64;
 
 pub type TouchID = u64;
 
@@ -108,6 +110,12 @@ fn gamepad_pressed(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool
 	}
 }
 
+#[cfg(target_arch = "wasm32")]
+pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
+	return Ok(vec![]);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 	let mut events = vec![];
@@ -428,6 +436,7 @@ macro_rules! gen_buttons {
 
 			}
 
+			#[cfg(not(target_arch = "wasm32"))]
 			fn from_extern(s: $xtype) -> Option<Self> {
 				return match s {
 					$(
@@ -445,6 +454,7 @@ macro_rules! gen_buttons {
 				};
 			}
 
+			#[cfg(not(target_arch = "wasm32"))]
 			fn as_extern(&self) -> $xtype {
 				return match self {
 					$(
@@ -459,7 +469,21 @@ macro_rules! gen_buttons {
 
 }
 
-gen_buttons!(Key(glutin::VirtualKeyCode), {
+#[cfg(not(target_arch = "wasm32"))]
+use glutin::VirtualKeyCode as ExternKey;
+#[cfg(not(target_arch = "wasm32"))]
+use glutin::MouseButton as ExternMouse;
+#[cfg(not(target_arch = "wasm32"))]
+use gilrs::ev::Button as ExternGamepadButton;
+
+#[cfg(target_arch = "wasm32")]
+struct ExternKey;
+#[cfg(target_arch = "wasm32")]
+struct ExternMouse;
+#[cfg(target_arch = "wasm32")]
+struct ExternGamepadButton;
+
+gen_buttons!(Key(ExternKey), {
 	Q("q") => Q,
 	W("w") => W,
 	E("e") => E,
@@ -536,13 +560,13 @@ gen_buttons!(Key(glutin::VirtualKeyCode), {
 	RCtrl("rctrl") => RControl,
 });
 
-gen_buttons!(Mouse(glutin::MouseButton), {
+gen_buttons!(Mouse(ExternMouse), {
 	Left("left") => Left,
 	Right("right") => Right,
 	Middle("middle") => Middle,
 });
 
-gen_buttons!(GamepadButton(gilrs::ev::Button), {
+gen_buttons!(GamepadButton(ExternGamepadButton), {
 	A("a") => South,
 	B("b") => East,
 	X("x") => West,

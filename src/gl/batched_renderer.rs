@@ -78,12 +78,12 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 
 		if self.vqueue.len() + verts.len() >= self.vqueue.capacity() {
 			self.vqueue.clear();
-			return Err(Error::MaxDraw);
+			return Err(Error::Gfx("max draw count".into()));
 		}
 
 		if self.iqueue.len() + indices.len() >= self.iqueue.capacity() {
 			self.iqueue.clear();
-			return Err(Error::MaxDraw);
+			return Err(Error::Gfx("max draw count reached".into()));
 		}
 
 		self.vqueue.extend_from_slice(&verts);

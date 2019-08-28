@@ -1,7 +1,7 @@
 // wengwengweng
 
 use super::*;
-use gfx::DrawCmd;
+use gfx::Drawable;
 use gfx::Transform::*;
 use gl::VertexLayout;
 
@@ -52,7 +52,7 @@ pub fn sprite<'a>(tex: &'a gfx::Tex2D) -> Sprite<'a> {
 	};
 }
 
-impl<'a> DrawCmd for Sprite<'a> {
+impl<'a> Drawable for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -124,7 +124,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 	};
 }
 
-impl<'a> DrawCmd for Text<'a> {
+impl<'a> Drawable for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -175,10 +175,16 @@ impl<'a> DrawCmd for Text<'a> {
 
 }
 
+#[derive(Clone)]
+struct Stroke {
+	width: f32,
+	join: gfx::LineJoin,
+}
+
 pub struct Polygon {
 	pts: Vec<Vec2>,
 	color: Color,
-	stroke: Option<f32>,
+	stroke: Option<Stroke>,
 }
 
 impl Polygon {
@@ -190,9 +196,18 @@ impl Polygon {
 		self.color.a = a;
 		return self;
 	}
-	pub fn stroke(mut self, s: f32) -> Self {
-		self.stroke = Some(s);
+	pub fn stroke(mut self, w: f32) -> Self {
+		self.stroke = Some(Stroke {
+			width: w,
+			join: gfx::LineJoin::None,
+		});
 		return self
+	}
+	pub fn line_join(mut self, j: gfx::LineJoin) -> Self {
+		if let Some(stroke) = &mut self.stroke {
+			stroke.join = j;
+		}
+		return self;
 	}
 }
 
@@ -206,25 +221,25 @@ pub fn polygon(pts: &[Vec2]) -> Polygon {
 
 }
 
-impl DrawCmd for Polygon {
+impl Drawable for Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let len = self.pts.len();
 
 		if len < 3 {
-			return Ok(());
+			return Err(Error::Gfx("polygon must have more than 3 vertices".into()));
 		}
 
-		if let Some(stroke) = self.stroke {
+		if let Some(stroke) = &self.stroke {
 
-			// TODO: smooth line join
+			// TODO: line join
 			for i in 0..len {
 
 				let p1 = self.pts[i];
 				let p2 = self.pts[(i + 1) % len];
 
-				ctx.draw(line(p1, p2).width(stroke).color(self.color))?;
+				ctx.draw(line(p1, p2).width(stroke.width).color(self.color).join(stroke.join))?;
 
 			}
 
@@ -256,8 +271,8 @@ impl DrawCmd for Polygon {
 pub struct Rect {
 	p1: Vec2,
 	p2: Vec2,
-	radius: f32,
-	stroke: Option<f32>,
+	radius: Option<f32>,
+	stroke: Option<Stroke>,
 	color: Color,
 }
 
@@ -267,11 +282,7 @@ pub fn rect(p1: Vec2, p2: Vec2) -> Rect {
 
 impl Rect {
 	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = r;
-		return self
-	}
-	pub fn stroke(mut self, s: f32) -> Self {
-		self.stroke = Some(s);
+		self.radius = Some(r);
 		return self
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -286,31 +297,57 @@ impl Rect {
 		return Rect {
 			p1: p1,
 			p2: p2,
-			radius: 0.0,
+			radius: None,
 			stroke: None,
 			color: color!(1),
 		};
+	}
+	pub fn stroke(mut self, w: f32) -> Self {
+		self.stroke = Some(Stroke {
+			width: w,
+			join: gfx::LineJoin::None,
+		});
+		return self
+	}
+	pub fn line_join(mut self, j: gfx::LineJoin) -> Self {
+		if let Some(stroke) = &mut self.stroke {
+			stroke.join = j;
+		}
+		return self;
 	}
 	pub fn from_size(w: f32, h: f32) -> Self {
 		return Self::new(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
 	}
 }
 
-impl DrawCmd for Rect {
+impl Drawable for Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let pts = [
-			self.p1,
-			vec2!(self.p2.x, self.p1.y),
-			self.p2,
-			vec2!(self.p1.x, self.p2.y),
-		];
+		if let Some(radius) = self.radius {
 
-		if let Some(stroke) = self.stroke {
-			ctx.draw(polygon(&pts).color(self.color).stroke(stroke))?;
+			// TODO: rect with radius
+			if let Some(stroke) = &self.stroke {
+				// ...
+			} else {
+				// ...
+			}
+
 		} else {
-			ctx.draw(polygon(&pts).color(self.color))?;
+
+			let pts = [
+				self.p1,
+				vec2!(self.p2.x, self.p1.y),
+				self.p2,
+				vec2!(self.p1.x, self.p2.y),
+			];
+
+			if let Some(stroke) = &self.stroke {
+				ctx.draw(polygon(&pts).color(self.color).stroke(stroke.width).line_join(stroke.join))?;
+			} else {
+				ctx.draw(polygon(&pts).color(self.color))?;
+			}
+
 		}
 
 		return Ok(());
@@ -324,6 +361,7 @@ pub struct Line {
 	p2: Vec2,
 	width: f32,
 	color: Color,
+	join: gfx::LineJoin,
 }
 
 impl Line {
@@ -339,6 +377,10 @@ impl Line {
 		self.color.a = a;
 		return self;
 	}
+	pub fn join(mut self, j: gfx::LineJoin) -> Self {
+		self.join = j;
+		return self;
+	}
 }
 
 pub fn line(p1: Vec2, p2: Vec2) -> Line {
@@ -347,28 +389,47 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 		p2: p2,
 		width: 1.0,
 		color: color!(1),
+		join: gfx::LineJoin::None,
 	};
 }
 
-impl DrawCmd for Line {
+impl Drawable for Line {
 
-	// TODO: clean
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let len = (self.p2 - self.p1).mag();
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
 
 		ctx.push(&[
+
 			Translate(self.p1 + (self.p2 - self.p1) * 0.5),
 			Rotate(rot),
+
 		], |ctx| {
-			return ctx.draw(Rect::from_size(len, self.width).color(self.color));
+
+			let w = len;
+			let h = self.width;
+
+			ctx.draw(Rect::from_size(w, h).color(self.color))?;
+
+			if let gfx::LineJoin::Round = self.join {
+				ctx.draw(circle(vec2!(-w / 2.0, 0), h / 2.0))?;
+				ctx.draw(circle(vec2!(w / 2.0, 0), h / 2.0))?;
+			}
+
+			return Ok(());
+
 		})?;
 
 		return Ok(());
 
 	}
 
+}
+
+// TODO
+pub struct Curve {
+	// ...
 }
 
 pub struct Points<'a> {
@@ -400,7 +461,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 	};
 }
 
-impl<'a> DrawCmd for Points<'a> {
+impl<'a> Drawable for Points<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -435,10 +496,6 @@ impl Circle {
 		self.color.a = a;
 		return self;
 	}
-	pub fn sides(mut self, s: usize) -> Self {
-		self.sides = s;
-		return self;
-	}
 	pub fn stroke(mut self, s: f32) -> Self {
 		self.stroke = Some(s);
 		return self
@@ -450,15 +507,19 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 		center: center,
 		radius: radius,
 		color: color!(),
-		// TODO: calculate sides
-		sides: radius as usize,
+		// TODO: is this correct?
+		sides: (radius.sqrt() * 6.0) as usize,
 		stroke: None,
 	};
 }
 
-impl DrawCmd for Circle {
+impl Drawable for Circle {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		if self.radius < 0.0 {
+			return Err(Error::Gfx("cannot draw circle with radius < 0".to_owned()));
+		}
 
 		let mut verts = Vec::new();
 
@@ -514,7 +575,7 @@ impl<'a> Canvas<'a> {
 	}
 }
 
-impl<'a> DrawCmd for Canvas<'a> {
+impl<'a> Drawable for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -553,7 +614,7 @@ impl<'a> Model<'a> {
 	}
 }
 
-impl<'a> DrawCmd for Model<'a> {
+impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -575,7 +636,7 @@ pub fn cube() -> Cube {
 	return Cube;
 }
 
-impl DrawCmd for Cube {
+impl Drawable for Cube {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 

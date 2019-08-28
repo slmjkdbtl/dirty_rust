@@ -22,49 +22,58 @@ pub trait Window {
 	fn is_cursor_locked(&self) -> bool;
 	fn toggle_cursor_locked(&mut self) -> Result<()>;
 	fn set_title(&mut self, t: &str);
+	fn title(&self) -> &str;
 	fn dpi(&self) -> f64;
 	fn width(&self) -> i32;
 	fn height(&self) -> i32;
 	fn mouse_pos(&self) -> Pos;
+	fn set_mouse_pos(&mut self, p: Pos) -> Result<()>;
 
 }
 
 impl Window for Ctx {
 
+	#[cfg(not(target_arch = "wasm32"))]
 	fn set_fullscreen(&mut self, b: bool) {
 
-		#[cfg(not(target_arch = "wasm32"))] {
+		let window = self.windowed_ctx.window();
 
-			let window = self.windowed_ctx.window();
-
-			if b {
-				window.set_fullscreen(Some(window.get_current_monitor()));
-				self.fullscreen = true;
-			} else {
-				window.set_fullscreen(None);
-				self.fullscreen = false;
-			}
-
+		if b {
+			window.set_fullscreen(Some(window.get_current_monitor()));
+		} else {
+			window.set_fullscreen(None);
 		}
 
 	}
 
+	#[cfg(target_arch = "wasm32")]
+	fn set_fullscreen(&mut self, b: bool) {
+		// ...
+	}
+
+	#[cfg(not(target_arch = "wasm32"))]
 	fn is_fullscreen(&self) -> bool {
-		#[cfg(target_arch = "wasm32")]
-		return false;
-		#[cfg(not(target_arch = "wasm32"))]
 		return self.windowed_ctx.window().get_fullscreen().is_some();
+	}
+
+	#[cfg(target_arch = "wasm32")]
+	fn is_fullscreen(&self) -> bool {
+		return false;
 	}
 
 	fn toggle_fullscreen(&mut self) {
 		self.set_fullscreen(!self.is_fullscreen());
 	}
 
+	#[cfg(not(target_arch = "wasm32"))]
 	fn set_cursor_hidden(&mut self, b: bool) {
-		#[cfg(not(target_arch = "wasm32"))] {
-			self.windowed_ctx.window().hide_cursor(b);
-			self.cursor_hidden = b;
-		}
+		self.windowed_ctx.window().hide_cursor(b);
+		self.cursor_hidden = b;
+	}
+
+	#[cfg(target_arch = "wasm32")]
+	fn set_cursor_hidden(&mut self, b: bool) {
+		// ...
 	}
 
 	fn is_cursor_hidden(&self) -> bool {
@@ -75,18 +84,19 @@ impl Window for Ctx {
 		self.set_cursor_hidden(!self.is_cursor_hidden());
 	}
 
+	#[cfg(not(target_arch = "wasm32"))]
 	fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
-		#[cfg(not(target_arch = "wasm32"))] {
-			self.windowed_ctx.window().grab_cursor(b)?;
-			self.cursor_locked = b;
-		}
+		self.windowed_ctx.window().grab_cursor(b)?;
+		self.cursor_locked = b;
+		return Ok(());
+	}
+
+	#[cfg(target_arch = "wasm32")]
+	fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
 		return Ok(());
 	}
 
 	fn is_cursor_locked(&self) -> bool {
-		#[cfg(target_arch = "wasm32")]
-		return false;
-		#[cfg(not(target_arch = "wasm32"))]
 		return self.cursor_locked;
 	}
 
@@ -95,15 +105,29 @@ impl Window for Ctx {
 	}
 
 	fn set_title(&mut self, t: &str) {
+
+		self.title = t.to_owned();
+
 		#[cfg(not(target_arch = "wasm32"))]
 		self.windowed_ctx.window().set_title(t);
+
+		#[cfg(target_arch = "wasm32")]
+		stdweb::web::document().set_title(t);
+
 	}
 
+	fn title(&self) -> &str {
+		return &self.title;
+	}
+
+	#[cfg(not(target_arch = "wasm32"))]
 	fn dpi(&self) -> f64 {
-		#[cfg(target_arch = "wasm32")]
-		return 1.0;
-		#[cfg(not(target_arch = "wasm32"))]
 		return self.windowed_ctx.window().get_hidpi_factor();
+	}
+
+	#[cfg(target_arch = "wasm32")]
+	fn dpi(&self) -> f64 {
+		return 1.0;
 	}
 
 	fn width(&self) -> i32 {
@@ -116,6 +140,16 @@ impl Window for Ctx {
 
 	fn mouse_pos(&self) -> Pos {
 		return self.mouse_pos;
+	}
+
+	fn set_mouse_pos(&mut self, p: Pos) -> Result<()> {
+
+		#[cfg(not(target_arch = "wasm32"))]
+		self.windowed_ctx.window().set_cursor_position(p.into())?;
+		self.mouse_pos = p;
+
+		return Ok(());
+
 	}
 
 }
@@ -142,8 +176,17 @@ impl Pos {
 }
 
 impl From<Pos> for Vec2 {
-	fn from(mpos: Pos) -> Self {
-		return vec2!(mpos.x, mpos.y);
+	fn from(p: Pos) -> Self {
+		return vec2!(p.x, p.y);
+	}
+}
+
+impl From<Vec2> for Pos {
+	fn from(p: Vec2) -> Self {
+		return Pos {
+			x: p.x as i32,
+			y: p.y as i32,
+		};
 	}
 }
 

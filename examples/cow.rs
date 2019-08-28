@@ -42,7 +42,9 @@ impl app::State for Game {
 
 			KeyPress(k) => {
 				if *k == Key::Esc {
-					ctx.quit();
+					ctx.toggle_cursor_hidden();
+					ctx.toggle_cursor_locked()?;
+// 					ctx.quit();
 				}
 				if *k == Key::F {
 					ctx.toggle_fullscreen();
@@ -71,23 +73,27 @@ impl app::State for Game {
 
 			MouseMove(delta) => {
 
-				let md: Vec2 = (*delta).into();
-				let mut rx = self.cam.yaw();
-				let mut ry = self.cam.pitch();
-				let dead = 48.0f32.to_radians();
+				if ctx.is_cursor_locked() {
 
-				rx -= md.x * self.eye_speed * ctx.dt();
-				ry -= md.y * self.eye_speed * ctx.dt();
+					let md: Vec2 = (*delta).into();
+					let mut rx = self.cam.yaw();
+					let mut ry = self.cam.pitch();
+					let dead = 48.0f32.to_radians();
 
-				if ry > dead {
-					ry = dead;
+					rx -= md.x * self.eye_speed * ctx.dt();
+					ry -= md.y * self.eye_speed * ctx.dt();
+
+					if ry > dead {
+						ry = dead;
+					}
+
+					if ry < -dead {
+						ry = -dead;
+					}
+
+					self.cam.set_angle(rx, ry);
+
 				}
-
-				if ry < -dead {
-					ry = -dead;
-				}
-
-				self.cam.set_angle(rx, ry);
 
 			},
 
@@ -110,7 +116,7 @@ impl app::State for Game {
 			ctx.use_cam(&self.cam, |ctx| {
 
 				ctx.push(&[
-					RotateY(ctx.time().into()),
+					RotateY(ctx.time()),
 				], |ctx| {
 					return ctx.draw(shapes::model(&self.model));
 				})?;
@@ -126,8 +132,6 @@ impl app::State for Game {
 		ctx.draw_with(&self.pixel_effect, |ctx| {
 			return ctx.draw(shapes::canvas(&self.canvas));
 		})?;
-
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		return Ok(());
 

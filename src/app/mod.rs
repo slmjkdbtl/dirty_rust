@@ -15,8 +15,6 @@ use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
 use std::time::Duration;
-use std::ops;
-use std::fmt;
 
 #[cfg(not(target_arch = "wasm32"))]
 use glutin::dpi::*;
@@ -62,7 +60,6 @@ pub struct Ctx {
 
 	// window
 	pub(self) title: String,
-	pub(self) fullscreen: bool,
 	pub(self) cursor_hidden: bool,
 	pub(self) cursor_locked: bool,
 	pub(self) width: i32,
@@ -259,7 +256,6 @@ impl Ctx {
 			title: conf.title.to_owned(),
 			width: conf.width,
 			height: conf.height,
-			fullscreen: conf.fullscreen,
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 
@@ -396,38 +392,6 @@ impl Time {
 	}
 }
 
-impl fmt::Display for Time {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		return write!(f, "{}", self.as_secs());
-	}
-}
-
-impl fmt::Debug for Time {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		return <Time as fmt::Display>::fmt(self, f);
-	}
-}
-
-impl ops::Mul<f32> for Time {
-	type Output = f32;
-	fn mul(self, s: f32) -> f32 {
-		return self.as_secs() * s;
-	}
-}
-
-impl ops::Mul<Time> for f32 {
-	type Output = f32;
-	fn mul(self, s: Time) -> f32 {
-		return s.as_secs() * self;
-	}
-}
-
-impl From<Time> for f32 {
-	fn from(t: Time) -> f32 {
-		return t.as_secs();
-	}
-}
-
 impl gfx::UniformValue for Time {
 	fn get(&self) -> gfx::UniformType {
 		return gfx::UniformType::F1(self.as_secs());
@@ -436,8 +400,8 @@ impl gfx::UniformValue for Time {
 
 pub trait App {
 	fn quit(&mut self);
-	fn dt(&self) -> Time;
-	fn time(&self) -> Time;
+	fn dt(&self) -> f32;
+	fn time(&self) -> f32;
 	fn fps(&self) -> u16;
 }
 
@@ -447,12 +411,12 @@ impl App for Ctx {
 		self.quit = true;
 	}
 
-	fn dt(&self) -> Time {
-		return self.dt;
+	fn dt(&self) -> f32 {
+		return self.dt.as_secs();
 	}
 
-	fn time(&self) -> Time {
-		return self.time;
+	fn time(&self) -> f32 {
+		return self.time.as_secs();
 	}
 
 	fn fps(&self) -> u16 {
