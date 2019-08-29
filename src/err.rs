@@ -168,7 +168,7 @@ impl From<rodio::decoder::DecoderError> for Error {
 	}
 }
 
-#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+#[cfg(all(feature = "app", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Input("gamepad error".into());
