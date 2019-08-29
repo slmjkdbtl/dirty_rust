@@ -67,7 +67,7 @@ impl Image {
 	pub fn set(&mut self, x: i32, y: i32, c: Color) -> Result<()> {
 
 		if x < 0 || x > self.width() - 1 || y < 0 || y > self.height() - 1 {
-			return Err(Error::Image);
+			return Err(Error::Image(format!("pixel out of bound: ({}, {})", x, y)));
 		}
 
 		return Ok(self.handle.put_pixel(x as u32, y as u32, c.into()));

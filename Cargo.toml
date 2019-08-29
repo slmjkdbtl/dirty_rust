@@ -26,7 +26,7 @@ default = [
 	"fs",
 	"app",
 	"img",
-# 	"audio",
+	"audio",
 	"http",
 	"geom",
 	"physics",

@@ -574,7 +574,7 @@ impl Font {
 		let th = tex.height() as i32;
 
 		if (tw % cols as i32 != 0 || th % rows as i32 != 0) {
-			return Err(Error::Font);
+			return Err(Error::Gfx("bitmap font texture size or column / row count not correct".into()));
 		}
 
 		for (i, ch) in chars.chars().enumerate() {
@@ -792,7 +792,7 @@ impl Model {
 	fn from_tobj(ctx: &Ctx, tobj: tobj::LoadResult) -> Result<Self> {
 
 		let (models, _) = tobj?;
-		let mesh = &models.get(0).ok_or(Error::ObjLoad)?.mesh;
+		let mesh = &models.get(0).ok_or(Error::Obj("no mesh found".into()))?.mesh;
 		let positions = &mesh.positions;
 		let indices = &mesh.indices;
 		let vert_count = positions.len() / 3;
