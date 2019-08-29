@@ -40,14 +40,15 @@ pub struct Track {
 	sink: Sink,
 }
 
+fn get_device() -> Result<rodio::Device> {
+	return rodio::default_output_device()
+		.ok_or(Error::Audio("failed to get output device".into()));
+}
+
 /// play a sound and return a track
 pub fn track(sound: &Sound) -> Result<Track> {
 
-	let device = match rodio::default_output_device() {
-		Some(d) => d,
-		None => return Err(Error::Audio),
-	};
-
+	let device = get_device()?;
 	let sink = Sink::new(&device);
 
 	sink.append(sound.apply());
@@ -91,7 +92,7 @@ impl Sound {
 	}
 
 	pub fn play(&self) -> Result<()> {
-		return Ok(rodio::play_raw(&rodio::default_output_device().ok_or(Error::Audio)?, self.apply().convert_samples()));
+		return Ok(rodio::play_raw(&get_device()?, self.apply().convert_samples()));
 	}
 
 	/// return a new sound with given speed
