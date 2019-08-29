@@ -33,8 +33,8 @@ impl app::State for Game {
 
 		ctx.push(&gfx::t()
 			.translate_3d(vec3!(0, 0, 3))
-			.rotate_y(ctx.time().into())
-			.rotate_z(ctx.time().into())
+			.rotate_y(ctx.time())
+			.rotate_z(ctx.time())
 		, |ctx| {
 			return ctx.draw(shapes::cube());
 		})?;
