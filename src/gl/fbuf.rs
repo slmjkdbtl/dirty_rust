@@ -65,7 +65,6 @@ impl Framebuffer {
 				return Err(Error::OpenGL("failed to create framebuffer".to_owned()));
 			}
 
-			device.clear(Surface::Color);
 			device.clear(Surface::Depth);
 			device.clear(Surface::Stencil);
 

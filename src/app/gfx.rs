@@ -480,6 +480,10 @@ impl Tex2D {
 		};
 	}
 
+	pub fn new(ctx: &Ctx, w: i32, h: i32,) -> Result<Self> {
+		return Ok(Self::from_handle(gl::Texture::new(&ctx.gl, w, h)?, w, h));
+	}
+
 	#[cfg(feature = "img")]
 	pub fn from_img(ctx: &Ctx, img: Image) -> Result<Self> {
 
@@ -518,6 +522,25 @@ impl Tex2D {
 
 	pub fn height(&self) -> i32 {
 		return self.height;
+	}
+
+	pub fn get_pixels(&self) -> Vec<u8> {
+		return self.handle.get_data(self.width(), self.height());
+	}
+
+	#[cfg(feature = "img")]
+	pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
+
+		image::save_buffer(
+			path,
+			&self.get_pixels(),
+			self.width() as u32,
+			self.height() as u32,
+			image::ColorType::RGBA(8),
+		)?;
+
+		return Ok(());
+
 	}
 
 	pub fn data(&mut self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
@@ -659,20 +682,7 @@ impl Canvas {
 
 	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
-
-		let tex = &self.tex;
-		let buffer = tex.handle.get_data(self.width(), self.height());
-
-		image::save_buffer(
-			path,
-			&buffer,
-			tex.width() as u32,
-			tex.height() as u32,
-			image::ColorType::RGBA(8),
-		)?;
-
-		return Ok(());
-
+		return self.tex.save(path);
 	}
 
 }

@@ -57,13 +57,11 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		use gfx::Transform::*;
-
-		ctx.push(&[
-			Translate3D(vec3!(0, 0, 3)),
-			RotateY(ctx.time().into()),
-			RotateZ(ctx.time().into())
-		], |ctx| {
+		ctx.push(&gfx::t()
+			.translate_3d(vec3!(0, 0, 3))
+			.rotate_y(ctx.time().into())
+			.rotate_z(ctx.time().into())
+		, |ctx| {
 			return ctx.draw(shapes::cube());
 		})?;
 
@@ -80,7 +78,6 @@ fn main() {
 		println!("{}", err);
 	}
 }
-
 ```
 
 ### cli

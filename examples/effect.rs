@@ -152,14 +152,12 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		use gfx::Transform::*;
-
 		let draw_icon = |ctx: &mut app::Ctx| -> Result<()> {
 
-			ctx.push(&[
-				Translate(vec2!(0, -24)),
-				Scale(vec2!(0.5)),
-			], |ctx| {
+			ctx.push(&gfx::t()
+				.translate(vec2!(0, -24))
+				.scale(vec2!(0.5))
+			, |ctx| {
 				return ctx.draw(shapes::sprite(&self.tex));
 			})?;
 
@@ -176,11 +174,9 @@ impl app::State for Game {
 			draw_icon(ctx)?;
 		}
 
-		ctx.push(&[
-
-			Translate(ctx.coord(gfx::Origin::Bottom) - vec2!(0, 64)),
-
-		], |ctx| {
+		ctx.push(&gfx::t()
+			.translate(ctx.coord(gfx::Origin::Bottom) - vec2!(0, 64))
+		, |ctx| {
 
 			if let Some(cur_effect) = self.cur_effect {
 
@@ -190,10 +186,10 @@ impl app::State for Game {
 
 					if let Some(param) = &effect.param {
 
-						ctx.push(&[
-							Translate(vec2!(0, 16)),
-							Scale(vec2!(0.8)),
-						], |ctx| {
+						ctx.push(&gfx::t()
+							.translate(vec2!(0, 16))
+							.scale(vec2!(0.8))
+						, |ctx| {
 							return ctx.draw(shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)));
 						})?;
 
