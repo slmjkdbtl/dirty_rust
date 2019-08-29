@@ -63,6 +63,9 @@ pub mod ase;
 #[cfg(feature = "texpack")]
 pub mod texpack;
 
+#[cfg(feature = "clipboard")]
+pub mod clipboard;
+
 mod bindings;
 
 #[cfg(feature = "lua")]

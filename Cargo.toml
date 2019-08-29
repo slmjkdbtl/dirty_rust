@@ -31,13 +31,15 @@ default = [
 	"geom",
 	"physics",
 	"term",
+	"video",
 # 	"serial",
 # 	"ui",
 # 	"ecs",
-
-	# features
 # 	"ase",
 # 	"texpack",
+# 	"clipboard",
+
+	# features
 # 	"gl3",
 
 ]
@@ -75,8 +77,6 @@ audio = [
 	"rodio",
 ]
 
-physics = []
-
 http = [
 	"url",
 	"httparse",
@@ -93,16 +93,21 @@ ase = [
 	"serde_json",
 ]
 
-geom = []
-
 texpack = [
-	"guillotiere",
+	"sheep",
 ]
 
+clipboard = [
+	"clipper",
+]
+
+geom = []
 ecs = []
+ui = []
+video = []
+physics = []
 
 gl3 = []
-ui = []
 
 [dependencies]
 rand = "0.7"
@@ -126,7 +131,9 @@ aseprite = { version = "0.1", optional = true }
 serde = { version = "1.0", optional = true, features = [ "derive", ] }
 serde_json = { version = "1.0", optional = true }
 
-guillotiere = { version = "0.4.2", optional = true }
+sheep = { version = "0.3", optional = true }
+
+clipper = { version = "0.5", optional = true, package = "clipboard" }
 
 rlua = { version = "0.16", optional = true }
 

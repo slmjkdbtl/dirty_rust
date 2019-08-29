@@ -44,6 +44,8 @@
 - bevel and miter line join
 - ellipse
 - integrate projection into camera
+- dashed lines
+- integrate collision detection with shape?
 
 == DONE
 - refactor http

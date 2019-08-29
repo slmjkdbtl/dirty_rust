@@ -176,6 +176,7 @@ impl<'a> Drawable for Text<'a> {
 struct Stroke {
 	width: f32,
 	join: gfx::LineJoin,
+	dash: Option<LineDash>,
 }
 
 pub struct Polygon {
@@ -197,6 +198,7 @@ impl Polygon {
 		self.stroke = Some(Stroke {
 			width: w,
 			join: gfx::LineJoin::None,
+			dash: None,
 		});
 		return self
 	}
@@ -320,6 +322,7 @@ impl Rect {
 		self.stroke = Some(Stroke {
 			width: w,
 			join: gfx::LineJoin::None,
+			dash: None,
 		});
 		return self
 	}
@@ -370,12 +373,19 @@ impl Drawable for Rect {
 
 }
 
+#[derive(Clone)]
+struct LineDash {
+	len: f32,
+	interval: f32,
+}
+
 pub struct Line {
 	p1: Vec2,
 	p2: Vec2,
 	width: f32,
 	color: Color,
 	cap: gfx::LineCap,
+	dash: Option<LineDash>,
 }
 
 impl Line {
@@ -395,6 +405,13 @@ impl Line {
 		self.cap = c;
 		return self;
 	}
+	pub fn dashed(mut self, len: f32, interval: f32) -> Self {
+		self.dash = Some(LineDash {
+			len: len,
+			interval: interval,
+		});
+		return self;
+	}
 }
 
 pub fn line(p1: Vec2, p2: Vec2) -> Line {
@@ -404,6 +421,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 		width: 1.0,
 		color: color!(1),
 		cap: gfx::LineCap::Butt,
+		dash: None,
 	};
 }
 
