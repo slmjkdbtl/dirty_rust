@@ -107,17 +107,15 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		use gfx::Transform::*;
-
 		ctx.draw_on(&self.canvas, |ctx| {
 
 			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.use_cam(&self.cam, |ctx| {
 
-				ctx.push(&[
-					RotateY(ctx.time()),
-				], |ctx| {
+				ctx.push(&gfx::t()
+					.rotate_y(ctx.time())
+				, |ctx| {
 					return ctx.draw(shapes::model(&self.model));
 				})?;
 

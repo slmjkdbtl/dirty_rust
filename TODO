@@ -43,6 +43,7 @@
 - vr
 - bevel and miter line join
 - ellipse
+- integrate projection into camera
 
 == DONE
 - refactor http
