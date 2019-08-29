@@ -87,11 +87,9 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		use gfx::Transform::*;
-
-		ctx.push(&[
-			Scale(vec2!(0.75)),
-		], |ctx| {
+		ctx.push(&gfx::t()
+			.scale(vec2!(0.75))
+		, |ctx| {
 			return ctx.draw(shapes::sprite(&self.tex));
 		})?;
 
