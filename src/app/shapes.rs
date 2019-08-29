@@ -2,7 +2,6 @@
 
 use super::*;
 use gfx::Drawable;
-use gfx::Transform::*;
 use gl::VertexLayout;
 
 pub struct Sprite<'a> {
@@ -58,14 +57,12 @@ impl<'a> Drawable for Sprite<'a> {
 
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
 
-		ctx.push(&[
+		ctx.push(&gfx::t()
+			.scale(scale)
+			.translate(self.offset * -0.5)
+		, |ctx| {
 
-			Scale(scale),
-			Translate(self.offset * -0.5),
-
-		], |ctx| {
-
-			let shape = gfx::QuadShape::new(ctx.transform, self.quad, self.color, ctx.conf.quad_origin, self.flip);
+			let shape = gfx::QuadShape::new(ctx.transform.matrix(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
 			ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
 
@@ -151,9 +148,9 @@ impl<'a> Drawable for Text<'a> {
 
 			let x = i as f32 * w;
 
-			ctx.push(&[
-				Translate(offset + vec2!(x, 0))
-			], |ctx| {
+			ctx.push(&gfx::t()
+				.translate(offset + vec2!(x, 0))
+			, |ctx| {
 
 				if ch != ' ' {
 
@@ -239,7 +236,24 @@ impl Drawable for Polygon {
 				let p1 = self.pts[i];
 				let p2 = self.pts[(i + 1) % len];
 
-				ctx.draw(line(p1, p2).width(stroke.width).color(self.color).join(stroke.join))?;
+				use gfx::LineJoin::*;
+
+				match stroke.join {
+					None => {
+						ctx.draw(line(p1, p2).width(stroke.width).color(self.color))?;
+					},
+					Bevel => {
+						// TODO
+						ctx.draw(line(p1, p2).width(stroke.width).color(self.color))?;
+					},
+					Miter => {
+						// TODO
+						ctx.draw(line(p1, p2).width(stroke.width).color(self.color))?;
+					},
+					Round => {
+						ctx.draw(line(p1, p2).width(stroke.width).color(self.color).cap(gfx::LineCap::Round))?;
+					},
+				}
 
 			}
 
@@ -250,7 +264,7 @@ impl Drawable for Polygon {
 
 			for (i, p) in self.pts.iter().enumerate() {
 
-				gfx::Vertex2D::new(ctx.transform * *p, vec2!(0), self.color).push(&mut verts);
+				gfx::Vertex2D::new(ctx.transform.matrix() * *p, vec2!(0), self.color).push(&mut verts);
 
 				if i >= 2 {
 					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
@@ -361,7 +375,7 @@ pub struct Line {
 	p2: Vec2,
 	width: f32,
 	color: Color,
-	join: gfx::LineJoin,
+	cap: gfx::LineCap,
 }
 
 impl Line {
@@ -377,8 +391,8 @@ impl Line {
 		self.color.a = a;
 		return self;
 	}
-	pub fn join(mut self, j: gfx::LineJoin) -> Self {
-		self.join = j;
+	pub fn cap(mut self, c: gfx::LineCap) -> Self {
+		self.cap = c;
 		return self;
 	}
 }
@@ -389,7 +403,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 		p2: p2,
 		width: 1.0,
 		color: color!(1),
-		join: gfx::LineJoin::None,
+		cap: gfx::LineCap::Butt,
 	};
 }
 
@@ -400,19 +414,19 @@ impl Drawable for Line {
 		let len = (self.p2 - self.p1).mag();
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
 
-		ctx.push(&[
+		ctx.push(&gfx::t()
 
-			Translate(self.p1 + (self.p2 - self.p1) * 0.5),
-			Rotate(rot),
+			.translate(self.p1 + (self.p2 - self.p1) * 0.5)
+			.rotate(rot)
 
-		], |ctx| {
+		, |ctx| {
 
 			let w = len;
 			let h = self.width;
 
 			ctx.draw(Rect::from_size(w, h).color(self.color))?;
 
-			if let gfx::LineJoin::Round = self.join {
+			if let gfx::LineCap::Round = self.cap {
 				ctx.draw(circle(vec2!(-w / 2.0, 0), h / 2.0))?;
 				ctx.draw(circle(vec2!(w / 2.0, 0), h / 2.0))?;
 			}
@@ -466,9 +480,9 @@ impl<'a> Drawable for Points<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		for pt in self.pts {
-			ctx.push(&[
-				Translate(*pt)
-			], |ctx| {
+			ctx.push(&gfx::t()
+				.translate(*pt)
+			, |ctx| {
 				return ctx.draw(Rect::from_size(self.size, self.size).color(self.color));
 			})?;
 		}
@@ -532,9 +546,9 @@ impl Drawable for Circle {
 
 		}
 
-		ctx.push(&[
-			Translate(self.center)
-		], |ctx| {
+		ctx.push(&gfx::t()
+			.translate(self.center)
+		, |ctx| {
 
 			if let Some(stroke) = self.stroke {
 				ctx.draw(polygon(&verts).color(self.color).stroke(stroke))?;
@@ -579,9 +593,9 @@ impl<'a> Drawable for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.push(&[
-			Scale(vec2!(1.0 / ctx.dpi() as f32))
-		], |ctx| {
+		ctx.push(&gfx::t()
+			.scale(vec2!(1.0 / ctx.dpi() as f32))
+		, |ctx| {
 			return ctx.draw(sprite(&self.canvas.tex).color(self.color));
 		})?;
 

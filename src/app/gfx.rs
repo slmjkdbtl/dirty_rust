@@ -40,7 +40,7 @@ pub trait Gfx {
 	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// transform
-	fn push(&mut self, transforms: &[Transform], f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// coord
 	fn coord(&self, coord: Origin) -> Vec2;
@@ -76,43 +76,10 @@ impl Gfx for Ctx {
 		return self.draw_calls_last;
 	}
 
-	fn push(&mut self, transforms: &[Transform], f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		self.transform_stack.push(self.transform.clone());
-
-		use Transform::*;
-
-		for t in transforms {
-			match t {
-				Translate(pos) => {
-					self.transform *= Mat4::translate(vec3!(pos.x, pos.y, 0));
-				},
-				Scale(scale) => {
-					self.transform *= Mat4::scale(vec3!(scale.x, scale.y, 1));
-				},
-				Rotate(angle) => {
-					self.transform *= Mat4::rotate(*angle, vec3!(0, 0, 1));
-				},
-				Translate3D(pos) => {
-					self.transform *= Mat4::translate(*pos);
-				},
-				Scale3D(scale) => {
-					self.transform *= Mat4::scale(*scale);
-				},
-				RotateX(angle) => {
-					self.transform *= Mat4::rotate(*angle, vec3!(1, 0, 0));
-				},
-				RotateY(angle) => {
-					self.transform *= Mat4::rotate(*angle, vec3!(0, 1, 0));
-				},
-				RotateZ(angle) => {
-					self.transform *= Mat4::rotate(*angle, vec3!(0, 0, 1));
-				},
-				Reset => {
-					self.transform = Mat4::identity();
-				}
-			}
-		}
+		self.transform = self.transform.apply(*t);
 
 		f(self)?;
 
@@ -141,17 +108,17 @@ impl Gfx for Ctx {
 		// TODO: what if shader is changed in callback?
 		canvas.handle.with(|| -> Result<()> {
 
-			self.push(&[
-				Transform::Reset
-			], |ctx| {
-				return f(ctx);
-			})?;
+			let t = self.transform;
+
+			self.transform = Transform::new();
+			f(self)?;
+			self.transform = t;
+			flush(self);
 
 			return Ok(());
 
 		})?;
 
-		flush(self);
 		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 		self.proj_2d = flip_matrix(&self.proj_2d);
 		self.proj_3d = flip_matrix(&self.proj_3d);
@@ -258,7 +225,7 @@ pub(super) fn begin(ctx: &mut Ctx) {
 pub(super) fn end(ctx: &mut Ctx) {
 
 	flush(ctx);
-	ctx.transform = Mat4::identity();
+	ctx.transform = Transform::new();
 	ctx.transform_stack.clear();
 	ctx.draw_calls += ctx.renderer_2d.draw_count();
 	ctx.renderer_2d.clear();
@@ -268,20 +235,6 @@ pub(super) fn end(ctx: &mut Ctx) {
 pub(super) fn flush(ctx: &mut Ctx) {
 	ctx.renderer_2d.flush();
 }
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Transform {
-	Translate(Vec2),
-	Scale(Vec2),
-	Rotate(f32),
-	Translate3D(Vec3),
-	Scale3D(Vec3),
-	RotateX(f32),
-	RotateY(f32),
-	RotateZ(f32),
-	Reset,
-}
-
 
 pub struct Vertex2D {
 	pos: Vec2,
@@ -1018,9 +971,8 @@ impl TrueTypeFont {
 			}
 
 			for q in &self.quads {
-				ctx.push(&[
-					Transform::Translate(q.pos)
-				], |ctx| {
+				ctx.push(&t()
+					.translate(q.pos), |ctx| {
 					return ctx.draw(shapes::sprite(&tex).quad(q.quad));
 				})?;
 			}
@@ -1033,13 +985,96 @@ impl TrueTypeFont {
 
 }
 
-// TODO: implement bevel and miter
+#[derive(Clone, Copy, Default)]
+pub struct Transform {
+	matrix: Mat4,
+}
+
+impl Transform {
+
+	pub fn new() -> Self {
+		return Self::from_mat4(Mat4::identity());
+	}
+
+	pub fn from_mat4(m: Mat4) -> Self {
+		return Self {
+			matrix: m,
+		};
+	}
+
+	pub fn translate(mut self, p: Vec2) -> Self {
+		self.matrix *= Mat4::translate(vec3!(p.x, p.y, 0.0));
+		return self;
+	}
+
+	pub fn rotate(mut self, a: f32) -> Self {
+		self.matrix *= Mat4::rotate(a, vec3!(0, 0, 1));
+		return self;
+	}
+
+	pub fn scale(mut self, s: Vec2) -> Self {
+		self.matrix *= Mat4::scale(vec3!(s.x, s.y, 1.0));
+		return self;
+	}
+
+	pub fn translate_3d(mut self, p: Vec3) -> Self {
+		self.matrix *= Mat4::translate(p);
+		return self;
+	}
+
+	pub fn scale_3d(mut self, s: Vec3) -> Self {
+		self.matrix *= Mat4::scale(s);
+		return self;
+	}
+
+	pub fn rotate_x(mut self, a: f32) -> Self {
+		self.matrix *= Mat4::rotate(a, vec3!(1, 0, 0));
+		return self;
+	}
+
+	pub fn rotate_y(mut self, a: f32) -> Self {
+		self.matrix *= Mat4::rotate(a, vec3!(0, 1, 0));
+		return self;
+	}
+
+	pub fn rotate_z(mut self, a: f32) -> Self {
+		self.matrix *= Mat4::rotate(a, vec3!(0, 0, 1));
+		return self;
+	}
+
+	pub fn matrix(&self) -> Mat4 {
+		return self.matrix;
+	}
+
+	pub fn apply(self, other: Self) -> Self {
+		return Self::from_mat4(self.matrix * other.matrix);
+	}
+
+}
+
+impl gfx::UniformValue for Transform {
+	fn get(&self) -> gfx::UniformType {
+		return gfx::UniformValue::get(&self.matrix);
+	}
+}
+
+pub fn t() -> Transform {
+	return Transform::new();
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LineJoin {
 	None,
 	Round,
 	Bevel,
 	Miter,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum LineCap {
+	Square,
+	Butt,
+	Round,
 }
 
 pub trait Drawable {
