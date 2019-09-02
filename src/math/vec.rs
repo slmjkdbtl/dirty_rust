@@ -61,7 +61,7 @@ macro_rules! gen_vec {
 		impl $name {
 
 			/// initialize with specifying all fields
-			pub fn new($($member: $type,)+) -> Self {
+			pub const fn new($($member: $type,)+) -> Self {
 				return Self {
 					$($member: $member),+
 				};
@@ -231,15 +231,15 @@ impl Vec3 {
 
 impl Color {
 
-	pub const WHITE: Color = Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0, };
-	pub const BLACK: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0, };
-	pub const RED: Color = Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0, };
-	pub const GREEN: Color = Color { r: 0.0, g: 1.0, b: 0.0, a: 1.0, };
-	pub const BLUE: Color = Color { r: 0.0, g: 0.0, b: 1.0, a: 1.0, };
-	pub const CYAN: Color = Color { r: 0.0, g: 1.0, b: 1.0, a: 1.0, };
-	pub const PURPLE: Color = Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0, };
-	pub const YELLOW: Color = Color { r: 1.0, g: 1.0, b: 0.0, a: 1.0, };
-	pub const NONE: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0, };
+	pub const WHITE: Self = Self::new(1.0, 1.0, 1.0, 1.0);
+	pub const BLACK: Self = Self::new(0.0, 0.0, 0.0, 1.0);
+	pub const RED: Self = Self::new(1.0, 0.0, 0.0, 1.0);
+	pub const GREEN: Self = Self::new(0.0, 1.0, 0.0, 1.0);
+	pub const BLUE: Self = Self::new(0.0, 0.0, 1.0, 1.0);
+	pub const CYAN: Self = Self::new(0.0, 1.0, 1.0, 1.0);
+	pub const PURPLE: Self = Self::new(1.0, 0.0, 1.0, 1.0);
+	pub const YELLOW: Self = Self::new(1.0, 1.0, 0.0, 1.0);
+	pub const NONE: Self = Self::new(0.0, 0.0, 0.0, 0.0);
 
 	pub fn from_hex(hex: u32, opacity: f32) -> Self {
 

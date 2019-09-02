@@ -22,6 +22,8 @@ pub enum Error {
 	Misc(String),
 }
 
+impl std::error::Error for Error {}
+
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		return match self {
@@ -44,8 +46,6 @@ impl fmt::Display for Error {
 		};
 	}
 }
-
-impl std::error::Error for Error {}
 
 impl From<std::io::Error> for Error {
 	fn from(_: std::io::Error) -> Self {

@@ -491,7 +491,7 @@ fn bind_http(ctx: &Context) -> Result<()> {
 	})?)?;
 
 	http.set("serve", ctx.create_function(|_, (loc, port, handler): (String, u16, Function)| {
-		return Ok(http::serve(&loc, port, |req| {
+		return Ok(http::serve((&loc[..], port), |req| {
 			return handler.call::<_, http::Response>(req).ok().expect("response required");
 		})?);
 	})?)?;

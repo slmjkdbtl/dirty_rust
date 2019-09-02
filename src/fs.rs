@@ -60,7 +60,7 @@ fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 	} else {
 
-		return Err(Error::Fs(format!("file not found: {}", path.display())));
+		return Ok(path.to_path_buf());
 
 	}
 

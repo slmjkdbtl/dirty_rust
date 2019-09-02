@@ -3,13 +3,14 @@
 use std::io::Write;
 use std::io::Read;
 use std::net::TcpListener;
+use std::net::ToSocketAddrs;
 
 use crate::Result;
 use super::*;
 
-pub fn serve<F: Fn(Request) -> Response>(loc: &str, port: u16, handler: F) -> Result<()> {
+pub fn serve<F: Fn(Request) -> Response>(loc: impl ToSocketAddrs, handler: F) -> Result<()> {
 
-	let listener = TcpListener::bind((loc, port))?;
+	let listener = TcpListener::bind(loc)?;
 
 	for stream in listener.incoming() {
 

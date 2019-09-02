@@ -1,89 +1,85 @@
 # wengwengweng
 
 == DOING
-- wasm
-- clearer error messages
+- [core] clearer error messages
 
 == TODO
-- http less allocation / copying
-- ketos bindings
-- python bindings
-- forge bindings
-- use rustls instead of native-tls
-- better http response api
-- add some dirty::CONSTANTs
-- use Future on assets
-- imgui integration
-- integrate truetype font with shape
-- text wrapping
-- fix ttf flashing first frame
-- fix resize framebuffer weirdness
-- higer level gl stencil abstraction
-- error report location
-- gl::Texture and gl::Program Drop
-- clearer shader variable prefixes
-- 3d texture
-- tween functions
-- rubiks cube example
-- noise function
-- rect stroke
-- sphere
-- flush batched renderer when shader uniform is sent?
-- framebuffer get and set individual pixels and pixel arrays
-- draw curve
-- image resizing
-- app error manangement
-- fix input lag with glutin's EventLoop::run
-- smooth line join on polygon stroke
-- no cargo warnings
-- gradient
-- different monitors
-- lua bindings
-- python bindings
-- vr
-- bevel and miter line join
-- ellipse
-- integrate projection into camera
-- dashed lines
-- integrate collision detection with shape?
+- [http] use rustls instead of native-tls
+- [core] add some dirty::CONSTANTs
+- [core] async fs
+- [core] async http
+- [gfx] imgui integration (?)
+- [gfx] integrate truetype font with shape
+- [gfx] text wrapping
+- [gfx] fix ttf flashing first frame
+- [gfx] fix resize framebuffer weirdness
+- [gfx] higer level gl stencil abstraction
+- [gfx] gl::Texture and gl::Program Drop
+- [gfx] clearer shader variable prefixes
+- [gfx] 3d texture
+- [math] tween functions
+- [example] rubiks cube example
+- [math] noise function
+- [gfx] sphere
+- [gfx] flush batched renderer when shader uniform is sent (?)
+- [gfx] framebuffer get and set individual pixels and pixel arrays
+- [gfx] draw curve
+- [img] image resizing
+- [core] no cargo warnings
+- [gfx] gradient
+- [window] different monitors
+- [lua] lua bindings
+- [python] python bindings
+- [window] vr
+- [gfx] bevel and miter line join
+- [gfx] ellipse
+- [gfx] integrate projection into camera
+- [gfx] dashed lines
+- [gfx] apply line joins to strokes
+- [geom] integrate collision detection with shape (?)
+- [gfx] correct vertex normal calculation
+- [core] wasm
+- [app] upgrade to glutin 0.22
 
 == DONE
-- refactor http
-- use cargo feature
-- restructure app module api
-- massive cleaning
-- sprite example
-- canvas rendering
-- gl3 feature
-- better UniformValue interface
-- fix canvas size and flip
-- fix gfx origin
-- weird lua fullscreen error (stupid)
-- move color to shape parameter
-- 3d camera
-- basic truetype support
-- custom shader
-- inverse matrix
-- fix fullscreen framebuffer weirdness
-- stencil buffer
-- support stencil in framebuffer
-- flipped projection 3d in framebuffer
-- split gl into modules
-- track draw calls
-- calculate vertex normals
-- image get and set individual pixels and pixel arrays
-- make batched renderer draw arbitrary shapes
-- polygon
-- circle
-- use time abstraction for App::dt() and App::time()
-- pass Event to State::event instead of input calls
-- gamepad
-- custom input button types
-- stateless gfx transform api
-- nested canvas flip again
-- remove redundant window conf
-- clear_ex
-- more testing on masked, shader, canvas, and batched renderers
-- Gfx::use_cam instead of Gfx::cam_pos & Gfx::cam_look
-- line joints
+- [http] refactor http
+- [core] use cargo feature
+- [app] restructure app module api
+- [core] massive cleaning
+- [example] sprite example
+- [gfx] canvas rendering
+- [gfx] gl3 feature
+- [gfx] better UniformValue interface
+- [gfx] fix canvas size and flip
+- [gfx] fix gfx origin
+- [lua] weird lua fullscreen error (stupid)
+- [gfx] move color to shape parameter
+- [gfx] 3d camera
+- [gfx] basic truetype support
+- [gfx] custom shader
+- [gfx] inverse matrix
+- [gfx] fix fullscreen framebuffer weirdness
+- [gfx] stencil buffer
+- [gfx] support stencil in framebuffer
+- [gfx] flipped projection 3d in framebuffer
+- [gfx] split gl into modules
+- [gfx] track draw calls
+- [gfx] calculate vertex normals
+- [gfx] image get and set individual pixels and pixel arrays
+- [gfx] make batched renderer draw arbitrary shapes
+- [gfx] polygon
+- [gfx] circle
+- [app] use time abstraction for App::dt() and App::time()
+- [window] pass Event to State::event instead of input calls
+- [window] gamepad
+- [window] custom input button types
+- [gfx] stateless gfx transform api
+- [gfx] nested canvas flip again
+- [window] remove redundant window conf
+- [gfx] Gfx::clear_ex
+- [gfx] more testing on masked, shader, canvas, and batched renderers
+- [gfx] Gfx::use_cam instead of Gfx::cam_pos & Gfx::cam_look
+- [gfx] line caps
+- [gfx] calculate circle vert count
+- [gfx] rect stroke
 
