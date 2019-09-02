@@ -14,7 +14,6 @@ pub struct Renderer<V: VertexLayout> {
 	vao: VertexArray,
 	count: usize,
 	prim: Primitive,
-	vertex: PhantomData<V>,
 
 }
 
@@ -35,8 +34,7 @@ impl<V: VertexLayout> Renderer<V> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			count: indices.len(),
-			prim: Primitive::Triangles,
-			vertex: PhantomData,
+			prim: Primitive::Triangle,
 		});
 
 	}

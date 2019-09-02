@@ -653,7 +653,9 @@ impl<'a> Drawable for Model<'a> {
 		ctx.cur_shader_3d.send("model", ctx.transform);
 		ctx.cur_shader_3d.send("color", self.color);
 		ctx.draw_calls += 1;
+		ctx.empty_tex.handle.bind();
 		self.model.renderer.draw(&ctx.cur_shader_3d.handle);
+		ctx.empty_tex.handle.unbind();
 		ctx.cur_shader_3d.send("color", color!(1));
 
 		return Ok(());
@@ -674,7 +676,84 @@ impl Drawable for Cube {
 
 		ctx.cur_shader_3d.send("model", ctx.transform);
 		ctx.draw_calls += 1;
+		ctx.empty_tex.handle.bind();
 		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle);
+		ctx.empty_tex.handle.unbind();
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Sprite3D<'a> {
+	tex: &'a gfx::Tex2D,
+	quad: Quad,
+	offset: Vec2,
+	radius: f32,
+	flip: gfx::Flip,
+	color: Color,
+}
+
+// TODO: up side down?
+// TODO: clean
+impl<'a> Sprite3D<'a> {
+	pub fn quad(mut self, quad: Quad) -> Self {
+		self.quad = quad;
+		return self;
+	}
+	pub fn color(mut self, color: Color) -> Self {
+		self.color = color;
+		return self;
+	}
+	pub fn opacity(mut self, a: f32) -> Self {
+		self.color.a = a;
+		return self;
+	}
+	pub fn offset(mut self, offset: Vec2) -> Self {
+		self.offset = offset;
+		return self;
+	}
+	pub fn flip(mut self, flip: gfx::Flip) -> Self {
+		self.flip = flip;
+		return self;
+	}
+	pub fn radius(mut self, r: f32) -> Self {
+		self.radius = r;
+		return self
+	}
+}
+
+pub fn sprite3d<'a>(tex: &'a gfx::Tex2D) -> Sprite3D<'a> {
+	return Sprite3D {
+		tex: tex,
+		quad: quad!(0, 0, 1, 1),
+		color: color!(1),
+		offset: vec2!(0),
+		radius: 0.0,
+		flip: gfx::Flip::None,
+	};
+}
+
+impl<'a> Drawable for Sprite3D<'a> {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let scale = vec3!(self.tex.width(), self.tex.height(), 1.0) * vec3!(self.quad.w, self.quad.h, 1.0);
+
+		ctx.push(&gfx::t()
+			.scale_3d(scale)
+		, |ctx| {
+
+			ctx.cur_shader_3d.send("model", ctx.transform);
+			ctx.draw_calls += 1;
+			self.tex.handle.bind();
+			ctx.flag_renderer.draw(&ctx.cur_shader_3d.handle);
+			self.tex.handle.unbind();
+
+			return Ok(());
+
+		})?;
 
 		return Ok(());
 

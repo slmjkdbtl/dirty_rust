@@ -40,6 +40,7 @@
 - [gfx] correct vertex normal calculation
 - [core] wasm
 - [app] upgrade to glutin 0.22
+- [gfx] 3D text
 
 == DONE
 - [http] refactor http
@@ -82,4 +83,5 @@
 - [gfx] line caps
 - [gfx] calculate circle vert count
 - [gfx] rect stroke
+- [gfx] 2D sprites in 3D
 

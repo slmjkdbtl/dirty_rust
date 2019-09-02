@@ -6,6 +6,7 @@ use dirty::math::*;
 use input::Key;
 
 struct Game {
+	tex: gfx::Tex2D,
 	model: gfx::Model,
 	pixel_effect: gfx::Shader,
 	canvas: gfx::Canvas,
@@ -24,6 +25,7 @@ impl app::State for Game {
 		pixel_effect.send("dimension", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
+			tex: gfx::Tex2D::from_bytes(ctx, include_bytes!("res/icon.png"))?,
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
 			pixel_effect: pixel_effect,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
@@ -112,6 +114,18 @@ impl app::State for Game {
 			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.use_cam(&self.cam, |ctx| {
+
+				ctx.push(&gfx::t()
+					.translate_3d(vec3!(30, 0, 0))
+					.scale_3d(vec3!(3))
+				, |ctx| {
+					return ctx.draw(shapes::cube());
+				})?;
+
+				ctx.push(&gfx::t()
+				, |ctx| {
+					return ctx.draw(shapes::sprite3d(&self.tex));
+				})?;
 
 				ctx.push(&gfx::t()
 					.rotate_y(ctx.time())

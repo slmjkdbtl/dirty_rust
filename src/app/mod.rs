@@ -83,6 +83,7 @@ pub struct Ctx {
 
 	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
+	pub(self) flag_renderer: gl::Renderer<gfx::Vertex3D>,
 
 	pub(self) empty_tex: gfx::Tex2D,
 
@@ -271,6 +272,7 @@ impl Ctx {
 			// TODO: ???
 			renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D>::new(&gl, 9999999, 9999999)?,
 			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
+			flag_renderer: gl::Renderer::from_shape(&gl, gfx::FlagShape)?,
 			gl: gl,
 
 			proj_2d: proj_2d,
