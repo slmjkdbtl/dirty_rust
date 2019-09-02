@@ -282,14 +282,16 @@ impl VertexLayout for Vertex2D {
 
 pub struct Vertex3D {
 	pos: Vec3,
+	uv: Vec2,
 	normal: Vec3,
 	color: Color,
 }
 
 impl Vertex3D {
-	pub fn new(pos: Vec3, normal: Vec3, color: Color) -> Self {
+	pub fn new(pos: Vec3, uv: Vec2, normal: Vec3, color: Color) -> Self {
 		return Self {
 			pos: pos,
+			uv: uv,
 			normal: normal,
 			color: color,
 		};
@@ -298,13 +300,15 @@ impl Vertex3D {
 
 impl VertexLayout for Vertex3D {
 
-	const STRIDE: usize = 10;
+	const STRIDE: usize = 12;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
 			self.pos.x,
 			self.pos.y,
 			self.pos.z,
+			self.uv.x,
+			self.uv.y,
 			self.normal.x,
 			self.normal.y,
 			self.normal.z,
@@ -319,6 +323,7 @@ impl VertexLayout for Vertex3D {
 
 		return gl::VertexAttrGroup::build()
 			.add("pos", 3)
+			.add("uv", 2)
 			.add("normal", 3)
 			.add("color", 4)
 			;
@@ -804,7 +809,7 @@ impl Model {
 			let vx = positions[i * 3 + 0];
 			let vy = positions[i * 3 + 1];
 			let vz = positions[i * 3 + 2];
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), normals[i], color!(rand!(), rand!(), rand!(), 1));
+			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec2!(), normals[i], color!(rand!(), rand!(), rand!(), 1));
 
 			vert.push(&mut verts);
 
@@ -836,6 +841,34 @@ impl Model {
 
 }
 
+pub(super) struct FlagShape;
+
+impl Shape for FlagShape {
+
+	type Vertex = Vertex3D;
+	const COUNT: usize = 4;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+
+		let q = quad!(0, 0, 1, 1);
+		let mut u1 = vec2!(q.x, q.y + q.h);
+		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u3 = vec2!(q.x + q.w, q.y);
+		let mut u4 = vec2!(q.x, q.y);
+
+		Self::Vertex::new(vec3!(-0.5, 0.5, 0.0), u1, vec3!(0, 0, -1), color!()).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, 0.0), u2, vec3!(0, 0, -1), color!()).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, 0.0), u3, vec3!(0, 0, -1), color!()).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, 0.0), u4, vec3!(0, 0, -1), color!()).push(queue);
+
+	}
+
+	fn indices() -> Vec<u32> {
+		return vec![0, 1, 3, 1, 2, 3];
+	}
+
+}
+
 pub(super) struct CubeShape;
 
 impl Shape for CubeShape {
@@ -845,14 +878,14 @@ impl Shape for CubeShape {
 
 	fn push(&self, queue: &mut Vec<f32>) {
 
-		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(0.33, 0.33, -0.66), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(-0.66, 0.66, -0.33), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec3!(-0.33, -0.33, -0.66), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec3!(0.66, -0.66, -0.33), color!(1, 1, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec3!(0.66, 0.66, 0.33), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec3!(-0.33, 0.33, 0.66), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec3!(-0.66, -0.66, 0.33), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec3!(0.33, -0.33, 0.66), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), vec3!(0.33, 0.33, -0.66), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), vec3!(-0.66, 0.66, -0.33), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec2!(), vec3!(-0.33, -0.33, -0.66), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec2!(), vec3!(0.66, -0.66, -0.33), color!(1, 1, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec2!(), vec3!(0.66, 0.66, 0.33), color!(1, 0, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec2!(), vec3!(-0.33, 0.33, 0.66), color!(0, 1, 0, 1)).push(queue);
+		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec2!(), vec3!(-0.66, -0.66, 0.33), color!(0, 0, 1, 1)).push(queue);
+		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec2!(), vec3!(0.33, -0.33, 0.66), color!(1, 1, 1, 1)).push(queue);
 
 // 		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(0.33, 0.33, -0.66), color!(1)).push(queue);
 // 		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(-0.66, 0.66, -0.33), color!(1)).push(queue);

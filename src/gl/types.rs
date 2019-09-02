@@ -103,12 +103,12 @@ bind_enum!(Cmp(u32) {
 });
 
 bind_enum!(Primitive(u32) {
-	Points => glow::POINT,
-	Lines => glow::LINE,
-	Triangles => glow::TRIANGLES,
-	LineStrips => glow::LINE_STRIP,
-	TriangleFans => glow::TRIANGLE_FAN,
-	TriangleStrips => glow::TRIANGLE_STRIP,
+	Point => glow::POINT,
+	Line => glow::LINE,
+	Triangle => glow::TRIANGLES,
+	LineStrip => glow::LINE_STRIP,
+	TriangleFan => glow::TRIANGLE_FAN,
+	TriangleStrip => glow::TRIANGLE_STRIP,
 });
 
 bind_enum!(ShaderType(u32) {

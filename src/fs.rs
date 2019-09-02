@@ -46,7 +46,11 @@ fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 	let path = path.as_ref();
 
-	if !Path::new(path).exists() {
+	if Path::new(path).exists() {
+
+		return Ok(path.to_path_buf());
+
+	} else {
 
 		let with_res = get_res_dir()
 			.ok_or(Error::Fs(format!("file not found: {}", path.display())))?
@@ -57,10 +61,6 @@ fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 		} else {
 			return Err(Error::Fs(format!("file not found: {}", path.display())));
 		}
-
-	} else {
-
-		return Ok(path.to_path_buf());
 
 	}
 

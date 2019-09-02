@@ -37,7 +37,7 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			vao: vao,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
-			prim: Primitive::Triangles,
+			prim: Primitive::Triangle,
 			cur_texture: None,
 			cur_program: None,
 			draw_count: 0,
