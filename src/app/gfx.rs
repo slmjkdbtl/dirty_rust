@@ -757,6 +757,13 @@ impl Camera {
 
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NormalMode {
+	Vertex,
+	Surface,
+}
+
+// TODO: not correct
 fn get_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 
 	let vert_count = pos.len() / 3;
@@ -780,7 +787,7 @@ fn get_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 	}
 
 	for n in &mut normals {
-		*n = n.normalize();
+		*n = (*n / 3.0).normalize();
 	}
 
 	return normals;

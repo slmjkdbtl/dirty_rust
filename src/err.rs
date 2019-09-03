@@ -107,7 +107,7 @@ impl From<image::ImageError> for Error {
 
 }
 
-#[cfg(all(feature = "app", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "app", not(web)))]
 impl From<glutin::CreationError> for Error {
 
 	fn from(err: glutin::CreationError) -> Self {
@@ -132,21 +132,21 @@ impl From<glutin::CreationError> for Error {
 
 }
 
-#[cfg(all(feature = "app", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "app", not(web)))]
 impl From<glutin::ContextError> for Error {
 	fn from(_: glutin::ContextError) -> Self {
 		return Error::Window("failed to create window context".into());
 	}
 }
 
-#[cfg(all(feature = "app", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "app", not(web)))]
 impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
 	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
 		return Error::Window("failed to create window context".into());
 	}
 }
 
-#[cfg(all(feature = "app", target_arch = "wasm32"))]
+#[cfg(all(feature = "app", web))]
 impl From<stdweb::web::error::InvalidCharacterError> for Error {
 	fn from(_: stdweb::web::error::InvalidCharacterError) -> Self {
 		return Error::Wasm;
@@ -154,7 +154,7 @@ impl From<stdweb::web::error::InvalidCharacterError> for Error {
 }
 
 // TODO: why this doesn't work
-#[cfg(all(feature = "app", target_arch = "wasm32"))]
+#[cfg(all(feature = "app", web))]
 impl From<stdweb::serde::ConversionError> for Error {
 	fn from(_: stdweb::serde::ConversionError) -> Self {
 		return Error::Wasm;
@@ -168,7 +168,7 @@ impl From<rodio::decoder::DecoderError> for Error {
 	}
 }
 
-#[cfg(all(feature = "app", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+#[cfg(all(feature = "app", not(mobile), not(web)))]
 impl From<gilrs::Error> for Error {
 	fn from(_: gilrs::Error) -> Self {
 		return Error::Input("gamepad error".into());
@@ -231,14 +231,14 @@ impl From<httparse::Error> for Error {
 
 }
 
-#[cfg(all(feature = "http", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+#[cfg(all(feature = "http", not(mobile), not(web)))]
 impl From<native_tls::Error> for Error {
 	fn from(_: native_tls::Error) -> Self {
 		return Error::Net("tls error".into());
 	}
 }
 
-#[cfg(all(feature = "http", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+#[cfg(all(feature = "http", not(mobile), not(web)))]
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
 		return Error::Net("tls error".into());
