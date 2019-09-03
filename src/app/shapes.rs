@@ -8,7 +8,6 @@ pub struct Sprite<'a> {
 	tex: &'a gfx::Tex2D,
 	quad: Quad,
 	offset: Vec2,
-	radius: f32,
 	flip: gfx::Flip,
 	color: Color,
 }
@@ -34,10 +33,6 @@ impl<'a> Sprite<'a> {
 		self.flip = flip;
 		return self;
 	}
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = r;
-		return self
-	}
 }
 
 pub fn sprite<'a>(tex: &'a gfx::Tex2D) -> Sprite<'a> {
@@ -46,7 +41,6 @@ pub fn sprite<'a>(tex: &'a gfx::Tex2D) -> Sprite<'a> {
 		quad: quad!(0, 0, 1, 1),
 		color: color!(1),
 		offset: vec2!(0),
-		radius: 0.0,
 		flip: gfx::Flip::None,
 	};
 }
@@ -690,7 +684,6 @@ pub struct Sprite3D<'a> {
 	tex: &'a gfx::Tex2D,
 	quad: Quad,
 	offset: Vec2,
-	radius: f32,
 	flip: gfx::Flip,
 	color: Color,
 }
@@ -718,10 +711,6 @@ impl<'a> Sprite3D<'a> {
 		self.flip = flip;
 		return self;
 	}
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = r;
-		return self
-	}
 }
 
 pub fn sprite3d<'a>(tex: &'a gfx::Tex2D) -> Sprite3D<'a> {
@@ -730,7 +719,6 @@ pub fn sprite3d<'a>(tex: &'a gfx::Tex2D) -> Sprite3D<'a> {
 		quad: quad!(0, 0, 1, 1),
 		color: color!(1),
 		offset: vec2!(0),
-		radius: 0.0,
 		flip: gfx::Flip::None,
 	};
 }

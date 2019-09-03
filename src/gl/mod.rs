@@ -23,9 +23,9 @@ use crate::Error;
 use crate::Result;
 use crate::math::*;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 pub(self) type GLCtx = glow::native::Context;
-#[cfg(target_arch = "wasm32")]
+#[cfg(web)]
 pub(self) type GLCtx = glow::web::Context;
 
 pub struct Device {
@@ -36,7 +36,7 @@ pub struct Device {
 // TODO: clean up this mess
 impl Device {
 
-	#[cfg(not(target_arch = "wasm32"))]
+	#[cfg(not(web))]
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
 		return Self {
 			ctx: Rc::new(GLCtx::from_loader_function(f)),

@@ -34,7 +34,8 @@ fn get_res_dir() -> Option<PathBuf> {
 
 	use std::env;
 
-	let path = env::current_exe()?
+	let path = env::current_exe()
+		.ok()?
 		.parent()?
 		.to_path_buf();
 

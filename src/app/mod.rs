@@ -16,13 +16,13 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 use glutin::dpi::*;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 use glutin::Api;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 use glutin::GlRequest;
-#[cfg(target_arch = "wasm32")]
+#[cfg(web)]
 use glow::RenderLoop;
 
 use derive_more::*;
@@ -65,13 +65,13 @@ pub struct Ctx {
 	pub(self) width: i32,
 	pub(self) height: i32,
 
-	#[cfg(not(target_arch = "wasm32"))]
+	#[cfg(not(web))]
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	#[cfg(not(target_arch = "wasm32"))]
+	#[cfg(not(web))]
 	pub(self) events_loop: glutin::EventsLoop,
-	#[cfg(target_arch = "wasm32")]
+	#[cfg(web)]
 	pub(self) render_loop: glow::web::RenderLoop,
-	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
@@ -107,7 +107,7 @@ impl Ctx {
 
 	pub(super) fn new(conf: app::Conf) -> Result<Self> {
 
-		#[cfg(not(target_arch = "wasm32"))]
+		#[cfg(not(web))]
 		let (windowed_ctx, events_loop, gl) =  {
 
 			let events_loop = glutin::EventsLoop::new();
@@ -166,7 +166,7 @@ impl Ctx {
 		};
 
 		// TODO: wait till glow supports stdweb
-		#[cfg(target_arch = "wasm32")]
+		#[cfg(web)]
 		let (gl, render_loop) = {
 
 			use stdweb::web;
@@ -260,13 +260,13 @@ impl Ctx {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 
-			#[cfg(not(target_arch = "wasm32"))]
+			#[cfg(not(web))]
 			events_loop: events_loop,
-			#[cfg(not(target_arch = "wasm32"))]
+			#[cfg(not(web))]
 			windowed_ctx: windowed_ctx,
-			#[cfg(target_arch = "wasm32")]
+			#[cfg(web)]
 			render_loop: render_loop,
-			#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+			#[cfg(all(not(mobile), not(web)))]
 			gamepad_ctx: gilrs::Gilrs::new()?,
 
 			// TODO: ???
@@ -316,14 +316,14 @@ impl Ctx {
 	pub(super) fn run(&mut self, s: &mut impl State) -> Result<()> {
 
 		// TODO: render loop
-// 		#[cfg(target_arch = "wasm32")]
+// 		#[cfg(web)]
 //         self.render_loop.run(|running: &mut bool| {
 // 			gfx::begin(self);
 // 			f(self);
 // 			gfx::end(self);
 // 		});
 
-		#[cfg(not(target_arch = "wasm32"))]
+		#[cfg(not(web))]
 		'run: loop {
 
 			let start_time = Instant::now();
@@ -681,11 +681,11 @@ pub enum Platform {
 
 pub fn platform() -> Platform {
 
-	#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+	#[cfg(desktop)]
 	return Platform::Desktop;
-	#[cfg(any(target_os = "ios", target_os = "android"))]
+	#[cfg(mobile)]
 	return Platform::Mobile;
-	#[cfg(target_arch = "wasm32")]
+	#[cfg(web)]
 	return Platform::Web;
 
 	return Platform::Unknown;

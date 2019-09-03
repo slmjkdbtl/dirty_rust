@@ -19,19 +19,19 @@ exclude = ["TODO"]
 default = [
 
 	# bindings
-	"lua",
+# 	"lua",
 # 	"python",
 
 	# modules
 	"fs",
 	"app",
 	"img",
-	"audio",
-	"http",
+# 	"audio",
+# 	"http",
 	"geom",
-	"physics",
-	"term",
-	"video",
+# 	"physics",
+# 	"term",
+# 	"video",
 # 	"serial",
 # 	"ui",
 # 	"ecs",

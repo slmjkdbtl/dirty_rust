@@ -2,9 +2,9 @@
 
 use std::path::PathBuf;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(mobile), not(web)))]
 pub use gilrs::GamepadId as GamepadID;
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(mobile, web))]
 pub type GamepadID = u64;
 
 pub type TouchID = u64;
@@ -110,12 +110,12 @@ fn gamepad_pressed(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool
 	}
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(web)]
 pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	return Ok(vec![]);
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 	let mut events = vec![];
@@ -304,7 +304,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 			events.push(Event::KeyDown(k));
 		});
 
-	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+	#[cfg(all(not(mobile), not(web)))]
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
 
 		use gilrs::ev::EventType::*;
@@ -436,7 +436,7 @@ macro_rules! gen_buttons {
 
 			}
 
-			#[cfg(not(target_arch = "wasm32"))]
+			#[cfg(desktop)]
 			fn from_extern(s: $xtype) -> Option<Self> {
 				return match s {
 					$(
@@ -444,6 +444,12 @@ macro_rules! gen_buttons {
 					)*
 					_ => None,
 				};
+			}
+
+			// TODO
+			#[cfg(not(desktop))]
+			fn from_extern(s: $xtype) -> Option<Self> {
+				return None;
 			}
 
 			fn as_str(&self) -> &'static str {
@@ -454,7 +460,7 @@ macro_rules! gen_buttons {
 				};
 			}
 
-			#[cfg(not(target_arch = "wasm32"))]
+			#[cfg(desktop)]
 			fn as_extern(&self) -> $xtype {
 				return match self {
 					$(
@@ -469,18 +475,18 @@ macro_rules! gen_buttons {
 
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 use glutin::VirtualKeyCode as ExternKey;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(web))]
 use glutin::MouseButton as ExternMouse;
-#[cfg(not(target_arch = "wasm32"))]
-use gilrs::ev::Button as ExternGamepadButton;
-
-#[cfg(target_arch = "wasm32")]
+#[cfg(web)]
 struct ExternKey;
-#[cfg(target_arch = "wasm32")]
+#[cfg(web)]
 struct ExternMouse;
-#[cfg(target_arch = "wasm32")]
+
+#[cfg(all(not(mobile), not(web)))]
+use gilrs::ev::Button as ExternGamepadButton;
+#[cfg(any(mobile, web))]
 struct ExternGamepadButton;
 
 gen_buttons!(Key(ExternKey), {
