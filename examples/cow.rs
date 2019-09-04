@@ -109,9 +109,9 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_on(&self.canvas, |ctx| {
+// 		ctx.draw_on(&self.canvas, |ctx| {
 
-			ctx.clear_ex(gfx::Surface::Depth);
+// 			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.use_cam(&self.cam, |ctx| {
 
@@ -137,13 +137,13 @@ impl app::State for Game {
 
 			})?;
 
-			return Ok(());
+// 			return Ok(());
 
-		})?;
+// 		})?;
 
-		ctx.draw_with(&self.pixel_effect, |ctx| {
-			return ctx.draw(shapes::canvas(&self.canvas));
-		})?;
+// 		ctx.draw_with(&self.pixel_effect, |ctx| {
+// 			return ctx.draw(shapes::canvas(&self.canvas));
+// 		})?;
 
 		return Ok(());
 

@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::path::PathBuf;
+use std::collections::HashSet;
 
 #[cfg(all(not(mobile), not(web)))]
 pub use gilrs::GamepadId as GamepadID;
@@ -13,6 +14,128 @@ use super::*;
 use crate::*;
 use window::Pos;
 
+pub trait Input {
+
+	fn down_keys(&self) -> HashSet<Key>;
+	fn key_down(&self, key: Key) -> bool;
+	fn key_pressed(&self, key: Key) -> bool;
+	fn key_released(&self, key: Key) -> bool;
+	fn key_up(&self, key: Key) -> bool;
+	fn key_rpressed(&self, key: Key) -> bool;
+	fn mouse_down(&self, mouse: Mouse) -> bool;
+	fn mouse_pressed(&self, mouse: Mouse) -> bool;
+	fn mouse_released(&self, mouse: Mouse) -> bool;
+	fn mouse_up(&self, mouse: Mouse) -> bool;
+	fn mouse_pos(&self) -> Pos;
+	fn mouse_delta(&self) -> Option<Pos>;
+	fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool;
+	fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool;
+	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool;
+	fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool;
+	fn scroll_delta(&self) -> Option<Pos>;
+	fn text_input(&self) -> Option<String>;
+
+}
+
+impl Input for app::Ctx {
+
+	fn down_keys(&self) -> HashSet<Key> {
+
+		use ButtonState::*;
+
+		return self.key_states
+			.iter()
+			.filter(|(_, &state)| state == Down || state == Pressed)
+			.map(|(key, _)| *key)
+			.collect();
+
+	}
+
+	fn key_down(&self, key: Key) -> bool {
+		return self.key_states.get(&key) == Some(&ButtonState::Down) || self.key_pressed(key);
+	}
+
+	fn key_pressed(&self, key: Key) -> bool {
+		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
+	}
+
+	fn key_released(&self, key: Key) -> bool {
+		return self.key_states.get(&key) == Some(&ButtonState::Released);
+	}
+
+	fn key_up(&self, key: Key) -> bool {
+		return self.key_states.get(&key) == Some(&ButtonState::Up) || self.key_states.get(&key).is_none();
+	}
+
+	fn key_rpressed(&self, key: Key) -> bool {
+		return self.rpressed_key == Some(key);
+	}
+
+	fn mouse_down(&self, mouse: Mouse) -> bool {
+		return self.mouse_states.get(&mouse) == Some(&ButtonState::Down) || self.mouse_pressed(mouse);
+	}
+
+	fn mouse_pressed(&self, mouse: Mouse) -> bool {
+		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
+	}
+
+	fn mouse_released(&self, mouse: Mouse) -> bool {
+		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
+	}
+
+	fn mouse_up(&self, mouse: Mouse) -> bool {
+		return self.mouse_states.get(&mouse) == Some(&ButtonState::Up) || self.mouse_states.get(&mouse).is_none();
+	}
+
+	fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
+		if let Some(states) = self.gamepad_button_states.get(&id) {
+			return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
+		} else {
+			return true;
+		}
+	}
+
+	fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
+		if let Some(states) = self.gamepad_button_states.get(&id) {
+			return states.get(&button) == Some(&ButtonState::Released);
+		} else {
+			return false;
+		}
+	}
+
+	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
+		if let Some(states) = self.gamepad_button_states.get(&id) {
+			return states.get(&button) == Some(&ButtonState::Down) || self.gamepad_pressed(id, button);
+		} else {
+			return false;
+		}
+	}
+
+	fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
+		if let Some(states) = self.gamepad_button_states.get(&id) {
+			return states.get(&button) == Some(&ButtonState::Pressed);
+		} else {
+			return false;
+		}
+	}
+
+	fn mouse_pos(&self) -> Pos {
+		return self.mouse_pos;
+	}
+
+	fn mouse_delta(&self) -> Option<Pos> {
+		return self.mouse_delta;
+	}
+
+	fn scroll_delta(&self) -> Option<Pos> {
+		return self.scroll_delta;
+	}
+
+	fn text_input(&self) -> Option<String> {
+		return self.text_input.clone();
+	}
+
+}
 pub enum Event {
 	KeyDown(Key),
 	KeyPress(Key),
@@ -44,70 +167,6 @@ pub(super) enum ButtonState {
 	Pressed,
 	Down,
 	Released,
-}
-
-fn key_down(ctx: &app::Ctx, key: Key) -> bool {
-	return ctx.key_states.get(&key) == Some(&ButtonState::Down) || key_pressed(ctx, key);
-}
-
-fn key_pressed(ctx: &app::Ctx, key: Key) -> bool {
-	return ctx.key_states.get(&key) == Some(&ButtonState::Pressed);
-}
-
-fn key_released(ctx: &app::Ctx, key: Key) -> bool {
-	return ctx.key_states.get(&key) == Some(&ButtonState::Released);
-}
-
-fn key_up(ctx: &app::Ctx, key: Key) -> bool {
-	return ctx.key_states.get(&key) == Some(&ButtonState::Up) || ctx.key_states.get(&key).is_none();
-}
-
-fn mouse_down(ctx: &app::Ctx, mouse: Mouse) -> bool {
-	return ctx.mouse_states.get(&mouse) == Some(&ButtonState::Down) || mouse_pressed(ctx, mouse);
-}
-
-fn mouse_pressed(ctx: &app::Ctx, mouse: Mouse) -> bool {
-	return ctx.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
-}
-
-fn mouse_released(ctx: &app::Ctx, mouse: Mouse) -> bool {
-	return ctx.mouse_states.get(&mouse) == Some(&ButtonState::Released);
-}
-
-fn mouse_up(ctx: &app::Ctx, mouse: Mouse) -> bool {
-	return ctx.mouse_states.get(&mouse) == Some(&ButtonState::Up) || ctx.mouse_states.get(&mouse).is_none();
-}
-
-fn gamepad_up(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-		return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
-	} else {
-		return true;
-	}
-}
-
-fn gamepad_released(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-		return states.get(&button) == Some(&ButtonState::Released);
-	} else {
-		return false;
-	}
-}
-
-fn gamepad_down(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-		return states.get(&button) == Some(&ButtonState::Down) || gamepad_pressed(ctx, id, button);
-	} else {
-		return false;
-	}
-}
-
-fn gamepad_pressed(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-		return states.get(&button) == Some(&ButtonState::Pressed);
-	} else {
-		return false;
-	}
 }
 
 #[cfg(web)]
@@ -240,7 +299,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 						events.push(Event::KeyPressRepeat(key));
 
-						if key_up(ctx, key) || key_released(ctx, key) {
+						if ctx.key_up(key) || ctx.key_released(key) {
 							ctx.key_states.insert(key, ButtonState::Pressed);
 							events.push(Event::KeyPress(key));
 						}
@@ -248,7 +307,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 					},
 
 					glutin::ElementState::Released => {
-						if key_down(ctx, key) || key_pressed(ctx, key) {
+						if ctx.key_down(key) || ctx.key_pressed(key) {
 							ctx.key_states.insert(key, ButtonState::Released);
 							events.push(Event::KeyRelease(key));
 						}
@@ -269,13 +328,13 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 			match state {
 
 				glutin::ElementState::Pressed => {
-					if mouse_up(ctx, button) || mouse_released(ctx, button) {
+					if ctx.mouse_up(button) || ctx.mouse_released(button) {
 						ctx.mouse_states.insert(button, ButtonState::Pressed);
 						events.push(Event::MousePress(button));
 					}
 				},
 				glutin::ElementState::Released => {
-					if mouse_down(ctx, button) || mouse_pressed(ctx, button) {
+					if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
 						ctx.mouse_states.insert(button, ButtonState::Released);
 						events.push(Event::MouseRelease(button));
 					}
@@ -316,7 +375,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 				if let Some(button) = GamepadButton::from_extern(button) {
 
-					if gamepad_up(ctx, id, button) || gamepad_released(ctx, id, button) {
+					if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
 
 						ctx
 							.gamepad_button_states
@@ -341,7 +400,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 			ButtonReleased(button, ..) => {
 				if let Some(button) = GamepadButton::from_extern(button) {
 
-					if gamepad_down(ctx, id, button) || gamepad_pressed(ctx, id, button) {
+					if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
 
 						ctx
 							.gamepad_button_states
@@ -573,10 +632,10 @@ gen_buttons!(Mouse(ExternMouse), {
 });
 
 gen_buttons!(GamepadButton(ExternGamepadButton), {
-	A("a") => South,
-	B("b") => East,
-	X("x") => West,
-	Y("y") => North,
+	South("south") => South,
+	East("east") => East,
+	West("west") => West,
+	North("north") => North,
 	LBumper("lbumper") => LeftTrigger,
 	LTrigger("ltrigger") => LeftTrigger2,
 	RBumper("rbumper") => RightTrigger,
