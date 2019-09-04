@@ -53,10 +53,14 @@ pub struct Ctx {
 
 	// input
 	pub(self) key_states: HashMap<Key, ButtonState>,
+	pub(self) rpressed_key: Option<Key>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Pos,
+	pub(self) mouse_delta: Option<Pos>,
 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(self) scroll_delta: Option<Pos>,
+	pub(self) text_input: Option<String>,
 
 	// window
 	pub(self) title: String,
@@ -83,7 +87,7 @@ pub struct Ctx {
 
 	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
-	pub(self) flag_renderer: gl::Renderer<gfx::Vertex3D>,
+	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D>,
 
 	pub(self) empty_tex: gfx::Tex2D,
 
@@ -248,12 +252,18 @@ impl Ctx {
 			time: Time::new(0.0),
 			fps_counter: FPSCounter::new(),
 
+			// input
 			key_states: HashMap::new(),
+			rpressed_key: None,
 			mouse_states: HashMap::new(),
 			mouse_pos: Pos::new(0, 0),
+			mouse_delta: None,
 			gamepad_button_states: HashMap::new(),
 			gamepad_axis_pos: HashMap::new(),
+			scroll_delta: None,
+			text_input: None,
 
+			// window
 			title: conf.title.to_owned(),
 			width: conf.width,
 			height: conf.height,
@@ -269,10 +279,10 @@ impl Ctx {
 			#[cfg(all(not(mobile), not(web)))]
 			gamepad_ctx: gilrs::Gilrs::new()?,
 
-			// TODO: ???
+			// TODO: max vert/indice count
 			renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D>::new(&gl, 9999999, 9999999)?,
+			renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D>::new(&gl, 9999999, 9999999)?,
 			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
-			flag_renderer: gl::Renderer::from_shape(&gl, gfx::FlagShape)?,
 			gl: gl,
 
 			proj_2d: proj_2d,

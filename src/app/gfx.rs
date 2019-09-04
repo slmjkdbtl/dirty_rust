@@ -234,6 +234,7 @@ pub(super) fn end(ctx: &mut Ctx) {
 
 pub(super) fn flush(ctx: &mut Ctx) {
 	ctx.renderer_2d.flush();
+	ctx.renderer_3d.flush();
 }
 
 pub struct Vertex2D {
@@ -848,7 +849,25 @@ impl Model {
 
 }
 
-pub(super) struct FlagShape;
+pub(super) struct FlagShape {
+	pub transform: Mat4,
+	pub quad: Quad,
+	pub color: Color,
+	pub origin: Origin,
+	pub flip: Flip,
+}
+
+impl FlagShape {
+	pub fn new(t: Mat4, q: Quad, c: Color, o: Origin, f: Flip) -> Self {
+		return Self {
+			transform: t,
+			quad: q,
+			color: c,
+			origin: o,
+			flip: f,
+		};
+	}
+}
 
 impl Shape for FlagShape {
 
@@ -857,16 +876,45 @@ impl Shape for FlagShape {
 
 	fn push(&self, queue: &mut Vec<f32>) {
 
-		let q = quad!(0, 0, 1, 1);
+		let t = self.transform;
+		let q = self.quad;
+		let c = self.color;
+		let offset = self.origin.as_pt() * 0.5;
+		let p1 = t * (vec2!(-0.5, 0.5) - offset);
+		let p2 = t * (vec2!(0.5, 0.5) - offset);
+		let p3 = t * (vec2!(0.5, -0.5) - offset);
+		let p4 = t * (vec2!(-0.5, -0.5) - offset);
+
 		let mut u1 = vec2!(q.x, q.y + q.h);
 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
 		let mut u3 = vec2!(q.x + q.w, q.y);
 		let mut u4 = vec2!(q.x, q.y);
 
-		Self::Vertex::new(vec3!(-0.5, 0.5, 0.0), u1, vec3!(0, 0, -1), color!()).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, 0.0), u2, vec3!(0, 0, -1), color!()).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, 0.0), u3, vec3!(0, 0, -1), color!()).push(queue);
-		Self::Vertex::new(vec3!(-0.5, -0.5, 0.0), u4, vec3!(0, 0, -1), color!()).push(queue);
+		match self.flip {
+			Flip::X => {
+				mem::swap(&mut u1, &mut u2);
+				mem::swap(&mut u4, &mut u3);
+			},
+			Flip::Y => {
+				mem::swap(&mut u2, &mut u3);
+				mem::swap(&mut u1, &mut u4);
+			},
+			Flip::XY => {
+				mem::swap(&mut u2, &mut u4);
+				mem::swap(&mut u1, &mut u3);
+			},
+			_ => {},
+		}
+
+		let mut u1 = vec2!(q.x, q.y + q.h);
+		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u3 = vec2!(q.x + q.w, q.y);
+		let mut u4 = vec2!(q.x, q.y);
+
+		Self::Vertex::new(vec3!(p1.x, p1.y, 0.0), u1, vec3!(0, 0, -1), c).push(queue);
+		Self::Vertex::new(vec3!(p2.x, p2.y, 0.0), u2, vec3!(0, 0, -1), c).push(queue);
+		Self::Vertex::new(vec3!(p3.x, p3.y, 0.0), u3, vec3!(0, 0, -1), c).push(queue);
+		Self::Vertex::new(vec3!(p4.x, p4.y, 0.0), u4, vec3!(0, 0, -1), c).push(queue);
 
 	}
 

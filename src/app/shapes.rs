@@ -727,17 +727,17 @@ impl<'a> Drawable for Sprite3D<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let scale = vec3!(self.tex.width(), self.tex.height(), 1.0) * vec3!(self.quad.w, self.quad.h, 1.0);
+		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
+		let offset = self.offset * -0.5;
 
 		ctx.push(&gfx::t()
-			.scale_3d(scale)
+			.scale_3d(vec3!(scale.x, scale.y, 1.0))
+			.translate_3d(vec3!(offset.x, offset.y, 0.0))
 		, |ctx| {
 
-			ctx.cur_shader_3d.send("model", ctx.transform);
-			ctx.draw_calls += 1;
-			self.tex.handle.bind();
-			ctx.flag_renderer.draw(&ctx.cur_shader_3d.handle);
-			self.tex.handle.unbind();
+			let shape = gfx::FlagShape::new(ctx.transform.matrix(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
+
+			ctx.renderer_3d.push_shape(shape, &ctx.cur_shader_3d.handle, Some(&self.tex.handle))?;
 
 			return Ok(());
 

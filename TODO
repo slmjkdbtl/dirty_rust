@@ -41,6 +41,7 @@
 - [core] wasm
 - [app] upgrade to glutin 0.22
 - [gfx] 3D text
+- [gfx] try draw cubes with batched renderer
 
 == DONE
 - [http] refactor http

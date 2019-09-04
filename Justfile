@@ -15,6 +15,12 @@ build:
 	rm -rf bin/dirty
 	cp target/release/dirty bin/dirty
 
+build-web:
+	cargo build --target wasm32-unknown-unknown
+
+build-ios:
+	cargo build --target x86_64-apple-ios
+
 build-windows:
 	cargo build --release --target x86_64-pc-windows-gnu
 

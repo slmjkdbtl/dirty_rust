@@ -98,7 +98,7 @@ texpack = [
 ]
 
 clipboard = [
-	"clipper",
+	"clip",
 ]
 
 geom = []
@@ -133,7 +133,7 @@ serde_json = { version = "1.0", optional = true }
 
 sheep = { version = "0.3", optional = true }
 
-clipper = { version = "0.5", optional = true, package = "clipboard" }
+clip = { version = "0.5", optional = true, package = "clipboard" }
 
 rlua = { version = "0.16", optional = true }
 
