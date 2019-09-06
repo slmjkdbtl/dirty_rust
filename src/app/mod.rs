@@ -343,7 +343,8 @@ impl Ctx {
 			}
 
 			gfx::begin(self);
-			s.run(self)?;
+			s.update(self)?;
+			s.draw(self)?;
 			gfx::end(self);
 			window::swap(self)?;
 
@@ -636,7 +637,11 @@ pub trait State {
 		return Ok(());
 	}
 
-	fn run(&mut self, _: &mut Ctx) -> Result<()> {
+	fn update(&mut self, _: &mut Ctx) -> Result<()> {
+		return Ok(());
+	}
+
+	fn draw(&self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 
