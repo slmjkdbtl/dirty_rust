@@ -110,9 +110,25 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		self.sprite.next();
+
+		return Ok(());
+
+	}
+
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+
+		ctx.draw(shapes::gradient(
+			ctx.coord(gfx::Origin::Top),
+			ctx.coord(gfx::Origin::Bottom),
+			&[
+				(color!(0, 0, 1, 1), 0.0),
+				(color!(1, 1, 1, 1), 1.0),
+			],
+		).width(640.0))?;
+
 		ctx.draw(&self.sprite)?;
 
 		return Ok(());

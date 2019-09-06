@@ -13,8 +13,8 @@ use crate::*;
 use crate::math::*;
 use super::*;
 
-use gl::VertexLayout;
-use gl::Shape;
+pub use gl::VertexLayout;
+pub use gl::Shape;
 
 pub use gl::UniformValue;
 pub use gl::UniformType;
