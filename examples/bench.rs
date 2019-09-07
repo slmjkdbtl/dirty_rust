@@ -45,7 +45,29 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+
+		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
+
+		if !self.started {
+			if ctx.fps() >= 56 {
+				self.started = true;
+			}
+		} else {
+			if !self.done {
+				self.count += RATE;
+				if ctx.fps() <= GATE {
+					println!("{}", self.count);
+					self.done = true;
+				}
+			}
+		}
+
+		return Ok(());
+
+	}
+
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let w = ctx.width() as i32;
 		let h = ctx.height() as i32;
@@ -80,22 +102,6 @@ impl app::State for Game {
 				return ctx.draw(shapes::text("waiting..."));
 			})?;
 
-		}
-
-		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
-
-		if !self.started {
-			if ctx.fps() >= 56 {
-				self.started = true;
-			}
-		} else {
-			if !self.done {
-				self.count += RATE;
-				if ctx.fps() <= GATE {
-					println!("{}", self.count);
-					self.done = true;
-				}
-			}
 		}
 
 		return Ok(());

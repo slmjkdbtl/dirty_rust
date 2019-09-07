@@ -309,7 +309,6 @@ impl Drawable for Gradient {
 			return Err(Error::Gfx("need at least 2 points to draw a gradient".into()));
 		}
 
-		use gfx::Shape;
 		use gfx::Vertex2D;
 
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
@@ -323,9 +322,25 @@ impl Drawable for Gradient {
 		let w = self.width;
 		let h = Vec2::dis(self.p1, self.p2);
 
+		let mut last_pos = None;
+
 		for s in &self.steps {
+
+			if (last_pos.is_none()) {
+				if (s.1 != 0.0) {
+					return Err(Error::Gfx("gradient step should start at 0.0".into()));
+				}
+			}
+
+			last_pos = Some(s.1);
+
 			Vertex2D::new(matrix * vec2!(-w / 2.0, -h / 2.0 + h * s.1), vec2!(0), s.0).push(&mut verts);
 			Vertex2D::new(matrix * vec2!(w / 2.0, -h / 2.0 + h * s.1), vec2!(0), s.0).push(&mut verts);
+
+		}
+
+		if (last_pos != Some(1.0)) {
+			return Err(Error::Gfx("gradient step should end at 1.0".into()));
 		}
 
 		let indices = [

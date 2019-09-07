@@ -45,7 +45,7 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_on(&self.canvas, |ctx| {
 
@@ -60,23 +60,13 @@ impl app::State for Game {
 				],
 			).width(640.0))?;
 
-			ctx.draw(
-				shapes::polygon(&[
-					vec2!(0, 0),
-					vec2!(120, 96),
-					vec2!(64, 160),
-				])
-					.stroke(12.0)
-					.line_join(gfx::LineJoin::Round)
-			)?;
-
 			return Ok(());
 
 		})?;
 
-// 		ctx.draw_with(&self.pixel_effect, |ctx| {
+		ctx.draw_with(&self.pixel_effect, |ctx| {
 			return ctx.draw(shapes::canvas(&self.canvas));
-// 		})?;
+		})?;
 
 		return Ok(());
 
