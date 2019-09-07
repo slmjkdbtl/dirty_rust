@@ -186,11 +186,11 @@ impl Ctx {
 			let canvas: CanvasElement = document
 				.create_element("canvas")?
 				.try_into()
-				.map_err(|_| Error::Wasm)?;
+				.map_err(|_| Error::Wasm(format!("failed to create canvas")))?;
 
 			let body = document
 				.body()
-				.ok_or(Error::Wasm)?;
+				.ok_or(Error::Wasm(format!("failed to get document body")))?;
 
 			body.append_child(&canvas);
 			canvas.set_width(conf.width as u32);

@@ -26,7 +26,6 @@
 - [gfx] draw curve
 - [img] image resizing
 - [core] no cargo warnings
-- [gfx] gradient
 - [window] different monitors
 - [lua] lua bindings
 - [python] python bindings
@@ -85,4 +84,5 @@
 - [gfx] calculate circle vert count
 - [gfx] rect stroke
 - [gfx] 2D sprites in 3D
+- [gfx] gradient
 

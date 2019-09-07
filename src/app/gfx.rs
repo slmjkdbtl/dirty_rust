@@ -693,12 +693,14 @@ impl Canvas {
 
 }
 
+// TODO: integrate projection in Camera (?)
 #[derive(Clone)]
 pub struct Camera {
 	front: Vec3,
 	pos: Vec3,
 	yaw: f32,
 	pitch: f32,
+// 	proj: Mat4,
 }
 
 impl Camera {
@@ -721,6 +723,10 @@ impl Camera {
 
 	pub fn set_pos(&mut self, pos: Vec3) {
 		self.pos = pos;
+	}
+
+	pub fn set_front(&mut self, front: Vec3) {
+		self.front = front;
 	}
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
@@ -795,6 +801,7 @@ fn get_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 
 }
 
+// TODO: messy
 #[derive(Clone)]
 pub struct Model {
 	pub(super) renderer: Rc<gl::Renderer<Vertex3D>>,
@@ -849,6 +856,7 @@ impl Model {
 
 }
 
+// TODO: messy
 pub(super) struct FlagShape {
 	pub transform: Mat4,
 	pub quad: Quad,
@@ -984,6 +992,7 @@ struct FontQuad {
 	quad: Quad,
 }
 
+// TODO: messy
 pub struct TrueTypeFont {
 	cache: GlyphBrush<'static, FontQuad>,
 	tex: Tex2D,

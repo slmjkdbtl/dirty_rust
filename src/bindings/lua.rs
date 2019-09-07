@@ -26,9 +26,35 @@ impl From<Error> for rlua::Error {
 }
 
 impl From<rlua::Error> for Error {
-	fn from(_: rlua::Error) -> Error {
-		return Error::Lua;
+
+	fn from(err: rlua::Error) -> Error {
+
+		use rlua::Error::*;
+
+		let msg = match err {
+			SyntaxError { message, .. } => format!("{}", message),
+			RuntimeError(m) => format!("{}", m),
+			MemoryError(m) => format!("{}", m),
+			GarbageCollectorError(m) => format!("{}", m),
+			ToLuaConversionError { from, to, .. } => format!("expected {}, found {}", to, from),
+			FromLuaConversionError { from, to, .. } => format!("expected {}, found {}", to, from),
+			RecursiveMutCallback => format!("recursive callback"),
+			CallbackDestructed => format!("callback destructed"),
+			StackError => format!("stack"),
+			BindError => format!("bind"),
+			CoroutineInactive => format!("coroutine inactive"),
+			UserDataTypeMismatch => format!("userdata type mismatch"),
+			UserDataBorrowError => format!("userdata borrow"),
+			UserDataBorrowMutError => format!("user data borrow mut"),
+			MismatchedRegistryKey => format!("mismatched registry key"),
+			ExternalError(_) => format!("external"),
+			CallbackError { traceback, cause } => format!("{}\n{}", cause, traceback),
+		};
+
+		return Error::Lua(msg);
+
 	}
+
 }
 
 trait ContextExt<'lua> {
@@ -169,7 +195,7 @@ fn bind_app(ctx: &Context) -> Result<()> {
 
 			let t = match val {
 				Value::Table(t) => t,
-				_ => return Err(Error::Lua.into()),
+				_ => return Err(Error::Lua(format!("expected table")).into()),
 			};
 
 			macro_rules! set {
@@ -693,7 +719,7 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 				match key.as_ref() {
 					"x" => Ok(this.x),
 					"y" => Ok(this.y),
-					_ => Err(Error::Lua.into()),
+					_ => Err(Error::Lua(format!("unexpected {}", key)).into()),
 				}
 			});
 
@@ -738,7 +764,7 @@ fn bind_vec(ctx: &Context) -> Result<()> {
 					"x" => Ok(this.x),
 					"y" => Ok(this.y),
 					"z" => Ok(this.z),
-					_ => Err(Error::Lua.into()),
+					_ => Err(Error::Lua(format!("unexpected {}", key)).into()),
 				}
 			});
 
@@ -873,46 +899,7 @@ pub fn run(code: &str, path: Option<impl AsRef<Path>>, args: Option<&[String]>) 
 			runtime = runtime.set_name(&format!("{}", path.as_ref().display()))?;
 		}
 
-		let handle_err = |err: &rlua::Error| {
-
-			use rlua::Error::*;
-
-			match err {
-				SyntaxError { message, .. } => eprintln!("{}", message),
-				RuntimeError(m) => eprintln!("{}", m),
-				MemoryError(m) => eprintln!("{}", m),
-				GarbageCollectorError(m) => eprintln!("{}", m),
-				ToLuaConversionError { from, to, .. } => {
-					eprintln!("expected {}, found {}", to, from);
-				},
-				FromLuaConversionError { from, to, .. } => {
-					eprintln!("expected {}, found {}", to, from);
-				},
-				RecursiveMutCallback => eprintln!("recursive callback error"),
-				CallbackDestructed => eprintln!("callback destructed"),
-				StackError => eprintln!("stack error"),
-				BindError => eprintln!("bind error"),
-				CoroutineInactive => eprintln!("coroutine inactive"),
-				UserDataTypeMismatch => eprintln!("userdata type mismatch"),
-				UserDataBorrowError => eprintln!("userdata borrow error"),
-				UserDataBorrowMutError => eprintln!("user data borrow mut error"),
-				MismatchedRegistryKey => eprintln!("mismatched registry key"),
-				ExternalError(_) => eprintln!("external error"),
-				_ => {},
-			}
-
-		};
-
-		if let Err(err) = runtime.call::<_, ()>(args) {
-
-			handle_err(&err);
-
-			if let rlua::Error::CallbackError { traceback, cause } = err {
-				handle_err(&cause);
-				eprintln!("{}", traceback);
-			}
-
-		}
+		runtime.call::<_, ()>(args)?;
 
 		return Ok(());
 

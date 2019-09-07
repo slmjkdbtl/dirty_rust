@@ -9,12 +9,10 @@ pub enum Error {
 	Net(String),
 	Image(String),
 	Window(String),
-	Wasm,
+	Wasm(String),
 	Audio(String),
-	Parse,
-	Thread,
-	FromUtf8,
-	Lua,
+	Thread(String),
+	Lua(String),
 	Gfx(String),
 	Obj(String),
 	Input(String),
@@ -32,12 +30,10 @@ impl fmt::Display for Error {
 			Error::Net(s) => write!(f, "network error: {}", s),
 			Error::Image(s) => write!(f, "image error: {}", s),
 			Error::Window(s) => write!(f, "window error: {}", s),
-			Error::Wasm => write!(f, "wasm error"),
+			Error::Wasm(s) => write!(f, "wasm error: {}", s),
 			Error::Audio(s) => write!(f, "audio error: {}", s),
-			Error::Parse => write!(f, "parse error"),
-			Error::Thread => write!(f, "thread error"),
-			Error::FromUtf8 => write!(f, "failed to convert from utf8"),
-			Error::Lua => write!(f, "lua error"),
+			Error::Thread(s) => write!(f, "thread error: {}", s),
+			Error::Lua(s) => write!(f, "lua error: {}", s),
 			Error::Gfx(s) => write!(f, "gfx error: {}", s),
 			Error::Obj(s) => write!(f, "obj error: {}", s),
 			Error::Input(s) => write!(f, "input error: {}", s),
@@ -55,13 +51,13 @@ impl From<std::io::Error> for Error {
 
 impl From<std::sync::mpsc::TryRecvError> for Error {
 	fn from(_: std::sync::mpsc::TryRecvError) -> Self {
-		return Error::Thread;
+		return Error::Thread(format!("failed to receive from another thread"));
 	}
 }
 
 impl From<std::string::FromUtf8Error> for Error {
 	fn from(_: std::string::FromUtf8Error) -> Self {
-		return Error::FromUtf8;
+		return Error::Misc("failed to convert utf8 to string".into());
 	}
 }
 
@@ -149,7 +145,7 @@ impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::C
 #[cfg(all(feature = "app", web))]
 impl From<stdweb::web::error::InvalidCharacterError> for Error {
 	fn from(_: stdweb::web::error::InvalidCharacterError) -> Self {
-		return Error::Wasm;
+		return Error::Wasm(format!("invalid character"));
 	}
 }
 
@@ -157,7 +153,7 @@ impl From<stdweb::web::error::InvalidCharacterError> for Error {
 #[cfg(all(feature = "app", web))]
 impl From<stdweb::serde::ConversionError> for Error {
 	fn from(_: stdweb::serde::ConversionError) -> Self {
-		return Error::Wasm;
+		return Error::Wasm(format!("conversion"));
 	}
 }
 
@@ -242,12 +238,6 @@ impl From<native_tls::Error> for Error {
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
 		return Error::Net("tls error".into());
-	}
-}
-#[cfg(feature = "ase")]
-impl From<serde_json::error::Error> for Error {
-	fn from(_: serde_json::error::Error) -> Self {
-		return Error::Parse;
 	}
 }
 
