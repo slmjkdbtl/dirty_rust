@@ -53,26 +53,6 @@ impl app::State for Game {
 				}
 			},
 
-			KeyDown(k) => {
-
-				if *k == Key::W {
-					self.cam.set_pos(self.cam.pos() + self.cam.front() * ctx.dt() * self.move_speed);
-				}
-
-				if *k == Key::S {
-					self.cam.set_pos(self.cam.pos() - self.cam.front() * ctx.dt() * self.move_speed);
-				}
-
-				if *k == Key::A {
-					self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
-				}
-
-				if *k == Key::D {
-					self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
-				}
-
-			},
-
 			MouseMove(delta) => {
 
 				if ctx.is_cursor_locked() {
@@ -107,7 +87,29 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+
+		if (ctx.key_down(Key::W)) {
+			self.cam.set_pos(self.cam.pos() + self.cam.front() * ctx.dt() * self.move_speed);
+		}
+
+		if (ctx.key_down(Key::S)) {
+			self.cam.set_pos(self.cam.pos() - self.cam.front() * ctx.dt() * self.move_speed);
+		}
+
+		if (ctx.key_down(Key::A)) {
+			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
+		}
+
+		if (ctx.key_down(Key::D)) {
+			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
+		}
+
+		return Ok(());
+
+	}
+
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 // 		ctx.draw_on(&self.canvas, |ctx| {
 
