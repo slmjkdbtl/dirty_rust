@@ -10,6 +10,7 @@ use crate::math::*;
 
 pub use gfx::Gfx;
 pub use window::Window;
+pub use input::Input;
 
 use std::collections::HashMap;
 use std::thread;
@@ -53,14 +54,10 @@ pub struct Ctx {
 
 	// input
 	pub(self) key_states: HashMap<Key, ButtonState>,
-	pub(self) rpressed_key: Option<Key>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Pos,
-	pub(self) mouse_delta: Option<Pos>,
 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
-	pub(self) scroll_delta: Option<Pos>,
-	pub(self) text_input: Option<String>,
 
 	// window
 	pub(self) title: String,
@@ -254,14 +251,10 @@ impl Ctx {
 
 			// input
 			key_states: HashMap::new(),
-			rpressed_key: None,
 			mouse_states: HashMap::new(),
 			mouse_pos: Pos::new(0, 0),
-			mouse_delta: None,
 			gamepad_button_states: HashMap::new(),
 			gamepad_axis_pos: HashMap::new(),
-			scroll_delta: None,
-			text_input: None,
 
 			// window
 			title: conf.title.to_owned(),
