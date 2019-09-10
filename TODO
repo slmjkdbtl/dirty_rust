@@ -40,6 +40,7 @@
 - [gfx] 3D text
 - [gfx] try draw cubes with batched renderer
 - [gfx] postprocessing (chaining shader + canvas)
+- [gfx] send whole piece of uniform (including texture) instead of one
 
 == DONE
 - [http] refactor http

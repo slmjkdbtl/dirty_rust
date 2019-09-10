@@ -18,7 +18,7 @@ impl app::State for Game {
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == &Key::Esc {
 					ctx.quit();
 				}
 			},
