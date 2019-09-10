@@ -29,7 +29,7 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
 			.translate_3d(vec3!(0, 0, 3))

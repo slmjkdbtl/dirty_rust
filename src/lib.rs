@@ -51,10 +51,10 @@ pub mod physics;
 #[cfg(feature = "http")]
 pub mod http;
 
-#[cfg(all(feature = "term", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+#[cfg(all(feature = "term", desktop))]
 pub mod term;
 
-#[cfg(all(feature = "serial", not(target_os = "ios"), not(target_os = "android"), not(target_arch = "wasm32")))]
+#[cfg(all(feature = "serial", desktop))]
 pub mod serial;
 
 #[cfg(feature = "ase")]

@@ -15,18 +15,23 @@ pub trait Window {
 	fn set_fullscreen(&mut self, b: bool);
 	fn is_fullscreen(&self) -> bool;
 	fn toggle_fullscreen(&mut self);
+
 	fn set_cursor_hidden(&mut self, b: bool);
 	fn is_cursor_hidden(&self) -> bool;
 	fn toggle_cursor_hidden(&mut self);
+
 	fn set_cursor_locked(&mut self, b: bool) -> Result<()>;
 	fn is_cursor_locked(&self) -> bool;
 	fn toggle_cursor_locked(&mut self) -> Result<()>;
+
 	fn set_title(&mut self, t: &str);
 	fn title(&self) -> &str;
+
 	fn dpi(&self) -> f64;
+
 	fn width(&self) -> i32;
 	fn height(&self) -> i32;
-	fn mouse_pos(&self) -> Pos;
+
 	fn set_mouse_pos(&mut self, p: Pos) -> Result<()>;
 
 }
@@ -136,10 +141,6 @@ impl Window for Ctx {
 
 	fn height(&self) -> i32 {
 		return self.height;
-	}
-
-	fn mouse_pos(&self) -> Pos {
-		return self.mouse_pos;
 	}
 
 	fn set_mouse_pos(&mut self, p: Pos) -> Result<()> {
