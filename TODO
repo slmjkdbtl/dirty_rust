@@ -1,7 +1,6 @@
 # wengwengweng
 
 == DOING
-- [core] clearer error messages
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -34,7 +33,6 @@
 - [gfx] ellipse
 - [gfx] integrate projection into camera
 - [gfx] dashed lines
-- [gfx] apply line joins to strokes
 - [geom] integrate collision detection with shape (?)
 - [gfx] correct vertex normal calculation
 - [core] wasm
@@ -86,4 +84,5 @@
 - [gfx] rect stroke
 - [gfx] 2D sprites in 3D
 - [gfx] gradient
+- [core] clearer error messages
 

@@ -2,10 +2,10 @@
 
 use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Error {
 	Fs(String),
-	IO,
+	IO(std::io::Error),
 	Net(String),
 	Image(String),
 	Window(String),
@@ -26,7 +26,7 @@ impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		return match self {
 			Error::Fs(s) => write!(f, "fs error: {}", s),
-			Error::IO => write!(f, "io error"),
+			Error::IO(e) => write!(f, "io error: {}", e),
 			Error::Net(s) => write!(f, "network error: {}", s),
 			Error::Image(s) => write!(f, "image error: {}", s),
 			Error::Window(s) => write!(f, "window error: {}", s),
@@ -44,8 +44,8 @@ impl fmt::Display for Error {
 }
 
 impl From<std::io::Error> for Error {
-	fn from(_: std::io::Error) -> Self {
-		return Error::IO;
+	fn from(err: std::io::Error) -> Self {
+		return Error::IO(err);
 	}
 }
 

@@ -10,8 +10,7 @@ personal toolkit for things
 - **fs** Common File System Functions
 - **http** Simple HTTP Client & Server
 - **term** TUI Utilities
-- **col** Common Collision Detections
-- **ase** Load Aseprite Spritesheets
+- **geom** Common Collision Detections
 
 All the modules can be configured with cargo feature:
 
@@ -24,8 +23,6 @@ All the modules can be used with lua or as rust modules, toggle with `lua` featu
 here's a minimal window setup:
 
 ```rust
-// wengwengweng
-
 use dirty::*;
 use dirty::app::*;
 use input::Key;
@@ -55,7 +52,7 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
 			.translate_3d(vec3!(0, 0, 3))

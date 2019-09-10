@@ -126,6 +126,7 @@ pub enum Event {
 	Touch(TouchID, Pos),
 	Resize(u32, u32),
 	FileHover(PathBuf),
+	FileHoverCancel,
 	FileDrop(PathBuf),
 	Focus(bool),
 }
@@ -219,6 +220,10 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 				HoveredFile(path) => {
 					events.push(Event::FileHover(path));
+				},
+
+				HoveredFileCancelled => {
+					events.push(Event::FileHoverCancel);
 				},
 
 				DroppedFile(path) => {
