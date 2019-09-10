@@ -1,6 +1,34 @@
 // wengwengweng
 
 use crate::math::*;
+use super::Texture;
+
+// TODO: wait for impl Trait in Traits
+pub struct UniformValues {
+	pub(super) values: Vec<(&'static str, UniformType)>,
+	pub(super) texture: Option<Texture>,
+}
+
+impl UniformValues {
+	pub fn build() -> Self {
+		return Self {
+			values: vec![],
+			texture: None,
+		};
+	}
+	pub fn value(mut self, name: &'static str, val: impl UniformValue) -> Self {
+		self.values.push((name, val.get()));
+		return self;
+	}
+	pub fn texture(mut self, tex: &Texture) -> Self {
+		self.texture = Some(tex.clone());
+		return self;
+	}
+}
+
+pub trait Uniform: 'static {
+	fn send(&self) -> UniformValues;
+}
 
 pub enum UniformType {
 	F1(f32),

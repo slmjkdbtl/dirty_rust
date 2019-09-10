@@ -25,6 +25,22 @@ impl Sprite {
 		};
 	}
 
+	pub fn width(&self) -> f32 {
+		return self.frames[self.cur_frame].w * self.tex.width() as f32;
+	}
+
+	pub fn height(&self) -> f32 {
+		return self.frames[self.cur_frame].h * self.tex.height() as f32;
+	}
+
+	pub fn tex_width(&self) -> i32 {
+		return self.tex.width();
+	}
+
+	pub fn tex_height(&self) -> i32 {
+		return self.tex.height();
+	}
+
 	pub fn slice(&mut self, x: u8, y: u8) {
 
 		let w = 1.0 / x as f32;
@@ -113,6 +129,7 @@ impl app::State for Game {
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		self.sprite.next();
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		return Ok(());
 

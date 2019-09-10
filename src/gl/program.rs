@@ -13,6 +13,7 @@ type ProgramID = <GLCtx as Context>::Program;
 pub struct Program {
 	ctx: Rc<GLCtx>,
 	pub(super) id: ProgramID,
+	texture: Option<Texture>,
 }
 
 impl Program {
@@ -56,9 +57,45 @@ impl Program {
 			let program = Self {
 				ctx: ctx,
 				id: program_id,
+				texture: None,
 			};
 
 			return Ok(program);
+
+		}
+
+	}
+
+	pub fn send_all(&mut self, uniforms: impl Uniform) {
+
+		unsafe {
+
+			use UniformType::*;
+
+			self.bind();
+
+			let uniforms = uniforms.send();
+
+			for (name, val) in uniforms.values {
+
+				let loc = self.ctx.get_uniform_location(self.id, name);
+
+				match val {
+					F1(f) => self.ctx.uniform_1_f32(loc, f),
+					F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
+					F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
+					F4(f1, f2, f3, f4) => self.ctx.uniform_4_f32(loc, f1, f2, f3, f4),
+					I1(i) => self.ctx.uniform_1_i32(loc, i),
+					I2(i1, i2) => self.ctx.uniform_2_i32(loc, i1, i2),
+					I3(i1, i2, i3) => self.ctx.uniform_3_i32(loc, i1, i2, i3),
+					I4(i1, i2, i3, i4) => self.ctx.uniform_4_i32(loc, i1, i2, i3, i4),
+					Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
+				}
+
+			}
+
+			self.texture = uniforms.texture;
+			self.unbind();
 
 		}
 
@@ -95,23 +132,40 @@ impl Program {
 	pub fn with(&self, f: impl FnOnce()) {
 
 		unsafe {
-			self.ctx.use_program(Some(self.id));
+			self.bind();
 			f();
-			self.ctx.use_program(None);
+			self.unbind();
 		}
 
 	}
 
 	pub(super) fn bind(&self) {
+
 		unsafe {
+
 			self.ctx.use_program(Some(self.id));
+
+			if let Some(tex) = &self.texture {
+				tex.bind();
+			}
+
 		}
+
 	}
 
 	pub(super) fn unbind(&self) {
+
 		unsafe {
+
 			self.ctx.use_program(None);
+
+			if let Some(tex) = &self.texture {
+				tex.unbind();
+			}
+
 		}
+
+
 	}
 
 }

@@ -131,6 +131,7 @@ impl Gfx for Ctx {
 
 	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
+		flush(self);
 		self.cur_shader_2d = shader.clone();
 		self.cur_shader_2d.send("proj", self.proj_2d);
 		f(self)?;
@@ -281,6 +282,20 @@ impl VertexLayout for Vertex2D {
 	}
 }
 
+pub(super) struct Uniform2D {
+	pub proj: Mat4,
+	pub tex: Tex2D,
+}
+
+impl gl::Uniform for Uniform2D {
+	fn send(&self) -> gl::UniformValues {
+		return gl::UniformValues::build()
+			.value("proj", self.proj)
+			.texture(&self.tex.handle)
+			;
+	}
+}
+
 pub struct Vertex3D {
 	pos: Vec3,
 	uv: Vec2,
@@ -331,6 +346,18 @@ impl VertexLayout for Vertex3D {
 
 	}
 
+}
+
+pub(super) struct Uniform3D {
+	pub proj: Mat4,
+}
+
+impl gl::Uniform for Uniform3D {
+	fn send(&self) -> gl::UniformValues {
+		return gl::UniformValues::build()
+			.value("proj", self.proj)
+			;
+	}
 }
 
 pub(super) struct QuadShape {
