@@ -333,6 +333,7 @@ impl Ctx {
 
 			for e in &input::poll(self)? {
 				s.event(self, e)?;
+				check_native_events(self, e);
 			}
 
 			gfx::begin(self);
@@ -364,6 +365,24 @@ impl Ctx {
 
 		return Ok(());
 
+	}
+
+}
+
+fn check_native_events(ctx: &mut Ctx, e: &input::Event) {
+
+	use input::Event::*;
+
+	#[cfg(target_os = "macos")]
+	match e {
+		KeyPress(k) => {
+			if k == &Key::Q {
+				if ctx.key_down(Key::LWin) || ctx.key_down(Key::RWin) {
+					ctx.quit();
+				}
+			}
+		},
+		_ => {},
 	}
 
 }
