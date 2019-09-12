@@ -6,9 +6,8 @@ use dirty::math::*;
 use input::Key;
 
 struct Game {
+	tex: gfx::Texture,
 	model: gfx::Model,
-	pixel_effect: gfx::Shader,
-	canvas: gfx::Canvas,
 	cam: gfx::Camera,
 	move_speed: f32,
 	eye_speed: f32,
@@ -18,15 +17,9 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let pixel_effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
-
-		pixel_effect.send("size", 6.0);
-		pixel_effect.send("dimension", vec2!(ctx.width(), ctx.height()));
-
 		return Ok(Self {
+			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			pixel_effect: pixel_effect,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			cam: gfx::Camera::new(vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
 			eye_speed: 0.16,
@@ -44,6 +37,7 @@ impl app::State for Game {
 				if *k == Key::Esc {
 					ctx.toggle_cursor_hidden();
 					ctx.toggle_cursor_locked()?;
+// 					ctx.quit();
 				}
 				if *k == Key::F {
 					ctx.toggle_fullscreen();
@@ -108,28 +102,28 @@ impl app::State for Game {
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_on(&self.canvas, |ctx| {
+		ctx.use_cam(&self.cam, |ctx| {
 
-			ctx.clear_ex(gfx::Surface::Depth);
+			ctx.push(&gfx::t()
+				.translate_3d(vec3!(30, 0, 0))
+				.scale_3d(vec3!(3))
+			, |ctx| {
+				return ctx.draw(shapes::cube());
+			})?;
 
-			ctx.use_cam(&self.cam, |ctx| {
+			ctx.push(&gfx::t()
+			, |ctx| {
+				return ctx.draw(shapes::sprite3d(&self.tex));
+			})?;
 
-				ctx.push(&gfx::t()
-					.rotate_y(ctx.time())
-				, |ctx| {
-					return ctx.draw(shapes::model(&self.model));
-				})?;
-
-				return Ok(());
-
+			ctx.push(&gfx::t()
+				.rotate_y(ctx.time())
+			, |ctx| {
+				return ctx.draw(shapes::model(&self.model));
 			})?;
 
 			return Ok(());
 
-		})?;
-
-		ctx.draw_with(&self.pixel_effect, |ctx| {
-			return ctx.draw(shapes::canvas(&self.canvas));
 		})?;
 
 		return Ok(());
