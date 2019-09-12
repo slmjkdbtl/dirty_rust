@@ -5,7 +5,7 @@ use dirty::app::*;
 use input::Key;
 
 struct Game {
-	tex: gfx::Tex2D,
+	tex: gfx::Texture,
 }
 
 impl app::State for Game {
@@ -63,7 +63,7 @@ impl app::State for Game {
 		}
 
 		return Ok(Self {
-			tex: gfx::Tex2D::from_img(ctx, img)?,
+			tex: gfx::Texture::from_img(ctx, img)?,
 		});
 
 	}

@@ -2,9 +2,9 @@
 
 uniform float size;
 uniform vec2 resolution;
+uniform vec4 filter;
 uniform vec4 color;
 
-// TODO: this is causing some extra pixels to appear at screen edge
 vec4 frag(sampler2D tex, vec2 uv) {
 
 	float px = size / resolution.x;
@@ -29,7 +29,7 @@ vec4 frag(sampler2D tex, vec2 uv) {
 
 	}
 
-	return oc;
+	return oc * filter;
 
 }
 

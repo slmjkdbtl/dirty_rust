@@ -35,7 +35,7 @@ impl Effect {
 }
 
 struct Game {
-	tex: gfx::Tex2D,
+	tex: gfx::Texture,
 	effects: Vec<Effect>,
 	cur_effect: Option<usize>,
 }
@@ -44,7 +44,7 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let tex = gfx::Tex2D::from_bytes(ctx, include_bytes!("res/dedede.png"))?;
+		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/dedede.png"))?;
 		let pixelate = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
 
 		pixelate.send("size", 32.0);

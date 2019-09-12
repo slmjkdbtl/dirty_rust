@@ -5,8 +5,7 @@ use dirty::app::*;
 use input::Key;
 
 struct Game {
-	mask: gfx::Tex2D,
-	tex: gfx::Tex2D,
+	mask: gfx::Texture,
 }
 
 impl app::State for Game {
@@ -14,8 +13,7 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			mask: gfx::Tex2D::from_bytes(ctx, include_bytes!("res/blob.png"))?,
-			tex: gfx::Tex2D::from_bytes(ctx, include_bytes!("res/gradient.png"))?,
+			mask: gfx::Texture::from_bytes(ctx, include_bytes!("res/blob.png"))?,
 		});
 
 	}
@@ -37,7 +35,7 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
 			.scale(vec2!(2))
@@ -49,7 +47,15 @@ impl app::State for Game {
 				return ctx.push(&gfx::t()
 					.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
 				, |ctx| {
-					return ctx.draw(shapes::sprite(&self.tex));
+					return ctx.draw(shapes::gradient(
+						vec2!(0, -80),
+						vec2!(0, 80),
+						&[
+							(color!(0.4, 1, 1, 1), 0.0),
+							(color!(1, 1, 0.6, 1), 0.5),
+							(color!(1, 0.4, 0.8, 1), 1.0),
+						],
+					).width(160.0));
 				});
 			})?;
 

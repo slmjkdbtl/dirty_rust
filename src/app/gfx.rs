@@ -284,10 +284,10 @@ impl VertexLayout for Vertex2D {
 
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
-	pub tex: Tex2D,
+	pub tex: Texture,
 }
 
-impl gl::Uniform for Uniform2D {
+impl gl::UniformInterface for Uniform2D {
 	fn send(&self) -> gl::UniformValues {
 		return gl::UniformValues::build()
 			.value("proj", self.proj)
@@ -352,7 +352,7 @@ pub(super) struct Uniform3D {
 	pub proj: Mat4,
 }
 
-impl gl::Uniform for Uniform3D {
+impl gl::UniformInterface for Uniform3D {
 	fn send(&self) -> gl::UniformValues {
 		return gl::UniformValues::build()
 			.value("proj", self.proj)
@@ -497,13 +497,13 @@ impl Origin {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Tex2D {
+pub struct Texture {
 	pub(super) handle: Rc<gl::Texture>,
 	width: i32,
 	height: i32,
 }
 
-impl Tex2D {
+impl Texture {
 
 	pub(super) fn from_handle(handle: gl::Texture, w: i32, h: i32) -> Self {
 		return Self {
@@ -588,7 +588,7 @@ impl Tex2D {
 #[derive(Clone, PartialEq)]
 pub struct Font {
 
-	pub(super) tex: Tex2D,
+	pub(super) tex: Texture,
 	pub(super) map: HashMap<char, Quad>,
 	pub(super) quad_size: Vec2,
 	grid_width: i32,
@@ -599,7 +599,7 @@ pub struct Font {
 impl Font {
 
 	/// creat a bitmap font from a texture, and grid of characters
-	pub fn from_tex(tex: Tex2D, cols: usize, rows: usize, chars: &str) -> Result<Self> {
+	pub fn from_tex(tex: Texture, cols: usize, rows: usize, chars: &str) -> Result<Self> {
 
 		let mut map = HashMap::new();
 		let quad_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
@@ -683,7 +683,7 @@ impl Shader {
 pub struct Canvas {
 
 	handle: Rc<gl::Framebuffer>,
-	pub(super) tex: Tex2D,
+	pub(super) tex: Texture,
 
 }
 
@@ -695,7 +695,7 @@ impl Canvas {
 		let tw = (width as f64 * dpi) as i32;
 		let th = (height as f64 * dpi) as i32;
 		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
-		let tex = Tex2D::from_pixels(&ctx, tw, th, &pixels)?;
+		let tex = Texture::from_pixels(&ctx, tw, th, &pixels)?;
 		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle)?;
 
 		return Ok(Self {
@@ -1022,7 +1022,7 @@ struct FontQuad {
 // TODO: messy
 pub struct TrueTypeFont {
 	cache: GlyphBrush<'static, FontQuad>,
-	tex: Tex2D,
+	tex: Texture,
 	quads: Vec<FontQuad>,
 	size: f32,
 }
@@ -1038,7 +1038,7 @@ impl TrueTypeFont {
 
 		return Ok(Self {
 			cache: font_cache,
-			tex: Tex2D::from_handle(font_cache_texture, width as i32, height as i32),
+			tex: Texture::from_handle(font_cache_texture, width as i32, height as i32),
 			quads: Vec::with_capacity(64),
 			size: size,
 		})

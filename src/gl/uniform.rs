@@ -26,7 +26,7 @@ impl UniformValues {
 	}
 }
 
-pub trait Uniform: 'static {
+pub trait UniformInterface: 'static {
 	fn send(&self) -> UniformValues;
 }
 

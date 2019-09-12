@@ -5,7 +5,7 @@ use gfx::Drawable;
 use gl::VertexLayout;
 
 pub struct Sprite<'a> {
-	tex: &'a gfx::Tex2D,
+	tex: &'a gfx::Texture,
 	quad: Quad,
 	offset: Vec2,
 	flip: gfx::Flip,
@@ -35,7 +35,7 @@ impl<'a> Sprite<'a> {
 	}
 }
 
-pub fn sprite<'a>(tex: &'a gfx::Tex2D) -> Sprite<'a> {
+pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	return Sprite {
 		tex: tex,
 		quad: quad!(0, 0, 1, 1),
@@ -767,7 +767,7 @@ impl Drawable for Cube {
 }
 
 pub struct Sprite3D<'a> {
-	tex: &'a gfx::Tex2D,
+	tex: &'a gfx::Texture,
 	quad: Quad,
 	offset: Vec2,
 	flip: gfx::Flip,
@@ -799,7 +799,7 @@ impl<'a> Sprite3D<'a> {
 	}
 }
 
-pub fn sprite3d<'a>(tex: &'a gfx::Tex2D) -> Sprite3D<'a> {
+pub fn sprite3d<'a>(tex: &'a gfx::Texture) -> Sprite3D<'a> {
 	return Sprite3D {
 		tex: tex,
 		quad: quad!(0, 0, 1, 1),

@@ -7,7 +7,7 @@ use input::Key;
 
 struct Sprite {
 
-	tex: gfx::Tex2D,
+	tex: gfx::Texture,
 	frames: Vec<Quad>,
 	cur_frame: usize,
 	looping: bool,
@@ -16,7 +16,7 @@ struct Sprite {
 
 impl Sprite {
 
-	pub fn new(tex: gfx::Tex2D) -> Self {
+	pub fn new(tex: gfx::Texture) -> Self {
 		return Self {
 			tex: tex,
 			frames: vec![quad!(0, 0, 1, 1)],
@@ -89,19 +89,28 @@ impl gfx::Drawable for &Sprite {
 
 struct Game {
 	sprite: Sprite,
+	shader: gfx::Shader,
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let tex = gfx::Tex2D::from_bytes(ctx, include_bytes!("res/car.png"))?;
+		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/car.png"))?;
 		let mut sprite = Sprite::new(tex);
 
 		sprite.slice(4, 1);
 
+		let shader = gfx::Shader::effect(ctx, include_str!("res/outline.frag"))?;
+
+		shader.send("size", 2.0);
+		shader.send("color", color!(0, 0, 0, 1));
+		shader.send("filter", color!(1));
+		shader.send("resolution", vec2!(sprite.tex_width(), sprite.tex_height()));
+
 		return Ok(Self {
 			sprite: sprite,
+			shader: shader,
 		});
 
 	}
@@ -141,12 +150,16 @@ impl app::State for Game {
 			ctx.coord(gfx::Origin::Top),
 			ctx.coord(gfx::Origin::Bottom),
 			&[
-				(color!(0, 0, 1, 1), 0.0),
-				(color!(1, 1, 1, 1), 1.0),
+				(color!(0.4, 1, 1, 1), 0.0),
+				(color!(1, 1, 0.6, 1), 0.5),
+				(color!(1, 0.4, 0.8, 1), 1.0),
 			],
 		).width(640.0))?;
 
-		ctx.draw(&self.sprite)?;
+		ctx.draw_with(&self.shader, |ctx| {
+			ctx.draw(&self.sprite)?;
+			return Ok(());
+		})?;
 
 		return Ok(());
 

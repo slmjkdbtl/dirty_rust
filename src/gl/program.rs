@@ -66,7 +66,7 @@ impl Program {
 
 	}
 
-	pub fn send_all(&mut self, uniforms: impl Uniform) {
+	pub fn send_all(&mut self, uniforms: impl UniformInterface) {
 
 		unsafe {
 
