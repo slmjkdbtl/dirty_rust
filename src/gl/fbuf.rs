@@ -7,8 +7,6 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-type FramebufferID = <GLCtx as Context>::Framebuffer;
-
 #[derive(Clone, Debug)]
 pub struct Framebuffer {
 

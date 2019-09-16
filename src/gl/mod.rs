@@ -28,6 +28,11 @@ pub(self) type GLCtx = glow::native::Context;
 #[cfg(web)]
 pub(self) type GLCtx = glow::web::Context;
 
+pub(self) type BufferID = <GLCtx as Context>::Buffer;
+pub(self) type ProgramID = <GLCtx as Context>::Program;
+pub(self) type TextureID = <GLCtx as Context>::Texture;
+pub(self) type FramebufferID = <GLCtx as Context>::Framebuffer;
+
 pub struct Device {
 	ctx: Rc<GLCtx>,
 }

@@ -72,7 +72,7 @@ impl<'a> Drawable for Sprite<'a> {
 
 pub struct Text<'a> {
 	txt: &'a str,
-	font: Option<&'a gfx::Font>,
+	font: Option<gfx::Font<'a>>,
 	color: Color,
 	offset: Vec2,
 	wrap: Option<u32>,
@@ -83,10 +83,80 @@ impl<'a> Text<'a> {
 		self.txt = txt;
 		return self;
 	}
-	pub fn font(mut self, font: &'a gfx::Font) -> Self {
+	pub fn font(mut self, mut font: gfx::Font<'a>) -> Self {
+
+		if let gfx::Font::TrueType(ref mut font) = font {
+
+			use glyph_brush::BrushAction;
+			use glyph_brush::Section;
+			use glyph_brush::rusttype;
+
+			let mut tex = font.tex.clone();
+
+			font.cache.queue(Section {
+				text: self.txt,
+				scale: rusttype::Scale::uniform(font.size),
+				..Section::default()
+			});
+
+			let mut update_texture = |rect: rusttype::Rect<u32>, data: &[u8]| {
+
+				let mut padded_data = Vec::with_capacity(data.len() * 4);
+
+				for a in data {
+					padded_data.extend_from_slice(&[
+						255,
+						255,
+						255,
+						*a,
+					]);
+				}
+
+				tex.data(
+					rect.min.x as i32,
+					rect.min.y as i32,
+					rect.width() as i32,
+					rect.height() as i32,
+					&padded_data,
+				);
+
+			};
+
+			let into_vertex = |verts: &glyph_brush::GlyphVertex| {
+
+				let uv = verts.tex_coords;
+				let pos = verts.pixel_coords.min;
+				let x = uv.min.x;
+				let y = uv.min.y;
+				let w = uv.max.x - x;
+				let h = uv.max.y - y;
+
+				return gfx::FontQuad {
+					pos: vec2!(pos.x, pos.y),
+					quad: quad!(x, y, w, h),
+				}
+
+			};
+
+			if let Ok(action) = font.cache.process_queued(
+				|rect, tex_data| update_texture(rect, tex_data),
+				|verts| into_vertex(&verts),
+			) {
+
+				if let BrushAction::Draw(quads) = action {
+					font.quads = quads;
+				}
+
+			}
+
+		}
+
 		self.font = Some(font);
+
 		return self;
+
 	}
+
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
 		return self;
@@ -119,44 +189,70 @@ impl<'a> Drawable for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let font;
+		use gfx::Font::*;
 
-		if let Some(f) = self.font {
-			font = f.clone();
+		let font;
+		let default_font = &gfx::Font::Bitmap(&ctx.default_font);
+
+		if let Some(f) = &self.font {
+			font = f;
 		} else {
-			font = ctx.default_font.clone();
+			font = default_font;
 		}
 
-		let len = self.txt.len();
-		let gw = font.width();
-		let gh = font.height();
-		let tw = font.width() * len as i32;
-		let th = gh;
-		let w = font.quad_size.x * font.tex.width() as f32;
-		let h = font.quad_size.y * font.tex.height() as f32;
-		let tex = font.tex.clone();
-		let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
-		let offset = offset + self.offset * vec2!(tw, th) * -0.5;
+		match font {
 
-		for (i, ch) in self.txt.chars().enumerate() {
+			Bitmap(font) => {
 
-			let x = i as f32 * w;
+				let len = self.txt.len();
+				let gw = font.width();
+				let gh = font.height();
+				let tw = font.width() * len as i32;
+				let th = gh;
+				let w = font.quad_size.x * font.tex.width() as f32;
+				let h = font.quad_size.y * font.tex.height() as f32;
+				let tex = font.tex.clone();
+				let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
+				let offset = offset + self.offset * vec2!(tw, th) * -0.5;
+				// TODO: don't clone here
+				let map = font.map.clone();
 
-			ctx.push(&gfx::t()
-				.translate(offset + vec2!(x, 0))
-			, |ctx| {
+				for (i, ch) in self.txt.chars().enumerate() {
 
-				if ch != ' ' {
+					let x = i as f32 * w;
 
-					if let Some(quad) = font.map.get(&ch) {
-						ctx.draw(sprite(&tex).quad(*quad).color(self.color))?;
-					}
+					ctx.push(&gfx::t()
+						.translate(offset + vec2!(x, 0))
+					, |ctx| {
+
+						if ch != ' ' {
+
+							if let Some(quad) = map.get(&ch) {
+								ctx.draw(sprite(&tex).quad(*quad).color(self.color))?;
+							}
+
+						}
+
+						return Ok(());
+
+					})?;
 
 				}
+			},
 
-				return Ok(());
+			TrueType(font) => {
 
-			})?;
+				let tex = font.tex.clone();
+
+				for q in font.quads.clone() {
+					ctx.push(&gfx::t()
+						.translate(q.pos)
+					, |ctx| {
+						return ctx.draw(shapes::sprite(&tex).quad(q.quad));
+					})?;
+				}
+
+			},
 
 		}
 

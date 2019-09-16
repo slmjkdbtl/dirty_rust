@@ -7,8 +7,6 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-type BufferID = <GLCtx as Context>::Buffer;
-
 #[derive(Clone, Debug)]
 pub struct IndexBuffer {
 
