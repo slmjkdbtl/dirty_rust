@@ -8,7 +8,6 @@
 - [core] async fs
 - [core] async http
 - [gfx] imgui integration (?)
-- [gfx] integrate truetype font with shape
 - [gfx] text wrapping
 - [gfx] fix ttf flashing first frame
 - [gfx] fix resize framebuffer weirdness
@@ -86,4 +85,5 @@
 - [gfx] 2D sprites in 3D
 - [gfx] gradient
 - [core] clearer error messages
+- [gfx] integrate truetype font with shape
 

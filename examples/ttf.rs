@@ -33,9 +33,9 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		self.font.draw(ctx, "营养过剩")?;
+		ctx.draw(shapes::text("营养过剩").font(gfx::Font::TrueType(&mut self.font)))?;
 
 		return Ok(());
 

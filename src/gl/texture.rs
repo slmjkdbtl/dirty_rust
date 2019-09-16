@@ -7,8 +7,6 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-type TextureID = <GLCtx as Context>::Texture;
-
 #[derive(Clone, Debug)]
 pub struct Texture {
 	ctx: Rc<GLCtx>,

@@ -143,6 +143,7 @@ fn main() {
 	if let Err(err) = app::launcher()
 		.cursor_locked(true)
 		.cursor_hidden(true)
+		.fullscreen(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}

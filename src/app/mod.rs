@@ -94,7 +94,7 @@ pub struct Ctx {
 	pub(self) default_shader_3d: gfx::Shader,
 	pub(self) cur_shader_3d: gfx::Shader,
 
-	pub(self) default_font: gfx::Font,
+	pub(self) default_font: gfx::BitmapFont,
 
 	pub(self) draw_calls_last: usize,
 	pub(self) draw_calls: usize,
@@ -235,7 +235,7 @@ impl Ctx {
 		let font_tex = gl::Texture::init(&gl, font_width, font_height, &font_img.into_raw())?;
 		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
 
-		let font = gfx::Font::from_tex(
+		let font = gfx::BitmapFont::from_tex(
 			font_tex,
 			DEFAULT_FONT_COLS,
 			DEFAULT_FONT_ROWS,

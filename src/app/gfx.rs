@@ -584,9 +584,15 @@ impl Texture {
 
 }
 
+pub enum Font<'a> {
+	Bitmap(&'a BitmapFont),
+	// TODO: no mut plz
+	TrueType(&'a mut TrueTypeFont),
+}
+
 /// bitmap font
 #[derive(Clone, PartialEq)]
-pub struct Font {
+pub struct BitmapFont {
 
 	pub(super) tex: Texture,
 	pub(super) map: HashMap<char, Quad>,
@@ -596,7 +602,7 @@ pub struct Font {
 
 }
 
-impl Font {
+impl BitmapFont {
 
 	/// creat a bitmap font from a texture, and grid of characters
 	pub fn from_tex(tex: Texture, cols: usize, rows: usize, chars: &str) -> Result<Self> {
@@ -1008,23 +1014,20 @@ impl Shape for CubeShape {
 }
 
 use glyph_brush::GlyphBrush;
-use glyph_brush::BrushAction;
 use glyph_brush::GlyphBrushBuilder;
-use glyph_brush::Section;
-use glyph_brush::rusttype;
 
 #[derive(Clone)]
-struct FontQuad {
-	pos: Vec2,
-	quad: Quad,
+pub(super) struct FontQuad {
+	pub(super) pos: Vec2,
+	pub(super) quad: Quad,
 }
 
 // TODO: messy
 pub struct TrueTypeFont {
-	cache: GlyphBrush<'static, FontQuad>,
-	tex: Texture,
-	quads: Vec<FontQuad>,
-	size: f32,
+	pub(super) cache: GlyphBrush<'static, FontQuad>,
+	pub(super) tex: Texture,
+	pub(super) quads: Vec<FontQuad>,
+	pub(super) size: f32,
 }
 
 impl TrueTypeFont {
@@ -1042,78 +1045,6 @@ impl TrueTypeFont {
 			quads: Vec::with_capacity(64),
 			size: size,
 		})
-
-	}
-
-	// TODO: let shape take care of this
-	pub fn draw(&mut self, ctx: &mut Ctx, txt: &str) -> Result<()> {
-
-		let mut tex = self.tex.clone();
-
-		self.cache.queue(Section {
-			text: txt,
-			scale: rusttype::Scale::uniform(self.size),
-			..Section::default()
-		});
-
-		let mut update_texture = |rect: rusttype::Rect<u32>, data: &[u8]| {
-
-			let mut padded_data = Vec::with_capacity(data.len() * 4);
-
-			for a in data {
-				padded_data.extend_from_slice(&[
-					255,
-					255,
-					255,
-					*a,
-				]);
-			}
-
-			tex.data(
-				rect.min.x as i32,
-				rect.min.y as i32,
-				rect.width() as i32,
-				rect.height() as i32,
-				&padded_data,
-			);
-
-		};
-
-		let into_vertex = |verts: &glyph_brush::GlyphVertex| {
-
-			let uv = verts.tex_coords;
-			let pos = verts.pixel_coords.min;
-			let x = uv.min.x;
-			let y = uv.min.y;
-			let w = uv.max.x - x;
-			let h = uv.max.y - y;
-
-			return FontQuad {
-				pos: vec2!(pos.x, pos.y),
-				quad: quad!(x, y, w, h),
-			}
-
-		};
-
-		if let Ok(action) = self.cache.process_queued(
-			|rect, tex_data| update_texture(rect, tex_data),
-			|verts| into_vertex(&verts),
-		) {
-
-			if let BrushAction::Draw(quads) = action {
-				self.quads = quads;
-			}
-
-			for q in &self.quads {
-				ctx.push(&t()
-					.translate(q.pos), |ctx| {
-					return ctx.draw(shapes::sprite(&tex).quad(q.quad));
-				})?;
-			}
-
-		}
-
-		return Ok(());
 
 	}
 
