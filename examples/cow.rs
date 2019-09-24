@@ -24,7 +24,7 @@ impl app::State for Game {
 		pixel_effect.send("dimension", vec2!(ctx.width(), ctx.height()));
 
 		return Ok(Self {
-			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
+			model: gfx::Model::from_obj(ctx, include_str!("res/plant.obj"))?,
 			pixel_effect: pixel_effect,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			cam: gfx::Camera::new(vec3!(0, 0, -12), 0.0, 0.0),
@@ -108,9 +108,9 @@ impl app::State for Game {
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_on(&self.canvas, |ctx| {
+// 		ctx.draw_on(&self.canvas, |ctx| {
 
-			ctx.clear_ex(gfx::Surface::Depth);
+// 			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.use_cam(&self.cam, |ctx| {
 
@@ -124,13 +124,13 @@ impl app::State for Game {
 
 			})?;
 
-			return Ok(());
+// 			return Ok(());
 
-		})?;
+// 		})?;
 
-		ctx.draw_with(&self.pixel_effect, |ctx| {
-			return ctx.draw(shapes::canvas(&self.canvas));
-		})?;
+// 		ctx.draw_with(&self.pixel_effect, |ctx| {
+// 			return ctx.draw(shapes::canvas(&self.canvas));
+// 		})?;
 
 		return Ok(());
 
@@ -143,7 +143,6 @@ fn main() {
 	if let Err(err) = app::launcher()
 		.cursor_locked(true)
 		.cursor_hidden(true)
-		.fullscreen(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}
