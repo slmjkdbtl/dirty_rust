@@ -4,25 +4,12 @@ use dirty::*;
 use dirty::app::*;
 use input::Key;
 
-struct Game {
-	pixel_effect: gfx::Shader,
-	canvas: gfx::Canvas,
-}
+struct Game;
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
-
-		let pixel_effect = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
-
-		pixel_effect.send("size", 6.0);
-		pixel_effect.send("dimension", vec2!(ctx.width(), ctx.height()));
-
-		return Ok(Self {
-			pixel_effect: pixel_effect,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
-		});
-
+		return Ok(Self);
 	}
 
 	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
@@ -47,26 +34,22 @@ impl app::State for Game {
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_on(&self.canvas, |ctx| {
+		use shapes::*;
 
-			ctx.draw(shapes::gradient(
-				ctx.coord(gfx::Origin::Top),
-				ctx.coord(gfx::Origin::Bottom),
-				&[
-					(color!(0, 1, 1, 1), 0.0),
-					(color!(1, 0, 1, 1), 0.5),
-					(color!(0, 0, 1, 1), 0.75),
-					(color!(1, 1, 1, 1), 1.0),
-				],
-			).width(640.0))?;
+		ctx.draw(gradient(
+			ctx.coord(gfx::Origin::Top),
+			ctx.coord(gfx::Origin::Bottom),
+			&[
+				(color!(0.4, 1, 1, 1), 0.0),
+				(color!(1, 1, 0.6, 1), 0.5),
+				(color!(1, 0.4, 0.8, 1), 1.0),
+			],
+		).width(640.0))?;
 
-			return Ok(());
-
-		})?;
-
-		ctx.draw_with(&self.pixel_effect, |ctx| {
-			return ctx.draw(shapes::canvas(&self.canvas));
-		})?;
+		ctx.draw(circle(vec2!(0), 120.0).color(color!(1, 0, 1, 1)))?;
+		ctx.draw(rect(vec2!(-64, -48), vec2!(64, 48)).color(color!(0, 1, 1, 1)))?;
+		ctx.draw(rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)))?;
+		ctx.draw(text("geoms").color(color!(0, 0, 1, 1)))?;
 
 		return Ok(());
 

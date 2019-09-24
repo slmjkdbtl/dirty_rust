@@ -1048,6 +1048,72 @@ impl TrueTypeFont {
 
 	}
 
+	pub fn push(&mut self, txt: &str) {
+
+		use glyph_brush::BrushAction;
+		use glyph_brush::Section;
+		use glyph_brush::rusttype;
+
+		let mut tex = self.tex.clone();
+
+		self.cache.queue(Section {
+			text: txt,
+			scale: rusttype::Scale::uniform(self.size),
+			..Section::default()
+		});
+
+		let mut update_texture = |rect: rusttype::Rect<u32>, data: &[u8]| {
+
+			let mut padded_data = Vec::with_capacity(data.len() * 4);
+
+			for a in data {
+				padded_data.extend_from_slice(&[
+					255,
+					255,
+					255,
+					*a,
+				]);
+			}
+
+			tex.data(
+				rect.min.x as i32,
+				rect.min.y as i32,
+				rect.width() as i32,
+				rect.height() as i32,
+				&padded_data,
+			);
+
+		};
+
+		let into_vertex = |verts: &glyph_brush::GlyphVertex| {
+
+			let uv = verts.tex_coords;
+			let pos = verts.pixel_coords.min;
+			let x = uv.min.x;
+			let y = uv.min.y;
+			let w = uv.max.x - x;
+			let h = uv.max.y - y;
+
+			return FontQuad {
+				pos: vec2!(pos.x, pos.y),
+				quad: quad!(x, y, w, h),
+			}
+
+		};
+
+		if let Ok(action) = self.cache.process_queued(
+			|rect, tex_data| update_texture(rect, tex_data),
+			|verts| into_vertex(&verts),
+		) {
+
+			if let BrushAction::Draw(quads) = action {
+				self.quads = quads;
+			}
+
+		}
+
+	}
+
 }
 
 #[derive(Clone, Copy, Default)]
@@ -1140,6 +1206,19 @@ pub enum LineCap {
 	Square,
 	Butt,
 	Round,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Fill {
+	NoFill,
+	Solid(Color),
+	Gradient(Vec2, Vec2, Vec<(Color, f32)>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Stroke {
+	NoStroke,
+	Solid(Color, LineJoin),
 }
 
 pub trait Drawable {

@@ -1,6 +1,7 @@
 # wengwengweng
 
 == DOING
+- [gfx] obj load all objects
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -40,6 +41,7 @@
 - [gfx] try draw cubes with batched renderer
 - [gfx] postprocessing (chaining shader + canvas)
 - [gfx] send whole piece of uniform (including texture) instead of one
+- [gfx] fallback font
 
 == DONE
 - [http] refactor http

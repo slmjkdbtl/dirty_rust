@@ -73,6 +73,7 @@ impl<'a> Drawable for Sprite<'a> {
 pub struct Text<'a> {
 	txt: &'a str,
 	font: Option<gfx::Font<'a>>,
+	fallback_font: Option<gfx::Font<'a>>,
 	color: Color,
 	offset: Vec2,
 	wrap: Option<u32>,
@@ -84,79 +85,19 @@ impl<'a> Text<'a> {
 		return self;
 	}
 	pub fn font(mut self, mut font: gfx::Font<'a>) -> Self {
-
 		if let gfx::Font::TrueType(ref mut font) = font {
-
-			use glyph_brush::BrushAction;
-			use glyph_brush::Section;
-			use glyph_brush::rusttype;
-
-			let mut tex = font.tex.clone();
-
-			font.cache.queue(Section {
-				text: self.txt,
-				scale: rusttype::Scale::uniform(font.size),
-				..Section::default()
-			});
-
-			let mut update_texture = |rect: rusttype::Rect<u32>, data: &[u8]| {
-
-				let mut padded_data = Vec::with_capacity(data.len() * 4);
-
-				for a in data {
-					padded_data.extend_from_slice(&[
-						255,
-						255,
-						255,
-						*a,
-					]);
-				}
-
-				tex.data(
-					rect.min.x as i32,
-					rect.min.y as i32,
-					rect.width() as i32,
-					rect.height() as i32,
-					&padded_data,
-				);
-
-			};
-
-			let into_vertex = |verts: &glyph_brush::GlyphVertex| {
-
-				let uv = verts.tex_coords;
-				let pos = verts.pixel_coords.min;
-				let x = uv.min.x;
-				let y = uv.min.y;
-				let w = uv.max.x - x;
-				let h = uv.max.y - y;
-
-				return gfx::FontQuad {
-					pos: vec2!(pos.x, pos.y),
-					quad: quad!(x, y, w, h),
-				}
-
-			};
-
-			if let Ok(action) = font.cache.process_queued(
-				|rect, tex_data| update_texture(rect, tex_data),
-				|verts| into_vertex(&verts),
-			) {
-
-				if let BrushAction::Draw(quads) = action {
-					font.quads = quads;
-				}
-
-			}
-
+			font.push(self.txt);
 		}
-
 		self.font = Some(font);
-
 		return self;
-
 	}
-
+	pub fn fallback_font(mut self, mut font: gfx::Font<'a>) -> Self {
+		if let gfx::Font::TrueType(ref mut font) = font {
+			font.push(self.txt);
+		}
+		self.fallback_font = Some(font);
+		return self;
+	}
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
 		return self;
@@ -179,6 +120,7 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 	return Text {
 		txt: txt,
 		font: None,
+		fallback_font: None,
 		offset: vec2!(0),
 		color: color!(1),
 		wrap: None,
@@ -691,7 +633,7 @@ pub struct Circle {
 	center: Vec2,
 	radius: f32,
 	color: Color,
-	sides: usize,
+	segments: usize,
 	stroke: Option<f32>,
 }
 
@@ -714,9 +656,9 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 	return Circle {
 		center: center,
 		radius: radius,
-		color: color!(),
+		color: color!(1),
 		// TODO: is this correct?
-		sides: (radius.sqrt() * 6.0) as usize,
+		segments: (radius.sqrt() * 6.0) as usize,
 		stroke: None,
 	};
 }
@@ -731,9 +673,9 @@ impl Drawable for Circle {
 
 		let mut verts = Vec::new();
 
-		for i in 0..self.sides {
+		for i in 0..self.segments {
 
-			let angle = 360.0 / self.sides as f32 * i as f32;
+			let angle = 360.0 / self.segments as f32 * i as f32;
 			let pt = Vec2::from_angle(angle.to_radians()) * self.radius;
 
 			verts.push(pt);
