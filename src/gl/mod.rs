@@ -196,3 +196,34 @@ fn draw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer
 
 }
 
+// TODO: make this the one
+#[cfg(not(feature="gl3"))]
+fn ddraw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, uniform: &impl UniformInterface, count: u32, mode: Primitive) {
+
+	program.send_all(uniform);
+
+	let tex = &uniform.send().texture;
+
+	program.bind();
+	vbuf.bind();
+	vbuf.bind_attrs(program);
+	ibuf.bind();
+
+	if let Some(tex) = tex {
+		tex.bind();
+	}
+
+	unsafe {
+		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+	}
+
+	ibuf.unbind();
+	vbuf.unbind();
+	program.unbind();
+
+	if let Some(tex) = tex {
+		tex.unbind();
+	}
+
+}
+

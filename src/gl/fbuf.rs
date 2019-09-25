@@ -75,15 +75,11 @@ impl Framebuffer {
 
 	pub fn with<R>(&self, f: impl FnOnce() -> R) -> R {
 
-		unsafe {
+		self.bind();
+		let r = f();
+		self.unbind();
 
-			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
-			let r = f();
-			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, None);
-
-			return r;
-
-		}
+		return r;
 
 	}
 

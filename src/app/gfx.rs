@@ -97,7 +97,7 @@ impl Gfx for Ctx {
 
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		flush(self);
+// 		flush(self);
 		self.proj_2d = flip_matrix(&self.proj_2d);
 		self.proj_3d = flip_matrix(&self.proj_3d);
 		self.cur_shader_2d.send("proj", self.proj_2d);
@@ -113,7 +113,7 @@ impl Gfx for Ctx {
 			self.transform = Transform::new();
 			f(self)?;
 			self.transform = t;
-			flush(self);
+// 			flush(self);
 
 			return Ok(());
 
@@ -131,12 +131,12 @@ impl Gfx for Ctx {
 
 	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		flush(self);
+// 		flush(self);
 		self.cur_shader_2d = shader.clone();
 		self.cur_shader_2d.send("proj", self.proj_2d);
 		f(self)?;
 		// TODO: why is this flush necessary?
-		flush(self);
+// 		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
 
 		return Ok(());
@@ -163,18 +163,18 @@ impl Gfx for Ctx {
 // 			},
 // 		};
 
-		flush(self);
+// 		flush(self);
 		self.gl.clear(gl::Surface::Stencil);
 		self.gl.enable(gl::Capability::StencilTest);
 		self.gl.stencil_func(f1);
 		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
 
 		mask(self)?;
-		flush(self);
+// 		flush(self);
 		self.gl.stencil_func(f2);
 		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
 		draw(self)?;
-		flush(self);
+// 		flush(self);
 		self.gl.disable(gl::Capability::StencilTest);
 
 		return Ok(());
@@ -229,7 +229,9 @@ pub(super) fn end(ctx: &mut Ctx) {
 	ctx.transform = Transform::new();
 	ctx.transform_stack.clear();
 	ctx.draw_calls += ctx.renderer_2d.draw_count();
+	ctx.draw_calls += ctx.renderer_3d.draw_count();
 	ctx.renderer_2d.clear();
+	ctx.renderer_3d.clear();
 
 }
 
@@ -282,6 +284,7 @@ impl VertexLayout for Vertex2D {
 	}
 }
 
+#[derive(Clone, PartialEq)]
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
 	pub tex: Texture,
@@ -348,14 +351,23 @@ impl VertexLayout for Vertex3D {
 
 }
 
+#[derive(Clone, PartialEq)]
 pub(super) struct Uniform3D {
 	pub proj: Mat4,
+	pub view: Mat4,
+	pub model: Mat4,
+	pub color: Color,
+	pub tex: Texture,
 }
 
 impl gl::UniformInterface for Uniform3D {
 	fn send(&self) -> gl::UniformValues {
 		return gl::UniformValues::build()
 			.value("proj", self.proj)
+			.value("view", self.view)
+			.value("model", self.model)
+			.value("color", self.color)
+			.texture(&self.tex.handle)
 			;
 	}
 }

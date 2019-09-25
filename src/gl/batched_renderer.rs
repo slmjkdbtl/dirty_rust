@@ -3,7 +3,7 @@
 use super::*;
 use crate::Result;
 
-pub struct BatchedRenderer<V: VertexLayout> {
+pub struct BatchedRenderer<V: VertexLayout, U: UniformInterface> {
 
 	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
@@ -13,13 +13,13 @@ pub struct BatchedRenderer<V: VertexLayout> {
 	vqueue: Vec<f32>,
 	iqueue: Vec<u32>,
 	prim: Primitive,
-	cur_texture: Option<Texture>,
+	cur_uniform: Option<U>,
 	cur_program: Option<Program>,
 	draw_count: usize,
 
 }
 
-impl<V: VertexLayout> BatchedRenderer<V> {
+impl<V: VertexLayout, U: UniformInterface> BatchedRenderer<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
@@ -38,26 +38,14 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
 			prim: Primitive::Triangle,
-			cur_texture: None,
+			cur_uniform: None,
 			cur_program: None,
 			draw_count: 0,
 		});
 
 	}
 
-	pub fn push(&mut self, verts: &[f32], indices: &[u32], program: &Program, otex: Option<&Texture>) -> Result<()> {
-
-		if let Some(tex) = otex {
-			if let Some(cur_tex) = &self.cur_texture {
-				if cur_tex != tex {
-					self.flush();
-					self.cur_texture = Some(tex.clone());
-				}
-			} else {
-				self.flush();
-				self.cur_texture = Some(tex.clone());
-			}
-		}
+	pub fn push(&mut self, verts: &[f32], indices: &[u32], program: &Program, uniform: &U) -> Result<()> {
 
 		if let Some(cur_program) = &self.cur_program {
 			if cur_program != program {
@@ -66,6 +54,17 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			}
 		} else {
 			self.cur_program = Some(program.clone());
+		}
+
+		if let Some(cur_uniform) = &self.cur_uniform {
+			if cur_uniform != uniform {
+				self.flush();
+				self.cur_uniform = Some(uniform.clone());
+				// TODO: is this the correct fix?
+				self.cur_program = Some(program.clone());
+			}
+		} else {
+			self.cur_uniform = Some(uniform.clone());
 		}
 
 		let offset = (self.vqueue.len() / V::STRIDE) as u32;
@@ -93,9 +92,9 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 
 	}
 
-	pub fn push_shape<S: Shape>(&mut self, shape: S, program: &Program, otex: Option<&Texture>) -> Result<()> {
+	pub fn push_shape<S: Shape>(&mut self, shape: S, program: &Program, uniform: &U) -> Result<()> {
 
-		self.push(&[], &S::indices(), program, otex)?;
+		self.push(&[], &S::indices(), program, uniform)?;
 		shape.push(&mut self.vqueue);
 
 		return Ok(());
@@ -113,14 +112,15 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			None => return,
 		};
 
+		let uniform = match &self.cur_uniform {
+			Some(p) => p,
+			None => return,
+		};
+
 		self.vbuf.data(0, &self.vqueue);
 		self.ibuf.data(0, &self.iqueue);
 
-		if let Some(tex) = &self.cur_texture {
-			tex.bind();
-		}
-
-		draw(
+		ddraw(
 			&self.ctx,
 			#[cfg(feature="gl3")]
 			&self.vao,
@@ -128,16 +128,13 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 			&self.vbuf,
 			&self.ibuf,
 			&program,
+			uniform,
 			self.iqueue.len() as u32,
 			self.prim,
 		);
 
-		if let Some(tex) = &self.cur_texture {
-			tex.unbind();
-		}
-
-		self.cur_texture = None;
 		self.cur_program = None;
+		self.cur_uniform = None;
 		self.vqueue.clear();
 		self.iqueue.clear();
 		self.draw_count += 1;
@@ -148,14 +145,10 @@ impl<V: VertexLayout> BatchedRenderer<V> {
 		return self.vqueue.is_empty();
 	}
 
-	pub fn frame_end(&mut self) {
-		self.flush();
-	}
-
 	pub fn clear(&mut self) {
 
-		self.cur_texture = None;
 		self.cur_program = None;
+		self.cur_uniform = None;
 		self.vqueue.clear();
 		self.iqueue.clear();
 		self.draw_count = 0;

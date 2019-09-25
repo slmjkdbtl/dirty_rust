@@ -62,6 +62,40 @@ impl Program {
 
 	}
 
+	pub fn send_all(&self, values: &impl UniformInterface) {
+
+		unsafe {
+
+			use UniformType::*;
+
+			let values = values.send();
+
+			self.bind();
+
+			for v in values.values {
+
+				let loc = self.ctx.get_uniform_location(self.id, v.0);
+
+				match v.1 {
+					F1(f) => self.ctx.uniform_1_f32(loc, f),
+					F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
+					F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
+					F4(f1, f2, f3, f4) => self.ctx.uniform_4_f32(loc, f1, f2, f3, f4),
+					I1(i) => self.ctx.uniform_1_i32(loc, i),
+					I2(i1, i2) => self.ctx.uniform_2_i32(loc, i1, i2),
+					I3(i1, i2, i3) => self.ctx.uniform_3_i32(loc, i1, i2, i3),
+					I4(i1, i2, i3, i4) => self.ctx.uniform_4_i32(loc, i1, i2, i3, i4),
+					Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
+				}
+
+			}
+
+			self.unbind();
+
+		}
+
+	}
+
 	pub fn send(&self, name: &str, value: impl UniformValue) {
 
 		unsafe {
@@ -90,13 +124,13 @@ impl Program {
 
 	}
 
-	pub fn with(&self, f: impl FnOnce()) {
+	pub fn with<R>(&self, f: impl FnOnce() -> R) -> R {
 
-		unsafe {
-			self.bind();
-			f();
-			self.unbind();
-		}
+		self.bind();
+		let r = f();
+		self.unbind();
+
+		return r;
 
 	}
 
