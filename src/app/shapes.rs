@@ -58,7 +58,12 @@ impl<'a> Drawable for Sprite<'a> {
 
 			let shape = gfx::QuadShape::new(ctx.transform.matrix(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
-			ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, Some(&self.tex.handle))?;
+			let uniform = gfx::Uniform2D {
+				proj: ctx.proj_2d,
+				tex: self.tex.clone(),
+			};
+
+			ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, &uniform)?;
 
 			return Ok(());
 
@@ -306,7 +311,10 @@ impl Drawable for Polygon {
 
 			}
 
-			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, Some(&ctx.empty_tex.handle))?;
+			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, &gfx::Uniform2D {
+				proj: ctx.proj_2d,
+				tex: ctx.empty_tex.clone(),
+			})?;
 
 		}
 
@@ -394,7 +402,10 @@ impl Drawable for Gradient {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 2 )
 			.collect();
 
-		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, Some(&ctx.empty_tex.handle))?;
+		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, &gfx::Uniform2D {
+			proj: ctx.proj_2d,
+			tex: ctx.empty_tex.clone(),
+		})?;
 
 		return Ok(());
 
@@ -861,7 +872,13 @@ impl<'a> Drawable for Sprite3D<'a> {
 
 			let shape = gfx::FlagShape::new(ctx.transform.matrix(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
-			ctx.renderer_3d.push_shape(shape, &ctx.cur_shader_3d.handle, Some(&self.tex.handle))?;
+			ctx.renderer_3d.push_shape(shape, &ctx.cur_shader_3d.handle, &gfx::Uniform3D {
+				proj: ctx.proj_3d,
+				model: mat4!(),
+				view: mat4!(),
+				color: color!(),
+				tex: self.tex.clone(),
+			})?;
 
 			return Ok(());
 

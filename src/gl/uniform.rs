@@ -4,6 +4,7 @@ use crate::math::*;
 use super::Texture;
 
 // TODO: wait for impl Trait in Traits
+#[derive(Clone, PartialEq)]
 pub struct UniformValues {
 	pub(super) values: Vec<(&'static str, UniformType)>,
 	pub(super) texture: Option<Texture>,
@@ -26,10 +27,11 @@ impl UniformValues {
 	}
 }
 
-pub trait UniformInterface: 'static {
+pub trait UniformInterface: 'static + PartialEq + Clone {
 	fn send(&self) -> UniformValues;
 }
 
+#[derive(Clone, PartialEq)]
 pub enum UniformType {
 	F1(f32),
 	F2(f32, f32),

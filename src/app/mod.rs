@@ -82,9 +82,9 @@ pub struct Ctx {
 	pub(self) proj_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
-	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D>,
+	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
-	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D>,
+	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D, gfx::Uniform3D>,
 
 	pub(self) empty_tex: gfx::Texture,
 
@@ -273,8 +273,8 @@ impl Ctx {
 			gamepad_ctx: gilrs::Gilrs::new()?,
 
 			// TODO: max vert/indice count
-			renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D>::new(&gl, 9999999, 9999999)?,
-			renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D>::new(&gl, 9999999, 9999999)?,
+			renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 9999999, 9999999)?,
+			renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 9999999, 9999999)?,
 			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
 			gl: gl,
 
