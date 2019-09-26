@@ -412,7 +412,7 @@ impl Shape for QuadShape {
 	type Vertex = Vertex2D;
 	const COUNT: usize = 4;
 
-	fn push(&self, queue: &mut Vec<f32>) {
+	fn vertices(&self, queue: &mut Vec<f32>) {
 
 		let t = self.transform;
 		let q = self.quad;
@@ -969,7 +969,7 @@ impl Shape for FlagShape {
 	type Vertex = Vertex3D;
 	const COUNT: usize = 4;
 
-	fn push(&self, queue: &mut Vec<f32>) {
+	fn vertices(&self, queue: &mut Vec<f32>) {
 
 		let t = self.transform;
 		let q = self.quad;
@@ -1026,7 +1026,7 @@ impl Shape for CubeShape {
 	type Vertex = Vertex3D;
 	const COUNT: usize = 8;
 
-	fn push(&self, queue: &mut Vec<f32>) {
+	fn vertices(&self, queue: &mut Vec<f32>) {
 
 		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), vec3!(0.33, 0.33, -0.66), color!(1, 0, 0, 1)).push(queue);
 		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), vec3!(-0.66, 0.66, -0.33), color!(0, 1, 0, 1)).push(queue);
