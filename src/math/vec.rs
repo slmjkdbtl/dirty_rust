@@ -67,6 +67,14 @@ macro_rules! gen_vec {
 				};
 			}
 
+			pub fn as_arr(&self) -> [$type; $count] {
+				return [
+					$(
+						self.$member,
+					)+
+				];
+			}
+
 		}
 
 		impl ops::Mul<$name> for $name {
@@ -95,11 +103,7 @@ macro_rules! gen_vec {
 
 		impl Into<[$type; $count]> for $name {
 			fn into(self) -> [$type; $count] {
-				return [
-					$(
-						self.$member,
-					)+
-				];
+				return self.as_arr();
 			}
 		}
 

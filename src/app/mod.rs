@@ -83,6 +83,8 @@ pub struct Ctx {
 	pub(self) view_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
+	pub(self) canvas_active: bool,
+
 	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D, gfx::Uniform3D>,
@@ -284,6 +286,8 @@ impl Ctx {
 			view_3d: mat4!(),
 			cam_3d: cam_3d,
 
+			canvas_active: false,
+
 			empty_tex: empty_tex,
 
 			default_shader_2d: shader_2d.clone(),
@@ -416,12 +420,6 @@ impl Time {
 		// TODO: use as_secs_f32
 // 		return self.time.as_secs_f32();
 		return self.time.as_millis() as f32 / 1000.0;
-	}
-}
-
-impl gfx::UniformValue for Time {
-	fn as_uniform(&self) -> gfx::UniformType {
-		return gfx::UniformType::F1(self.as_secs());
 	}
 }
 
