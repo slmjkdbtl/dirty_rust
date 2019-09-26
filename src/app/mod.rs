@@ -83,8 +83,6 @@ pub struct Ctx {
 	pub(self) view_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
-	pub(self) canvas_active: bool,
-
 	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
 	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D, gfx::Uniform3D>,
@@ -96,6 +94,8 @@ pub struct Ctx {
 
 	pub(self) default_shader_3d: gfx::Shader3D,
 	pub(self) cur_shader_3d: gfx::Shader3D,
+
+	pub(self) cur_canvas: Option<gfx::Canvas>,
 
 	pub(self) default_font: gfx::BitmapFont,
 
@@ -286,8 +286,6 @@ impl Ctx {
 			view_3d: mat4!(),
 			cam_3d: cam_3d,
 
-			canvas_active: false,
-
 			empty_tex: empty_tex,
 
 			default_shader_2d: shader_2d.clone(),
@@ -295,6 +293,8 @@ impl Ctx {
 
 			default_shader_3d: shader_3d.clone(),
 			cur_shader_3d: shader_3d,
+
+			cur_canvas: None,
 
 			default_font: font,
 			draw_calls: 0,

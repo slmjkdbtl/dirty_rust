@@ -1,7 +1,5 @@
 // wengwengweng
 
-use glow::Context;
-
 use super::*;
 use crate::Result;
 
@@ -48,7 +46,8 @@ impl<V: VertexLayout> Renderer<V> {
 
 	}
 
-	pub fn draw<U: UniformInterface>(&self, program: &Program<U>, uniforms: &U) {
+	pub fn draw<U: UniformInterface>(&self, program: &Program<U>, uniforms: &U, fbuf: Option<&Framebuffer>) {
+
 		draw(
 			&self.ctx,
 			#[cfg(feature="gl3")]
@@ -58,6 +57,7 @@ impl<V: VertexLayout> Renderer<V> {
 			&self.ibuf,
 			&program,
 			uniforms,
+			fbuf,
 			self.count as u32,
 			self.prim,
 		);

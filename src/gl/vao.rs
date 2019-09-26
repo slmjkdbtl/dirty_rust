@@ -62,7 +62,7 @@ impl VertexArray {
 			self.bind();
 			vbuf.bind();
 
-			for (i, attr) in V::attrs().iter().enumerate() {
+			for (i, attr) in iter_attrs(&V::attrs()).enumerate() {
 
 				self.ctx.vertex_attrib_pointer_f32(
 					i as u32,
