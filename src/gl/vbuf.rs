@@ -91,7 +91,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 		unsafe {
 
-			for attr in &self.attrs {
+			for attr in iter_attrs(&self.attrs) {
 
 				let index = self.ctx.get_attrib_location(program.id, &attr.name) as u32;
 

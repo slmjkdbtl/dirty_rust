@@ -99,12 +99,12 @@ impl Gfx for Ctx {
 	// TODO: fix this with the new uniform design
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		if self.canvas_active {
+		if self.cur_canvas.is_some() {
 			return Err(Error::Gfx(format!("cannot use canvas inside a canvas call")));
 		}
 
-		self.canvas_active = true;
-		flush(self);
+		self.cur_canvas = Some(canvas.clone());
+// 		flush(self);
 
 		let o_proj_2d = self.proj_2d;
 		let o_proj_3d = self.proj_3d;
@@ -131,7 +131,7 @@ impl Gfx for Ctx {
 		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 		self.proj_2d = o_proj_2d;
 		self.proj_3d = o_proj_3d;
-		self.canvas_active = false;
+		self.cur_canvas = None;
 
 		return Ok(());
 
@@ -298,14 +298,13 @@ impl VertexLayout for Vertex2D {
 	}
 
 	fn attrs() -> gl::VertexAttrGroup {
-
-		return gl::VertexAttrGroup::build()
-			.add("pos", 2)
-			.add("uv", 2)
-			.add("color", 4)
-			;
-
+		return vec![
+			("pos", 2),
+			("uv", 2),
+			("color", 4),
+		];
 	}
+
 }
 
 #[derive(Clone, PartialEq)]
@@ -366,12 +365,12 @@ impl VertexLayout for Vertex3D {
 
 	fn attrs() -> gl::VertexAttrGroup {
 
-		return gl::VertexAttrGroup::build()
-			.add("pos", 3)
-			.add("uv", 2)
-			.add("normal", 3)
-			.add("color", 4)
-			;
+		return vec![
+			("pos", 3),
+			("uv", 2),
+			("normal", 3),
+			("color", 4),
+		];
 
 	}
 
@@ -387,6 +386,7 @@ pub(super) struct Uniform3D {
 }
 
 impl gl::UniformInterface for Uniform3D {
+
 	fn values(&self) -> UniformValues {
 		return vec![
 			("proj", UniformType::Mat4(self.proj.as_arr())),
@@ -395,9 +395,11 @@ impl gl::UniformInterface for Uniform3D {
 			("color", UniformType::F4(self.color.as_arr())),
 		];
 	}
+
 	fn texture(&self) -> Option<&gl::Texture> {
 		return Some(&self.tex.handle);
 	}
+
 }
 
 pub(super) struct QuadShape {
@@ -756,7 +758,7 @@ impl Shader3D {
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
 
-	handle: Rc<gl::Framebuffer>,
+	pub(super) handle: Rc<gl::Framebuffer>,
 	pub(super) tex: Texture,
 
 }

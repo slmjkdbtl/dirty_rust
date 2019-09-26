@@ -83,13 +83,13 @@ impl Framebuffer {
 
 	}
 
-	fn bind(&self) {
+	pub(super) fn bind(&self) {
 		unsafe {
 			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
 		}
 	}
 
-	fn unbind(&self) {
+	pub(super) fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, None);
 		}

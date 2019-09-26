@@ -162,7 +162,16 @@ impl Device {
 }
 
 #[cfg(feature="gl3")]
-fn draw<U: UniformInterface>(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program<U>, uniform: &U, count: u32, mode: Primitive) {
+fn draw<U: UniformInterface>(
+	ctx: &GLCtx,
+	vao: &VertexArray,
+	ibuf: &IndexBuffer,
+	program: &Program<U>,
+	uniform: &U,
+	fbuf: Option<&Framebuffer>,
+	count: u32,
+	mode: Primitive,
+) {
 
 	program.send(&uniform.values());
 
@@ -191,7 +200,20 @@ fn draw<U: UniformInterface>(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer,
 }
 
 #[cfg(not(feature="gl3"))]
-fn draw<V: VertexLayout, U: UniformInterface>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program<U>, uniform: &U, count: u32, mode: Primitive) {
+fn draw<V: VertexLayout, U: UniformInterface>(
+	ctx: &GLCtx,
+	vbuf: &VertexBuffer<V>,
+	ibuf: &IndexBuffer,
+	program: &Program<U>,
+	uniform: &U,
+	fbuf: Option<&Framebuffer>,
+	count: u32,
+	mode: Primitive,
+) {
+
+	if let Some(fbuf) = fbuf {
+		fbuf.bind();
+	}
 
 	program.send(&uniform.values());
 
@@ -216,6 +238,10 @@ fn draw<V: VertexLayout, U: UniformInterface>(ctx: &GLCtx, vbuf: &VertexBuffer<V
 
 	if let Some(tex) = tex {
 		tex.unbind();
+	}
+
+	if let Some(fbuf) = fbuf {
+		fbuf.unbind();
 	}
 
 }

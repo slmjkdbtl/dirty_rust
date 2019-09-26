@@ -32,14 +32,9 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let pix_shader = gfx::Shader2D::effect(ctx, include_str!("res/pix.frag"))?;
-
-// 		pix_shader.send("size", 6.0);
-// 		pix_shader.send("dimension", vec2!(ctx.width(), ctx.height()));
-
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			pix_shader: pix_shader,
+			pix_shader: gfx::Shader2D::effect(ctx, include_str!("res/pix.frag"))?,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			cam: gfx::Camera::new(vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
@@ -100,19 +95,19 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		if (ctx.key_down(Key::W)) {
+		if ctx.key_down(Key::W) {
 			self.cam.set_pos(self.cam.pos() + self.cam.front() * ctx.dt() * self.move_speed);
 		}
 
-		if (ctx.key_down(Key::S)) {
+		if ctx.key_down(Key::S) {
 			self.cam.set_pos(self.cam.pos() - self.cam.front() * ctx.dt() * self.move_speed);
 		}
 
-		if (ctx.key_down(Key::A)) {
+		if ctx.key_down(Key::A) {
 			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
-		if (ctx.key_down(Key::D)) {
+		if ctx.key_down(Key::D) {
 			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
@@ -131,7 +126,8 @@ impl app::State for Game {
 				ctx.push(&gfx::t()
 					.rotate_y(ctx.time())
 				, |ctx| {
-					return ctx.draw(shapes::model(&self.model));
+					ctx.draw(shapes::model(&self.model))?;
+					return Ok(());
 				})?;
 
 				return Ok(());
