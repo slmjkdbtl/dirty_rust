@@ -1,7 +1,6 @@
 # wengwengweng
 
 == DOING
-- [gfx] obj load all objects
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -42,6 +41,8 @@
 - [gfx] postprocessing (chaining shader + canvas)
 - [gfx] send whole piece of uniform (including texture) instead of one
 - [gfx] fallback font
+- [gfx] obj load all objects
+- [gfx] gl3 flag texture not rendering
 
 == DONE
 - [http] refactor http
@@ -92,4 +93,5 @@
 - [gfx] fix custom shader with new uniform
 - [gfx] send Framebuffer to draw func
 - [gfx] gfx level Uniform trait
+- [gfx] fix gl3 shader vertex attr
 
