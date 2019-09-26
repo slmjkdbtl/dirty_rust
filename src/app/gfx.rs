@@ -96,55 +96,42 @@ impl Gfx for Ctx {
 		return thing.draw(self);
 	}
 
-	// TODO: fix this with the new uniform design
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
 			return Err(Error::Gfx(format!("cannot use canvas inside a canvas call")));
 		}
 
-		self.cur_canvas = Some(canvas.clone());
-// 		flush(self);
-
 		let o_proj_2d = self.proj_2d;
 		let o_proj_3d = self.proj_3d;
+		let t = self.transform;
+
+		self.gl.viewport(0, 0, canvas.width(), canvas.height());
+		self.cur_canvas = Some(canvas.clone());
 
 		self.proj_2d = flip_matrix(&o_proj_2d);
 		self.proj_3d = flip_matrix(&o_proj_3d);
-		self.gl.viewport(0, 0, canvas.width(), canvas.height());
+		self.transform = Transform::new();
 
-		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
-		// TODO: what if shader is changed in callback?
-		canvas.handle.with(|| -> Result<()> {
+		f(self)?;
 
-			let t = self.transform;
-
-			self.transform = Transform::new();
-			f(self)?;
-			self.transform = t;
-// 			flush(self);
-
-			return Ok(());
-
-		})?;
-
-		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
+		self.transform = t;
 		self.proj_2d = o_proj_2d;
 		self.proj_3d = o_proj_3d;
+
 		self.cur_canvas = None;
+		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 
 		return Ok(());
 
 	}
 
-	// TODO: fix this with the new uniform design
 	fn draw_2d_with(&mut self, shader: &Shader2D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
 		self.cur_shader_2d = shader.clone();
 		self.cur_shader_2d.handle.send(&uniform.values());
 		f(self)?;
-		// TODO: why is this flush necessary?
 		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
 
@@ -152,14 +139,12 @@ impl Gfx for Ctx {
 
 	}
 
-	// TODO: fix this with the new uniform design
 	fn draw_3d_with(&mut self, shader: &Shader3D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
 		self.cur_shader_3d = shader.clone();
 		self.cur_shader_3d.handle.send(&uniform.values());
 		f(self)?;
-		// TODO: why is this flush necessary?
 		flush(self);
 		self.cur_shader_3d = self.default_shader_3d.clone();
 
@@ -187,18 +172,18 @@ impl Gfx for Ctx {
 // 			},
 // 		};
 
-// 		flush(self);
+		flush(self);
 		self.gl.clear(gl::Surface::Stencil);
 		self.gl.enable(gl::Capability::StencilTest);
 		self.gl.stencil_func(f1);
 		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
 
 		mask(self)?;
-// 		flush(self);
+		flush(self);
 		self.gl.stencil_func(f2);
 		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
 		draw(self)?;
-// 		flush(self);
+		flush(self);
 		self.gl.disable(gl::Capability::StencilTest);
 
 		return Ok(());
@@ -582,7 +567,6 @@ impl Texture {
 		return Self::from_img(ctx, Image::from_bytes(data)?);
 	}
 
-	// TODO: use Color
 	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::init(&ctx.gl, w, h, &pixels)?;
@@ -796,7 +780,7 @@ impl Canvas {
 
 }
 
-// TODO: integrate projection in Camera (?)
+// TODO: integrate projection in Camera
 #[derive(Clone)]
 pub struct Camera {
 	front: Vec3,

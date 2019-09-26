@@ -2,8 +2,6 @@
 
 == DOING
 - [gfx] obj load all objects
-- [gfx] fix custom shader with new uniform
-- [gfx] gfx level Uniform trait
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -91,4 +89,7 @@
 - [core] clearer error messages
 - [gfx] integrate truetype font with shape
 - [gfx] apply redesigned uniform
+- [gfx] fix custom shader with new uniform
+- [gfx] send Framebuffer to draw func
+- [gfx] gfx level Uniform trait
 
