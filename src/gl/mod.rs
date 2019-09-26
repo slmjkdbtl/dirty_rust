@@ -173,6 +173,10 @@ fn draw<U: UniformInterface>(
 	mode: Primitive,
 ) {
 
+	if let Some(fbuf) = fbuf {
+		fbuf.bind();
+	}
+
 	program.send(&uniform.values());
 
 	let tex = &uniform.texture();
@@ -195,6 +199,10 @@ fn draw<U: UniformInterface>(
 
 	if let Some(tex) = tex {
 		tex.unbind();
+	}
+
+	if let Some(fbuf) = fbuf {
+		fbuf.unbind();
 	}
 
 }
