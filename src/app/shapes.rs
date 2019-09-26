@@ -56,7 +56,7 @@ impl<'a> Drawable for Sprite<'a> {
 			.translate(self.offset * -0.5)
 		, |ctx| {
 
-			let shape = gfx::QuadShape::new(ctx.transform.matrix(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
+			let shape = gfx::QuadShape::new(ctx.transform.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
 			let uniform = gfx::Uniform2D {
 				proj: ctx.proj_2d,
@@ -303,7 +303,7 @@ impl Drawable for Polygon {
 
 			for (i, p) in self.pts.iter().enumerate() {
 
-				gfx::Vertex2D::new(ctx.transform.matrix() * *p, vec2!(0), self.color).push(&mut verts);
+				gfx::Vertex2D::new(ctx.transform.as_mat4() * *p, vec2!(0), self.color).push(&mut verts);
 
 				if i >= 2 {
 					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
@@ -363,7 +363,7 @@ impl Drawable for Gradient {
 		let matrix = ctx.transform
 			.translate((self.p1 + self.p2) * 0.5)
 			.rotate(rot - 90f32.to_radians())
-			.matrix();
+			.as_mat4();
 
 		let w = self.width;
 		let h = Vec2::dis(self.p1, self.p2);
@@ -779,13 +779,15 @@ impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.cur_shader_3d.send("model", ctx.transform);
-		ctx.cur_shader_3d.send("color", self.color);
 		ctx.draw_calls += 1;
-		ctx.empty_tex.handle.bind();
-		self.model.renderer.draw(&ctx.cur_shader_3d.handle);
-		ctx.empty_tex.handle.unbind();
-		ctx.cur_shader_3d.send("color", color!(1));
+
+		self.model.renderer.draw(&ctx.cur_shader_3d.handle, &gfx::Uniform3D {
+			proj: ctx.proj_3d,
+			view: ctx.view_3d,
+			model: ctx.transform,
+			color: self.color,
+			tex: ctx.empty_tex.clone(),
+		});
 
 		return Ok(());
 
@@ -803,11 +805,15 @@ impl Drawable for Cube {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.cur_shader_3d.send("model", ctx.transform);
 		ctx.draw_calls += 1;
-		ctx.empty_tex.handle.bind();
-		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle);
-		ctx.empty_tex.handle.unbind();
+
+		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle, &gfx::Uniform3D {
+			proj: ctx.proj_3d,
+			view: ctx.view_3d,
+			model: ctx.transform,
+			color: color!(),
+			tex: ctx.empty_tex.clone(),
+		});
 
 		return Ok(());
 
@@ -870,12 +876,12 @@ impl<'a> Drawable for Sprite3D<'a> {
 			.translate_3d(vec3!(offset.x, offset.y, 0.0))
 		, |ctx| {
 
-			let shape = gfx::FlagShape::new(ctx.transform.matrix(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
+			let shape = gfx::FlagShape::new(ctx.transform.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
 			ctx.renderer_3d.push_shape(shape, &ctx.cur_shader_3d.handle, &gfx::Uniform3D {
 				proj: ctx.proj_3d,
-				model: mat4!(),
-				view: mat4!(),
+				view: ctx.view_3d,
+				model: gfx::Transform::new(),
 				color: color!(),
 				tex: self.tex.clone(),
 			})?;

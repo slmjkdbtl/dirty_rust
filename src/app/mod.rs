@@ -80,6 +80,7 @@ pub struct Ctx {
 
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
+	pub(self) view_3d: math::Mat4,
 	pub(self) cam_3d: gfx::Camera,
 
 	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D, gfx::Uniform2D>,
@@ -88,11 +89,11 @@ pub struct Ctx {
 
 	pub(self) empty_tex: gfx::Texture,
 
-	pub(self) default_shader_2d: gfx::Shader,
-	pub(self) cur_shader_2d: gfx::Shader,
+	pub(self) default_shader_2d: gfx::Shader2D,
+	pub(self) cur_shader_2d: gfx::Shader2D,
 
-	pub(self) default_shader_3d: gfx::Shader,
-	pub(self) cur_shader_3d: gfx::Shader,
+	pub(self) default_shader_3d: gfx::Shader3D,
+	pub(self) cur_shader_3d: gfx::Shader3D,
 
 	pub(self) default_font: gfx::BitmapFont,
 
@@ -214,20 +215,20 @@ impl Ctx {
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
-		let shader_2d = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_2d_src, &frag_2d_src)?);
+		let shader_2d = gfx::Shader2D::from_handle(gl::Program::new(&gl, &vert_2d_src, &frag_2d_src)?);
 		let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
 
-		shader_2d.send("proj", proj_2d.clone());
+// 		shader_2d.send("proj", proj_2d.clone());
 
 		let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
 		let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
 
-		let shader_3d = gfx::Shader::from_handle(gl::Program::new(&gl, &vert_3d_src, &frag_3d_src)?);
+		let shader_3d = gfx::Shader3D::from_handle(gl::Program::new(&gl, &vert_3d_src, &frag_3d_src)?);
 		let proj_3d = math::perspective(60f32.to_radians(), conf.width as f32 / conf.height as f32, 0.1, 1024.0);
 		let cam_3d = gfx::Camera::new(vec3!(), 0.0, 0.0);
 
-		shader_3d.send("proj", proj_3d.clone());
-		shader_3d.send("view", cam_3d.get_lookat_matrix());
+// 		shader_3d.send("proj", proj_3d.clone());
+// 		shader_3d.send("view", cam_3d.get_lookat_matrix());
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_width = font_img.width();
@@ -280,6 +281,7 @@ impl Ctx {
 
 			proj_2d: proj_2d,
 			proj_3d: proj_3d,
+			view_3d: mat4!(),
 			cam_3d: cam_3d,
 
 			empty_tex: empty_tex,
@@ -418,7 +420,7 @@ impl Time {
 }
 
 impl gfx::UniformValue for Time {
-	fn get(&self) -> gfx::UniformType {
+	fn as_uniform(&self) -> gfx::UniformType {
 		return gfx::UniformType::F1(self.as_secs());
 	}
 }

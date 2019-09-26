@@ -87,7 +87,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 	}
 
 	// TODO: put this elsewhere?
-	pub(super) fn bind_attrs(&self, program: &Program) {
+	pub(super) fn bind_attrs<U: UniformInterface>(&self, program: &Program<U>) {
 
 		unsafe {
 
