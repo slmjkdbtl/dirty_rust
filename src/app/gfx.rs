@@ -451,8 +451,8 @@ impl Shape for QuadShape {
 
 	}
 
-	fn indices() -> Vec<u32> {
-		return vec![0, 1, 3, 1, 2, 3];
+	fn indices() -> &'static [u32] {
+		return &[0, 1, 3, 1, 2, 3];
 	}
 
 }
@@ -1013,8 +1013,8 @@ impl Shape for FlagShape {
 
 	}
 
-	fn indices() -> Vec<u32> {
-		return vec![0, 1, 3, 1, 2, 3];
+	fn indices() -> &'static [u32] {
+		return &[0, 1, 3, 1, 2, 3];
 	}
 
 }
@@ -1048,8 +1048,8 @@ impl Shape for CubeShape {
 
 	}
 
-	fn indices() -> Vec<u32> {
-		return vec![
+	fn indices() -> &'static [u32] {
+		return &[
 			0, 1, 2,
 			2, 3, 0,
 			1, 5, 6,
