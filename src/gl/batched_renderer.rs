@@ -57,15 +57,11 @@ impl<V: VertexLayout, U: UniformInterface + PartialEq + Clone> BatchedRenderer<V
 		fbuf: Option<&Framebuffer>,
 	) -> Result<()> {
 
-		let mut flushed = false;
-
+		// TODO: don't use recursion
 		if let Some(cur_program) = &self.cur_program {
 			if cur_program != program {
-				if !flushed {
-					self.flush();
-					flushed = true;
-				}
-				self.cur_program = Some(program.clone());
+				self.flush();
+				return self.push(verts, indices, program, uniform, fbuf);
 			}
 		} else {
 			self.cur_program = Some(program.clone());
@@ -73,25 +69,17 @@ impl<V: VertexLayout, U: UniformInterface + PartialEq + Clone> BatchedRenderer<V
 
 		if let Some(cur_uniform) = &self.cur_uniform {
 			if cur_uniform != uniform {
-				if !flushed {
-					self.flush();
-					flushed = true;
-				}
-				self.cur_uniform = Some(uniform.clone());
-				self.cur_program = Some(program.clone());
+				self.flush();
+				return self.push(verts, indices, program, uniform, fbuf);
 			}
 		} else {
 			self.cur_uniform = Some(uniform.clone());
 		}
 
 		if self.cur_fbuf.as_ref() != fbuf {
-			if !flushed {
-				self.flush();
-				flushed = true;
-			}
+			self.flush();
 			self.cur_fbuf = fbuf.map(Clone::clone);
-			self.cur_uniform = Some(uniform.clone());
-			self.cur_program = Some(program.clone());
+			return self.push(verts, indices, program, uniform, fbuf);
 		}
 
 		let offset = (self.vqueue.len() / V::STRIDE) as u32;
@@ -127,7 +115,7 @@ impl<V: VertexLayout, U: UniformInterface + PartialEq + Clone> BatchedRenderer<V
 		fbuf: Option<&Framebuffer>,
 	) -> Result<()> {
 
-		self.push(&[], &S::indices(), program, uniform, fbuf)?;
+		self.push(&[], S::indices(), program, uniform, fbuf)?;
 		shape.push(&mut self.vqueue);
 
 		return Ok(());

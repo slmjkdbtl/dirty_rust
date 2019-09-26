@@ -20,7 +20,7 @@ pub trait Shape {
 	type Vertex: VertexLayout;
 	const COUNT: usize;
 	fn push(&self, queue: &mut Vec<f32>);
-	fn indices() -> Vec<u32>;
+	fn indices() -> &'static [u32];
 
 }
 

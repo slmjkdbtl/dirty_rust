@@ -4,16 +4,9 @@ use dirty::*;
 use dirty::app::*;
 use input::Key;
 
-const RATE: usize = 128;
-const GATE: u16 = 54;
-
 struct Game {
-
 	tex: gfx::Texture,
 	count: usize,
-	started: bool,
-	done: bool,
-
 }
 
 impl app::State for Game {
@@ -21,10 +14,8 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
-			count: 0,
-			done: false,
-			started: false,
+			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/bunny.png"))?,
+			count: 10000,
 		});
 	}
 
@@ -34,8 +25,11 @@ impl app::State for Game {
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == &Key::Esc {
 					ctx.quit();
+				}
+				if k == &Key::Space {
+					self.count += 500;
 				}
 			},
 			_ => {},
@@ -49,20 +43,6 @@ impl app::State for Game {
 
 		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
 
-		if !self.started {
-			if ctx.fps() >= 56 {
-				self.started = true;
-			}
-		} else {
-			if !self.done {
-				self.count += RATE;
-				if ctx.fps() <= GATE {
-					println!("{}", self.count);
-					self.done = true;
-				}
-			}
-		}
-
 		return Ok(());
 
 	}
@@ -72,37 +52,35 @@ impl app::State for Game {
 		let w = ctx.width() as i32;
 		let h = ctx.height() as i32;
 
-		if self.started {
-
-			if !self.done {
-
-				for _ in 0..self.count {
-					ctx.push(&gfx::t()
-						.translate(vec2!(rand!(-w / 2, w / 2), rand!(-h / 2, h / 2)))
-					, |ctx| {
-						return ctx.draw(shapes::sprite(&self.tex));
-					})?;
-				}
-
-			} else {
-
-				ctx.push(&gfx::t()
-					.scale(vec2!(6))
-				, |ctx| {
-					return ctx.draw(shapes::text(&format!("{}", self.count)));
-				})?;
-
-			}
-
-		} else {
-
+		for _ in 0..self.count {
 			ctx.push(&gfx::t()
-				.scale(vec2!(2))
+				.translate(vec2!(rand!(-w, w) * 0.5, rand!(-h, h) * 0.5))
 			, |ctx| {
-				return ctx.draw(shapes::text("waiting..."));
+				ctx.draw(shapes::sprite(&self.tex))?;
+				return Ok(());
 			})?;
-
 		}
+
+		ctx.push(&gfx::t()
+			.scale(vec2!(6))
+		, |ctx| {
+			let fps = ctx.fps();
+			let c = if fps >= 60 {
+				color!(0, 1, 0, 1)
+			} else {
+				color!(1, 0, 0, 1)
+			};
+			ctx.draw(shapes::text(&format!("{}", fps)).color(c))?;
+			return Ok(());
+		})?;
+
+		ctx.push(&gfx::t()
+			.translate(vec2!(0, 64))
+			.scale(vec2!(1.5))
+		, |ctx| {
+			ctx.draw(shapes::text(&format!("{} bunnies", self.count)))?;
+			return Ok(());
+		})?;
 
 		return Ok(());
 
@@ -113,7 +91,9 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.hidpi(false)
+// 		.hidpi(false)
+		.fps_cap(None)
+		.vsync(false)
 		.run::<Game>() {
 		println!("{}", err);
 	}
