@@ -3,7 +3,8 @@
 use super::*;
 use crate::Result;
 
-pub struct BatchedRenderer<V: VertexLayout, U: UniformInterface> {
+// TODO: shouldn't need to bind to one type of UniformInterface
+pub struct BatchedRenderer<V: VertexLayout, U: UniformInterface + PartialEq + Clone> {
 
 	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
@@ -14,12 +15,12 @@ pub struct BatchedRenderer<V: VertexLayout, U: UniformInterface> {
 	iqueue: Vec<u32>,
 	prim: Primitive,
 	cur_uniform: Option<U>,
-	cur_program: Option<Program>,
+	cur_program: Option<Program<U>>,
 	draw_count: usize,
 
 }
 
-impl<V: VertexLayout, U: UniformInterface> BatchedRenderer<V, U> {
+impl<V: VertexLayout, U: UniformInterface + PartialEq + Clone> BatchedRenderer<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
@@ -45,7 +46,7 @@ impl<V: VertexLayout, U: UniformInterface> BatchedRenderer<V, U> {
 
 	}
 
-	pub fn push(&mut self, verts: &[f32], indices: &[u32], program: &Program, uniform: &U) -> Result<()> {
+	pub fn push(&mut self, verts: &[f32], indices: &[u32], program: &Program<U>, uniform: &U) -> Result<()> {
 
 		if let Some(cur_program) = &self.cur_program {
 			if cur_program != program {
@@ -92,7 +93,7 @@ impl<V: VertexLayout, U: UniformInterface> BatchedRenderer<V, U> {
 
 	}
 
-	pub fn push_shape<S: Shape>(&mut self, shape: S, program: &Program, uniform: &U) -> Result<()> {
+	pub fn push_shape<S: Shape>(&mut self, shape: S, program: &Program<U>, uniform: &U) -> Result<()> {
 
 		self.push(&[], &S::indices(), program, uniform)?;
 		shape.push(&mut self.vqueue);
@@ -120,7 +121,7 @@ impl<V: VertexLayout, U: UniformInterface> BatchedRenderer<V, U> {
 		self.vbuf.data(0, &self.vqueue);
 		self.ibuf.data(0, &self.iqueue);
 
-		ddraw(
+		draw(
 			&self.ctx,
 			#[cfg(feature="gl3")]
 			&self.vao,

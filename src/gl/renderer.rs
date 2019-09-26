@@ -48,7 +48,7 @@ impl<V: VertexLayout> Renderer<V> {
 
 	}
 
-	pub fn draw(&self, program: &Program) {
+	pub fn draw<U: UniformInterface>(&self, program: &Program<U>, uniforms: &U) {
 		draw(
 			&self.ctx,
 			#[cfg(feature="gl3")]
@@ -57,6 +57,7 @@ impl<V: VertexLayout> Renderer<V> {
 			&self.vbuf,
 			&self.ibuf,
 			&program,
+			uniforms,
 			self.count as u32,
 			self.prim,
 		);

@@ -162,11 +162,19 @@ impl Device {
 }
 
 #[cfg(feature="gl3")]
-fn draw(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, count: u32, mode: Primitive) {
+fn draw<U: UniformInterface>(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program<U>, uniform: &U, count: u32, mode: Primitive) {
 
+	program.send_all(uniform);
+
+	let tex = &uniform.send().texture;
+
+	program.bind();
 	vao.bind();
 	ibuf.bind();
-	program.bind();
+
+	if let Some(tex) = tex {
+		tex.bind();
+	}
 
 	unsafe {
 		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
@@ -176,29 +184,14 @@ fn draw(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program, c
 	ibuf.unbind();
 	vao.unbind();
 
-}
-
-#[cfg(not(feature="gl3"))]
-fn draw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, count: u32, mode: Primitive) {
-
-	program.bind();
-	vbuf.bind();
-	vbuf.bind_attrs(program);
-	ibuf.bind();
-
-	unsafe {
-		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+	if let Some(tex) = tex {
+		tex.unbind();
 	}
 
-	ibuf.unbind();
-	vbuf.unbind();
-	program.unbind();
-
 }
 
-// TODO: make this the one
 #[cfg(not(feature="gl3"))]
-fn ddraw<V: VertexLayout>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program, uniform: &impl UniformInterface, count: u32, mode: Primitive) {
+fn draw<V: VertexLayout, U: UniformInterface>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program<U>, uniform: &U, count: u32, mode: Primitive) {
 
 	program.send_all(uniform);
 

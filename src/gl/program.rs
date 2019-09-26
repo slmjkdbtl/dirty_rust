@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::rc::Rc;
+use std::marker::PhantomData;
 
 use glow::Context;
 
@@ -8,12 +9,13 @@ use super::*;
 use crate::Result;
 
 #[derive(Clone, Debug)]
-pub struct Program {
+pub struct Program<U: UniformInterface> {
 	ctx: Rc<GLCtx>,
 	pub(super) id: ProgramID,
+	uniform_interface: PhantomData<U>,
 }
 
-impl Program {
+impl<U: UniformInterface> Program<U> {
 
 	pub fn new(device: &Device, vert_src: &str, frag_src: &str) -> Result<Self> {
 
@@ -54,6 +56,7 @@ impl Program {
 			let program = Self {
 				ctx: ctx,
 				id: program_id,
+				uniform_interface: PhantomData,
 			};
 
 			return Ok(program);
@@ -106,7 +109,7 @@ impl Program {
 
 			let loc = self.ctx.get_uniform_location(self.id, name);
 
-			match value.get() {
+			match value.as_uniform() {
 				F1(f) => self.ctx.uniform_1_f32(loc, f),
 				F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
 				F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
@@ -149,7 +152,7 @@ impl Program {
 }
 
 // TODO
-impl Drop for Program {
+impl<U: UniformInterface> Drop for Program<U> {
 	fn drop(&mut self) {
 		unsafe {
 // 			self.ctx.delete_program(self.id);
@@ -157,7 +160,7 @@ impl Drop for Program {
 	}
 }
 
-impl PartialEq for Program {
+impl<U: UniformInterface> PartialEq for Program<U> {
 	fn eq(&self, other: &Self) -> bool {
 		return self.id == other.id;
 	}

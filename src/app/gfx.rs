@@ -35,7 +35,7 @@ pub trait Gfx {
 	// drawing
 	fn draw(&mut self, t: impl Drawable) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_with(&mut self, shader: &Shader2D, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
@@ -100,8 +100,8 @@ impl Gfx for Ctx {
 // 		flush(self);
 		self.proj_2d = flip_matrix(&self.proj_2d);
 		self.proj_3d = flip_matrix(&self.proj_3d);
-		self.cur_shader_2d.send("proj", self.proj_2d);
-		self.cur_shader_3d.send("proj", self.proj_3d);
+// 		self.cur_shader_2d.send("proj", self.proj_2d);
+// 		self.cur_shader_3d.send("proj", self.proj_3d);
 		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 
 		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
@@ -122,18 +122,18 @@ impl Gfx for Ctx {
 		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 		self.proj_2d = flip_matrix(&self.proj_2d);
 		self.proj_3d = flip_matrix(&self.proj_3d);
-		self.cur_shader_2d.send("proj", self.proj_2d);
-		self.cur_shader_3d.send("proj", self.proj_3d);
+// 		self.cur_shader_2d.send("proj", self.proj_2d);
+// 		self.cur_shader_3d.send("proj", self.proj_3d);
 
 		return Ok(());
 
 	}
 
-	fn draw_with(&mut self, shader: &Shader, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	fn draw_with(&mut self, shader: &Shader2D, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 // 		flush(self);
 		self.cur_shader_2d = shader.clone();
-		self.cur_shader_2d.send("proj", self.proj_2d);
+// 		self.cur_shader_2d.send("proj", self.proj_2d);
 		f(self)?;
 		// TODO: why is this flush necessary?
 // 		flush(self);
@@ -193,7 +193,7 @@ impl Gfx for Ctx {
 	}
 
 	fn use_cam(&mut self, cam: &Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-		self.cur_shader_3d.send("view", cam.get_lookat_matrix());
+		self.view_3d = cam.get_lookat_matrix();
 		return f(self);
 	}
 
@@ -355,7 +355,7 @@ impl VertexLayout for Vertex3D {
 pub(super) struct Uniform3D {
 	pub proj: Mat4,
 	pub view: Mat4,
-	pub model: Mat4,
+	pub model: Transform,
 	pub color: Color,
 	pub tex: Texture,
 }
@@ -365,7 +365,7 @@ impl gl::UniformInterface for Uniform3D {
 		return gl::UniformValues::build()
 			.value("proj", self.proj)
 			.value("view", self.view)
-			.value("model", self.model)
+			.value("model", self.model.as_mat4())
 			.value("color", self.color)
 			.texture(&self.tex.handle)
 			;
@@ -665,14 +665,18 @@ impl BitmapFont {
 
 }
 
-#[derive(Clone, PartialEq)]
-pub struct Shader {
-	pub(super) handle: Rc<gl::Program>,
+pub trait Uniform {
+	fn send(&self) -> UniformValue;
 }
 
-impl Shader {
+#[derive(Clone, PartialEq)]
+pub struct Shader2D {
+	pub(super) handle: Rc<gl::Program<Uniform2D>>,
+}
 
-	pub(super) fn from_handle(handle: gl::Program) -> Self {
+impl Shader2D {
+
+	pub(super) fn from_handle(handle: gl::Program<Uniform2D>) -> Self {
 		return Self {
 			handle: Rc::new(handle),
 		};
@@ -691,8 +695,32 @@ impl Shader {
 		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
 	}
 
-	pub fn send(&self, name: &str, value: impl gl::UniformValue) {
-		self.handle.send(name, value);
+}
+
+#[derive(Clone, PartialEq)]
+pub struct Shader3D {
+	pub(super) handle: Rc<gl::Program<Uniform3D>>,
+}
+
+impl Shader3D {
+
+	pub(super) fn from_handle(handle: gl::Program<Uniform3D>) -> Self {
+		return Self {
+			handle: Rc::new(handle),
+		};
+	}
+
+	pub fn effect(ctx: &Ctx, frag: &str) -> Result<Self> {
+
+		let vert_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
+		let frag_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
+
+		return Self::from_code(ctx, &vert_src, &frag_src);
+
+	}
+
+	pub fn from_code(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
+		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
 	}
 
 }
@@ -1128,7 +1156,7 @@ impl TrueTypeFont {
 
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct Transform {
 	matrix: Mat4,
 }
@@ -1185,7 +1213,7 @@ impl Transform {
 		return self;
 	}
 
-	pub fn matrix(&self) -> Mat4 {
+	pub fn as_mat4(&self) -> Mat4 {
 		return self.matrix;
 	}
 
@@ -1196,8 +1224,8 @@ impl Transform {
 }
 
 impl gfx::UniformValue for Transform {
-	fn get(&self) -> gfx::UniformType {
-		return gfx::UniformValue::get(&self.matrix);
+	fn as_uniform(&self) -> gfx::UniformType {
+		return gfx::UniformValue::as_uniform(&self.matrix);
 	}
 }
 

@@ -18,7 +18,7 @@ impl UniformValues {
 		};
 	}
 	pub fn value(mut self, name: &'static str, val: impl UniformValue) -> Self {
-		self.values.push((name, val.get()));
+		self.values.push((name, val.as_uniform()));
 		return self;
 	}
 	pub fn texture(mut self, tex: &Texture) -> Self {
@@ -27,7 +27,7 @@ impl UniformValues {
 	}
 }
 
-pub trait UniformInterface: 'static + PartialEq + Clone {
+pub trait UniformInterface: 'static {
 	fn send(&self) -> UniformValues;
 }
 
@@ -45,89 +45,89 @@ pub enum UniformType {
 }
 
 pub trait UniformValue {
-	fn get(&self) -> UniformType;
+	fn as_uniform(&self) -> UniformType;
 }
 
 impl UniformValue for f32 {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F1(*self);
 	}
 }
 
 impl UniformValue for [f32; 2] {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F2(self[0], self[1]);
 	}
 }
 
 impl UniformValue for [f32; 3] {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F3(self[0], self[1], self[2]);
 	}
 }
 
 impl UniformValue for [f32; 4] {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F4(self[0], self[1], self[2], self[3]);
 	}
 }
 
 impl UniformValue for i32 {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::I1(*self);
 	}
 }
 
 impl UniformValue for [i32; 2] {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::I2(self[0], self[1]);
 	}
 }
 
 impl UniformValue for [i32; 3] {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::I3(self[0], self[1], self[2]);
 	}
 }
 
 impl UniformValue for [i32; 4] {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::I4(self[0], self[1], self[2], self[3]);
 	}
 }
 
 impl UniformValue for Vec2 {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F2(self.x, self.y);
 	}
 }
 
 impl UniformValue for Vec3 {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F3(self.x, self.y, self.z);
 	}
 }
 
 impl UniformValue for Vec4 {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F4(self.x, self.y, self.z, self.w);
 	}
 }
 
 impl UniformValue for Color {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F4(self.r, self.g, self.b, self.a);
 	}
 }
 
 impl UniformValue for Quad {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::F4(self.x, self.y, self.w, self.h);
 	}
 }
 
 impl UniformValue for Mat4 {
-	fn get(&self) -> UniformType {
+	fn as_uniform(&self) -> UniformType {
 		return UniformType::Mat4(self.as_arr());
 	}
 }
