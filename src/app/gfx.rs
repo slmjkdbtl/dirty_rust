@@ -16,8 +16,8 @@ use super::*;
 pub use gl::VertexLayout;
 pub use gl::Shape;
 
-pub use gl::UniformValue;
 pub use gl::UniformType;
+pub use gl::UniformValues;
 pub use gl::FilterMode;
 pub use gl::Surface;
 pub use gl::Cmp;
@@ -35,7 +35,8 @@ pub trait Gfx {
 	// drawing
 	fn draw(&mut self, t: impl Drawable) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_with(&mut self, shader: &Shader2D, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_2d_with(&mut self, shader: &Shader2D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_3d_with(&mut self, shader: &Shader3D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
@@ -95,13 +96,21 @@ impl Gfx for Ctx {
 		return thing.draw(self);
 	}
 
+	// TODO: fix this with the new uniform design
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-// 		flush(self);
-		self.proj_2d = flip_matrix(&self.proj_2d);
-		self.proj_3d = flip_matrix(&self.proj_3d);
-// 		self.cur_shader_2d.send("proj", self.proj_2d);
-// 		self.cur_shader_3d.send("proj", self.proj_3d);
+		if self.canvas_active {
+			return Err(Error::Gfx(format!("cannot use canvas inside a canvas call")));
+		}
+
+		self.canvas_active = true;
+		flush(self);
+
+		let o_proj_2d = self.proj_2d;
+		let o_proj_3d = self.proj_3d;
+
+		self.proj_2d = flip_matrix(&o_proj_2d);
+		self.proj_3d = flip_matrix(&o_proj_3d);
 		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 
 		// TODO: fixed fullscreen framebuffer weirdness, but now weird resize
@@ -120,16 +129,16 @@ impl Gfx for Ctx {
 		})?;
 
 		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
-		self.proj_2d = flip_matrix(&self.proj_2d);
-		self.proj_3d = flip_matrix(&self.proj_3d);
-// 		self.cur_shader_2d.send("proj", self.proj_2d);
-// 		self.cur_shader_3d.send("proj", self.proj_3d);
+		self.proj_2d = o_proj_2d;
+		self.proj_3d = o_proj_3d;
+		self.canvas_active = false;
 
 		return Ok(());
 
 	}
 
-	fn draw_with(&mut self, shader: &Shader2D, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	// TODO: fix this with the new uniform design
+	fn draw_2d_with(&mut self, shader: &Shader2D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 // 		flush(self);
 		self.cur_shader_2d = shader.clone();
@@ -138,6 +147,21 @@ impl Gfx for Ctx {
 		// TODO: why is this flush necessary?
 // 		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
+
+		return Ok(());
+
+	}
+
+	// TODO: fix this with the new uniform design
+	fn draw_3d_with(&mut self, shader: &Shader3D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+// 		flush(self);
+		self.cur_shader_3d = shader.clone();
+// 		self.cur_shader_3d.send("proj", self.proj_2d);
+		f(self)?;
+		// TODO: why is this flush necessary?
+// 		flush(self);
+		self.cur_shader_3d = self.default_shader_3d.clone();
 
 		return Ok(());
 
@@ -291,11 +315,13 @@ pub(super) struct Uniform2D {
 }
 
 impl gl::UniformInterface for Uniform2D {
-	fn send(&self) -> gl::UniformValues {
-		return gl::UniformValues::build()
-			.value("proj", self.proj)
-			.texture(&self.tex.handle)
-			;
+	fn values(&self) -> UniformValues {
+		return vec![
+			("proj", UniformType::Mat4(self.proj.as_arr())),
+		];
+	}
+	fn texture(&self) -> Option<&gl::Texture> {
+		return Some(&self.tex.handle);
 	}
 }
 
@@ -361,14 +387,16 @@ pub(super) struct Uniform3D {
 }
 
 impl gl::UniformInterface for Uniform3D {
-	fn send(&self) -> gl::UniformValues {
-		return gl::UniformValues::build()
-			.value("proj", self.proj)
-			.value("view", self.view)
-			.value("model", self.model.as_mat4())
-			.value("color", self.color)
-			.texture(&self.tex.handle)
-			;
+	fn values(&self) -> UniformValues {
+		return vec![
+			("proj", UniformType::Mat4(self.proj.as_arr())),
+			("view", UniformType::Mat4(self.view.as_arr())),
+			("model", UniformType::Mat4(self.model.as_mat4().as_arr())),
+			("color", UniformType::F4(self.color.as_arr())),
+		];
+	}
+	fn texture(&self) -> Option<&gl::Texture> {
+		return Some(&self.tex.handle);
 	}
 }
 
@@ -666,7 +694,7 @@ impl BitmapFont {
 }
 
 pub trait Uniform {
-	fn send(&self) -> UniformValue;
+	fn values(&self) -> UniformValues;
 }
 
 #[derive(Clone, PartialEq)]
@@ -1221,12 +1249,6 @@ impl Transform {
 		return Self::from_mat4(self.matrix * other.matrix);
 	}
 
-}
-
-impl gfx::UniformValue for Transform {
-	fn as_uniform(&self) -> gfx::UniformType {
-		return gfx::UniformValue::as_uniform(&self.matrix);
-	}
 }
 
 pub fn t() -> Transform {

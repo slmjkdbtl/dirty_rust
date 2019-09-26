@@ -65,60 +65,26 @@ impl<U: UniformInterface> Program<U> {
 
 	}
 
-	pub fn send_all(&self, values: &impl UniformInterface) {
+	pub fn send(&self, uniform: &impl UniformInterface) {
 
 		unsafe {
 
 			use UniformType::*;
 
-			let values = values.send();
-
 			self.bind();
 
-			for v in values.values {
+			for v in uniform.values() {
 
 				let loc = self.ctx.get_uniform_location(self.id, v.0);
 
 				match v.1 {
 					F1(f) => self.ctx.uniform_1_f32(loc, f),
-					F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
-					F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
-					F4(f1, f2, f3, f4) => self.ctx.uniform_4_f32(loc, f1, f2, f3, f4),
-					I1(i) => self.ctx.uniform_1_i32(loc, i),
-					I2(i1, i2) => self.ctx.uniform_2_i32(loc, i1, i2),
-					I3(i1, i2, i3) => self.ctx.uniform_3_i32(loc, i1, i2, i3),
-					I4(i1, i2, i3, i4) => self.ctx.uniform_4_i32(loc, i1, i2, i3, i4),
+					F2(f) => self.ctx.uniform_2_f32(loc, f[0], f[1]),
+					F3(f) => self.ctx.uniform_3_f32(loc, f[0], f[1], f[2]),
+					F4(f) => self.ctx.uniform_4_f32(loc, f[0], f[1], f[2], f[3]),
 					Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
 				}
 
-			}
-
-			self.unbind();
-
-		}
-
-	}
-
-	pub fn send(&self, name: &str, value: impl UniformValue) {
-
-		unsafe {
-
-			self.bind();
-
-			use UniformType::*;
-
-			let loc = self.ctx.get_uniform_location(self.id, name);
-
-			match value.as_uniform() {
-				F1(f) => self.ctx.uniform_1_f32(loc, f),
-				F2(f1, f2) => self.ctx.uniform_2_f32(loc, f1, f2),
-				F3(f1, f2, f3) => self.ctx.uniform_3_f32(loc, f1, f2, f3),
-				F4(f1, f2, f3, f4) => self.ctx.uniform_4_f32(loc, f1, f2, f3, f4),
-				I1(i) => self.ctx.uniform_1_i32(loc, i),
-				I2(i1, i2) => self.ctx.uniform_2_i32(loc, i1, i2),
-				I3(i1, i2, i3) => self.ctx.uniform_3_i32(loc, i1, i2, i3),
-				I4(i1, i2, i3, i4) => self.ctx.uniform_4_i32(loc, i1, i2, i3, i4),
-				Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
 			}
 
 			self.unbind();
