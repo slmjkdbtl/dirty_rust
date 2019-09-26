@@ -40,7 +40,7 @@ impl<V: VertexLayout> Renderer<V> {
 	pub fn from_shape<S: Shape>(device: &Device, shape: S) -> Result<Self> {
 
 		let mut verts = Vec::with_capacity(S::COUNT * S::Vertex::STRIDE);
-		shape.push(&mut verts);
+		shape.vertices(&mut verts);
 
 		return Self::new(device, &verts, &S::indices());
 

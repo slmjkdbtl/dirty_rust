@@ -51,23 +51,20 @@ impl<'a> Drawable for Sprite<'a> {
 
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
 
-		ctx.push(&gfx::t()
+		// TODO: extremely slow
+		let t = ctx.transform
 			.scale(scale)
 			.translate(self.offset * -0.5)
-		, |ctx| {
+			;
 
-			let shape = gfx::QuadShape::new(ctx.transform.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
+		let shape = gfx::QuadShape::new(t.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
-			let uniform = gfx::Uniform2D {
-				proj: ctx.proj_2d,
-				tex: self.tex.clone(),
-			};
+		let uniform = gfx::Uniform2D {
+			proj: ctx.proj_2d,
+			tex: self.tex.clone(),
+		};
 
-			ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, &uniform, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()))?;
-
-			return Ok(());
-
-		})?;
+		ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, &uniform, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()))?;
 
 		return Ok(());
 

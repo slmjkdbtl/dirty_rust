@@ -44,6 +44,7 @@
 - [gfx] fallback font
 - [gfx] obj load all objects
 - [gfx] gl3 flag texture not rendering
+- [gfx] quad renderer's matrix calculation is slow
 
 == DONE
 - [http] refactor http
