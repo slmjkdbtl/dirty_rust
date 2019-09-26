@@ -140,12 +140,12 @@ impl Gfx for Ctx {
 	// TODO: fix this with the new uniform design
 	fn draw_2d_with(&mut self, shader: &Shader2D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-// 		flush(self);
+		flush(self);
 		self.cur_shader_2d = shader.clone();
-// 		self.cur_shader_2d.send("proj", self.proj_2d);
+		self.cur_shader_2d.handle.send(&uniform.values());
 		f(self)?;
 		// TODO: why is this flush necessary?
-// 		flush(self);
+		flush(self);
 		self.cur_shader_2d = self.default_shader_2d.clone();
 
 		return Ok(());
@@ -155,12 +155,12 @@ impl Gfx for Ctx {
 	// TODO: fix this with the new uniform design
 	fn draw_3d_with(&mut self, shader: &Shader3D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-// 		flush(self);
+		flush(self);
 		self.cur_shader_3d = shader.clone();
-// 		self.cur_shader_3d.send("proj", self.proj_2d);
+		self.cur_shader_3d.handle.send(&uniform.values());
 		f(self)?;
 		// TODO: why is this flush necessary?
-// 		flush(self);
+		flush(self);
 		self.cur_shader_3d = self.default_shader_3d.clone();
 
 		return Ok(());

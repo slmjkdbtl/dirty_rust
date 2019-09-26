@@ -65,7 +65,7 @@ impl<U: UniformInterface> Program<U> {
 
 	}
 
-	pub fn send(&self, uniform: &impl UniformInterface) {
+	pub fn send(&self, values: &UniformValues) {
 
 		unsafe {
 
@@ -73,7 +73,7 @@ impl<U: UniformInterface> Program<U> {
 
 			self.bind();
 
-			for v in uniform.values() {
+			for v in values {
 
 				let loc = self.ctx.get_uniform_location(self.id, v.0);
 

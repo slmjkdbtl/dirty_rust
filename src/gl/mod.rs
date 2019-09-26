@@ -164,7 +164,7 @@ impl Device {
 #[cfg(feature="gl3")]
 fn draw<U: UniformInterface>(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer, program: &Program<U>, uniform: &U, count: u32, mode: Primitive) {
 
-	program.send(uniform);
+	program.send(&uniform.values());
 
 	let tex = &uniform.texture();
 
@@ -193,7 +193,7 @@ fn draw<U: UniformInterface>(ctx: &GLCtx, vao: &VertexArray, ibuf: &IndexBuffer,
 #[cfg(not(feature="gl3"))]
 fn draw<V: VertexLayout, U: UniformInterface>(ctx: &GLCtx, vbuf: &VertexBuffer<V>, ibuf: &IndexBuffer, program: &Program<U>, uniform: &U, count: u32, mode: Primitive) {
 
-	program.send(uniform);
+	program.send(&uniform.values());
 
 	let tex = &uniform.texture();
 
