@@ -417,9 +417,7 @@ impl Time {
 		self.time = d;
 	}
 	fn as_secs(&self) -> f32 {
-		// TODO: use as_secs_f32
-// 		return self.time.as_secs_f32();
-		return self.time.as_millis() as f32 / 1000.0;
+		return self.time.as_secs_f32();
 	}
 }
 

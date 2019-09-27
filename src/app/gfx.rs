@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::mem;
+use std::ops;
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
@@ -1187,48 +1188,44 @@ impl Transform {
 		};
 	}
 
-	pub fn translate(mut self, p: Vec2) -> Self {
-		self.matrix *= Mat4::translate(vec3!(p.x, p.y, 0.0));
-		return self;
+	pub fn translate(&self, p: Vec2) -> Self {
+		return Self::from_mat4(self.matrix * Mat4::translate(vec3!(p.x, p.y, 0.0)));
 	}
 
-	pub fn rotate(mut self, a: f32) -> Self {
-		self.matrix *= Mat4::rotate(a, vec3!(0, 0, 1));
-		return self;
+	pub fn rotate(&self, a: f32) -> Self {
+		return Self::from_mat4(self.matrix * Mat4::rotate(a, vec3!(0, 0, 1)));
 	}
 
-	pub fn scale(mut self, s: Vec2) -> Self {
-		self.matrix *= Mat4::scale(vec3!(s.x, s.y, 1.0));
-		return self;
+	pub fn scale(&self, s: Vec2) -> Self {
+		return Self::from_mat4(self.matrix * Mat4::scale(vec3!(s.x, s.y, 1.0)));
 	}
 
-	pub fn translate_3d(mut self, p: Vec3) -> Self {
-		self.matrix *= Mat4::translate(p);
-		return self;
+	pub fn translate_3d(&self, p: Vec3) -> Self {
+		return Self::from_mat4(self.matrix * Mat4::translate(p));
 	}
 
-	pub fn scale_3d(mut self, s: Vec3) -> Self {
-		self.matrix *= Mat4::scale(s);
-		return self;
+	pub fn scale_3d(&self, s: Vec3) -> Self {
+		return Self::from_mat4(self.matrix * Mat4::scale(s));
 	}
 
-	pub fn rotate_x(mut self, a: f32) -> Self {
-		self.matrix *= Mat4::rotate(a, vec3!(1, 0, 0));
-		return self;
+	pub fn rotate_x(&self, a: f32) -> Self {
+		return Self::from_mat4(self.matrix *  Mat4::rotate(a, vec3!(1, 0, 0)));
 	}
 
-	pub fn rotate_y(mut self, a: f32) -> Self {
-		self.matrix *= Mat4::rotate(a, vec3!(0, 1, 0));
-		return self;
+	pub fn rotate_y(&self, a: f32) -> Self {
+		return Self::from_mat4(self.matrix *  Mat4::rotate(a, vec3!(0, 1, 0)));
 	}
 
-	pub fn rotate_z(mut self, a: f32) -> Self {
-		self.matrix *= Mat4::rotate(a, vec3!(0, 0, 1));
-		return self;
+	pub fn rotate_z(&self, a: f32) -> Self {
+		return Self::from_mat4(self.matrix *  Mat4::rotate(a, vec3!(0, 0, 1)));
 	}
 
 	pub fn as_mat4(&self) -> Mat4 {
 		return self.matrix;
+	}
+
+	pub fn invert(&self) -> Self {
+		return Self::from_mat4(self.matrix.invert());
 	}
 
 	pub fn apply(self, other: Self) -> Self {
@@ -1236,6 +1233,28 @@ impl Transform {
 	}
 
 }
+
+impl ops::Mul<Vec4> for Transform {
+	type Output = Vec4;
+	fn mul(self, pt: Self::Output) -> Self::Output {
+		return self.matrix * pt;
+	}
+}
+
+impl ops::Mul<Vec3> for Transform {
+	type Output = Vec3;
+	fn mul(self, pt: Self::Output) -> Self::Output {
+		return self.matrix * pt;
+	}
+}
+
+impl ops::Mul<Vec2> for Transform {
+	type Output = Vec2;
+	fn mul(self, pt: Self::Output) -> Self::Output {
+		return self.matrix * pt;
+	}
+}
+
 
 pub fn t() -> Transform {
 	return Transform::new();
