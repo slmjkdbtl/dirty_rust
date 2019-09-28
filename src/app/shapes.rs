@@ -64,7 +64,7 @@ impl<'a> Drawable for Sprite<'a> {
 			tex: self.tex.clone(),
 		};
 
-		ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, &uniform, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()))?;
+		ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, &uniform)?;
 
 		return Ok(());
 
@@ -311,7 +311,7 @@ impl Drawable for Polygon {
 			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, &gfx::Uniform2D {
 				proj: ctx.proj_2d,
 				tex: ctx.empty_tex.clone(),
-			}, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()))?;
+			})?;
 
 		}
 
@@ -402,7 +402,7 @@ impl Drawable for Gradient {
 		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, &gfx::Uniform2D {
 			proj: ctx.proj_2d,
 			tex: ctx.empty_tex.clone(),
-		}, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()))?;
+		})?;
 
 		return Ok(());
 
@@ -784,7 +784,7 @@ impl<'a> Drawable for Model<'a> {
 			model: ctx.transform,
 			color: self.color,
 			tex: ctx.empty_tex.clone(),
-		}, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()));
+		});
 
 		return Ok(());
 
@@ -810,7 +810,7 @@ impl Drawable for Cube {
 			model: ctx.transform,
 			color: color!(),
 			tex: ctx.empty_tex.clone(),
-		}, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()));
+		});
 
 		return Ok(());
 
@@ -881,7 +881,7 @@ impl<'a> Drawable for Sprite3D<'a> {
 				model: gfx::Transform::new(),
 				color: color!(),
 				tex: self.tex.clone(),
-			}, ctx.cur_canvas.as_ref().map(|s| s.handle.as_ref()))?;
+			})?;
 
 			return Ok(());
 
