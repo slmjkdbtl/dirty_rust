@@ -9,7 +9,7 @@ struct Game {
 	model: gfx::Model,
 	pix_shader: gfx::Shader2D,
 	canvas: gfx::Canvas,
-	cam: gfx::Camera,
+	cam: gfx::PCam,
 	move_speed: f32,
 	eye_speed: f32,
 }
@@ -36,7 +36,7 @@ impl app::State for Game {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
 			pix_shader: gfx::Shader2D::effect(ctx, include_str!("res/pix.frag"))?,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
-			cam: gfx::Camera::new(vec3!(0, 0, -12), 0.0, 0.0),
+			cam: gfx::PCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
 			eye_speed: 0.16,
 		});
@@ -138,12 +138,18 @@ impl app::State for Game {
 
 		})?;
 
-		ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-			resolution: vec2!(ctx.width(), ctx.height()),
-			size: 6.0,
-		}, |ctx| {
-			return ctx.draw(shapes::canvas(&self.canvas));
+		ctx.draw_on(&self.canvas, |ctx| {
+			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
+				resolution: vec2!(ctx.width(), ctx.height()),
+				size: 6.0,
+			}, |ctx| {
+				ctx.draw(shapes::canvas(&self.canvas))?;
+				return Ok(());
+			})?;
+			return Ok(());
 		})?;
+
+		ctx.draw(shapes::canvas(&self.canvas))?;
 
 		return Ok(());
 

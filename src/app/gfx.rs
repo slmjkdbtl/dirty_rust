@@ -48,7 +48,7 @@ pub trait Gfx {
 	fn coord(&self, coord: Origin) -> Vec2;
 
 	// camera
-	fn use_cam(&mut self, cam: &Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 }
 
@@ -103,6 +103,8 @@ impl Gfx for Ctx {
 			return Err(Error::Gfx(format!("cannot use canvas inside a canvas call")));
 		}
 
+		flush(self);
+
 		let o_proj_2d = self.proj_2d;
 		let o_proj_3d = self.proj_3d;
 		let t = self.transform;
@@ -114,7 +116,12 @@ impl Gfx for Ctx {
 		self.proj_3d = flip_matrix(&o_proj_3d);
 		self.transform = Transform::new();
 
-		f(self)?;
+		canvas.handle.with(|| -> Result<()> {
+			f(self)?;
+			return Ok(());
+		})?;
+
+		flush(self);
 
 		self.transform = t;
 		self.proj_2d = o_proj_2d;
@@ -202,9 +209,25 @@ impl Gfx for Ctx {
 
 	}
 
-	fn use_cam(&mut self, cam: &Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-		self.view_3d = cam.get_lookat_matrix();
-		return f(self);
+	fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		let oview_3d = self.view_3d;
+		let oproj_3d = self.proj_3d;
+
+		self.view_3d = cam.lookat();
+		self.proj_3d = cam.projection();
+
+		if self.cur_canvas.is_some() {
+			self.proj_3d = flip_matrix(&self.proj_3d);
+		}
+
+		f(self)?;
+
+		self.view_3d = oview_3d;
+		self.proj_3d = oproj_3d;
+
+		return Ok(());
+
 	}
 
 }
@@ -781,25 +804,36 @@ impl Canvas {
 
 }
 
-// TODO: integrate projection in Camera
+pub trait Camera {
+	fn projection(&self) -> Mat4;
+	fn lookat(&self) -> Mat4;
+}
+
 #[derive(Clone)]
-pub struct Camera {
+pub struct PCam {
 	front: Vec3,
 	pos: Vec3,
 	yaw: f32,
 	pitch: f32,
-// 	proj: Mat4,
+	fov: f32,
+	aspect: f32,
+	near: f32,
+	far: f32,
 }
 
-impl Camera {
+impl PCam {
 
-	pub fn new(pos: Vec3, yaw: f32, pitch: f32) -> Self {
+	pub fn new(fov: f32, aspect: f32, near: f32, far: f32, pos: Vec3, yaw: f32, pitch: f32) -> Self {
 
 		let mut c = Self {
 			pos: vec3!(),
 			front: vec3!(),
 			yaw: 0.0,
 			pitch: 0.0,
+			fov: 60.0,
+			aspect: aspect,
+			near: near,
+			far: far,
 		};
 
 		c.set_pos(pos);
@@ -846,10 +880,15 @@ impl Camera {
 		return self.pitch;
 	}
 
-	pub(super) fn get_lookat_matrix(&self) -> Mat4 {
+}
+
+impl Camera for PCam {
+	fn projection(&self) -> Mat4 {
+		return math::perspective(self.fov.to_radians(), self.aspect, self.near, self.far);
+	}
+	fn lookat(&self) -> Mat4 {
 		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
 	}
-
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

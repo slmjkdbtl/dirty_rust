@@ -11,6 +11,7 @@ export!(vao);
 export!(uniform);
 export!(stencil);
 export!(renderer);
+export!(shape);
 export!(batched_renderer);
 
 use std::mem;
@@ -168,14 +169,9 @@ fn draw<U: UniformInterface>(
 	ibuf: &IndexBuffer,
 	program: &Program<U>,
 	uniform: &U,
-	fbuf: Option<&Framebuffer>,
 	count: u32,
 	mode: Primitive,
 ) {
-
-	if let Some(fbuf) = fbuf {
-		fbuf.bind();
-	}
 
 	program.send(&uniform.values());
 
@@ -201,10 +197,6 @@ fn draw<U: UniformInterface>(
 		tex.unbind();
 	}
 
-	if let Some(fbuf) = fbuf {
-		fbuf.unbind();
-	}
-
 }
 
 #[cfg(not(feature="gl3"))]
@@ -214,14 +206,9 @@ fn draw<V: VertexLayout, U: UniformInterface>(
 	ibuf: &IndexBuffer,
 	program: &Program<U>,
 	uniform: &U,
-	fbuf: Option<&Framebuffer>,
 	count: u32,
 	mode: Primitive,
 ) {
-
-	if let Some(fbuf) = fbuf {
-		fbuf.bind();
-	}
 
 	program.send(&uniform.values());
 
@@ -246,10 +233,6 @@ fn draw<V: VertexLayout, U: UniformInterface>(
 
 	if let Some(tex) = tex {
 		tex.unbind();
-	}
-
-	if let Some(fbuf) = fbuf {
-		fbuf.unbind();
 	}
 
 }

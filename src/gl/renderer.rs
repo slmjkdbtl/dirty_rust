@@ -46,7 +46,7 @@ impl<V: VertexLayout> Renderer<V> {
 
 	}
 
-	pub fn draw<U: UniformInterface>(&self, program: &Program<U>, uniforms: &U, fbuf: Option<&Framebuffer>) {
+	pub fn draw<U: UniformInterface>(&self, program: &Program<U>, uniforms: &U) {
 
 		draw(
 			&self.ctx,
@@ -57,7 +57,6 @@ impl<V: VertexLayout> Renderer<V> {
 			&self.ibuf,
 			&program,
 			uniforms,
-			fbuf,
 			self.count as u32,
 			self.prim,
 		);
