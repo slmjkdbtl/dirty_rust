@@ -4,7 +4,7 @@
 name = "dirty"
 description = "dirty tool kit"
 version = "0.0.0"
-authors = ["t <voygagaga@outlook.com>"]
+authors = ["tga <tga@wengwengweng.me>"]
 repository = "https://github.com/slmjkdbtl/DIRTY"
 license = "Zlib"
 edition = "2018"
@@ -34,6 +34,7 @@ default = [
 # 	"video",
 # 	"serial",
 # 	"ecs",
+# 	"json",
 # 	"ase",
 # 	"texpack",
 # 	"clipboard",
@@ -89,10 +90,13 @@ term = [
 	"console",
 ]
 
-ase = [
-	"aseprite",
+json = [
 	"serde",
 	"serde_json",
+]
+
+ase = [
+	"aseprite",
 ]
 
 texpack = [

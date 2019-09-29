@@ -1,11 +1,15 @@
 // wengwengweng
 
+#[cfg(not(feature = "json"))]
+compile_error!("ase requires json feature");
+
 use std::path::Path;
 use std::collections::HashMap;
 
 use aseprite::SpritesheetData;
 
 use crate::math::*;
+use crate::json;
 use crate::Result;
 
 ///! Load Aseprite Spritesheets
@@ -62,7 +66,7 @@ impl SpriteData {
 
 		let mut frames = vec![];
 		let mut anims = HashMap::new();
-		let data: SpritesheetData = serde_json::from_str(json)?;
+		let data: SpritesheetData = json::decode(json)?;
 
 		let width = data.meta.size.w;
 		let height = data.meta.size.h;

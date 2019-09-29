@@ -80,14 +80,11 @@ impl Gfx for Ctx {
 
 	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		self.transform_stack.push(self.transform.clone());
-		self.transform = self.transform.apply(*t);
+		let ot = self.transform;
 
+		self.transform = ot.apply(t);
 		f(self)?;
-
-		self.transform = self.transform_stack
-			.pop()
-			.ok_or(Error::Gfx("failed to pop transform stack".into()))?;
+		self.transform = ot;
 
 		return Ok(());
 
@@ -260,7 +257,6 @@ pub(super) fn end(ctx: &mut Ctx) {
 
 	flush(ctx);
 	ctx.transform = Transform::new();
-	ctx.transform_stack.clear();
 	ctx.draw_calls += ctx.renderer_2d.draw_count();
 	ctx.draw_calls += ctx.renderer_3d.draw_count();
 	ctx.renderer_2d.clear();
@@ -1267,7 +1263,7 @@ impl Transform {
 		return Self::from_mat4(self.matrix.invert());
 	}
 
-	pub fn apply(self, other: Self) -> Self {
+	pub fn apply(self, other: &Self) -> Self {
 		return Self::from_mat4(self.matrix * other.matrix);
 	}
 
