@@ -102,7 +102,6 @@ pub struct Ctx {
 	pub(self) draw_calls: usize,
 
 	pub(self) transform: gfx::Transform,
-	pub(self) transform_stack: Vec<gfx::Transform>,
 
 }
 
@@ -296,7 +295,6 @@ impl Ctx {
 			draw_calls_last: 0,
 
 			transform: gfx::Transform::new(),
-			transform_stack: Vec::with_capacity(4),
 
 			conf: conf,
 

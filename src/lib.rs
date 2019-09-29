@@ -63,6 +63,9 @@ pub mod ase;
 #[cfg(feature = "texpack")]
 pub mod texpack;
 
+#[cfg(feature = "json")]
+pub mod json;
+
 #[cfg(feature = "clipboard")]
 pub mod clipboard;
 

@@ -17,6 +17,7 @@ pub enum Error {
 	Obj(String),
 	Input(String),
 	OpenGL(String),
+	Json(serde_json::Error),
 	Misc(String),
 }
 
@@ -38,6 +39,7 @@ impl fmt::Display for Error {
 			Error::Obj(s) => write!(f, "obj error: {}", s),
 			Error::Input(s) => write!(f, "input error: {}", s),
 			Error::OpenGL(s) => write!(f, "opengl error: {}", s),
+			Error::Json(e) => write!(f, "json error: line {}", e.line()),
 			Error::Misc(s) => write!(f, "misc error: {}", s),
 		};
 	}
@@ -238,6 +240,13 @@ impl From<native_tls::Error> for Error {
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
 		return Error::Net("tls error".into());
+	}
+}
+
+#[cfg(feature = "json")]
+impl From<serde_json::Error> for Error {
+	fn from(e: serde_json::Error) -> Self {
+		return Error::Json(e);
 	}
 }
 
