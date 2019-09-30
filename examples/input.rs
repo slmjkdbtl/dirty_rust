@@ -34,7 +34,7 @@ impl app::State for Game {
 
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(shapes::text("yo"))?;
+		ctx.draw(&shapes::text("yo"))?;
 
 		return Ok(());
 

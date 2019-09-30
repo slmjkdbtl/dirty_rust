@@ -2,7 +2,6 @@
 
 use std::fmt;
 use std::ops;
-use std::mem;
 
 use derive_more::*;
 

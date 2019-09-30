@@ -35,12 +35,12 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(shapes::text("营养过剩").font(gfx::Font::TrueType(&mut self.font)))?;
+		ctx.draw(&shapes::text("营养过剩").font(gfx::Font::TrueType(&mut self.font)))?;
 
 		ctx.push(&gfx::t()
 			.translate(vec2!(120))
 		, |ctx| {
-			return ctx.draw(shapes::text("你是谁").font(gfx::Font::TrueType(&mut self.font)));
+			return ctx.draw(&shapes::text("你是谁").font(gfx::Font::TrueType(&mut self.font)));
 		});
 
 		return Ok(());

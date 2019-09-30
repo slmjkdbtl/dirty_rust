@@ -66,8 +66,8 @@ pub mod texpack;
 #[cfg(feature = "json")]
 pub mod json;
 
-#[cfg(feature = "clipboard")]
-pub mod clipboard;
+#[cfg(feature = "clip")]
+pub mod clip;
 
 mod bindings;
 

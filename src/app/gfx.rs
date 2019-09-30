@@ -630,10 +630,10 @@ impl Texture {
 
 }
 
-pub enum Font<'a> {
-	Bitmap(&'a BitmapFont),
-	// TODO: no mut plz
-	TrueType(&'a mut TrueTypeFont),
+pub enum TextAlign {
+	Left,
+	Center,
+	Right,
 }
 
 /// bitmap font
@@ -806,7 +806,7 @@ pub trait Camera {
 }
 
 #[derive(Clone)]
-pub struct PCam {
+pub struct PerspectiveCam {
 	front: Vec3,
 	pos: Vec3,
 	yaw: f32,
@@ -817,7 +817,7 @@ pub struct PCam {
 	far: f32,
 }
 
-impl PCam {
+impl PerspectiveCam {
 
 	pub fn new(fov: f32, aspect: f32, near: f32, far: f32, pos: Vec3, yaw: f32, pitch: f32) -> Self {
 
@@ -826,7 +826,7 @@ impl PCam {
 			front: vec3!(),
 			yaw: 0.0,
 			pitch: 0.0,
-			fov: 60.0,
+			fov: fov,
 			aspect: aspect,
 			near: near,
 			far: far,
@@ -878,7 +878,7 @@ impl PCam {
 
 }
 
-impl Camera for PCam {
+impl Camera for PerspectiveCam {
 	fn projection(&self) -> Mat4 {
 		return math::perspective(self.fov.to_radians(), self.aspect, self.near, self.far);
 	}
@@ -894,7 +894,7 @@ pub enum NormalMode {
 }
 
 // TODO: not correct
-fn get_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
+fn gen_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 
 	let vert_count = pos.len() / 3;
 	let tri_count = indices.len() / 3;
@@ -939,7 +939,7 @@ impl Model {
 		let positions = &mesh.positions;
 		let indices = &mesh.indices;
 		let vert_count = positions.len() / 3;
-		let normals = get_vertex_normals(&positions, &indices);
+		let normals = gen_vertex_normals(&positions, &indices);
 		let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
 
 		for i in 0..vert_count {
@@ -1036,11 +1036,6 @@ impl Shape for FlagShape {
 			},
 			_ => {},
 		}
-
-		let mut u1 = vec2!(q.x, q.y + q.h);
-		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
-		let mut u3 = vec2!(q.x + q.w, q.y);
-		let mut u4 = vec2!(q.x, q.y);
 
 		Self::Vertex::new(vec3!(p1.x, p1.y, 0.0), u1, vec3!(0, 0, -1), c).push(queue);
 		Self::Vertex::new(vec3!(p2.x, p2.y, 0.0), u2, vec3!(0, 0, -1), c).push(queue);

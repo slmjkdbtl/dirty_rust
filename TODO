@@ -45,6 +45,8 @@
 - [gfx] obj load all objects
 - [gfx] gl3 flag texture not rendering
 - [gfx] quad renderer's matrix calculation is slow
+- [gfx] 2d camera (?)
+- [gfx] use TextAlign instead of offset (?)
 
 == DONE
 - [http] refactor http

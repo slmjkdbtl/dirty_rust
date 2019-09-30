@@ -56,7 +56,7 @@ impl app::State for Game {
 			ctx.push(&gfx::t()
 				.translate(vec2!(rand!(-w, w) * 0.5, rand!(-h, h) * 0.5))
 			, |ctx| {
-				ctx.draw(shapes::sprite(&self.tex))?;
+				ctx.draw(&shapes::sprite(&self.tex))?;
 				return Ok(());
 			})?;
 		}
@@ -70,7 +70,7 @@ impl app::State for Game {
 			} else {
 				color!(1, 0, 0, 1)
 			};
-			ctx.draw(shapes::text(&format!("{}", fps)).color(c))?;
+			ctx.draw(&shapes::text(&format!("{}", fps)).color(c))?;
 			return Ok(());
 		})?;
 
@@ -78,7 +78,7 @@ impl app::State for Game {
 			.translate(vec2!(0, 64))
 			.scale(vec2!(1.5))
 		, |ctx| {
-			ctx.draw(shapes::text(&format!("{} bunnies", self.count)))?;
+			ctx.draw(&shapes::text(&format!("{} bunnies", self.count)))?;
 			return Ok(());
 		})?;
 

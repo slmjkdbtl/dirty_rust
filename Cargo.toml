@@ -37,7 +37,7 @@ default = [
 # 	"json",
 # 	"ase",
 # 	"texpack",
-# 	"clipboard",
+	"clip",
 # 	"vr",
 # 	"osc",
 # 	"ui",
@@ -103,8 +103,8 @@ texpack = [
 	"sheep",
 ]
 
-clipboard = [
-	"clip",
+clip = [
+	"clipboard",
 ]
 
 vr = [
@@ -152,8 +152,8 @@ serde_json = { version = "1.0", optional = true }
 # texpack
 sheep = { version = "0.3", optional = true }
 
-# clipboard
-clip = { version = "0.5", optional = true, package = "clipboard" }
+# clip
+clipboard = { version = "0.5", optional = true }
 
 # osc
 rosc = { version = "0.2", optional = true }
@@ -170,10 +170,9 @@ pyo3 = { version = "0.8.0", optional = true }
 
 # ketos = "0.11"
 # laminar = "0.2"
-# rayon = "1.0"
+rayon = "1.0"
 # crossbeam = "0.7"
 # sokol = "0.2"
-# rayon = "1.1"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 # TODO: glutin 0.22

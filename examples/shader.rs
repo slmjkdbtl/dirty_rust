@@ -48,7 +48,7 @@ impl app::State for Game {
 	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_with(&self.shader, |ctx| {
-			ctx.draw(shapes::rect(ctx.coord(Origin::TopLeft) + vec2!(48), ctx.coord(Origin::BottomRight) - vec2!(48)))?;
+			ctx.draw(&shapes::rect(ctx.coord(Origin::TopLeft) + vec2!(48), ctx.coord(Origin::BottomRight) - vec2!(48)))?;
 			return Ok(());
 		})?;
 

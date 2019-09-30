@@ -90,7 +90,7 @@ impl app::State for Game {
 		ctx.push(&gfx::t()
 			.scale(vec2!(0.75))
 		, |ctx| {
-			return ctx.draw(shapes::sprite(&self.tex));
+			return ctx.draw(&shapes::sprite(&self.tex));
 		})?;
 
 		return Ok(());
