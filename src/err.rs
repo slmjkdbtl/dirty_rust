@@ -17,7 +17,7 @@ pub enum Error {
 	Obj(String),
 	Input(String),
 	OpenGL(String),
-	Json(serde_json::Error),
+	Json(String),
 	Misc(String),
 }
 
@@ -25,22 +25,31 @@ impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+
+		let print_err = |f: &mut fmt::Formatter, ty: &str, msg: &str| -> std::fmt::Result {
+			if msg.is_empty() {
+				return write!(f, "{} error", ty);
+			} else {
+				return write!(f, "{} error: {}", ty, msg);
+			}
+		};
+
 		return match self {
-			Error::Fs(s) => write!(f, "fs error: {}", s),
-			Error::IO(e) => write!(f, "io error: {}", e),
-			Error::Net(s) => write!(f, "network error: {}", s),
-			Error::Image(s) => write!(f, "image error: {}", s),
-			Error::Window(s) => write!(f, "window error: {}", s),
-			Error::Wasm(s) => write!(f, "wasm error: {}", s),
-			Error::Audio(s) => write!(f, "audio error: {}", s),
-			Error::Thread(s) => write!(f, "thread error: {}", s),
-			Error::Lua(s) => write!(f, "lua error: {}", s),
-			Error::Gfx(s) => write!(f, "gfx error: {}", s),
-			Error::Obj(s) => write!(f, "obj error: {}", s),
-			Error::Input(s) => write!(f, "input error: {}", s),
-			Error::OpenGL(s) => write!(f, "opengl error: {}", s),
-			Error::Json(e) => write!(f, "json error: line {}", e.line()),
-			Error::Misc(s) => write!(f, "misc error: {}", s),
+			Error::Fs(s) => print_err(f, "fs", s),
+			Error::IO(e) => print_err(f, "io", &format!("{}", e)),
+			Error::Net(s) => print_err(f, "network", s),
+			Error::Image(s) => print_err(f, "image", s),
+			Error::Window(s) => print_err(f, "window", s),
+			Error::Wasm(s) => print_err(f, "wasm", s),
+			Error::Audio(s) => print_err(f, "audio", s),
+			Error::Thread(s) => print_err(f, "thread", s),
+			Error::Lua(s) => print_err(f, "lua", s),
+			Error::Gfx(s) => print_err(f, "gfx", s),
+			Error::Obj(s) => print_err(f, "obj", s),
+			Error::Input(s) => print_err(f, "input", s),
+			Error::OpenGL(s) => print_err(f, "opengl", s),
+			Error::Json(s) => print_err(f, "json", s),
+			Error::Misc(s) => print_err(f, "misc", s),
 		};
 	}
 }
@@ -71,7 +80,7 @@ impl From<String> for Error {
 
 impl From<std::ffi::OsString> for Error {
 	fn from(s: std::ffi::OsString) -> Self {
-		return Error::Misc(String::new());
+		return Error::Misc(format!("{}", s.into_string().unwrap_or(String::new())));
 	}
 }
 
@@ -239,14 +248,20 @@ impl From<native_tls::Error> for Error {
 #[cfg(all(feature = "http", not(mobile), not(web)))]
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 	fn from(_: native_tls::HandshakeError<std::net::TcpStream>) -> Self {
-		return Error::Net("tls error".into());
+		return Error::Net("tls handshake error".into());
 	}
 }
 
 #[cfg(feature = "json")]
 impl From<serde_json::Error> for Error {
 	fn from(e: serde_json::Error) -> Self {
-		return Error::Json(e);
+		return Error::Json(format!("line {}", e.line()));
+	}
+}
+
+impl From<Box<dyn std::error::Error>> for Error {
+	fn from(_: Box<dyn std::error::Error>) -> Self {
+		return Error::Misc(format!(""));
 	}
 }
 

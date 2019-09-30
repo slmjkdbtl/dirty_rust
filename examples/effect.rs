@@ -158,7 +158,7 @@ impl app::State for Game {
 				.translate(vec2!(0, -24))
 				.scale(vec2!(0.5))
 			, |ctx| {
-				return ctx.draw(shapes::sprite(&self.tex));
+				return ctx.draw(&shapes::sprite(&self.tex));
 			})?;
 
 			return Ok(());
@@ -182,7 +182,7 @@ impl app::State for Game {
 
 				if let Some(effect) = self.effects.get(cur_effect) {
 
-					ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
+					ctx.draw(&shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
 
 					if let Some(param) = &effect.param {
 
@@ -190,7 +190,7 @@ impl app::State for Game {
 							.translate(vec2!(0, 16))
 							.scale(vec2!(0.8))
 						, |ctx| {
-							return ctx.draw(shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)));
+							return ctx.draw(&shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)));
 						})?;
 
 					}
@@ -198,7 +198,7 @@ impl app::State for Game {
 				}
 
 			} else {
-				ctx.draw(shapes::text("no effect"))?;
+				ctx.draw(&shapes::text("no effect"))?;
 			}
 
 			return Ok(());

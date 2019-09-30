@@ -78,12 +78,11 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 	let listings = glob::glob(&format!("{}", pat))
 		.ok()
 		.or_else(|| glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)).ok())
-		.ok_or(Error::Fs(format!("failed to execute glob pattern {}", pat)))?;
+		.ok_or(Error::Fs(format!("failed to execute glob pattern {}", pat)))?
+		.flatten()
+		.collect();
 
-	return Ok(listings
-		.filter(|s| s.is_ok())
-		.map(|s| s.expect("failed to glob"))
-		.collect());
+	return Ok(listings);
 
 }
 
@@ -226,9 +225,5 @@ pub fn data_dir(name: &str) -> Result<PathBuf> {
 
 	return Ok(data_dir);
 
-}
-
-pub fn join(a: impl AsRef<Path>, b: impl AsRef<Path>) -> PathBuf {
-	return a.as_ref().join(b.as_ref());
 }
 

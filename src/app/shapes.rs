@@ -45,7 +45,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	};
 }
 
-impl<'a> Drawable for Sprite<'a> {
+impl<'a> Drawable for &Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -74,8 +74,8 @@ impl<'a> Drawable for Sprite<'a> {
 
 pub struct Text<'a> {
 	txt: &'a str,
-	font: Option<gfx::Font<'a>>,
-	fallback_font: Option<gfx::Font<'a>>,
+	font: Option<&'a gfx::BitmapFont>,
+	fallback_font: Option<&'a gfx::BitmapFont>,
 	color: Color,
 	offset: Vec2,
 	wrap: Option<u32>,
@@ -86,17 +86,11 @@ impl<'a> Text<'a> {
 		self.txt = txt;
 		return self;
 	}
-	pub fn font(mut self, mut font: gfx::Font<'a>) -> Self {
-		if let gfx::Font::TrueType(ref mut font) = font {
-			font.push(self.txt);
-		}
+	pub fn font(mut self, font: &'a gfx::BitmapFont) -> Self {
 		self.font = Some(font);
 		return self;
 	}
-	pub fn fallback_font(mut self, mut font: gfx::Font<'a>) -> Self {
-		if let gfx::Font::TrueType(ref mut font) = font {
-			font.push(self.txt);
-		}
+	pub fn fallback_font(mut self, font: &'a gfx::BitmapFont) -> Self {
 		self.fallback_font = Some(font);
 		return self;
 	}
@@ -129,74 +123,52 @@ pub fn text<'a>(txt: &'a str) -> Text<'a> {
 	};
 }
 
-impl<'a> Drawable for Text<'a> {
+impl<'a> Drawable for &Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		use gfx::Font::*;
-
 		let font;
-		let default_font = &gfx::Font::Bitmap(&ctx.default_font);
 
-		if let Some(f) = &self.font {
+		if let Some(f) = self.font {
 			font = f;
 		} else {
-			font = default_font;
+			font = &ctx.default_font;
 		}
 
-		match font {
+		let len = self.txt.len();
+		let gw = font.width();
+		let gh = font.height();
+		let tw = font.width() * len as i32;
+		let th = gh;
+		let w = font.quad_size.x * font.tex.width() as f32;
+		let h = font.quad_size.y * font.tex.height() as f32;
+		let tex = font.tex.clone();
+		let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
+		let offset = offset + self.offset * vec2!(tw, th) * -0.5;
+		// TODO: don't clone here
+		let map = font.map.clone();
 
-			Bitmap(font) => {
+		// TODO: text wrapping
+		// TODO: text align
+		for (i, ch) in self.txt.chars().enumerate() {
 
-				let len = self.txt.len();
-				let gw = font.width();
-				let gh = font.height();
-				let tw = font.width() * len as i32;
-				let th = gh;
-				let w = font.quad_size.x * font.tex.width() as f32;
-				let h = font.quad_size.y * font.tex.height() as f32;
-				let tex = font.tex.clone();
-				let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
-				let offset = offset + self.offset * vec2!(tw, th) * -0.5;
-				// TODO: don't clone here
-				let map = font.map.clone();
+			let x = i as f32 * w;
 
-				for (i, ch) in self.txt.chars().enumerate() {
+			ctx.push(&gfx::t()
+				.translate(offset + vec2!(x, 0))
+			, |ctx| {
 
-					let x = i as f32 * w;
-
-					ctx.push(&gfx::t()
-						.translate(offset + vec2!(x, 0))
-					, |ctx| {
-
-						if ch != ' ' {
-
-							if let Some(quad) = map.get(&ch) {
-								ctx.draw(sprite(&tex).quad(*quad).color(self.color))?;
-							}
-
-						}
-
-						return Ok(());
-
-					})?;
-
-				}
-			},
-
-			TrueType(font) => {
-
-				let tex = font.tex.clone();
-
-				for q in font.quads.clone() {
-					ctx.push(&gfx::t()
-						.translate(q.pos)
-					, |ctx| {
-						return ctx.draw(shapes::sprite(&tex).quad(q.quad));
-					})?;
+				if ch == '\n' {
+					// TODO: next line
+				} else if ch != ' ' {
+					if let Some(quad) = map.get(&ch) {
+						ctx.draw(&sprite(&tex).quad(*quad).color(self.color))?;
+					}
 				}
 
-			},
+				return Ok(());
+
+			})?;
 
 		}
 
@@ -254,7 +226,7 @@ pub fn polygon(pts: &[Vec2]) -> Polygon {
 
 }
 
-impl Drawable for Polygon {
+impl Drawable for &Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -276,18 +248,18 @@ impl Drawable for Polygon {
 
 				match stroke.join {
 					None => {
-						ctx.draw(line(p1, p2).width(stroke.width).color(self.color))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color))?;
 					},
 					Bevel => {
 						// TODO
-						ctx.draw(line(p1, p2).width(stroke.width).color(self.color))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color))?;
 					},
 					Miter => {
 						// TODO
-						ctx.draw(line(p1, p2).width(stroke.width).color(self.color))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color))?;
 					},
 					Round => {
-						ctx.draw(line(p1, p2).width(stroke.width).color(self.color).cap(gfx::LineCap::Round))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color).cap(gfx::LineCap::Round))?;
 					},
 				}
 
@@ -344,7 +316,7 @@ impl Gradient {
 	}
 }
 
-impl Drawable for Gradient {
+impl Drawable for &Gradient {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -463,7 +435,7 @@ impl Rect {
 	}
 }
 
-impl Drawable for Rect {
+impl Drawable for &Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -486,9 +458,9 @@ impl Drawable for Rect {
 			];
 
 			if let Some(stroke) = &self.stroke {
-				ctx.draw(polygon(&pts).color(self.color).stroke(stroke.width).line_join(stroke.join))?;
+				ctx.draw(&polygon(&pts).color(self.color).stroke(stroke.width).line_join(stroke.join))?;
 			} else {
-				ctx.draw(polygon(&pts).color(self.color))?;
+				ctx.draw(&polygon(&pts).color(self.color))?;
 			}
 
 		}
@@ -551,7 +523,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 	};
 }
 
-impl Drawable for Line {
+impl Drawable for &Line {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -568,11 +540,11 @@ impl Drawable for Line {
 			let w = len;
 			let h = self.width;
 
-			ctx.draw(Rect::from_size(w, h).color(self.color))?;
+			ctx.draw(&Rect::from_size(w, h).color(self.color))?;
 
 			if let gfx::LineCap::Round = self.cap {
-				ctx.draw(circle(vec2!(-w / 2.0, 0), h / 2.0))?;
-				ctx.draw(circle(vec2!(w / 2.0, 0), h / 2.0))?;
+				ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
+				ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
 			}
 
 			return Ok(());
@@ -619,7 +591,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 	};
 }
 
-impl<'a> Drawable for Points<'a> {
+impl<'a> Drawable for &Points<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -627,7 +599,7 @@ impl<'a> Drawable for Points<'a> {
 			ctx.push(&gfx::t()
 				.translate(*pt)
 			, |ctx| {
-				return ctx.draw(Rect::from_size(self.size, self.size).color(self.color));
+				return ctx.draw(&Rect::from_size(self.size, self.size).color(self.color));
 			})?;
 		}
 
@@ -671,7 +643,7 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 	};
 }
 
-impl Drawable for Circle {
+impl Drawable for &Circle {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -695,9 +667,9 @@ impl Drawable for Circle {
 		, |ctx| {
 
 			if let Some(stroke) = self.stroke {
-				ctx.draw(polygon(&verts).color(self.color).stroke(stroke))?;
+				ctx.draw(&polygon(&verts).color(self.color).stroke(stroke))?;
 			} else {
-				ctx.draw(polygon(&verts).color(self.color))?;
+				ctx.draw(&polygon(&verts).color(self.color))?;
 			}
 
 			return Ok(());
@@ -733,14 +705,14 @@ impl<'a> Canvas<'a> {
 	}
 }
 
-impl<'a> Drawable for Canvas<'a> {
+impl<'a> Drawable for &Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
 			.scale(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
-			return ctx.draw(sprite(&self.canvas.tex).color(self.color));
+			return ctx.draw(&sprite(&self.canvas.tex).color(self.color));
 		})?;
 
 		return Ok(());
@@ -772,7 +744,7 @@ impl<'a> Model<'a> {
 	}
 }
 
-impl<'a> Drawable for Model<'a> {
+impl<'a> Drawable for &Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -798,7 +770,7 @@ pub fn cube() -> Cube {
 	return Cube;
 }
 
-impl Drawable for Cube {
+impl Drawable for &Cube {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -861,7 +833,7 @@ pub fn sprite3d<'a>(tex: &'a gfx::Texture) -> Sprite3D<'a> {
 	};
 }
 
-impl<'a> Drawable for Sprite3D<'a> {
+impl<'a> Drawable for &Sprite3D<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 

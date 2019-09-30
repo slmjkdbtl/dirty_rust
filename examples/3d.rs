@@ -108,18 +108,18 @@ impl app::State for Game {
 				.translate_3d(vec3!(30, 0, 0))
 				.scale_3d(vec3!(3))
 			, |ctx| {
-				return ctx.draw(shapes::cube());
+				return ctx.draw(&shapes::cube());
 			})?;
 
 			ctx.push(&gfx::t()
 			, |ctx| {
-				return ctx.draw(shapes::sprite3d(&self.tex));
+				return ctx.draw(&shapes::sprite3d(&self.tex));
 			})?;
 
 			ctx.push(&gfx::t()
 				.rotate_y(ctx.time())
 			, |ctx| {
-				return ctx.draw(shapes::model(&self.model));
+				return ctx.draw(&shapes::model(&self.model));
 			})?;
 
 			return Ok(());

@@ -1,8 +1,5 @@
 // wengwengweng
 
-#[cfg(not(feature = "json"))]
-compile_error!("ase requires json feature");
-
 use std::path::Path;
 use std::collections::HashMap;
 
@@ -62,6 +59,7 @@ impl SpriteData {
 
 	}
 
+	#[cfg(feature = "json")]
 	pub fn from_json(json: &str) -> Result<Self> {
 
 		let mut frames = vec![];

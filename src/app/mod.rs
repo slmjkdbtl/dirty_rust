@@ -225,7 +225,7 @@ impl Ctx {
 
 		use gfx::Camera;
 
-		let cam_3d = gfx::PCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
+		let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_width = font_img.width();

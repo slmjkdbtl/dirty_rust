@@ -36,10 +36,10 @@ impl app::State for Game {
 			.rotate_y(ctx.time())
 			.rotate_z(ctx.time())
 		, |ctx| {
-			return ctx.draw(shapes::cube());
+			return ctx.draw(&shapes::cube());
 		})?;
 
-		ctx.draw(shapes::text("yo"))?;
+		ctx.draw(&shapes::text("yo"))?;
 
 		return Ok(());
 
@@ -48,7 +48,10 @@ impl app::State for Game {
 }
 
 fn main() {
-	if let Err(err) = app::run::<Game>() {
+	if let Err(err) = app::launcher()
+// 		.origin(gfx::Origin::TopLeft)
+// 		.quad_origin(gfx::Origin::TopLeft)
+		.run::<Game>() {
 		println!("{}", err);
 	}
 }
