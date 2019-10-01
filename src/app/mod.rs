@@ -12,6 +12,9 @@ pub use gfx::Gfx;
 pub use window::Window;
 pub use input::Input;
 
+#[cfg(feature = "imgui")]
+pub use imgui_lib as imgui;
+
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
@@ -102,6 +105,13 @@ pub struct Ctx {
 	pub(self) draw_calls: usize,
 
 	pub(self) transform: gfx::Transform,
+
+	#[cfg(feature = "imgui")]
+	pub(self) imgui_ctx: imgui::Context,
+	#[cfg(feature = "imgui")]
+	pub(self) imgui_platform: imgui_winit_support::WinitPlatform,
+	#[cfg(feature = "imgui")]
+	pub(self) imgui_renderer: imgui_opengl_renderer::Renderer,
 
 }
 
@@ -201,6 +211,24 @@ impl Ctx {
 
 		};
 
+		#[cfg(feature = "imgui")]
+		let (imgui_ctx, imgui_platform, imgui_renderer) = {
+
+			use imgui::Context;
+			use imgui_winit_support::{HiDpiMode, WinitPlatform};
+			use imgui_opengl_renderer::Renderer;
+
+			let mut ctx = Context::create();
+			let mut platform = WinitPlatform::init(&mut ctx);
+
+			platform.attach_window(ctx.io_mut(), &windowed_ctx.window(), HiDpiMode::Locked(1.0));
+
+			let renderer = Renderer::new(&mut ctx, |s| windowed_ctx.get_proc_address(s) as *const _);
+
+			(ctx, platform, renderer)
+
+		};
+
 		gl.enable(gl::Capability::Blend);
 		gl.enable(gl::Capability::DepthTest);
 // 		gl.enable(gl::Capability::CullFace);
@@ -296,6 +324,13 @@ impl Ctx {
 
 			transform: gfx::Transform::new(),
 
+			#[cfg(feature = "imgui")]
+			imgui_ctx: imgui_ctx,
+			#[cfg(feature = "imgui")]
+			imgui_platform: imgui_platform,
+			#[cfg(feature = "imgui")]
+			imgui_renderer: imgui_renderer,
+
 			conf: conf,
 
 		};
@@ -336,9 +371,27 @@ impl Ctx {
 			}
 
 			gfx::begin(self);
+
 			s.update(self)?;
 			s.draw(self)?;
 			gfx::end(self);
+
+			#[cfg(feature = "imgui")] {
+
+				let io = self.imgui_ctx.io_mut();
+
+				self.imgui_platform.prepare_frame(io, &self.windowed_ctx.window())?;
+				io.update_delta_time(start_time);
+
+				let ui = self.imgui_ctx.frame();
+
+				s.imgui(&ui)?;
+
+				self.imgui_platform.prepare_render(&ui, &self.windowed_ctx.window());
+				self.imgui_renderer.render(ui);
+
+			}
+
 			window::swap(self)?;
 
 			if self.quit {
@@ -645,6 +698,11 @@ pub trait State {
 	}
 
 	fn draw(&self, _: &mut Ctx) -> Result<()> {
+		return Ok(());
+	}
+
+	#[cfg(feature = "imgui")]
+	fn imgui(&self, _: &imgui::Ui) -> Result<()> {
 		return Ok(());
 	}
 

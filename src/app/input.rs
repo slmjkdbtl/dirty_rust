@@ -147,8 +147,6 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 #[cfg(not(web))]
 pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
-	let mut events = vec![];
-
 	for state in ctx.key_states.values_mut() {
 		if state == &ButtonState::Pressed {
 			*state = ButtonState::Down;
@@ -175,6 +173,9 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 		}
 	}
 
+	let mut events = vec![];
+	let mut ne = vec![];
+
 	let mut keyboard_input = None;
 	let mut mouse_input = None;
 	let mut cursor_moved = None;
@@ -185,6 +186,8 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 		use glutin::Event::*;
 		use glutin::WindowEvent::*;
+
+		ne.push(e.clone());
 
 		match e {
 
@@ -255,6 +258,11 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 		};
 
 	});
+
+	#[cfg(feature = "imgui")]
+	for e in ne {
+		ctx.imgui_platform.handle_event(ctx.imgui_ctx.io_mut(), &ctx.windowed_ctx.window(), &e);
+	}
 
 	if close {
 		ctx.quit = true;
