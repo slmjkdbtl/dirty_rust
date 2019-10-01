@@ -303,7 +303,7 @@ impl VertexLayout for Vertex2D {
 	}
 
 	fn attrs() -> gl::VertexAttrGroup {
-		return vec![
+		return &[
 			("pos", 2),
 			("uv", 2),
 			("color", 4),
@@ -370,7 +370,7 @@ impl VertexLayout for Vertex3D {
 
 	fn attrs() -> gl::VertexAttrGroup {
 
-		return vec![
+		return &[
 			("pos", 3),
 			("uv", 2),
 			("normal", 3),

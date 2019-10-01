@@ -1,6 +1,6 @@
 // wengwengweng
 
-pub type VertexAttrGroup = Vec<(&'static str, u8)>;
+pub type VertexAttrGroup = &'static[(&'static str, u8)];
 
 pub(super) struct VertexAttrIter<'a> {
 	attrs: &'a VertexAttrGroup,

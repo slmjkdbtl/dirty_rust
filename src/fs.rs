@@ -129,13 +129,13 @@ pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 pub fn extname(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let ext = path
+
+	return Ok(path
 		.extension()
 		.ok_or(Error::Fs(format!("failed to get extname: {}", path.display())))?
 		.to_os_string()
-		.into_string()?;
-
-	return Ok(ext);
+		.into_string().map_err(|_| Error::Fs(format!("failed to get extname: {}", path.display())))?
+	);
 
 }
 
