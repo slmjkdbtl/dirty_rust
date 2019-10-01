@@ -24,6 +24,7 @@ pub enum Error {
 impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
+
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
 		let print_err = |f: &mut fmt::Formatter, ty: &str, msg: &str| -> std::fmt::Result {
@@ -51,7 +52,9 @@ impl fmt::Display for Error {
 			Error::Json(s) => print_err(f, "json", s),
 			Error::Misc(s) => print_err(f, "misc", s),
 		};
+
 	}
+
 }
 
 impl From<std::io::Error> for Error {
@@ -75,12 +78,6 @@ impl From<std::string::FromUtf8Error> for Error {
 impl From<String> for Error {
 	fn from(s: String) -> Self {
 		return Error::Misc(s);
-	}
-}
-
-impl From<std::ffi::OsString> for Error {
-	fn from(s: std::ffi::OsString) -> Self {
-		return Error::Misc(format!("{}", s.into_string().unwrap_or(String::new())));
 	}
 }
 
