@@ -6,9 +6,8 @@ run example="sprite":
 run-lua example="app":
 	./bin/dirty examples/{{example}}.lua
 
-install: build
-	upx bin/dirty
-	install -v bin/dirty $BIN
+install:
+	cargo install --force --path .
 
 build:
 	cargo build --release
@@ -41,4 +40,8 @@ loc:
 
 checkdep:
 	cargo outdated --root-deps-only
+
+depgraph:
+	cargo deps --all-deps | dot -Tpng > $TMPDIR/graph.png; \
+		open $TMPDIR/graph.png
 

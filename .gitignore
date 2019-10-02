@@ -1,7 +1,6 @@
 # wengwengweng
 
 target/
-bin/
 Cargo.lock
 **/*.rs.bk
 *.swp
