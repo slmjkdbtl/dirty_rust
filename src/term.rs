@@ -2,6 +2,8 @@
 
 //! TUI Utilities
 
+pub use console::style;
+
 use crate::math::Color;
 use crate::Result;
 
@@ -55,23 +57,4 @@ impl Term {
 	}
 
 }
-
-macro_rules! ansi_wrap {
-	($name:ident) => {
-		pub fn $name(s: &str) -> String {
-			return console::style(s).$name().to_string();
-		}
-	}
-}
-
-ansi_wrap!(black);
-ansi_wrap!(red);
-ansi_wrap!(green);
-ansi_wrap!(yellow);
-ansi_wrap!(blue);
-ansi_wrap!(magenta);
-ansi_wrap!(cyan);
-ansi_wrap!(white);
-ansi_wrap!(bold);
-ansi_wrap!(italic);
 
