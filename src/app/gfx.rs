@@ -269,6 +269,7 @@ pub(super) fn flush(ctx: &mut Ctx) {
 	ctx.renderer_3d.flush();
 }
 
+#[derive(Clone)]
 pub struct Vertex2D {
 	pos: Vec2,
 	uv: Vec2,
@@ -329,6 +330,7 @@ impl gl::UniformInterface for Uniform2D {
 	}
 }
 
+#[derive(Clone)]
 pub struct Vertex3D {
 	pos: Vec3,
 	uv: Vec2,

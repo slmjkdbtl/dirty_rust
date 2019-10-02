@@ -63,19 +63,11 @@ pub mod ase;
 #[cfg(feature = "texpack")]
 pub mod texpack;
 
-#[cfg(feature = "json")]
-pub mod json;
-
 #[cfg(feature = "clip")]
 pub mod clip;
 
-mod bindings;
-
-#[cfg(feature = "lua")]
-pub use bindings::lua;
-
-#[cfg(feature = "python")]
-pub use bindings::python;
+pub mod bindings;
+pub mod codec;
 
 mod err;
 pub use err::Error;

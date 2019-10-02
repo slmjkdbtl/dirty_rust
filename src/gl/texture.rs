@@ -10,9 +10,9 @@ use crate::Result;
 #[derive(Clone, Debug)]
 pub struct Texture {
 	ctx: Rc<GLCtx>,
-	pub(super) id: TextureID,
-	pub(super) width: i32,
-	pub(super) height: i32,
+	pub id: TextureID,
+	pub width: i32,
+	pub height: i32,
 }
 
 impl Texture {

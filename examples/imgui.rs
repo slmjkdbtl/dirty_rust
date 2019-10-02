@@ -2,7 +2,6 @@
 
 use dirty::*;
 use dirty::app::*;
-use dirty::math::*;
 use input::Key;
 
 struct Game;

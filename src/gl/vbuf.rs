@@ -125,6 +125,27 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
+	pub fn data_raw<T>(&self, data: &[T]) {
+
+		unsafe {
+
+			let byte_len = mem::size_of_val(data) / mem::size_of::<u8>();
+			let byte_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, byte_len);
+
+			self.bind();
+
+			self.ctx.buffer_sub_data_u8_slice(
+				glow::ARRAY_BUFFER,
+				0,
+				byte_slice,
+			);
+
+			self.unbind();
+
+		}
+
+	}
+
 }
 
 impl<V: VertexLayout> Drop for VertexBuffer<V> {
