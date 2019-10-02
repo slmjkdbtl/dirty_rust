@@ -86,6 +86,11 @@ impl Response {
 		return String::from_utf8_lossy(self.bytes()).to_owned().to_string();
 	}
 
+	#[cfg(feature = "json")]
+	pub fn json<D: for<'a> serde::de::Deserialize<'a>>(&self) -> Result<D> {
+		return Ok(serde_json::from_str(&self.text())?);
+	}
+
 	pub fn status(&self) -> Status {
 		return self.status;
 	}

@@ -5,6 +5,9 @@ pub mod input;
 pub mod window;
 pub mod shapes;
 
+#[cfg(feature = "imgui")]
+mod imgui_renderer;
+
 use crate::*;
 use crate::math::*;
 
@@ -221,6 +224,7 @@ impl Ctx {
 			let mut ctx = Context::create();
 			let mut platform = WinitPlatform::init(&mut ctx);
 
+			ctx.set_ini_filename(None);
 			platform.attach_window(ctx.io_mut(), &windowed_ctx.window(), HiDpiMode::Locked(1.0));
 
 			let renderer = Renderer::new(&mut ctx, |s| windowed_ctx.get_proc_address(s) as *const _);

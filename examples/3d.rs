@@ -8,7 +8,7 @@ use input::Key;
 struct Game {
 	tex: gfx::Texture,
 	model: gfx::Model,
-	cam: gfx::Camera,
+	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
 }
@@ -20,7 +20,7 @@ impl app::State for Game {
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			cam: gfx::Camera::new(vec3!(0, 0, -12), 0.0, 0.0),
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
 			eye_speed: 0.16,
 		});

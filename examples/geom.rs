@@ -36,7 +36,7 @@ impl app::State for Game {
 
 		use shapes::*;
 
-		ctx.draw(gradient(
+		ctx.draw(&gradient(
 			ctx.coord(gfx::Origin::Top),
 			ctx.coord(gfx::Origin::Bottom),
 			&[
@@ -46,10 +46,10 @@ impl app::State for Game {
 			],
 		).width(640.0))?;
 
-		ctx.draw(circle(vec2!(0), 120.0).color(color!(1, 0, 1, 1)))?;
-		ctx.draw(rect(vec2!(-64, -48), vec2!(64, 48)).color(color!(0, 1, 1, 1)))?;
-		ctx.draw(rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)))?;
-		ctx.draw(text("geoms").color(color!(0, 0, 1, 1)))?;
+		ctx.draw(&circle(vec2!(0), 120.0).color(color!(1, 0, 1, 1)))?;
+		ctx.draw(&rect(vec2!(-64, -48), vec2!(64, 48)).color(color!(0, 1, 1, 1)))?;
+		ctx.draw(&rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)))?;
+		ctx.draw(&text("geoms").color(color!(0, 0, 1, 1)))?;
 
 		return Ok(());
 

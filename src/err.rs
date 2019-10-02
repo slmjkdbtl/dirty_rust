@@ -18,6 +18,7 @@ pub enum Error {
 	Input(String),
 	OpenGL(String),
 	Json(String),
+	Bin(String),
 	Misc(String),
 }
 
@@ -50,6 +51,7 @@ impl fmt::Display for Error {
 			Error::Input(s) => print_err(f, "input", s),
 			Error::OpenGL(s) => print_err(f, "opengl", s),
 			Error::Json(s) => print_err(f, "json", s),
+			Error::Bin(s) => print_err(f, "bin", s),
 			Error::Misc(s) => print_err(f, "misc", s),
 		};
 
@@ -253,6 +255,13 @@ impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 impl From<serde_json::Error> for Error {
 	fn from(e: serde_json::Error) -> Self {
 		return Error::Json(format!("line {}", e.line()));
+	}
+}
+
+#[cfg(feature = "bin")]
+impl From<Box<bincode::ErrorKind>> for Error {
+	fn from(e: Box<bincode::ErrorKind>) -> Self {
+		return Error::Bin(format!("{}", e));
 	}
 }
 
