@@ -146,7 +146,7 @@ glob = { version = "0.3", optional = true }
 glow = { version = "0.2", optional = true }
 glyph_brush = { version = "0.6", optional = true }
 
-image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", ] }
+image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", "jpeg", ] }
 tobj = { version = "0.1", optional = true }
 
 # audio
