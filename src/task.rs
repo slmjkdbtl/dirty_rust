@@ -3,64 +3,65 @@
 //! Simple Threading Utilities
 
 use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
 use std::thread;
 
-pub struct Pool {
-	// ...
+pub fn exec<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> Task<T> {
+	return Task::new(f);
 }
 
-impl Pool {
+pub struct Task<T: Send + 'static> {
+	rx: mpsc::Receiver<T>,
+	data: Option<T>,
+	done: bool,
+	thread: thread::JoinHandle<()>,
+}
 
-	pub fn new(num: usize) -> Self {
-		return Self {};
-	}
+impl<T: Send + 'static> Task<T> {
 
-	pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(&mut self, f: F) -> Task<T> {
+	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Self {
 
 		let (tx, rx) = mpsc::channel();
 
-		thread::spawn(move || {
-			tx.send(f());
+		// TODO: deal with error inside thread::spawn
+		let t = thread::spawn(move || {
+			tx.send(f()).expect("thread failure");
 		});
 
-		return Task::from_rx(rx);
-
-	}
-
-}
-
-pub fn exec<T: Send + Clone + 'static, F: FnOnce() -> T + Send + 'static>(f: F) -> Task<T> {
-
-	let (tx, rx) = mpsc::channel();
-
-	let t = thread::spawn(move || {
-		tx.send(f());
-	});
-
-	return Task::from_rx(rx);
-
-}
-
-pub struct Task<T> {
-	rx: Receiver<T>,
-	data: Option<T>,
-}
-
-impl<T> Task<T> {
-
-	fn from_rx(rx: Receiver<T>) -> Self {
 		return Self {
 			rx: rx,
+			thread: t,
 			data: None,
+			done: false,
 		};
+
 	}
 
-	pub fn get(&mut self) -> &Option<T> {
+	pub fn done(&self) -> bool {
+		return self.done;
+	}
+
+	pub fn block(&mut self) -> Option<T> {
+		self.done = true;
+		return self.rx.recv().ok();
+	}
+
+	pub fn poll(&mut self) -> Option<T> {
+
+		if self.done {
+			return None;
+		}
+
 		if let Ok(data) = self.rx.try_recv() {
 			self.data = Some(data);
 		}
-		return &self.data;
+
+		if self.data.is_some() {
+			self.done = true;
+			return self.data.take();
+		} else {
+			return None;
+		}
+
 	}
 
 }

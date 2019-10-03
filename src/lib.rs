@@ -17,11 +17,21 @@ macro_rules! export {
 
 macro_rules! hashmap {
 	($($key:ident => $val:expr),*$(,)?) => {
-		let mut _tmp_map = std::collections::HashMap::new();
+		let mut _tmp = std::collections::HashMap::new();
 		$(
-			_tmp_map.insert($key, $val);
+			_tmp.insert($key, $val);
 		)*
-		_tmp_map
+		_tmp
+	}
+}
+
+macro_rules! hashset {
+	($($val:expr),*$(,)?) => {
+		let mut _tmp = std::collections::HashSet::new();
+		$(
+			_tmp.insert($val);
+		)*
+		_tmp
 	}
 }
 
@@ -71,5 +81,5 @@ pub mod codec;
 
 mod err;
 pub use err::Error;
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
