@@ -14,7 +14,6 @@ pub struct Term {
 impl Term {
 
 	pub fn new() -> Self {
-
 		return Self {
 			term: console::Term::stdout(),
 		};
