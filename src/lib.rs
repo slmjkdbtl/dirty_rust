@@ -16,23 +16,23 @@ macro_rules! export {
 }
 
 macro_rules! hashmap {
-	($($key:ident => $val:expr),*$(,)?) => {
+	($($key:expr => $val:expr),*$(,)?) => {
+		{
 		let mut _tmp = std::collections::HashMap::new();
-		$(
-			_tmp.insert($key, $val);
-		)*
+		$(_tmp.insert($key, $val);)*
 		_tmp
+		}
 	}
 }
 
 macro_rules! hashset {
-	($($val:expr),*$(,)?) => {
-		let mut _tmp = std::collections::HashSet::new();
-		$(
-			_tmp.insert($val);
-		)*
-		_tmp
-	}
+	($($item:expr),*$(,)?) => {
+		{
+			let mut _tmp = std::collections::HashSet::new();
+			$(_tmp.insert($item);)*
+			_tmp
+		}
+	};
 }
 
 pub mod math;
