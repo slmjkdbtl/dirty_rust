@@ -180,7 +180,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	let mut mouse_input = None;
 	let mut cursor_moved = None;
 	let mut resized = None;
-	let mut character_input = None;
+	let mut character_input = vec![];
 	let mut close = false;
 
 	ctx.events_loop.poll_events(|e| {
@@ -211,7 +211,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 				},
 
 				ReceivedCharacter(ch) => {
-					character_input = Some(ch);
+					character_input.push(ch);
 				},
 
 				Resized(size) => {
@@ -339,11 +339,14 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 		events.push(Event::Resize(ctx.width as u32, ctx.height as u32));
 	}
 
-	if let Some(ch) = character_input {
-		if !ctx.invalid_chars.contains(&ch) {
-			events.push(Event::TextInput(ch));
-		}
-	}
+	character_input
+		.into_iter()
+		.filter(|c| !ctx.invalid_chars.contains(&c))
+		.map(|c| Event::TextInput(c))
+		.for_each(|c| {
+			events.push(c);
+		})
+		;
 
 	#[cfg(all(not(mobile), not(web)))]
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
