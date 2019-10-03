@@ -18,6 +18,7 @@ pub use input::Input;
 #[cfg(feature = "imgui")]
 pub use imgui_lib as imgui;
 
+use std::collections::HashSet;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
@@ -64,6 +65,7 @@ pub struct Ctx {
 	pub(self) mouse_pos: Pos,
 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(self) invalid_chars: HashSet<char>,
 
 	// window
 	pub(self) title: String,
@@ -285,6 +287,29 @@ impl Ctx {
 			mouse_pos: Pos::new(0, 0),
 			gamepad_button_states: HashMap::new(),
 			gamepad_axis_pos: HashMap::new(),
+			invalid_chars: hashset![
+				'\u{7f}',
+				'\r',
+				'\n',
+				'\u{1b}',
+				'\u{8}',
+				'\u{f700}',
+				'\u{f701}',
+				'\u{f702}',
+				'\u{f703}',
+				'\u{f704}',
+				'\u{f705}',
+				'\u{f706}',
+				'\u{f707}',
+				'\u{f708}',
+				'\u{f709}',
+				'\u{f70a}',
+				'\u{f70b}',
+				'\u{f70c}',
+				'\u{f70d}',
+				'\u{f70e}',
+				'\u{f70f}',
+			],
 
 			// window
 			title: conf.title.to_owned(),

@@ -180,6 +180,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	let mut mouse_input = None;
 	let mut cursor_moved = None;
 	let mut resized = None;
+	let mut character_input = None;
 	let mut close = false;
 
 	ctx.events_loop.poll_events(|e| {
@@ -210,7 +211,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 				},
 
 				ReceivedCharacter(ch) => {
-					events.push(Event::TextInput(ch));
+					character_input = Some(ch);
 				},
 
 				Resized(size) => {
@@ -336,6 +337,12 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 		ctx.width = size.width as i32;
 		ctx.height = size.height as i32;
 		events.push(Event::Resize(ctx.width as u32, ctx.height as u32));
+	}
+
+	if let Some(ch) = character_input {
+		if !ctx.invalid_chars.contains(&ch) {
+			events.push(Event::TextInput(ch));
+		}
 	}
 
 	#[cfg(all(not(mobile), not(web)))]
