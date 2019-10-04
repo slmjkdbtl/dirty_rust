@@ -10,6 +10,34 @@ pub type GamepadID = u64;
 
 pub type TouchID = u64;
 
+use lazy_static::lazy_static;
+
+lazy_static! {
+	static ref INVALID_CHARS: HashSet<char> = hashset![
+		'\u{7f}',
+		'\r',
+		'\n',
+		'\u{1b}',
+		'\u{8}',
+		'\u{f700}',
+		'\u{f701}',
+		'\u{f702}',
+		'\u{f703}',
+		'\u{f704}',
+		'\u{f705}',
+		'\u{f706}',
+		'\u{f707}',
+		'\u{f708}',
+		'\u{f709}',
+		'\u{f70a}',
+		'\u{f70b}',
+		'\u{f70c}',
+		'\u{f70d}',
+		'\u{f70e}',
+		'\u{f70f}',
+	];
+}
+
 use super::*;
 use crate::*;
 use window::Pos;
@@ -180,7 +208,6 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	let mut mouse_input = None;
 	let mut cursor_moved = None;
 	let mut resized = None;
-	let mut character_input = vec![];
 	let mut close = false;
 
 	ctx.events_loop.poll_events(|e| {
@@ -211,7 +238,9 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 				},
 
 				ReceivedCharacter(ch) => {
-					character_input.push(ch);
+					if !INVALID_CHARS.contains(&ch) {
+						events.push(Event::TextInput(ch));
+					}
 				},
 
 				Resized(size) => {
@@ -338,15 +367,6 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 		ctx.height = size.height as i32;
 		events.push(Event::Resize(ctx.width as u32, ctx.height as u32));
 	}
-
-	character_input
-		.into_iter()
-		.filter(|c| !ctx.invalid_chars.contains(&c))
-		.map(|c| Event::TextInput(c))
-		.for_each(|c| {
-			events.push(c);
-		})
-		;
 
 	#[cfg(all(not(mobile), not(web)))]
 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
