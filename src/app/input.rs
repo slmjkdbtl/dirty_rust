@@ -3,16 +3,9 @@
 use std::path::PathBuf;
 use std::collections::HashSet;
 
-#[cfg(all(not(mobile), not(web)))]
-pub use gilrs::GamepadId as GamepadID;
-#[cfg(any(mobile, web))]
-pub type GamepadID = u64;
+use lazy_static::lazy_static as lstatic;
 
-pub type TouchID = u64;
-
-use lazy_static::lazy_static;
-
-lazy_static! {
+lstatic! {
 	static ref INVALID_CHARS: HashSet<char> = hashset![
 		'\u{7f}',
 		'\r',
@@ -37,6 +30,13 @@ lazy_static! {
 		'\u{f70f}',
 	];
 }
+
+#[cfg(all(not(mobile), not(web)))]
+pub use gilrs::GamepadId as GamepadID;
+#[cfg(any(mobile, web))]
+pub type GamepadID = u64;
+
+pub type TouchID = u64;
 
 use super::*;
 use crate::*;

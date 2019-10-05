@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::f32::consts::PI;
+
 use super::*;
 use gfx::Drawable;
 use gl::VertexLayout;
@@ -189,6 +191,7 @@ pub struct Polygon {
 	pts: Vec<Vec2>,
 	color: Color,
 	stroke: Option<Stroke>,
+	radius: Option<f32>,
 }
 
 impl Polygon {
@@ -214,6 +217,10 @@ impl Polygon {
 		}
 		return self;
 	}
+	pub fn radius(mut self, r: f32) -> Self {
+		self.radius = Some(r);
+		return self
+	}
 }
 
 pub fn polygon(pts: &[Vec2]) -> Polygon {
@@ -222,6 +229,7 @@ pub fn polygon(pts: &[Vec2]) -> Polygon {
 		pts: pts.to_vec(),
 		color: color!(),
 		stroke: None,
+		radius: None,
 	};
 
 }
@@ -230,19 +238,27 @@ impl Drawable for &Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let len = self.pts.len();
-
-		if len < 3 {
-			return Err(Error::Gfx("polygon must have more than 3 vertices".into()));
+		if self.pts.len() < 3 {
+			return Ok(());
 		}
+
+		use std::borrow::Cow;
+
+		let pts = if let Some(radius) = self.radius {
+			Cow::Owned(rounded_poly_verts(&self.pts, radius, None))
+		} else {
+			Cow::Borrowed(&self.pts)
+		};
+
+// 		let pts = pts.as_ref().unwrap_or(&self.pts);
 
 		if let Some(stroke) = &self.stroke {
 
 			// TODO: line join
-			for i in 0..len {
+			for i in 0..pts.len() {
 
-				let p1 = self.pts[i];
-				let p2 = self.pts[(i + 1) % len];
+				let p1 = pts[i];
+				let p2 = pts[(i + 1) % pts.len()];
 
 				use gfx::LineJoin::*;
 
@@ -267,10 +283,10 @@ impl Drawable for &Polygon {
 
 		} else {
 
-			let mut verts = Vec::with_capacity(self.pts.len() * gfx::Vertex2D::STRIDE);
+			let mut verts = Vec::with_capacity(pts.len() * gfx::Vertex2D::STRIDE);
 			let mut indices = Vec::new();
 
-			for (i, p) in self.pts.iter().enumerate() {
+			for (i, p) in pts.iter().enumerate() {
 
 				gfx::Vertex2D::new(ctx.transform.as_mat4() * *p, vec2!(0), self.color).push(&mut verts);
 
@@ -435,34 +451,30 @@ impl Rect {
 	}
 }
 
+// struct Stroke {
+// 	width: f32,
+// 	line_join: gfx::LineJoin,
+// }
+
 impl Drawable for &Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
+		let mut pts = vec![
+			self.p1,
+			vec2!(self.p2.x, self.p1.y),
+			self.p2,
+			vec2!(self.p1.x, self.p2.y),
+		];
+
 		if let Some(radius) = self.radius {
+			pts = rounded_poly_verts(&pts, radius, None);
+		}
 
-			// TODO: rect with radius
-			if let Some(stroke) = &self.stroke {
-				// ...
-			} else {
-				// ...
-			}
-
+		if let Some(stroke) = &self.stroke {
+			ctx.draw(&polygon(&pts).color(self.color).stroke(stroke.width).line_join(stroke.join))?;
 		} else {
-
-			let pts = [
-				self.p1,
-				vec2!(self.p2.x, self.p1.y),
-				self.p2,
-				vec2!(self.p1.x, self.p2.y),
-			];
-
-			if let Some(stroke) = &self.stroke {
-				ctx.draw(&polygon(&pts).color(self.color).stroke(stroke.width).line_join(stroke.join))?;
-			} else {
-				ctx.draw(&polygon(&pts).color(self.color))?;
-			}
-
+			ctx.draw(&polygon(&pts).color(self.color))?;
 		}
 
 		return Ok(());
@@ -613,7 +625,7 @@ pub struct Circle {
 	center: Vec2,
 	radius: f32,
 	color: Color,
-	segments: usize,
+	segments: Option<u32>,
 	stroke: Option<f32>,
 }
 
@@ -630,6 +642,10 @@ impl Circle {
 		self.stroke = Some(s);
 		return self
 	}
+	pub fn segments(mut self, s: u32) -> Self {
+		self.segments = Some(s);
+		return self
+	}
 }
 
 pub fn circle(center: Vec2, radius: f32) -> Circle {
@@ -637,10 +653,75 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 		center: center,
 		radius: radius,
 		color: color!(1),
-		// TODO: is this correct?
-		segments: (radius.sqrt() * 6.0) as usize,
+		segments: None,
 		stroke: None,
 	};
+}
+
+// TODO: is this correct?
+fn circle_segments(radius: f32) -> u32 {
+	return (radius.sqrt() * 6.0) as u32;
+}
+
+fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u32>) -> Vec<Vec2> {
+
+	let segments = segments.unwrap_or(circle_segments(radius));
+	let segments = segments as usize;
+	let mut nv = Vec::with_capacity(segments);
+	let len = verts.len();
+
+	for i in 0..len {
+
+		// TODO: fix weirdness
+		let prev = verts.get(i - 1).map(|p| *p).unwrap_or(verts[len - 1]);
+		let p = verts[i];
+		let next = verts.get(i + 1).map(|p| *p).unwrap_or(verts[0]);
+		let angle = Vec2::angle2(p - prev, p - next);
+		let dis = radius / f32::tan(angle / 2.0);
+
+		let p1 = p + (prev - p) * (dis / (prev - p).mag());
+		let p2 = p + (next - p) * (dis / (next - p).mag());
+
+		let center = p + (p1 - p) + (p2 - p);
+
+		let start_angle = center.angle(p1);
+		let end_angle = start_angle + angle;
+
+		let arc = arc_verts(radius, start_angle, end_angle, None)
+			.iter()
+			.map(|p| *p + center)
+			.collect::<Vec<Vec2>>()
+			;
+
+		nv.extend_from_slice(&arc);
+
+	}
+
+	return nv;
+
+}
+
+fn arc_verts(radius: f32, start: f32, end: f32, segments: Option<u32>) -> Vec<Vec2> {
+
+	assert!(end > start, "end angle should be larger than start");
+	let segments = segments.unwrap_or(f32::ceil(circle_segments(radius) as f32 * (end - start) / (PI * 2.0)) as u32);
+	let segments = segments as usize;
+	let step = (end - start) / segments as f32;
+	let mut verts = Vec::with_capacity(segments);
+
+	for i in 0..=segments {
+
+		let angle = start + i as f32 * step;
+		verts.push(Vec2::from_angle(angle) * radius);
+
+	}
+
+	return verts;
+
+}
+
+fn circle_verts(radius: f32, segments: Option<u32>) -> Vec<Vec2> {
+	return arc_verts(radius, 0.0, PI * 2.0, segments);
 }
 
 impl Drawable for &Circle {
@@ -651,16 +732,7 @@ impl Drawable for &Circle {
 			return Err(Error::Gfx("cannot draw circle with radius < 0".to_owned()));
 		}
 
-		let mut verts = Vec::new();
-
-		for i in 0..self.segments {
-
-			let angle = 360.0 / self.segments as f32 * i as f32;
-			let pt = Vec2::from_angle(angle.to_radians()) * self.radius;
-
-			verts.push(pt);
-
-		}
+		let verts = circle_verts(self.radius, self.segments);
 
 		ctx.push(&gfx::t()
 			.translate(self.center)
