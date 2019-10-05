@@ -2,14 +2,20 @@
 
 use dirty::*;
 use dirty::app::*;
+use dirty::math::*;
 use input::Key;
+use input::Mouse;
 
-struct Game;
+struct Game {
+	pts: Vec<Vec2>,
+}
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
-		return Ok(Self);
+		return Ok(Self {
+			pts: vec![],
+		});
 	}
 
 	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
@@ -25,6 +31,12 @@ impl app::State for Game {
 					ctx.toggle_fullscreen();
 				}
 			},
+			MousePress(m) => {
+				if m == &Mouse::Left {
+					let mpos: Vec2 = ctx.mouse_pos().into();
+					self.pts.push(mpos - vec2!(320, 240));
+				}
+			}
 			_ => {},
 		}
 
@@ -46,9 +58,15 @@ impl app::State for Game {
 			],
 		).width(640.0))?;
 
+		for p in &self.pts {
+			ctx.draw(&circle(*p, 3.0).color(Color::BLUE))?;
+		}
+
+		ctx.draw(&polygon(&self.pts).radius(12.0).stroke(1.0))?;
+
 		ctx.draw(&circle(vec2!(0), 120.0).color(color!(1, 0, 1, 1)))?;
-		ctx.draw(&rect(vec2!(-64, -48), vec2!(64, 48)).color(color!(0, 1, 1, 1)))?;
-		ctx.draw(&rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)))?;
+		ctx.draw(&rect(vec2!(-72, -54), vec2!(72, 54)).color(color!(0, 1, 1, 1)).radius(12.0))?;
+		ctx.draw(&rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)).radius(12.0))?;
 		ctx.draw(&text("geoms").color(color!(0, 0, 1, 1)))?;
 
 		return Ok(());
@@ -58,6 +76,9 @@ impl app::State for Game {
 }
 
 fn main() {
+	let p1 = vec2!(0);
+	let p2 = vec2!(-1, 0);
+	dbg!(Vec2::angle(p2, p1));
 	if let Err(err) = app::run::<Game>() {
 		println!("{}", err);
 	}

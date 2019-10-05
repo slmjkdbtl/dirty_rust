@@ -2,6 +2,8 @@
 
 == DOING
 - [gfx] investigate the extreme slowness of the 2d renderer
+- [window] mouse pos based on gfx origin
+- [gfx] shape: fill, stroke structs
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -51,6 +53,7 @@
 - [gfx] make gl3 default (?)
 - [gfx] custom imgui renderer
 - [gfx] gl3 3d sprite no texture
+- [gfx] rounded polygon weirdness
 
 == DONE
 - [http] refactor http
@@ -104,4 +107,5 @@
 - [gfx] fix gl3 shader vertex attr
 - [gfx] basic imgui integration
 - [gfx] imgui don't gen ini file
+- [gfx] rounded corners on polygon
 

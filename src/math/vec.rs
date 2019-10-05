@@ -169,12 +169,12 @@ impl Vec2 {
 
 	/// get a vector from given angle
 	pub fn from_angle(angle: f32) -> Self {
-		return vec2!(angle.cos(), angle.sin());
+		return vec2!(f32::cos(angle), f32::sin(angle));
 	}
 
 	/// get vector magnitude
 	pub fn mag(&self) -> f32 {
-		return (self.x * self.x + self.y * self.y).sqrt();
+		return f32::sqrt(self.x * self.x + self.y * self.y);
 	}
 
 	/// normalize vector
@@ -192,14 +192,20 @@ impl Vec2 {
 		return self.x * other.x + self.y * other.y;
 	}
 
-	/// get angle between 2 vectors
+	// TODO: name these
+	/// get angle between 2 points
 	pub fn angle(self, other: Self) -> f32 {
-		return (other.y - self.y).atan2(other.x - self.x);
+		return f32::atan2(other.y - self.y, other.x - self.x);
+	}
+
+	/// get angle between 2 vectors
+	pub fn angle2(self, other: Self) -> f32 {
+		return f32::acos(Self::dot(self, other) / (self.mag() * other.mag()));
 	}
 
 	/// get distance between another vector
 	pub fn dis(self, other: Self) -> f32 {
-		return ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt();
+		return f32::sqrt((self.x - other.x).powi(2) + (self.y - other.y).powi(2));
 	}
 
 }
@@ -208,7 +214,7 @@ impl Vec3 {
 
 	/// get vector magnitude
 	pub fn mag(&self) -> f32 {
-		return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+		return f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
 	}
 
 	/// normalize vector
