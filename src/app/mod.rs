@@ -41,10 +41,6 @@ use input::Mouse;
 use input::GamepadID;
 use input::GamepadButton;
 
-use window::Pos;
-
-use gfx::Origin;
-
 include!("../res/resources.rs");
 
 // TODO: make this lighter
@@ -62,7 +58,7 @@ pub struct Ctx {
 	// input
 	pub(self) key_states: HashMap<Key, ButtonState>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
-	pub(self) mouse_pos: Pos,
+	pub(self) mouse_pos: Vec2,
 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 
@@ -283,7 +279,7 @@ impl Ctx {
 			// input
 			key_states: HashMap::new(),
 			mouse_states: HashMap::new(),
-			mouse_pos: Pos::new(0, 0),
+			mouse_pos: vec2!(),
 			gamepad_button_states: HashMap::new(),
 			gamepad_axis_pos: HashMap::new(),
 
@@ -607,12 +603,12 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn origin(mut self, o: Origin) -> Self {
+	pub fn origin(mut self, o: gfx::Origin) -> Self {
 		self.conf.origin = o;
 		return self;
 	}
 
-	pub fn quad_origin(mut self, o: Origin) -> Self {
+	pub fn quad_origin(mut self, o: gfx::Origin) -> Self {
 		self.conf.quad_origin = o;
 		return self;
 	}
@@ -643,8 +639,8 @@ pub struct Conf {
 	pub cursor_locked: bool,
 	pub fps_cap: Option<u16>,
 	pub clear_color: Color,
-	pub origin: Origin,
-	pub quad_origin: Origin,
+	pub origin: gfx::Origin,
+	pub quad_origin: gfx::Origin,
 	pub texture_filter: gfx::FilterMode,
 }
 
@@ -682,8 +678,8 @@ impl Default for Conf {
 			cursor_locked: false,
 			fps_cap: Some(60),
 			clear_color: color!(0, 0, 0, 1),
-			origin: Origin::Center,
-			quad_origin: Origin::Center,
+			origin: gfx::Origin::Center,
+			quad_origin: gfx::Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,
 		};
 	}

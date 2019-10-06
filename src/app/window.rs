@@ -4,7 +4,6 @@
 
 #[cfg(not(web))]
 use glutin::dpi::*;
-use derive_more::*;
 
 use super::*;
 use crate::math::*;
@@ -34,7 +33,7 @@ pub trait Window {
 	fn gwidth(&self) -> i32;
 	fn gheight(&self) -> i32;
 
-	fn set_mouse_pos(&mut self, p: Pos) -> Result<()>;
+	fn set_mouse_pos(&mut self, p: Vec2) -> Result<()>;
 
 }
 
@@ -153,11 +152,14 @@ impl Window for Ctx {
 		return self.conf.height;
 	}
 
-	fn set_mouse_pos(&mut self, p: Pos) -> Result<()> {
+	fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
+
+		let offset = self.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(self.width(), self.height());
+		let mpos = p + offset;
 
 		#[cfg(not(web))]
-		self.windowed_ctx.window().set_cursor_position(p.into())?;
-		self.mouse_pos = p;
+		self.windowed_ctx.window().set_cursor_position(mpos.into())?;
+		self.mouse_pos = mpos;
 
 		return Ok(());
 
@@ -171,74 +173,16 @@ pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
 	return Ok(());
 }
 
-#[derive(Copy, Clone, PartialEq, Debug, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, From, Into)]
-pub struct Pos {
-	pub x: i32,
-	pub y: i32,
-}
-
-impl Pos {
-	pub(super) fn new(x: i32, y: i32) -> Self {
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-}
-
-impl From<Pos> for Vec2 {
-	fn from(p: Pos) -> Self {
-		return vec2!(p.x, p.y);
-	}
-}
-
-impl From<Vec2> for Pos {
-	fn from(p: Vec2) -> Self {
-		return Pos {
-			x: p.x as i32,
-			y: p.y as i32,
-		};
-	}
-}
-
 #[cfg(not(web))]
-impl From<LogicalPosition> for Pos {
-	fn from(pos: LogicalPosition) -> Self {
-		let (x, y): (i32, i32) = pos.into();
-		return Self {
-			x: x,
-			y: y,
-		};
-	}
-}
-
-#[cfg(not(web))]
-impl From<Pos> for LogicalPosition {
-	fn from(pos: Pos) -> Self {
-		return Self {
-			x: pos.x as f64,
-			y: pos.y as f64,
-		};
-	}
-}
-
-#[cfg(not(web))]
-impl From<glutin::MouseScrollDelta> for Pos {
+impl From<glutin::MouseScrollDelta> for Vec2 {
 	fn from(delta: glutin::MouseScrollDelta) -> Self {
 		use glutin::MouseScrollDelta;
 		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
-				let (x, y): (i32, i32) = pos.into();
-				return Self {
-					x: x,
-					y: y,
-				};
+				return vec2!(pos.x, pos.y);
 			},
 			MouseScrollDelta::LineDelta(x, y) => {
-				return Self {
-					x: x as i32,
-					y: y as i32,
-				};
+				return vec2!(x, y);
 			}
 		};
 	}

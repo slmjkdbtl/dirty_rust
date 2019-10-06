@@ -2,6 +2,7 @@
 
 use std::fmt;
 use std::ops;
+use std::f32::consts::PI;
 
 use derive_more::*;
 
@@ -192,15 +193,9 @@ impl Vec2 {
 		return self.x * other.x + self.y * other.y;
 	}
 
-	// TODO: name these
 	/// get angle between 2 points
 	pub fn angle(self, other: Self) -> f32 {
 		return f32::atan2(other.y - self.y, other.x - self.x);
-	}
-
-	/// get angle between 2 vectors
-	pub fn angle2(self, other: Self) -> f32 {
-		return f32::acos(Self::dot(self, other) / (self.mag() * other.mag()));
 	}
 
 	/// get distance between another vector
