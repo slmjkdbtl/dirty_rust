@@ -12,7 +12,7 @@ struct Game {
 
 impl app::State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(_: &mut app::Ctx) -> Result<Self> {
 		return Ok(Self {
 			pts: vec![],
 		});
@@ -33,8 +33,7 @@ impl app::State for Game {
 			},
 			MousePress(m) => {
 				if m == &Mouse::Left {
-					let mpos: Vec2 = ctx.mouse_pos().into();
-					self.pts.push(mpos - vec2!(320, 240));
+					self.pts.push(ctx.mouse_pos());
 				}
 			}
 			_ => {},
@@ -66,7 +65,7 @@ impl app::State for Game {
 
 		ctx.draw(&circle(vec2!(0), 120.0).color(color!(1, 0, 1, 1)))?;
 		ctx.draw(&rect(vec2!(-72, -54), vec2!(72, 54)).color(color!(0, 1, 1, 1)).radius(12.0))?;
-		ctx.draw(&rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)).radius(12.0))?;
+		ctx.draw(&rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)).stroke(2.0).radius(12.0))?;
 		ctx.draw(&text("geoms").color(color!(0, 0, 1, 1)))?;
 
 		return Ok(());
@@ -76,9 +75,6 @@ impl app::State for Game {
 }
 
 fn main() {
-	let p1 = vec2!(0);
-	let p2 = vec2!(-1, 0);
-	dbg!(Vec2::angle(p2, p1));
 	if let Err(err) = app::run::<Game>() {
 		println!("{}", err);
 	}

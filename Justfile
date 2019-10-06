@@ -11,8 +11,6 @@ install:
 
 build:
 	cargo build --release
-	rm -rf bin/dirty
-	cp target/release/dirty bin/dirty
 
 build-web:
 	cargo build --target wasm32-unknown-unknown

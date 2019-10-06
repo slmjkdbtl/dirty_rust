@@ -250,8 +250,6 @@ impl Drawable for &Polygon {
 			Cow::Borrowed(&self.pts)
 		};
 
-// 		let pts = pts.as_ref().unwrap_or(&self.pts);
-
 		if let Some(stroke) = &self.stroke {
 
 			// TODO: line join
@@ -663,6 +661,14 @@ fn circle_segments(radius: f32) -> u32 {
 	return (radius.sqrt() * 6.0) as u32;
 }
 
+fn normalize_angle(angle: f32) -> f32 {
+	if angle < 0.0 {
+		return PI * 2.0 + angle;
+	} else {
+		return angle;
+	}
+}
+
 fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u32>) -> Vec<Vec2> {
 
 	let segments = segments.unwrap_or(circle_segments(radius));
@@ -676,7 +682,7 @@ fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u32>) -> Vec
 		let prev = verts.get(i - 1).map(|p| *p).unwrap_or(verts[len - 1]);
 		let p = verts[i];
 		let next = verts.get(i + 1).map(|p| *p).unwrap_or(verts[0]);
-		let angle = Vec2::angle2(p - prev, p - next);
+		let angle = normalize_angle(p.angle(prev) - p.angle(next));
 		let dis = radius / f32::tan(angle / 2.0);
 
 		let p1 = p + (prev - p) * (dis / (prev - p).mag());
@@ -729,7 +735,7 @@ impl Drawable for &Circle {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		if self.radius < 0.0 {
-			return Err(Error::Gfx("cannot draw circle with radius < 0".to_owned()));
+			return Ok(());
 		}
 
 		let verts = circle_verts(self.radius, self.segments);

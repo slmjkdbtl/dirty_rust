@@ -2,7 +2,6 @@
 
 == DOING
 - [gfx] investigate the extreme slowness of the 2d renderer
-- [window] mouse pos based on gfx origin
 - [gfx] shape: fill, stroke structs
 
 == TODO
@@ -108,4 +107,5 @@
 - [gfx] basic imgui integration
 - [gfx] imgui don't gen ini file
 - [gfx] rounded corners on polygon
+- [window] mouse pos based on gfx origin
 

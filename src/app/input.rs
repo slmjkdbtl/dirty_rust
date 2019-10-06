@@ -40,14 +40,13 @@ pub type TouchID = u64;
 
 use super::*;
 use crate::*;
-use window::Pos;
 
 pub trait Input {
 
 	fn down_keys(&self) -> HashSet<Key>;
 	fn key_down(&self, key: Key) -> bool;
 	fn mouse_down(&self, mouse: Mouse) -> bool;
-	fn mouse_pos(&self) -> Pos;
+	fn mouse_pos(&self) -> Vec2;
 	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool;
 
 }
@@ -82,7 +81,7 @@ impl Input for app::Ctx {
 		}
 	}
 
-	fn mouse_pos(&self) -> Pos {
+	fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
 	}
 
@@ -142,8 +141,8 @@ pub enum Event {
 	KeyRelease(Key),
 	MousePress(Mouse),
 	MouseRelease(Mouse),
-	MouseMove(Pos),
-	Scroll(Pos),
+	MouseMove(Vec2),
+	Scroll(Vec2),
 	TextInput(char),
 	GamepadPress(GamepadID, GamepadButton),
 	GamepadPressRepeat(GamepadID, GamepadButton),
@@ -151,7 +150,7 @@ pub enum Event {
 	GamepadAxis(GamepadID, GamepadAxis, Vec2),
 	GamepadConnect(GamepadID),
 	GamepadDisconnect(GamepadID),
-	Touch(TouchID, Pos),
+	Touch(TouchID, Vec2),
 	Resize(u32, u32),
 	FileHover(PathBuf),
 	FileHoverCancel,
@@ -275,10 +274,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 
 			DeviceEvent { event, .. } => match event {
 				glutin::DeviceEvent::MouseMotion { delta } => {
-					events.push(Event::MouseMove(Pos {
-						x: delta.0 as i32,
-						y: delta.1 as i32,
-					}));
+					events.push(Event::MouseMove(vec2!(delta.0, delta.1)));
 				},
 				_ => (),
 			},
@@ -359,7 +355,12 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	}
 
 	if let Some(pos) = cursor_moved {
-		ctx.mouse_pos = pos.into();
+
+		let offset = ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(ctx.width(), ctx.height());
+		let mpos: Vec2 = pos.into();
+
+		ctx.mouse_pos = mpos - offset;
+
 	}
 
 	if let Some(size) = resized {
