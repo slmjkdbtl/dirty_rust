@@ -7,7 +7,7 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-pub trait VertexLayout: Clone {
+pub trait VertexLayout {
 
 	const STRIDE: usize;
 	fn push(&self, queue: &mut Vec<f32>);
@@ -20,7 +20,6 @@ pub struct VertexBuffer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
 	pub(super) id: BufferID,
-	pub(super) attrs: VertexAttrGroup,
 	layout: PhantomData<V>,
 
 }
@@ -37,7 +36,6 @@ impl<V: VertexLayout> VertexBuffer<V> {
 			let buf = Self {
 				ctx: ctx,
 				id: id,
-				attrs: V::attrs(),
 				layout: PhantomData,
 			};
 
@@ -77,10 +75,6 @@ impl<V: VertexLayout> VertexBuffer<V> {
 		}
 	}
 
-	pub(super) fn attrs(&self) -> &VertexAttrGroup {
-		return &self.attrs;
-	}
-
 	// TODO: change this to take V?
 	pub fn data(&self, offset: usize, data: &[f32]) {
 
@@ -103,14 +97,6 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-}
-
-impl<V: VertexLayout> Drop for VertexBuffer<V> {
-	fn drop(&mut self) {
-		unsafe {
-			self.ctx.delete_buffer(self.id);
-		}
-	}
 }
 
 impl<V: VertexLayout> PartialEq for VertexBuffer<V> {

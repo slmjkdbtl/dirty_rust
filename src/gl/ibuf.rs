@@ -109,14 +109,6 @@ impl IndexBuffer {
 
 }
 
-impl Drop for IndexBuffer {
-	fn drop(&mut self) {
-		unsafe {
-			self.ctx.delete_buffer(self.id);
-		}
-	}
-}
-
 impl PartialEq for IndexBuffer {
 	fn eq(&self, other: &Self) -> bool {
 		return self.id == other.id;

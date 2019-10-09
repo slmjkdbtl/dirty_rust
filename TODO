@@ -15,7 +15,6 @@
 - [gfx] fix resize framebuffer weirdness
 - [gfx] higer level gl stencil abstraction
 - [gfx] gl::Texture and gl::Program Drop
-- [gfx] clearer shader variable prefixes
 - [gfx] 3d texture
 - [math] tween functions
 - [example] rubiks cube example
@@ -110,4 +109,5 @@
 - [gfx] rounded corners on polygon
 - [window] mouse pos based on gfx origin
 - [gl] Program -> Pipeline
+- [gfx] clearer shader variable prefixes
 

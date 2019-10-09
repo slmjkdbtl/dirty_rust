@@ -172,15 +172,6 @@ impl Texture {
 
 }
 
-// TODO
-impl Drop for Texture {
-	fn drop(&mut self) {
-		unsafe {
-// 			self.ctx.delete_texture(self.id);
-		}
-	}
-}
-
 impl PartialEq for Texture {
 	fn eq(&self, other: &Self) -> bool {
 		return self.id == other.id;
