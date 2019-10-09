@@ -4,7 +4,7 @@ use super::*;
 use crate::Result;
 
 // TODO: shouldn't need to bind to one type of UniformLayout
-pub struct BatchedRenderer<V: VertexLayout, U: UniformLayout + PartialEq + Clone> {
+pub struct BatchedRenderer<V: VertexLayout, U: UniformLayout + PartialEq> {
 
 	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,

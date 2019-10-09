@@ -87,11 +87,13 @@ pub struct Ctx {
 
 	pub(self) empty_tex: gfx::Texture,
 
-	pub(self) default_shader_2d: gfx::Shader2D,
-	pub(self) cur_shader_2d: gfx::Shader2D,
+	pub(self) default_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
+	pub(self) cur_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
+	pub(self) cur_custom_uniform_2d: gfx::UniformValues,
 
-	pub(self) default_shader_3d: gfx::Shader3D,
-	pub(self) cur_shader_3d: gfx::Shader3D,
+	pub(self) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(self) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(self) cur_custom_uniform_3d: gfx::UniformValues,
 
 	pub(self) cur_canvas: Option<gfx::Canvas>,
 
@@ -240,13 +242,13 @@ impl Ctx {
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
-		let shader_2d = gfx::Shader2D::from_handle(gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?);
+		let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
 		let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
 
 		let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
 		let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
 
-		let shader_3d = gfx::Shader3D::from_handle(gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?);
+		let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
 
 		use gfx::Camera;
 
@@ -307,11 +309,13 @@ impl Ctx {
 
 			empty_tex: empty_tex,
 
-			default_shader_2d: shader_2d.clone(),
-			cur_shader_2d: shader_2d,
+			default_pipeline_2d: pipeline_2d.clone(),
+			cur_pipeline_2d: pipeline_2d,
+			cur_custom_uniform_2d: vec![],
 
-			default_shader_3d: shader_3d.clone(),
-			cur_shader_3d: shader_3d,
+			default_pipeline_3d: pipeline_3d.clone(),
+			cur_pipeline_3d: pipeline_3d,
+			cur_custom_uniform_3d: vec![],
 
 			cur_canvas: None,
 

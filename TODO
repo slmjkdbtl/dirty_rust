@@ -53,6 +53,7 @@
 - [gfx] custom imgui renderer
 - [gfx] gl3 3d sprite no texture
 - [gfx] rounded polygon weirdness
+- [http] HTTP 2.0
 
 == DONE
 - [http] refactor http

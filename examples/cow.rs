@@ -7,13 +7,14 @@ use input::Key;
 
 struct Game {
 	model: gfx::Model,
-	pix_shader: gfx::Shader2D,
+	pix_shader: gfx::Shader2D<PixUniform>,
 	canvas: gfx::Canvas,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
 }
 
+#[derive(Clone)]
 struct PixUniform {
 	resolution: Vec2,
 	size: f32,
