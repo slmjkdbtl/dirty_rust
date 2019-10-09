@@ -5,9 +5,6 @@ pub mod input;
 pub mod window;
 pub mod shapes;
 
-#[cfg(feature = "imgui")]
-mod imgui_renderer;
-
 use crate::*;
 use crate::math::*;
 
@@ -18,7 +15,6 @@ pub use input::Input;
 #[cfg(feature = "imgui")]
 pub use imgui_lib as imgui;
 
-use std::collections::HashSet;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
@@ -86,7 +82,7 @@ pub struct Ctx {
 	pub(self) view_3d: math::Mat4,
 
 	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D>,
+	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D, gfx::Uniform3D>,
 
 	pub(self) empty_tex: gfx::Texture,
@@ -238,19 +234,19 @@ impl Ctx {
 		gl.depth_func(gl::Cmp::LessOrEqual);
 		gl.clear_color(conf.clear_color);
 
-		let empty_tex = gl::Texture::init(&gl, 1, 1, &[255; 4])?;
+		let empty_tex = gl::Texture::from(&gl, 1, 1, &[255; 4])?;
 		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
 
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
-		let shader_2d = gfx::Shader2D::from_handle(gl::Program::new(&gl, &vert_2d_src, &frag_2d_src)?);
+		let shader_2d = gfx::Shader2D::from_handle(gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?);
 		let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
 
 		let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
 		let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
 
-		let shader_3d = gfx::Shader3D::from_handle(gl::Program::new(&gl, &vert_3d_src, &frag_3d_src)?);
+		let shader_3d = gfx::Shader3D::from_handle(gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?);
 
 		use gfx::Camera;
 
@@ -259,7 +255,7 @@ impl Ctx {
 		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
 		let font_width = font_img.width();
 		let font_height = font_img.height();
-		let font_tex = gl::Texture::init(&gl, font_width, font_height, &font_img.into_raw())?;
+		let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
 		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
 
 		let font = gfx::BitmapFont::from_tex(

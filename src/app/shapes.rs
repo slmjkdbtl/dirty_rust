@@ -828,13 +828,13 @@ impl<'a> Drawable for &Model<'a> {
 
 		ctx.draw_calls += 1;
 
-		self.model.renderer.draw(&ctx.cur_shader_3d.handle, &gfx::Uniform3D {
+		self.model.renderer.draw(&ctx.cur_shader_3d.handle, Some(&gfx::Uniform3D {
 			proj: ctx.proj_3d,
 			view: ctx.view_3d,
 			model: ctx.transform,
 			color: self.color,
 			tex: ctx.empty_tex.clone(),
-		});
+		}));
 
 		return Ok(());
 
@@ -854,13 +854,13 @@ impl Drawable for &Cube {
 
 		ctx.draw_calls += 1;
 
-		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle, &gfx::Uniform3D {
+		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle, Some(&gfx::Uniform3D {
 			proj: ctx.proj_3d,
 			view: ctx.view_3d,
 			model: ctx.transform,
 			color: color!(),
 			tex: ctx.empty_tex.clone(),
-		});
+		}));
 
 		return Ok(());
 

@@ -7,7 +7,7 @@ use glow::Context;
 use super::*;
 use crate::Result;
 
-pub trait VertexLayout {
+pub trait VertexLayout: Clone {
 
 	const STRIDE: usize;
 	fn push(&self, queue: &mut Vec<f32>);
@@ -57,7 +57,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	pub fn init(device: &Device, data: &[f32]) -> Result<Self> {
+	pub fn from(device: &Device, data: &[f32]) -> Result<Self> {
 
 		let buf = Self::new(device, data.len(), BufferUsage::Static)?;
 		buf.data(0, data);
@@ -77,30 +77,8 @@ impl<V: VertexLayout> VertexBuffer<V> {
 		}
 	}
 
-	// TODO: put this elsewhere?
-	pub(super) fn bind_attrs<U: UniformInterface>(&self, program: &Program<U>) {
-
-		unsafe {
-
-			for attr in iter_attrs(&self.attrs) {
-
-				let index = self.ctx.get_attrib_location(program.id, &attr.name) as u32;
-
-				self.ctx.vertex_attrib_pointer_f32(
-					index,
-					attr.size,
-					glow::FLOAT,
-					false,
-					(V::STRIDE * mem::size_of::<f32>()) as i32,
-					(attr.offset * mem::size_of::<f32>()) as i32,
-				);
-
-				self.ctx.enable_vertex_attrib_array(index);
-
-			}
-
-		}
-
+	pub(super) fn attrs(&self) -> &VertexAttrGroup {
+		return &self.attrs;
 	}
 
 	// TODO: change this to take V?
@@ -116,27 +94,6 @@ impl<V: VertexLayout> VertexBuffer<V> {
 			self.ctx.buffer_sub_data_u8_slice(
 				glow::ARRAY_BUFFER,
 				(offset * mem::size_of::<f32>()) as i32,
-				byte_slice,
-			);
-
-			self.unbind();
-
-		}
-
-	}
-
-	pub fn data_raw<T>(&self, data: &[T]) {
-
-		unsafe {
-
-			let byte_len = mem::size_of_val(data) / mem::size_of::<u8>();
-			let byte_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, byte_len);
-
-			self.bind();
-
-			self.ctx.buffer_sub_data_u8_slice(
-				glow::ARRAY_BUFFER,
-				0,
 				byte_slice,
 			);
 
