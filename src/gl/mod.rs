@@ -2,7 +2,7 @@
 
 export!(types);
 export!(texture);
-export!(program);
+export!(pipeline);
 export!(vbuf);
 export!(ibuf);
 export!(fbuf);
@@ -162,78 +162,78 @@ impl Device {
 
 }
 
-#[cfg(feature="gl3")]
-fn draw<U: UniformInterface>(
-	ctx: &GLCtx,
-	vao: &VertexArray,
-	ibuf: &IndexBuffer,
-	program: &Program<U>,
-	uniform: &U,
-	count: u32,
-	mode: Primitive,
-) {
+// #[cfg(feature="gl3")]
+// fn draw<U: UniformLayout>(
+// 	ctx: &GLCtx,
+// 	vao: &VertexArray,
+// 	ibuf: &IndexBuffer,
+// 	program: &Program<U>,
+// 	uniform: &U,
+// 	count: u32,
+// 	mode: Primitive,
+// ) {
 
-	program.send(&uniform.values());
+// 	program.send(&uniform.values());
 
-	let tex = &uniform.texture();
+// 	let tex = &uniform.texture();
 
-	program.bind();
-	vao.bind();
-	ibuf.bind();
+// 	program.bind();
+// 	vao.bind();
+// 	ibuf.bind();
 
-	if let Some(tex) = tex {
-		tex.bind();
-	}
+// 	if let Some(tex) = tex {
+// 		tex.bind();
+// 	}
 
-	unsafe {
-		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-	}
+// 	unsafe {
+// 		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+// 	}
 
-	program.unbind();
-	ibuf.unbind();
-	vao.unbind();
+// 	program.unbind();
+// 	ibuf.unbind();
+// 	vao.unbind();
 
-	if let Some(tex) = tex {
-		tex.unbind();
-	}
+// 	if let Some(tex) = tex {
+// 		tex.unbind();
+// 	}
 
-}
+// }
 
-#[cfg(not(feature="gl3"))]
-fn draw<V: VertexLayout, U: UniformInterface>(
-	ctx: &GLCtx,
-	vbuf: &VertexBuffer<V>,
-	ibuf: &IndexBuffer,
-	program: &Program<U>,
-	uniform: &U,
-	count: u32,
-	mode: Primitive,
-) {
+// #[cfg(not(feature="gl3"))]
+// fn draw<V: VertexLayout, U: UniformLayout>(
+// 	ctx: &GLCtx,
+// 	vbuf: &VertexBuffer<V>,
+// 	ibuf: &IndexBuffer,
+// 	program: &Program<U>,
+// 	uniform: &U,
+// 	count: u32,
+// 	mode: Primitive,
+// ) {
 
-	program.send(&uniform.values());
+// 	program.send(&uniform.values());
 
-	let tex = &uniform.texture();
+// 	let tex = &uniform.texture();
 
-	program.bind();
-	vbuf.bind();
-	vbuf.bind_attrs(program);
-	ibuf.bind();
+// 	program.bind();
+// 	vbuf.bind();
+// 	vbuf.bind_attrs(program);
+// 	ibuf.bind();
 
-	if let Some(tex) = tex {
-		tex.bind();
-	}
+// 	if let Some(tex) = tex {
+// 		tex.bind();
+// 	}
 
-	unsafe {
-		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-	}
+// 	unsafe {
+// 		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+// 	}
 
-	ibuf.unbind();
-	vbuf.unbind();
-	program.unbind();
+// 	ibuf.unbind();
+// 	vbuf.unbind();
+// 	program.unbind();
 
-	if let Some(tex) = tex {
-		tex.unbind();
-	}
+// 	if let Some(tex) = tex {
+// 		tex.unbind();
+// 	}
 
-}
+// }
 

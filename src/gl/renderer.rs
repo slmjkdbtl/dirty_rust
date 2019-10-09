@@ -1,9 +1,11 @@
 // wengwengweng
 
+use std::marker::PhantomData;
+
 use super::*;
 use crate::Result;
 
-pub struct Renderer<V: VertexLayout> {
+pub struct Renderer<V: VertexLayout, U: UniformLayout> {
 
 	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
@@ -12,18 +14,19 @@ pub struct Renderer<V: VertexLayout> {
 	vao: VertexArray,
 	count: usize,
 	prim: Primitive,
+	uniform_layout: PhantomData<U>,
 
 }
 
-impl<V: VertexLayout> Renderer<V> {
+impl<V: VertexLayout, U: UniformLayout> Renderer<V, U> {
 
 	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
 
-		let vbuf = VertexBuffer::<V>::init(&device, &verts)?;
-		let ibuf = IndexBuffer::init(&device, &indices)?;
+		let vbuf = VertexBuffer::<V>::from(&device, &verts)?;
+		let ibuf = IndexBuffer::from(&device, &indices)?;
 
 		#[cfg(feature="gl3")]
-		let vao = VertexArray::init(&device, &vbuf)?;
+		let vao = VertexArray::from(&device, &vbuf)?;
 
 		return Ok(Self {
 			ctx: device.ctx.clone(),
@@ -33,6 +36,7 @@ impl<V: VertexLayout> Renderer<V> {
 			vao: vao,
 			count: indices.len(),
 			prim: Primitive::Triangle,
+			uniform_layout: PhantomData,
 		});
 
 	}
@@ -46,16 +50,14 @@ impl<V: VertexLayout> Renderer<V> {
 
 	}
 
-	pub fn draw<U: UniformInterface>(&self, program: &Program<U>, uniforms: &U) {
+	pub fn draw(&self, pipeline: &Pipeline<V, U>, uniforms: Option<&U>) {
 
-		draw(
-			&self.ctx,
+		pipeline.draw(
 			#[cfg(feature="gl3")]
-			&self.vao,
+			Some(&self.vao),
 			#[cfg(not(feature="gl3"))]
-			&self.vbuf,
-			&self.ibuf,
-			&program,
+			Some(&self.vbuf),
+			Some(&self.ibuf),
 			uniforms,
 			self.count as u32,
 			self.prim,

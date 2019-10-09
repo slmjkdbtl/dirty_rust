@@ -45,7 +45,7 @@ impl IndexBuffer {
 
 	}
 
-	pub fn init(device: &Device, data: &[u32]) -> Result<Self> {
+	pub fn from(device: &Device, data: &[u32]) -> Result<Self> {
 
 		let buf = Self::new(device, data.len(), BufferUsage::Static)?;
 		buf.data(0, data);

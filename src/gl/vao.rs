@@ -35,7 +35,7 @@ impl VertexArray {
 
 	}
 
-	pub fn init<V: VertexLayout>(device: &Device, vbuf: &VertexBuffer<V>) -> Result<Self> {
+	pub fn from<V: VertexLayout>(device: &Device, vbuf: &VertexBuffer<V>) -> Result<Self> {
 
 		let vao = Self::new(device)?;
 		vao.attr(vbuf);

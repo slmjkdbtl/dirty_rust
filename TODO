@@ -108,4 +108,5 @@
 - [gfx] imgui don't gen ini file
 - [gfx] rounded corners on polygon
 - [window] mouse pos based on gfx origin
+- [gl] Program -> Pipeline
 

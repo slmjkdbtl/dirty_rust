@@ -319,10 +319,10 @@ pub(super) struct Uniform2D {
 	pub tex: Texture,
 }
 
-impl gl::UniformInterface for Uniform2D {
+impl gl::UniformLayout for Uniform2D {
 	fn values(&self) -> UniformValues {
 		return vec![
-			("proj", UniformType::Mat4(self.proj.as_arr())),
+			("proj", self.proj.into()),
 		];
 	}
 	fn texture(&self) -> Option<&gl::Texture> {
@@ -390,14 +390,14 @@ pub(super) struct Uniform3D {
 	pub tex: Texture,
 }
 
-impl gl::UniformInterface for Uniform3D {
+impl gl::UniformLayout for Uniform3D {
 
 	fn values(&self) -> UniformValues {
 		return vec![
-			("proj", UniformType::Mat4(self.proj.as_arr())),
-			("view", UniformType::Mat4(self.view.as_arr())),
-			("model", UniformType::Mat4(self.model.as_mat4().as_arr())),
-			("color", UniformType::F4(self.color.as_arr())),
+			("proj", self.proj.into()),
+			("view", self.view.into()),
+			("model", self.model.as_mat4().into()),
+			("color", self.color.into()),
 		];
 	}
 
@@ -569,7 +569,7 @@ impl Texture {
 
 		let w = img.width();
 		let h = img.height();
-		let handle = gl::Texture::init(&ctx.gl, w, h, &img.into_raw())?;
+		let handle = gl::Texture::from(&ctx.gl, w, h, &img.into_raw())?;
 
 		handle.filter(ctx.conf.texture_filter);
 
@@ -589,7 +589,7 @@ impl Texture {
 
 	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
-		let handle = gl::Texture::init(&ctx.gl, w, h, &pixels)?;
+		let handle = gl::Texture::from(&ctx.gl, w, h, &pixels)?;
 		handle.filter(ctx.conf.texture_filter);
 		return Ok(Self::from_handle(handle, w, h));
 
@@ -705,12 +705,12 @@ pub trait Uniform {
 
 #[derive(Clone, PartialEq)]
 pub struct Shader2D {
-	pub(super) handle: Rc<gl::Program<Uniform2D>>,
+	pub(super) handle: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,
 }
 
 impl Shader2D {
 
-	pub(super) fn from_handle(handle: gl::Program<Uniform2D>) -> Self {
+	pub(super) fn from_handle(handle: gl::Pipeline<Vertex2D, Uniform2D>) -> Self {
 		return Self {
 			handle: Rc::new(handle),
 		};
@@ -726,19 +726,19 @@ impl Shader2D {
 	}
 
 	pub fn from_code(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
-		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
+		return Ok(Self::from_handle(gl::Pipeline::new(&ctx.gl, vert, frag)?));
 	}
 
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Shader3D {
-	pub(super) handle: Rc<gl::Program<Uniform3D>>,
+	pub(super) handle: Rc<gl::Pipeline<Vertex3D, Uniform3D>>,
 }
 
 impl Shader3D {
 
-	pub(super) fn from_handle(handle: gl::Program<Uniform3D>) -> Self {
+	pub(super) fn from_handle(handle: gl::Pipeline<Vertex3D, Uniform3D>) -> Self {
 		return Self {
 			handle: Rc::new(handle),
 		};
@@ -754,7 +754,7 @@ impl Shader3D {
 	}
 
 	pub fn from_code(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
-		return Ok(Self::from_handle(gl::Program::new(&ctx.gl, vert, frag)?));
+		return Ok(Self::from_handle(gl::Pipeline::new(&ctx.gl, vert, frag)?));
 	}
 
 }
@@ -1009,7 +1009,7 @@ fn gen_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 // TODO: messy
 #[derive(Clone)]
 pub struct Model {
-	pub(super) renderer: Rc<gl::Renderer<Vertex3D>>,
+	pub(super) renderer: Rc<gl::Renderer<Vertex3D, Uniform3D>>,
 }
 
 impl Model {

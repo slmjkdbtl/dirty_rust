@@ -77,7 +77,7 @@ impl Texture {
 
 	}
 
-	pub fn init(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
+	pub fn from(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(device, width, height)?;
 		tex.data(0, 0, width, height, data);
