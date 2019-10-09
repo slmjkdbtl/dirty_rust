@@ -26,7 +26,7 @@ impl<V: VertexLayout, U: UniformLayout> Renderer<V, U> {
 		let ibuf = IndexBuffer::from(&device, &indices)?;
 
 		#[cfg(feature="gl3")]
-		let vao = VertexArray::from(&device, &vbuf)?;
+		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
 
 		return Ok(Self {
 			ctx: device.ctx.clone(),
@@ -57,6 +57,7 @@ impl<V: VertexLayout, U: UniformLayout> Renderer<V, U> {
 			Some(&self.vao),
 			#[cfg(not(feature="gl3"))]
 			Some(&self.vbuf),
+			#[cfg(not(feature="gl3"))]
 			Some(&self.ibuf),
 			uniforms,
 			self.count as u32,

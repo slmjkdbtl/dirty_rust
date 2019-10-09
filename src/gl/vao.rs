@@ -35,10 +35,16 @@ impl VertexArray {
 
 	}
 
-	pub fn from<V: VertexLayout>(device: &Device, vbuf: &VertexBuffer<V>) -> Result<Self> {
+	pub fn from<V: VertexLayout>(device: &Device, vbuf: &VertexBuffer<V>, ibuf: Option<&IndexBuffer>) -> Result<Self> {
 
 		let vao = Self::new(device)?;
-		vao.attr(vbuf);
+
+		vao.bind_vbuf(vbuf);
+
+		if let Some(ibuf) = ibuf {
+			vao.bind_ibuf(ibuf)
+		}
+
 		return Ok(vao);
 
 	}
@@ -55,7 +61,16 @@ impl VertexArray {
 		}
 	}
 
-	pub fn attr<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>) {
+	pub fn bind_ibuf(&self, ibuf: &IndexBuffer) {
+
+		self.bind();
+		ibuf.bind();
+		self.unbind();
+		ibuf.unbind();
+
+	}
+
+	pub fn bind_vbuf<V: VertexLayout>(&self, vbuf: &VertexBuffer<V>) {
 
 		unsafe {
 

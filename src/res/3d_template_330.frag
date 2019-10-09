@@ -5,18 +5,18 @@
 // in vec2 v_uv;
 in vec4 v_color;
 
-out vec4 frag_color;
+uniform sampler2D u_tex;
+uniform vec4 u_color;
 
-uniform sampler2D tex;
-uniform vec4 color;
+out vec4 o_color;
 
 ###REPLACE###
 
 void main() {
 
-	frag_color = v_color;
+	o_color = v_color;
 
-	if (frag_color.a == 0.0) {
+	if (o_color.a == 0.0) {
 		discard;
 	}
 

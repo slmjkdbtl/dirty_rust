@@ -306,9 +306,9 @@ impl VertexLayout for Vertex2D {
 
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[
-			("pos", 2),
-			("uv", 2),
-			("color", 4),
+			("a_pos", 2),
+			("a_uv", 2),
+			("a_color", 4),
 		];
 	}
 
@@ -326,7 +326,7 @@ impl gl::UniformLayout for Uniform2D {
 	fn values(&self) -> UniformValues {
 
 		let mut values = vec![
-			("proj", self.proj.into()),
+			("u_proj", self.proj.into()),
 		];
 
 		values.extend(self.custom.clone());
@@ -383,10 +383,10 @@ impl VertexLayout for Vertex3D {
 
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[
-			("pos", 3),
-			("uv", 2),
-			("normal", 3),
-			("color", 4),
+			("a_pos", 3),
+			("a_uv", 2),
+			("a_normal", 3),
+			("a_color", 4),
 		];
 	}
 
@@ -409,10 +409,10 @@ impl gl::UniformLayout for Uniform3D {
 	fn values(&self) -> UniformValues {
 
 		let mut values = vec![
-			("proj", self.proj.into()),
-			("view", self.view.into()),
-			("model", self.model.as_mat4().into()),
-			("color", self.color.into()),
+			("u_proj", self.proj.into()),
+			("u_view", self.view.into()),
+			("u_model", self.model.as_mat4().into()),
+			("u_color", self.color.into()),
 		];
 
 		values.extend(self.custom.clone());

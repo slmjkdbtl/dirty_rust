@@ -4,7 +4,7 @@ use super::*;
 use crate::Result;
 
 // TODO: shouldn't need to bind to one type of UniformLayout
-pub struct BatchedRenderer<V: VertexLayout, U: UniformLayout + PartialEq> {
+pub struct BatchedRenderer<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> {
 
 	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
@@ -20,7 +20,7 @@ pub struct BatchedRenderer<V: VertexLayout, U: UniformLayout + PartialEq> {
 
 }
 
-impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U> {
+impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
@@ -28,7 +28,7 @@ impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
 		#[cfg(feature="gl3")]
-		let vao = VertexArray::from(&device, &vbuf)?;
+		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
 
 		return Ok(Self {
 			ctx: device.ctx.clone(),
@@ -136,6 +136,7 @@ impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U
 			Some(&self.vao),
 			#[cfg(not(feature="gl3"))]
 			Some(&self.vbuf),
+			#[cfg(not(feature="gl3"))]
 			Some(&self.ibuf),
 			Some(uniform),
 			self.iqueue.len() as u32,
