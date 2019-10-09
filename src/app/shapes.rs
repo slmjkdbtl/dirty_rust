@@ -64,9 +64,10 @@ impl<'a> Drawable for &Sprite<'a> {
 		let uniform = gfx::Uniform2D {
 			proj: ctx.proj_2d,
 			tex: self.tex.clone(),
+			custom: ctx.cur_custom_uniform_2d.clone(),
 		};
 
-		ctx.renderer_2d.push_shape(shape, &ctx.cur_shader_2d.handle, &uniform)?;
+		ctx.renderer_2d.push_shape(shape, &ctx.cur_pipeline_2d, &uniform)?;
 
 		return Ok(());
 
@@ -294,9 +295,10 @@ impl Drawable for &Polygon {
 
 			}
 
-			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, &gfx::Uniform2D {
+			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_pipeline_2d, &gfx::Uniform2D {
 				proj: ctx.proj_2d,
 				tex: ctx.empty_tex.clone(),
+				custom: ctx.cur_custom_uniform_2d.clone(),
 			})?;
 
 		}
@@ -385,9 +387,10 @@ impl Drawable for &Gradient {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 2 )
 			.collect();
 
-		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_shader_2d.handle, &gfx::Uniform2D {
+		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_pipeline_2d, &gfx::Uniform2D {
 			proj: ctx.proj_2d,
 			tex: ctx.empty_tex.clone(),
+			custom: ctx.cur_custom_uniform_2d.clone(),
 		})?;
 
 		return Ok(());
@@ -828,12 +831,13 @@ impl<'a> Drawable for &Model<'a> {
 
 		ctx.draw_calls += 1;
 
-		self.model.renderer.draw(&ctx.cur_shader_3d.handle, Some(&gfx::Uniform3D {
+		self.model.renderer.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
 			proj: ctx.proj_3d,
 			view: ctx.view_3d,
 			model: ctx.transform,
 			color: self.color,
 			tex: ctx.empty_tex.clone(),
+			custom: ctx.cur_custom_uniform_3d.clone(),
 		}));
 
 		return Ok(());
@@ -854,12 +858,13 @@ impl Drawable for &Cube {
 
 		ctx.draw_calls += 1;
 
-		ctx.cube_renderer.draw(&ctx.cur_shader_3d.handle, Some(&gfx::Uniform3D {
+		ctx.cube_renderer.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
 			proj: ctx.proj_3d,
 			view: ctx.view_3d,
 			model: ctx.transform,
 			color: color!(),
 			tex: ctx.empty_tex.clone(),
+			custom: ctx.cur_custom_uniform_3d.clone(),
 		}));
 
 		return Ok(());
@@ -925,12 +930,13 @@ impl<'a> Drawable for &Sprite3D<'a> {
 
 			let shape = gfx::FlagShape::new(ctx.transform.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
 
-			ctx.renderer_3d.push_shape(shape, &ctx.cur_shader_3d.handle, &gfx::Uniform3D {
+			ctx.renderer_3d.push_shape(shape, &ctx.cur_pipeline_3d, &gfx::Uniform3D {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,
 				model: gfx::Transform::new(),
 				color: color!(),
 				tex: self.tex.clone(),
+				custom: ctx.cur_custom_uniform_3d.clone(),
 			})?;
 
 			return Ok(());

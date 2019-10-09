@@ -67,7 +67,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	pub fn send(&self, values: &UniformValues) {
+	// TODO: take &U
+	pub fn send(&self, uniform: &U) {
 
 		unsafe {
 
@@ -75,7 +76,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.ctx.use_program(Some(self.program_id));
 
-			for v in values {
+			for v in uniform.values() {
 
 				let loc = self.ctx.get_uniform_location(self.program_id, v.0);
 
@@ -120,10 +121,35 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
 
+			self.ctx.bind_vertex_array(None);
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
-			self.ctx.bind_buffer(glow::ARRAY_BUFFER, None);
 			self.ctx.use_program(None);
 			self.ctx.bind_texture(glow::TEXTURE_2D, None);
+
+		}
+
+	}
+
+	pub fn bind_attrs(&self, attrs: &VertexAttrGroup) {
+
+		unsafe {
+
+			for attr in iter_attrs(attrs) {
+
+				let index = self.ctx.get_attrib_location(self.program_id, &attr.name) as u32;
+
+				self.ctx.vertex_attrib_pointer_f32(
+					index,
+					attr.size,
+					glow::FLOAT,
+					false,
+					(V::STRIDE * mem::size_of::<f32>()) as i32,
+					(attr.offset * mem::size_of::<f32>()) as i32,
+				);
+
+				self.ctx.enable_vertex_attrib_array(index);
+
+			}
 
 		}
 
@@ -142,7 +168,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 		unsafe {
 
 			if let Some(uniform) = uniform {
-				self.send(&uniform.values());
+				self.send(&uniform);
 			}
 
 			let tex = flatten(uniform.map(|u| u.texture()));
@@ -151,24 +177,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, vbuf.map(|b| b.id));
 
 			if let Some(vbuf) = vbuf {
-
-				for attr in iter_attrs(vbuf.attrs()) {
-
-					let index = self.ctx.get_attrib_location(self.program_id, &attr.name) as u32;
-
-					self.ctx.vertex_attrib_pointer_f32(
-						index,
-						attr.size,
-						glow::FLOAT,
-						false,
-						(V::STRIDE * mem::size_of::<f32>()) as i32,
-						(attr.offset * mem::size_of::<f32>()) as i32,
-					);
-
-					self.ctx.enable_vertex_attrib_array(index);
-
-				}
-
+				self.bind_attrs(vbuf.attrs());
 			}
 
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, ibuf.map(|b| b.id));
@@ -196,7 +205,6 @@ impl<V: VertexLayout, U: UniformLayout> Drop for Pipeline<V, U> {
 	}
 }
 
-// TODO: compare types
 impl<V: VertexLayout, U: UniformLayout> PartialEq for Pipeline<V, U> {
 	fn eq(&self, other: &Self) -> bool {
 		return self.program_id == other.program_id;

@@ -5,6 +5,7 @@ use std::ops;
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
+use std::marker::PhantomData;
 use std::io::Cursor;
 
 #[cfg(feature = "img")]
@@ -36,8 +37,8 @@ pub trait Gfx {
 	// drawing
 	fn draw(&mut self, t: impl Drawable) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_2d_with(&mut self, shader: &Shader2D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_3d_with(&mut self, shader: &Shader3D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
@@ -131,27 +132,27 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw_2d_with(&mut self, shader: &Shader2D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
-		self.cur_shader_2d = shader.clone();
-		self.cur_shader_2d.handle.send(&uniform.values());
+		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.handle);
+		self.cur_custom_uniform_2d = uniform.values();
 		f(self)?;
 		flush(self);
-		self.cur_shader_2d = self.default_shader_2d.clone();
+		self.cur_pipeline_2d = self.default_pipeline_2d.clone();
 
 		return Ok(());
 
 	}
 
-	fn draw_3d_with(&mut self, shader: &Shader3D, uniform: &impl Uniform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
-		self.cur_shader_3d = shader.clone();
-		self.cur_shader_3d.handle.send(&uniform.values());
+		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.handle);
+		self.cur_custom_uniform_3d = uniform.values();
 		f(self)?;
 		flush(self);
-		self.cur_shader_3d = self.default_shader_3d.clone();
+		self.cur_pipeline_3d = self.default_pipeline_3d.clone();
 
 		return Ok(());
 
@@ -317,17 +318,27 @@ impl VertexLayout for Vertex2D {
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
 	pub tex: Texture,
+	pub custom: UniformValues,
 }
 
 impl gl::UniformLayout for Uniform2D {
+
 	fn values(&self) -> UniformValues {
-		return vec![
+
+		let mut values = vec![
 			("proj", self.proj.into()),
 		];
+
+		values.extend(self.custom.clone());
+
+		return values;
+
 	}
+
 	fn texture(&self) -> Option<&gl::Texture> {
 		return Some(&self.tex.handle);
 	}
+
 }
 
 #[derive(Clone)]
@@ -383,22 +394,31 @@ impl VertexLayout for Vertex3D {
 
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform3D {
+
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub model: Transform,
 	pub color: Color,
 	pub tex: Texture,
+	pub custom: UniformValues,
+
 }
 
 impl gl::UniformLayout for Uniform3D {
 
 	fn values(&self) -> UniformValues {
-		return vec![
+
+		let mut values = vec![
 			("proj", self.proj.into()),
 			("view", self.view.into()),
 			("model", self.model.as_mat4().into()),
 			("color", self.color.into()),
 		];
+
+		values.extend(self.custom.clone());
+
+		return values;
+
 	}
 
 	fn texture(&self) -> Option<&gl::Texture> {
@@ -699,20 +719,28 @@ impl BitmapFont {
 
 }
 
-pub trait Uniform {
+pub trait Uniform: Clone {
 	fn values(&self) -> UniformValues;
 }
 
-#[derive(Clone, PartialEq)]
-pub struct Shader2D {
-	pub(super) handle: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,
+impl Uniform for () {
+	fn values(&self) -> UniformValues {
+		return vec![];
+	}
 }
 
-impl Shader2D {
+#[derive(Clone, PartialEq)]
+pub struct Shader2D<U: Uniform> {
+	pub(super) handle: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,
+	uniform: PhantomData<U>,
+}
+
+impl<U: Uniform> Shader2D<U> {
 
 	pub(super) fn from_handle(handle: gl::Pipeline<Vertex2D, Uniform2D>) -> Self {
 		return Self {
 			handle: Rc::new(handle),
+			uniform: PhantomData,
 		};
 	}
 
@@ -732,15 +760,17 @@ impl Shader2D {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Shader3D {
+pub struct Shader3D<U: Uniform> {
 	pub(super) handle: Rc<gl::Pipeline<Vertex3D, Uniform3D>>,
+	uniform: PhantomData<U>,
 }
 
-impl Shader3D {
+impl<U: Uniform> Shader3D<U> {
 
 	pub(super) fn from_handle(handle: gl::Pipeline<Vertex3D, Uniform3D>) -> Self {
 		return Self {
 			handle: Rc::new(handle),
+			uniform: PhantomData,
 		};
 	}
 
