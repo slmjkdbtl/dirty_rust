@@ -52,6 +52,8 @@
 - [gl] cache attr and uniform locations
 - [misc] refactor errors to be more typed and specific
 - [http] multiple request in single connection
+- [http] request time out
+- [http] HTTP/1.1
 
 == DONE
 - [http] refactor http
@@ -111,5 +113,4 @@
 - [gfx] clearer shader variable prefixes
 - [gfx] send whole piece of uniform (including texture) instead of one
 - [gl] flush batched renderer when shader uniform is sent (?)
-- [http] HTTP/1.1
 

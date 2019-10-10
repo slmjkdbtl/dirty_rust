@@ -50,19 +50,10 @@ pub fn send(mut req: Request, data: Option<&[u8]>) -> Result<Response> {
 }
 
 pub fn get(url: &str) -> Result<Response> {
-
-	// TODO: more elegant way to handle single request and multiple
-	let mut req = Request::from_url(Method::GET, url)?;
-	req.set_header(Header::Connection, "close");
-	return send(req, None);
-
+	return send(Request::from_url(Method::GET, url)?, None);
 }
 
 pub fn post(url: &str, data: impl AsRef<[u8]>) -> Result<Response> {
-
-	let mut req = Request::from_url(Method::POST, url)?;
-	req.set_header(Header::Connection, "close");
-	return send(req, Some(data.as_ref()));
-
+	return send(Request::from_url(Method::POST, url)?, Some(data.as_ref()));
 }
 
