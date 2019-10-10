@@ -20,7 +20,6 @@
 - [example] rubiks cube example
 - [math] noise function
 - [gfx] sphere
-- [gfx] flush batched renderer when shader uniform is sent (?)
 - [gfx] framebuffer get and set individual pixels and pixel arrays
 - [gfx] draw curve
 - [img] image resizing
@@ -40,10 +39,8 @@
 - [gfx] 3D text
 - [gfx] try draw cubes with batched renderer
 - [gfx] postprocessing (chaining shader + canvas)
-- [gfx] send whole piece of uniform (including texture) instead of one
 - [gfx] fallback font
 - [gfx] obj load all objects
-- [gfx] gl3 flag texture not rendering
 - [gfx] quad renderer's matrix calculation is slow
 - [gfx] 2d camera (?)
 - [gfx] use TextAlign instead of offset (?)
@@ -112,4 +109,6 @@
 - [window] mouse pos based on gfx origin
 - [gl] Program -> Pipeline
 - [gfx] clearer shader variable prefixes
+- [gfx] send whole piece of uniform (including texture) instead of one
+- [gl] flush batched renderer when shader uniform is sent (?)
 

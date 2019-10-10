@@ -1,19 +1,11 @@
 // wengwengweng
 
-use std::io::Write;
-use std::io::Read;
-use std::net::TcpStream;
-
 use url::Url;
-#[cfg(all(not(mobile), not(web)))]
-use native_tls::TlsConnector;
 
 use crate::Error;
 use crate::Result;
 
 use super::*;
-
-const RESPONSE_BUF_SIZE: usize = 1024;
 
 #[derive(Clone)]
 pub struct Request {
@@ -91,16 +83,48 @@ impl Request {
 
 	}
 
-	pub fn get(url: &str) -> Result<Self> {
-		return Self::from_url(Method::GET, url);
+	pub fn set_scheme(&mut self, s: Scheme) {
+		self.scheme = s;
 	}
 
-	pub fn post(url: &str) -> Result<Self> {
-		return Self::from_url(Method::POST, url);
+	pub fn set_version(&mut self, v: Version) {
+		self.version = v;
 	}
 
-	pub fn port(&self) -> u16 {
-		return self.port;
+	pub fn set_method(&mut self, m: Method) {
+		self.method = m;
+	}
+
+	pub fn set_host(&mut self, h: &str) {
+		self.host = h.to_owned();
+	}
+
+	pub fn set_path(&mut self, p: &str) {
+		self.path = p.to_owned();
+	}
+
+	pub fn set_port(&mut self, p: u16) {
+		self.port = p;
+	}
+
+	pub fn set_header(&mut self, key: Header, value: &str) {
+		self.headers.set(key, value);
+	}
+
+	pub fn set_body(&mut self, data: impl AsRef<[u8]>) {
+		self.body = data.as_ref().to_owned();
+	}
+
+	pub fn scheme(&self) -> Scheme {
+		return self.scheme;
+	}
+
+	pub fn version(&self) -> Version {
+		return self.version;
+	}
+
+	pub fn method(&self) -> Method {
+		return self.method;
 	}
 
 	pub fn host(&self) -> &str {
@@ -111,28 +135,16 @@ impl Request {
 		return &self.path;
 	}
 
-	pub fn scheme(&self) -> Scheme {
-		return self.scheme;
-	}
-
-	pub fn method(&self) -> Method {
-		return self.method;
-	}
-
-	pub fn version(&self) -> Version {
-		return self.version;
+	pub fn port(&self) -> u16 {
+		return self.port;
 	}
 
 	pub fn headers(&self) -> &HeaderMap {
 		return &self.headers;
 	}
 
-	pub fn set_header(&mut self, key: Header, value: &str) {
-		self.headers.set(key, value);
-	}
-
-	pub fn body(&mut self, data: impl AsRef<[u8]>) {
-		self.body = data.as_ref().to_owned();
+	pub fn body(&self) -> &[u8] {
+		return &self.body;
 	}
 
 	pub fn message(&self) -> Vec<u8> {
@@ -146,46 +158,6 @@ impl Request {
 		m.extend_from_slice(&self.body);
 
 		return m;
-
-	}
-
-	// TODO: move this to outside
-	// TODO: browser
-	pub fn send(&mut self, data: Option<&[u8]>) -> Result<Response> {
-
-		if let Some(data) = data {
-			self.body(data);
-		}
-
-		let mut stream = TcpStream::connect((self.host(), self.port()))?;
-		let mut buf = Vec::with_capacity(RESPONSE_BUF_SIZE);
-
-		match self.scheme() {
-
-			Scheme::HTTP => {
-
-				stream.write_all(&self.message())?;
-				stream.read_to_end(&mut buf)?;
-
-			},
-
-			Scheme::HTTPS => {
-
-				#[cfg(all(not(mobile), not(web)))] {
-
-					let connector = TlsConnector::new()?;
-					let mut stream = connector.connect(self.host(), stream)?;
-
-					stream.write_all(&self.message())?;
-					stream.read_to_end(&mut buf)?;
-
-				}
-
-			},
-
-		};
-
-		return Response::from_raw(&buf);
 
 	}
 

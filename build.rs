@@ -2,6 +2,7 @@
 
 use std::env;
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Lib {
 	Dylib(&'static str),
@@ -9,6 +10,7 @@ enum Lib {
 	Framework(&'static str),
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Path {
 	Dependency(&'static str),
@@ -18,6 +20,7 @@ enum Path {
 	All(&'static str),
 }
 
+#[allow(dead_code)]
 fn link(lib: Lib) {
 
 	use Lib::*;
@@ -44,6 +47,7 @@ fn link(lib: Lib) {
 
 }
 
+#[allow(dead_code)]
 fn search(search: Path) {
 
 	use Path::*;
@@ -78,14 +82,17 @@ fn search(search: Path) {
 
 }
 
+#[allow(dead_code)]
 fn flags(f: &str) {
 	println!("cargo:rustc-flags={}", f);
 }
 
+#[allow(dead_code)]
 fn cfg(c: &str) {
 	println!("cargo:rustc-cfg={}", c);
 }
 
+#[allow(dead_code)]
 fn env(k: &str, v: &str) {
 	println!("cargo:rustc-env={}={}", k, v);
 }

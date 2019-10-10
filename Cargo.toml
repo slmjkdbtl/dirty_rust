@@ -26,11 +26,11 @@ default = [
 	"fs",
 	"app",
 	"img",
-# 	"audio",
+	"audio",
 	"http",
 # 	"geom",
 # 	"physics",
-	"term",
+# 	"term",
 # 	"video",
 # 	"serial",
 # 	"ecs",
@@ -41,8 +41,8 @@ default = [
 # 	"vr",
 # 	"osc",
 # 	"ui",
-	"json",
-	"bin",
+# 	"json",
+# 	"bin",
 
 	# features
 # 	"gl3",
@@ -92,10 +92,6 @@ term = [
 	"console",
 ]
 
-json = [
-	"serde_json",
-]
-
 ase = [
 	"aseprite",
 ]
@@ -120,6 +116,10 @@ vr = [
 
 osc = [
 	"rosc",
+]
+
+json = [
+	"serde_json",
 ]
 
 bin = [
@@ -174,11 +174,11 @@ clipboard = { version = "0.5", optional = true }
 # osc
 rosc = { version = "0.2", optional = true }
 
-# bin
-bincode = { version = "1.2", optional = true }
-
 # json
 serde_json = { version = "1.0", optional = true }
+
+# bin
+bincode = { version = "1.2", optional = true }
 
 # vr
 openvr = { version = "0.6", optional = true }
