@@ -72,7 +72,7 @@ impl Request {
 
 		return Ok(Self {
 			method: method,
-			version: Version::V10,
+			version: Version::V11,
 			scheme: scheme,
 			host: host.to_owned(),
 			path: path.to_owned(),
@@ -85,10 +85,6 @@ impl Request {
 
 	pub fn set_scheme(&mut self, s: Scheme) {
 		self.scheme = s;
-	}
-
-	pub fn set_version(&mut self, v: Version) {
-		self.version = v;
 	}
 
 	pub fn set_method(&mut self, m: Method) {
