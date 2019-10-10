@@ -18,12 +18,13 @@ pub fn send(mut req: Request, data: Option<&[u8]>) -> Result<Response> {
 
 	let mut stream = TcpStream::connect((req.host(), req.port()))?;
 	let mut buf = Vec::with_capacity(1024);
+	let msg = req.message();
 
 	match req.scheme() {
 
 		Scheme::HTTP => {
 
-			stream.write_all(&req.message())?;
+			stream.write_all(&msg)?;
 			stream.read_to_end(&mut buf)?;
 
 		},
@@ -35,7 +36,7 @@ pub fn send(mut req: Request, data: Option<&[u8]>) -> Result<Response> {
 				let connector = TlsConnector::new()?;
 				let mut stream = connector.connect(req.host(), stream)?;
 
-				stream.write_all(&req.message())?;
+				stream.write_all(&msg)?;
 				stream.read_to_end(&mut buf)?;
 
 			}
@@ -49,10 +50,19 @@ pub fn send(mut req: Request, data: Option<&[u8]>) -> Result<Response> {
 }
 
 pub fn get(url: &str) -> Result<Response> {
-	return send(Request::from_url(Method::GET, url)?, None);
+
+	// TODO: more elegant way to handle single request and multiple
+	let mut req = Request::from_url(Method::GET, url)?;
+	req.set_header(Header::Connection, "close");
+	return send(req, None);
+
 }
 
 pub fn post(url: &str, data: impl AsRef<[u8]>) -> Result<Response> {
-	return send(Request::from_url(Method::POST, url)?, Some(data.as_ref()));
+
+	let mut req = Request::from_url(Method::POST, url)?;
+	req.set_header(Header::Connection, "close");
+	return send(req, Some(data.as_ref()));
+
 }
 

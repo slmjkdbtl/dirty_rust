@@ -8,9 +8,7 @@ fn main() {
 
 	match http::get(url) {
 		Ok(res) => println!("{}", res.text()),
-		Err(err) => {
-			dbg!(err);
-		},
+		Err(err) => println!("{}", err),
 	};
 
 }
