@@ -2,12 +2,10 @@
 
 use std::rc::Rc;
 
-use glow::Context;
+use glow::HasContext;
 
 use super::*;
 use crate::Result;
-
-type VertexArrayID = <GLCtx as Context>::VertexArray;
 
 #[derive(Clone, Debug)]
 pub struct VertexArray {

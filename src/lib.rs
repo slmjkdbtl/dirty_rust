@@ -7,6 +7,7 @@
 
 #![deny(clippy::implicit_return)]
 
+#[allow(unused_macros)]
 macro_rules! export {
 	($name:ident) => {
 		mod $name;
@@ -14,6 +15,7 @@ macro_rules! export {
 	}
 }
 
+#[allow(unused_macros)]
 macro_rules! hashmap {
 	($($key:expr => $val:expr),*$(,)?) => {
 		{
@@ -24,6 +26,7 @@ macro_rules! hashmap {
 	}
 }
 
+#[allow(unused_macros)]
 macro_rules! hashset {
 	($($item:expr),*$(,)?) => {
 		{

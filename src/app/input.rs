@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use lazy_static::lazy_static as lstatic;
 
 lstatic! {
-	static ref INVALID_CHARS: HashSet<char> = hashset![
+	pub(super) static ref INVALID_CHARS: HashSet<char> = hashset![
 		'\u{7f}',
 		'\r',
 		'\n',
@@ -135,6 +135,7 @@ fn gamepad_released(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> boo
 	}
 }
 
+#[derive(Clone)]
 pub enum Event {
 	KeyPress(Key),
 	KeyPressRepeat(Key),
@@ -172,7 +173,7 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 }
 
 #[cfg(not(web))]
-pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
+pub(super) fn poll(ctx: &mut app::Ctx, events_loop: &mut glutin::EventsLoop) -> Result<Vec<Event>> {
 
 	for state in ctx.key_states.values_mut() {
 		if state == &ButtonState::Pressed {
@@ -201,35 +202,89 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	}
 
 	let mut events = vec![];
-	let mut ne = vec![];
+	#[cfg(feature = "imgui")]
+	let mut imgui_events = vec![];
 
-	let mut keyboard_input = None;
-	let mut mouse_input = None;
-	let mut cursor_moved = None;
-	let mut resized = None;
 	let mut close = false;
 
-	ctx.events_loop.poll_events(|e| {
+	events_loop.poll_events(|e| {
 
 		use glutin::Event::*;
 		use glutin::WindowEvent::*;
 
-		ne.push(e.clone());
+		#[cfg(feature = "imgui")]
+		imgui_events.push(e.clone());
 
 		match e {
 
 			WindowEvent { event, .. } => match event {
 
 				KeyboardInput { input, .. } => {
-					keyboard_input = Some(input);
+
+					if let Some(kc) = input.virtual_keycode {
+
+						if let Some(key) = Key::from_extern(kc) {
+
+							match input.state {
+
+								glutin::ElementState::Pressed => {
+
+									events.push(Event::KeyPressRepeat(key));
+
+									if key_up(ctx, key) || key_released(ctx, key) {
+										ctx.key_states.insert(key, ButtonState::Pressed);
+										events.push(Event::KeyPress(key));
+									}
+
+								},
+
+								glutin::ElementState::Released => {
+									if ctx.key_down(key) || key_pressed(ctx, key) {
+										ctx.key_states.insert(key, ButtonState::Released);
+										events.push(Event::KeyRelease(key));
+									}
+								},
+
+							}
+
+						}
+
+					}
+
 				},
 
 				MouseInput { button, state, .. } => {
-					mouse_input = Some((button, state));
+
+					if let Some(button) = Mouse::from_extern(button) {
+
+						match state {
+
+							glutin::ElementState::Pressed => {
+								if mouse_up(ctx, button) || mouse_released(ctx, button) {
+									ctx.mouse_states.insert(button, ButtonState::Pressed);
+									events.push(Event::MousePress(button));
+								}
+							},
+							glutin::ElementState::Released => {
+								if ctx.mouse_down(button) || mouse_pressed(ctx, button) {
+									ctx.mouse_states.insert(button, ButtonState::Released);
+									events.push(Event::MouseRelease(button));
+								}
+							},
+
+						}
+
+					}
+
 				},
 
 				CursorMoved { position, .. } => {
-					cursor_moved = Some(position);
+
+					let offset = ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(ctx.width(), ctx.height());
+					let mpos: Vec2 = position.into();
+
+					ctx.mouse_pos = mpos - offset;
+
 				},
 
 				MouseWheel { delta, .. } => {
@@ -243,7 +298,11 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 				},
 
 				Resized(size) => {
-					resized = Some(size);
+
+					ctx.width = size.width as i32;
+					ctx.height = size.height as i32;
+					events.push(Event::Resize(ctx.width as u32, ctx.height as u32));
+
 				},
 
 				Touch(touch) => {
@@ -286,87 +345,13 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
 	});
 
 	#[cfg(feature = "imgui")]
-	for e in ne {
+	for e in imgui_events {
 		ctx.imgui_platform.handle_event(ctx.imgui_ctx.io_mut(), &ctx.windowed_ctx.window(), &e);
 	}
 
 	if close {
 		ctx.quit = true;
 		return Ok(events);
-	}
-
-	if let Some(input) = keyboard_input {
-
-		if let Some(kc) = input.virtual_keycode {
-
-			if let Some(key) = Key::from_extern(kc) {
-
-				match input.state {
-
-					glutin::ElementState::Pressed => {
-
-						events.push(Event::KeyPressRepeat(key));
-
-						if key_up(ctx, key) || key_released(ctx, key) {
-							ctx.key_states.insert(key, ButtonState::Pressed);
-							events.push(Event::KeyPress(key));
-						}
-
-					},
-
-					glutin::ElementState::Released => {
-						if ctx.key_down(key) || key_pressed(ctx, key) {
-							ctx.key_states.insert(key, ButtonState::Released);
-							events.push(Event::KeyRelease(key));
-						}
-					},
-
-				}
-
-			}
-
-		}
-
-	}
-
-	if let Some((button, state)) = mouse_input {
-
-		if let Some(button) = Mouse::from_extern(button) {
-
-			match state {
-
-				glutin::ElementState::Pressed => {
-					if mouse_up(ctx, button) || mouse_released(ctx, button) {
-						ctx.mouse_states.insert(button, ButtonState::Pressed);
-						events.push(Event::MousePress(button));
-					}
-				},
-				glutin::ElementState::Released => {
-					if ctx.mouse_down(button) || mouse_pressed(ctx, button) {
-						ctx.mouse_states.insert(button, ButtonState::Released);
-						events.push(Event::MouseRelease(button));
-					}
-				},
-
-			}
-
-		}
-
-	}
-
-	if let Some(pos) = cursor_moved {
-
-		let offset = ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(ctx.width(), ctx.height());
-		let mpos: Vec2 = pos.into();
-
-		ctx.mouse_pos = mpos - offset;
-
-	}
-
-	if let Some(size) = resized {
-		ctx.width = size.width as i32;
-		ctx.height = size.height as i32;
-		events.push(Event::Resize(ctx.width as u32, ctx.height as u32));
 	}
 
 	#[cfg(all(not(mobile), not(web)))]
@@ -480,6 +465,7 @@ macro_rules! gen_buttons {
 
 		impl $type {
 
+			#[allow(dead_code)]
 			fn from_str(s: &str) -> Option<Self> {
 
 				return match s {
@@ -491,6 +477,7 @@ macro_rules! gen_buttons {
 
 			}
 
+			#[allow(dead_code)]
 			#[cfg(desktop)]
 			fn from_extern(s: $xtype) -> Option<Self> {
 				return match s {
@@ -502,11 +489,13 @@ macro_rules! gen_buttons {
 			}
 
 			// TODO
+			#[allow(dead_code)]
 			#[cfg(not(desktop))]
 			fn from_extern(s: $xtype) -> Option<Self> {
 				return None;
 			}
 
+			#[allow(dead_code)]
 			fn as_str(&self) -> &'static str {
 				return match self {
 					$(
@@ -515,6 +504,7 @@ macro_rules! gen_buttons {
 				};
 			}
 
+			#[allow(dead_code)]
 			#[cfg(desktop)]
 			fn as_extern(&self) -> $xtype {
 				return match self {
