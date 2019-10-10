@@ -7,7 +7,7 @@ use super::*;
 
 #[derive(Clone, Debug)]
 pub struct Response {
-	body: Vec<u8>,
+	body: Body,
 	status: Status,
 	headers: HeaderMap,
 }
@@ -32,16 +32,16 @@ impl Response {
 		let body = &buf[body_pos..];
 
 		return Ok(Self {
-			body: body.to_owned(),
+			body: Body::from_raw(body),
 			status: status,
 			headers: HeaderMap::new(),
 		});
 
 	}
 
-	pub fn set_body(&mut self, body: impl AsRef<[u8]>) {
+	pub fn set_body(&mut self, body: Body) {
 
-		self.body = body.as_ref().to_owned();
+		self.body = body;
 		self.set_header(Header::ContentLength, &self.body.len().to_string());
 
 	}
@@ -53,7 +53,7 @@ impl Response {
 		headers.set(Header::Location, url);
 
 		return Self {
-			body: Vec::new(),
+			body: Body::empty(),
 			status: Status::SeeOther,
 			headers: headers,
 		}
@@ -69,24 +69,15 @@ impl Response {
 		headers.set(Header::ContentType, t.as_str());
 
 		return Self {
-			body: body.to_owned(),
+			body: Body::from_raw(body),
 			status: status,
 			headers: headers,
 		};
 
 	}
 
-	pub fn body(&self) -> &[u8] {
+	pub fn body(&self) -> &Body {
 		return &self.body;
-	}
-
-	pub fn text(&self) -> String {
-		return String::from_utf8_lossy(self.body()).to_owned().to_string();
-	}
-
-	#[cfg(feature = "json")]
-	pub fn json<D: for<'a> serde::de::Deserialize<'a>>(&self) -> Result<D> {
-		return Ok(serde_json::from_str(&self.text())?);
 	}
 
 	pub fn status(&self) -> Status {
@@ -110,7 +101,7 @@ impl Response {
 		m.extend_from_slice("\r\n".as_bytes());
 		m.extend_from_slice(&self.headers.to_string().as_bytes());
 		m.extend_from_slice("\r\n".as_bytes());
-		m.extend_from_slice(&self.body);
+		m.extend_from_slice(&self.body.as_bytes());
 
 		return m;
 
