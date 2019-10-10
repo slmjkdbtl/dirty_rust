@@ -80,6 +80,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			for v in uniform.values() {
 
+				// TODO: cache location
 				let loc = self.ctx.get_uniform_location(self.program_id, v.0);
 
 				match v.1 {

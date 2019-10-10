@@ -136,10 +136,11 @@ impl Gfx for Ctx {
 
 		flush(self);
 		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.handle);
-		self.cur_custom_uniform_2d = uniform.values();
+		self.cur_custom_uniform_2d = Some(uniform.values());
 		f(self)?;
 		flush(self);
 		self.cur_pipeline_2d = self.default_pipeline_2d.clone();
+		self.cur_custom_uniform_2d = None;
 
 		return Ok(());
 
@@ -149,10 +150,11 @@ impl Gfx for Ctx {
 
 		flush(self);
 		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.handle);
-		self.cur_custom_uniform_3d = uniform.values();
+		self.cur_custom_uniform_3d = Some(uniform.values());
 		f(self)?;
 		flush(self);
 		self.cur_pipeline_3d = self.default_pipeline_3d.clone();
+		self.cur_custom_uniform_3d = None;
 
 		return Ok(());
 
@@ -318,7 +320,7 @@ impl VertexLayout for Vertex2D {
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
 	pub tex: Texture,
-	pub custom: UniformValues,
+	pub custom: Option<UniformValues>,
 }
 
 impl gl::UniformLayout for Uniform2D {
@@ -329,7 +331,9 @@ impl gl::UniformLayout for Uniform2D {
 			("u_proj", self.proj.into()),
 		];
 
-		values.extend(self.custom.clone());
+		if let Some(custom) = &self.custom {
+			values.extend(custom.clone());
+		}
 
 		return values;
 
@@ -400,7 +404,7 @@ pub(super) struct Uniform3D {
 	pub model: Transform,
 	pub color: Color,
 	pub tex: Texture,
-	pub custom: UniformValues,
+	pub custom: Option<UniformValues>,
 
 }
 
@@ -415,7 +419,9 @@ impl gl::UniformLayout for Uniform3D {
 			("u_color", self.color.into()),
 		];
 
-		values.extend(self.custom.clone());
+		if let Some(custom) = &self.custom {
+			values.extend(custom.clone());
+		}
 
 		return values;
 
