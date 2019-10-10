@@ -67,8 +67,6 @@ pub struct Ctx {
 
 	#[cfg(not(web))]
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	#[cfg(not(web))]
-	pub(self) events_loop: glutin::EventsLoop,
 	#[cfg(web)]
 	pub(self) render_loop: glow::web::RenderLoop,
 	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
@@ -113,312 +111,293 @@ pub struct Ctx {
 
 }
 
-impl Ctx {
+fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
-	pub(super) fn new(conf: app::Conf) -> Result<Self> {
+	#[cfg(not(web))]
+	let (windowed_ctx, mut events_loop, gl) =  {
 
-		#[cfg(not(web))]
-		let (windowed_ctx, events_loop, gl) =  {
+		let events_loop = glutin::EventsLoop::new();
 
-			let events_loop = glutin::EventsLoop::new();
+		let mut window_builder = glutin::WindowBuilder::new()
+			.with_title(conf.title.to_owned())
+			.with_resizable(conf.resizable)
+			.with_transparency(conf.transparent)
+			.with_decorations(!conf.borderless)
+			.with_always_on_top(conf.always_on_top)
+			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
+			.with_multitouch()
+			;
 
-			let mut window_builder = glutin::WindowBuilder::new()
-				.with_title(conf.title.to_owned())
-				.with_resizable(conf.resizable)
-				.with_transparency(conf.transparent)
-				.with_decorations(!conf.borderless)
-				.with_always_on_top(conf.always_on_top)
-				.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-				.with_multitouch()
+		if conf.fullscreen {
+			window_builder = window_builder
+				.with_fullscreen(Some(events_loop.get_primary_monitor()));
+		}
+
+		#[cfg(target_os = "macos")] {
+
+			use glutin::os::macos::WindowBuilderExt;
+
+			window_builder = window_builder
+				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
+				.with_title_hidden(conf.hide_title)
+				.with_titlebar_transparent(conf.titlebar_transparent)
+				.with_fullsize_content_view(conf.titlebar_transparent)
+// 				.with_disallow_hidpi(!conf.hidpi)
 				;
 
-			if conf.fullscreen {
-				window_builder = window_builder
-					.with_fullscreen(Some(events_loop.get_primary_monitor()));
-			}
+		}
 
-			#[cfg(target_os = "macos")] {
+		let mut ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
+			;
 
-				use glutin::os::macos::WindowBuilderExt;
-
-				window_builder = window_builder
-					.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
-					.with_title_hidden(conf.hide_title)
-					.with_titlebar_transparent(conf.titlebar_transparent)
-					.with_fullsize_content_view(conf.titlebar_transparent)
-	// 				.with_disallow_hidpi(!conf.hidpi)
-					;
-
-			}
-
-			let mut ctx_builder = glutin::ContextBuilder::new()
-				.with_vsync(conf.vsync)
-				.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
+		#[cfg(feature = "gl3")] {
+			ctx_builder = ctx_builder
+				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+				.with_gl_profile(glutin::GlProfile::Core)
 				;
+		}
 
-			#[cfg(feature = "gl3")] {
-				ctx_builder = ctx_builder
-					.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
-					.with_gl_profile(glutin::GlProfile::Core)
-					;
-			}
-
-			let windowed_ctx = unsafe {
-				ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
-			};
-
-			let gl = gl::Device::from_loader(|s| {
-				windowed_ctx.get_proc_address(s) as *const _
-			});
-
-			(windowed_ctx, events_loop, gl)
-
+		let windowed_ctx = unsafe {
+			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
 		};
 
-		// TODO: wait till glow supports stdweb
-		#[cfg(web)]
-		let (gl, render_loop) = {
+		let gl = gl::Device::from_loader(|s| {
+			windowed_ctx.get_proc_address(s) as *const _
+		});
 
-			use stdweb::web;
-			use web::IElement;
-			use web::INode;
-			use web::html_element::CanvasElement;
-			use stdweb::unstable::TryInto;
+		(windowed_ctx, events_loop, gl)
 
-			let document = web::document();
+	};
 
-			document.set_title(&conf.title);
+	// TODO: wait till glow supports stdweb
+	#[cfg(web)]
+	let (gl, render_loop) = {
 
-			let canvas: CanvasElement = document
-				.create_element("canvas")?
-				.try_into()
-				.map_err(|_| Error::Wasm(format!("failed to create canvas")))?;
+		use stdweb::web;
+		use web::IElement;
+		use web::INode;
+		use web::html_element::CanvasElement;
+		use stdweb::unstable::TryInto;
 
-			let body = document
-				.body()
-				.ok_or(Error::Wasm(format!("failed to get document body")))?;
+		let document = web::document();
 
-			body.append_child(&canvas);
-			canvas.set_width(conf.width as u32);
-			canvas.set_height(conf.height as u32);
+		document.set_title(&conf.title);
 
-			let gl_ctx = canvas.get_context()?;
-			let render_loop = glow::web::RenderLoop::from_request_animation_frame();
+		let canvas: CanvasElement = document
+			.create_element("canvas")?
+			.try_into()
+			.map_err(|_| Error::Wasm(format!("failed to create canvas")))?;
 
-			((), render_loop)
+		let body = document
+			.body()
+			.ok_or(Error::Wasm(format!("failed to get document body")))?;
 
-		};
+		body.append_child(&canvas);
+		canvas.set_width(conf.width as u32);
+		canvas.set_height(conf.height as u32);
 
-		#[cfg(feature = "imgui")]
-		let (imgui_ctx, imgui_platform, imgui_renderer) = {
+		let gl_ctx = canvas.get_context()?;
+		let render_loop = glow::web::RenderLoop::from_request_animation_frame();
 
-			use imgui::Context;
-			use imgui_winit_support::{HiDpiMode, WinitPlatform};
-			use imgui_opengl_renderer::Renderer;
+		((), render_loop)
 
-			let mut ctx = Context::create();
-			let mut platform = WinitPlatform::init(&mut ctx);
+	};
 
-			ctx.set_ini_filename(None);
-			platform.attach_window(ctx.io_mut(), &windowed_ctx.window(), HiDpiMode::Locked(1.0));
+	#[cfg(feature = "imgui")]
+	let (imgui_ctx, imgui_platform, imgui_renderer) = {
 
-			let renderer = Renderer::new(&mut ctx, |s| windowed_ctx.get_proc_address(s) as *const _);
+		use imgui::Context;
+		use imgui_winit_support::{HiDpiMode, WinitPlatform};
+		use imgui_opengl_renderer::Renderer;
 
-			(ctx, platform, renderer)
+		let mut ctx = Context::create();
+		let mut platform = WinitPlatform::init(&mut ctx);
 
-		};
+		ctx.set_ini_filename(None);
+		platform.attach_window(ctx.io_mut(), &windowed_ctx.window(), HiDpiMode::Locked(1.0));
 
-		gl.enable(gl::Capability::Blend);
-		gl.enable(gl::Capability::DepthTest);
+		let renderer = Renderer::new(&mut ctx, |s| windowed_ctx.get_proc_address(s) as *const _);
+
+		(ctx, platform, renderer)
+
+	};
+
+	gl.enable(gl::Capability::Blend);
+	gl.enable(gl::Capability::DepthTest);
 // 		gl.enable(gl::Capability::CullFace);
 // 		gl.cull_face(gl::Face::Back);
-		gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
-		gl.depth_func(gl::Cmp::LessOrEqual);
-		gl.clear_color(conf.clear_color);
+	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
+	gl.depth_func(gl::Cmp::LessOrEqual);
+	gl.clear_color(conf.clear_color);
 
-		let empty_tex = gl::Texture::from(&gl, 1, 1, &[255; 4])?;
-		let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
+	let empty_tex = gl::Texture::from(&gl, 1, 1, &[255; 4])?;
+	let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
 
-		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
-		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
+	let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
+	let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
-		let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
-		let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
+	let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
+	let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
 
-		let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
-		let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
+	let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
+	let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
 
-		let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
+	let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
 
-		use gfx::Camera;
+	use gfx::Camera;
 
-		let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
+	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
-		let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
-		let font_width = font_img.width();
-		let font_height = font_img.height();
-		let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
-		let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
+	let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
+	let font_width = font_img.width();
+	let font_height = font_img.height();
+	let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
+	let font_tex = gfx::Texture::from_handle(font_tex, font_width, font_height);
 
-		let font = gfx::BitmapFont::from_tex(
-			font_tex,
-			DEFAULT_FONT_COLS,
-			DEFAULT_FONT_ROWS,
-			DEFAULT_FONT_CHARS,
-		)?;
+	let font = gfx::BitmapFont::from_tex(
+		font_tex,
+		DEFAULT_FONT_COLS,
+		DEFAULT_FONT_ROWS,
+		DEFAULT_FONT_CHARS,
+	)?;
 
-		let mut ctx = Self {
+	let mut ctx = Ctx {
 
-			quit: false,
-			dt: Time::new(0.0),
-			time: Time::new(0.0),
-			fps_counter: FPSCounter::new(),
+		quit: false,
+		dt: Time::new(0.0),
+		time: Time::new(0.0),
+		fps_counter: FPSCounter::new(),
 
-			// input
-			key_states: HashMap::new(),
-			mouse_states: HashMap::new(),
-			mouse_pos: vec2!(),
-			gamepad_button_states: HashMap::new(),
-			gamepad_axis_pos: HashMap::new(),
+		// input
+		key_states: HashMap::new(),
+		mouse_states: HashMap::new(),
+		mouse_pos: vec2!(),
+		gamepad_button_states: HashMap::new(),
+		gamepad_axis_pos: HashMap::new(),
 
-			// window
-			title: conf.title.to_owned(),
-			width: conf.width,
-			height: conf.height,
-			cursor_hidden: conf.cursor_hidden,
-			cursor_locked: conf.cursor_locked,
-
-			#[cfg(not(web))]
-			events_loop: events_loop,
-			#[cfg(not(web))]
-			windowed_ctx: windowed_ctx,
-			#[cfg(web)]
-			render_loop: render_loop,
-			#[cfg(all(not(mobile), not(web)))]
-			gamepad_ctx: gilrs::Gilrs::new()?,
-
-			// TODO: max vert/indice count
-			renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 9999999, 9999999)?,
-			renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 9999999, 9999999)?,
-			cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
-			gl: gl,
-
-			proj_2d: proj_2d,
-			view_3d: cam_3d.lookat(),
-			proj_3d: cam_3d.projection(),
-
-			empty_tex: empty_tex,
-
-			default_pipeline_2d: pipeline_2d.clone(),
-			cur_pipeline_2d: pipeline_2d,
-			cur_custom_uniform_2d: None,
-
-			default_pipeline_3d: pipeline_3d.clone(),
-			cur_pipeline_3d: pipeline_3d,
-			cur_custom_uniform_3d: None,
-
-			cur_canvas: None,
-
-			default_font: font,
-			draw_calls: 0,
-			draw_calls_last: 0,
-
-			transform: gfx::Transform::new(),
-
-			#[cfg(feature = "imgui")]
-			imgui_ctx: imgui_ctx,
-			#[cfg(feature = "imgui")]
-			imgui_platform: imgui_platform,
-			#[cfg(feature = "imgui")]
-			imgui_renderer: imgui_renderer,
-
-			conf: conf,
-
-		};
-
-		if ctx.conf.cursor_hidden {
-			ctx.set_cursor_hidden(true);
-		}
-
-		if ctx.conf.cursor_locked {
-			ctx.set_cursor_locked(true)?;
-		}
-
-		ctx.clear();
-		window::swap(&ctx)?;
-
-		return Ok(ctx);
-
-	}
-
-	pub(super) fn run(&mut self, s: &mut impl State) -> Result<()> {
-
-		// TODO: render loop
-// 		#[cfg(web)]
-//         self.render_loop.run(|running: &mut bool| {
-// 			gfx::begin(self);
-// 			f(self);
-// 			gfx::end(self);
-// 		});
+		// window
+		title: conf.title.to_owned(),
+		width: conf.width,
+		height: conf.height,
+		cursor_hidden: conf.cursor_hidden,
+		cursor_locked: conf.cursor_locked,
 
 		#[cfg(not(web))]
-		'run: loop {
+		windowed_ctx: windowed_ctx,
+		#[cfg(web)]
+		render_loop: render_loop,
+		#[cfg(all(not(mobile), not(web)))]
+		gamepad_ctx: gilrs::Gilrs::new()?,
 
-			let start_time = Instant::now();
+		// TODO: max vert/indice count
+		renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 9999999, 9999999)?,
+		renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 9999999, 9999999)?,
+		cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
+		gl: gl,
 
-			for e in &input::poll(self)? {
-				s.event(self, e)?;
-				check_native_events(self, e);
-			}
+		proj_2d: proj_2d,
+		view_3d: cam_3d.lookat(),
+		proj_3d: cam_3d.projection(),
 
-			gfx::begin(self);
+		empty_tex: empty_tex,
 
-			s.update(self)?;
-			s.draw(self)?;
-			gfx::end(self);
+		default_pipeline_2d: pipeline_2d.clone(),
+		cur_pipeline_2d: pipeline_2d,
+		cur_custom_uniform_2d: None,
 
-			#[cfg(feature = "imgui")] {
+		default_pipeline_3d: pipeline_3d.clone(),
+		cur_pipeline_3d: pipeline_3d,
+		cur_custom_uniform_3d: None,
 
-				let io = self.imgui_ctx.io_mut();
+		cur_canvas: None,
 
-				self.imgui_platform.prepare_frame(io, &self.windowed_ctx.window())?;
-				io.update_delta_time(start_time);
+		default_font: font,
+		draw_calls: 0,
+		draw_calls_last: 0,
 
-				let ui = self.imgui_ctx.frame();
+		transform: gfx::Transform::new(),
 
-				s.imgui(&ui)?;
+		#[cfg(feature = "imgui")]
+		imgui_ctx: imgui_ctx,
+		#[cfg(feature = "imgui")]
+		imgui_platform: imgui_platform,
+		#[cfg(feature = "imgui")]
+		imgui_renderer: imgui_renderer,
 
-				self.imgui_platform.prepare_render(&ui, &self.windowed_ctx.window());
-				self.imgui_renderer.render(ui);
+		conf: conf,
 
-			}
+	};
 
-			window::swap(self)?;
+	if ctx.conf.cursor_hidden {
+		ctx.set_cursor_hidden(true);
+	}
 
-			if self.quit {
-				break 'run;
-			}
+	if ctx.conf.cursor_locked {
+		ctx.set_cursor_locked(true)?;
+	}
 
-			if let Some(fps_cap) = self.conf.fps_cap {
+	ctx.clear();
+	window::swap(&ctx)?;
 
-				let real_dt = start_time.elapsed().as_millis();
-				let expected_dt = (1000.0 / fps_cap as f32) as u128;
+	let mut s = S::init(&mut ctx)?;
 
-				if real_dt < expected_dt {
-					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
-				}
+	'run: loop {
 
-			}
+		let start_time = Instant::now();
 
-			self.dt.set_inner(start_time.elapsed());
-			self.time += self.dt;
-			self.fps_counter.tick(self.dt);
+		for e in input::poll(&mut ctx, &mut events_loop)? {
+			check_native_events(&mut ctx, &e);
+			s.event(&mut ctx, e)?;
+		}
+
+		gfx::begin(&mut ctx);
+
+		s.update(&mut ctx)?;
+		s.draw(&mut ctx)?;
+		gfx::end(&mut ctx);
+
+		#[cfg(feature = "imgui")] {
+
+			let io = ctx.imgui_ctx.io_mut();
+
+			ctx.imgui_platform.prepare_frame(io, &ctx.windowed_ctx.window())?;
+			io.update_delta_time(start_time);
+
+			let ui = ctx.imgui_ctx.frame();
+
+			s.imgui(&ui)?;
+
+			ctx.imgui_platform.prepare_render(&ui, &ctx.windowed_ctx.window());
+			ctx.imgui_renderer.render(ui);
 
 		}
 
-		return Ok(());
+		window::swap(&ctx)?;
+
+		if ctx.quit {
+			break 'run;
+		}
+
+		if let Some(fps_cap) = ctx.conf.fps_cap {
+
+			let real_dt = start_time.elapsed().as_millis();
+			let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+			if real_dt < expected_dt {
+				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+			}
+
+		}
+
+		ctx.dt.set_inner(start_time.elapsed());
+		ctx.time += ctx.dt;
+		ctx.fps_counter.tick(ctx.dt);
 
 	}
+
+	return Ok(());
 
 }
 
@@ -511,15 +490,7 @@ pub struct Launcher {
 impl Launcher {
 
 	pub fn run<S: State>(self) -> Result<()> {
-
-		let mut ctx = Ctx::new(self.conf)?;
-		let mut s = S::init(&mut ctx)?;
-
-		ctx.run(&mut s)?;
-		s.quit(&mut ctx)?;
-
-		return Ok(());
-
+		return run_with_conf::<S>(self.conf);
 	}
 
 	pub fn conf(mut self, c: Conf) -> Self {
@@ -686,11 +657,11 @@ impl Default for Conf {
 
 }
 
-pub trait State {
+pub trait State: Sized {
 
-	fn init(_: &mut Ctx) -> Result<Self> where Self: Sized;
+	fn init(_: &mut Ctx) -> Result<Self>;
 
-	fn event(&mut self, _: &mut Ctx, _: &input::Event) -> Result<()> {
+	fn event(&mut self, _: &mut Ctx, _: input::Event) -> Result<()> {
 		return Ok(());
 	}
 

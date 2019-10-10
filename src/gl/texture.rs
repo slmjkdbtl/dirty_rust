@@ -2,7 +2,7 @@
 
 use std::rc::Rc;
 
-use glow::Context;
+use glow::HasContext;
 
 use super::*;
 use crate::Result;

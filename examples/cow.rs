@@ -44,18 +44,18 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.toggle_cursor_hidden();
 					ctx.toggle_cursor_locked()?;
 				}
-				if *k == Key::F {
+				if k == Key::F {
 					ctx.toggle_fullscreen();
 				}
 			},
@@ -64,7 +64,7 @@ impl app::State for Game {
 
 				if ctx.is_cursor_locked() {
 
-					let md: Vec2 = (*delta).into();
+					let md: Vec2 = delta.into();
 					let mut rx = self.cam.yaw();
 					let mut ry = self.cam.pitch();
 					let dead = 48.0f32.to_radians();

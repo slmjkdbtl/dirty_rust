@@ -7,6 +7,7 @@ export!(vbuf);
 export!(ibuf);
 export!(fbuf);
 export!(attr);
+#[cfg(feature = "gl3")]
 export!(vao);
 export!(uniform);
 export!(stencil);
@@ -18,21 +19,24 @@ use std::mem;
 use std::rc::Rc;
 use std::marker::PhantomData;
 
-use glow::Context;
+use glow::HasContext;
 
 use crate::Error;
 use crate::Result;
 use crate::math::*;
 
 #[cfg(not(web))]
-pub(self) type GLCtx = glow::native::Context;
+pub(self) type GLCtx = glow::Context;
 #[cfg(web)]
 pub(self) type GLCtx = glow::web::Context;
 
-pub(self) type BufferID = <GLCtx as Context>::Buffer;
-pub(self) type ProgramID = <GLCtx as Context>::Program;
-pub(self) type TextureID = <GLCtx as Context>::Texture;
-pub(self) type FramebufferID = <GLCtx as Context>::Framebuffer;
+pub(self) type BufferID = <GLCtx as HasContext>::Buffer;
+pub(self) type ProgramID = <GLCtx as HasContext>::Program;
+pub(self) type TextureID = <GLCtx as HasContext>::Texture;
+pub(self) type FramebufferID = <GLCtx as HasContext>::Framebuffer;
+
+#[cfg(feature = "gl3")]
+pub(self) type VertexArrayID = <GLCtx as Context>::VertexArray;
 
 pub struct Device {
 	ctx: Rc<GLCtx>,
