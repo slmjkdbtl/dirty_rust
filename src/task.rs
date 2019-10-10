@@ -24,17 +24,26 @@ impl<T: Send + 'static> TaskPool<T> {
 	}
 
 	pub fn exec(&mut self, f: impl FnOnce() -> T + Send + 'static) {
+
 		self.queue.push_back(Task::new(f));
+		self.adjust();
+
 	}
 
-	pub fn poll(&mut self) -> Vec<T> {
+	fn adjust(&mut self) {
 
-		if self.active.len() < self.max as usize {
+		self.active.retain(|t| !t.done());
+
+		for _ in 0..self.max as usize - self.active.len() {
 			if let Some(mut task) = self.queue.pop_front() {
 				task.start();
 				self.active.push(task);
 			}
 		}
+
+	}
+
+	pub fn poll(&mut self) -> Vec<T> {
 
 		let mut basket = vec![];
 
@@ -44,10 +53,14 @@ impl<T: Send + 'static> TaskPool<T> {
 			}
 		}
 
-		self.active.retain(|t| !t.done());
+		self.adjust();
 
 		return basket;
 
+	}
+
+	pub fn clear_queue(&mut self) {
+		self.queue.clear();
 	}
 
 }
@@ -55,7 +68,6 @@ impl<T: Send + 'static> TaskPool<T> {
 pub struct Task<T: Send + 'static> {
 	rx: Option<mpsc::Receiver<T>>,
 	action: Option<Box<dyn FnOnce() -> T + Send + 'static>>,
-	data: Option<T>,
 	done: bool,
 }
 
@@ -64,7 +76,6 @@ impl<T: Send + 'static> Task<T> {
 	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Self {
 		return Self {
 			action: Some(Box::new(f)),
-			data: None,
 			done: false,
 			rx: None,
 		};
@@ -80,7 +91,6 @@ impl<T: Send + 'static> Task<T> {
 
 	}
 
-	// TODO: return error if no action
 	pub fn start(&mut self) {
 
 		if let Some(action) = self.action.take() {
@@ -89,7 +99,7 @@ impl<T: Send + 'static> Task<T> {
 
 			// TODO: deal with error inside thread::spawn
 			thread::spawn(move || {
-				tx.send((action)()).expect("thread failure");
+				tx.send(action()).expect("thread failure");
 			});
 
 			self.rx = Some(rx);
@@ -106,40 +116,30 @@ impl<T: Send + 'static> Task<T> {
 		return self.done;
 	}
 
-	// TODO: return error if no rx
 	pub fn block(&mut self) -> Option<T> {
 
-		if let Some(rx) = &self.rx {
-			self.done = true;
-			return rx.recv().ok();
-		} else {
-			return None;
-		}
+		let rx = self.rx.as_ref()?;
+		let data = rx.recv().ok()?;
+
+		self.done = true;
+
+		return Some(data);
 
 	}
 
-	// TODO: return error if no rx
 	pub fn poll(&mut self) -> Option<T> {
 
-		let rx = match &self.rx {
-			Some(rx) => rx,
-			None => return None,
-		};
+		let rx = self.rx.as_ref()?;
 
 		if self.done {
 			return None;
 		}
 
-		if let Ok(data) = rx.try_recv() {
-			self.data = Some(data);
-		}
+		let data = rx.try_recv().ok()?;
 
-		if self.data.is_some() {
-			self.done = true;
-			return self.data.take();
-		} else {
-			return None;
-		}
+		self.done = true;
+
+		return Some(data);
 
 	}
 

@@ -6,9 +6,9 @@
 
 == TODO
 - [http] use rustls instead of native-tls
-- [core] add some dirty::CONSTANTs
-- [core] async fs
-- [core] async http
+- [misc] add some dirty::CONSTANTs
+- [misc] async fs
+- [misc] async http
 - [gfx] imgui integration (?)
 - [gfx] text wrapping
 - [gfx] fix ttf flashing first frame
@@ -24,7 +24,7 @@
 - [gfx] framebuffer get and set individual pixels and pixel arrays
 - [gfx] draw curve
 - [img] image resizing
-- [core] no cargo warnings
+- [misc] no cargo warnings
 - [window] different monitors
 - [lua] lua bindings
 - [python] python bindings
@@ -35,7 +35,7 @@
 - [gfx] dashed lines
 - [geom] integrate collision detection with shape (?)
 - [gfx] correct vertex normal calculation
-- [core] wasm
+- [misc] wasm
 - [app] upgrade to glutin 0.22
 - [gfx] 3D text
 - [gfx] try draw cubes with batched renderer
@@ -54,12 +54,13 @@
 - [gfx] rounded polygon weirdness
 - [http] HTTP 2.0
 - [gl] cache attr and uniform locations
+- [misc] refactor errors to be more typed and specific
 
 == DONE
 - [http] refactor http
-- [core] use cargo feature
+- [misc] use cargo feature
 - [app] restructure app module api
-- [core] massive cleaning
+- [misc] massive cleaning
 - [example] sprite example
 - [gfx] canvas rendering
 - [gfx] gl3 feature
@@ -98,7 +99,7 @@
 - [gfx] rect stroke
 - [gfx] 2D sprites in 3D
 - [gfx] gradient
-- [core] clearer error messages
+- [misc] clearer error messages
 - [gfx] integrate truetype font with shape
 - [gfx] apply redesigned uniform
 - [gfx] fix custom shader with new uniform
