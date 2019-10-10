@@ -5,7 +5,7 @@
 export!(res);
 export!(req);
 export!(types);
-export!(router);
+export!(body);
 export!(server);
 export!(client);
 

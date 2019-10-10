@@ -16,7 +16,7 @@ pub struct Request {
 	path: String,
 	port: u16,
 	headers: HeaderMap,
-	body: Vec<u8>,
+	body: Body,
 }
 
 impl Request {
@@ -51,7 +51,7 @@ impl Request {
 			path: path.to_owned(),
 			port: 80,
 			headers: HeaderMap::new(),
-			body: body.to_owned(),
+			body: Body::from_raw(body),
 		});
 
 	}
@@ -78,7 +78,7 @@ impl Request {
 			path: path.to_owned(),
 			port: scheme.port(),
 			headers: headers,
-			body: Vec::new(),
+			body: Body::empty(),
 		});
 
 	}
@@ -107,8 +107,8 @@ impl Request {
 		self.headers.set(key, value);
 	}
 
-	pub fn set_body(&mut self, data: impl AsRef<[u8]>) {
-		self.body = data.as_ref().to_owned();
+	pub fn set_body(&mut self, data: Body) {
+		self.body = data;
 	}
 
 	pub fn scheme(&self) -> Scheme {
@@ -139,7 +139,7 @@ impl Request {
 		return &self.headers;
 	}
 
-	pub fn body(&self) -> &[u8] {
+	pub fn body(&self) -> &Body {
 		return &self.body;
 	}
 
@@ -151,7 +151,7 @@ impl Request {
 		m.extend_from_slice("\r\n".as_bytes());
 		m.extend_from_slice(&self.headers.to_string().as_bytes());
 		m.extend_from_slice("\r\n".as_bytes());
-		m.extend_from_slice(&self.body);
+		m.extend_from_slice(&self.body.as_bytes());
 
 		return m;
 

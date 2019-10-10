@@ -10,7 +10,7 @@ use native_tls::TlsConnector;
 use crate::Result;
 use super::*;
 
-pub fn send(mut req: Request, data: Option<&[u8]>) -> Result<Response> {
+pub fn send(mut req: Request, data: Option<Body>) -> Result<Response> {
 
 	if let Some(data) = data {
 		req.set_body(data);
@@ -53,7 +53,7 @@ pub fn get(url: &str) -> Result<Response> {
 	return send(Request::from_url(Method::GET, url)?, None);
 }
 
-pub fn post(url: &str, data: impl AsRef<[u8]>) -> Result<Response> {
-	return send(Request::from_url(Method::POST, url)?, Some(data.as_ref()));
+pub fn post(url: &str, body: Body) -> Result<Response> {
+	return send(Request::from_url(Method::POST, url)?, Some(body));
 }
 
