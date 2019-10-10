@@ -89,11 +89,11 @@ pub struct Ctx {
 
 	pub(self) default_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cur_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cur_custom_uniform_2d: gfx::UniformValues,
+	pub(self) cur_custom_uniform_2d: Option<gfx::UniformValues>,
 
 	pub(self) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) cur_custom_uniform_3d: gfx::UniformValues,
+	pub(self) cur_custom_uniform_3d: Option<gfx::UniformValues>,
 
 	pub(self) cur_canvas: Option<gfx::Canvas>,
 
@@ -311,11 +311,11 @@ impl Ctx {
 
 			default_pipeline_2d: pipeline_2d.clone(),
 			cur_pipeline_2d: pipeline_2d,
-			cur_custom_uniform_2d: vec![],
+			cur_custom_uniform_2d: None,
 
 			default_pipeline_3d: pipeline_3d.clone(),
 			cur_pipeline_3d: pipeline_3d,
-			cur_custom_uniform_3d: vec![],
+			cur_custom_uniform_3d: None,
 
 			cur_canvas: None,
 

@@ -1,14 +1,13 @@
 // wengwengweng
 
-use std::thread;
-
 use dirty::*;
 use dirty::app::*;
+use dirty::img::Image;
 use dirty::task::Task;
 use input::Key;
 
 struct Game {
-	task: Task<Result<Vec<u8>>>,
+	task: Task<Result<Image>>,
 	tex: Option<gfx::Texture>,
 }
 
@@ -16,8 +15,12 @@ impl app::State for Game {
 
 	fn init(_: &mut app::Ctx) -> Result<Self> {
 
+		let task = Task::exec(|| {
+			return Image::from_bytes(&fs::read("examples/res/dedede.png")?);
+		});
+
 		return Ok(Self {
-			task: task!(fs::read("examples/res/dedede.png")),
+			task: task,
 			tex: None,
 		});
 
@@ -47,7 +50,7 @@ impl app::State for Game {
 
 		if self.tex.is_none() {
 			if let Some(data) = self.task.poll() {
-				self.tex = Some(gfx::Texture::from_bytes(ctx, &data?)?);
+				self.tex = Some(gfx::Texture::from_img(ctx, data?)?);
 			}
 		}
 
