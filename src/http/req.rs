@@ -72,7 +72,7 @@ impl Request {
 
 		return Ok(Self {
 			method: method,
-			version: Version::V11,
+			version: Version::V10,
 			scheme: scheme,
 			host: host.to_owned(),
 			path: path.to_owned(),
