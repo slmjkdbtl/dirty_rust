@@ -69,7 +69,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	// TODO: take &U
 	pub fn send(&self, uniform: &U) {
 
 		unsafe {

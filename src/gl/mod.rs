@@ -101,6 +101,7 @@ impl Device {
 
 	}
 
+	// TODO: move these to a RenderPass abstraction?
 	pub fn clear_color(&self, c: Color) {
 		unsafe {
 			self.ctx.clear_color(c.r, c.g, c.b, c.a);
@@ -161,79 +162,4 @@ impl Device {
 	}
 
 }
-
-// #[cfg(feature="gl3")]
-// fn draw<U: UniformLayout>(
-// 	ctx: &GLCtx,
-// 	vao: &VertexArray,
-// 	ibuf: &IndexBuffer,
-// 	program: &Program<U>,
-// 	uniform: &U,
-// 	count: u32,
-// 	mode: Primitive,
-// ) {
-
-// 	program.send(&uniform.values());
-
-// 	let tex = &uniform.texture();
-
-// 	program.bind();
-// 	vao.bind();
-// 	ibuf.bind();
-
-// 	if let Some(tex) = tex {
-// 		tex.bind();
-// 	}
-
-// 	unsafe {
-// 		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-// 	}
-
-// 	program.unbind();
-// 	ibuf.unbind();
-// 	vao.unbind();
-
-// 	if let Some(tex) = tex {
-// 		tex.unbind();
-// 	}
-
-// }
-
-// #[cfg(not(feature="gl3"))]
-// fn draw<V: VertexLayout, U: UniformLayout>(
-// 	ctx: &GLCtx,
-// 	vbuf: &VertexBuffer<V>,
-// 	ibuf: &IndexBuffer,
-// 	program: &Program<U>,
-// 	uniform: &U,
-// 	count: u32,
-// 	mode: Primitive,
-// ) {
-
-// 	program.send(&uniform.values());
-
-// 	let tex = &uniform.texture();
-
-// 	program.bind();
-// 	vbuf.bind();
-// 	vbuf.bind_attrs(program);
-// 	ibuf.bind();
-
-// 	if let Some(tex) = tex {
-// 		tex.bind();
-// 	}
-
-// 	unsafe {
-// 		ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-// 	}
-
-// 	ibuf.unbind();
-// 	vbuf.unbind();
-// 	program.unbind();
-
-// 	if let Some(tex) = tex {
-// 		tex.unbind();
-// 	}
-
-// }
 

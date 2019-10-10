@@ -4,7 +4,6 @@ use super::*;
 use crate::Result;
 
 // TODO: trait alias plz
-// TODO: shouldn't need to bind to one type of UniformLayout
 pub struct BatchedRenderer<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> {
 
 	ctx: Rc<GLCtx>,

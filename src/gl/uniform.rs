@@ -5,7 +5,7 @@ use super::Texture;
 
 pub type UniformValues = Vec<(&'static str, UniformType)>;
 
-// TODO: wait for impl Trait in Traits
+// TODO: -> impl UniformValue
 pub trait UniformLayout: 'static {
 	fn values(&self) -> UniformValues;
 	fn texture(&self) -> Option<&Texture>;

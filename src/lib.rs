@@ -4,7 +4,6 @@
 //! toolkit for things
 
 #![allow(unused_parens)]
-#![allow(dead_code)]
 
 #![deny(clippy::implicit_return)]
 

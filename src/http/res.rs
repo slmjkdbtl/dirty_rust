@@ -1,7 +1,5 @@
 // wengwengweng
 
-use std::io::Read;
-
 use crate::Error;
 use crate::Result;
 
@@ -15,6 +13,31 @@ pub struct Response {
 }
 
 impl Response {
+
+	pub fn from_raw(buf: &[u8]) -> Result<Self> {
+
+		let mut headers = [httparse::EMPTY_HEADER; 128];
+		let mut res = httparse::Response::new(&mut headers);
+
+		let body_pos = match res.parse(&buf)? {
+			httparse::Status::Complete(len) => len,
+			httparse::Status::Partial => return Err(Error::Net("incomplete request message".into())),
+		};
+
+		let code = res.code
+			.ok_or(Error::Net("failed to parse response status code".into()))?;
+
+		let status = Status::from_code(code)?;
+
+		let body = &buf[body_pos..];
+
+		return Ok(Self {
+			body: body.to_owned(),
+			status: status,
+			headers: HeaderMap::new(),
+		});
+
+	}
 
 	pub fn set_body(&mut self, body: impl AsRef<[u8]>) {
 
@@ -53,37 +76,12 @@ impl Response {
 
 	}
 
-	pub fn from_raw(buf: &[u8]) -> Result<Self> {
-
-		let mut headers = [httparse::EMPTY_HEADER; 128];
-		let mut res = httparse::Response::new(&mut headers);
-
-		let body_pos = match res.parse(&buf)? {
-			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => return Err(Error::Net("incomplete request message".into())),
-		};
-
-		let code = res.code
-			.ok_or(Error::Net("failed to parse response status code".into()))?;
-
-		let status = Status::from_code(code)?;
-
-		let body = &buf[body_pos..];
-
-		return Ok(Self {
-			body: body.to_owned(),
-			status: status,
-			headers: HeaderMap::new(),
-		});
-
-	}
-
-	pub fn bytes(&self) -> &[u8] {
+	pub fn body(&self) -> &[u8] {
 		return &self.body;
 	}
 
 	pub fn text(&self) -> String {
-		return String::from_utf8_lossy(self.bytes()).to_owned().to_string();
+		return String::from_utf8_lossy(self.body()).to_owned().to_string();
 	}
 
 	#[cfg(feature = "json")]

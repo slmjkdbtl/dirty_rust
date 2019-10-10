@@ -3,7 +3,6 @@
 //! Simple Threading Utilities
 
 use std::collections::VecDeque;
-
 use std::sync::mpsc;
 use std::thread;
 
@@ -59,8 +58,20 @@ impl<T: Send + 'static> TaskPool<T> {
 
 	}
 
+	pub fn queue_count(&self) -> usize {
+		return self.queue.len();
+	}
+
+	pub fn active_count(&self) -> usize {
+		return self.active.len();
+	}
+
 	pub fn clear_queue(&mut self) {
 		self.queue.clear();
+	}
+
+	pub fn clear_active(&mut self) {
+		self.active.clear();
 	}
 
 }
@@ -116,7 +127,7 @@ impl<T: Send + 'static> Task<T> {
 		return self.done;
 	}
 
-	pub fn block(&mut self) -> Option<T> {
+	pub fn poll_blocked(&mut self) -> Option<T> {
 
 		let rx = self.rx.as_ref()?;
 		let data = rx.recv().ok()?;

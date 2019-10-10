@@ -105,7 +105,6 @@ fn circle_circle(c1: (Vec2, f32), c2: (Vec2, f32)) -> bool {
 
 }
 
-// TODO: understand this
 fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
 	let (p1, p2) = l1;

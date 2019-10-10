@@ -2,7 +2,6 @@
 
 use std::fmt;
 use std::ops;
-use std::f32::consts::PI;
 
 use derive_more::*;
 

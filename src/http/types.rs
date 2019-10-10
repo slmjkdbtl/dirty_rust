@@ -215,14 +215,17 @@ macro_rules! gen_content_type {
 gen_content_type! {
 	Text("txt") => "text/plain; charset=utf-8",
 	HTML("html", "htm") => "text/html; charset=utf-8",
+	XML("xml") => "text/xml; charset=utf-8",
+	CSV("csv") => "text/csv; charset=utf-8",
 	Markdown("md", "markdown") => "text/markdown; charset=utf-8",
 	CSS("css") => "text/css; charset=utf-8",
 	PNG("png") => "image/png",
 	JPEG("jpg", "jpeg") => "image/jpeg",
 	GIF("gif") => "image/gif",
 	PDF("pdf") => "application/pdf",
-	JavaScript("js") => "application/javascript; charset=utf-8",
-	JSON("json") => "application/json; charset=utf-8",
+	JavaScript("js") => "application/javascript",
+	JSON("json") => "application/json",
+	GraphQL("graphql") => "application/graphql",
 	ZIP("zip") => "application/zip",
 	MP3("mp3") => "audio/mpeg",
 	OGG("ogg") => "audio/ogg",
@@ -233,6 +236,7 @@ gen_content_type! {
 	WOFF("woff") => "font/woff",
 	WOFF2("woff2") => "font/woff2",
 	MP4("mp4") => "video/mp4",
+	MOV("mov") => "video/quicktime",
 }
 
 macro_rules! gen_status {
