@@ -63,36 +63,38 @@ impl app::State for Game {
 		for p in &self.pts {
 			ctx.draw(
 				&circle(*p, 3.0)
-					.color(Color::BLUE)
+					.fill(Color::BLUE)
 			)?;
 		}
 
 		ctx.draw(
 			&polygon(&self.pts)
-				.radius(12.0)
-				.stroke(1.0)
+				.stroke(color!(1.0))
+				.nofill()
+				.line_width(1.0)
 		)?;
 
 		ctx.draw(
 			&circle(vec2!(0), 120.0)
-				.color(color!(1, 0, 1, 1))
+				.fill(color!(1, 0, 1, 1))
 		)?;
 
 		ctx.draw(
 			&rect(vec2!(-72, -54), vec2!(72, 54))
-				.color(color!(0, 1, 1, 1))
+				.fill(color!(0, 1, 1, 1))
 				.radius(12.0)
 		)?;
 
 		ctx.draw(
 			&rect(vec2!(-48, -32), vec2!(48, 32))
-				.color(color!(1, 1, 0, 1))
-				.stroke(2.0)
+				.stroke(color!(1, 1, 0, 1))
+				.nofill()
+				.line_width(2.0)
 				.radius(12.0)
 		)?;
 
 		ctx.draw(
-			&text("geoms")
+			&text("geom")
 				.color(color!(0, 0, 1, 1))
 		)?;
 
