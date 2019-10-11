@@ -65,6 +65,9 @@ pub mod physics;
 #[cfg(feature = "http")]
 pub mod http;
 
+#[cfg(all(feature = "ui"))]
+pub mod ui;
+
 #[cfg(all(feature = "term", desktop))]
 pub mod term;
 

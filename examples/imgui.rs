@@ -12,16 +12,16 @@ impl app::State for Game {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.quit();
 				}
-				if *k == Key::F {
+				if k == Key::F {
 					ctx.toggle_fullscreen();
 				}
 			},

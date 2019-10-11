@@ -76,17 +76,17 @@ impl<'a> Drawable for &Sprite<'a> {
 }
 
 pub struct Text<'a> {
-	txt: &'a str,
+	content: &'a str,
 	font: Option<&'a gfx::BitmapFont>,
 	fallback_font: Option<&'a gfx::BitmapFont>,
 	color: Color,
-	offset: Vec2,
-	wrap: Option<u32>,
+	align: gfx::Origin,
+	wrap: Option<f32>,
 }
 
 impl<'a> Text<'a> {
 	pub fn text(mut self, txt: &'a str) -> Self {
-		self.txt = txt;
+		self.content = txt;
 		return self;
 	}
 	pub fn font(mut self, font: &'a gfx::BitmapFont) -> Self {
@@ -105,73 +105,129 @@ impl<'a> Text<'a> {
 		self.color.a = a;
 		return self;
 	}
-	pub fn offset(mut self, offset: Vec2) -> Self {
-		self.offset = offset;
+	pub fn align(mut self, o: gfx::Origin) -> Self {
+		self.align = o;
 		return self;
 	}
-	pub fn wrap(mut self, wrap: u32) -> Self {
+	pub fn wrap(mut self, wrap: f32) -> Self {
 		self.wrap = Some(wrap);
 		return self;
 	}
 }
 
-pub fn text<'a>(txt: &'a str) -> Text<'a> {
+pub fn text<'a>(text: &'a str) -> Text<'a> {
 	return Text {
-		txt: txt,
+		content: text,
 		font: None,
 		fallback_font: None,
-		offset: vec2!(0),
+		align: gfx::Origin::Center,
 		color: color!(1),
 		wrap: None,
 	};
+}
+
+fn chunk_str(s: &str, len: usize) -> Vec<&str> {
+
+	if len == 0 {
+		return vec![s];
+	}
+
+	let mut chunks = Vec::with_capacity(s.len() / len);
+	let mut cur = s;
+
+	while !cur.is_empty() {
+		let (chunk, rest) = cur.split_at(std::cmp::min(len, cur.len()));
+		chunks.push(chunk);
+		cur = rest;
+	}
+
+	return chunks;
+
 }
 
 impl<'a> Drawable for &Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let font;
+		let font = self.font.or(self.fallback_font).unwrap_or(&ctx.default_font);
 
-		if let Some(f) = self.font {
-			font = f;
-		} else {
-			font = &ctx.default_font;
-		}
+		let gw = font.width() as f32;
+		let gh = font.height() as f32;
 
-		let len = self.txt.len();
-		let gw = font.width();
-		let gh = font.height();
-		let tw = font.width() * len as i32;
-		let th = gh;
-		let w = font.quad_size.x * font.tex.width() as f32;
-		let h = font.quad_size.y * font.tex.height() as f32;
-		let tex = font.tex.clone();
-		let offset = vec2!(gw as f32 * (len as f32 * -0.5 + 0.5), 0);
-		let offset = offset + self.offset * vec2!(tw, th) * -0.5;
-		// TODO: don't clone here
-		let map = font.map.clone();
+		let limit = self.wrap.map(|w| f32::floor(w / gw) as usize);
 
-		// TODO: text wrapping
-		// TODO: text align
-		for (i, ch) in self.txt.chars().enumerate() {
+		let (lines, tw, th) = {
 
-			let x = i as f32 * w;
+			let mut lines = vec![];
+			let mut w = 0;
 
-			ctx.push(&gfx::t()
-				.translate(offset + vec2!(x, 0))
-			, |ctx| {
+			for chunk in self.content.split('\n') {
 
-				if ch == '\n' {
-					// TODO: next line
-				} else if ch != ' ' {
-					if let Some(quad) = map.get(&ch) {
-						ctx.draw(&sprite(&tex).quad(*quad).color(self.color))?;
-					}
+				let cw = chunk.len();
+
+				if cw > w {
+					w = cw;
 				}
 
-				return Ok(());
+				if let Some(limit) = limit {
+					lines.extend(chunk_str(chunk, limit));
+					if limit > w {
+						w = limit;
+					}
+				} else {
+					lines.push(chunk);
+				}
 
-			})?;
+			}
+
+			let h = lines.len();
+
+			(lines, w, h)
+
+		};
+
+		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let offset_pos = -offset * vec2!(gw * tw as f32, gh * th as f32);
+
+		// TODO: no clone
+		let tex = font.tex.clone();
+		let map = font.map.clone();
+
+		let mut pos = vec2!();
+
+		for l in lines {
+
+			pos.x += (tw - l.len()) as f32 * gw * offset.x;
+
+			for ch in l.chars() {
+
+				ctx.push(&gfx::t()
+					.translate(offset_pos + pos)
+				, |ctx| {
+
+					if ch != '\n' {
+
+						if let Some(quad) = map.get(&ch) {
+							ctx.draw(
+								&sprite(&tex)
+									.offset(vec2!(-1))
+									.quad(*quad)
+									.color(self.color)
+							)?;
+						}
+
+						pos.x += gw;
+
+					}
+
+					return Ok(());
+
+				})?;
+
+			}
+
+			pos.y += gh;
+			pos.x = 0.0;
 
 		}
 

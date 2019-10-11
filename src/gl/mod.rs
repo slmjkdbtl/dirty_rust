@@ -36,7 +36,7 @@ pub(self) type TextureID = <GLCtx as HasContext>::Texture;
 pub(self) type FramebufferID = <GLCtx as HasContext>::Framebuffer;
 
 #[cfg(feature = "gl3")]
-pub(self) type VertexArrayID = <GLCtx as Context>::VertexArray;
+pub(self) type VertexArrayID = <GLCtx as HasContext>::VertexArray;
 
 pub struct Device {
 	ctx: Rc<GLCtx>,

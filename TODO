@@ -10,7 +10,6 @@
 - [misc] async fs
 - [misc] async http
 - [gfx] imgui integration (?)
-- [gfx] text wrapping
 - [gfx] fix ttf flashing first frame
 - [gfx] fix resize framebuffer weirdness
 - [gfx] higer level gl stencil abstraction
@@ -42,7 +41,6 @@
 - [gfx] obj load all objects
 - [gfx] quad renderer's matrix calculation is slow
 - [gfx] 2d camera (?)
-- [gfx] use TextAlign instead of offset (?)
 - [gfx] imgui dpi problem
 - [gfx] make gl3 default (?)
 - [gfx] custom imgui renderer
@@ -113,4 +111,7 @@
 - [gfx] clearer shader variable prefixes
 - [gfx] send whole piece of uniform (including texture) instead of one
 - [gl] flush batched renderer when shader uniform is sent (?)
+- [gfx] text new line
+- [gfx] use TextAlign instead of offset (?)
+- [gfx] text wrapping
 

@@ -29,6 +29,7 @@ default = [
 	"audio",
 # 	"http",
 # 	"geom",
+# 	"ui",
 # 	"physics",
 # 	"term",
 # 	"video",
@@ -40,7 +41,6 @@ default = [
 # 	"clip",
 # 	"vr",
 # 	"osc",
-# 	"ui",
 # 	"json",
 # 	"bin",
 
