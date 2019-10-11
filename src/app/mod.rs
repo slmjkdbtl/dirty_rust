@@ -188,11 +188,11 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		let canvas: CanvasElement = document
 			.create_element("canvas")?
 			.try_into()
-			.map_err(|_| Error::Wasm(format!("failed to create canvas")))?;
+			.map_err(|_| Error::Web(format!("failed to create canvas")))?;
 
 		let body = document
 			.body()
-			.ok_or(Error::Wasm(format!("failed to get document body")))?;
+			.ok_or(Error::Web(format!("failed to get document body")))?;
 
 		body.append_child(&canvas);
 		canvas.set_width(conf.width as u32);
@@ -226,8 +226,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
-// 		gl.enable(gl::Capability::CullFace);
-// 		gl.cull_face(gl::Face::Back);
+// 	gl.enable(gl::Capability::CullFace);
+// 	gl.cull_face(gl::Face::Back);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(conf.clear_color);
@@ -265,6 +265,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let mut ctx = Ctx {
 
+		// app
 		quit: false,
 		dt: Time::new(0.0),
 		time: Time::new(0.0),
@@ -291,9 +292,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		#[cfg(all(not(mobile), not(web)))]
 		gamepad_ctx: gilrs::Gilrs::new()?,
 
-		// TODO: max vert/indice count
-		renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 9999999, 9999999)?,
-		renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 9999999, 9999999)?,
+		renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
+		renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
 		cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
 		gl: gl,
 
@@ -348,7 +348,6 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		let start_time = Instant::now();
 
 		for e in input::poll(&mut ctx, &mut events_loop)? {
-			check_native_events(&mut ctx, &e);
 			s.event(&mut ctx, e)?;
 		}
 
@@ -397,29 +396,12 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	}
 
+	s.quit(&mut ctx)?;
+
 	return Ok(());
 
 }
 
-fn check_native_events(ctx: &mut Ctx, e: &input::Event) {
-
-	use input::Event::*;
-
-	#[cfg(target_os = "macos")]
-	match e {
-		KeyPress(k) => {
-			if k == &Key::Q {
-				if ctx.key_down(Key::LWin) || ctx.key_down(Key::RWin) {
-					ctx.quit();
-				}
-			}
-		},
-		_ => {},
-	}
-
-}
-
-// TODO: more powerful
 #[derive(Copy, Clone, PartialEq, Add, AddAssign, Sub, SubAssign)]
 pub struct Time {
 	time: Duration,

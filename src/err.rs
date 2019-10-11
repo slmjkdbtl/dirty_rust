@@ -8,7 +8,7 @@ pub enum Error {
 	Net(String),
 	Image(String),
 	Window(String),
-	Wasm(String),
+	Web(String),
 	Audio(String),
 	Thread(String),
 	Lua(String),
@@ -40,7 +40,7 @@ impl fmt::Display for Error {
 			Error::Net(s) => print_err(f, "network", s),
 			Error::Image(s) => print_err(f, "image", s),
 			Error::Window(s) => print_err(f, "window", s),
-			Error::Wasm(s) => print_err(f, "wasm", s),
+			Error::Web(s) => print_err(f, "wasm", s),
 			Error::Audio(s) => print_err(f, "audio", s),
 			Error::Thread(s) => print_err(f, "thread", s),
 			Error::Lua(s) => print_err(f, "lua", s),
@@ -154,7 +154,7 @@ impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::C
 #[cfg(all(feature = "app", web))]
 impl From<stdweb::web::error::InvalidCharacterError> for Error {
 	fn from(_: stdweb::web::error::InvalidCharacterError) -> Self {
-		return Error::Wasm(format!("invalid character"));
+		return Error::Web(format!("invalid character"));
 	}
 }
 
@@ -162,7 +162,7 @@ impl From<stdweb::web::error::InvalidCharacterError> for Error {
 #[cfg(all(feature = "app", web))]
 impl From<stdweb::serde::ConversionError> for Error {
 	fn from(_: stdweb::serde::ConversionError) -> Self {
-		return Error::Wasm(format!("conversion"));
+		return Error::Web(format!("conversion"));
 	}
 }
 

@@ -14,7 +14,6 @@
 - [gfx] fix ttf flashing first frame
 - [gfx] fix resize framebuffer weirdness
 - [gfx] higer level gl stencil abstraction
-- [gfx] gl::Texture and gl::Program Drop
 - [gfx] 3d texture
 - [math] tween functions
 - [example] rubiks cube example
