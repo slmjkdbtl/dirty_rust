@@ -70,10 +70,6 @@ impl<T: Send + 'static> TaskPool<T> {
 		self.queue.clear();
 	}
 
-	pub fn clear_active(&mut self) {
-		self.active.clear();
-	}
-
 }
 
 pub struct Task<T: Send + 'static> {

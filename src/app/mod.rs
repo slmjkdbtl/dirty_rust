@@ -37,8 +37,6 @@ use input::Mouse;
 use input::GamepadID;
 use input::GamepadButton;
 
-include!("../res/resources.rs");
-
 // TODO: make this lighter
 /// Manages Ctx
 pub struct Ctx {
@@ -235,14 +233,14 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	let empty_tex = gl::Texture::from(&gl, 1, 1, &[255; 4])?;
 	let empty_tex = gfx::Texture::from_handle(empty_tex, 1, 1);
 
-	let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
-	let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
+	let vert_2d_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", res::DEFAULT_2D_VERT);
+	let frag_2d_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", res::DEFAULT_2D_FRAG);
 
 	let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
 	let proj_2d = conf.origin.to_ortho(conf.width, conf.height);
 
-	let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
-	let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
+	let vert_3d_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", res::DEFAULT_3D_VERT);
+	let frag_3d_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", res::DEFAULT_3D_FRAG);
 
 	let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
 
@@ -250,7 +248,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
-	let font_img = img::Image::from_bytes(DEFAULT_FONT_IMG)?;
+	let font_img = img::Image::from_bytes(res::CP437_IMG)?;
 	let font_width = font_img.width();
 	let font_height = font_img.height();
 	let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
@@ -258,9 +256,9 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let font = gfx::BitmapFont::from_tex(
 		font_tex,
-		DEFAULT_FONT_COLS,
-		DEFAULT_FONT_ROWS,
-		DEFAULT_FONT_CHARS,
+		res::CP437_COLS,
+		res::CP437_ROWS,
+		res::CP437_CHARS,
 	)?;
 
 	let mut ctx = Ctx {

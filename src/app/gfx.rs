@@ -24,6 +24,16 @@ pub use gl::FilterMode;
 pub use gl::Surface;
 pub use gl::Cmp;
 
+pub use res::CP437_IMG;
+pub use res::CP437_COLS;
+pub use res::CP437_ROWS;
+pub use res::CP437_CHARS;
+
+pub use res::PROGGY_IMG;
+pub use res::PROGGY_COLS;
+pub use res::PROGGY_ROWS;
+pub use res::PROGGY_CHARS;
+
 pub trait Gfx {
 
 	// clearing
@@ -759,8 +769,8 @@ impl<U: Uniform> Shader2D<U> {
 
 	pub fn effect(ctx: &Ctx, frag: &str) -> Result<Self> {
 
-		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
-		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
+		let vert_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", res::DEFAULT_2D_VERT);
+		let frag_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
 
 		return Self::from_code(ctx, &vert_src, &frag_src);
 
@@ -789,8 +799,8 @@ impl<U: Uniform> Shader3D<U> {
 
 	pub fn effect(ctx: &Ctx, frag: &str) -> Result<Self> {
 
-		let vert_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
-		let frag_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
+		let vert_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", res::DEFAULT_3D_VERT);
+		let frag_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
 
 		return Self::from_code(ctx, &vert_src, &frag_src);
 
