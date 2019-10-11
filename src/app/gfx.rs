@@ -51,6 +51,9 @@ pub trait Gfx {
 	// camera
 	fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
+	// font
+	fn default_font(&self) -> &BitmapFont;
+
 }
 
 impl Gfx for Ctx {
@@ -228,6 +231,10 @@ impl Gfx for Ctx {
 
 		return Ok(());
 
+	}
+
+	fn default_font(&self) -> &BitmapFont {
+		return &self.default_font;
 	}
 
 }
