@@ -673,12 +673,6 @@ impl Texture {
 
 }
 
-pub enum TextAlign {
-	Left,
-	Center,
-	Right,
-}
-
 /// bitmap font
 #[derive(Clone, PartialEq)]
 pub struct BitmapFont {
@@ -1447,7 +1441,7 @@ pub enum Fill {
 	Gradient(Vec2, Vec2, Vec<(Color, f32)>),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
 	NoStroke,
 	Solid(Color, LineJoin),

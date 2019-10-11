@@ -47,26 +47,54 @@ impl app::State for Game {
 
 		use shapes::*;
 
-		ctx.draw(&gradient(
-			ctx.coord(gfx::Origin::Top),
-			ctx.coord(gfx::Origin::Bottom),
-			&[
-				(color!(0.4, 1, 1, 1), 0.0),
-				(color!(1, 1, 0.6, 1), 0.5),
-				(color!(1, 0.4, 0.8, 1), 1.0),
-			],
-		).width(640.0))?;
+		ctx.draw(
+			&gradient(
+				ctx.coord(gfx::Origin::Top),
+				ctx.coord(gfx::Origin::Bottom),
+				&[
+					(color!(0.4, 1, 1, 1), 0.0),
+					(color!(1, 1, 0.6, 1), 0.5),
+					(color!(1, 0.4, 0.8, 1), 1.0),
+				],
+			)
+				.width(640.0)
+		)?;
 
 		for p in &self.pts {
-			ctx.draw(&circle(*p, 3.0).color(Color::BLUE))?;
+			ctx.draw(
+				&circle(*p, 3.0)
+					.color(Color::BLUE)
+			)?;
 		}
 
-		ctx.draw(&polygon(&self.pts).radius(12.0).stroke(1.0))?;
+		ctx.draw(
+			&polygon(&self.pts)
+				.radius(12.0)
+				.stroke(1.0)
+		)?;
 
-		ctx.draw(&circle(vec2!(0), 120.0).color(color!(1, 0, 1, 1)))?;
-		ctx.draw(&rect(vec2!(-72, -54), vec2!(72, 54)).color(color!(0, 1, 1, 1)).radius(12.0))?;
-		ctx.draw(&rect(vec2!(-48, -32), vec2!(48, 32)).color(color!(1, 1, 0, 1)).stroke(2.0).radius(12.0))?;
-		ctx.draw(&text("geoms").color(color!(0, 0, 1, 1)))?;
+		ctx.draw(
+			&circle(vec2!(0), 120.0)
+				.color(color!(1, 0, 1, 1))
+		)?;
+
+		ctx.draw(
+			&rect(vec2!(-72, -54), vec2!(72, 54))
+				.color(color!(0, 1, 1, 1))
+				.radius(12.0)
+		)?;
+
+		ctx.draw(
+			&rect(vec2!(-48, -32), vec2!(48, 32))
+				.color(color!(1, 1, 0, 1))
+				.stroke(2.0)
+				.radius(12.0)
+		)?;
+
+		ctx.draw(
+			&text("geoms")
+				.color(color!(0, 0, 1, 1))
+		)?;
 
 		return Ok(());
 

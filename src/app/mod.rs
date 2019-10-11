@@ -206,11 +206,10 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	#[cfg(feature = "imgui")]
 	let (imgui_ctx, imgui_platform, imgui_renderer) = {
 
-		use imgui::Context;
 		use imgui_winit_support::{HiDpiMode, WinitPlatform};
 		use imgui_opengl_renderer::Renderer;
 
-		let mut ctx = Context::create();
+		let mut ctx = imgui::Context::create();
 		let mut platform = WinitPlatform::init(&mut ctx);
 
 		ctx.set_ini_filename(None);
@@ -707,6 +706,7 @@ pub enum Platform {
 	Unknown,
 }
 
+#[allow(unreachable_code)]
 pub fn platform() -> Platform {
 
 	#[cfg(desktop)]
