@@ -1434,19 +1434,6 @@ pub enum LineCap {
 	Round,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Fill {
-	NoFill,
-	Solid(Color),
-	Gradient(Vec2, Vec2, Vec<(Color, f32)>),
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Stroke {
-	NoStroke,
-	Solid(Color, LineJoin),
-}
-
 pub trait Drawable {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
 }

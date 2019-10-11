@@ -242,29 +242,40 @@ struct Stroke {
 	width: f32,
 	join: gfx::LineJoin,
 	dash: Option<LineDash>,
+	color: Color,
 }
 
 pub struct Polygon {
 	pts: Vec<Vec2>,
-	color: Color,
+	fill: Option<Color>,
 	stroke: Option<Stroke>,
 	radius: Option<f32>,
 }
 
 impl Polygon {
-	pub fn color(mut self, c: Color) -> Self {
-		self.color = c;
+	pub fn fill(mut self, c: Color) -> Self {
+		self.fill = Some(c);
+		return self;
+	}
+	pub fn nofill(mut self) -> Self {
+		self.fill = None;
 		return self;
 	}
 	pub fn opacity(mut self, a: f32) -> Self {
-		self.color.a = a;
+		if let Some(fill) = &mut self.fill {
+			fill.a = a;
+		}
+		if let Some(stroke) = &mut self.stroke {
+			stroke.color.a = a;
+		}
 		return self;
 	}
-	pub fn stroke(mut self, w: f32) -> Self {
+	pub fn stroke(mut self, c: Color) -> Self {
 		self.stroke = Some(Stroke {
-			width: w,
+			width: 1.0,
 			join: gfx::LineJoin::None,
 			dash: None,
+			color: c,
 		});
 		return self
 	}
@@ -274,17 +285,23 @@ impl Polygon {
 		}
 		return self;
 	}
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = Some(r);
-		return self
+	pub fn line_width(mut self, w: f32) -> Self {
+		if let Some(stroke) = &mut self.stroke {
+			stroke.width = w;
+		}
+		return self;
 	}
+// 	pub fn radius(mut self, r: f32) -> Self {
+// 		self.radius = Some(r);
+// 		return self
+// 	}
 }
 
 pub fn polygon(pts: &[Vec2]) -> Polygon {
 
 	return Polygon {
 		pts: pts.to_vec(),
-		color: color!(),
+		fill: Some(color!()),
 		stroke: None,
 		radius: None,
 	};
@@ -307,43 +324,14 @@ impl Drawable for &Polygon {
 			Cow::Borrowed(&self.pts)
 		};
 
-		if let Some(stroke) = &self.stroke {
-
-			// TODO: line join
-			for i in 0..pts.len() {
-
-				let p1 = pts[i];
-				let p2 = pts[(i + 1) % pts.len()];
-
-				use gfx::LineJoin::*;
-
-				match stroke.join {
-					None => {
-						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color))?;
-					},
-					Bevel => {
-						// TODO
-						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color))?;
-					},
-					Miter => {
-						// TODO
-						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color))?;
-					},
-					Round => {
-						ctx.draw(&line(p1, p2).width(stroke.width).color(self.color).cap(gfx::LineCap::Round))?;
-					},
-				}
-
-			}
-
-		} else {
+		if let Some(color) = self.fill {
 
 			let mut verts = Vec::with_capacity(pts.len() * gfx::Vertex2D::STRIDE);
 			let mut indices = Vec::new();
 
 			for (i, p) in pts.iter().enumerate() {
 
-				gfx::Vertex2D::new(ctx.transform.as_mat4() * *p, vec2!(0), self.color).push(&mut verts);
+				gfx::Vertex2D::new(ctx.transform.as_mat4() * *p, vec2!(0), color).push(&mut verts);
 
 				if i >= 2 {
 					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
@@ -356,6 +344,37 @@ impl Drawable for &Polygon {
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_2d.clone(),
 			})?;
+
+		}
+
+		if let Some(stroke) = &self.stroke {
+
+			// TODO: line join
+			for i in 0..pts.len() {
+
+				let p1 = pts[i];
+				let p2 = pts[(i + 1) % pts.len()];
+
+				use gfx::LineJoin::*;
+
+				match stroke.join {
+					None => {
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
+					},
+					Bevel => {
+						// TODO
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
+					},
+					Miter => {
+						// TODO
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
+					},
+					Round => {
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color).cap(gfx::LineCap::Round))?;
+					},
+				}
+
+			}
 
 		}
 
@@ -459,8 +478,8 @@ pub struct Rect {
 	p1: Vec2,
 	p2: Vec2,
 	radius: Option<f32>,
+	fill: Option<Color>,
 	stroke: Option<Stroke>,
-	color: Color,
 }
 
 pub fn rect(p1: Vec2, p2: Vec2) -> Rect {
@@ -472,12 +491,21 @@ impl Rect {
 		self.radius = Some(r);
 		return self
 	}
-	pub fn color(mut self, color: Color) -> Self {
-		self.color = color;
+	pub fn fill(mut self, c: Color) -> Self {
+		self.fill = Some(c);
+		return self;
+	}
+	pub fn nofill(mut self) -> Self {
+		self.fill = None;
 		return self;
 	}
 	pub fn opacity(mut self, a: f32) -> Self {
-		self.color.a = a;
+		if let Some(fill) = &mut self.fill {
+			fill.a = a;
+		}
+		if let Some(stroke) = &mut self.stroke {
+			stroke.color.a = a;
+		}
 		return self;
 	}
 	pub fn new(p1: Vec2, p2: Vec2) -> Self {
@@ -486,14 +514,15 @@ impl Rect {
 			p2: p2,
 			radius: None,
 			stroke: None,
-			color: color!(1),
+			fill: Some(color!(1)),
 		};
 	}
-	pub fn stroke(mut self, w: f32) -> Self {
+	pub fn stroke(mut self, c: Color) -> Self {
 		self.stroke = Some(Stroke {
-			width: w,
+			width: 1.0,
 			join: gfx::LineJoin::None,
 			dash: None,
+			color: c,
 		});
 		return self
 	}
@@ -503,36 +532,36 @@ impl Rect {
 		}
 		return self;
 	}
+	pub fn line_width(mut self, w: f32) -> Self {
+		if let Some(stroke) = &mut self.stroke {
+			stroke.width = w;
+		}
+		return self;
+	}
 	pub fn from_size(w: f32, h: f32) -> Self {
 		return Self::new(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
 	}
 }
 
-// struct Stroke {
-// 	width: f32,
-// 	line_join: gfx::LineJoin,
-// }
-
 impl Drawable for &Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let mut pts = vec![
+		let pts = vec![
 			self.p1,
 			vec2!(self.p2.x, self.p1.y),
 			self.p2,
 			vec2!(self.p1.x, self.p2.y),
 		];
 
-		if let Some(radius) = self.radius {
-			pts = rounded_poly_verts(&pts, radius, None);
-		}
+		let poly = Polygon {
+			pts: pts.to_vec(),
+			fill: self.fill,
+			stroke: self.stroke.clone(),
+			radius: self.radius,
+		};
 
-		if let Some(stroke) = &self.stroke {
-			ctx.draw(&polygon(&pts).color(self.color).stroke(stroke.width).line_join(stroke.join))?;
-		} else {
-			ctx.draw(&polygon(&pts).color(self.color))?;
-		}
+		ctx.draw(&poly)?;
 
 		return Ok(());
 
@@ -609,7 +638,7 @@ impl Drawable for &Line {
 			let w = len;
 			let h = self.width;
 
-			ctx.draw(&Rect::from_size(w, h).color(self.color))?;
+			ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
 
 			if let gfx::LineCap::Round = self.cap {
 				ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
@@ -631,9 +660,15 @@ pub struct Curve {
 	// ...
 }
 
+pub enum PointMode {
+	Rect,
+	Circle,
+}
+
 pub struct Points<'a> {
 	pts: &'a[Vec2],
 	size: f32,
+	mode: PointMode,
 	color: Color,
 }
 
@@ -650,6 +685,10 @@ impl<'a> Points<'a> {
 		self.color.a = a;
 		return self;
 	}
+	pub fn mode(mut self, m: PointMode) -> Self {
+		self.mode = m;
+		return self;
+	}
 }
 
 pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
@@ -657,6 +696,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 		pts: pts,
 		size: 1.0,
 		color: color!(1),
+		mode: PointMode::Rect,
 	};
 }
 
@@ -668,7 +708,7 @@ impl<'a> Drawable for &Points<'a> {
 			ctx.push(&gfx::t()
 				.translate(*pt)
 			, |ctx| {
-				return ctx.draw(&Rect::from_size(self.size, self.size).color(self.color));
+				return ctx.draw(&Rect::from_size(self.size, self.size).fill(self.color));
 			})?;
 		}
 
@@ -681,26 +721,57 @@ impl<'a> Drawable for &Points<'a> {
 pub struct Circle {
 	center: Vec2,
 	radius: f32,
-	color: Color,
 	segments: Option<u32>,
-	stroke: Option<f32>,
+	stroke: Option<Stroke>,
+	fill: Option<Color>,
+	range: (f32, f32),
 }
 
 impl Circle {
-	pub fn color(mut self, c: Color) -> Self {
-		self.color = c;
+	pub fn fill(mut self, c: Color) -> Self {
+		self.fill = Some(c);
+		return self;
+	}
+	pub fn nofill(mut self) -> Self {
+		self.fill = None;
 		return self;
 	}
 	pub fn opacity(mut self, a: f32) -> Self {
-		self.color.a = a;
+		if let Some(fill) = &mut self.fill {
+			fill.a = a;
+		}
+		if let Some(stroke) = &mut self.stroke {
+			stroke.color.a = a;
+		}
 		return self;
 	}
-	pub fn stroke(mut self, s: f32) -> Self {
-		self.stroke = Some(s);
-		return self
+	pub fn stroke(mut self, c: Color) -> Self {
+		self.stroke = Some(Stroke {
+			width: 1.0,
+			join: gfx::LineJoin::None,
+			dash: None,
+			color: c,
+		});
+		return self;
+	}
+	pub fn line_join(mut self, j: gfx::LineJoin) -> Self {
+		if let Some(stroke) = &mut self.stroke {
+			stroke.join = j;
+		}
+		return self;
+	}
+	pub fn line_width(mut self, w: f32) -> Self {
+		if let Some(stroke) = &mut self.stroke {
+			stroke.width = w;
+		}
+		return self;
 	}
 	pub fn segments(mut self, s: u32) -> Self {
 		self.segments = Some(s);
+		return self
+	}
+	pub fn range(mut self, p1: f32, p2: f32) -> Self {
+		self.range = (p1, p2);
 		return self
 	}
 }
@@ -709,9 +780,10 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 	return Circle {
 		center: center,
 		radius: radius,
-		color: color!(1),
 		segments: None,
 		stroke: None,
+		fill: Some(color!(1)),
+		range: (0.0, 2.0 * PI),
 	};
 }
 
@@ -785,10 +857,6 @@ fn arc_verts(radius: f32, start: f32, end: f32, segments: Option<u32>) -> Vec<Ve
 
 }
 
-fn circle_verts(radius: f32, segments: Option<u32>) -> Vec<Vec2> {
-	return arc_verts(radius, 0.0, PI * 2.0, segments);
-}
-
 impl Drawable for &Circle {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
@@ -797,17 +865,20 @@ impl Drawable for &Circle {
 			return Ok(());
 		}
 
-		let verts = circle_verts(self.radius, self.segments);
+		let pts = arc_verts(self.radius, self.range.0, self.range.1, self.segments);
 
 		ctx.push(&gfx::t()
 			.translate(self.center)
 		, |ctx| {
 
-			if let Some(stroke) = self.stroke {
-				ctx.draw(&polygon(&verts).color(self.color).stroke(stroke))?;
-			} else {
-				ctx.draw(&polygon(&verts).color(self.color))?;
-			}
+			let poly = Polygon {
+				pts: pts,
+				fill: self.fill,
+				stroke: self.stroke.clone(),
+				radius: None,
+			};
+
+			ctx.draw(&poly)?;
 
 			return Ok(());
 
