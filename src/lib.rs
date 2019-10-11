@@ -37,6 +37,8 @@ macro_rules! hashset {
 	};
 }
 
+mod res;
+
 pub mod math;
 pub mod task;
 
