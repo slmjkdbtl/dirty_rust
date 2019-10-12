@@ -105,7 +105,8 @@ impl app::State for Game {
 }
 
 fn main() {
-	if let Err(err) = app::run::<Game>() {
+	if let Err(err) = app::launcher()
+		.run::<Game>() {
 		println!("{}", err);
 	}
 }

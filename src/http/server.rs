@@ -19,7 +19,7 @@ pub fn serve<F: Fn(Request) -> Response>(loc: impl ToSocketAddrs, handler: F) ->
 
 		stream.read(&mut buf)?;
 
-		let req = Request::from_raw(&buf)?;
+		let req = Request::parse(&buf)?;
 		let res = handler(req);
 
 		stream.write_all(&res.message())?;

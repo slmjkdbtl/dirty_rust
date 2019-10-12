@@ -21,7 +21,7 @@ pub struct Request {
 
 impl Request {
 
-	pub fn from_raw(buf: &[u8]) -> Result<Self> {
+	pub fn parse(buf: &[u8]) -> Result<Self> {
 
 		let mut headers = [httparse::EMPTY_HEADER; 128];
 		let mut req = httparse::Request::new(&mut headers);
@@ -51,7 +51,7 @@ impl Request {
 			path: path.to_owned(),
 			port: 80,
 			headers: HeaderMap::new(),
-			body: Body::from_raw(body),
+			body: Body::from_bytes(body),
 		});
 
 	}
