@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::collections::HashMap;
+use std::path::Path;
 use std::str::FromStr;
 
 use crate::Error;
@@ -204,6 +205,19 @@ macro_rules! gen_content_type {
 					)*
 					_ => None,
 				};
+			}
+
+			pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
+
+				let path = path.as_ref();
+				let ext = path
+					.extension()?
+					.to_os_string()
+					.into_string()
+					.ok()?;
+
+				return Self::from_ext(&ext);
+
 			}
 
 		}

@@ -45,7 +45,7 @@ pub fn send(mut req: Request, data: Option<Body>) -> Result<Response> {
 
 	};
 
-	return Response::from_raw(&buf);
+	return Response::parse(&buf);
 
 }
 

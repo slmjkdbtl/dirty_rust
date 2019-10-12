@@ -14,7 +14,7 @@ pub struct Response {
 
 impl Response {
 
-	pub fn from_raw(buf: &[u8]) -> Result<Self> {
+	pub fn parse(buf: &[u8]) -> Result<Self> {
 
 		let mut headers = [httparse::EMPTY_HEADER; 128];
 		let mut res = httparse::Response::new(&mut headers);
@@ -32,7 +32,7 @@ impl Response {
 		let body = &buf[body_pos..];
 
 		return Ok(Self {
-			body: Body::from_raw(body),
+			body: Body::from_bytes(body),
 			status: status,
 			headers: HeaderMap::new(),
 		});
@@ -43,36 +43,6 @@ impl Response {
 
 		self.body = body;
 		self.set_header(Header::ContentLength, &self.body.len().to_string());
-
-	}
-
-	pub fn redirect(url: &str) -> Self {
-
-		let mut headers = HeaderMap::new();
-
-		headers.set(Header::Location, url);
-
-		return Self {
-			body: Body::empty(),
-			status: Status::SeeOther,
-			headers: headers,
-		}
-
-	}
-
-	pub fn new(status: Status, t: ContentType, body: impl AsRef<[u8]>) -> Self {
-
-		let body = body.as_ref();
-		let mut headers = HeaderMap::new();
-
-		headers.set(Header::ContentLength, &body.len().to_string());
-		headers.set(Header::ContentType, t.as_str());
-
-		return Self {
-			body: Body::from_raw(body),
-			status: status,
-			headers: headers,
-		};
 
 	}
 
@@ -104,6 +74,68 @@ impl Response {
 		m.extend_from_slice(&self.body.as_bytes());
 
 		return m;
+
+	}
+
+}
+
+use std::path::Path;
+
+pub trait ResponseExt: Sized {
+	fn text(text: &str) -> Self;
+	fn file(path: impl AsRef<Path>) -> Result<Self>;
+	fn redirect(url: &str) -> Self;
+}
+
+impl ResponseExt for Response {
+
+	fn text(text: &str) -> Self {
+
+		let body = Body::from_text(text);
+		let mut headers = HeaderMap::new();
+
+		headers.set(Header::ContentLength, &body.len().to_string());
+		headers.set(Header::ContentType, ContentType::Text.as_str());
+
+		return Self {
+			body: body,
+			status: Status::Ok,
+			headers: headers,
+		};
+
+	}
+
+	fn file(path: impl AsRef<Path>) -> Result<Self> {
+
+		let mut headers = HeaderMap::new();
+		let content = std::fs::read(&path)?;
+		let body = Body::from_bytes(&content);
+
+		headers.set(Header::ContentLength, &body.len().to_string());
+
+		if let Some(ty) = ContentType::from_path(&path) {
+			headers.set(Header::ContentType, ty.as_str());
+		}
+
+		return Ok(Self {
+			body: body,
+			status: Status::Ok,
+			headers: headers,
+		});
+
+	}
+
+	fn redirect(url: &str) -> Self {
+
+		let mut headers = HeaderMap::new();
+
+		headers.set(Header::Location, url);
+
+		return Self {
+			body: Body::empty(),
+			status: Status::SeeOther,
+			headers: headers,
+		}
 
 	}
 

@@ -18,14 +18,14 @@ impl Body {
 		};
 	}
 
-	pub fn from_raw(data: &[u8]) -> Self {
+	pub fn from_bytes(data: &[u8]) -> Self {
 		return Self {
 			data: data.to_owned(),
 		};
 	}
 
 	pub fn from_text(text: &str) -> Self {
-		return Self::from_raw(text.as_bytes());
+		return Self::from_bytes(text.as_bytes());
 	}
 
 	#[cfg(feature = "json")]
