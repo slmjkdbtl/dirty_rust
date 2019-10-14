@@ -1051,7 +1051,7 @@ fn gen_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 // TODO: messy
 #[derive(Clone)]
 pub struct Model {
-	pub(super) renderer: Rc<gl::Renderer<Vertex3D, Uniform3D>>,
+	pub(super) meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
 }
 
 impl Model {
@@ -1059,28 +1059,32 @@ impl Model {
 	fn from_tobj(ctx: &Ctx, tobj: tobj::LoadResult) -> Result<Self> {
 
 		let (models, _) = tobj?;
-		let mesh = &models.get(0).ok_or(Error::Obj("no mesh found".into()))?.mesh;
-		let positions = &mesh.positions;
-		let indices = &mesh.indices;
-		let vert_count = positions.len() / 3;
-		let normals = gen_vertex_normals(&positions, &indices);
-		let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
+		let mut meshes = Vec::with_capacity(models.len());
 
-		for i in 0..vert_count {
+		for m in models {
 
-			let vx = positions[i * 3 + 0];
-			let vy = positions[i * 3 + 1];
-			let vz = positions[i * 3 + 2];
-			let vert = Vertex3D::new(vec3!(vx, vy, vz), vec2!(), normals[i], color!(rand!(), rand!(), rand!(), 1));
+			let m = m.mesh;
+			let vert_count = m.positions.len() / 3;
+			let normals = gen_vertex_normals(&m.positions, &m.indices);
+			let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
 
-			vert.push(&mut verts);
+			for i in 0..vert_count {
+
+				let vx = m.positions[i * 3 + 0];
+				let vy = m.positions[i * 3 + 1];
+				let vz = m.positions[i * 3 + 2];
+				let vert = Vertex3D::new(vec3!(vx, vy, vz), vec2!(), normals[i], color!(rand!(), rand!(), rand!(), 1));
+
+				vert.push(&mut verts);
+
+			}
+
+			meshes.push(Rc::new(gl::Mesh::new(&ctx.gl, &verts, &m.indices)?));
 
 		}
 
-		let renderer = gl::Renderer::new(&ctx.gl, &verts, indices)?;
-
 		return Ok(Self {
-			renderer: Rc::new(renderer),
+			meshes: meshes,
 		});
 
 	}

@@ -19,7 +19,7 @@ impl app::State for Game {
 
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
-			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
+			model: gfx::Model::from_obj(ctx, include_str!("res/plant.obj"))?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
 			eye_speed: 0.16,
@@ -111,13 +111,12 @@ impl app::State for Game {
 				return ctx.draw(shapes::cube());
 			})?;
 
-			ctx.push(&gfx::t()
-			, |ctx| {
-				return ctx.draw(shapes::sprite3d(&self.tex));
-			})?;
+// 			ctx.push(&gfx::t()
+// 			, |ctx| {
+// 				return ctx.draw(shapes::sprite3d(&self.tex));
+// 			})?;
 
 			ctx.push(&gfx::t()
-				.rotate_y(ctx.time())
 			, |ctx| {
 				return ctx.draw(shapes::model(&self.model));
 			})?;

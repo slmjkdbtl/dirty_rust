@@ -5,9 +5,8 @@ use std::marker::PhantomData;
 use super::*;
 use crate::Result;
 
-pub struct Renderer<V: VertexLayout, U: UniformLayout> {
+pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 
-	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	#[cfg(feature="gl3")]
@@ -18,7 +17,7 @@ pub struct Renderer<V: VertexLayout, U: UniformLayout> {
 
 }
 
-impl<V: VertexLayout, U: UniformLayout> Renderer<V, U> {
+impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
 
@@ -29,7 +28,6 @@ impl<V: VertexLayout, U: UniformLayout> Renderer<V, U> {
 		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
 
 		return Ok(Self {
-			ctx: device.ctx.clone(),
 			vbuf: vbuf,
 			ibuf: ibuf,
 			#[cfg(feature="gl3")]
