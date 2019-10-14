@@ -52,6 +52,7 @@
 - [misc] mun bindings
 - [misc] old example
 - [app] quit handler
+- [gfx] obj model flipped
 
 == DONE
 - [http] refactor http
@@ -115,4 +116,5 @@
 - [gfx] use TextAlign instead of offset (?)
 - [gfx] text wrapping
 - [gfx] shape: fill & stroke
+- [gfx] load obj mtl
 

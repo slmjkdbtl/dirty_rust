@@ -15,7 +15,7 @@ struct Teapot {
 }
 
 struct Game {
-	tasks: TaskPool<Result<gfx::ModelLoad>>,
+	tasks: TaskPool<Result<gfx::ModelData>>,
 	teapots: Vec<Teapot>,
 }
 
