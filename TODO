@@ -28,7 +28,6 @@
 - [gfx] integrate projection into camera
 - [gfx] dashed lines
 - [geom] integrate collision detection with shape (?)
-- [gfx] correct vertex normal calculation
 - [misc] wasm
 - [app] upgrade to glutin 0.22
 - [gfx] 3D text
@@ -117,4 +116,5 @@
 - [gfx] text wrapping
 - [gfx] shape: fill & stroke
 - [gfx] load obj mtl
+- [gfx] fix vertex normal calculation
 
