@@ -8,6 +8,7 @@ attribute vec4 a_color;
 varying vec2 v_uv;
 varying float v_brightness;
 varying vec4 v_color;
+varying vec3 v_normal;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
@@ -25,6 +26,7 @@ void main() {
 // 	v_brightness = max(dot(unit_normal, unit_light_dir), 0.05);
 	v_uv = a_uv;
 	v_color = a_color;
+	v_normal = a_normal;
 	gl_Position = u_proj * u_view * vec4(world_pos, 1.0);
 
 }

@@ -1015,34 +1015,33 @@ pub enum NormalMode {
 	Surface,
 }
 
-// TODO: not correct
 fn gen_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 
 	let vert_count = pos.len() / 3;
-	let tri_count = indices.len() / 3;
 	let mut normals = vec![vec3!(0); vert_count];
 
-	for i in 0..tri_count {
+	indices
+		.chunks(3)
+		.for_each(|tri| {
 
-		let i1 = indices[i * 3] as usize;
-		let i2 = indices[i * 3 + 1] as usize;
-		let i3 = indices[i * 3 + 2] as usize;
-		let v1 = vec3!(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-		let v2 = vec3!(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-		let v3 = vec3!(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
-		let normal = Vec3::cross((v3 - v1), (v2 - v1)).normalize();
+			let i1 = tri[0] as usize;
+			let i2 = tri[1] as usize;
+			let i3 = tri[2] as usize;
+			let v1 = vec3!(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
+			let v2 = vec3!(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
+			let v3 = vec3!(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+			let normal = Vec3::cross((v2 - v1), (v3 - v1));
 
-		normals[i1] += normal;
-		normals[i2] += normal;
-		normals[i3] += normal;
+			normals[i1] += normal;
+			normals[i2] += normal;
+			normals[i3] += normal;
 
-	}
+		});
 
-	for n in &mut normals {
-		*n = (*n / 3.0).normalize();
-	}
-
-	return normals;
+	return normals
+		.into_iter()
+		.map(|p| p.normalize())
+		.collect();
 
 }
 
@@ -1069,8 +1068,16 @@ impl Model {
 
 			let m = m.mesh;
 			let vert_count = m.positions.len() / 3;
-// 			let normals = gen_vertex_normals(&m.positions, &m.indices);
 			let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
+
+			let normals = if m.normals.is_empty() {
+				gen_vertex_normals(&m.positions, &m.indices)
+			} else {
+				m.normals
+					.chunks(3)
+					.map(|n| vec3!(n[0], n[1], n[2]))
+					.collect()
+			};
 
 			let mtl = match m.material_id {
 				Some(id) => materials.get(id),
@@ -1087,13 +1094,10 @@ impl Model {
 				let vx = m.positions[i * 3 + 0];
 				let vy = m.positions[i * 3 + 1];
 				let vz = m.positions[i * 3 + 2];
-				let nx = m.normals.get(i * 3 + 0).map(|i| *i).unwrap_or(0.0);
-				let ny = m.normals.get(i * 3 + 1).map(|i| *i).unwrap_or(0.0);
-				let nz = m.normals.get(i * 3 + 2).map(|i| *i).unwrap_or(0.0);
 
 				let vert = Vertex3D {
 					pos: vec3!(vx, vy, vz),
-					normal: vec3!(nx, ny, nz),
+					normal: normals[i],
 					uv: vec2!(),
 					color: color,
 				};
@@ -1125,18 +1129,24 @@ impl Model {
 // 			let normals = gen_vertex_normals(&m.positions, &m.indices);
 			let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
 
+			let normals = if m.normals.is_empty() {
+				gen_vertex_normals(&m.positions, &m.indices)
+			} else {
+				m.normals
+					.chunks(3)
+					.map(|n| vec3!(n[0], n[1], n[2]))
+					.collect()
+			};
+
 			for i in 0..vert_count {
 
 				let vx = m.positions[i * 3 + 0];
 				let vy = m.positions[i * 3 + 1];
 				let vz = m.positions[i * 3 + 2];
-				let nx = m.normals.get(i * 3 + 0).map(|i| *i).unwrap_or(0.0);
-				let ny = m.normals.get(i * 3 + 1).map(|i| *i).unwrap_or(0.0);
-				let nz = m.normals.get(i * 3 + 2).map(|i| *i).unwrap_or(0.0);
 
 				let vert = Vertex3D {
 					pos: vec3!(vx, vy, vz),
-					normal: vec3!(nx, ny, nz),
+					normal: normals[i],
 					uv: vec2!(),
 					color: color!(rand!(), rand!(), rand!(), 1),
 				};

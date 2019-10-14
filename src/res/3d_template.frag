@@ -1,6 +1,7 @@
 // wengwengweng
 
 varying vec2 v_uv;
+varying vec3 v_normal;
 varying float v_brightness;
 varying vec4 v_color;
 
