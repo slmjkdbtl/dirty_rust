@@ -13,7 +13,7 @@ out vec4 o_color;
 
 void main() {
 
-	o_color = frag(u_tex, v_uv) * v_color;
+	o_color = frag();
 
 	if (o_color.a == 0.0) {
 		discard;

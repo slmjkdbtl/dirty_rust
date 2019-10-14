@@ -2,7 +2,6 @@
 
 varying vec2 v_uv;
 varying vec3 v_normal;
-varying float v_brightness;
 varying vec4 v_color;
 
 uniform sampler2D u_tex;
@@ -12,8 +11,7 @@ uniform vec4 u_color;
 
 void main() {
 
-// 	gl_FragColor = vec4(v_color.xyz * v_brightness, v_color.a);
-	gl_FragColor = v_color * texture2D(u_tex, v_uv);
+	gl_FragColor = frag();
 
 	if (gl_FragColor.a == 0.0) {
 		discard;

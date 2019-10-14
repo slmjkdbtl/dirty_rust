@@ -11,18 +11,18 @@ uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
 
-// out vec2 v_uv;
+out vec2 v_uv;
 out vec4 v_color;
+out vec3 v_normal;
 
 ###REPLACE###
 
 void main() {
 
-	vec3 world_pos = (u_model * vec4(a_pos, 1.0)).xyz;
-
-// 	v_uv = uv;
+	v_uv = a_uv;
 	v_color = a_color;
-	gl_Position = u_proj * u_view * vec4(world_pos, 1.0);
+	v_normal = a_normal;
+	gl_Position = vert();
 
 }
 

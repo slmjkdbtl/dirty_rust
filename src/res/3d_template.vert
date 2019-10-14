@@ -6,7 +6,6 @@ attribute vec2 a_uv;
 attribute vec4 a_color;
 
 varying vec2 v_uv;
-varying float v_brightness;
 varying vec4 v_color;
 varying vec3 v_normal;
 
@@ -18,16 +17,10 @@ uniform mat4 u_proj;
 
 void main() {
 
-	vec3 world_pos = (u_model * vec4(a_pos, 1.0)).xyz;
-
-// 	vec3 unit_normal = normalize((u_model * vec4(a_normal, 1.0)).xyz);
-// 	vec3 unit_light_dir = normalize(vec3(0, 240, 0) - world_pos);
-
-// 	v_brightness = max(dot(unit_normal, unit_light_dir), 0.05);
 	v_uv = a_uv;
 	v_color = a_color;
 	v_normal = a_normal;
-	gl_Position = u_proj * u_view * vec4(world_pos, 1.0);
+	gl_Position = vert();
 
 }
 

@@ -17,7 +17,7 @@ void main() {
 
 	v_color = a_color;
 	v_uv = a_uv;
-	gl_Position = vert(u_proj, vec4(a_pos, 1.0, 1.0));
+	gl_Position = vert();
 
 }
 

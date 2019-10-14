@@ -1,6 +1,6 @@
 // wengwengweng
 
 vec4 frag() {
-	return texture2D(u_tex, v_uv);
+	return vec4(v_normal, 1.0);
 }
 

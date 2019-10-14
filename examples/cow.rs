@@ -35,7 +35,7 @@ impl app::State for Game {
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			pix_shader: gfx::Shader2D::effect(ctx, include_str!("res/pix.frag"))?,
+			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,

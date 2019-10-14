@@ -22,7 +22,7 @@ float makeSphere(vec3 p) {
 	return length(trans(p)) - 1.0;
 }
 
-vec4 frag(sampler2D tex, vec2 uv) {
+vec4 frag() {
 
 	vec2 p = (gl_FragCoord.xy * 2. - resolution) / min(resolution.x, resolution.y);
 

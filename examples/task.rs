@@ -17,6 +17,7 @@ struct Teapot {
 struct Game {
 	tasks: TaskPool<Result<gfx::ModelData>>,
 	teapots: Vec<Teapot>,
+	shader: gfx::Shader3D<()>,
 }
 
 impl Game {
@@ -31,7 +32,7 @@ impl Game {
 
 impl app::State for Game {
 
-	fn init(_: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		let mut tasks = TaskPool::new(THREAD_COUNT);
 
@@ -44,6 +45,7 @@ impl app::State for Game {
 		return Ok(Self {
 			tasks: tasks,
 			teapots: vec![],
+			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 		});
 
 	}
@@ -90,10 +92,21 @@ impl app::State for Game {
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		for t in &self.teapots {
+
 			ctx.push(&t.transform, |ctx| {
-				ctx.draw(shapes::model(&t.model))?;
+
+				ctx.draw_3d_with(&self.shader, &(), |ctx| {
+
+					ctx.draw(shapes::model(&t.model))?;
+
+					return Ok(());
+
+				})?;
+
 				return Ok(());
+
 			})?;
+
 		}
 
 		ctx.push(&gfx::t()
@@ -101,7 +114,7 @@ impl app::State for Game {
 			.scale(vec2!(2))
 		, |ctx| {
 			ctx.draw(
-				shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total()))
+				shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total())),
 			)?;
 			return Ok(());
 		})?;
