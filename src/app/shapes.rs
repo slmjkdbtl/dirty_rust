@@ -959,14 +959,16 @@ impl<'a> Drawable for Model<'a> {
 
 		ctx.draw_calls += 1;
 
-		self.model.renderer.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
-			proj: ctx.proj_3d,
-			view: ctx.view_3d,
-			model: ctx.transform,
-			color: self.color,
-			tex: ctx.empty_tex.clone(),
-			custom: ctx.cur_custom_uniform_3d.clone(),
-		}));
+		for m in &self.model.meshes {
+			m.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
+				proj: ctx.proj_3d,
+				view: ctx.view_3d,
+				model: ctx.transform,
+				color: self.color,
+				tex: ctx.empty_tex.clone(),
+				custom: ctx.cur_custom_uniform_3d.clone(),
+			}));
+		}
 
 		return Ok(());
 

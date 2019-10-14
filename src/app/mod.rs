@@ -77,9 +77,9 @@ pub struct Ctx {
 	pub(self) proj_3d: math::Mat4,
 	pub(self) view_3d: math::Mat4,
 
-	pub(self) renderer_2d: gl::BatchedRenderer<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cube_renderer: gl::Renderer<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) renderer_3d: gl::BatchedRenderer<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(self) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
+	pub(self) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(self) renderer_3d: gl::BatchedMesh<gfx::Vertex3D, gfx::Uniform3D>,
 
 	pub(self) empty_tex: gfx::Texture,
 
@@ -289,9 +289,9 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		#[cfg(all(not(mobile), not(web)))]
 		gamepad_ctx: gilrs::Gilrs::new()?,
 
-		renderer_2d: gl::BatchedRenderer::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
-		renderer_3d: gl::BatchedRenderer::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
-		cube_renderer: gl::Renderer::from_shape(&gl, gfx::CubeShape)?,
+		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
+		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
+		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		gl: gl,
 
 		proj_2d: proj_2d,

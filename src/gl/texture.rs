@@ -109,13 +109,13 @@ impl Texture {
 
 	}
 
-	pub(crate) fn bind(&self) {
+	pub(super) fn bind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, Some(self.id));
 		}
 	}
 
-	pub(crate) fn unbind(&self) {
+	pub(super) fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_texture(glow::TEXTURE_2D, None);
 		}

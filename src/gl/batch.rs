@@ -4,9 +4,8 @@ use super::*;
 use crate::Result;
 
 // TODO: trait alias plz
-pub struct BatchedRenderer<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> {
+pub struct BatchedMesh<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> {
 
-	ctx: Rc<GLCtx>,
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	#[cfg(feature="gl3")]
@@ -20,10 +19,11 @@ pub struct BatchedRenderer<V: VertexLayout + Clone, U: UniformLayout + PartialEq
 
 }
 
-impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U> {
+impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedMesh<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
+		let max_vertices = max_vertices * V::STRIDE;
 		let vbuf = VertexBuffer::new(&device, max_vertices, BufferUsage::Dynamic)?;
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
@@ -31,7 +31,6 @@ impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedRende
 		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
 
 		return Ok(Self {
-			ctx: device.ctx.clone(),
 			vbuf: vbuf,
 			ibuf: ibuf,
 			#[cfg(feature="gl3")]

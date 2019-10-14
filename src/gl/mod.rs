@@ -11,9 +11,9 @@ export!(attr);
 export!(vao);
 export!(uniform);
 export!(stencil);
-export!(renderer);
+export!(mesh);
 export!(shape);
-export!(batched_renderer);
+export!(batch);
 
 use std::mem;
 use std::rc::Rc;

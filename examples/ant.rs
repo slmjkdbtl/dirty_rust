@@ -57,9 +57,6 @@ struct Ant {
 	y: i32,
 }
 
-struct Game {
-}
-
 struct Sim {
 	grids: Vec<Vec<Option<u8>>>,
 	ant: Ant,
