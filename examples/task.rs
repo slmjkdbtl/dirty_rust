@@ -97,11 +97,11 @@ impl app::State for Game {
 		}
 
 		ctx.push(&gfx::t()
-			.translate(vec2!(24))
+			.translate(vec2!(32))
+			.scale(vec2!(2))
 		, |ctx| {
 			ctx.draw(
 				shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total()))
-					.align(gfx::Origin::TopLeft)
 			)?;
 			return Ok(());
 		})?;
