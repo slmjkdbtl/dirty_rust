@@ -1054,11 +1054,17 @@ pub struct Model {
 	pub(super) meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
 }
 
+#[derive(Clone)]
+pub struct ModelLoad(Vec<(Vec<f32>, Vec<u32>)>);
+
 impl Model {
 
-	fn from_tobj(ctx: &Ctx, tobj: tobj::LoadResult) -> Result<Self> {
+	pub fn prepare_obj(obj: &str) -> Result<ModelLoad> {
 
-		let (models, _) = tobj?;
+		let (models, _) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
+			return Err(tobj::LoadError::GenericFailure);
+		})?;
+
 		let mut meshes = Vec::with_capacity(models.len());
 
 		for m in models {
@@ -1079,8 +1085,25 @@ impl Model {
 
 			}
 
-			meshes.push(Rc::new(gl::Mesh::new(&ctx.gl, &verts, &m.indices)?));
+			meshes.push((verts, m.indices));
 
+		}
+
+		return Ok(ModelLoad(meshes));
+
+	}
+
+	pub fn from(ctx: &Ctx, models: ModelLoad) -> Result<Self> {
+
+// 		let meshes = models
+// 			.into_iter()
+// 			.map(|m| Rc::new(gl::Mesh::new(&ctx.gl, &m.verts, &m.indices)?))
+// 			.collect();
+
+		let mut meshes = Vec::with_capacity(models.0.len());
+
+		for m in models.0 {
+			meshes.push(Rc::new(gl::Mesh::new(&ctx.gl, &m.0, &m.1)?));
 		}
 
 		return Ok(Self {
@@ -1090,20 +1113,14 @@ impl Model {
 	}
 
 	pub fn from_obj(ctx: &Ctx, obj: &str) -> Result<Self> {
-		return Self::from_tobj(ctx, tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
-			return Err(tobj::LoadError::GenericFailure);
-		}));
+		return Self::from(ctx, Self::prepare_obj(obj)?);
 	}
 
-	pub fn from_obj_with_mtl(ctx: &Ctx, obj: &str, mtl: &str) -> Result<Self> {
-		return Self::from_tobj(ctx, tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
-			return tobj::load_mtl_buf(&mut Cursor::new(mtl));
-		}));
-	}
-
-	pub fn from_obj_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
-		return Self::from_tobj(ctx, tobj::load_obj(path.as_ref()));
-	}
+// 	pub fn from_obj_with_mtl(ctx: &Ctx, obj: &str, mtl: &str) -> Result<Self> {
+// 		return Self::from_tobj(ctx, tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
+// 			return tobj::load_mtl_buf(&mut Cursor::new(mtl));
+// 		}));
+// 	}
 
 }
 

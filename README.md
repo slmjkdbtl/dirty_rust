@@ -97,6 +97,7 @@ If no argument is provided, it'll search for `main.{lua,py}`
 - **ttf** drawing text with truetype fonts
 - **geom** basic geomatry / collision detections
 - **dither** image processing
+- **task** load resources on a different thread
 - **request** making an http/https request
 - **server** a simple http server
 
