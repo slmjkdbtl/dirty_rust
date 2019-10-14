@@ -58,12 +58,56 @@ struct Ant {
 }
 
 struct Game {
+}
+
+struct Sim {
 	grids: Vec<Vec<Option<u8>>>,
 	ant: Ant,
 	count: usize,
 }
 
-impl app::State for Game {
+impl Sim {
+
+	fn next(&mut self) {
+
+		let x = self.ant.x as usize;
+		let y = self.ant.y as usize;
+
+		let cols = match self.grids.get(x).map(Clone::clone) {
+			Some(c) => c,
+			None => return,
+		};
+
+		let cur = match cols.get(y).map(Clone::clone) {
+			Some(g) => g,
+			None => return,
+		};
+
+		let dir = &self.ant.dir;
+
+		if let Some(cur) = cur {
+			self.grids[x][y] = Some((cur + 1) % GRIDS.len() as u8);
+			if cur % 2 == 0 {
+				self.ant.dir = dir.turn_left();
+			} else {
+				self.ant.dir = dir.turn_right();
+			}
+		} else {
+			self.grids[x][y] = Some(0);
+			self.ant.dir = dir.turn_right();
+		};
+
+		let (x, y) = self.ant.dir.forward((self.ant.x, self.ant.y));
+
+		self.ant.x = x;
+		self.ant.y = y;
+		self.count += 1;
+
+	}
+
+}
+
+impl app::State for Sim {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
@@ -103,41 +147,8 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let x = self.ant.x as usize;
-		let y = self.ant.y as usize;
-
-		let cols = match self.grids.get(x).map(Clone::clone) {
-			Some(c) => c,
-			None => return Ok(()),
-		};
-
-		let cur = match cols.get(y).map(Clone::clone) {
-			Some(g) => g,
-			None => return Ok(()),
-		};
-
-		let dir = &self.ant.dir;
-
-		if let Some(cur) = cur {
-			self.grids[x][y] = Some((cur + 1) % GRIDS.len() as u8);
-			if cur % 2 == 0 {
-				self.ant.dir = dir.turn_left();
-			} else {
-				self.ant.dir = dir.turn_right();
-			}
-		} else {
-			self.grids[x][y] = Some(0);
-			self.ant.dir = dir.turn_right();
-		};
-
-		let (x, y) = self.ant.dir.forward((self.ant.x, self.ant.y));
-
-		self.ant.x = x;
-		self.ant.y = y;
-
+		self.next();
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-		self.count += 1;
 
 		return Ok(());
 
@@ -151,7 +162,7 @@ impl app::State for Game {
 			for (j, g) in row.iter().enumerate() {
 				if let Some(c) = g {
 					ctx.draw(
-						&rect(vec2!(i as i32 * GRID_SIZE, j as i32 * GRID_SIZE), vec2!((i + 1) as i32 * GRID_SIZE, (j + 1) as i32 * GRID_SIZE))
+						rect(vec2!(i as i32 * GRID_SIZE, j as i32 * GRID_SIZE), vec2!((i + 1) as i32 * GRID_SIZE, (j + 1) as i32 * GRID_SIZE))
 							.fill(GRIDS[*c as usize])
 					)?;
 				}
@@ -162,9 +173,9 @@ impl app::State for Game {
 			.translate(vec2!(16))
 		, |ctx| {
 			ctx.draw(
-				&shapes::text(&format!("{}", self.count))
+				shapes::text(&format!("{}", self.count))
 					.align(gfx::Origin::TopLeft)
-			);
+			)?;
 			return Ok(());
 		})?;
 
@@ -180,7 +191,7 @@ fn main() {
 		.fps_cap(None)
 		.origin(gfx::Origin::TopLeft)
 		.quad_origin(gfx::Origin::TopLeft)
-		.run::<Game>() {
+		.run::<Sim>() {
 		println!("{}", err);
 	}
 }

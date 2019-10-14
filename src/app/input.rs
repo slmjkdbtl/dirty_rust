@@ -135,7 +135,7 @@ fn gamepad_released(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> boo
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Event {
 	KeyPress(Key),
 	KeyPressRepeat(Key),

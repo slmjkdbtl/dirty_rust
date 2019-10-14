@@ -6,7 +6,7 @@ personal toolkit for things
 ### modules
 - **app** Windowing, Input, and Graphics
 - **img** Image Loading & Writing
-- **audio** Sound Loading & playback
+- **audio** Sound Loading & Playback
 - **fs** Common File System Functions
 - **http** Simple HTTP Client & Server
 - **term** TUI Utilities
@@ -92,7 +92,6 @@ If no argument is provided, it'll search for `main.{lua,py}`
 - **window** basic window and a cube
 - **conf** window / graphics configs
 - **sprite** a 2d animating sprite
-- **effect** custom shader effects
 - **cow** displaying 3d models from obj files
 - **mask** simple stencil mask
 - **ttf** drawing text with truetype fonts

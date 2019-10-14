@@ -1,42 +1,42 @@
 // wengwengweng
 
 use dirty::*;
+use dirty::math::*;
 use dirty::app::*;
 use input::Key;
 
-struct Effect {
-	name: String,
-	shader: gfx::Shader,
-	param: Option<Param>,
+// struct Effect<U> {
+// 	name: String,
+// 	shader: gfx::Shader2D<U>,
+// }
+
+// impl<U> Effect<U> {
+// 	pub fn new(name: &str, shader: gfx::Shader2D<U>) -> Self {
+// 		return Self {
+// 			name: name.to_owned(),
+// 			shader: shader,
+// 		};
+// 	}
+// }
+
+#[derive(Clone)]
+struct PixUniform {
+	resolution: Vec2,
+	size: f32,
 }
 
-struct Param {
-	name: String,
-	value: f32,
-}
-
-impl Param {
-	pub fn new(name: &str, value: f32) -> Self {
-		return Self {
-			name: name.to_owned(),
-			value: value,
-		};
-	}
-}
-
-impl Effect {
-	pub fn new(name: &str, shader: gfx::Shader, param: Option<Param>) -> Self {
-		return Self {
-			name: name.to_owned(),
-			shader: shader,
-			param: param,
-		};
+impl gfx::Uniform for PixUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return vec![
+			("resolution", self.resolution.as_arr().into()),
+			("size", self.size.into()),
+		];
 	}
 }
 
 struct Game {
 	tex: gfx::Texture,
-	effects: Vec<Effect>,
+// 	effects: Box<Vec<Effect<dyn gfx::Uniform>>>,
 	cur_effect: Option<usize>,
 }
 
@@ -59,12 +59,12 @@ impl app::State for Game {
 		let grayscale = gfx::Shader::effect(ctx, include_str!("res/grayscale.frag"))?;
 		let invert = gfx::Shader::effect(ctx, include_str!("res/invert.frag"))?;
 
-		let effects = vec![
-			Effect::new("pixlate", pixelate, Some(Param::new("size", 32.0))),
-			Effect::new("blur", blur, Some(Param::new("radius", 24.0))),
-			Effect::new("grayscale", grayscale, None),
-			Effect::new("invert", invert, None),
-		];
+// 		let effects = vec![
+// 			Effect::new("pixlate", pixelate, Some(Param::new("size", 32.0))),
+// 			Effect::new("blur", blur, Some(Param::new("radius", 24.0))),
+// 			Effect::new("grayscale", grayscale, None),
+// 			Effect::new("invert", invert, None),
+// 		];
 
 		return Ok(Self {
 			tex: tex,
@@ -74,7 +74,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -82,7 +82,7 @@ impl app::State for Game {
 
 			KeyPress(k) => {
 
-				if *k == Key::Left || *k == Key::A {
+				if k == Key::Left || k == Key::A {
 					if let Some(cur_effect) = self.cur_effect {
 						if cur_effect > 0 {
 							self.cur_effect = Some(cur_effect - 1);
@@ -96,7 +96,7 @@ impl app::State for Game {
 					}
 				}
 
-				if *k == Key::Right || *k == Key::D {
+				if k == Key::Right || k == Key::D {
 					if let Some(cur_effect) = self.cur_effect {
 						if cur_effect < self.effects.len() - 1 {
 							self.cur_effect = Some(cur_effect + 1);
@@ -110,37 +110,11 @@ impl app::State for Game {
 					}
 				}
 
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.quit();
 				}
 
 			},
-
-			KeyDown(k) => {
-
-				if *k == Key::Up || *k == Key::W {
-					if let Some(cur_effect) = self.cur_effect {
-						if let Some(effect) = self.effects.get_mut(cur_effect) {
-							if let Some(param) = &mut effect.param {
-								param.value = param.value + ctx.dt() * 24.0;
-								effect.shader.send(&param.name, param.value);
-							}
-						}
-					}
-				}
-
-				if *k == Key::Down || *k == Key::S {
-					if let Some(cur_effect) = self.cur_effect {
-						if let Some(effect) = self.effects.get_mut(cur_effect) {
-							if let Some(param) = &mut effect.param {
-								param.value = param.value - ctx.dt() * 24.0;
-								effect.shader.send(&param.name, param.value);
-							}
-						}
-					}
-				}
-
-			}
 
 			_ => {},
 
@@ -150,7 +124,29 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+
+		if ctx.key_down(Key::Up) || ctx.key_down(Key::W) {
+			if let Some(cur_effect) = self.cur_effect {
+				if let Some(effect) = self.effects.get_mut(cur_effect) {
+					if let Some(param) = &mut effect.param {
+						param.value = param.value + ctx.dt() * 24.0;
+						effect.shader.send(&param.name, param.value);
+					}
+				}
+			}
+		}
+
+		if ctx.key_down(Key::Down) || ctx.key_down(Key::S) {
+			if let Some(cur_effect) = self.cur_effect {
+				if let Some(effect) = self.effects.get_mut(cur_effect) {
+					if let Some(param) = &mut effect.param {
+						param.value = param.value - ctx.dt() * 24.0;
+						effect.shader.send(&param.name, param.value);
+					}
+				}
+			}
+		}
 
 		let draw_icon = |ctx: &mut app::Ctx| -> Result<()> {
 
@@ -158,7 +154,7 @@ impl app::State for Game {
 				.translate(vec2!(0, -24))
 				.scale(vec2!(0.5))
 			, |ctx| {
-				return ctx.draw(&shapes::sprite(&self.tex));
+				return ctx.draw(shapes::sprite(&self.tex));
 			})?;
 
 			return Ok(());
@@ -166,7 +162,7 @@ impl app::State for Game {
 		};
 
 		if let Some(cur_effect) = self.cur_effect {
-			ctx.draw_with(&self.effects[cur_effect].shader, |ctx| {
+			ctx.draw_2d_with(&self.effects[cur_effect].shader, |ctx| {
 				draw_icon(ctx)?;
 				return Ok(());
 			})?;
@@ -182,7 +178,7 @@ impl app::State for Game {
 
 				if let Some(effect) = self.effects.get(cur_effect) {
 
-					ctx.draw(&shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
+					ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
 
 					if let Some(param) = &effect.param {
 
@@ -190,7 +186,7 @@ impl app::State for Game {
 							.translate(vec2!(0, 16))
 							.scale(vec2!(0.8))
 						, |ctx| {
-							return ctx.draw(&shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)));
+							return ctx.draw(shapes::text(&format!("{}: {:.*}", param.name, 0, param.value)));
 						})?;
 
 					}
@@ -198,7 +194,7 @@ impl app::State for Game {
 				}
 
 			} else {
-				ctx.draw(&shapes::text("no effect"))?;
+				ctx.draw(shapes::text("no effect"))?;
 			}
 
 			return Ok(());

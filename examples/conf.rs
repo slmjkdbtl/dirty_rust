@@ -12,13 +12,13 @@ impl app::State for Game {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.quit();
 				}
 			},
@@ -29,7 +29,7 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw(shapes::text("yo"))?;
 

@@ -42,12 +42,12 @@ impl app::State for Game {
 		, |ctx| {
 
 			ctx.draw_masked(|ctx| {
-				return ctx.draw(&shapes::sprite(&self.mask));
+				return ctx.draw(shapes::sprite(&self.mask));
 			}, |ctx| {
 				return ctx.push(&gfx::t()
 					.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
 				, |ctx| {
-					return ctx.draw(&shapes::gradient(
+					return ctx.draw(shapes::gradient(
 						vec2!(0, -80),
 						vec2!(0, 80),
 						&[

@@ -6,6 +6,7 @@ use super::*;
 use gfx::Drawable;
 use gl::VertexLayout;
 
+#[derive(Clone)]
 pub struct Sprite<'a> {
 	tex: &'a gfx::Texture,
 	quad: Quad,
@@ -47,7 +48,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	};
 }
 
-impl<'a> Drawable for &Sprite<'a> {
+impl<'a> Drawable for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -145,7 +146,7 @@ fn chunk_str(s: &str, len: usize) -> Vec<&str> {
 
 }
 
-impl<'a> Drawable for &Text<'a> {
+impl<'a> Drawable for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -209,7 +210,7 @@ impl<'a> Drawable for &Text<'a> {
 
 						if let Some(quad) = map.get(&ch) {
 							ctx.draw(
-								&sprite(&tex)
+								sprite(&tex)
 									.offset(vec2!(-1))
 									.quad(*quad)
 									.color(self.color)
@@ -308,7 +309,7 @@ pub fn polygon(pts: &[Vec2]) -> Polygon {
 
 }
 
-impl Drawable for &Polygon {
+impl Drawable for Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -327,7 +328,7 @@ impl Drawable for &Polygon {
 		if let Some(color) = self.fill {
 
 			let mut verts = Vec::with_capacity(pts.len() * gfx::Vertex2D::STRIDE);
-			let mut indices = Vec::new();
+			let mut indices = Vec::with_capacity((pts.len() - 2) * 3);
 
 			for (i, p) in pts.iter().enumerate() {
 
@@ -359,18 +360,18 @@ impl Drawable for &Polygon {
 
 				match stroke.join {
 					None => {
-						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
+						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Bevel => {
 						// TODO
-						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
+						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Miter => {
 						// TODO
-						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
+						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Round => {
-						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color).cap(gfx::LineCap::Round))?;
+						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color).cap(gfx::LineCap::Round))?;
 					},
 				}
 
@@ -407,7 +408,7 @@ impl Gradient {
 	}
 }
 
-impl Drawable for &Gradient {
+impl Drawable for Gradient {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -543,7 +544,7 @@ impl Rect {
 	}
 }
 
-impl Drawable for &Rect {
+impl Drawable for Rect {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -561,7 +562,7 @@ impl Drawable for &Rect {
 			radius: self.radius,
 		};
 
-		ctx.draw(&poly)?;
+		ctx.draw(poly)?;
 
 		return Ok(());
 
@@ -621,7 +622,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 	};
 }
 
-impl Drawable for &Line {
+impl Drawable for Line {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -638,11 +639,11 @@ impl Drawable for &Line {
 			let w = len;
 			let h = self.width;
 
-			ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
+			ctx.draw(Rect::from_size(w, h).fill(self.color))?;
 
 			if let gfx::LineCap::Round = self.cap {
-				ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
-				ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
+				ctx.draw(circle(vec2!(-w / 2.0, 0), h / 2.0))?;
+				ctx.draw(circle(vec2!(w / 2.0, 0), h / 2.0))?;
 			}
 
 			return Ok(());
@@ -700,7 +701,7 @@ pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
 	};
 }
 
-impl<'a> Drawable for &Points<'a> {
+impl<'a> Drawable for Points<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -708,7 +709,7 @@ impl<'a> Drawable for &Points<'a> {
 			ctx.push(&gfx::t()
 				.translate(*pt)
 			, |ctx| {
-				return ctx.draw(&Rect::from_size(self.size, self.size).fill(self.color));
+				return ctx.draw(Rect::from_size(self.size, self.size).fill(self.color));
 			})?;
 		}
 
@@ -857,7 +858,7 @@ fn arc_verts(radius: f32, start: f32, end: f32, segments: Option<u32>) -> Vec<Ve
 
 }
 
-impl Drawable for &Circle {
+impl Drawable for Circle {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -878,7 +879,7 @@ impl Drawable for &Circle {
 				radius: None,
 			};
 
-			ctx.draw(&poly)?;
+			ctx.draw(poly)?;
 
 			return Ok(());
 
@@ -913,14 +914,14 @@ impl<'a> Canvas<'a> {
 	}
 }
 
-impl<'a> Drawable for &Canvas<'a> {
+impl<'a> Drawable for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
 			.scale(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
-			return ctx.draw(&sprite(&self.canvas.tex).color(self.color));
+			return ctx.draw(sprite(&self.canvas.tex).color(self.color));
 		})?;
 
 		return Ok(());
@@ -952,7 +953,7 @@ impl<'a> Model<'a> {
 	}
 }
 
-impl<'a> Drawable for &Model<'a> {
+impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -979,7 +980,7 @@ pub fn cube() -> Cube {
 	return Cube;
 }
 
-impl Drawable for &Cube {
+impl Drawable for Cube {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
@@ -1043,7 +1044,7 @@ pub fn sprite3d<'a>(tex: &'a gfx::Texture) -> Sprite3D<'a> {
 	};
 }
 
-impl<'a> Drawable for &Sprite3D<'a> {
+impl<'a> Drawable for Sprite3D<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 

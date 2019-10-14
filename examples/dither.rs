@@ -68,13 +68,13 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.quit();
 				}
 			},
@@ -85,12 +85,12 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
 			.scale(vec2!(0.75))
 		, |ctx| {
-			return ctx.draw(&shapes::sprite(&self.tex));
+			return ctx.draw(shapes::sprite(&self.tex));
 		})?;
 
 		return Ok(());
