@@ -81,7 +81,7 @@ pub struct Text<'a> {
 	font: Option<&'a gfx::BitmapFont>,
 	fallback_font: Option<&'a gfx::BitmapFont>,
 	color: Color,
-	align: gfx::Origin,
+	align: Option<gfx::Origin>,
 	wrap: Option<f32>,
 }
 
@@ -107,7 +107,7 @@ impl<'a> Text<'a> {
 		return self;
 	}
 	pub fn align(mut self, o: gfx::Origin) -> Self {
-		self.align = o;
+		self.align = Some(o);
 		return self;
 	}
 	pub fn wrap(mut self, wrap: f32) -> Self {
@@ -121,7 +121,7 @@ pub fn text<'a>(text: &'a str) -> Text<'a> {
 		content: text,
 		font: None,
 		fallback_font: None,
-		align: gfx::Origin::Center,
+		align: None,
 		color: color!(1),
 		wrap: None,
 	};
@@ -187,7 +187,8 @@ impl<'a> Drawable for Text<'a> {
 
 		};
 
-		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let align = self.align.unwrap_or(ctx.conf.origin);
+		let offset = (align.as_pt() + vec2!(1)) * 0.5;
 		let offset_pos = -offset * vec2!(gw * tw as f32, gh * th as f32);
 
 		// TODO: no clone
