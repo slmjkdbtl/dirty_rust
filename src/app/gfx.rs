@@ -286,19 +286,9 @@ pub(super) fn flush(ctx: &mut Ctx) {
 
 #[derive(Clone)]
 pub struct Vertex2D {
-	pos: Vec2,
-	uv: Vec2,
-	color: Color,
-}
-
-impl Vertex2D {
-	pub fn new(pos: Vec2, uv: Vec2, color: Color) -> Self {
-		return Self {
-			pos: pos,
-			uv: uv,
-			color: color,
-		};
-	}
+	pub pos: Vec2,
+	pub uv: Vec2,
+	pub color: Color,
 }
 
 impl VertexLayout for Vertex2D {
@@ -359,21 +349,10 @@ impl gl::UniformLayout for Uniform2D {
 
 #[derive(Clone)]
 pub struct Vertex3D {
-	pos: Vec3,
-	uv: Vec2,
-	normal: Vec3,
-	color: Color,
-}
-
-impl Vertex3D {
-	pub fn new(pos: Vec3, uv: Vec2, normal: Vec3, color: Color) -> Self {
-		return Self {
-			pos: pos,
-			uv: uv,
-			normal: normal,
-			color: color,
-		};
-	}
+	pub pos: Vec3,
+	pub uv: Vec2,
+	pub normal: Vec3,
+	pub color: Color,
 }
 
 impl VertexLayout for Vertex3D {
@@ -502,10 +481,29 @@ impl Shape for QuadShape {
 			_ => {},
 		}
 
-		Self::Vertex::new(p1, u1, c).push(queue);
-		Self::Vertex::new(p2, u2, c).push(queue);
-		Self::Vertex::new(p3, u3, c).push(queue);
-		Self::Vertex::new(p4, u4, c).push(queue);
+		Vertex2D {
+			pos: p1,
+			uv: u1,
+			color: c
+		}.push(queue);
+
+		Vertex2D {
+			pos: p2,
+			uv: u2,
+			color: c
+		}.push(queue);
+
+		Vertex2D {
+			pos: p3,
+			uv: u3,
+			color: c
+		}.push(queue);
+
+		Vertex2D {
+			pos: p4,
+			uv: u4,
+			color: c
+		}.push(queue);
 
 	}
 
@@ -1055,11 +1053,64 @@ pub struct Model {
 }
 
 #[derive(Clone)]
-pub struct ModelLoad(Vec<(Vec<f32>, Vec<u32>)>);
+pub struct ModelData(Vec<(Vec<f32>, Vec<u32>)>);
 
 impl Model {
 
-	pub fn prepare_obj(obj: &str) -> Result<ModelLoad> {
+	pub fn prepare_obj_mtl(obj: &str, mtl: &str) -> Result<ModelData> {
+
+		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
+			return tobj::load_mtl_buf(&mut Cursor::new(mtl));
+		})?;
+
+		let mut meshes = Vec::with_capacity(models.len());
+
+		for m in models {
+
+			let m = m.mesh;
+			let vert_count = m.positions.len() / 3;
+// 			let normals = gen_vertex_normals(&m.positions, &m.indices);
+			let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
+
+			let mtl = match m.material_id {
+				Some(id) => materials.get(id),
+				None => None,
+			};
+
+			let color = mtl
+				.map(|m| m.diffuse)
+				.map(|d| color!(d[0], d[1], d[2], 1.0))
+				.unwrap_or(color!(rand!(), rand!(), rand!(), 1));
+
+			for i in 0..vert_count {
+
+				let vx = m.positions[i * 3 + 0];
+				let vy = m.positions[i * 3 + 1];
+				let vz = m.positions[i * 3 + 2];
+				let nx = m.normals.get(i * 3 + 0).map(|i| *i).unwrap_or(0.0);
+				let ny = m.normals.get(i * 3 + 1).map(|i| *i).unwrap_or(0.0);
+				let nz = m.normals.get(i * 3 + 2).map(|i| *i).unwrap_or(0.0);
+
+				let vert = Vertex3D {
+					pos: vec3!(vx, vy, vz),
+					normal: vec3!(nx, ny, nz),
+					uv: vec2!(),
+					color: color,
+				};
+
+				vert.push(&mut verts);
+
+			}
+
+			meshes.push((verts, m.indices));
+
+		}
+
+		return Ok(ModelData(meshes));
+
+	}
+
+	pub fn prepare_obj(obj: &str) -> Result<ModelData> {
 
 		let (models, _) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
 			return Err(tobj::LoadError::GenericFailure);
@@ -1071,7 +1122,7 @@ impl Model {
 
 			let m = m.mesh;
 			let vert_count = m.positions.len() / 3;
-			let normals = gen_vertex_normals(&m.positions, &m.indices);
+// 			let normals = gen_vertex_normals(&m.positions, &m.indices);
 			let mut verts = Vec::with_capacity(vert_count * Vertex3D::STRIDE);
 
 			for i in 0..vert_count {
@@ -1079,7 +1130,16 @@ impl Model {
 				let vx = m.positions[i * 3 + 0];
 				let vy = m.positions[i * 3 + 1];
 				let vz = m.positions[i * 3 + 2];
-				let vert = Vertex3D::new(vec3!(vx, vy, vz), vec2!(), normals[i], color!(rand!(), rand!(), rand!(), 1));
+				let nx = m.normals.get(i * 3 + 0).map(|i| *i).unwrap_or(0.0);
+				let ny = m.normals.get(i * 3 + 1).map(|i| *i).unwrap_or(0.0);
+				let nz = m.normals.get(i * 3 + 2).map(|i| *i).unwrap_or(0.0);
+
+				let vert = Vertex3D {
+					pos: vec3!(vx, vy, vz),
+					normal: vec3!(nx, ny, nz),
+					uv: vec2!(),
+					color: color!(rand!(), rand!(), rand!(), 1),
+				};
 
 				vert.push(&mut verts);
 
@@ -1089,11 +1149,11 @@ impl Model {
 
 		}
 
-		return Ok(ModelLoad(meshes));
+		return Ok(ModelData(meshes));
 
 	}
 
-	pub fn from(ctx: &Ctx, models: ModelLoad) -> Result<Self> {
+	pub fn from(ctx: &Ctx, models: ModelData) -> Result<Self> {
 
 // 		let meshes = models
 // 			.into_iter()
@@ -1116,11 +1176,9 @@ impl Model {
 		return Self::from(ctx, Self::prepare_obj(obj)?);
 	}
 
-// 	pub fn from_obj_with_mtl(ctx: &Ctx, obj: &str, mtl: &str) -> Result<Self> {
-// 		return Self::from_tobj(ctx, tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
-// 			return tobj::load_mtl_buf(&mut Cursor::new(mtl));
-// 		}));
-// 	}
+	pub fn from_obj_mtl(ctx: &Ctx, obj: &str, mtl: &str) -> Result<Self> {
+		return Self::from(ctx, Self::prepare_obj_mtl(obj, mtl)?);
+	}
 
 }
 
@@ -1182,10 +1240,33 @@ impl Shape for FlagShape {
 			_ => {},
 		}
 
-		Self::Vertex::new(vec3!(p1.x, p1.y, 0.0), u1, vec3!(0, 0, -1), c).push(queue);
-		Self::Vertex::new(vec3!(p2.x, p2.y, 0.0), u2, vec3!(0, 0, -1), c).push(queue);
-		Self::Vertex::new(vec3!(p3.x, p3.y, 0.0), u3, vec3!(0, 0, -1), c).push(queue);
-		Self::Vertex::new(vec3!(p4.x, p4.y, 0.0), u4, vec3!(0, 0, -1), c).push(queue);
+		Vertex3D {
+			pos: vec3!(p1.x, p1.y, 0.0),
+			uv: u1,
+			normal: vec3!(0, 0, -1),
+			color: c,
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(p2.x, p2.y, 0.0),
+			uv: u2,
+			normal: vec3!(0, 0, -1),
+			color: c,
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(p3.x, p3.y, 0.0),
+			uv: u3,
+			normal: vec3!(0, 0, -1),
+			color: c,
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(p4.x, p4.y, 0.0),
+			uv: u4,
+			normal: vec3!(0, 0, -1),
+			color: c,
+		}.push(queue);
 
 	}
 
@@ -1204,14 +1285,61 @@ impl Shape for CubeShape {
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
 
-		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec2!(), vec3!(0.33, 0.33, -0.66), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec2!(), vec3!(-0.66, 0.66, -0.33), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec2!(), vec3!(-0.33, -0.33, -0.66), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec2!(), vec3!(0.66, -0.66, -0.33), color!(1, 1, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec2!(), vec3!(0.66, 0.66, 0.33), color!(1, 0, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec2!(), vec3!(-0.33, 0.33, 0.66), color!(0, 1, 0, 1)).push(queue);
-		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec2!(), vec3!(-0.66, -0.66, 0.33), color!(0, 0, 1, 1)).push(queue);
-		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec2!(), vec3!(0.33, -0.33, 0.66), color!(1, 1, 1, 1)).push(queue);
+		Vertex3D {
+			pos: vec3!(-0.5, -0.5, 0.5),
+			uv: vec2!(),
+			normal: vec3!(0.33, 0.33, -0.66),
+			color: color!(1, 0, 0, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(0.5, -0.5, 0.5),
+			uv: vec2!(),
+			normal: vec3!(-0.66, 0.66, -0.33),
+			color: color!(0, 1, 0, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(0.5, 0.5, 0.5),
+			uv: vec2!(),
+			normal: vec3!(-0.33, -0.33, -0.66),
+			color: color!(0, 0, 1, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(-0.5, 0.5, 0.5),
+			uv: vec2!(),
+			normal: vec3!(0.66, -0.66, -0.33),
+			color: color!(1, 1, 1, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(-0.5, -0.5, -0.5),
+			uv: vec2!(),
+			normal: vec3!(0.66, 0.66, 0.33),
+			color: color!(1, 0, 0, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(0.5, -0.5, -0.5),
+			uv: vec2!(),
+			normal: vec3!(-0.33, 0.33, 0.66),
+			color: color!(0, 1, 0, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(0.5, 0.5, -0.5),
+			uv: vec2!(),
+			normal: vec3!(-0.66, -0.66, 0.33),
+			color: color!(0, 0, 1, 1),
+		}.push(queue);
+
+		Vertex3D {
+			pos: vec3!(-0.5, 0.5, -0.5),
+			uv: vec2!(),
+			normal: vec3!(0.33, -0.33, 0.66),
+			color: color!(1, 1, 1, 1),
+		}.push(queue);
 
 // 		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(0.33, 0.33, -0.66), color!(1)).push(queue);
 // 		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(-0.66, 0.66, -0.33), color!(1)).push(queue);

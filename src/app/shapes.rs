@@ -333,7 +333,11 @@ impl Drawable for Polygon {
 
 			for (i, p) in pts.iter().enumerate() {
 
-				gfx::Vertex2D::new(ctx.transform.as_mat4() * *p, vec2!(0), color).push(&mut verts);
+				gfx::Vertex2D {
+					pos: ctx.transform.as_mat4() * *p,
+					uv: vec2!(0),
+					color: color,
+				}.push(&mut verts);
 
 				if i >= 2 {
 					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
@@ -442,8 +446,17 @@ impl Drawable for Gradient {
 
 			last_pos = Some(s.1);
 
-			Vertex2D::new(matrix * vec2!(-w / 2.0, -h / 2.0 + h * s.1), vec2!(0), s.0).push(&mut verts);
-			Vertex2D::new(matrix * vec2!(w / 2.0, -h / 2.0 + h * s.1), vec2!(0), s.0).push(&mut verts);
+			Vertex2D {
+				pos: matrix * vec2!(-w / 2.0, -h / 2.0 + h * s.1),
+				uv: vec2!(0),
+				color: s.0,
+			}.push(&mut verts);
+
+			Vertex2D {
+				pos: matrix * vec2!(w / 2.0, -h / 2.0 + h * s.1),
+				uv: vec2!(0),
+				color: s.0,
+			}.push(&mut verts);
 
 		}
 

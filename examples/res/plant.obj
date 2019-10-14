@@ -1,5 +1,6 @@
 # Blender v2.80 (sub 75) OBJ File: 'plant.blend'
 # www.blender.org
+mtllib plant.mtl
 o stem_stem_mesh
 v 0.694974 1.885025 0.432191
 v 0.692777 1.885259 0.434244
