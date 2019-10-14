@@ -754,17 +754,33 @@ impl<U: Uniform> Shader2D<U> {
 		};
 	}
 
-	pub fn effect(ctx: &Ctx, frag: &str) -> Result<Self> {
+	pub fn from_frag(ctx: &Ctx, frag: &str) -> Result<Self> {
 
-		let vert_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", res::DEFAULT_2D_VERT);
-		let frag_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
-
-		return Self::from_code(ctx, &vert_src, &frag_src);
+		return Self::from_vert_frag(
+			ctx,
+			res::DEFAULT_2D_VERT,
+			&frag,
+		);
 
 	}
 
-	pub fn from_code(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
-		return Ok(Self::from_handle(gl::Pipeline::new(&ctx.gl, vert, frag)?));
+	pub fn from_vert(ctx: &Ctx, vert: &str) -> Result<Self> {
+
+		return Self::from_vert_frag(
+			ctx,
+			&vert,
+			res::DEFAULT_2D_FRAG,
+		);
+
+	}
+
+	pub fn from_vert_frag(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
+
+		let vert_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
+		let frag_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
+
+		return Ok(Self::from_handle(gl::Pipeline::new(&ctx.gl, &vert_src, &frag_src)?));
+
 	}
 
 }
@@ -784,17 +800,33 @@ impl<U: Uniform> Shader3D<U> {
 		};
 	}
 
-	pub fn effect(ctx: &Ctx, frag: &str) -> Result<Self> {
+	pub fn from_frag(ctx: &Ctx, frag: &str) -> Result<Self> {
 
-		let vert_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", res::DEFAULT_3D_VERT);
-		let frag_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
-
-		return Self::from_code(ctx, &vert_src, &frag_src);
+		return Self::from_vert_frag(
+			ctx,
+			res::DEFAULT_3D_VERT,
+			&frag,
+		);
 
 	}
 
-	pub fn from_code(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
-		return Ok(Self::from_handle(gl::Pipeline::new(&ctx.gl, vert, frag)?));
+	pub fn from_vert(ctx: &Ctx, vert: &str) -> Result<Self> {
+
+		return Self::from_vert_frag(
+			ctx,
+			&vert,
+			res::DEFAULT_3D_FRAG,
+		);
+
+	}
+
+	pub fn from_vert_frag(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
+
+		let vert_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
+		let frag_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
+
+		return Ok(Self::from_handle(gl::Pipeline::new(&ctx.gl, &vert_src, &frag_src)?));
+
 	}
 
 }

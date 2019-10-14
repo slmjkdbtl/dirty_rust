@@ -4,18 +4,18 @@ uniform float size;
 uniform vec2 resolution;
 
 // TODO: this is causing some extra pixels to appear at screen edge
-vec4 frag(sampler2D tex, vec2 uv) {
+vec4 frag() {
 
 	if (size <= 0.0) {
-		return texture2D(tex, uv);
+		return texture2D(u_tex, v_uv);
 	}
 
 	vec2 nsize = vec2(size / resolution.x, size / resolution.y);
-	float x = floor(uv.x / nsize.x + 0.5);
-	float y = floor(uv.y / nsize.y + 0.5);
-	vec4 c = texture2D(tex, vec2(x, y) * nsize);
+	float x = floor(v_uv.x / nsize.x + 0.5);
+	float y = floor(v_uv.y / nsize.y + 0.5);
+	vec4 c = texture2D(u_tex, vec2(x, y) * nsize);
 
-	return c;
+	return c * v_color;
 
 }
 

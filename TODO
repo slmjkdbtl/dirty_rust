@@ -52,6 +52,7 @@
 - [misc] old example
 - [app] quit handler
 - [gfx] obj model flipped
+- [window] get mouse pos at first frame
 
 == DONE
 - [http] refactor http

@@ -45,19 +45,19 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/dedede.png"))?;
-		let pixelate = gfx::Shader::effect(ctx, include_str!("res/pix.frag"))?;
+		let pixelate = gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?;
 
 		pixelate.send("size", 32.0);
 		pixelate.send("dimension", vec2!(tex.width(), tex.height()));
 
-		let blur = gfx::Shader::effect(ctx, include_str!("res/blur.frag"))?;
+		let blur = gfx::Shader::from_frag(ctx, include_str!("res/blur.frag"))?;
 
 		blur.send("radius", 24.0);
 		blur.send("dir", vec2!(1, 0));
 		blur.send("dimension", vec2!(tex.width(), tex.height()));
 
-		let grayscale = gfx::Shader::effect(ctx, include_str!("res/grayscale.frag"))?;
-		let invert = gfx::Shader::effect(ctx, include_str!("res/invert.frag"))?;
+		let grayscale = gfx::Shader::from_frag(ctx, include_str!("res/grayscale.frag"))?;
+		let invert = gfx::Shader::from_frag(ctx, include_str!("res/invert.frag"))?;
 
 // 		let effects = vec![
 // 			Effect::new("pixlate", pixelate, Some(Param::new("size", 32.0))),

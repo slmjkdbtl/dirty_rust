@@ -5,11 +5,11 @@ uniform vec2 resolution;
 uniform vec4 filter;
 uniform vec4 color;
 
-vec4 frag(sampler2D tex, vec2 uv) {
+vec4 frag() {
 
 	float px = size / resolution.x;
 	float py = size / resolution.y;
-	vec4 oc = texture2D(tex, uv);
+	vec4 oc = texture2D(u_tex, v_uv);
 
 	if (oc.a == 0.0) {
 
@@ -21,15 +21,15 @@ vec4 frag(sampler2D tex, vec2 uv) {
 		pts[3] = vec2(0.0, py);
 
 		for (int i = 0; i < 4; i++) {
-			vec2 pt = clamp(uv + pts[i], vec2(0.0), vec2(1.0));
-			if (texture2D(tex, pt).a == 1.0) {
+			vec2 pt = clamp(v_uv + pts[i], vec2(0.0), vec2(1.0));
+			if (texture2D(u_tex, pt).a == 1.0) {
 				return color;
 			}
 		}
 
 	}
 
-	return oc * filter;
+	return oc * filter * v_color;
 
 }
 
