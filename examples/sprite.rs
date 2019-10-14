@@ -81,7 +81,7 @@ impl Sprite {
 impl gfx::Drawable for &Sprite {
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 		return ctx.draw(
-			&shapes::sprite(&self.tex)
+			shapes::sprite(&self.tex)
 				.quad(self.frames[self.cur_frame])
 		);
 	}

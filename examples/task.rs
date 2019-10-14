@@ -61,9 +61,9 @@ impl app::State for Game {
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
 		if let Some(tex) = &self.tex {
-			ctx.draw(&shapes::sprite(tex))?;
+			ctx.draw(shapes::sprite(tex))?;
 		} else {
-			ctx.draw(&shapes::text("loading"))?;
+			ctx.draw(shapes::text("loading"))?;
 		}
 
 		return Ok(());

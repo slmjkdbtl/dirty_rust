@@ -50,6 +50,8 @@
 - [http] HTTP/1.1
 - [window] stdweb & glow
 - [misc] mun bindings
+- [misc] old example
+- [app] quit handler
 
 == DONE
 - [http] refactor http

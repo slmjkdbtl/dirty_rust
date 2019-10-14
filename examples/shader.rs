@@ -1,23 +1,36 @@
 // wengwengweng
 
 use dirty::*;
+use dirty::math::*;
 use dirty::app::*;
-use gfx::Origin;
 use input::Key;
 
 struct Game {
-	shader: gfx::Shader,
+	shader: gfx::Shader2D<TwistUniform>,
+}
+
+#[derive(Clone)]
+struct TwistUniform {
+	resolution: Vec2,
+	mouse: Vec2,
+	time: f32,
+}
+
+impl gfx::Uniform for TwistUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return vec![
+			("resolution", self.resolution.into()),
+			("mouse", self.mouse.into()),
+			("time", self.time.into()),
+		];
+	}
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let shader = gfx::Shader::effect(ctx, include_str!("res/twist.frag"))?;
-
-		shader.send("time", ctx.time());
-		shader.send("mouse", vec2!(ctx.mouse_pos().x, ctx.mouse_pos().y));
-		shader.send("resolution", vec2!(ctx.width(), ctx.height()));
+		let shader = gfx::Shader2D::effect(ctx, include_str!("res/twist.frag"))?;
 
 		return Ok(Self {
 			shader: shader,
@@ -25,16 +38,16 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.quit();
 				}
-				if *k == Key::F {
+				if k == Key::F {
 					ctx.toggle_fullscreen();
 				}
 			},
@@ -45,15 +58,26 @@ impl app::State for Game {
 
 	}
 
-	fn run(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_with(&self.shader, |ctx| {
-			ctx.draw(&shapes::rect(ctx.coord(Origin::TopLeft) + vec2!(48), ctx.coord(Origin::BottomRight) - vec2!(48)))?;
+		ctx.draw_2d_with(&self.shader, &TwistUniform {
+
+			resolution: vec2!(ctx.width(), ctx.height()),
+			time: ctx.time().into(),
+			mouse: ctx.mouse_pos().normalize(),
+
+		}, |ctx| {
+
+			ctx.draw(
+				shapes::rect(
+					ctx.coord(gfx::Origin::TopLeft) + vec2!(48),
+					ctx.coord(gfx::Origin::BottomRight) - vec2!(48)
+				)
+			)?;
+
 			return Ok(());
-		})?;
 
-		self.shader.send("time", ctx.time());
-		self.shader.send("mouse", vec2!(ctx.mouse_pos().x, ctx.mouse_pos().y) / 640.0);
+		})?;
 
 		return Ok(());
 

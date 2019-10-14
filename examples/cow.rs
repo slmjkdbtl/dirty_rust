@@ -23,8 +23,8 @@ struct PixUniform {
 impl gfx::Uniform for PixUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return vec![
-			("resolution", gfx::UniformType::F2(self.resolution.as_arr())),
-			("size", gfx::UniformType::F1(self.size)),
+			("resolution", self.resolution.into()),
+			("size", self.size.into()),
 		];
 	}
 }
@@ -127,7 +127,7 @@ impl app::State for Game {
 				ctx.push(&gfx::t()
 					.rotate_y(ctx.time())
 				, |ctx| {
-					ctx.draw(&shapes::model(&self.model))?;
+					ctx.draw(shapes::model(&self.model))?;
 					return Ok(());
 				})?;
 
@@ -144,13 +144,13 @@ impl app::State for Game {
 				resolution: vec2!(ctx.width(), ctx.height()),
 				size: 6.0,
 			}, |ctx| {
-				ctx.draw(&shapes::canvas(&self.canvas))?;
+				ctx.draw(shapes::canvas(&self.canvas))?;
 				return Ok(());
 			})?;
 			return Ok(());
 		})?;
 
-		ctx.draw(&shapes::canvas(&self.canvas))?;
+		ctx.draw(shapes::canvas(&self.canvas))?;
 
 		return Ok(());
 

@@ -45,19 +45,8 @@ fn get_device() -> Result<rodio::Device> {
 		.ok_or(Error::Audio("failed to get output device".into()));
 }
 
-/// play a sound and return a track
-pub fn track(sound: &Sound) -> Result<Track> {
-
-	let device = get_device()?;
-	let sink = Sink::new(&device);
-
-	sink.append(sound.apply());
-	sink.pause();
-
-	return Ok(Track {
-		sink: sink,
-	});
-
+pub fn play(s: &Sound) -> Result<()> {
+	return s.play();
 }
 
 impl Default for Effect {
@@ -179,6 +168,24 @@ impl Sound {
 
 impl Track {
 
+	pub fn from(sound: Sound) -> Result<Self> {
+
+		let device = get_device()?;
+		let sink = Sink::new(&device);
+
+		sink.append(sound.apply());
+		sink.pause();
+
+		return Ok(Self {
+			sink,
+		});
+
+	}
+
+	pub fn is_playing(&self) -> bool {
+		return !self.sink.is_paused();
+	}
+
 	/// pause a track
 	pub fn pause(&self) {
 		self.sink.pause();
@@ -187,11 +194,6 @@ impl Track {
 	/// resume a track
 	pub fn play(&self) {
 		self.sink.play();
-	}
-
-	/// drop a track
-	pub fn drop(self) {
-		self.sink.detach();
 	}
 
 }
