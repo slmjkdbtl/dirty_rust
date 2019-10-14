@@ -2,26 +2,48 @@
 
 use dirty::*;
 use dirty::app::*;
-use dirty::img::Image;
-use dirty::task::Task;
+use dirty::math::*;
+use dirty::task::TaskPool;
 use input::Key;
 
+const THREAD_COUNT: u32 = 1;
+const LOAD_COUNT: usize = 120;
+
+struct Teapot {
+	transform: gfx::Transform,
+	model: gfx::Model,
+}
+
 struct Game {
-	task: Task<Result<Image>>,
-	tex: Option<gfx::Texture>,
+	tasks: TaskPool<Result<gfx::ModelLoad>>,
+	teapots: Vec<Teapot>,
+}
+
+impl Game {
+	fn load_more(&mut self) {
+		for _ in 0..LOAD_COUNT {
+			self.tasks.exec(|| {
+				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?);
+			});
+		}
+	}
 }
 
 impl app::State for Game {
 
 	fn init(_: &mut app::Ctx) -> Result<Self> {
 
-		let task = Task::exec(|| {
-			return Image::from_bytes(&fs::read("examples/res/dedede.png")?);
-		});
+		let mut tasks = TaskPool::new(THREAD_COUNT);
+
+		for _ in 0..LOAD_COUNT {
+			tasks.exec(|| {
+				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?);
+			});
+		}
 
 		return Ok(Self {
-			task: task,
-			tex: None,
+			tasks: tasks,
+			teapots: vec![],
 		});
 
 	}
@@ -35,8 +57,8 @@ impl app::State for Game {
 				if k == Key::Esc {
 					ctx.quit();
 				}
-				if k == Key::F {
-					ctx.toggle_fullscreen();
+				if k == Key::Space {
+					self.load_more();
 				}
 			},
 			_ => {},
@@ -48,10 +70,17 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		if self.tex.is_none() {
-			if let Some(data) = self.task.poll() {
-				self.tex = Some(gfx::Texture::from_img(ctx, data?)?);
-			}
+		for m in self.tasks.poll() {
+			let model = m?;
+			self.teapots.push(Teapot {
+				transform: gfx::t()
+					.translate_3d(vec3!(rand!(-320, 320), rand!(-320, 320), rand!(240, 640)))
+					.rotate_x(rand!(0, 360).to_radians())
+					.rotate_y(rand!(0, 360).to_radians())
+					.rotate_z(rand!(0, 360).to_radians())
+					,
+				model: gfx::Model::from(ctx, model)?,
+			});
 		}
 
 		return Ok(());
@@ -60,11 +89,22 @@ impl app::State for Game {
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-		if let Some(tex) = &self.tex {
-			ctx.draw(shapes::sprite(tex))?;
-		} else {
-			ctx.draw(shapes::text("loading"))?;
+		for t in &self.teapots {
+			ctx.push(&t.transform, |ctx| {
+				ctx.draw(shapes::model(&t.model))?;
+				return Ok(());
+			})?;
 		}
+
+		ctx.push(&gfx::t()
+			.translate(vec2!(24))
+		, |ctx| {
+			ctx.draw(
+				shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total()))
+					.align(gfx::Origin::TopLeft)
+			)?;
+			return Ok(());
+		})?;
 
 		return Ok(());
 
@@ -75,6 +115,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
+		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}

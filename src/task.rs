@@ -10,6 +10,8 @@ pub struct TaskPool<T: Send + 'static> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
 	max: u32,
+	completed: usize,
+	total: usize,
 }
 
 impl<T: Send + 'static> TaskPool<T> {
@@ -19,6 +21,8 @@ impl<T: Send + 'static> TaskPool<T> {
 			queue: VecDeque::new(),
 			active: vec![],
 			max: max,
+			completed: 0,
+			total: 0,
 		};
 	}
 
@@ -26,6 +30,7 @@ impl<T: Send + 'static> TaskPool<T> {
 
 		self.queue.push_back(Task::new(f));
 		self.adjust();
+		self.total += 1;
 
 	}
 
@@ -48,6 +53,7 @@ impl<T: Send + 'static> TaskPool<T> {
 
 		for task in &mut self.active {
 			if let Some(data) = task.poll() {
+				self.completed += 1;
 				basket.push(data);
 			}
 		}
@@ -58,6 +64,10 @@ impl<T: Send + 'static> TaskPool<T> {
 
 	}
 
+	pub fn clear_queue(&mut self) {
+		self.queue.clear();
+	}
+
 	pub fn queue_count(&self) -> usize {
 		return self.queue.len();
 	}
@@ -66,8 +76,12 @@ impl<T: Send + 'static> TaskPool<T> {
 		return self.active.len();
 	}
 
-	pub fn clear_queue(&mut self) {
-		self.queue.clear();
+	pub fn completed(&self) -> usize {
+		return self.completed;
+	}
+
+	pub fn total(&self) -> usize {
+		return self.total;
 	}
 
 }
