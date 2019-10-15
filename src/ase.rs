@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use aseprite::SpritesheetData;
 
 use crate::math::*;
-use crate::json;
 use crate::Result;
 
 ///! Load Aseprite Spritesheets
@@ -47,6 +46,7 @@ pub struct SpriteData {
 
 impl SpriteData {
 
+	#[cfg(feature = "json")]
 	pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
 
 		#[cfg(feature = "fs")]
@@ -61,6 +61,8 @@ impl SpriteData {
 
 	#[cfg(feature = "json")]
 	pub fn from_json(json: &str) -> Result<Self> {
+
+		use crate::codec::json;
 
 		let mut frames = vec![];
 		let mut anims = HashMap::new();
