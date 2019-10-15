@@ -97,6 +97,12 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
+	pub fn drop(&self) {
+		unsafe {
+			self.ctx.delete_buffer(self.id);
+		}
+	}
+
 }
 
 impl<V: VertexLayout> PartialEq for VertexBuffer<V> {

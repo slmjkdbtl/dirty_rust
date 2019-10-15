@@ -53,6 +53,9 @@
 - [app] quit handler
 - [gfx] obj model flipped
 - [window] get mouse pos at first frame
+- [gfx] scale modes
+- [gfx] npatch
+- [gfx] 3d ortho
 
 == DONE
 - [http] refactor http

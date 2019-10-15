@@ -855,7 +855,12 @@ fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u32>) -> Vec
 
 fn arc_verts(radius: f32, start: f32, end: f32, segments: Option<u32>) -> Vec<Vec2> {
 
-	assert!(end > start, "end angle should be larger than start");
+	let (start, end) = if end < start {
+		(end, start)
+	} else {
+		(start, end)
+	};
+
 	let segments = segments.unwrap_or(f32::ceil(circle_segments(radius) as f32 * (end - start) / (PI * 2.0)) as u32);
 	let segments = segments as usize;
 	let step = (end - start) / segments as f32;
@@ -880,7 +885,14 @@ impl Drawable for Circle {
 			return Ok(());
 		}
 
-		let pts = arc_verts(self.radius, self.range.0, self.range.1, self.segments);
+		let p1 = self.range.0.max(0.0).min(PI * 2.0);
+		let p2 = self.range.1.max(0.0).min(PI * 2.0);
+
+		let mut pts = arc_verts(self.radius, p1, p2, self.segments);
+
+		if p1 != 0.0 || p2 != PI * 2.0 {
+			pts.push(self.center);
+		}
 
 		ctx.push(&gfx::t()
 			.translate(self.center)

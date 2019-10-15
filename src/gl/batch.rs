@@ -168,5 +168,14 @@ impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedMesh<
 		return self.draw_count;
 	}
 
+	pub fn drop(&self) {
+
+		self.vbuf.drop();
+		self.ibuf.drop();
+		#[cfg(feature="gl3")]
+		self.vao.drop();
+
+	}
+
 }
 
