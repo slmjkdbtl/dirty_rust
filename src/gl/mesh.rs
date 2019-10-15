@@ -64,5 +64,14 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
+	pub fn drop(&self) {
+
+		self.vbuf.drop();
+		self.ibuf.drop();
+		#[cfg(feature="gl3")]
+		self.vao.drop();
+
+	}
+
 }
 

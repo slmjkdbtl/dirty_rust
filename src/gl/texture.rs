@@ -170,6 +170,12 @@ impl Texture {
 
 	}
 
+	pub fn drop(&self) {
+		unsafe {
+			self.ctx.delete_texture(self.id);
+		}
+	}
+
 }
 
 impl PartialEq for Texture {

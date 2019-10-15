@@ -513,7 +513,13 @@ impl Shape for QuadShape {
 
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug)]
+pub enum ScaleMode {
+	Letterbox,
+	Stretch,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Flip {
 	None,
 	X,
@@ -521,7 +527,7 @@ pub enum Flip {
 	XY,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub enum Origin {
 	TopLeft,
 	Top,

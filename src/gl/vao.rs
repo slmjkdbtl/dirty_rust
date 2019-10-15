@@ -97,14 +97,12 @@ impl VertexArray {
 
 	}
 
-}
-
-impl Drop for VertexArray {
-	fn drop(&mut self) {
+	pub fn drop(&self) {
 		unsafe {
 			self.ctx.delete_vertex_array(self.id);
 		}
 	}
+
 }
 
 impl PartialEq for VertexArray {

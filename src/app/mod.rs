@@ -344,13 +344,9 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 		let start_time = Instant::now();
 
-		for e in input::poll(&mut ctx, &mut events_loop)? {
-			s.event(&mut ctx, e)?;
-		}
-
-		gfx::begin(&mut ctx);
-
+		input::poll(&mut ctx, &mut events_loop, &mut s)?;
 		s.update(&mut ctx)?;
+		gfx::begin(&mut ctx);
 		s.draw(&mut ctx)?;
 		gfx::end(&mut ctx);
 
@@ -568,6 +564,11 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn scale_mode(mut self, m: gfx::ScaleMode) -> Self {
+		self.conf.scale_mode = m;
+		return self;
+	}
+
 }
 
 #[derive(Clone, Debug)]
@@ -592,6 +593,7 @@ pub struct Conf {
 	pub origin: gfx::Origin,
 	pub quad_origin: gfx::Origin,
 	pub texture_filter: gfx::FilterMode,
+	pub scale_mode: gfx::ScaleMode,
 }
 
 impl Conf {
@@ -631,6 +633,7 @@ impl Default for Conf {
 			origin: gfx::Origin::Center,
 			quad_origin: gfx::Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,
+			scale_mode: gfx::ScaleMode::Letterbox,
 		};
 	}
 

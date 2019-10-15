@@ -49,6 +49,8 @@ impl app::State for Game {
 
 fn main() {
 	if let Err(err) = app::launcher()
+		.resizable(true)
+		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Game>() {
 		println!("{}", err);
 	}

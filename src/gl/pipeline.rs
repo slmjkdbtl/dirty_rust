@@ -185,6 +185,12 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
+	pub fn drop(&self) {
+		unsafe {
+			self.ctx.delete_program(self.program_id);
+		}
+	}
+
 }
 
 impl<V: VertexLayout, U: UniformLayout> PartialEq for Pipeline<V, U> {
