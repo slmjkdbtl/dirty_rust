@@ -2,9 +2,11 @@
 
 use dirty::*;
 use dirty::app::*;
-use dirty::math::*;
 use dirty::task::TaskPool;
 use input::Key;
+
+mod pix;
+use pix::*;
 
 const THREAD_COUNT: u32 = 1;
 const LOAD_COUNT: usize = 120;
@@ -18,6 +20,7 @@ struct Game {
 	tasks: TaskPool<Result<gfx::ModelData>>,
 	teapots: Vec<Teapot>,
 	shader: gfx::Shader3D<()>,
+	pix_effect: PixEffect,
 }
 
 impl Game {
@@ -46,6 +49,7 @@ impl app::State for Game {
 			tasks: tasks,
 			teapots: vec![],
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
+			pix_effect: PixEffect::new(ctx)?,
 		});
 
 	}
@@ -85,29 +89,42 @@ impl app::State for Game {
 			});
 		}
 
+		for t in &mut self.teapots {
+			t.transform = t.transform
+				.rotate_x(ctx.dt())
+				.rotate_y(ctx.dt())
+				.rotate_z(ctx.dt())
+				;
+		}
+
+		self.pix_effect.render(ctx, |ctx| {
+
+			ctx.clear_ex(gfx::Surface::Depth);
+
+			for t in &self.teapots {
+				ctx.push(&t.transform, |ctx| {
+					ctx.draw_3d_with(&self.shader, &(), |ctx| {
+						ctx.draw(shapes::model(&t.model))?;
+						return Ok(());
+					})?;
+					return Ok(());
+				})?;
+			}
+
+			return Ok(());
+
+		})?;
+
 		return Ok(());
 
 	}
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-		for t in &self.teapots {
-
-			ctx.push(&t.transform, |ctx| {
-
-				ctx.draw_3d_with(&self.shader, &(), |ctx| {
-
-					ctx.draw(shapes::model(&t.model))?;
-
-					return Ok(());
-
-				})?;
-
-				return Ok(());
-
-			})?;
-
-		}
+		self.pix_effect.draw(ctx, &PixUniform {
+			resolution: vec2!(ctx.width(), ctx.height()),
+			size: 6.0,
+		})?;
 
 		ctx.push(&gfx::t()
 			.translate(vec2!(32))
@@ -129,6 +146,7 @@ fn main() {
 
 	if let Err(err) = app::launcher()
 		.origin(gfx::Origin::TopLeft)
+		.quad_origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}

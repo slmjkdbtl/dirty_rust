@@ -5,28 +5,15 @@ use dirty::app::*;
 use dirty::math::*;
 use input::Key;
 
+mod pix;
+use pix::*;
+
 struct Game {
 	model: gfx::Model,
-	pix_shader: gfx::Shader2D<PixUniform>,
-	canvas: gfx::Canvas,
+	pix_effect: PixEffect,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
-}
-
-#[derive(Clone)]
-struct PixUniform {
-	resolution: Vec2,
-	size: f32,
-}
-
-impl gfx::Uniform for PixUniform {
-	fn values(&self) -> gfx::UniformValues {
-		return vec![
-			("resolution", self.resolution.into()),
-			("size", self.size.into()),
-		];
-	}
 }
 
 impl app::State for Game {
@@ -35,8 +22,7 @@ impl app::State for Game {
 
 		return Ok(Self {
 			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
-			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			pix_effect: PixEffect::new(ctx)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
 			eye_speed: 0.16,
@@ -112,13 +98,7 @@ impl app::State for Game {
 			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
-		return Ok(());
-
-	}
-
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
-
-		ctx.draw_on(&self.canvas, |ctx| {
+		self.pix_effect.render(ctx, |ctx| {
 
 			ctx.clear_ex(gfx::Surface::Depth);
 
@@ -139,18 +119,16 @@ impl app::State for Game {
 
 		})?;
 
-		ctx.draw_on(&self.canvas, |ctx| {
-			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-				resolution: vec2!(ctx.width(), ctx.height()),
-				size: 6.0,
-			}, |ctx| {
-				ctx.draw(shapes::canvas(&self.canvas))?;
-				return Ok(());
-			})?;
-			return Ok(());
-		})?;
+		return Ok(());
 
-		ctx.draw(shapes::canvas(&self.canvas))?;
+	}
+
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+
+		self.pix_effect.draw(ctx, &PixUniform {
+			resolution: vec2!(ctx.width(), ctx.height()),
+			size: 6.0,
+		})?;
 
 		return Ok(());
 
