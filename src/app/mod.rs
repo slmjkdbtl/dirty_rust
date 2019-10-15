@@ -554,11 +554,6 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn quad_origin(mut self, o: gfx::Origin) -> Self {
-		self.conf.quad_origin = o;
-		return self;
-	}
-
 	pub fn texture_filter(mut self, f: gfx::FilterMode) -> Self {
 		self.conf.texture_filter = f;
 		return self;
@@ -591,7 +586,6 @@ pub struct Conf {
 	pub fps_cap: Option<u16>,
 	pub clear_color: Color,
 	pub origin: gfx::Origin,
-	pub quad_origin: gfx::Origin,
 	pub texture_filter: gfx::FilterMode,
 	pub scale_mode: gfx::ScaleMode,
 }
@@ -631,7 +625,6 @@ impl Default for Conf {
 			fps_cap: Some(60),
 			clear_color: color!(0, 0, 0, 1),
 			origin: gfx::Origin::Center,
-			quad_origin: gfx::Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,
 			scale_mode: gfx::ScaleMode::Letterbox,
 		};

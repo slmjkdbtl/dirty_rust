@@ -428,20 +428,7 @@ pub(super) struct QuadShape {
 	pub transform: Mat4,
 	pub quad: Quad,
 	pub color: Color,
-	pub origin: Origin,
 	pub flip: Flip,
-}
-
-impl QuadShape {
-	pub fn new(t: Mat4, q: Quad, c: Color, o: Origin, f: Flip) -> Self {
-		return Self {
-			transform: t,
-			quad: q,
-			color: c,
-			origin: o,
-			flip: f,
-		};
-	}
 }
 
 impl Shape for QuadShape {
@@ -454,11 +441,10 @@ impl Shape for QuadShape {
 		let t = self.transform;
 		let q = self.quad;
 		let c = self.color;
-		let offset = self.origin.as_pt() * 0.5;
-		let p1 = t * (vec2!(-0.5, 0.5) - offset);
-		let p2 = t * (vec2!(0.5, 0.5) - offset);
-		let p3 = t * (vec2!(0.5, -0.5) - offset);
-		let p4 = t * (vec2!(-0.5, -0.5) - offset);
+		let p1 = t * (vec2!(-0.5, 0.5));
+		let p2 = t * (vec2!(0.5, 0.5));
+		let p3 = t * (vec2!(0.5, -0.5));
+		let p4 = t * (vec2!(-0.5, -0.5));
 
 		let mut u1 = vec2!(q.x, q.y + q.h);
 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
@@ -1262,20 +1248,7 @@ pub(super) struct FlagShape {
 	pub transform: Mat4,
 	pub quad: Quad,
 	pub color: Color,
-	pub origin: Origin,
 	pub flip: Flip,
-}
-
-impl FlagShape {
-	pub fn new(t: Mat4, q: Quad, c: Color, o: Origin, f: Flip) -> Self {
-		return Self {
-			transform: t,
-			quad: q,
-			color: c,
-			origin: o,
-			flip: f,
-		};
-	}
 }
 
 impl Shape for FlagShape {
@@ -1288,11 +1261,10 @@ impl Shape for FlagShape {
 		let t = self.transform;
 		let q = self.quad;
 		let c = self.color;
-		let offset = self.origin.as_pt() * 0.5;
-		let p1 = t * (vec2!(-0.5, 0.5) - offset);
-		let p2 = t * (vec2!(0.5, 0.5) - offset);
-		let p3 = t * (vec2!(0.5, -0.5) - offset);
-		let p4 = t * (vec2!(-0.5, -0.5) - offset);
+		let p1 = t * (vec2!(-0.5, 0.5));
+		let p2 = t * (vec2!(0.5, 0.5));
+		let p3 = t * (vec2!(0.5, -0.5));
+		let p4 = t * (vec2!(-0.5, -0.5));
 
 		let mut u1 = vec2!(q.x, q.y + q.h);
 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);

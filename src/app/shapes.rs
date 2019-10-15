@@ -10,7 +10,7 @@ use gl::VertexLayout;
 pub struct Sprite<'a> {
 	tex: &'a gfx::Texture,
 	quad: Quad,
-	offset: Vec2,
+	offset: Option<Vec2>,
 	flip: gfx::Flip,
 	color: Color,
 }
@@ -29,7 +29,7 @@ impl<'a> Sprite<'a> {
 		return self;
 	}
 	pub fn offset(mut self, offset: Vec2) -> Self {
-		self.offset = offset;
+		self.offset = Some(offset);
 		return self;
 	}
 	pub fn flip(mut self, flip: gfx::Flip) -> Self {
@@ -43,7 +43,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 		tex: tex,
 		quad: quad!(0, 0, 1, 1),
 		color: color!(1),
-		offset: vec2!(0),
+		offset: None,
 		flip: gfx::Flip::None,
 	};
 }
@@ -53,14 +53,20 @@ impl<'a> Drawable for Sprite<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
+		let offset = self.offset.unwrap_or(ctx.conf.origin.as_pt());
 
 		// TODO: extremely slow
 		let t = ctx.transform
 			.scale(scale)
-			.translate(self.offset * -0.5)
+			.translate(offset * -0.5)
 			;
 
-		let shape = gfx::QuadShape::new(t.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
+		let shape = gfx::QuadShape {
+			transform: t.as_mat4(),
+			quad: self.quad,
+			color: self.color,
+			flip: self.flip,
+		};
 
 		let uniform = gfx::Uniform2D {
 			proj: ctx.proj_2d,
@@ -1084,7 +1090,12 @@ impl<'a> Drawable for Sprite3D<'a> {
 			.translate_3d(vec3!(offset.x, offset.y, 0.0))
 		, |ctx| {
 
-			let shape = gfx::FlagShape::new(ctx.transform.as_mat4(), self.quad, self.color, ctx.conf.quad_origin, self.flip);
+			let shape = gfx::FlagShape {
+				transform: ctx.transform.as_mat4(),
+				quad: self.quad,
+				color: self.color,
+				flip: self.flip,
+			};
 
 			ctx.renderer_3d.push_shape(shape, &ctx.cur_pipeline_3d, &gfx::Uniform3D {
 				proj: ctx.proj_3d,
