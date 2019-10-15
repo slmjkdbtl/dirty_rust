@@ -1330,67 +1330,58 @@ impl Shape for CubeShape {
 		Vertex3D {
 			pos: vec3!(-0.5, -0.5, 0.5),
 			uv: vec2!(),
-			normal: vec3!(0.33, 0.33, -0.66),
+			normal: vec3!(-0.41, -0.41, 0.82),
 			color: color!(1, 0, 0, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(0.5, -0.5, 0.5),
 			uv: vec2!(),
-			normal: vec3!(-0.66, 0.66, -0.33),
+			normal: vec3!(0.67, -0.67, 0.33),
 			color: color!(0, 1, 0, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(0.5, 0.5, 0.5),
 			uv: vec2!(),
-			normal: vec3!(-0.33, -0.33, -0.66),
+			normal: vec3!(0.41, 0.41, 0.82),
 			color: color!(0, 0, 1, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(-0.5, 0.5, 0.5),
 			uv: vec2!(),
-			normal: vec3!(0.66, -0.66, -0.33),
+			normal: vec3!(-0.67, 0.67, 0.33),
 			color: color!(1, 1, 1, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(-0.5, -0.5, -0.5),
 			uv: vec2!(),
-			normal: vec3!(0.66, 0.66, 0.33),
+			normal: vec3!(-0.67, -0.67, -0.33),
 			color: color!(1, 0, 0, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(0.5, -0.5, -0.5),
 			uv: vec2!(),
-			normal: vec3!(-0.33, 0.33, 0.66),
+			normal: vec3!(0.41, -0.41, -0.82),
 			color: color!(0, 1, 0, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(0.5, 0.5, -0.5),
 			uv: vec2!(),
-			normal: vec3!(-0.66, -0.66, 0.33),
+			normal: vec3!(0.67, 0.67, -0.33),
 			color: color!(0, 0, 1, 1),
 		}.push(queue);
 
 		Vertex3D {
 			pos: vec3!(-0.5, 0.5, -0.5),
 			uv: vec2!(),
-			normal: vec3!(0.33, -0.33, 0.66),
+			normal: vec3!(-0.41, 0.41, -0.82),
 			color: color!(1, 1, 1, 1),
 		}.push(queue);
-
-// 		Self::Vertex::new(vec3!(-0.5, -0.5, 0.5), vec3!(0.33, 0.33, -0.66), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(0.5, -0.5, 0.5), vec3!(-0.66, 0.66, -0.33), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(0.5, 0.5, 0.5), vec3!(-0.33, -0.33, -0.66), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(-0.5, 0.5, 0.5), vec3!(0.66, -0.66, -0.33), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(-0.5, -0.5, -0.5), vec3!(0.66, 0.66, 0.33), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(0.5, -0.5, -0.5), vec3!(-0.33, 0.33, 0.66), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(0.5, 0.5, -0.5), vec3!(-0.66, -0.66, 0.33), color!(1)).push(queue);
-// 		Self::Vertex::new(vec3!(-0.5, 0.5, -0.5), vec3!(0.33, -0.33, 0.66), color!(1)).push(queue);
 
 	}
 
