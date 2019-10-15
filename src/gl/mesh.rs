@@ -8,7 +8,7 @@ use crate::Result;
 pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 
 	vbuf: VertexBuffer<V>,
-	ibuf: IndexBuffer,
+	ibuf: Option<IndexBuffer>,
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	count: usize,
@@ -19,23 +19,37 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 
 impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
-	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
+	pub fn new_no_index(device: &Device, verts: &[f32]) -> Result<Self> {
 
 		let vbuf = VertexBuffer::<V>::from(&device, &verts)?;
-		let ibuf = IndexBuffer::from(&device, &indices)?;
 
 		#[cfg(feature="gl3")]
-		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
+		let vao = VertexArray::from(&device, &vbuf, None)?;
 
 		return Ok(Self {
 			vbuf: vbuf,
-			ibuf: ibuf,
+			ibuf: None,
 			#[cfg(feature="gl3")]
 			vao: vao,
-			count: indices.len(),
+			count: verts.len(),
 			prim: Primitive::Triangle,
 			uniform_layout: PhantomData,
 		});
+
+	}
+
+	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
+
+		let mut mesh = Self::new_no_index(device, verts)?;
+		let ibuf = IndexBuffer::from(&device, &indices)?;
+
+		#[cfg(feature="gl3")]
+		mesh.vao.bind_ibuf(&ibuf);
+
+		mesh.count = indices.len();
+		mesh.ibuf = Some(ibuf);
+
+		return Ok(mesh);
 
 	}
 
@@ -44,7 +58,11 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 		let mut verts = Vec::with_capacity(S::COUNT * S::Vertex::STRIDE);
 		shape.vertices(&mut verts);
 
-		return Self::new(device, &verts, &S::indices());
+		if let Some(indices) = S::indices() {
+			return Self::new(device, &verts, indices);
+		} else {
+			return Self::new_no_index(device, &verts);
+		}
 
 	}
 
@@ -56,7 +74,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 			#[cfg(not(feature="gl3"))]
 			Some(&self.vbuf),
 			#[cfg(not(feature="gl3"))]
-			Some(&self.ibuf),
+			self.ibuf.as_ref(),
 			uniforms,
 			self.count as u32,
 			self.prim,
@@ -67,7 +85,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 	pub fn drop(&self) {
 
 		self.vbuf.drop();
-		self.ibuf.drop();
+		self.ibuf.as_ref().map(|i| i.drop());
 		#[cfg(feature="gl3")]
 		self.vao.drop();
 

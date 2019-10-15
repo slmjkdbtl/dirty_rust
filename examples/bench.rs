@@ -54,7 +54,7 @@ impl app::State for Game {
 
 		for _ in 0..self.count {
 			ctx.push(&gfx::t()
-				.translate(vec2!(rand!(-w, w) * 0.5, rand!(-h, h) * 0.5))
+				.translate(vec2!(rand!(-w, w) as f32 * 0.5, rand!(-h, h) as f32 * 0.5))
 			, |ctx| {
 				ctx.draw(shapes::sprite(&self.tex))?;
 				return Ok(());

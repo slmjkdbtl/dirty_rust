@@ -507,8 +507,8 @@ impl Shape for QuadShape {
 
 	}
 
-	fn indices() -> &'static [u32] {
-		return &[0, 1, 3, 1, 2, 3];
+	fn indices() -> Option<&'static [u32]> {
+		return Some(&[0, 1, 3, 1, 2, 3]);
 	}
 
 }
@@ -1053,6 +1053,33 @@ pub enum NormalMode {
 	Surface,
 }
 
+// TODO
+fn gen_surface_normals(pos: &[f32], indices: &[u32]) -> Vec<(Vec3, Vec3)> {
+
+	let mut verts = Vec::with_capacity(pos.len());
+
+	indices
+		.chunks(3)
+		.for_each(|tri| {
+
+			let i1 = tri[0] as usize;
+			let i2 = tri[1] as usize;
+			let i3 = tri[2] as usize;
+			let v1 = vec3!(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
+			let v2 = vec3!(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
+			let v3 = vec3!(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+			let normal = Vec3::cross((v2 - v1), (v3 - v1)).normalize();
+
+			verts.push((v1, normal));
+			verts.push((v2, normal));
+			verts.push((v3, normal));
+
+		});
+
+	return verts;
+
+}
+
 fn gen_vertex_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 
 	let vert_count = pos.len() / 3;
@@ -1318,8 +1345,8 @@ impl Shape for FlagShape {
 
 	}
 
-	fn indices() -> &'static [u32] {
-		return &[0, 1, 3, 1, 2, 3];
+	fn indices() -> Option<&'static [u32]> {
+		return Some(&[0, 1, 3, 1, 2, 3]);
 	}
 
 }
@@ -1391,8 +1418,8 @@ impl Shape for CubeShape {
 
 	}
 
-	fn indices() -> &'static [u32] {
-		return &[
+	fn indices() -> Option<&'static [u32]> {
+		return Some(&[
 			0, 1, 2,
 			2, 3, 0,
 			1, 5, 6,
@@ -1405,7 +1432,7 @@ impl Shape for CubeShape {
 			1, 0, 4,
 			3, 2, 6,
 			6, 7, 3,
-		];
+		]);
 	}
 
 }
