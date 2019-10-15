@@ -60,7 +60,7 @@ pub trait Gfx {
 	// camera
 	fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
-	// font
+	// query
 	fn default_font(&self) -> &BitmapFont;
 
 }
