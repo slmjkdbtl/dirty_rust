@@ -18,7 +18,7 @@ vec3 trans(vec3 p) {
 	);
 }
 
-float makeSphere(vec3 p) {
+float make_sphere(vec3 p) {
 	return length(trans(p)) - 1.0;
 }
 
@@ -42,7 +42,7 @@ vec4 frag() {
 
 	for (int i = 0; i < 10; i++) {
 
-		inter = makeSphere(ray_pos);
+		inter = make_sphere(ray_pos);
 		ray_length += inter;
 		ray_pos = cam_pos + ray * ray_length;
 

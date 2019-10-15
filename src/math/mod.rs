@@ -8,39 +8,20 @@ mod vec;
 mod mat;
 #[macro_use]
 mod rand;
-mod tween;
 
 pub use vec::*;
 pub use mat::*;
-pub use tween::*;
-pub use self::rand::*;
-
-/// clamp a number within range
-pub fn clamp<N: PartialOrd>(x: N, min: N, max: N) -> N {
-
-	if min > max {
-		return clamp(x, max, min);
-	}
-
-	if x < min {
-		return min;
-	} else if x > max {
-		return max;
-	} else {
-		return x;
-	}
-
-}
+pub use rand::*;
 
 /// linear interpolation
 pub fn lerp(from: f32, to: f32, amount: f32) -> f32 {
-	return from + (to - from) * clamp(amount, 0.0, 1.0);
+	return from + (to - from) * amount.max(0.0).min(1.0);
 }
 
 /// cubic interpolation
 pub fn smooth(from: f32, to: f32, amount: f32) -> f32 {
 
-	let t = clamp(amount, 0.0, 1.0);
+	let t = amount.max(0.0).min(1.0);
 	let m = t * t * (3.0 - 2.0 * t);
 
 	return from + (to - from) * m;
@@ -49,7 +30,7 @@ pub fn smooth(from: f32, to: f32, amount: f32) -> f32 {
 
 /// map a value to another range
 pub fn map(val: f32, a1: f32, a2: f32, b1: f32, b2: f32) -> f32 {
-	return clamp(b1 + (val - a1) / (a2 - a1) * (b2 - b1), b1.min(b2), b1.max(b2));
+	return b1 + (val - a1) / (a2 - a1) * (b2 - b1);
 }
 
 /// generate orthographic matrix
