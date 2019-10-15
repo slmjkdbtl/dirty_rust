@@ -16,7 +16,6 @@
 - [math] noise function
 - [gfx] sphere
 - [gfx] framebuffer get and set individual pixels and pixel arrays
-- [gfx] draw curve
 - [img] image resizing
 - [misc] no cargo warnings
 - [window] different monitors
@@ -56,6 +55,8 @@
 - [gfx] scale modes
 - [gfx] npatch
 - [gfx] 3d ortho
+- [gfx] draw curve
+- [gfx] draw default to a framebuffer
 
 == DONE
 - [http] refactor http

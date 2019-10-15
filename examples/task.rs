@@ -81,9 +81,9 @@ impl app::State for Game {
 			self.teapots.push(Teapot {
 				transform: gfx::t()
 					.translate_3d(vec3!(rand!(-320, 320), rand!(-320, 320), rand!(240, 640)))
-					.rotate_x(rand!(0, 360).to_radians())
-					.rotate_y(rand!(0, 360).to_radians())
-					.rotate_z(rand!(0, 360).to_radians())
+					.rotate_x(rand!(0f32, 360f32).to_radians())
+					.rotate_y(rand!(0f32, 360f32).to_radians())
+					.rotate_z(rand!(0f32, 360f32).to_radians())
 					,
 				model: gfx::Model::from(ctx, model)?,
 			});

@@ -168,8 +168,8 @@ pub(super) enum ButtonState {
 }
 
 #[cfg(web)]
-pub(super) fn poll(ctx: &mut app::Ctx) -> Result<Vec<Event>> {
-	return Ok(vec![]);
+pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
+	return Ok(());
 }
 
 #[cfg(not(web))]
