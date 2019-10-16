@@ -19,7 +19,7 @@ pub trait VertexLayout {
 pub struct VertexBuffer<V: VertexLayout> {
 
 	ctx: Rc<GLCtx>,
-	pub(super) id: BufferID,
+	id: BufferID,
 	layout: PhantomData<V>,
 
 }
@@ -61,6 +61,10 @@ impl<V: VertexLayout> VertexBuffer<V> {
 		buf.data(0, data);
 		return Ok(buf);
 
+	}
+
+	pub(super) fn id(&self) -> BufferID {
+		return self.id;
 	}
 
 	pub(super) fn bind(&self) {

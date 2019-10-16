@@ -116,8 +116,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			let tex = uniform.map(|u| u.texture()).flatten();
 
 			self.ctx.use_program(Some(self.program_id));
-			self.ctx.bind_vertex_array(vao.map(|v| v.id));
-			self.ctx.bind_texture(glow::TEXTURE_2D, tex.map(|t| t.id));
+			self.ctx.bind_vertex_array(vao.map(|v| v.id()));
+			self.ctx.bind_texture(glow::TEXTURE_2D, tex.map(|t| t.id()));
 
 			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
 
@@ -148,7 +148,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			let tex = uniform.map(|u| u.texture()).flatten();
 
 			self.ctx.use_program(Some(self.program_id));
-			self.ctx.bind_buffer(glow::ARRAY_BUFFER, vbuf.map(|b| b.id));
+			self.ctx.bind_buffer(glow::ARRAY_BUFFER, vbuf.map(|b| b.id()));
 
 			if vbuf.is_some() {
 
@@ -171,8 +171,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			}
 
-			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, ibuf.map(|b| b.id));
-			self.ctx.bind_texture(glow::TEXTURE_2D, tex.map(|t| t.id));
+			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, ibuf.map(|b| b.id()));
+			self.ctx.bind_texture(glow::TEXTURE_2D, tex.map(|t| t.id()));
 
 			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
 

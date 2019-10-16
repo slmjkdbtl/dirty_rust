@@ -10,7 +10,7 @@ use crate::Result;
 #[derive(Clone, Debug)]
 pub struct Texture {
 	ctx: Rc<GLCtx>,
-	pub id: TextureID,
+	id: TextureID,
 }
 
 impl Texture {
@@ -97,6 +97,10 @@ impl Texture {
 
 	}
 
+	pub(super) fn id(&self) -> TextureID {
+		return self.id;
+	}
+
 	pub fn filter(&self, f: FilterMode) {
 
 		unsafe {
@@ -142,8 +146,8 @@ impl Texture {
 			self.ctx.tex_sub_image_2d_u8_slice(
 				glow::TEXTURE_2D,
 				0,
-				x as i32,
-				y as i32,
+				x,
+				y,
 				width as i32,
 				height as i32,
 				glow::RGBA,

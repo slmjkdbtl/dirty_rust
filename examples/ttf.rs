@@ -14,7 +14,7 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 120.0)?;
-		let tex = font.get_char_tex(ctx, '1')?;
+		let tex = font.get_char_tex(ctx, '我')?;
 
 		font.prepare("123123");
 

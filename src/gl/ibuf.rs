@@ -11,7 +11,7 @@ use crate::Result;
 pub struct IndexBuffer {
 
 	ctx: Rc<GLCtx>,
-	pub(super) id: BufferID,
+	id: BufferID,
 
 }
 
@@ -51,6 +51,10 @@ impl IndexBuffer {
 		buf.data(0, data);
 		return Ok(buf);
 
+	}
+
+	pub(super) fn id(&self) -> BufferID {
+		return self.id;
 	}
 
 	pub(super) fn bind(&self) {

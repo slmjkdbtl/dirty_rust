@@ -11,18 +11,22 @@ use crate::Result;
 pub struct Framebuffer {
 
 	ctx: Rc<GLCtx>,
-	pub(super) id: FramebufferID,
+	id: FramebufferID,
+	tex: Texture,
 
 }
 
 impl Framebuffer {
 
-	pub fn new(device: &Device, tex: &Texture, w: i32, h: i32) -> Result<Self> {
+	pub fn new(device: &Device, w: i32, h: i32) -> Result<Self> {
 
 		unsafe {
 
 			let ctx = device.ctx.clone();
 			let id = ctx.create_framebuffer()?;
+
+			let pixels = vec![0.0 as u8; (w * h * 4) as usize];
+			let tex = Texture::from(&device, w, h, &pixels)?;
 
 			let rbo = ctx.create_renderbuffer()?;
 
@@ -40,6 +44,7 @@ impl Framebuffer {
 			let fbuf = Self {
 				ctx: ctx,
 				id: id,
+				tex: tex,
 			};
 
 			fbuf.bind();
@@ -48,7 +53,7 @@ impl Framebuffer {
 				glow::FRAMEBUFFER,
 				glow::COLOR_ATTACHMENT0,
 				glow::TEXTURE_2D,
-				Some(tex.id),
+				Some(fbuf.tex.id()),
 				0,
 			);
 
@@ -83,6 +88,14 @@ impl Framebuffer {
 
 	}
 
+	pub fn tex(&self) -> &Texture {
+		return &self.tex;
+	}
+
+	pub(super) fn id(&self) -> FramebufferID {
+		return self.id;
+	}
+
 	pub(super) fn bind(&self) {
 		unsafe {
 			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
@@ -92,6 +105,12 @@ impl Framebuffer {
 	pub(super) fn unbind(&self) {
 		unsafe {
 			self.ctx.bind_framebuffer(glow::FRAMEBUFFER, None);
+		}
+	}
+
+	pub fn drop(&self) {
+		unsafe {
+			self.ctx.delete_framebuffer(self.id);
 		}
 	}
 

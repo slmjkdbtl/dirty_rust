@@ -10,7 +10,7 @@ use crate::Result;
 #[derive(Clone, Debug)]
 pub struct VertexArray {
 	ctx: Rc<GLCtx>,
-	pub(super) id: VertexArrayID,
+	id: VertexArrayID,
 }
 
 impl VertexArray {
@@ -45,6 +45,10 @@ impl VertexArray {
 
 		return Ok(vao);
 
+	}
+
+	pub(super) fn id(&self) -> VertexArrayID {
+		return self.id;
 	}
 
 	pub(super) fn bind(&self) {
