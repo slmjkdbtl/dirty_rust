@@ -15,13 +15,13 @@ pub use rand::*;
 
 /// linear interpolation
 pub fn lerp(from: f32, to: f32, amount: f32) -> f32 {
-	return from + (to - from) * amount.max(0.0).min(1.0);
+	return from + (to - from) * amount.clamp(0.0, 1.0);
 }
 
 /// cubic interpolation
 pub fn smooth(from: f32, to: f32, amount: f32) -> f32 {
 
-	let t = amount.max(0.0).min(1.0);
+	let t = amount.clamp(0.0, 1.0);
 	let m = t * t * (3.0 - 2.0 * t);
 
 	return from + (to - from) * m;

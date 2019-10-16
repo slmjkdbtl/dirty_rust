@@ -5,24 +5,32 @@ use dirty::app::*;
 use input::Key;
 
 struct Game {
-	font: gfx::TrueTypeFont,
+	font: gfx::TruetypeFont,
+	tex: gfx::Texture,
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+
+		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 120.0)?;
+		let tex = font.get_char_tex(ctx, '1')?;
+
+		font.prepare("123123");
+
 		return Ok(Self {
-			font: gfx::TrueTypeFont::new(ctx, include_bytes!("res/Zpix.ttf"), 64.0)?,
+			font: font,
+			tex: tex,
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if *k == Key::Esc {
+				if k == Key::Esc {
 					ctx.quit();
 				}
 			},
@@ -33,15 +41,9 @@ impl app::State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(shapes::text("营养过剩").font(gfx::Font::TrueType(&mut self.font)))?;
-
-		ctx.push(&gfx::t()
-			.translate(vec2!(120))
-		, |ctx| {
-			return ctx.draw(shapes::text("你是谁").font(gfx::Font::TrueType(&mut self.font)));
-		});
+		ctx.draw(shapes::sprite(&self.tex))?;
 
 		return Ok(());
 
@@ -52,8 +54,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.origin(gfx::Origin::TopLeft)
-		.quad_origin(gfx::Origin::TopLeft)
+// 		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}

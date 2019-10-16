@@ -59,6 +59,8 @@
 - [gfx] draw default to a framebuffer
 - [gfx] global scale
 - [gfx] first polygon isn't drawing
+- [gfx] allow z buffer in 2d
+- [gfx] split up to modules
 
 == DONE
 - [http] refactor http

@@ -75,7 +75,7 @@ impl Image {
 	}
 
 	pub fn resize(&mut self) -> Result<()> {
-		unimplemented!();
+		todo!();
 	}
 
 	pub fn into_raw(self) -> Vec<u8> {

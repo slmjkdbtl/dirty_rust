@@ -47,7 +47,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let w = ctx.width() as i32;
 		let h = ctx.height() as i32;

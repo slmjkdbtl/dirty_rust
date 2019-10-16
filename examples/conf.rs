@@ -56,7 +56,6 @@ fn main() {
 		.always_on_top(false)
 		.fps_cap(Some(60))
 		.origin(gfx::Origin::Center)
-		.quad_origin(gfx::Origin::Center)
 		.texture_filter(gfx::FilterMode::Nearest)
 		.run::<Game>() {
 		println!("{}", err);

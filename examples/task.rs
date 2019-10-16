@@ -119,7 +119,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		self.pix_effect.draw(ctx, &PixUniform {
 			resolution: vec2!(ctx.width(), ctx.height()),
@@ -146,7 +146,6 @@ fn main() {
 
 	if let Err(err) = app::launcher()
 		.origin(gfx::Origin::TopLeft)
-		.quad_origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}

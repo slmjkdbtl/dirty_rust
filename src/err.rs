@@ -270,3 +270,9 @@ impl From<Box<dyn std::error::Error>> for Error {
 	}
 }
 
+impl From<&str> for Error {
+	fn from(s: &str) -> Self {
+		return Error::Misc(format!("{}", s));
+	}
+}
+

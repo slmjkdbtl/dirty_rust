@@ -17,7 +17,7 @@ pub struct Framebuffer {
 
 impl Framebuffer {
 
-	pub fn new(device: &Device, tex: &Texture) -> Result<Self> {
+	pub fn new(device: &Device, tex: &Texture, w: i32, h: i32) -> Result<Self> {
 
 		unsafe {
 
@@ -31,8 +31,8 @@ impl Framebuffer {
 			ctx.renderbuffer_storage(
 				glow::RENDERBUFFER,
 				glow::DEPTH24_STENCIL8,
-				tex.width as i32,
-				tex.height as i32
+				w,
+				h,
 			);
 
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);

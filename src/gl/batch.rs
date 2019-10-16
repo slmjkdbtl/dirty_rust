@@ -3,8 +3,11 @@
 use super::*;
 use crate::Result;
 
+pub trait BatchedVertex = VertexLayout + Clone;
+pub trait BatchedUniform = UniformLayout + Clone + PartialEq;
+
 // TODO: trait alias plz
-pub struct BatchedMesh<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> {
+pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
@@ -19,7 +22,7 @@ pub struct BatchedMesh<V: VertexLayout + Clone, U: UniformLayout + PartialEq + C
 
 }
 
-impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedMesh<V, U> {
+impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
@@ -88,7 +91,6 @@ impl<V: VertexLayout + Clone, U: UniformLayout + PartialEq + Clone> BatchedMesh<
 			.iter()
 			.map(|i| *i + offset)
 			.collect::<Vec<u32>>();
-			;
 
 		self.vqueue.extend_from_slice(&verts);
 		self.iqueue.extend_from_slice(&indices);

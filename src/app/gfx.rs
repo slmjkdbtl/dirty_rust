@@ -4,6 +4,7 @@ use std::mem;
 use std::ops;
 use std::rc::Rc;
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::marker::PhantomData;
 use std::io::Cursor;
@@ -602,11 +603,8 @@ impl Texture {
 
 		let w = img.width();
 		let h = img.height();
-		let handle = gl::Texture::from(&ctx.gl, w, h, &img.into_raw())?;
 
-		handle.filter(ctx.conf.texture_filter);
-
-		return Ok(Self::from_handle(handle, w as i32, h as i32));
+		return Self::from_pixels(ctx, w, h, &img.into_raw());
 
 	}
 
@@ -722,6 +720,69 @@ impl BitmapFont {
 	/// get current text height
 	pub fn height(&self) -> i32 {
 		return self.grid_height;
+	}
+
+}
+
+pub struct TruetypeFont {
+	font: fontdue::Font,
+	cache: BTreeMap<char, Quad>,
+	size: f32,
+	pub(super) tex: Texture,
+}
+
+impl TruetypeFont {
+
+	pub fn from_bytes(ctx: &app::Ctx, b: &[u8], size: f32) -> Result<Self> {
+
+		let font = fontdue::Font::from_bytes(b)?;
+
+		return Ok(Self {
+			font: font,
+			size: size,
+			cache: BTreeMap::new(),
+			tex: Texture::from_handle(gl::Texture::empty(&ctx.gl)?, 0, 0),
+		});
+
+	}
+
+	pub fn prepare(&mut self, s: &str) {
+
+		for ch in s.chars() {
+
+			if self.cache.get(&ch).is_none() {
+
+				let ((w, h), bitmap) = self.get_char_data(ch);
+
+// 				self.cache.insert(ch, quad!());
+
+			}
+
+		}
+
+	}
+
+	fn get_char_data(&mut self, ch: char) -> ((usize, usize), Vec<u8>) {
+
+		let (metrics, bitmap) = self.font.rasterize(ch, self.size);
+		let (w, h) = (metrics.width, metrics.height);
+
+		let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
+
+		for b in bitmap {
+			nbitmap.extend_from_slice(&[b, b, b, 255]);
+		}
+
+		return ((w, h), nbitmap);
+
+	}
+
+	pub fn get_char_tex(&mut self, ctx: &Ctx, ch: char) -> Result<Texture> {
+
+		let ((w, h), bitmap) = self.get_char_data(ch);
+
+		return Texture::from_pixels(ctx, w as i32, h as i32, &bitmap);
+
 	}
 
 }
@@ -845,7 +906,7 @@ impl Canvas {
 		let th = (height as f64 * dpi) as i32;
 		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
 		let tex = Texture::from_pixels(&ctx, tw, th, &pixels)?;
-		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle)?;
+		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle, width, height)?;
 
 		return Ok(Self {
 			handle: Rc::new(handle),
@@ -1410,109 +1471,6 @@ impl Shape for CubeShape {
 			3, 2, 6,
 			6, 7, 3,
 		];
-	}
-
-}
-
-use glyph_brush::GlyphBrush;
-use glyph_brush::GlyphBrushBuilder;
-
-#[derive(Clone)]
-pub(super) struct FontQuad {
-	pub(super) pos: Vec2,
-	pub(super) quad: Quad,
-}
-
-// TODO: messy
-pub struct TrueTypeFont {
-	pub(super) cache: GlyphBrush<'static, FontQuad>,
-	pub(super) tex: Texture,
-	pub(super) quads: Vec<FontQuad>,
-	pub(super) size: f32,
-}
-
-impl TrueTypeFont {
-
-	pub fn new(ctx: &Ctx, bytes: &'static [u8], size: f32) -> Result<Self> {
-
-		let font_cache = GlyphBrushBuilder::using_font_bytes(bytes).build();
-
-		let (width, height) = font_cache.texture_dimensions();
-		let font_cache_texture = gl::Texture::new(&ctx.gl, width as i32, height as i32)?;
-
-		return Ok(Self {
-			cache: font_cache,
-			tex: Texture::from_handle(font_cache_texture, width as i32, height as i32),
-			quads: Vec::with_capacity(64),
-			size: size,
-		})
-
-	}
-
-	pub fn push(&mut self, txt: &str) {
-
-		use glyph_brush::BrushAction;
-		use glyph_brush::Section;
-		use glyph_brush::rusttype;
-
-		let mut tex = self.tex.clone();
-
-		self.cache.queue(Section {
-			text: txt,
-			scale: rusttype::Scale::uniform(self.size),
-			..Section::default()
-		});
-
-		let mut update_texture = |rect: rusttype::Rect<u32>, data: &[u8]| {
-
-			let mut padded_data = Vec::with_capacity(data.len() * 4);
-
-			for a in data {
-				padded_data.extend_from_slice(&[
-					255,
-					255,
-					255,
-					*a,
-				]);
-			}
-
-			tex.data(
-				rect.min.x as i32,
-				rect.min.y as i32,
-				rect.width() as i32,
-				rect.height() as i32,
-				&padded_data,
-			);
-
-		};
-
-		let into_vertex = |verts: &glyph_brush::GlyphVertex| {
-
-			let uv = verts.tex_coords;
-			let pos = verts.pixel_coords.min;
-			let x = uv.min.x;
-			let y = uv.min.y;
-			let w = uv.max.x - x;
-			let h = uv.max.y - y;
-
-			return FontQuad {
-				pos: vec2!(pos.x, pos.y),
-				quad: quad!(x, y, w, h),
-			}
-
-		};
-
-		if let Ok(action) = self.cache.process_queued(
-			|rect, tex_data| update_texture(rect, tex_data),
-			|verts| into_vertex(&verts),
-		) {
-
-			if let BrushAction::Draw(quads) = action {
-				self.quads = quads;
-			}
-
-		}
-
 	}
 
 }

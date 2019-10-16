@@ -11,13 +11,11 @@ use crate::Result;
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	pub id: TextureID,
-	pub width: i32,
-	pub height: i32,
 }
 
 impl Texture {
 
-	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
+	pub fn empty(device: &Device) -> Result<Self> {
 
 		unsafe {
 
@@ -27,8 +25,6 @@ impl Texture {
 			let tex = Self {
 				ctx: ctx,
 				id: id,
-				width: width,
-				height: height,
 			};
 
 			tex.bind();
@@ -56,6 +52,22 @@ impl Texture {
 				glow::TEXTURE_MAG_FILTER,
 				FilterMode::Nearest.into(),
 			);
+
+			tex.unbind();
+
+			return Ok(tex);
+
+		}
+
+	}
+
+	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
+
+		unsafe {
+
+			let tex = Self::empty(device)?;
+
+			tex.bind();
 
 			tex.ctx.tex_image_2d(
 				glow::TEXTURE_2D,
