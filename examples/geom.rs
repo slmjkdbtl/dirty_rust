@@ -70,7 +70,7 @@ impl app::State for Game {
 		ctx.draw(
 			polygon(&self.pts)
 				.stroke(color!(1.0))
-				.nofill()
+				.no_fill()
 				.line_width(1.0)
 		)?;
 
@@ -88,7 +88,7 @@ impl app::State for Game {
 		ctx.draw(
 			rect(vec2!(-48, -32), vec2!(48, 32))
 				.stroke(color!(1, 1, 0, 1))
-				.nofill()
+				.no_fill()
 				.line_width(2.0)
 				.radius(12.0)
 		)?;

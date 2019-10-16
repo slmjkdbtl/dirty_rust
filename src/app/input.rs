@@ -210,6 +210,7 @@ pub(super) fn poll(
 
 	let mut close = false;
 
+	// TODO: deal with errors inside
 	events_loop.poll_events(|e| {
 
 		use glutin::Event::*;
@@ -283,7 +284,7 @@ pub(super) fn poll(
 
 				CursorMoved { position, .. } => {
 
-					let offset = ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(ctx.width(), ctx.height());
+					let offset = (ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5)) * vec2!(ctx.width(), ctx.height());
 					let mpos: Vec2 = position.into();
 
 					ctx.mouse_pos = mpos - offset;

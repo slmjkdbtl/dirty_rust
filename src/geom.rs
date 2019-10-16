@@ -272,18 +272,18 @@ pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 }
 
 #[derive(Clone, Debug)]
-pub enum Shape2D {
+pub enum Shape2D<'a> {
 	Point(Vec2),
 	Circle(Vec2, f32),
 	Rect(Vec2, Vec2),
 	Line(Vec2, Vec2),
-	Polygon(Vec<Vec2>),
+	Polygon(&'a[Vec2]),
 	Ray(Vec2, f32),
 }
 
-impl From<&[Vec2]> for Shape2D {
-	fn from(pts: &[Vec2]) -> Self {
-		return Self::Polygon(pts.to_owned());
+impl<'a> From<&'a [Vec2]> for Shape2D<'a> {
+	fn from(pts: &'a [Vec2]) -> Self {
+		return Self::Polygon(pts);
 	}
 }
 

@@ -62,6 +62,7 @@ pub trait Gfx {
 
 	// query
 	fn default_font(&self) -> &BitmapFont;
+	fn transform(&self) -> Transform;
 
 }
 
@@ -240,6 +241,10 @@ impl Gfx for Ctx {
 
 	fn default_font(&self) -> &BitmapFont {
 		return &self.default_font;
+	}
+
+	fn transform(&self) -> Transform {
+		return self.transform;
 	}
 
 }
@@ -493,8 +498,8 @@ impl Shape for QuadShape {
 
 	}
 
-	fn indices() -> Option<&'static [u32]> {
-		return Some(&[0, 1, 3, 1, 2, 3]);
+	fn indices() -> &'static [u32] {
+		return &[0, 1, 3, 1, 2, 3];
 	}
 
 }
@@ -1317,8 +1322,8 @@ impl Shape for FlagShape {
 
 	}
 
-	fn indices() -> Option<&'static [u32]> {
-		return Some(&[0, 1, 3, 1, 2, 3]);
+	fn indices() -> &'static [u32] {
+		return &[0, 1, 3, 1, 2, 3];
 	}
 
 }
@@ -1390,8 +1395,8 @@ impl Shape for CubeShape {
 
 	}
 
-	fn indices() -> Option<&'static [u32]> {
-		return Some(&[
+	fn indices() -> &'static [u32] {
+		return &[
 			0, 1, 2,
 			2, 3, 0,
 			1, 5, 6,
@@ -1404,7 +1409,7 @@ impl Shape for CubeShape {
 			1, 0, 4,
 			3, 2, 6,
 			6, 7, 3,
-		]);
+		];
 	}
 
 }
