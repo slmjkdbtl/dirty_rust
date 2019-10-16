@@ -82,6 +82,52 @@ impl<'a> Drawable for Sprite<'a> {
 
 }
 
+pub struct TText<'a> {
+	font: &'a gfx::TruetypeFont,
+	content: &'a str,
+}
+
+pub fn ttext<'a>(s: &'a str, f: &'a mut gfx::TruetypeFont) -> TText<'a> {
+	return TText {
+		font: f,
+		content: s,
+	};
+}
+
+impl<'a> Drawable for TText<'a> {
+
+	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+
+		let mut x = 0.0;
+
+		for ch in self.content.chars() {
+
+			if let Some(quad) = self.font.map.get(&ch) {
+
+				ctx.push(&gfx::t()
+					.translate(vec2!(x, 0))
+				, |ctx| {
+
+					ctx.draw(
+						shapes::sprite(&self.font.tex)
+							.quad(*quad)
+					)?;
+
+					x += self.font.tex_size.0 as f32 * quad.w;
+
+					return Ok(());
+				})?;
+
+			}
+
+		}
+
+		return Ok(());
+
+	}
+
+}
+
 pub struct Text<'a> {
 	content: &'a str,
 	font: Option<&'a gfx::BitmapFont>,

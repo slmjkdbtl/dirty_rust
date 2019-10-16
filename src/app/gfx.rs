@@ -579,30 +579,26 @@ impl Origin {
 
 #[derive(Clone, PartialEq)]
 pub struct Texture {
-	pub(super) handle: Rc<gl::Texture>,
-	width: i32,
-	height: i32,
+	handle: Rc<gl::Texture>,
 }
 
 impl Texture {
 
-	pub(super) fn from_handle(handle: gl::Texture, w: i32, h: i32) -> Self {
+	pub(super) fn from_handle(handle: gl::Texture) -> Self {
 		return Self {
 			handle: Rc::new(handle),
-			width: w,
-			height: h,
 		};
 	}
 
-	pub fn new(ctx: &Ctx, w: i32, h: i32,) -> Result<Self> {
-		return Ok(Self::from_handle(gl::Texture::new(&ctx.gl, w, h)?, w, h));
+	pub fn new(ctx: &Ctx, w: u32, h: u32) -> Result<Self> {
+		return Ok(Self::from_handle(gl::Texture::new(&ctx.gl, w, h)?));
 	}
 
 	#[cfg(feature = "img")]
 	pub fn from_img(ctx: &Ctx, img: Image) -> Result<Self> {
 
-		let w = img.width();
-		let h = img.height();
+		let w = img.width() as u32;
+		let h = img.height() as u32;
 
 		return Self::from_pixels(ctx, w, h, &img.into_raw());
 
@@ -618,20 +614,20 @@ impl Texture {
 		return Self::from_img(ctx, Image::from_bytes(data)?);
 	}
 
-	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
+	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::from(&ctx.gl, w, h, &pixels)?;
 		handle.filter(ctx.conf.texture_filter);
-		return Ok(Self::from_handle(handle, w, h));
+		return Ok(Self::from_handle(handle));
 
 	}
 
 	pub fn width(&self) -> i32 {
-		return self.width;
+		return self.handle.width();
 	}
 
 	pub fn height(&self) -> i32 {
-		return self.height;
+		return self.handle.height();
 	}
 
 	pub fn get_pixels(&self) -> Vec<u8> {
@@ -651,12 +647,6 @@ impl Texture {
 
 		return Ok(());
 
-	}
-
-	pub fn data(&mut self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
-		self.width = width;
-		self.height = height;
-		self.handle.data(x, y, width, height, data);
 	}
 
 }
@@ -726,56 +716,75 @@ impl BitmapFont {
 
 pub struct TruetypeFont {
 	font: fontdue::Font,
-	cache: BTreeMap<char, Quad>,
-	size: f32,
+	size: u32,
+	cur_pt: (u32, u32),
+	pub(super) tex_size: (u32, u32),
+	pub(super) map: HashMap<char, Quad>,
 	pub(super) tex: Texture,
 }
 
 impl TruetypeFont {
 
-	pub fn from_bytes(ctx: &app::Ctx, b: &[u8], size: f32) -> Result<Self> {
+	pub fn from_bytes(ctx: &app::Ctx, b: &[u8], size: u32) -> Result<Self> {
 
 		let font = fontdue::Font::from_bytes(b)?;
+		let (max_w, max_h) = (size * 32, size * 32);
+		let tex = Texture::new(ctx, max_w, max_h)?;
+
+		if size > 72 {
+			return Err(Error::Gfx(format!("font size cannot exceed 72")));
+		}
 
 		return Ok(Self {
 			font: font,
 			size: size,
-			cache: BTreeMap::new(),
-			tex: Texture::new(ctx, 1024, 1024)?,
+			map: HashMap::new(),
+			tex_size: (max_w, max_h),
+			cur_pt: (0, 0),
+			tex: tex,
 		});
 
 	}
 
 	pub fn prepare(&mut self, s: &str) {
 
+		let (tw, th) = self.tex_size;
+
 		for ch in s.chars() {
-			if self.cache.get(&ch).is_none() {
-				let ((w, h), bitmap) = self.get_char_data(ch);
+
+			if self.map.get(&ch).is_none() {
+
+				let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
+				let (w, h) = (metrics.width as u32, metrics.height as u32);
+
+				let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
+
+				for b in bitmap {
+					nbitmap.extend_from_slice(&[b, b, b, b]);
+				}
+
+				let (mut x, mut y) = self.cur_pt;
+
+				if x + w >= tw {
+					x = 0;
+					y += h;
+				}
+
+				self.tex.handle.sub_data(x, y, w, h, &nbitmap);
+
+				self.map.insert(ch, quad!(
+					x as f32 / tw as f32,
+					y as f32 / th as f32,
+					w as f32 / tw as f32,
+					h as f32 / th as f32,
+				));
+
+				x += w;
+				self.cur_pt = (x, y);
+
 			}
+
 		}
-
-	}
-
-	fn get_char_data(&mut self, ch: char) -> ((usize, usize), Vec<u8>) {
-
-		let (metrics, bitmap) = self.font.rasterize(ch, self.size);
-		let (w, h) = (metrics.width, metrics.height);
-
-		let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
-
-		for b in bitmap {
-			nbitmap.extend_from_slice(&[b, b, b, 255]);
-		}
-
-		return ((w, h), nbitmap);
-
-	}
-
-	pub fn get_char_tex(&mut self, ctx: &Ctx, ch: char) -> Result<Texture> {
-
-		let ((w, h), bitmap) = self.get_char_data(ch);
-
-		return Texture::from_pixels(ctx, w as i32, h as i32, &bitmap);
 
 	}
 
@@ -793,7 +802,7 @@ impl Uniform for () {
 
 #[derive(Clone, PartialEq)]
 pub struct Shader2D<U: Uniform> {
-	pub(super) handle: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,
+	handle: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,
 	uniform: PhantomData<U>,
 }
 
@@ -839,7 +848,7 @@ impl<U: Uniform> Shader2D<U> {
 
 #[derive(Clone, PartialEq)]
 pub struct Shader3D<U: Uniform> {
-	pub(super) handle: Rc<gl::Pipeline<Vertex3D, Uniform3D>>,
+	handle: Rc<gl::Pipeline<Vertex3D, Uniform3D>>,
 	uniform: PhantomData<U>,
 }
 
@@ -893,13 +902,13 @@ pub struct Canvas {
 
 impl Canvas {
 
-	pub fn new(ctx: &Ctx, width: i32, height: i32) -> Result<Self> {
+	pub fn new(ctx: &Ctx, width: u32, height: u32) -> Result<Self> {
 
 		let dpi = ctx.dpi();
-		let tw = (width as f64 * dpi) as i32;
-		let th = (height as f64 * dpi) as i32;
+		let tw = (width as f64 * dpi) as u32;
+		let th = (height as f64 * dpi) as u32;
 		let handle = gl::Framebuffer::new(&ctx.gl, tw, th)?;
-		let tex = Texture::from_handle(handle.tex().clone(), tw, th);
+		let tex = Texture::from_handle(handle.tex().clone());
 
 		return Ok(Self {
 			handle: Rc::new(handle),
