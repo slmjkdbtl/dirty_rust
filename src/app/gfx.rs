@@ -741,7 +741,7 @@ impl TruetypeFont {
 			font: font,
 			size: size,
 			cache: BTreeMap::new(),
-			tex: Texture::from_handle(gl::Texture::empty(&ctx.gl)?, 0, 0),
+			tex: Texture::new(ctx, 1024, 1024)?,
 		});
 
 	}
@@ -749,15 +749,9 @@ impl TruetypeFont {
 	pub fn prepare(&mut self, s: &str) {
 
 		for ch in s.chars() {
-
 			if self.cache.get(&ch).is_none() {
-
 				let ((w, h), bitmap) = self.get_char_data(ch);
-
-// 				self.cache.insert(ch, quad!());
-
 			}
-
 		}
 
 	}
@@ -904,9 +898,8 @@ impl Canvas {
 		let dpi = ctx.dpi();
 		let tw = (width as f64 * dpi) as i32;
 		let th = (height as f64 * dpi) as i32;
-		let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
-		let tex = Texture::from_pixels(&ctx, tw, th, &pixels)?;
-		let handle = gl::Framebuffer::new(&ctx.gl, &tex.handle, width, height)?;
+		let handle = gl::Framebuffer::new(&ctx.gl, tw, th)?;
+		let tex = Texture::from_handle(handle.tex().clone(), tw, th);
 
 		return Ok(Self {
 			handle: Rc::new(handle),
@@ -921,6 +914,10 @@ impl Canvas {
 
 	pub fn height(&self) -> i32 {
 		return self.tex.height();
+	}
+
+	pub fn tex(&self) -> &Texture {
+		return &self.tex;
 	}
 
 	#[cfg(feature = "img")]

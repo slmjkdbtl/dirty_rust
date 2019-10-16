@@ -44,6 +44,10 @@ impl PixEffect {
 
 	}
 
+	pub fn canvas(&self) -> &gfx::Canvas {
+		return &self.canvas;
+	}
+
 	pub fn draw(&self, ctx: &mut app::Ctx, u: &PixUniform) -> Result<()> {
 
 		ctx.draw_2d_with(&self.shader, u, |ctx| {

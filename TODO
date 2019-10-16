@@ -61,6 +61,7 @@
 - [gfx] first polygon isn't drawing
 - [gfx] allow z buffer in 2d
 - [gfx] split up to modules
+- [gfx] font cache
 
 == DONE
 - [http] refactor http
