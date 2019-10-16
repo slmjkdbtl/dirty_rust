@@ -6,21 +6,19 @@ use input::Key;
 
 struct Game {
 	font: gfx::TruetypeFont,
-	tex: gfx::Texture,
 }
 
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 120.0)?;
-		let tex = font.get_char_tex(ctx, '我')?;
+		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 12)?;
 
-		font.prepare("123123");
+		// TODO: temperarily have to cache manually
+		font.prepare("营养过剩");
 
 		return Ok(Self {
 			font: font,
-			tex: tex,
 		});
 	}
 
@@ -43,7 +41,12 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(shapes::sprite(&self.tex))?;
+		ctx.push(&gfx::t()
+			.scale(vec2!(12))
+		, |ctx| {
+			ctx.draw(shapes::ttext("营养过剩", &mut self.font))?;
+			return Ok(());
+		})?;
 
 		return Ok(());
 
@@ -54,7 +57,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-// 		.origin(gfx::Origin::TopLeft)
+		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}

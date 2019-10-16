@@ -11,11 +11,13 @@ use crate::Result;
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
+	width: u32,
+	height: u32,
 }
 
 impl Texture {
 
-	pub fn empty(device: &Device) -> Result<Self> {
+	pub fn new(device: &Device, width: u32, height: u32) -> Result<Self> {
 
 		unsafe {
 
@@ -25,6 +27,8 @@ impl Texture {
 			let tex = Self {
 				ctx: ctx,
 				id: id,
+				width: width,
+				height: height,
 			};
 
 			tex.bind();
@@ -53,22 +57,6 @@ impl Texture {
 				FilterMode::Nearest.into(),
 			);
 
-			tex.unbind();
-
-			return Ok(tex);
-
-		}
-
-	}
-
-	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
-
-		unsafe {
-
-			let tex = Self::empty(device)?;
-
-			tex.bind();
-
 			tex.ctx.tex_image_2d(
 				glow::TEXTURE_2D,
 				0,
@@ -89,10 +77,10 @@ impl Texture {
 
 	}
 
-	pub fn from(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
+	pub fn from(device: &Device, width: u32, height: u32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(device, width, height)?;
-		tex.data(0, 0, width, height, data);
+		tex.data(data);
 		return Ok(tex);
 
 	}
@@ -137,7 +125,15 @@ impl Texture {
 		}
 	}
 
-	pub fn data(&self, x: i32, y: i32, width: i32, height: i32, data: &[u8]) {
+	pub fn width(&self) -> i32 {
+		return self.width as i32;
+	}
+
+	pub fn height(&self) -> i32 {
+		return self.height as i32;
+	}
+
+	pub fn sub_data(&self, x: u32, y: u32, w: u32, h: u32, data: &[u8]) {
 
 		unsafe {
 
@@ -146,10 +142,34 @@ impl Texture {
 			self.ctx.tex_sub_image_2d_u8_slice(
 				glow::TEXTURE_2D,
 				0,
-				x,
-				y,
-				width as i32,
-				height as i32,
+				x as i32,
+				y as i32,
+				w as i32,
+				h as i32,
+				glow::RGBA,
+				glow::UNSIGNED_BYTE,
+				Some(data),
+			);
+
+			self.unbind();
+
+		}
+
+	}
+
+	pub fn data(&self, data: &[u8]) {
+
+		unsafe {
+
+			self.bind();
+
+			self.ctx.tex_sub_image_2d_u8_slice(
+				glow::TEXTURE_2D,
+				0,
+				0,
+				0,
+				self.width as i32,
+				self.height as i32,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
 				Some(data),

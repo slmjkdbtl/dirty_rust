@@ -18,7 +18,7 @@ pub struct Framebuffer {
 
 impl Framebuffer {
 
-	pub fn new(device: &Device, w: i32, h: i32) -> Result<Self> {
+	pub fn new(device: &Device, w: u32, h: u32) -> Result<Self> {
 
 		unsafe {
 
@@ -35,8 +35,8 @@ impl Framebuffer {
 			ctx.renderbuffer_storage(
 				glow::RENDERBUFFER,
 				glow::DEPTH24_STENCIL8,
-				w,
-				h,
+				w as i32,
+				h as i32,
 			);
 
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
