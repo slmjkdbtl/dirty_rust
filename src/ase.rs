@@ -3,25 +3,12 @@
 use std::path::Path;
 use std::collections::HashMap;
 
-use aseprite::SpritesheetData;
-
 use crate::math::*;
 use crate::Result;
 
 ///! Load Aseprite Spritesheets
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-/// anim direction
-pub enum AnimDir {
-	/// forward
-	Forward,
-	/// reverse
-	Reverse,
-	/// pingpong
-	PingPong,
-}
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug)]
 /// anim
 pub struct Anim {
 
@@ -29,8 +16,6 @@ pub struct Anim {
 	pub from: usize,
 	/// to frame
 	pub to: usize,
-	/// direction
-	pub dir: AnimDir,
 
 }
 
@@ -66,7 +51,7 @@ impl SpriteData {
 
 		let mut frames = vec![];
 		let mut anims = HashMap::new();
-		let data: SpritesheetData = json::decode(json)?;
+		let data: aseprite::SpritesheetData = json::decode(json)?;
 
 		let width = data.meta.size.w;
 		let height = data.meta.size.h;
@@ -86,16 +71,16 @@ impl SpriteData {
 
 			for anim in frame_tags {
 
-				let dir = match anim.direction {
-					aseprite::Direction::Forward => AnimDir::Forward,
-					aseprite::Direction::Reverse => AnimDir::Reverse,
-					aseprite::Direction::Pingpong => AnimDir::PingPong,
-				};
+				let mut from = anim.from;
+				let mut to = anim.to;
+
+				if let aseprite::Direction::Reverse = anim.direction {
+					std::mem::swap(&mut from, &mut to);
+				}
 
 				anims.insert(anim.name, Anim {
-					from: anim.from as usize,
-					to: anim.to as usize,
-					dir: dir,
+					from: from as usize,
+					to: to as usize,
 				});
 
 			}

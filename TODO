@@ -57,6 +57,8 @@
 - [gfx] 3d ortho
 - [gfx] draw curve
 - [gfx] draw default to a framebuffer
+- [gfx] global scale
+- [gfx] first polygon isn't drawing
 
 == DONE
 - [http] refactor http

@@ -265,7 +265,7 @@ impl Polygon {
 		self.fill = Some(c);
 		return self;
 	}
-	pub fn nofill(mut self) -> Self {
+	pub fn no_fill(mut self) -> Self {
 		self.fill = None;
 		return self;
 	}
@@ -316,6 +316,7 @@ pub fn polygon(pts: &[Vec2]) -> Polygon {
 
 }
 
+// TODO: first polygon isn't drawing
 impl Drawable for Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
@@ -340,7 +341,7 @@ impl Drawable for Polygon {
 			for (i, p) in pts.iter().enumerate() {
 
 				gfx::Vertex2D {
-					pos: ctx.transform.as_mat4() * *p,
+					pos: ctx.transform * *p,
 					uv: vec2!(0),
 					color: color,
 				}.push(&mut verts);
@@ -516,7 +517,7 @@ impl Rect {
 		self.fill = Some(c);
 		return self;
 	}
-	pub fn nofill(mut self) -> Self {
+	pub fn no_fill(mut self) -> Self {
 		self.fill = None;
 		return self;
 	}
@@ -753,7 +754,7 @@ impl Circle {
 		self.fill = Some(c);
 		return self;
 	}
-	pub fn nofill(mut self) -> Self {
+	pub fn no_fill(mut self) -> Self {
 		self.fill = None;
 		return self;
 	}

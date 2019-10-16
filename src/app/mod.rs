@@ -73,6 +73,8 @@ pub struct Ctx {
 	// gfx
 	pub(self) gl: gl::Device,
 
+// 	pub(self) backbuffer: gfx::Canvas,
+
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
 	pub(self) view_3d: math::Mat4,
@@ -289,6 +291,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		#[cfg(all(not(mobile), not(web)))]
 		gamepad_ctx: gilrs::Gilrs::new()?,
 
+// 		backbuffer: gfx::Canvas,
+
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
@@ -345,9 +349,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		let start_time = Instant::now();
 
 		input::poll(&mut ctx, &mut events_loop, &mut s)?;
-		s.update(&mut ctx)?;
 		gfx::begin(&mut ctx);
-		s.draw(&mut ctx)?;
+		s.run(&mut ctx)?;
 		gfx::end(&mut ctx);
 
 		#[cfg(feature = "imgui")] {
@@ -427,6 +430,7 @@ pub trait App {
 	fn dt(&self) -> f32;
 	fn time(&self) -> f32;
 	fn fps(&self) -> u16;
+	fn conf(&self) -> &Conf;
 }
 
 impl App for Ctx {
@@ -445,6 +449,10 @@ impl App for Ctx {
 
 	fn fps(&self) -> u16 {
 		return self.fps_counter.fps();
+	}
+
+	fn conf(&self) -> &Conf {
+		return &self.conf;
 	}
 
 }
@@ -564,6 +572,11 @@ impl Launcher {
 		return self;
 	}
 
+	pub fn scale(mut self, s: u8) -> Self {
+		self.conf.scale = s;
+		return self;
+	}
+
 }
 
 #[derive(Clone, Debug)]
@@ -588,6 +601,7 @@ pub struct Conf {
 	pub origin: gfx::Origin,
 	pub texture_filter: gfx::FilterMode,
 	pub scale_mode: gfx::ScaleMode,
+	pub scale: u8,
 }
 
 impl Conf {
@@ -627,6 +641,7 @@ impl Default for Conf {
 			origin: gfx::Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,
 			scale_mode: gfx::ScaleMode::Letterbox,
+			scale: 1,
 		};
 	}
 
@@ -640,11 +655,7 @@ pub trait State: Sized {
 		return Ok(());
 	}
 
-	fn update(&mut self, _: &mut Ctx) -> Result<()> {
-		return Ok(());
-	}
-
-	fn draw(&self, _: &mut Ctx) -> Result<()> {
+	fn run(&mut self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 
