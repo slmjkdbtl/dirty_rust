@@ -113,7 +113,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				self.send(&uniform);
 			}
 
-			let tex = flatten(uniform.map(|u| u.texture()));
+			let tex = uniform.map(|u| u.texture()).flatten();
 
 			self.ctx.use_program(Some(self.program_id));
 			self.ctx.bind_vertex_array(vao.map(|v| v.id));
@@ -145,7 +145,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				self.send(&uniform);
 			}
 
-			let tex = flatten(uniform.map(|u| u.texture()));
+			let tex = uniform.map(|u| u.texture()).flatten();
 
 			self.ctx.use_program(Some(self.program_id));
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, vbuf.map(|b| b.id));
@@ -197,12 +197,5 @@ impl<V: VertexLayout, U: UniformLayout> PartialEq for Pipeline<V, U> {
 	fn eq(&self, other: &Self) -> bool {
 		return self.program_id == other.program_id;
 	}
-}
-
-fn flatten<T>(opt: Option<Option<T>>) -> Option<T> {
-	return match opt {
-		None => None,
-		Some(v) => v,
-	};
 }
 

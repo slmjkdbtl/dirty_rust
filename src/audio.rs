@@ -133,29 +133,30 @@ impl Sound {
 	fn apply(&self) -> Box<dyn Source<Item = i16> + Send> {
 
 		type S = dyn Source<Item = i16> + Send;
-		let s = Box::new(self.buffer.clone());
+
+		let s = box self.buffer.clone();
 		let effect = self.effect;
 
 		let s: Box<S> = if effect.speed != 0.0 {
-			Box::new(s.speed(effect.speed))
+			box s.speed(effect.speed)
 		} else {
 			s
 		};
 
 		let s: Box<S> = if effect.volume != 0.0 {
-			Box::new(s.amplify(effect.volume))
+			box s.amplify(effect.volume)
 		} else {
 			s
 		};
 
 		let s: Box<S> = if effect.fadein != 0 {
-			Box::new(s.fade_in(Duration::from_millis(effect.fadein)))
+			box s.fade_in(Duration::from_millis(effect.fadein))
 		} else {
 			s
 		};
 
 		let s: Box<S> = if effect.repeat {
-			Box::new(s.repeat_infinite())
+			box s.repeat_infinite()
 		} else {
 			s
 		};

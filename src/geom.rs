@@ -268,7 +268,7 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 }
 
 pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
-	unimplemented!();
+	todo!();
 }
 
 #[derive(Clone, Debug)]

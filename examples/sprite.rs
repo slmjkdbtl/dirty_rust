@@ -17,6 +17,7 @@ struct Sprite {
 impl Sprite {
 
 	pub fn new(tex: gfx::Texture) -> Self {
+
 		return Self {
 			tex: tex,
 			frames: vec![quad!(0, 0, 1, 1)],
@@ -135,7 +136,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw(&self.sprite)?;
 

@@ -6,7 +6,10 @@ use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::thread;
 
-pub struct TaskPool<T: Send + 'static> {
+pub trait TaskItem = Send + 'static;
+pub trait TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
+
+pub struct TaskPool<T: TaskItem> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
 	max: u32,
@@ -14,7 +17,7 @@ pub struct TaskPool<T: Send + 'static> {
 	total: usize,
 }
 
-impl<T: Send + 'static> TaskPool<T> {
+impl<T: TaskItem> TaskPool<T> {
 
 	pub fn new(max: u32) -> Self {
 		return Self {
@@ -26,7 +29,7 @@ impl<T: Send + 'static> TaskPool<T> {
 		};
 	}
 
-	pub fn exec(&mut self, f: impl FnOnce() -> T + Send + 'static) {
+	pub fn exec(&mut self, f: impl FnOnce() -> T + TaskItem) {
 
 		self.queue.push_back(Task::new(f));
 		self.adjust();
@@ -86,23 +89,23 @@ impl<T: Send + 'static> TaskPool<T> {
 
 }
 
-pub struct Task<T: Send + 'static> {
+pub struct Task<T: TaskItem> {
 	rx: Option<mpsc::Receiver<T>>,
-	action: Option<Box<dyn FnOnce() -> T + Send + 'static>>,
+	action: Option<Box<dyn TaskAction<T>>>,
 	done: bool,
 }
 
-impl<T: Send + 'static> Task<T> {
+impl<T: TaskItem> Task<T> {
 
-	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Self {
+	pub fn new(f: impl FnOnce() -> T + TaskItem) -> Self {
 		return Self {
-			action: Some(Box::new(f)),
+			action: Some(box f),
 			done: false,
 			rx: None,
 		};
 	}
 
-	pub fn exec(f: impl FnOnce() -> T + Send + 'static) -> Self {
+	pub fn exec(f: impl FnOnce() -> T + TaskItem) -> Self {
 
 		let mut task = Self::new(f);
 

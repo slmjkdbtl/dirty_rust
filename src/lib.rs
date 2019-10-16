@@ -3,8 +3,14 @@
 //! # DIRTY
 //! toolkit for things
 
-#![allow(unused_parens)]
+#![feature(clamp)]
+#![feature(try_blocks)]
+#![feature(box_syntax)]
+#![feature(trait_alias)]
+#![feature(option_flattening)]
+#![feature(type_alias_impl_trait)]
 
+#![allow(unused_parens)]
 #![deny(clippy::implicit_return)]
 
 #[allow(unused_macros)]

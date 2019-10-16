@@ -187,7 +187,6 @@ fn main() {
 		.vsync(false)
 		.fps_cap(None)
 		.origin(gfx::Origin::TopLeft)
-		.quad_origin(gfx::Origin::TopLeft)
 		.run::<Sim>() {
 		println!("{}", err);
 	}
