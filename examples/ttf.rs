@@ -41,10 +41,15 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		use shapes::*;
+
 		ctx.push(&gfx::t()
 			.scale(vec2!(12))
 		, |ctx| {
-			ctx.draw(shapes::ttext("营养过剩", &mut self.font))?;
+			ctx.draw(
+				text("营养过剩")
+					.font(Font::Truetype(&self.font))
+			)?;
 			return Ok(());
 		})?;
 
