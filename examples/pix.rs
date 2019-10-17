@@ -29,7 +29,7 @@ impl PixEffect {
 	pub fn new(ctx: &app::Ctx) -> Result<Self> {
 		return Ok(Self {
 			shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			canvas: gfx::Canvas::new(ctx, ctx.width() as u32, ctx.height() as u32)?,
 		});
 	}
 
