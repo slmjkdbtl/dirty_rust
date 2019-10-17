@@ -133,33 +133,72 @@ impl<'a> Drawable for Text<'a> {
 		let map = font.map().clone();
 		let (tw, th) = (tex.width(), tex.height());
 
-		// TODO: wrap & align
+		// TODO: wrapping
+		// TODO: \n for new line?
 
-		let mut x = 0.0;
+		let (pw, ph) = {
 
-		for ch in self.content.chars() {
+			let (mut pw, mut ph) = (0.0, 0.0);
 
-			if let Some(quad) = map.get(&ch) {
+			for ch in self.content.chars() {
 
-				ctx.push(&gfx::t()
-					.translate(vec2!(x, 0))
-				, |ctx| {
+				if let Some(quad) = map.get(&ch) {
 
-					ctx.draw(
-						shapes::sprite(&tex)
-							.quad(*quad)
-							.color(self.color)
-					)?;
+					let gw = tw as f32 * quad.w;
+					let gh = th as f32 * quad.h;
 
-					x += tw as f32 * quad.w;
+					if gh > ph {
+						ph = gh;
+					}
 
-					return Ok(());
+					pw += gw;
 
-				})?;
+				}
 
 			}
 
-		}
+			(pw, ph)
+
+		};
+
+		let align = self.align.unwrap_or(ctx.conf.origin);
+		let offset = (align.as_pt() + vec2!(1)) * 0.5;
+		let offset_pos = -offset * vec2!(pw, ph);
+
+		ctx.push(&gfx::t()
+			.translate(offset_pos)
+		, |ctx| {
+
+			let mut x = 0.0;
+
+			for ch in self.content.chars() {
+
+				if let Some(quad) = map.get(&ch) {
+
+					ctx.push(&gfx::t()
+						.translate(vec2!(x, 0))
+					, |ctx| {
+
+						ctx.draw(
+							shapes::sprite(&tex)
+								.offset(vec2!(-1))
+								.quad(*quad)
+								.color(self.color)
+						)?;
+
+						x += tw as f32 * quad.w;
+
+						return Ok(());
+
+					})?;
+
+				}
+
+			}
+
+			return Ok(());
+
+		})?;
 
 		return Ok(());
 

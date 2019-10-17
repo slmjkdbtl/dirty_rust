@@ -59,10 +59,8 @@
 - [gfx] global scale
 - [gfx] first polygon isn't drawing
 - [gfx] allow z buffer in 2d
-- [gfx] split into submodules
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
-- [gfx] text wrapping for truetype font
-- [gfx] use Font trait for text rendering
+- [gfx] text wrapping
 
 == DONE
 - [http] refactor http
@@ -130,4 +128,6 @@
 - [gfx] fix vertex normal calculation
 - [gfx] font cache
 - [gfx] integrate ttf into shapes::Text
+- [gfx] use Font trait for text rendering
+- [gfx] split into submodules
 

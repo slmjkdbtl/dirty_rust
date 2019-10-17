@@ -62,7 +62,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.origin(gfx::Origin::TopLeft)
+// 		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}
