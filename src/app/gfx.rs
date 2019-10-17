@@ -4,7 +4,6 @@ use std::mem;
 use std::ops;
 use std::rc::Rc;
 use std::collections::HashMap;
-use std::collections::BTreeMap;
 use std::path::Path;
 use std::marker::PhantomData;
 use std::io::Cursor;

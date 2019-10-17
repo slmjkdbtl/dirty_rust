@@ -82,56 +82,15 @@ impl<'a> Drawable for Sprite<'a> {
 
 }
 
-pub struct TText<'a> {
-	font: &'a gfx::TruetypeFont,
-	content: &'a str,
-}
-
-pub fn ttext<'a>(s: &'a str, f: &'a mut gfx::TruetypeFont) -> TText<'a> {
-	return TText {
-		font: f,
-		content: s,
-	};
-}
-
-impl<'a> Drawable for TText<'a> {
-
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
-
-		let mut x = 0.0;
-
-		for ch in self.content.chars() {
-
-			if let Some(quad) = self.font.map.get(&ch) {
-
-				ctx.push(&gfx::t()
-					.translate(vec2!(x, 0))
-				, |ctx| {
-
-					ctx.draw(
-						shapes::sprite(&self.font.tex)
-							.quad(*quad)
-					)?;
-
-					x += self.font.tex_size.0 as f32 * quad.w;
-
-					return Ok(());
-				})?;
-
-			}
-
-		}
-
-		return Ok(());
-
-	}
-
+#[derive(Clone, Copy)]
+pub enum Font<'a> {
+	Truetype(&'a gfx::TruetypeFont),
+	Bitmap(&'a gfx::BitmapFont),
 }
 
 pub struct Text<'a> {
 	content: &'a str,
-	font: Option<&'a gfx::BitmapFont>,
-	fallback_font: Option<&'a gfx::BitmapFont>,
+	font: Option<Font<'a>>,
 	color: Color,
 	align: Option<gfx::Origin>,
 	wrap: Option<f32>,
@@ -142,12 +101,8 @@ impl<'a> Text<'a> {
 		self.content = txt;
 		return self;
 	}
-	pub fn font(mut self, font: &'a gfx::BitmapFont) -> Self {
+	pub fn font(mut self, font: Font<'a>) -> Self {
 		self.font = Some(font);
-		return self;
-	}
-	pub fn fallback_font(mut self, font: &'a gfx::BitmapFont) -> Self {
-		self.fallback_font = Some(font);
 		return self;
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -172,7 +127,6 @@ pub fn text<'a>(text: &'a str) -> Text<'a> {
 	return Text {
 		content: text,
 		font: None,
-		fallback_font: None,
 		align: None,
 		color: color!(1),
 		wrap: None,
@@ -202,86 +156,128 @@ impl<'a> Drawable for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let font = self.font.or(self.fallback_font).unwrap_or(&ctx.default_font);
+		let font = self.font.unwrap_or(Font::Bitmap(&ctx.default_font));
 
-		let gw = font.width() as f32;
-		let gh = font.height() as f32;
+		match font {
 
-		let limit = self.wrap.map(|w| f32::floor(w / gw) as usize);
+			Font::Truetype(f) => {
 
-		let (lines, tw, th) = {
+				// TODO: no clone plz
+				let map = f.map.clone();
+				let tex = f.tex.clone();
+				let tex_size = f.tex_size;
+				let mut x = 0.0;
 
-			let mut lines = vec![];
-			let mut w = 0;
+				for ch in self.content.chars() {
 
-			for chunk in self.content.split('\n') {
+					if let Some(quad) = map.get(&ch) {
 
-				let cw = chunk.len();
+						ctx.push(&gfx::t()
+							.translate(vec2!(x, 0))
+						, |ctx| {
 
-				if cw > w {
-					w = cw;
-				}
-
-				if let Some(limit) = limit {
-					lines.extend(chunk_str(chunk, limit));
-					if limit > w {
-						w = limit;
-					}
-				} else {
-					lines.push(chunk);
-				}
-
-			}
-
-			let h = lines.len();
-
-			(lines, w, h)
-
-		};
-
-		let align = self.align.unwrap_or(ctx.conf.origin);
-		let offset = (align.as_pt() + vec2!(1)) * 0.5;
-		let offset_pos = -offset * vec2!(gw * tw as f32, gh * th as f32);
-
-		// TODO: no clone
-		let tex = font.tex.clone();
-		let map = font.map.clone();
-
-		let mut pos = vec2!();
-
-		for l in lines {
-
-			pos.x += (tw - l.len()) as f32 * gw * offset.x;
-
-			for ch in l.chars() {
-
-				ctx.push(&gfx::t()
-					.translate(offset_pos + pos)
-				, |ctx| {
-
-					if ch != '\n' {
-
-						if let Some(quad) = map.get(&ch) {
 							ctx.draw(
-								sprite(&tex)
-									.offset(vec2!(-1))
+								shapes::sprite(&tex)
 									.quad(*quad)
 									.color(self.color)
 							)?;
-						}
 
-						pos.x += gw;
+							x += tex_size.0 as f32 * quad.w;
+
+							return Ok(());
+
+						})?;
 
 					}
 
-					return Ok(());
+				}
 
-				})?;
+			},
 
-			}
+			Font::Bitmap(f) => {
 
-			pos.y += gh;
-			pos.x = 0.0;
+				let gw = f.width() as f32;
+				let gh = f.height() as f32;
+
+				let limit = self.wrap.map(|w| f32::floor(w / gw) as usize);
+
+				let (lines, tw, th) = {
+
+					let mut lines = vec![];
+					let mut w = 0;
+
+					for chunk in self.content.split('\n') {
+
+						let cw = chunk.len();
+
+						if cw > w {
+							w = cw;
+						}
+
+						if let Some(limit) = limit {
+							lines.extend(chunk_str(chunk, limit));
+							if limit > w {
+								w = limit;
+							}
+						} else {
+							lines.push(chunk);
+						}
+
+					}
+
+					let h = lines.len();
+
+					(lines, w, h)
+
+				};
+
+				let align = self.align.unwrap_or(ctx.conf.origin);
+				let offset = (align.as_pt() + vec2!(1)) * 0.5;
+				let offset_pos = -offset * vec2!(gw * tw as f32, gh * th as f32);
+
+				// TODO: no clone plz
+				let tex = f.tex.clone();
+				let map = f.map.clone();
+
+				let mut pos = vec2!();
+
+				for l in lines {
+
+					pos.x += (tw - l.len()) as f32 * gw * offset.x;
+
+					for ch in l.chars() {
+
+						ctx.push(&gfx::t()
+							.translate(offset_pos + pos)
+						, |ctx| {
+
+							if ch != '\n' {
+
+								if let Some(quad) = map.get(&ch) {
+									ctx.draw(
+										sprite(&tex)
+											.offset(vec2!(-1))
+											.quad(*quad)
+											.color(self.color)
+									)?;
+								}
+
+								pos.x += gw;
+
+							}
+
+							return Ok(());
+
+						})?;
+
+					}
+
+					pos.y += gh;
+					pos.x = 0.0;
+
+				}
+
+			},
 
 		}
 
