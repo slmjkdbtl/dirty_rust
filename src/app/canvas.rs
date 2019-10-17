@@ -15,11 +15,11 @@ pub struct Canvas {
 
 impl Canvas {
 
-	pub fn new(ctx: &Ctx, width: u32, height: u32) -> Result<Self> {
+	pub fn new(ctx: &Ctx, width: i32, height: i32) -> Result<Self> {
 
 		let dpi = ctx.dpi();
-		let tw = (width as f64 * dpi) as u32;
-		let th = (height as f64 * dpi) as u32;
+		let tw = (width as f64 * dpi) as i32;
+		let th = (height as f64 * dpi) as i32;
 		let handle = gl::Framebuffer::new(&ctx.gl, tw, th)?;
 		let tex = Texture::from_handle(handle.tex().clone());
 

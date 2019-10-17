@@ -85,7 +85,7 @@ impl Font for BitmapFont {
 /// truetype font
 pub struct TruetypeFont {
 	font: fontdue::Font,
-	size: u32,
+	size: i32,
 	cur_pt: Pos,
 	pub(super) map: HashMap<char, Quad>,
 	pub(super) tex: Texture,
@@ -94,7 +94,7 @@ pub struct TruetypeFont {
 impl TruetypeFont {
 
 	/// parse a truetype file from bytes
-	pub fn from_bytes(ctx: &Ctx, b: &[u8], size: u32) -> Result<Self> {
+	pub fn from_bytes(ctx: &Ctx, b: &[u8], size: i32) -> Result<Self> {
 
 		let font = fontdue::Font::from_bytes(b)?;
 		let (max_w, max_h) = (size * 32, size * 32);
@@ -143,7 +143,7 @@ impl TruetypeFont {
 					return Err(Error::Gfx(format!("reached font texture size limit")))
 				}
 
-				self.tex.sub_data(x as u32, y as u32, w as u32, h as u32, &nbitmap);
+				self.tex.sub_data(x as i32, y as i32, w as i32, h as i32, &nbitmap);
 
 				self.map.insert(ch, quad!(
 					x as f32 / tw as f32,

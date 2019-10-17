@@ -22,15 +22,15 @@ impl Texture {
 		};
 	}
 
-	pub fn new(ctx: &Ctx, w: u32, h: u32) -> Result<Self> {
+	pub fn new(ctx: &Ctx, w: i32, h: i32) -> Result<Self> {
 		return Ok(Self::from_handle(gl::Texture::new(&ctx.gl, w, h)?));
 	}
 
 	#[cfg(feature = "img")]
 	pub fn from_img(ctx: &Ctx, img: Image) -> Result<Self> {
 
-		let w = img.width() as u32;
-		let h = img.height() as u32;
+		let w = img.width();
+		let h = img.height();
 
 		return Self::from_pixels(ctx, w, h, &img.into_raw());
 
@@ -41,7 +41,7 @@ impl Texture {
 		return Self::from_img(ctx, Image::from_bytes(data)?);
 	}
 
-	pub fn from_pixels(ctx: &Ctx, w: u32, h: u32, pixels: &[u8]) -> Result<Self> {
+	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
 		let handle = gl::Texture::from(&ctx.gl, w, h, &pixels)?;
 		handle.filter(ctx.conf.texture_filter);
@@ -65,7 +65,7 @@ impl Texture {
 		self.handle.data(data);
 	}
 
-	pub(super) fn sub_data(&self, x: u32, y: u32, w: u32, h: u32, data: &[u8]) {
+	pub(super) fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
 		self.handle.sub_data(x, y, w, h, data);
 	}
 

@@ -11,13 +11,13 @@ use crate::Result;
 pub struct Texture {
 	ctx: Rc<GLCtx>,
 	id: TextureID,
-	width: u32,
-	height: u32,
+	width: i32,
+	height: i32,
 }
 
 impl Texture {
 
-	pub fn new(device: &Device, width: u32, height: u32) -> Result<Self> {
+	pub fn new(device: &Device, width: i32, height: i32) -> Result<Self> {
 
 		unsafe {
 
@@ -61,8 +61,8 @@ impl Texture {
 				glow::TEXTURE_2D,
 				0,
 				glow::RGBA as i32,
-				width as i32,
-				height as i32,
+				width,
+				height,
 				0,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
@@ -77,7 +77,7 @@ impl Texture {
 
 	}
 
-	pub fn from(device: &Device, width: u32, height: u32, data: &[u8]) -> Result<Self> {
+	pub fn from(device: &Device, width: i32, height: i32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(device, width, height)?;
 		tex.data(data);
@@ -133,7 +133,7 @@ impl Texture {
 		return self.height as i32;
 	}
 
-	pub fn sub_data(&self, x: u32, y: u32, w: u32, h: u32, data: &[u8]) {
+	pub fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
 
 		unsafe {
 

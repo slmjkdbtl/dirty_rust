@@ -18,7 +18,7 @@ pub struct Framebuffer {
 
 impl Framebuffer {
 
-	pub fn new(device: &Device, w: u32, h: u32) -> Result<Self> {
+	pub fn new(device: &Device, w: i32, h: i32) -> Result<Self> {
 
 		unsafe {
 
