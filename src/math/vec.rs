@@ -5,6 +5,7 @@ use std::ops;
 
 use derive_more::*;
 
+// https://github.com/rust-lang/rust/issues/35853
 macro_rules! nested_macro {
 
 	($($body:tt)*) => {
@@ -48,6 +49,8 @@ macro_rules! gen_vec {
 			}
 
 		}
+
+		pub use $sname;
 
 		#[allow(missing_docs)]
 		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into)]

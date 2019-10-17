@@ -82,27 +82,27 @@ impl<'a> Drawable for Sprite<'a> {
 
 }
 
-#[derive(Clone, Copy)]
-pub enum Font<'a> {
-	Truetype(&'a gfx::TruetypeFont),
-	Bitmap(&'a gfx::BitmapFont),
-}
-
 pub struct Text<'a> {
 	content: &'a str,
-	font: Option<Font<'a>>,
+	font: Option<&'a dyn gfx::Font>,
 	color: Color,
 	align: Option<gfx::Origin>,
 	wrap: Option<f32>,
 }
 
+pub fn text<'a>(s: &'a str) -> Text<'a> {
+	return Text {
+		content: s,
+		font: None,
+		align: None,
+		color: color!(1),
+		wrap: None,
+	};
+}
+
 impl<'a> Text<'a> {
-	pub fn text(mut self, txt: &'a str) -> Self {
-		self.content = txt;
-		return self;
-	}
-	pub fn font(mut self, font: Font<'a>) -> Self {
-		self.font = Some(font);
+	pub fn font(mut self, f: &'a dyn gfx::Font) -> Self {
+		self.font = Some(f);
 		return self;
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -123,161 +123,41 @@ impl<'a> Text<'a> {
 	}
 }
 
-pub fn text<'a>(text: &'a str) -> Text<'a> {
-	return Text {
-		content: text,
-		font: None,
-		align: None,
-		color: color!(1),
-		wrap: None,
-	};
-}
-
-fn chunk_str(s: &str, len: usize) -> Vec<&str> {
-
-	if len == 0 {
-		return vec![s];
-	}
-
-	let mut chunks = Vec::with_capacity(s.len() / len);
-	let mut cur = s;
-
-	while !cur.is_empty() {
-		let (chunk, rest) = cur.split_at(std::cmp::min(len, cur.len()));
-		chunks.push(chunk);
-		cur = rest;
-	}
-
-	return chunks;
-
-}
-
 impl<'a> Drawable for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let font = self.font.unwrap_or(Font::Bitmap(&ctx.default_font));
+		let font = self.font.unwrap_or(&ctx.default_font);
+		// TODO: no clone plz
+		let tex = font.texture().clone();
+		let map = font.map().clone();
+		let (tw, th) = (tex.width(), tex.height());
 
-		match font {
+		// TODO: wrap & align
 
-			Font::Truetype(f) => {
+		let mut x = 0.0;
 
-				// TODO: no clone plz
-				let map = f.map.clone();
-				let tex = f.tex.clone();
-				let tex_size = f.tex_size;
-				let mut x = 0.0;
+		for ch in self.content.chars() {
 
-				for ch in self.content.chars() {
+			if let Some(quad) = map.get(&ch) {
 
-					if let Some(quad) = map.get(&ch) {
+				ctx.push(&gfx::t()
+					.translate(vec2!(x, 0))
+				, |ctx| {
 
-						ctx.push(&gfx::t()
-							.translate(vec2!(x, 0))
-						, |ctx| {
+					ctx.draw(
+						shapes::sprite(&tex)
+							.quad(*quad)
+							.color(self.color)
+					)?;
 
-							ctx.draw(
-								shapes::sprite(&tex)
-									.quad(*quad)
-									.color(self.color)
-							)?;
+					x += tw as f32 * quad.w;
 
-							x += tex_size.w as f32 * quad.w;
+					return Ok(());
 
-							return Ok(());
+				})?;
 
-						})?;
-
-					}
-
-				}
-
-			},
-
-			Font::Bitmap(f) => {
-
-				let gw = f.width() as f32;
-				let gh = f.height() as f32;
-
-				let limit = self.wrap.map(|w| f32::floor(w / gw) as usize);
-
-				let (lines, tw, th) = {
-
-					let mut lines = vec![];
-					let mut w = 0;
-
-					for chunk in self.content.split('\n') {
-
-						let cw = chunk.len();
-
-						if cw > w {
-							w = cw;
-						}
-
-						if let Some(limit) = limit {
-							lines.extend(chunk_str(chunk, limit));
-							if limit > w {
-								w = limit;
-							}
-						} else {
-							lines.push(chunk);
-						}
-
-					}
-
-					let h = lines.len();
-
-					(lines, w, h)
-
-				};
-
-				let align = self.align.unwrap_or(ctx.conf.origin);
-				let offset = (align.as_pt() + vec2!(1)) * 0.5;
-				let offset_pos = -offset * vec2!(gw * tw as f32, gh * th as f32);
-
-				// TODO: no clone plz
-				let tex = f.tex.clone();
-				let map = f.map.clone();
-
-				let mut pos = vec2!();
-
-				for l in lines {
-
-					pos.x += (tw - l.len()) as f32 * gw * offset.x;
-
-					for ch in l.chars() {
-
-						ctx.push(&gfx::t()
-							.translate(offset_pos + pos)
-						, |ctx| {
-
-							if ch != '\n' {
-
-								if let Some(quad) = map.get(&ch) {
-									ctx.draw(
-										sprite(&tex)
-											.offset(vec2!(-1))
-											.quad(*quad)
-											.color(self.color)
-									)?;
-								}
-
-								pos.x += gw;
-
-							}
-
-							return Ok(());
-
-						})?;
-
-					}
-
-					pos.y += gh;
-					pos.x = 0.0;
-
-				}
-
-			},
+			}
 
 		}
 
