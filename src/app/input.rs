@@ -47,7 +47,7 @@ pub trait Input {
 	fn key_down(&self, key: Key) -> bool;
 	fn mouse_down(&self, mouse: Mouse) -> bool;
 	fn mouse_pos(&self) -> Vec2;
-// 	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool;
+	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool;
 
 }
 
@@ -73,13 +73,13 @@ impl Input for app::Ctx {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Down) || mouse_pressed(self, mouse);
 	}
 
-// 	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
-// 		if let Some(states) = self.gamepad_button_states.get(&id) {
-// 			return states.get(&button) == Some(&ButtonState::Down) || gamepad_pressed(self, id, button);
-// 		} else {
-// 			return false;
-// 		}
-// 	}
+	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
+		if let Some(states) = self.gamepad_button_states.get(&id) {
+			return states.get(&button) == Some(&ButtonState::Down) || gamepad_pressed(self, id, button);
+		} else {
+			return false;
+		}
+	}
 
 	fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
@@ -111,29 +111,29 @@ fn mouse_up(ctx: &app::Ctx, mouse: Mouse) -> bool {
 	return ctx.mouse_states.get(&mouse) == Some(&ButtonState::Up) || ctx.mouse_states.get(&mouse).is_none();
 }
 
-// fn gamepad_up(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-// 	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-// 		return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
-// 	} else {
-// 		return true;
-// 	}
-// }
+fn gamepad_up(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
+	if let Some(states) = ctx.gamepad_button_states.get(&id) {
+		return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
+	} else {
+		return true;
+	}
+}
 
-// fn gamepad_pressed(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-// 	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-// 		return states.get(&button) == Some(&ButtonState::Pressed);
-// 	} else {
-// 		return false;
-// 	}
-// }
+fn gamepad_pressed(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
+	if let Some(states) = ctx.gamepad_button_states.get(&id) {
+		return states.get(&button) == Some(&ButtonState::Pressed);
+	} else {
+		return false;
+	}
+}
 
-// fn gamepad_released(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
-// 	if let Some(states) = ctx.gamepad_button_states.get(&id) {
-// 		return states.get(&button) == Some(&ButtonState::Released);
-// 	} else {
-// 		return false;
-// 	}
-// }
+fn gamepad_released(ctx: &app::Ctx, id: GamepadID, button: GamepadButton) -> bool {
+	if let Some(states) = ctx.gamepad_button_states.get(&id) {
+		return states.get(&button) == Some(&ButtonState::Released);
+	} else {
+		return false;
+	}
+}
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -195,15 +195,15 @@ pub(super) fn poll(
 		}
 	}
 
-// 	for states in ctx.gamepad_button_states.values_mut() {
-// 		for state in states.values_mut() {
-// 			if state == &ButtonState::Pressed {
-// 				*state = ButtonState::Down;
-// 			} else if state == &ButtonState::Released {
-// 				*state = ButtonState::Up;
-// 			}
-// 		}
-// 	}
+	for states in ctx.gamepad_button_states.values_mut() {
+		for state in states.values_mut() {
+			if state == &ButtonState::Pressed {
+				*state = ButtonState::Down;
+			} else if state == &ButtonState::Released {
+				*state = ButtonState::Up;
+			}
+		}
+	}
 
 	#[cfg(feature = "imgui")]
 	let mut imgui_events = vec![];
@@ -365,104 +365,104 @@ pub(super) fn poll(
 		return Ok(());
 	}
 
-// 	#[cfg(desktop)]
-// 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+	#[cfg(desktop)]
+	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
 
-// 		use gilrs::ev::EventType::*;
+		use gilrs::ev::EventType::*;
 
-// 		match event {
+		match event {
 
-// 			ButtonPressed(button, ..) => {
+			ButtonPressed(button, ..) => {
 
-// 				if let Some(button) = GamepadButton::from_extern(button) {
+				if let Some(button) = GamepadButton::from_extern(button) {
 
-// 					if gamepad_up(ctx, id, button) || gamepad_released(ctx, id, button) {
+					if gamepad_up(ctx, id, button) || gamepad_released(ctx, id, button) {
 
-// 						ctx
-// 							.gamepad_button_states
-// 							.entry(id)
-// 							.or_insert(HashMap::new())
-// 							.insert(button, ButtonState::Pressed);
+						ctx
+							.gamepad_button_states
+							.entry(id)
+							.or_insert(HashMap::new())
+							.insert(button, ButtonState::Pressed);
 
-// 						s.event(&mut ctx, Event::GamepadPress(id, button))?;
+						s.event(&mut ctx, Event::GamepadPress(id, button))?;
 
-// 					}
+					}
 
-// 				}
+				}
 
-// 			},
+			},
 
-// 			ButtonRepeated(button, ..) => {
-// 				if let Some(button) = GamepadButton::from_extern(button) {
-// 					s.event(&mut ctx, Event::GamepadPressRepeat(id, button))?;
-// 				}
-// 			},
+			ButtonRepeated(button, ..) => {
+				if let Some(button) = GamepadButton::from_extern(button) {
+					s.event(&mut ctx, Event::GamepadPressRepeat(id, button))?;
+				}
+			},
 
-// 			ButtonReleased(button, ..) => {
-// 				if let Some(button) = GamepadButton::from_extern(button) {
+			ButtonReleased(button, ..) => {
+				if let Some(button) = GamepadButton::from_extern(button) {
 
-// 					if ctx.gamepad_down(id, button) || gamepad_pressed(ctx, id, button) {
+					if ctx.gamepad_down(id, button) || gamepad_pressed(ctx, id, button) {
 
-// 						ctx
-// 							.gamepad_button_states
-// 							.entry(id)
-// 							.or_insert(HashMap::new())
-// 							.insert(button, ButtonState::Released);
+						ctx
+							.gamepad_button_states
+							.entry(id)
+							.or_insert(HashMap::new())
+							.insert(button, ButtonState::Released);
 
-// 						s.event(&mut ctx, Event::GamepadRelease(id, button))?;
+						s.event(&mut ctx, Event::GamepadRelease(id, button))?;
 
-// 					}
+					}
 
-// 				}
+				}
 
-// 			},
+			},
 
-// 			AxisChanged(axis, val, ..) => {
+			AxisChanged(axis, val, ..) => {
 
-// 				let mut pos = ctx.gamepad_axis_pos
-// 					.entry(id)
-// 					.or_insert((vec2!(), vec2!()))
-// 					.clone()
-// 					;
+				let mut pos = ctx.gamepad_axis_pos
+					.entry(id)
+					.or_insert((vec2!(), vec2!()))
+					.clone()
+					;
 
-// 				match axis {
-// 					gilrs::ev::Axis::LeftStickX => {
-// 						pos.0.x = val;
-// 						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
-// 					},
-// 					gilrs::ev::Axis::LeftStickY => {
-// 						pos.0.y = val;
-// 						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
-// 					},
-// 					gilrs::ev::Axis::RightStickX => {
-// 						pos.1.x = val;
-// 						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
-// 					},
-// 					gilrs::ev::Axis::RightStickY => {
-// 						pos.1.y = val;
-// 						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
-// 					},
-// 					_ => {},
+				match axis {
+					gilrs::ev::Axis::LeftStickX => {
+						pos.0.x = val;
+						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+					},
+					gilrs::ev::Axis::LeftStickY => {
+						pos.0.y = val;
+						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+					},
+					gilrs::ev::Axis::RightStickX => {
+						pos.1.x = val;
+						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+					},
+					gilrs::ev::Axis::RightStickY => {
+						pos.1.y = val;
+						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+					},
+					_ => {},
 
-// 				}
+				}
 
-// 				ctx.gamepad_axis_pos.insert(id, pos);
+				ctx.gamepad_axis_pos.insert(id, pos);
 
-// 			},
+			},
 
-// 			Connected => {
-// 				s.event(&mut ctx, Event::GamepadConnect(id))?;
-// 			},
+			Connected => {
+				s.event(&mut ctx, Event::GamepadConnect(id))?;
+			},
 
-// 			Disconnected => {
-// 				s.event(&mut ctx, Event::GamepadDisconnect(id))?;
-// 			},
+			Disconnected => {
+				s.event(&mut ctx, Event::GamepadDisconnect(id))?;
+			},
 
-// 			_ => {},
+			_ => {},
 
-// 		}
+		}
 
-// 	}
+	}
 
 	return Ok(());
 

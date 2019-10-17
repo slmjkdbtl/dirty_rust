@@ -35,7 +35,7 @@ use input::ButtonState;
 use input::Key;
 use input::Mouse;
 use input::GamepadID;
-// use input::GamepadButton;
+use input::GamepadButton;
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -53,7 +53,7 @@ pub struct Ctx {
 	pub(self) key_states: HashMap<Key, ButtonState>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Vec2,
-// 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 
 	// window
@@ -68,7 +68,7 @@ pub struct Ctx {
 	#[cfg(web)]
 	pub(self) render_loop: glow::web::RenderLoop,
 	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
-// 	pub(self) gamepad_ctx: gilrs::Gilrs,
+	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
 	pub(self) gl: gl::Device,
@@ -274,7 +274,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		mouse_pos: vec2!(),
-// 		gamepad_button_states: HashMap::new(),
+		gamepad_button_states: HashMap::new(),
 		gamepad_axis_pos: HashMap::new(),
 
 		// window
@@ -289,7 +289,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		#[cfg(web)]
 		render_loop: render_loop,
 		#[cfg(desktop)]
-// 		gamepad_ctx: gilrs::Gilrs::new()?,
+		gamepad_ctx: gilrs::Gilrs::new()?,
 
 // 		backbuffer: gfx::Canvas,
 
