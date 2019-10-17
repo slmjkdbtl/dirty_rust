@@ -8,6 +8,7 @@ mod transform;
 mod font;
 mod camera;
 mod mesh;
+mod desc;
 
 pub mod input;
 pub mod window;
@@ -258,8 +259,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
 	let font_img = img::Image::from_bytes(res::CP437_IMG)?;
-	let font_width = font_img.width() as u32;
-	let font_height = font_img.height() as u32;
+	let font_width = font_img.width();
+	let font_height = font_img.height();
 	let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
 	let font_tex = gfx::Texture::from_handle(font_tex);
 

@@ -4,75 +4,8 @@ use std::rc::Rc;
 use std::marker::PhantomData;
 
 use crate::*;
-use crate::math::*;
 use super::*;
 use super::gfx::*;
-
-#[derive(Clone, PartialEq)]
-pub(super) struct Uniform3D {
-
-	pub proj: Mat4,
-	pub view: Mat4,
-	pub model: Transform,
-	pub color: Color,
-	pub tex: Texture,
-	pub custom: Option<UniformValues>,
-
-}
-
-impl gl::UniformLayout for Uniform3D {
-
-	fn values(&self) -> UniformValues {
-
-		let mut values = vec![
-			("u_proj", self.proj.into()),
-			("u_view", self.view.into()),
-			("u_model", self.model.as_mat4().into()),
-			("u_color", self.color.into()),
-		];
-
-		if let Some(custom) = &self.custom {
-			values.extend(custom.clone());
-		}
-
-		return values;
-
-	}
-
-	fn texture(&self) -> Option<&gl::Texture> {
-		return Some(&self.tex.handle);
-	}
-
-}
-
-#[derive(Clone, PartialEq)]
-pub(super) struct Uniform2D {
-	pub proj: Mat4,
-	pub tex: Texture,
-	pub custom: Option<UniformValues>,
-}
-
-impl gl::UniformLayout for Uniform2D {
-
-	fn values(&self) -> UniformValues {
-
-		let mut values = vec![
-			("u_proj", self.proj.into()),
-		];
-
-		if let Some(custom) = &self.custom {
-			values.extend(custom.clone());
-		}
-
-		return values;
-
-	}
-
-	fn texture(&self) -> Option<&gl::Texture> {
-		return Some(&self.tex.handle);
-	}
-
-}
 
 pub trait Uniform: Clone {
 	fn values(&self) -> UniformValues;

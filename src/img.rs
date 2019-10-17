@@ -4,11 +4,6 @@
 
 use std::path::Path;
 
-#[cfg(feature = "fs")]
-use crate::fs;
-#[cfg(not(feature = "fs"))]
-use std::fs;
-
 use crate::math::Color;
 use crate::Result;
 use crate::Error;
@@ -21,9 +16,9 @@ pub struct Image {
 
 impl Image {
 
-	pub fn new(w: u32, h: u32) -> Result<Self> {
+	pub fn new(w: i32, h: i32) -> Result<Self> {
 		return Ok(Self {
-			handle: image::ImageBuffer::new(w, h),
+			handle: image::ImageBuffer::new(w as u32, h as u32),
 		});
 	}
 

@@ -15,7 +15,7 @@ impl app::State for Game {
 		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 12)?;
 
 		// TODO: temperarily have to cache manually
-		font.prepare("营养过剩");
+		font.prepare("营养过剩")?;
 
 		return Ok(Self {
 			font: font,
@@ -62,7 +62,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-// 		.origin(gfx::Origin::TopLeft)
+		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}
