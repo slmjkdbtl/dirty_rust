@@ -27,10 +27,6 @@ impl Image {
 		});
 	}
 
-	pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
-		return Self::from_bytes(&fs::read(path)?);
-	}
-
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let img = image::load_from_memory(data)?

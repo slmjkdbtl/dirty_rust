@@ -182,7 +182,7 @@ impl<'a> Drawable for Text<'a> {
 									.color(self.color)
 							)?;
 
-							x += tex_size.0 as f32 * quad.w;
+							x += tex_size.w as f32 * quad.w;
 
 							return Ok(());
 

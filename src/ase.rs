@@ -32,19 +32,6 @@ pub struct SpriteData {
 impl SpriteData {
 
 	#[cfg(feature = "json")]
-	pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
-
-		#[cfg(feature = "fs")]
-		let json = crate::fs::read_str(path);
-
-		#[cfg(not(feature = "fs"))]
-		let json = std::fs::read_to_string(path);
-
-		return Self::from_json(&json?);
-
-	}
-
-	#[cfg(feature = "json")]
 	pub fn from_json(json: &str) -> Result<Self> {
 
 		use crate::codec::json;

@@ -1,6 +1,14 @@
 // wengwengweng
 
 pub mod gfx;
+mod texture;
+mod shader;
+mod canvas;
+mod transform;
+mod font;
+mod camera;
+mod mesh;
+
 pub mod input;
 pub mod window;
 pub mod shapes;
