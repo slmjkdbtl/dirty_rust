@@ -2,7 +2,6 @@
 
 //! Common Math Functions & Structs
 
-#[macro_use]
 mod vec;
 #[macro_use]
 mod mat;

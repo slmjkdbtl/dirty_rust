@@ -48,7 +48,7 @@ impl app::State for Game {
 		, |ctx| {
 			ctx.draw(
 				text("营养过剩")
-					.font(Font::Truetype(&self.font))
+					.font(&self.font)
 			)?;
 			return Ok(());
 		})?;

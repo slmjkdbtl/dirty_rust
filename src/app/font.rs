@@ -2,10 +2,15 @@
 
 use std::collections::HashMap;
 
-use crate::*;
-use crate::math::*;
 use super::*;
 use super::gfx::*;
+
+pub type CharMap = HashMap<char, Quad>;
+
+pub trait Font {
+	fn texture(&self) -> &Texture;
+	fn map(&self) -> &CharMap;
+}
 
 /// bitmap font
 #[derive(Clone, PartialEq)]
@@ -36,12 +41,10 @@ impl BitmapFont {
 		for (i, ch) in chars.chars().enumerate() {
 
 			map.insert(ch, quad!(
-
 				(i % cols) as f32 * quad_size.x,
 				(i / cols) as f32 * quad_size.y,
 				quad_size.x,
 				quad_size.y
-
 			));
 
 		}
@@ -70,13 +73,20 @@ impl BitmapFont {
 
 }
 
+impl Font for BitmapFont {
+	fn texture(&self) -> &Texture {
+		return &self.tex;
+	}
+	fn map(&self) -> &CharMap {
+		return &self.map;
+	}
+}
 
 /// truetype font
 pub struct TruetypeFont {
 	font: fontdue::Font,
 	size: u32,
 	cur_pt: Pos,
-	pub(super) tex_size: Size,
 	pub(super) map: HashMap<char, Quad>,
 	pub(super) tex: Texture,
 }
@@ -98,7 +108,6 @@ impl TruetypeFont {
 			font: font,
 			size: size,
 			map: HashMap::new(),
-			tex_size: size!(max_w, max_h),
 			cur_pt: pos!(0, 0),
 			tex: tex,
 		});
@@ -106,9 +115,9 @@ impl TruetypeFont {
 	}
 
 	/// manually cache characters
-	pub fn prepare(&mut self, s: &str) {
+	pub fn prepare(&mut self, s: &str) -> Result<()> {
 
-		let (tw, th) = self.tex_size.into();
+		let (tw, th) = (self.tex.width(), self.tex.height());
 
 		for ch in s.chars() {
 
@@ -130,6 +139,10 @@ impl TruetypeFont {
 					y += h;
 				}
 
+				if y >= th {
+					return Err(Error::Gfx(format!("reached font texture size limit")))
+				}
+
 				self.tex.sub_data(x as u32, y as u32, w as u32, h as u32, &nbitmap);
 
 				self.map.insert(ch, quad!(
@@ -146,6 +159,8 @@ impl TruetypeFont {
 
 		}
 
+		return Ok(());
+
 	}
 
 	/// get width of a string
@@ -154,7 +169,7 @@ impl TruetypeFont {
 			.chars()
 			.map(|c| self.map.get(&c))
 			.flatten()
-			.map(|q| (q.w * self.tex_size.w as f32) as i32)
+			.map(|q| (q.w * self.tex.width() as f32) as i32)
 			.sum();
 	}
 
@@ -163,5 +178,14 @@ impl TruetypeFont {
 		return self.size as i32;
 	}
 
+}
+
+impl Font for TruetypeFont {
+	fn texture(&self) -> &Texture {
+		return &self.tex;
+	}
+	fn map(&self) -> &CharMap {
+		return &self.map;
+	}
 }
 
