@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Window & Graphics
+//! Window Operations
 
 #[cfg(not(web))]
 use glutin::dpi::*;

@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Input & Events
+
 use std::path::PathBuf;
 use std::collections::HashSet;
 

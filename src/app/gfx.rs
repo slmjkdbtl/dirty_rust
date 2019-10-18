@@ -1,19 +1,15 @@
 // wengwengweng
 
-use std::mem;
+//! Graphics
 
 use crate::*;
 use crate::math::*;
 use super::*;
 
-pub use gl::VertexLayout;
-pub use gl::Shape;
-
-pub use gl::UniformType;
 pub use gl::UniformValues;
 pub use gl::FilterMode;
-pub use gl::Surface;
-pub use gl::Cmp;
+use gl::Surface;
+use gl::Cmp;
 
 pub use res::CP437_IMG;
 pub use res::CP437_COLS;
@@ -31,7 +27,7 @@ pub use shader::*;
 pub use canvas::*;
 pub use font::*;
 pub use camera::*;
-pub use mesh::*;
+pub use model::*;
 pub use desc::*;
 
 pub trait Gfx {
@@ -123,7 +119,7 @@ impl Gfx for Ctx {
 		self.proj_3d = flip_matrix(&o_proj_3d);
 		self.transform = Transform::new();
 
-		canvas.handle.with(|| -> Result<()> {
+		canvas.gl_fbuf().with(|| -> Result<()> {
 			f(self)?;
 			return Ok(());
 		})?;
@@ -144,7 +140,7 @@ impl Gfx for Ctx {
 	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
-		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.handle);
+		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.gl_pipeline());
 		self.cur_custom_uniform_2d = Some(uniform.values());
 		f(self)?;
 		flush(self);
@@ -158,7 +154,7 @@ impl Gfx for Ctx {
 	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		flush(self);
-		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.handle);
+		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.gl_pipeline());
 		self.cur_custom_uniform_3d = Some(uniform.values());
 		f(self)?;
 		flush(self);

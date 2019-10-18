@@ -1,5 +1,7 @@
 // wengwengweng
 
+/// Windowing, Input, and Graphics
+
 pub mod gfx;
 mod texture;
 mod shader;
@@ -7,12 +9,18 @@ mod canvas;
 mod transform;
 mod font;
 mod camera;
-mod mesh;
+mod model;
 mod desc;
 
 pub mod input;
 pub mod window;
 pub mod shapes;
+
+mod state;
+mod conf;
+
+pub use state::*;
+pub use conf::*;
 
 use crate::*;
 use crate::math::*;
@@ -241,7 +249,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	gl.clear_color(conf.clear_color);
 
 	let empty_tex = gl::Texture::from(&gl, 1, 1, &[255; 4])?;
-	let empty_tex = gfx::Texture::from_handle(empty_tex);
+	let empty_tex = gfx::Texture::from_gl_tex(empty_tex);
 
 	let vert_2d_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", res::DEFAULT_2D_VERT);
 	let frag_2d_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", res::DEFAULT_2D_FRAG);
@@ -262,7 +270,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	let font_width = font_img.width();
 	let font_height = font_img.height();
 	let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
-	let font_tex = gfx::Texture::from_handle(font_tex);
+	let font_tex = gfx::Texture::from_gl_tex(font_tex);
 
 	let font = gfx::BitmapFont::from_tex(
 		font_tex,
@@ -585,101 +593,6 @@ impl Launcher {
 	pub fn scale(mut self, s: u8) -> Self {
 		self.conf.scale = s;
 		return self;
-	}
-
-}
-
-#[derive(Clone, Debug)]
-pub struct Conf {
-	pub width: i32,
-	pub height: i32,
-	pub title: String,
-	pub hidpi: bool,
-	pub resizable: bool,
-	pub fullscreen: bool,
-	pub always_on_top: bool,
-	pub borderless: bool,
-	pub transparent: bool,
-	pub vsync: bool,
-	pub hide_title: bool,
-	pub hide_titlebar_buttons: bool,
-	pub titlebar_transparent: bool,
-	pub cursor_hidden: bool,
-	pub cursor_locked: bool,
-	pub fps_cap: Option<u16>,
-	pub clear_color: Color,
-	pub origin: gfx::Origin,
-	pub texture_filter: gfx::FilterMode,
-	pub scale_mode: gfx::ScaleMode,
-	pub scale: u8,
-}
-
-impl Conf {
-
-	pub fn basic(title: &str, width: i32, height: i32) -> Self {
-		return Self {
-			title: String::from(title),
-			width: width,
-			height: height,
-			..Default::default()
-		};
-	}
-
-}
-
-impl Default for Conf {
-
-	fn default() -> Self {
-		return Self {
-			width: 640,
-			height: 480,
-			title: String::new(),
-			hidpi: true,
-			resizable: false,
-			fullscreen: false,
-			always_on_top: false,
-			borderless: false,
-			transparent: false,
-			vsync: true,
-			hide_title: false,
-			hide_titlebar_buttons: false,
-			titlebar_transparent: false,
-			cursor_hidden: false,
-			cursor_locked: false,
-			fps_cap: Some(60),
-			clear_color: color!(0, 0, 0, 1),
-			origin: gfx::Origin::Center,
-			texture_filter: gfx::FilterMode::Nearest,
-			scale_mode: gfx::ScaleMode::Letterbox,
-			scale: 1,
-		};
-	}
-
-}
-
-pub trait State: Sized {
-
-	fn init(_: &mut Ctx) -> Result<Self>;
-
-	fn event(&mut self, _: &mut Ctx, _: input::Event) -> Result<()> {
-		return Ok(());
-	}
-
-	fn update(&mut self, _: &mut Ctx) -> Result<()> {
-		return Ok(());
-	}
-
-	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
-		return Ok(());
-	}
-
-	#[cfg(feature = "imgui")]
-	fn imgui(&self, _: &imgui::Ui) -> Result<()> {
-		return Ok(());
-	}
-
-	fn quit(&mut self, _: &mut Ctx) -> Result<()> {
-		return Ok(());
 	}
 
 }

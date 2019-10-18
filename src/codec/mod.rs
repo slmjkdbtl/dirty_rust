@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Codecs for Common Formats
+
 pub use serde::Serialize;
 pub use serde::Deserialize;
 

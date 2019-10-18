@@ -5,6 +5,7 @@ use std::ops;
 use crate::*;
 use crate::math::*;
 
+/// transform matrix
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Transform {
 	matrix: Mat4,

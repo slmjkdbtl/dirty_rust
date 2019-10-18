@@ -7,6 +7,9 @@ use super::gfx::*;
 
 pub type CharMap = HashMap<char, Quad>;
 
+const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
+
+/// general functionalities of a font
 pub trait Font {
 	fn texture(&self) -> &Texture;
 	fn map(&self) -> &CharMap;
@@ -16,9 +19,9 @@ pub trait Font {
 #[derive(Clone, PartialEq)]
 pub struct BitmapFont {
 
-	pub(super) tex: Texture,
-	pub(super) map: HashMap<char, Quad>,
-	pub(super) quad_size: Vec2,
+	tex: Texture,
+	map: HashMap<char, Quad>,
+	quad_size: Vec2,
 	grid_width: i32,
 	grid_height: i32,
 
@@ -87,8 +90,8 @@ pub struct TruetypeFont {
 	font: fontdue::Font,
 	size: i32,
 	cur_pt: Pos,
-	pub(super) map: HashMap<char, Quad>,
-	pub(super) tex: Texture,
+	map: HashMap<char, Quad>,
+	tex: Texture,
 }
 
 impl TruetypeFont {
@@ -126,6 +129,10 @@ impl TruetypeFont {
 				let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
 				let (w, h) = (metrics.width as i32, metrics.height as i32);
 
+				// TODO: wait for fontdue::Metrics to get fully implemented
+				let (bx, by) = (metrics.bearing_x as i32, metrics.bearing_y as i32);
+				let (ax, ay) = (metrics.advance_x as i32, metrics.advance_y as i32);
+
 				let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
 
 				for b in bitmap {
@@ -143,7 +150,7 @@ impl TruetypeFont {
 					return Err(Error::Gfx(format!("reached font texture size limit")))
 				}
 
-				self.tex.sub_data(x as i32, y as i32, w as i32, h as i32, &nbitmap);
+				self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);
 
 				self.map.insert(ch, quad!(
 					x as f32 / tw as f32,
@@ -163,6 +170,11 @@ impl TruetypeFont {
 
 	}
 
+	/// prepare all ascii chars
+	pub fn prepare_asciis(&mut self) -> Result<()> {
+		return self.prepare(ASCII_CHARS);
+	}
+
 	/// get width of a string
 	pub fn width(&self, s: &str) -> i32 {
 		return s
@@ -175,7 +187,7 @@ impl TruetypeFont {
 
 	/// get height of a char
 	pub fn height(&self) -> i32 {
-		return self.size as i32;
+		return self.size;
 	}
 
 }

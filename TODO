@@ -61,6 +61,7 @@
 - [gfx] allow z buffer in 2d
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
 - [gfx] text wrapping
+- [gfx] truetype font paddings
 
 == DONE
 - [http] refactor http

@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! OpenGL Abstraction
+
 export!(types);
 export!(texture);
 export!(pipeline);
