@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Bindings to Scripting Languages
+
 #[cfg(all(feature = "lua", feature = "python"))]
 compile_error!("can only enable one scripting option");
 

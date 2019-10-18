@@ -11,6 +11,7 @@
 #![feature(type_alias_impl_trait)]
 
 #![allow(unused_parens)]
+// #![warn(missing_docs)]
 #![deny(clippy::implicit_return)]
 
 #[allow(unused_macros)]

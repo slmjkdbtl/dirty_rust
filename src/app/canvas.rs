@@ -7,44 +7,54 @@ use crate::*;
 use super::*;
 use super::gfx::*;
 
+/// framebuffer for off-screen rendering
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
-	pub(super) handle: Rc<gl::Framebuffer>,
-	pub(super) tex: Texture,
+	gl_fbuf: Rc<gl::Framebuffer>,
+	tex: Texture,
 }
 
 impl Canvas {
 
+	/// create a new canvas from width and height
 	pub fn new(ctx: &Ctx, width: i32, height: i32) -> Result<Self> {
 
 		let dpi = ctx.dpi();
 		let tw = (width as f64 * dpi) as i32;
 		let th = (height as f64 * dpi) as i32;
-		let handle = gl::Framebuffer::new(&ctx.gl, tw, th)?;
-		let tex = Texture::from_handle(handle.tex().clone());
+		let fbuf = gl::Framebuffer::new(&ctx.gl, tw, th)?;
+		let tex = Texture::from_gl_tex(fbuf.tex().clone());
 
 		return Ok(Self {
-			handle: Rc::new(handle),
+			gl_fbuf: Rc::new(fbuf),
 			tex: tex,
 		});
 
 	}
 
+	/// get canvas width
 	pub fn width(&self) -> i32 {
 		return self.tex.width();
 	}
 
+	/// get canvas height
 	pub fn height(&self) -> i32 {
 		return self.tex.height();
 	}
 
+	/// get underlying texture for the canvas
 	pub fn tex(&self) -> &Texture {
 		return &self.tex;
 	}
 
+	/// capture and save to an image
 	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 		return self.tex.save(path);
+	}
+
+	pub(super) fn gl_fbuf(&self) -> &gl::Framebuffer {
+		return &self.gl_fbuf;
 	}
 
 }

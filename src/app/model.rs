@@ -7,17 +7,23 @@ use crate::*;
 use super::*;
 use super::gfx::*;
 
+/// 3d model
 #[derive(Clone)]
 pub struct Model {
-	pub(super) meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
+	meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
 }
 
+/// 3d model mesh data
 #[derive(Clone)]
 pub struct ModelData(Vec<(Vec<f32>, Vec<u32>)>);
 
 impl Model {
 
+	// TODO: combine this with the one below
+	/// load mesh data with materials that's safe to send between threads
 	pub fn prepare_obj_mtl(obj: &str, mtl: &str) -> Result<ModelData> {
+
+		use gl::VertexLayout;
 
 		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
 			return tobj::load_mtl_buf(&mut Cursor::new(mtl));
@@ -75,7 +81,10 @@ impl Model {
 
 	}
 
+	/// load mesh data that's safe to send between threads
 	pub fn prepare_obj(obj: &str) -> Result<ModelData> {
+
+		use gl::VertexLayout;
 
 		let (models, _) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
 			return Err(tobj::LoadError::GenericFailure);
@@ -124,6 +133,7 @@ impl Model {
 
 	}
 
+	/// create model with mesh data
 	pub fn from(ctx: &Ctx, models: ModelData) -> Result<Self> {
 
 // 		let meshes = models
@@ -143,12 +153,18 @@ impl Model {
 
 	}
 
+	/// create model from obj
 	pub fn from_obj(ctx: &Ctx, obj: &str) -> Result<Self> {
 		return Self::from(ctx, Self::prepare_obj(obj)?);
 	}
 
+	/// create model from obj with materials
 	pub fn from_obj_mtl(ctx: &Ctx, obj: &str, mtl: &str) -> Result<Self> {
 		return Self::from(ctx, Self::prepare_obj_mtl(obj, mtl)?);
+	}
+
+	pub(super) fn meshes(&self) -> &[Rc<gl::Mesh<Vertex3D, Uniform3D>>] {
+		return &self.meshes;
 	}
 
 }

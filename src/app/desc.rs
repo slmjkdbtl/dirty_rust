@@ -7,6 +7,7 @@ use super::gfx::*;
 
 use crate::gl;
 
+/// vertex layout for the 2d pipeline
 #[derive(Clone)]
 pub struct Vertex2D {
 	pub pos: Vec2,
@@ -41,6 +42,7 @@ impl gl::VertexLayout for Vertex2D {
 
 }
 
+/// vertex layout for the 3d pipeline
 #[derive(Clone)]
 pub struct Vertex3D {
 	pub pos: Vec3,
@@ -81,6 +83,7 @@ impl gl::VertexLayout for Vertex3D {
 
 }
 
+/// uniform layout for the 2d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
@@ -105,11 +108,12 @@ impl gl::UniformLayout for Uniform2D {
 	}
 
 	fn texture(&self) -> Option<&gl::Texture> {
-		return Some(&self.tex.handle);
+		return Some(&self.tex.gl_tex());
 	}
 
 }
 
+/// uniform layout for the 3d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform3D {
 
@@ -142,11 +146,12 @@ impl gl::UniformLayout for Uniform3D {
 	}
 
 	fn texture(&self) -> Option<&gl::Texture> {
-		return Some(&self.tex.handle);
+		return Some(&self.tex.gl_tex());
 	}
 
 }
 
+/// shape for a quad
 pub(super) struct QuadShape {
 	pub transform: Mat4,
 	pub quad: Quad,
@@ -154,12 +159,14 @@ pub(super) struct QuadShape {
 	pub flip: Flip,
 }
 
-impl Shape for QuadShape {
+impl gl::Shape for QuadShape {
 
 	type Vertex = Vertex2D;
 	const COUNT: usize = 4;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
+
+		use gl::VertexLayout;
 
 		let t = self.transform;
 		let q = self.quad;
@@ -223,6 +230,7 @@ impl Shape for QuadShape {
 }
 
 // TODO: messy
+/// shape for a flag
 pub(super) struct FlagShape {
 	pub transform: Mat4,
 	pub quad: Quad,
@@ -230,12 +238,14 @@ pub(super) struct FlagShape {
 	pub flip: Flip,
 }
 
-impl Shape for FlagShape {
+impl gl::Shape for FlagShape {
 
 	type Vertex = Vertex3D;
 	const COUNT: usize = 4;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
+
+		use gl::VertexLayout;
 
 		let t = self.transform;
 		let q = self.quad;
@@ -302,14 +312,17 @@ impl Shape for FlagShape {
 
 }
 
+/// shape for a cube
 pub(super) struct CubeShape;
 
-impl Shape for CubeShape {
+impl gl::Shape for CubeShape {
 
 	type Vertex = Vertex3D;
 	const COUNT: usize = 8;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
+
+		use gl::VertexLayout;
 
 		Vertex3D {
 			pos: vec3!(-0.5, -0.5, 0.5),

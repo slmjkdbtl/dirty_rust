@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Common Shapes for Drawing
+
 use std::f32::consts::PI;
 
 use super::*;
@@ -164,6 +166,8 @@ impl<'a> Drawable for Text<'a> {
 		let align = self.align.unwrap_or(ctx.conf.origin);
 		let offset = (align.as_pt() + vec2!(1)) * 0.5;
 		let offset_pos = -offset * vec2!(pw, ph);
+
+// 		ctx.draw(sprite(&tex))?;
 
 		ctx.push(&gfx::t()
 			.translate(offset_pos)
@@ -915,7 +919,7 @@ impl<'a> Drawable for Canvas<'a> {
 		ctx.push(&gfx::t()
 			.scale(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
-			return ctx.draw(sprite(&self.canvas.tex).color(self.color));
+			return ctx.draw(sprite(&self.canvas.tex()).color(self.color));
 		})?;
 
 		return Ok(());
@@ -953,7 +957,7 @@ impl<'a> Drawable for Model<'a> {
 
 		ctx.draw_calls += 1;
 
-		for m in &self.model.meshes {
+		for m in self.model.meshes() {
 			m.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,

@@ -9,21 +9,22 @@ use super::*;
 #[cfg(feature = "img")]
 use crate::img::Image;
 
+/// texture
 #[derive(Clone, PartialEq)]
 pub struct Texture {
-	pub(super) handle: Rc<gl::Texture>,
+	gl_tex: Rc<gl::Texture>,
 }
 
 impl Texture {
 
-	pub(super) fn from_handle(handle: gl::Texture) -> Self {
+	pub(super) fn from_gl_tex(gl_tex: gl::Texture) -> Self {
 		return Self {
-			handle: Rc::new(handle),
+			gl_tex: Rc::new(gl_tex),
 		};
 	}
 
 	pub fn new(ctx: &Ctx, w: i32, h: i32) -> Result<Self> {
-		return Ok(Self::from_handle(gl::Texture::new(&ctx.gl, w, h)?));
+		return Ok(Self::from_gl_tex(gl::Texture::new(&ctx.gl, w, h)?));
 	}
 
 	#[cfg(feature = "img")]
@@ -43,30 +44,30 @@ impl Texture {
 
 	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
-		let handle = gl::Texture::from(&ctx.gl, w, h, &pixels)?;
-		handle.filter(ctx.conf.texture_filter);
-		return Ok(Self::from_handle(handle));
+		let gl_tex = gl::Texture::from(&ctx.gl, w, h, &pixels)?;
+		gl_tex.filter(ctx.conf.texture_filter);
+		return Ok(Self::from_gl_tex(gl_tex));
 
 	}
 
 	pub fn width(&self) -> i32 {
-		return self.handle.width();
+		return self.gl_tex.width();
 	}
 
 	pub fn height(&self) -> i32 {
-		return self.handle.height();
+		return self.gl_tex.height();
 	}
 
 	pub fn get_pixels(&self) -> Vec<u8> {
-		return self.handle.get_data(self.width(), self.height());
+		return self.gl_tex.get_data(self.width(), self.height());
 	}
 
 	pub(super) fn data(&self, data: &[u8]) {
-		self.handle.data(data);
+		self.gl_tex.data(data);
 	}
 
 	pub(super) fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
-		self.handle.sub_data(x, y, w, h, data);
+		self.gl_tex.sub_data(x, y, w, h, data);
 	}
 
 	#[cfg(feature = "img")]
@@ -82,6 +83,10 @@ impl Texture {
 
 		return Ok(());
 
+	}
+
+	pub(super) fn gl_tex(&self) -> &gl::Texture {
+		return &self.gl_tex;
 	}
 
 }
