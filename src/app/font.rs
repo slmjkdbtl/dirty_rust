@@ -118,7 +118,7 @@ impl TruetypeFont {
 	}
 
 	/// manually cache characters
-	pub fn prepare(&mut self, s: &str) -> Result<()> {
+	pub fn cache(&mut self, s: &str) -> Result<()> {
 
 		let (tw, th) = (self.tex.width(), self.tex.height());
 
@@ -170,9 +170,9 @@ impl TruetypeFont {
 
 	}
 
-	/// prepare all ascii chars
-	pub fn prepare_asciis(&mut self) -> Result<()> {
-		return self.prepare(ASCII_CHARS);
+	/// cache all ascii chars
+	pub fn cache_asciis(&mut self) -> Result<()> {
+		return self.cache(ASCII_CHARS);
 	}
 
 	/// get width of a string
@@ -200,4 +200,6 @@ impl Font for TruetypeFont {
 		return &self.map;
 	}
 }
+
+// TODO: 3d extruded text
 
