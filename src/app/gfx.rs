@@ -8,8 +8,8 @@ use super::*;
 
 pub use gl::UniformValues;
 pub use gl::FilterMode;
-use gl::Surface;
-use gl::Cmp;
+pub use gl::Surface;
+pub use gl::Cmp;
 
 pub use res::CP437_IMG;
 pub use res::CP437_COLS;

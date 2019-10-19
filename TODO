@@ -14,7 +14,6 @@
 - [example] rubiks cube example
 - [math] noise function
 - [gfx] sphere
-- [gfx] framebuffer get and set individual pixels and pixel arrays
 - [img] image resizing
 - [misc] no cargo warnings
 - [window] different monitors
@@ -28,7 +27,6 @@
 - [geom] integrate collision detection with shape (?)
 - [misc] wasm
 - [app] upgrade to glutin 0.22
-- [gfx] 3D text
 - [gfx] try draw cubes with batched renderer
 - [gfx] postprocessing (chaining shader + canvas)
 - [gfx] fallback font
@@ -53,7 +51,7 @@
 - [window] get mouse pos at first frame
 - [gfx] scale modes
 - [gfx] npatch
-- [gfx] 3d ortho
+- [gfx] 3d ortho cam
 - [gfx] draw curve
 - [gfx] draw default to a framebuffer
 - [gfx] global scale
@@ -62,6 +60,9 @@
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
 - [gfx] text wrapping
 - [gfx] truetype font paddings
+- [gfx] 3d extruded text
+- [app] global messaging with custom type (?)
+- [gl] shader uniform mismatch
 
 == DONE
 - [http] refactor http
