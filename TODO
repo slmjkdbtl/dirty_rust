@@ -2,6 +2,8 @@
 
 == DOING
 - [gfx] investigate the extreme slowness of the 2d renderer
+- [gfx] draw curve
+- [gfx] mesh calculate bounding box
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -49,10 +51,8 @@
 - [app] quit handler
 - [gfx] obj model flipped
 - [window] get mouse pos at first frame
-- [gfx] scale modes
 - [gfx] npatch
 - [gfx] 3d ortho cam
-- [gfx] draw curve
 - [gfx] draw default to a framebuffer
 - [gfx] global scale
 - [gfx] first polygon isn't drawing
@@ -63,6 +63,8 @@
 - [gfx] 3d extruded text
 - [app] global messaging with custom type (?)
 - [gl] shader uniform mismatch
+- [gfx] make all shapes cachable
+- [gfx] scale modes
 
 == DONE
 - [http] refactor http
@@ -132,4 +134,5 @@
 - [gfx] integrate ttf into shapes::Text
 - [gfx] use Font trait for text rendering
 - [gfx] split into submodules
+- [gfx] ignore obj no mtl error
 

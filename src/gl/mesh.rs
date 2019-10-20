@@ -5,8 +5,14 @@ use std::marker::PhantomData;
 use super::*;
 use crate::Result;
 
-pub struct Mesh<V: VertexLayout, U: UniformLayout> {
+#[derive(Clone)]
+pub struct MeshData<V: VertexLayout> {
+	pub vertices: Vec<V>,
+	pub indices: Vec<u32>,
+}
 
+#[derive(Clone)]
+pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	#[cfg(feature="gl3")]
@@ -14,7 +20,6 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 	count: usize,
 	prim: Primitive,
 	uniform_layout: PhantomData<U>,
-
 }
 
 impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
@@ -36,6 +41,18 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 			prim: Primitive::Triangle,
 			uniform_layout: PhantomData,
 		});
+
+	}
+
+	pub fn from_meshdata(device: &Device, data: MeshData<V>) -> Result<Self> {
+
+		let mut verts = Vec::with_capacity(data.vertices.len() * V::STRIDE);
+
+		for v in data.vertices {
+			v.push(&mut verts);
+		}
+
+		return Self::new(device, &verts, &data.indices);
 
 	}
 

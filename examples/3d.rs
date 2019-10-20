@@ -7,7 +7,9 @@ use input::Key;
 
 struct Game {
 	tex: gfx::Texture,
-	model: gfx::Model,
+	shader: gfx::Shader3D<()>,
+	plant: gfx::Mesh,
+	ok: gfx::Mesh,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
@@ -19,9 +21,11 @@ impl app::State for Game {
 
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
-			model: gfx::Model::from_obj_mtl(ctx, include_str!("res/plant.obj"), include_str!("res/plant.mtl"))?,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
-			move_speed: 8.0,
+			plant: gfx::Mesh::from_obj(ctx, include_str!("res/plant.obj"), Some(include_str!("res/plant.mtl")))?,
+			ok: gfx::Mesh::from_obj(ctx, include_str!("res/ok.obj"), None)?,
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12.0), 0.0, 0.0),
+			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
+			move_speed: 9.0,
 			eye_speed: 0.16,
 		});
 
@@ -37,7 +41,6 @@ impl app::State for Game {
 				if k == Key::Esc {
 					ctx.toggle_cursor_hidden();
 					ctx.toggle_cursor_locked()?;
-// 					ctx.quit();
 				}
 				if k == Key::F {
 					ctx.toggle_fullscreen();
@@ -116,9 +119,16 @@ impl app::State for Game {
 // 				return ctx.draw(shapes::sprite3d(&self.tex));
 // 			})?;
 
-			ctx.push(&gfx::t()
-			, |ctx| {
-				return ctx.draw(shapes::model(&self.model));
+			ctx.draw_3d_with(&self.shader, &(), |ctx| {
+
+				ctx.push(&gfx::t()
+				, |ctx| {
+					return ctx.draw(&shapes::mesh(&self.ok));
+// 					return ctx.draw(&shapes::mesh(&self.plant));
+				})?;
+
+				return Ok(());
+
 			})?;
 
 			return Ok(());

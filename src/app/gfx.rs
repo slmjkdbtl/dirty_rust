@@ -27,7 +27,7 @@ pub use shader::*;
 pub use canvas::*;
 pub use font::*;
 pub use camera::*;
-pub use model::*;
+pub use mesh::*;
 pub use desc::*;
 
 pub trait Gfx {
@@ -40,7 +40,7 @@ pub trait Gfx {
 	fn draw_calls(&self) -> usize;
 
 	// drawing
-	fn draw(&mut self, t: impl Drawable) -> Result<()>;
+	fn draw(&mut self, t: &impl Drawable) -> Result<()>;
 	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
@@ -96,7 +96,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw(&mut self, thing: impl Drawable) -> Result<()> {
+	fn draw(&mut self, thing: &impl Drawable) -> Result<()> {
 		return thing.draw(self);
 	}
 

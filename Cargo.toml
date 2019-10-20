@@ -71,6 +71,7 @@ app = [
 	"glow",
 	"fontdue",
 	"stdweb",
+	"splines",
 ]
 
 img = [
@@ -147,6 +148,7 @@ glob = { version = "0.3", optional = true }
 
 glow = { version = "0.3.0-alpha3", optional = true, default-features = false, features = [ "stdweb", ] }
 fontdue = { version = "0.0", optional = true }
+splines = { version = "2.2", optional = true }
 
 image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", "jpeg", ] }
 tobj = { version = "0.1", optional = true }

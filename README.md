@@ -59,10 +59,10 @@ impl app::State for Game {
 			.rotate_y(ctx.time())
 			.rotate_z(ctx.time())
 		, |ctx| {
-			return ctx.draw(shapes::cube());
+			return ctx.draw(&shapes::cube());
 		})?;
 
-		ctx.draw(shapes::text("yo"))?;
+		ctx.draw(&shapes::text("yo"))?;
 
 		return Ok(());
 

@@ -43,12 +43,12 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		use shapes::*;
 
 		ctx.draw(
-			gradient(
+			&gradient(
 				ctx.coord(gfx::Origin::Top),
 				ctx.coord(gfx::Origin::Bottom),
 				&[
@@ -62,31 +62,31 @@ impl app::State for Game {
 
 		for p in &self.pts {
 			ctx.draw(
-				circle(*p, 3.0)
+				&circle(*p, 3.0)
 					.fill(Color::BLUE)
 			)?;
 		}
 
 		ctx.draw(
-			polygon(&self.pts)
+			&polygon(&self.pts)
 				.stroke(color!(1.0))
 				.no_fill()
 				.line_width(1.0)
 		)?;
 
 		ctx.draw(
-			circle(vec2!(0), 120.0)
+			&circle(vec2!(0), 120.0)
 				.fill(color!(1, 0, 1, 1))
 		)?;
 
 		ctx.draw(
-			rect(vec2!(-72, -54), vec2!(72, 54))
+			&rect(vec2!(-72, -54), vec2!(72, 54))
 				.fill(color!(0, 1, 1, 1))
 				.radius(12.0)
 		)?;
 
 		ctx.draw(
-			rect(vec2!(-48, -32), vec2!(48, 32))
+			&rect(vec2!(-48, -32), vec2!(48, 32))
 				.stroke(color!(1, 1, 0, 1))
 				.no_fill()
 				.line_width(2.0)
@@ -94,8 +94,16 @@ impl app::State for Game {
 		)?;
 
 		ctx.draw(
-			text("geom")
+			&text("geom")
 				.color(color!(0, 0, 1, 1))
+		)?;
+
+		ctx.draw(
+			&Curve::from_pts(&[
+				(0.0, vec2!(-48)),
+				(0.4, vec2!(36, -24)),
+				(1.0, vec2!(48))
+			])
 		)?;
 
 		return Ok(());
