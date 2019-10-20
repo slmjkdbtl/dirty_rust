@@ -107,7 +107,7 @@ impl app::State for Game {
 				ctx.push(&gfx::t()
 					.rotate_y(ctx.time())
 				, |ctx| {
-					ctx.draw(shapes::model(&self.model))?;
+					ctx.draw(&shapes::model(&self.model))?;
 					return Ok(());
 				})?;
 

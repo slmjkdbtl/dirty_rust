@@ -51,7 +51,7 @@ impl PixEffect {
 	pub fn draw(&self, ctx: &mut app::Ctx, u: &PixUniform) -> Result<()> {
 
 		ctx.draw_2d_with(&self.shader, u, |ctx| {
-			ctx.draw(shapes::canvas(&self.canvas))?;
+			ctx.draw(&shapes::canvas(&self.canvas))?;
 			return Ok(());
 		})?;
 

@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Common Shapes for Drawing
+//! Common Drawing Primitives
 
 use std::f32::consts::PI;
 
@@ -184,7 +184,7 @@ impl<'a> Drawable for Text<'a> {
 					, |ctx| {
 
 						ctx.draw(
-							shapes::sprite(&tex)
+							&shapes::sprite(&tex)
 								.offset(vec2!(-1))
 								.quad(*quad)
 								.color(self.color)
@@ -337,18 +337,18 @@ impl Drawable for Polygon {
 
 				match stroke.join {
 					None => {
-						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Bevel => {
 						// TODO
-						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Miter => {
 						// TODO
-						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Round => {
-						ctx.draw(line(p1, p2).width(stroke.width).color(stroke.color).cap(gfx::LineCap::Round))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color).cap(gfx::LineCap::Round))?;
 					},
 				}
 
@@ -548,7 +548,7 @@ impl Drawable for Rect {
 			radius: self.radius,
 		};
 
-		ctx.draw(poly)?;
+		ctx.draw(&poly)?;
 
 		return Ok(());
 
@@ -625,11 +625,11 @@ impl Drawable for Line {
 			let w = len;
 			let h = self.width;
 
-			ctx.draw(Rect::from_size(w, h).fill(self.color))?;
+			ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
 
 			if let gfx::LineCap::Round = self.cap {
-				ctx.draw(circle(vec2!(-w / 2.0, 0), h / 2.0))?;
-				ctx.draw(circle(vec2!(w / 2.0, 0), h / 2.0))?;
+				ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
+				ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
 			}
 
 			return Ok(());
@@ -642,9 +642,85 @@ impl Drawable for Line {
 
 }
 
+impl splines::interpolate::Linear<f32> for Vec2 {
+	fn outer_mul(self, t: f32) -> Self {
+		return self * t;
+	}
+	fn outer_div(self, t: f32) -> Self {
+		return self / t;
+	}
+}
+
+impl splines::Interpolate<f32> for Vec2 {
+	fn lerp(a: Self, b: Self, t: f32) -> Self {
+		return a * (1. - t) + b * t;
+	}
+
+	fn cubic_hermite(x: (Self, f32), a: (Self, f32), b: (Self, f32), y: (Self, f32), t: f32) -> Self {
+		return splines::interpolate::cubic_hermite_def(x, a, b, y, t);
+	}
+
+	fn quadratic_bezier(a: Self, u: Self, b: Self, t: f32) -> Self {
+		return splines::interpolate::quadratic_bezier_def(a, u, b, t);
+	}
+
+	fn cubic_bezier(a: Self, u: Self, v: Self, b: Self, t: f32) -> Self {
+		return splines::interpolate::cubic_bezier_def(a, u, v, b, t);
+	}
+}
+
 // TODO
 pub struct Curve {
-	// ...
+	dt: f32,
+	spline: splines::Spline<f32, Vec2>,
+}
+
+pub use splines::Interpolation as Interp;
+
+impl Curve {
+
+	pub fn from_pts(pts: &[(f32, Vec2)]) -> Self {
+
+		use splines::Key;
+
+		let keys = pts
+			.iter()
+			.map(|(t, p)| Key::new(*t, *p, Interp::Cosine))
+			.collect();
+
+		let spline = splines::Spline::from_vec(keys);
+
+		return Self {
+			dt: 0.1,
+			spline: spline,
+		};
+
+	}
+
+}
+
+impl Drawable for Curve {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let mut step = 0.0;
+		let mut samples = vec![];
+
+		while step <= 1.0 {
+			if let Some(sample) = self.spline.sample(step) {
+				samples.push(sample);
+			}
+			step += self.dt;
+		}
+
+		for i in 0..samples.len() - 1 {
+			ctx.draw(&line(samples[i], samples[i + 1]))?;
+		}
+
+		return Ok(());
+
+	}
+
 }
 
 pub enum PointMode {
@@ -695,7 +771,7 @@ impl<'a> Drawable for Points<'a> {
 			ctx.push(&gfx::t()
 				.translate(*pt)
 			, |ctx| {
-				return ctx.draw(Rect::from_size(self.size, self.size).fill(self.color));
+				return ctx.draw(&Rect::from_size(self.size, self.size).fill(self.color));
 			})?;
 		}
 
@@ -877,7 +953,7 @@ impl Drawable for Circle {
 				radius: None,
 			};
 
-			ctx.draw(poly)?;
+			ctx.draw(&poly)?;
 
 			return Ok(());
 
@@ -919,7 +995,7 @@ impl<'a> Drawable for Canvas<'a> {
 		ctx.push(&gfx::t()
 			.scale(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
-			return ctx.draw(sprite(&self.canvas.tex()).color(self.color));
+			return ctx.draw(&sprite(&self.canvas.tex()).color(self.color));
 		})?;
 
 		return Ok(());
@@ -928,19 +1004,19 @@ impl<'a> Drawable for Canvas<'a> {
 
 }
 
-pub struct Model<'a> {
-	model: &'a gfx::Model,
+pub struct Mesh<'a> {
+	mesh: &'a gfx::Mesh,
 	color: Color,
 }
 
-pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
-	return Model {
-		model: m,
+pub fn mesh<'a>(m: &'a gfx::Mesh) -> Mesh<'a> {
+	return Mesh {
+		mesh: m,
 		color: color!(1),
 	};
 }
 
-impl<'a> Model<'a> {
+impl<'a> Mesh<'a> {
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
 		return self;
@@ -951,13 +1027,13 @@ impl<'a> Model<'a> {
 	}
 }
 
-impl<'a> Drawable for Model<'a> {
+impl<'a> Drawable for Mesh<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw_calls += 1;
 
-		for m in self.model.meshes() {
+		for m in self.mesh.meshes() {
 			m.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,
