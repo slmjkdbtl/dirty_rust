@@ -65,6 +65,14 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
+	pub fn vbuf(&self) -> &VertexBuffer<V> {
+		return &self.vbuf;
+	}
+
+	pub fn ibuf(&self) -> &IndexBuffer {
+		return &self.ibuf;
+	}
+
 	pub fn draw(&self, pipeline: &Pipeline<V, U>, uniforms: Option<&U>) {
 
 		pipeline.draw(

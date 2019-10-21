@@ -69,23 +69,30 @@ impl Transform {
 
 }
 
+impl ops::Mul<Transform> for Mat4 {
+	type Output = Mat4;
+	fn mul(self, m: Transform) -> Self::Output {
+		return self * m.as_mat4();
+	}
+}
+
 impl ops::Mul<Vec4> for Transform {
 	type Output = Vec4;
-	fn mul(self, pt: Self::Output) -> Self::Output {
+	fn mul(self, pt: Vec4) -> Self::Output {
 		return self.matrix * pt;
 	}
 }
 
 impl ops::Mul<Vec3> for Transform {
 	type Output = Vec3;
-	fn mul(self, pt: Self::Output) -> Self::Output {
+	fn mul(self, pt: Vec3) -> Self::Output {
 		return self.matrix * pt;
 	}
 }
 
 impl ops::Mul<Vec2> for Transform {
 	type Output = Vec2;
-	fn mul(self, pt: Self::Output) -> Self::Output {
+	fn mul(self, pt: Vec2) -> Self::Output {
 		return self.matrix * pt;
 	}
 }

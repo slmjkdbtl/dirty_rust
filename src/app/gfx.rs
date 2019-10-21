@@ -246,8 +246,8 @@ impl Gfx for Ctx {
 
 	fn to_sc(&self, pt: Vec3) -> Vec2 {
 
-		let pt = self.proj_3d * self.view_3d * self.transform.as_mat4() * pt;
-		let pt = (pt / pt.z * 0.5).xy() * vec2!(self.width(), -self.height());
+		let pt = self.proj_3d * self.view_3d * self.transform * pt;
+		let pt = (pt / pt.z * 0.5).xy() * vec2!(self.gwidth(), -self.gheight());
 
 		return pt;
 
@@ -365,27 +365,6 @@ impl Origin {
 
 	}
 
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum NormalMode {
-	Vertex,
-	Surface,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum LineJoin {
-	None,
-	Round,
-	Bevel,
-	Miter,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum LineCap {
-	Square,
-	Butt,
-	Round,
 }
 
 pub trait Drawable {
