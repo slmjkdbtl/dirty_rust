@@ -52,7 +52,7 @@ impl Mesh {
 			let color = mtl
 				.map(|m| m.diffuse)
 				.map(|d| color!(d[0], d[1], d[2], 1.0))
-				.unwrap_or(color!(rand!(), rand!(), rand!(), 1));
+				.unwrap_or(color!());
 
 			for i in 0..vert_count {
 
@@ -105,8 +105,41 @@ impl Mesh {
 		return &self.meshes;
 	}
 
+	pub fn update(&mut self, f: impl FnOnce(&mut MeshData)) {
+
+		use gl::VertexLayout;
+
+		f(&mut self.data);
+
+		for (i, m) in self.data.iter().enumerate() {
+
+			if let Some(mesh) = self.meshes.get(i) {
+
+				let mut queue = Vec::with_capacity(m.vertices.len() * Vertex3D::STRIDE);
+
+				for v in &m.vertices {
+					v.push(&mut queue);
+				}
+
+				mesh.vbuf().data(0, &queue);
+				mesh.ibuf().data(0, &m.indices);
+
+			}
+
+		}
+
+	}
+
 	pub fn meshdata(&self) -> &MeshData {
 		return &self.data;
+	}
+
+	pub fn center(&self) -> Vec3 {
+
+		let (min, max) = self.bbox();
+
+		return (min + max) / 2.0;
+
 	}
 
 	pub fn bbox(&self) -> (Vec3, Vec3) {

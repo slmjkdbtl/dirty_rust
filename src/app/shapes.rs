@@ -18,6 +18,15 @@ pub struct Sprite<'a> {
 }
 
 impl<'a> Sprite<'a> {
+	pub fn new(tex: &'a gfx::Texture) -> Self {
+		return Self {
+			tex: tex,
+			quad: quad!(0, 0, 1, 1),
+			color: color!(1),
+			offset: None,
+			flip: gfx::Flip::None,
+		};
+	}
 	pub fn quad(mut self, quad: Quad) -> Self {
 		self.quad = quad;
 		return self;
@@ -41,13 +50,7 @@ impl<'a> Sprite<'a> {
 }
 
 pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
-	return Sprite {
-		tex: tex,
-		quad: quad!(0, 0, 1, 1),
-		color: color!(1),
-		offset: None,
-		flip: gfx::Flip::None,
-	};
+	return Sprite::new(tex);
 }
 
 impl<'a> Drawable for Sprite<'a> {
@@ -84,6 +87,7 @@ impl<'a> Drawable for Sprite<'a> {
 
 }
 
+#[derive(Clone)]
 pub struct Text<'a> {
 	content: &'a str,
 	font: Option<&'a dyn gfx::Font>,
@@ -92,17 +96,16 @@ pub struct Text<'a> {
 	wrap: Option<f32>,
 }
 
-pub fn text<'a>(s: &'a str) -> Text<'a> {
-	return Text {
-		content: s,
-		font: None,
-		align: None,
-		color: color!(1),
-		wrap: None,
-	};
-}
-
 impl<'a> Text<'a> {
+	pub fn new(s: &'a str) -> Self {
+		return Self {
+			content: s,
+			font: None,
+			align: None,
+			color: color!(1),
+			wrap: None,
+		};
+	}
 	pub fn font(mut self, f: &'a dyn gfx::Font) -> Self {
 		self.font = Some(f);
 		return self;
@@ -123,6 +126,10 @@ impl<'a> Text<'a> {
 		self.wrap = Some(wrap);
 		return self;
 	}
+}
+
+pub fn text<'a>(s: &'a str) -> Text<'a> {
+	return Text::new(s);
 }
 
 impl<'a> Drawable for Text<'a> {
@@ -210,14 +217,36 @@ impl<'a> Drawable for Text<'a> {
 
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct LineDash {
+	len: f32,
+	interval: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum LineJoin {
+	None,
+	Round,
+	Bevel,
+	Miter,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum LineCap {
+	Square,
+	Butt,
+	Round,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct Stroke {
 	width: f32,
-	join: gfx::LineJoin,
+	join: LineJoin,
 	dash: Option<LineDash>,
 	color: Color,
 }
 
+#[derive(Clone)]
 pub struct Polygon {
 	pts: Vec<Vec2>,
 	fill: Option<Color>,
@@ -226,6 +255,14 @@ pub struct Polygon {
 }
 
 impl Polygon {
+	pub fn from_pts(pts: &[Vec2]) -> Self {
+		return Self {
+			pts: pts.to_vec(),
+			fill: Some(color!()),
+			stroke: None,
+			radius: None,
+		};
+	}
 	pub fn fill(mut self, c: Color) -> Self {
 		self.fill = Some(c);
 		return self;
@@ -246,13 +283,13 @@ impl Polygon {
 	pub fn stroke(mut self, c: Color) -> Self {
 		self.stroke = Some(Stroke {
 			width: 1.0,
-			join: gfx::LineJoin::None,
+			join: LineJoin::None,
 			dash: None,
 			color: c,
 		});
 		return self
 	}
-	pub fn line_join(mut self, j: gfx::LineJoin) -> Self {
+	pub fn line_join(mut self, j: LineJoin) -> Self {
 		if let Some(stroke) = &mut self.stroke {
 			stroke.join = j;
 		}
@@ -264,24 +301,16 @@ impl Polygon {
 		}
 		return self;
 	}
-// 	pub fn radius(mut self, r: f32) -> Self {
-// 		self.radius = Some(r);
-// 		return self
-// 	}
+	pub fn radius(mut self, r: f32) -> Self {
+		self.radius = Some(r);
+		return self
+	}
 }
 
 pub fn polygon(pts: &[Vec2]) -> Polygon {
-
-	return Polygon {
-		pts: pts.to_vec(),
-		fill: Some(color!()),
-		stroke: None,
-		radius: None,
-	};
-
+	return Polygon::from_pts(pts);
 }
 
-// TODO: first polygon isn't drawing
 impl Drawable for Polygon {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
@@ -333,7 +362,7 @@ impl Drawable for Polygon {
 				let p1 = pts[i];
 				let p2 = pts[(i + 1) % pts.len()];
 
-				use gfx::LineJoin::*;
+				use LineJoin::*;
 
 				match stroke.join {
 					None => {
@@ -348,7 +377,7 @@ impl Drawable for Polygon {
 						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color))?;
 					},
 					Round => {
-						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color).cap(gfx::LineCap::Round))?;
+						ctx.draw(&line(p1, p2).width(stroke.width).color(stroke.color).cap(LineCap::Round))?;
 					},
 				}
 
@@ -362,6 +391,7 @@ impl Drawable for Polygon {
 
 }
 
+#[derive(Clone)]
 pub struct Gradient {
 	p1: Vec2,
 	p2: Vec2,
@@ -369,20 +399,23 @@ pub struct Gradient {
 	width: f32,
 }
 
-pub fn gradient(p1: Vec2, p2: Vec2, steps: &[(Color, f32)]) -> Gradient {
-	return Gradient {
-		p1: p1,
-		p2: p2,
-		steps: steps.to_vec(),
-		width: 1.0,
-	};
-}
-
 impl Gradient {
+	pub fn from(p1: Vec2, p2: Vec2, steps: &[(Color, f32)]) -> Gradient {
+		return Self {
+			p1: p1,
+			p2: p2,
+			steps: steps.to_vec(),
+			width: 1.0,
+		};
+	}
 	pub fn width(mut self, w: f32) -> Self {
 		self.width = w;
 		return self;
 	}
+}
+
+pub fn gradient(p1: Vec2, p2: Vec2, steps: &[(Color, f32)]) -> Gradient {
+	return Gradient::from(p1, p2, steps);
 }
 
 impl Drawable for Gradient {
@@ -461,6 +494,7 @@ impl Drawable for Gradient {
 
 }
 
+#[derive(Clone)]
 pub struct Rect {
 	p1: Vec2,
 	p2: Vec2,
@@ -469,11 +503,19 @@ pub struct Rect {
 	stroke: Option<Stroke>,
 }
 
-pub fn rect(p1: Vec2, p2: Vec2) -> Rect {
-	return Rect::new(p1, p2);
-}
-
 impl Rect {
+	pub fn from_pts(p1: Vec2, p2: Vec2) -> Self {
+		return Self {
+			p1: p1,
+			p2: p2,
+			radius: None,
+			stroke: None,
+			fill: Some(color!(1)),
+		};
+	}
+	pub fn from_size(w: f32, h: f32) -> Self {
+		return Self::from_pts(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
+	}
 	pub fn radius(mut self, r: f32) -> Self {
 		self.radius = Some(r);
 		return self
@@ -495,25 +537,16 @@ impl Rect {
 		}
 		return self;
 	}
-	pub fn new(p1: Vec2, p2: Vec2) -> Self {
-		return Rect {
-			p1: p1,
-			p2: p2,
-			radius: None,
-			stroke: None,
-			fill: Some(color!(1)),
-		};
-	}
 	pub fn stroke(mut self, c: Color) -> Self {
 		self.stroke = Some(Stroke {
 			width: 1.0,
-			join: gfx::LineJoin::None,
+			join: LineJoin::None,
 			dash: None,
 			color: c,
 		});
 		return self
 	}
-	pub fn line_join(mut self, j: gfx::LineJoin) -> Self {
+	pub fn line_join(mut self, j: LineJoin) -> Self {
 		if let Some(stroke) = &mut self.stroke {
 			stroke.join = j;
 		}
@@ -525,9 +558,10 @@ impl Rect {
 		}
 		return self;
 	}
-	pub fn from_size(w: f32, h: f32) -> Self {
-		return Self::new(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
-	}
+}
+
+pub fn rect(p1: Vec2, p2: Vec2) -> Rect {
+	return Rect::from_pts(p1, p2);
 }
 
 impl Drawable for Rect {
@@ -557,21 +591,26 @@ impl Drawable for Rect {
 }
 
 #[derive(Clone)]
-struct LineDash {
-	len: f32,
-	interval: f32,
-}
-
 pub struct Line {
 	p1: Vec2,
 	p2: Vec2,
 	width: f32,
 	color: Color,
-	cap: gfx::LineCap,
+	cap: LineCap,
 	dash: Option<LineDash>,
 }
 
 impl Line {
+	pub fn from(p1: Vec2, p2: Vec2) -> Line {
+		return Self {
+			p1: p1,
+			p2: p2,
+			width: 1.0,
+			color: color!(1),
+			cap: LineCap::Butt,
+			dash: None,
+		};
+	}
 	pub fn width(mut self, w: f32) -> Self {
 		self.width = w;
 		return self;
@@ -584,7 +623,7 @@ impl Line {
 		self.color.a = a;
 		return self;
 	}
-	pub fn cap(mut self, c: gfx::LineCap) -> Self {
+	pub fn cap(mut self, c: LineCap) -> Self {
 		self.cap = c;
 		return self;
 	}
@@ -598,14 +637,7 @@ impl Line {
 }
 
 pub fn line(p1: Vec2, p2: Vec2) -> Line {
-	return Line {
-		p1: p1,
-		p2: p2,
-		width: 1.0,
-		color: color!(1),
-		cap: gfx::LineCap::Butt,
-		dash: None,
-	};
+	return Line::from(p1, p2);
 }
 
 impl Drawable for Line {
@@ -627,7 +659,7 @@ impl Drawable for Line {
 
 			ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
 
-			if let gfx::LineCap::Round = self.cap {
+			if let LineCap::Round = self.cap {
 				ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
 				ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
 			}
@@ -669,13 +701,14 @@ impl splines::Interpolate<f32> for Vec2 {
 	}
 }
 
+pub use splines::Interpolation as Interp;
+
 // TODO
+#[derive(Clone)]
 pub struct Curve {
 	dt: f32,
 	spline: splines::Spline<f32, Vec2>,
 }
-
-pub use splines::Interpolation as Interp;
 
 impl Curve {
 
@@ -723,11 +756,13 @@ impl Drawable for Curve {
 
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum PointMode {
 	Rect,
 	Circle,
 }
 
+#[derive(Clone)]
 pub struct Points<'a> {
 	pts: &'a[Vec2],
 	size: f32,
@@ -736,6 +771,14 @@ pub struct Points<'a> {
 }
 
 impl<'a> Points<'a> {
+	pub fn from(pts: &'a[Vec2]) -> Self {
+		return Self {
+			pts: pts,
+			size: 1.0,
+			color: color!(1),
+			mode: PointMode::Rect,
+		};
+	}
 	pub fn size(mut self, s: f32) -> Self {
 		self.size = s;
 		return self;
@@ -754,13 +797,8 @@ impl<'a> Points<'a> {
 	}
 }
 
-pub fn pts<'a>(pts: &'a[Vec2]) -> Points<'a> {
-	return Points {
-		pts: pts,
-		size: 1.0,
-		color: color!(1),
-		mode: PointMode::Rect,
-	};
+pub fn points<'a>(pts: &'a[Vec2]) -> Points<'a> {
+	return Points::from(pts);
 }
 
 impl<'a> Drawable for Points<'a> {
@@ -768,11 +806,14 @@ impl<'a> Drawable for Points<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		for pt in self.pts {
-			ctx.push(&gfx::t()
-				.translate(*pt)
-			, |ctx| {
-				return ctx.draw(&Rect::from_size(self.size, self.size).fill(self.color));
-			})?;
+			match self.mode {
+				PointMode::Circle => {
+					ctx.draw(&Circle::new(*pt, self.size).fill(self.color))?;
+				},
+				PointMode::Rect => {
+					ctx.draw(&Rect::from_pts(*pt - vec2!(self.size) * 0.5, *pt + vec2!(self.size) * 0.5).fill(self.color))?;
+				},
+			}
 		}
 
 		return Ok(());
@@ -781,6 +822,7 @@ impl<'a> Drawable for Points<'a> {
 
 }
 
+#[derive(Clone)]
 pub struct Circle {
 	center: Vec2,
 	radius: f32,
@@ -791,6 +833,16 @@ pub struct Circle {
 }
 
 impl Circle {
+	pub fn new(center: Vec2, radius: f32) -> Self {
+		return Self {
+			center: center,
+			radius: radius,
+			segments: None,
+			stroke: None,
+			fill: Some(color!(1)),
+			range: (0.0, 2.0 * PI),
+		};
+	}
 	pub fn fill(mut self, c: Color) -> Self {
 		self.fill = Some(c);
 		return self;
@@ -811,13 +863,13 @@ impl Circle {
 	pub fn stroke(mut self, c: Color) -> Self {
 		self.stroke = Some(Stroke {
 			width: 1.0,
-			join: gfx::LineJoin::None,
+			join: LineJoin::None,
 			dash: None,
 			color: c,
 		});
 		return self;
 	}
-	pub fn line_join(mut self, j: gfx::LineJoin) -> Self {
+	pub fn line_join(mut self, j: LineJoin) -> Self {
 		if let Some(stroke) = &mut self.stroke {
 			stroke.join = j;
 		}
@@ -840,14 +892,7 @@ impl Circle {
 }
 
 pub fn circle(center: Vec2, radius: f32) -> Circle {
-	return Circle {
-		center: center,
-		radius: radius,
-		segments: None,
-		stroke: None,
-		fill: Some(color!(1)),
-		range: (0.0, 2.0 * PI),
-	};
+	return Circle::new(center, radius);
 }
 
 // TODO: is this correct?
@@ -965,19 +1010,23 @@ impl Drawable for Circle {
 
 }
 
+#[derive(Clone)]
 pub struct Canvas<'a> {
 	canvas: &'a gfx::Canvas,
 	color: Color,
 }
 
 pub fn canvas<'a>(c: &'a gfx::Canvas) -> Canvas<'a> {
-	return Canvas {
-		canvas: c,
-		color: color!(1),
-	};
+	return Canvas::new(c);
 }
 
 impl<'a> Canvas<'a> {
+	pub fn new(c: &'a gfx::Canvas) -> Self {
+		return Self {
+			canvas: c,
+			color: color!(1),
+		};
+	}
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
 		return self;
@@ -1004,19 +1053,23 @@ impl<'a> Drawable for Canvas<'a> {
 
 }
 
+#[derive(Clone)]
 pub struct Mesh<'a> {
 	mesh: &'a gfx::Mesh,
 	color: Color,
 }
 
 pub fn mesh<'a>(m: &'a gfx::Mesh) -> Mesh<'a> {
-	return Mesh {
-		mesh: m,
-		color: color!(1),
-	};
+	return Mesh::new(m);
 }
 
 impl<'a> Mesh<'a> {
+	pub fn new(m: &'a gfx::Mesh) -> Self {
+		return Self {
+			mesh: m,
+			color: color!(1),
+		};
+	}
 	pub fn color(mut self, color: Color) -> Self {
 		self.color = color;
 		return self;
@@ -1050,10 +1103,17 @@ impl<'a> Drawable for Mesh<'a> {
 
 }
 
+#[derive(Clone)]
 pub struct Cube;
 
+impl Cube {
+	pub fn new() -> Self {
+		return Self;
+	}
+}
+
 pub fn cube() -> Cube {
-	return Cube;
+	return Cube::new();
 }
 
 impl Drawable for Cube {
@@ -1077,6 +1137,7 @@ impl Drawable for Cube {
 
 }
 
+#[derive(Clone)]
 pub struct Line3D {
 	p1: Vec3,
 	p2: Vec3,
@@ -1084,14 +1145,17 @@ pub struct Line3D {
 }
 
 pub fn line3d(p1: Vec3, p2: Vec3) -> Line3D {
-	return Line3D {
-		p1: p1,
-		p2: p2,
-		color: color!(),
-	};
+	return Line3D::from(p1, p2);
 }
 
 impl Line3D {
+	pub fn from(p1: Vec3, p2: Vec3) -> Self {
+		return Self {
+			p1: p1,
+			p2: p2,
+			color: color!(),
+		};
+	}
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
 		return self;
@@ -1100,6 +1164,7 @@ impl Line3D {
 
 impl Drawable for Line3D {
 
+	// TODO: deal with out of bound
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let p1 = ctx.to_sc(self.p1);
@@ -1116,6 +1181,7 @@ impl Drawable for Line3D {
 
 }
 
+#[derive(Clone)]
 pub struct Rect3D {
 	p1: Vec3,
 	p2: Vec3,
@@ -1123,14 +1189,17 @@ pub struct Rect3D {
 }
 
 pub fn rect3d(p1: Vec3, p2: Vec3) -> Rect3D {
-	return Rect3D {
-		p1: p1,
-		p2: p2,
-		color: color!(),
-	};
+	return Rect3D::from_pts(p1, p2);
 }
 
 impl Rect3D {
+	pub fn from_pts(p1: Vec3, p2: Vec3) -> Self {
+		return Self {
+			p1: p1,
+			p2: p2,
+			color: color!(),
+		};
+	}
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
 		return self;
@@ -1151,20 +1220,20 @@ impl Drawable for Rect3D {
 		let p7 = vec3!(self.p2.x, self.p1.y, self.p2.z);
 		let p8 = vec3!(self.p1.x, self.p1.y, self.p2.z);
 
-		ctx.draw(&line3d(p1, p2))?;
-		ctx.draw(&line3d(p2, p3))?;
-		ctx.draw(&line3d(p3, p4))?;
-		ctx.draw(&line3d(p4, p1))?;
+		ctx.draw(&line3d(p1, p2).color(self.color))?;
+		ctx.draw(&line3d(p2, p3).color(self.color))?;
+		ctx.draw(&line3d(p3, p4).color(self.color))?;
+		ctx.draw(&line3d(p4, p1).color(self.color))?;
 
-		ctx.draw(&line3d(p5, p6))?;
-		ctx.draw(&line3d(p6, p7))?;
-		ctx.draw(&line3d(p7, p8))?;
-		ctx.draw(&line3d(p8, p5))?;
+		ctx.draw(&line3d(p5, p6).color(self.color))?;
+		ctx.draw(&line3d(p6, p7).color(self.color))?;
+		ctx.draw(&line3d(p7, p8).color(self.color))?;
+		ctx.draw(&line3d(p8, p5).color(self.color))?;
 
-		ctx.draw(&line3d(p1, p5))?;
-		ctx.draw(&line3d(p2, p6))?;
-		ctx.draw(&line3d(p3, p7))?;
-		ctx.draw(&line3d(p4, p8))?;
+		ctx.draw(&line3d(p1, p5).color(self.color))?;
+		ctx.draw(&line3d(p2, p6).color(self.color))?;
+		ctx.draw(&line3d(p3, p7).color(self.color))?;
+		ctx.draw(&line3d(p4, p8).color(self.color))?;
 
 		return Ok(());
 
@@ -1172,19 +1241,25 @@ impl Drawable for Rect3D {
 
 }
 
+#[derive(Clone)]
 pub struct Circle3D {
 	pt: Vec3,
+	radius: f32,
 	color: Color,
 }
 
-pub fn circle3d(p: Vec3) -> Circle3D {
-	return Circle3D {
-		pt: p,
-		color: color!(),
-	};
+pub fn circle3d(p: Vec3, r: f32) -> Circle3D {
+	return Circle3D::new(p, r);
 }
 
 impl Circle3D {
+	pub fn new(p: Vec3, r: f32) -> Self {
+		return Self {
+			pt: p,
+			radius: r,
+			color: color!(),
+		};
+	}
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
 		return self;
@@ -1196,7 +1271,7 @@ impl Drawable for Circle3D {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw(
-			&circle(ctx.to_sc(self.pt), 4.0)
+			&circle(ctx.to_sc(self.pt), self.radius)
 				.fill(self.color)
 		)?;
 
@@ -1206,6 +1281,7 @@ impl Drawable for Circle3D {
 
 }
 
+#[derive(Clone)]
 pub struct Sprite3D<'a> {
 	tex: &'a gfx::Texture,
 	quad: Quad,
@@ -1214,9 +1290,22 @@ pub struct Sprite3D<'a> {
 	color: Color,
 }
 
+pub fn sprite3d<'a>(tex: &'a gfx::Texture) -> Sprite3D<'a> {
+	return Sprite3D::new(tex);
+}
+
 // TODO: up side down?
 // TODO: clean
 impl<'a> Sprite3D<'a> {
+	pub fn new(tex: &'a gfx::Texture) -> Self {
+		return Self {
+			tex: tex,
+			quad: quad!(0, 0, 1, 1),
+			color: color!(1),
+			offset: vec2!(0),
+			flip: gfx::Flip::None,
+		};
+	}
 	pub fn quad(mut self, quad: Quad) -> Self {
 		self.quad = quad;
 		return self;
@@ -1239,16 +1328,6 @@ impl<'a> Sprite3D<'a> {
 	}
 }
 
-pub fn sprite3d<'a>(tex: &'a gfx::Texture) -> Sprite3D<'a> {
-	return Sprite3D {
-		tex: tex,
-		quad: quad!(0, 0, 1, 1),
-		color: color!(1),
-		offset: vec2!(0),
-		flip: gfx::Flip::None,
-	};
-}
-
 impl<'a> Drawable for Sprite3D<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
@@ -1261,7 +1340,7 @@ impl<'a> Drawable for Sprite3D<'a> {
 			.translate_3d(vec3!(offset.x, offset.y, 0.0))
 		, |ctx| {
 
-			let shape = gfx::FlagShape {
+			let shape = gfx::Quad3DShape {
 				transform: ctx.transform.as_mat4(),
 				quad: self.quad,
 				color: self.color,

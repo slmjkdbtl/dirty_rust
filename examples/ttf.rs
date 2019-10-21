@@ -47,7 +47,7 @@ impl app::State for Game {
 			.scale(vec2!(12))
 		, |ctx| {
 			ctx.draw(
-				text("营养过剩")
+				&text("营养过剩")
 					.font(&self.font)
 			)?;
 			return Ok(());

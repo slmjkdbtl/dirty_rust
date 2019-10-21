@@ -94,8 +94,8 @@ impl VertexArray {
 
 			}
 
-			vbuf.unbind();
 			self.unbind();
+			vbuf.unbind();
 
 		}
 

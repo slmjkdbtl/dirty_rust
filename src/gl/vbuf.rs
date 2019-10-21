@@ -10,6 +10,7 @@ use crate::Result;
 pub trait VertexLayout {
 
 	const STRIDE: usize;
+
 	fn push(&self, queue: &mut Vec<f32>);
 	fn attrs() -> VertexAttrGroup;
 
@@ -17,11 +18,9 @@ pub trait VertexLayout {
 
 #[derive(Clone, Debug)]
 pub struct VertexBuffer<V: VertexLayout> {
-
 	ctx: Rc<GLCtx>,
 	id: BufferID,
 	layout: PhantomData<V>,
-
 }
 
 impl<V: VertexLayout> VertexBuffer<V> {

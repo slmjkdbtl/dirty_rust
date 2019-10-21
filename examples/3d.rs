@@ -23,7 +23,7 @@ impl app::State for Game {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
 			plant: gfx::Mesh::from_obj(ctx, include_str!("res/plant.obj"), Some(include_str!("res/plant.mtl")))?,
 			ok: gfx::Mesh::from_obj(ctx, include_str!("res/ok.obj"), None)?,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12.0), 0.0, 0.0),
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(0, 0, -12.0), 0.0, 0.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			move_speed: 9.0,
 			eye_speed: 0.16,
@@ -112,6 +112,7 @@ impl app::State for Game {
 			ctx.draw_3d_with(&self.shader, &(), |ctx| {
 
 				ctx.draw(&shapes::rect3d(min, max))?;
+				ctx.draw(&shapes::circle3d(self.ok.center(), 3.0))?;
 
 				ctx.push(&gfx::t()
 				, |ctx| {

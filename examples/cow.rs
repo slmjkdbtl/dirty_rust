@@ -9,7 +9,7 @@ mod pix;
 use pix::*;
 
 struct Game {
-	model: gfx::Model,
+	mesh: gfx::Mesh,
 	pix_effect: PixEffect,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
@@ -20,8 +20,18 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
+		let mut mesh = gfx::Mesh::from_obj(ctx, include_str!("res/cow.obj"), None)?;
+
+		mesh.update(|mut data| {
+			for m in data {
+				for v in &mut m.vertices {
+					v.color = color!(rand!(), rand!(), rand!(), 1);
+				}
+			}
+		});
+
 		return Ok(Self {
-			model: gfx::Model::from_obj(ctx, include_str!("res/cow.obj"))?,
+			mesh: mesh,
 			pix_effect: PixEffect::new(ctx)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
 			move_speed: 16.0,
@@ -107,7 +117,7 @@ impl app::State for Game {
 				ctx.push(&gfx::t()
 					.rotate_y(ctx.time())
 				, |ctx| {
-					ctx.draw(&shapes::model(&self.model))?;
+					ctx.draw(&shapes::mesh(&self.mesh))?;
 					return Ok(());
 				})?;
 

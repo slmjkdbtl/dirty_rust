@@ -231,14 +231,14 @@ impl gl::Shape for QuadShape {
 
 // TODO: messy
 /// shape for a flag
-pub(super) struct FlagShape {
+pub(super) struct Quad3DShape {
 	pub transform: Mat4,
 	pub quad: Quad,
 	pub color: Color,
 	pub flip: Flip,
 }
 
-impl gl::Shape for FlagShape {
+impl gl::Shape for Quad3DShape {
 
 	type Vertex = Vertex3D;
 	const COUNT: usize = 4;
