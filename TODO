@@ -65,6 +65,7 @@
 - [gl] shader uniform mismatch
 - [gfx] make all shapes cachable
 - [gfx] scale modes
+- [gfx] 3d line
 
 == DONE
 - [http] refactor http

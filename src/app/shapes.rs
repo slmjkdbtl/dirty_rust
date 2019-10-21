@@ -1077,6 +1077,135 @@ impl Drawable for Cube {
 
 }
 
+pub struct Line3D {
+	p1: Vec3,
+	p2: Vec3,
+	color: Color,
+}
+
+pub fn line3d(p1: Vec3, p2: Vec3) -> Line3D {
+	return Line3D {
+		p1: p1,
+		p2: p2,
+		color: color!(),
+	};
+}
+
+impl Line3D {
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+}
+
+impl Drawable for Line3D {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let p1 = ctx.to_sc(self.p1);
+		let p2 = ctx.to_sc(self.p2);
+
+		ctx.draw(
+			&line(p1, p2)
+				.color(self.color)
+		)?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Rect3D {
+	p1: Vec3,
+	p2: Vec3,
+	color: Color,
+}
+
+pub fn rect3d(p1: Vec3, p2: Vec3) -> Rect3D {
+	return Rect3D {
+		p1: p1,
+		p2: p2,
+		color: color!(),
+	};
+}
+
+impl Rect3D {
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+}
+
+impl Drawable for Rect3D {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		let p1 = vec3!(self.p1.x, self.p2.y, self.p1.z);
+		let p2 = vec3!(self.p2.x, self.p2.y, self.p1.z);
+		let p3 = vec3!(self.p2.x, self.p1.y, self.p1.z);
+		let p4 = self.p1;
+
+		let p5 = vec3!(self.p1.x, self.p2.y, self.p2.z);
+		let p6 = self.p2;
+		let p7 = vec3!(self.p2.x, self.p1.y, self.p2.z);
+		let p8 = vec3!(self.p1.x, self.p1.y, self.p2.z);
+
+		ctx.draw(&line3d(p1, p2))?;
+		ctx.draw(&line3d(p2, p3))?;
+		ctx.draw(&line3d(p3, p4))?;
+		ctx.draw(&line3d(p4, p1))?;
+
+		ctx.draw(&line3d(p5, p6))?;
+		ctx.draw(&line3d(p6, p7))?;
+		ctx.draw(&line3d(p7, p8))?;
+		ctx.draw(&line3d(p8, p5))?;
+
+		ctx.draw(&line3d(p1, p5))?;
+		ctx.draw(&line3d(p2, p6))?;
+		ctx.draw(&line3d(p3, p7))?;
+		ctx.draw(&line3d(p4, p8))?;
+
+		return Ok(());
+
+	}
+
+}
+
+pub struct Circle3D {
+	pt: Vec3,
+	color: Color,
+}
+
+pub fn circle3d(p: Vec3) -> Circle3D {
+	return Circle3D {
+		pt: p,
+		color: color!(),
+	};
+}
+
+impl Circle3D {
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+}
+
+impl Drawable for Circle3D {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		ctx.draw(
+			&circle(ctx.to_sc(self.pt), 4.0)
+				.fill(self.color)
+		)?;
+
+		return Ok(());
+
+	}
+
+}
+
 pub struct Sprite3D<'a> {
 	tex: &'a gfx::Texture,
 	quad: Quad,
@@ -1142,7 +1271,7 @@ impl<'a> Drawable for Sprite3D<'a> {
 			ctx.renderer_3d.push_shape(shape, &ctx.cur_pipeline_3d, &gfx::Uniform3D {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,
-				model: gfx::Transform::new(),
+				model: ctx.transform,
 				color: color!(),
 				tex: self.tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),

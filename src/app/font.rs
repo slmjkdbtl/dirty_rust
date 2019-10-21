@@ -5,9 +5,9 @@ use std::collections::HashMap;
 use super::*;
 use super::gfx::*;
 
-pub type CharMap = HashMap<char, Quad>;
-
 const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
+
+pub type CharMap = HashMap<char, Quad>;
 
 /// general functionalities of a font
 pub trait Font {
@@ -136,7 +136,7 @@ impl TruetypeFont {
 				let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
 
 				for b in bitmap {
-					nbitmap.extend_from_slice(&[b, b, b, b]);
+					nbitmap.extend_from_slice(&[255, 255, 255, b]);
 				}
 
 				let (mut x, mut y) = self.cur_pt.into();

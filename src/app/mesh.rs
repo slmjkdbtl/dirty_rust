@@ -105,7 +105,10 @@ impl Mesh {
 		return &self.meshes;
 	}
 
-	// TODO
+	pub fn meshdata(&self) -> &MeshData {
+		return &self.data;
+	}
+
 	pub fn bbox(&self) -> (Vec3, Vec3) {
 
 		let mut min = vec3!();

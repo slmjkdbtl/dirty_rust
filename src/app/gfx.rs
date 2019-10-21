@@ -59,6 +59,7 @@ pub trait Gfx {
 	// query
 	fn default_font(&self) -> &BitmapFont;
 	fn transform(&self) -> Transform;
+	fn to_sc(&self, pt: Vec3) -> Vec2;
 
 }
 
@@ -241,6 +242,15 @@ impl Gfx for Ctx {
 
 	fn transform(&self) -> Transform {
 		return self.transform;
+	}
+
+	fn to_sc(&self, pt: Vec3) -> Vec2 {
+
+		let pt = self.proj_3d * self.view_3d * self.transform.as_mat4() * pt;
+		let pt = (pt / pt.z * 0.5).xy() * vec2!(self.width(), -self.height());
+
+		return pt;
+
 	}
 
 }
