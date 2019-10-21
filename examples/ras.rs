@@ -5,10 +5,18 @@ use dirty::app::*;
 use dirty::math::*;
 use input::Key;
 
+fn viewport(p: Vec3, w: f32, h: f32) -> Mat4 {
+
+	return mat4!(
+		w / 2.0, 0.0, 0.0, p.x + w / 2.0,
+		0.0, h / 2.0, 0.0, p.y + h / 2.0,
+		0.0, 0.0, p.z / 2.0, p.z / 2.0,
+		0.0, 0.0, 0.0, 1.0,
+	);
+
+}
+
 struct Game {
-	tex: gfx::Texture,
-	shader: gfx::Shader3D<()>,
-	plant: gfx::Mesh,
 	ok: gfx::Mesh,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
@@ -20,11 +28,8 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/icon.png"))?,
-			plant: gfx::Mesh::from_obj(ctx, include_str!("res/plant.obj"), Some(include_str!("res/plant.mtl")))?,
 			ok: gfx::Mesh::from_obj(ctx, include_str!("res/ok.obj"), None)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12.0), 0.0, 0.0),
-			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			move_speed: 9.0,
 			eye_speed: 0.16,
 		});
@@ -39,11 +44,7 @@ impl app::State for Game {
 
 			KeyPress(k) => {
 				if k == Key::Esc {
-					ctx.toggle_cursor_hidden();
-					ctx.toggle_cursor_locked()?;
-				}
-				if k == Key::F {
-					ctx.toggle_fullscreen();
+					ctx.quit();
 				}
 			},
 
@@ -105,27 +106,38 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let (min, max) = self.ok.bbox();
+		use shapes::*;
+		use gfx::Camera;
 
-		ctx.use_cam(&self.cam, |ctx| {
+		let proj = self.cam.projection();
+		let view = self.cam.lookat();
+		let model = Mat4::identity()
+// 			* Mat4::scale(vec3!(720))
+			;
 
-			ctx.draw_3d_with(&self.shader, &(), |ctx| {
+		for mesh in self.ok.meshdata() {
 
-				ctx.draw(&shapes::rect3d(min, max))?;
+			for tri in mesh.indices.chunks(3) {
 
-				ctx.push(&gfx::t()
-				, |ctx| {
-					return ctx.draw(&shapes::mesh(&self.ok));
-// 					return ctx.draw(&shapes::mesh(&self.plant));
-				})?;
+				let p1 = mesh.vertices[tri[0] as usize].pos;
+				let p2 = mesh.vertices[tri[1] as usize].pos;
+				let p3 = mesh.vertices[tri[2] as usize].pos;
 
-				return Ok(());
+				let p1 = proj * view * model * p1;
+				let p2 = proj * view * model * p2;
+				let p3 = proj * view * model * p3;
 
-			})?;
+				let p1 = (p1 / p1.z * 0.5).xy() * vec2!(ctx.width(), -ctx.height());
+				let p2 = (p2 / p2.z * 0.5).xy() * vec2!(ctx.width(), -ctx.height());
+				let p3 = (p3 / p3.z * 0.5).xy() * vec2!(ctx.width(), -ctx.height());
 
-			return Ok(());
+				ctx.draw(&line(p1, p2))?;
+				ctx.draw(&line(p2, p3))?;
+				ctx.draw(&line(p3, p1))?;
 
-		})?;
+			}
+
+		}
 
 		return Ok(());
 

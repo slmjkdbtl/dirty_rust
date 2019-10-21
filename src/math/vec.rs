@@ -235,6 +235,22 @@ impl Vec3 {
         );
 	}
 
+	pub fn xy(self) -> Vec2 {
+		return vec2!(self.x, self.y);
+	}
+
+}
+
+impl Vec4 {
+
+	pub fn xy(self) -> Vec2 {
+		return vec2!(self.x, self.y);
+	}
+
+	pub fn xyz(self) -> Vec3 {
+		return vec3!(self.x, self.y, self.z);
+	}
+
 }
 
 impl Color {
