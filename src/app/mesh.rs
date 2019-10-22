@@ -13,7 +13,9 @@ pub type MeshData = Vec<gl::MeshData<Vertex3D>>;
 /// 3d mesh
 #[derive(Clone)]
 pub struct Mesh {
-	data: MeshData,
+	meshdata: MeshData,
+	bbox: (Vec3, Vec3),
+	center: Vec3,
 	meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
 }
 
@@ -89,9 +91,14 @@ impl Mesh {
 			meshes.push(Rc::new(gl::Mesh::from_meshdata(&ctx.gl, m.clone())?));
 		}
 
+		let (min, max) = get_bbox(&meshdata);
+		let center = (min + max) / 2.0;
+
 		return Ok(Self {
-			data: meshdata,
+			meshdata: meshdata,
 			meshes: meshes,
+			bbox: (min, max),
+			center: center,
 		});
 
 	}
@@ -109,9 +116,14 @@ impl Mesh {
 
 		use gl::VertexLayout;
 
-		f(&mut self.data);
+		f(&mut self.meshdata);
 
-		for (i, m) in self.data.iter().enumerate() {
+		let (min, max) = get_bbox(&self.meshdata);
+
+		self.center = (min + max) / 2.0;
+		self.bbox = (min, max);
+
+		for (i, m) in self.meshdata.iter().enumerate() {
 
 			if let Some(mesh) = self.meshes.get(i) {
 
@@ -131,59 +143,59 @@ impl Mesh {
 	}
 
 	pub fn meshdata(&self) -> &MeshData {
-		return &self.data;
+		return &self.meshdata;
 	}
 
 	pub fn center(&self) -> Vec3 {
-
-		let (min, max) = self.bbox();
-
-		return (min + max) / 2.0;
-
+		return self.center;
 	}
 
 	pub fn bbox(&self) -> (Vec3, Vec3) {
+		return self.bbox;
+	}
 
-		let mut min = vec3!();
-		let mut max = vec3!();
+}
 
-		for m in &self.data {
+fn get_bbox(meshes: &MeshData) -> (Vec3, Vec3) {
 
-			for v in &m.vertices {
+	let mut min = vec3!();
+	let mut max = vec3!();
 
-				let pos = v.pos;
+	for m in meshes {
 
-				if pos.x < min.x {
-					min.x = pos.x;
-				}
+		for v in &m.vertices {
 
-				if pos.y < min.y {
-					min.y = pos.y;
-				}
+			let pos = v.pos;
 
-				if pos.z < min.z {
-					min.z = pos.z;
-				}
+			if pos.x < min.x {
+				min.x = pos.x;
+			}
 
-				if pos.x > max.x {
-					max.x = pos.x;
-				}
+			if pos.y < min.y {
+				min.y = pos.y;
+			}
 
-				if pos.y > max.y {
-					max.y = pos.y;
-				}
+			if pos.z < min.z {
+				min.z = pos.z;
+			}
 
-				if pos.z > max.z {
-					max.z = pos.z;
-				}
+			if pos.x > max.x {
+				max.x = pos.x;
+			}
 
+			if pos.y > max.y {
+				max.y = pos.y;
+			}
+
+			if pos.z > max.z {
+				max.z = pos.z;
 			}
 
 		}
 
-		return (min, max);
-
 	}
+
+	return (min, max);
 
 }
 
