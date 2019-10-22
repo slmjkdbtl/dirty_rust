@@ -14,40 +14,56 @@ pub use vec::*;
 pub use mat::*;
 pub use rand::*;
 
-pub trait Lerpable =
+pub trait Lerp:
 	Copy
 	+ Add<Output = Self>
 	+ Sub<Output = Self>
 	+ Mul<f32, Output = Self>
-	;
+{
 
-/// linear interpolation
-pub fn lerp<N: Lerpable>(from: N, to: N, amount: f32) -> N {
-	return from + (to - from) * amount.clamp(0.0, 1.0);
+	/// linear interpolation
+	fn lerp(self, to: Self, amount: f32) -> Self {
+		return self + (to - self) * amount.clamp(0.0, 1.0);
+	}
+
+	/// cubic interpolation
+	fn smooth(self, to: Self, amount: f32) -> Self {
+
+		let t = amount.clamp(0.0, 1.0);
+		let m = t * t * (3.0 - 2.0 * t);
+
+		return self + (to - self) * m;
+
+	}
+
 }
 
-/// cubic interpolation
-pub fn smooth<N: Lerpable>(from: N, to: N, amount: f32) -> N {
+impl Lerp for f32 {}
+impl Lerp for Vec2 {}
+impl Lerp for Vec3 {}
+impl Lerp for Vec4 {}
+impl Lerp for Color {}
 
-	let t = amount.clamp(0.0, 1.0);
-	let m = t * t * (3.0 - 2.0 * t);
-
-	return from + (to - from) * m;
-
-}
-
-pub trait Mappable =
+pub trait Map:
 	Copy
-	+ Add<Output = Self>
-	+ Sub<Output = Self>
-	+ Mul<Output = Self>
-	+ Div<Output = Self>
-	;
+	+ Add<Self, Output = Self>
+	+ Sub<Self, Output = Self>
+	+ Mul<Self, Output = Self>
+	+ Div<Self, Output = Self>
+{
 
-/// map a value to another range
-pub fn map<N: Mappable>(val: N, a1: N, a2: N, b1: N, b2: N) -> N {
-	return b1 + (val - a1) / (a2 - a1) * (b2 - b1);
+	/// map a value to another range
+	fn map(self, a1: Self, a2: Self, b1: Self, b2: Self) -> Self {
+		return b1 + (self - a1) / (a2 - a1) * (b2 - b1);
+	}
+
 }
+
+impl Map for f32 {}
+impl Map for Vec2 {}
+impl Map for Vec3 {}
+impl Map for Vec4 {}
+impl Map for Color {}
 
 /// generate orthographic matrix
 pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {

@@ -71,7 +71,7 @@ macro_rules! gen_vec {
 				};
 			}
 
-			pub fn as_arr(&self) -> [$type; $count] {
+			pub const fn as_arr(&self) -> [$type; $count] {
 				return [
 					$(
 						self.$member,
@@ -100,6 +100,18 @@ macro_rules! gen_vec {
 			fn mul(self, v: $name) -> $name {
 				return $name {
 					$($member: v.$member * self),+
+				};
+			}
+
+		}
+
+		impl ops::Div<$name> for $name {
+
+			type Output = Self;
+
+			fn div(self, other: Self) -> Self {
+				return Self {
+					$($member: self.$member / other.$member),+
 				};
 			}
 
