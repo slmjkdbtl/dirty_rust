@@ -8,16 +8,16 @@ personal toolkit for things
 - **img** Image Loading & Writing
 - **audio** Sound Loading & Playback
 - **fs** Common File System Functions
+- **geom** Common Collision Detections
+- **physics** Simple Physics Simulation
 - **http** Simple HTTP Client & Server
 - **term** TUI Utilities
-- **geom** Common Collision Detections
 
 All the modules can be configured with cargo feature:
 
 ```toml
 default = [ "fs", "app", "img", "audio", ]
 ```
-All the modules can be used with lua or as rust modules, toggle with `lua` feature
 
 ### example
 here's a minimal window setup:
@@ -77,23 +77,13 @@ fn main() {
 }
 ```
 
-### cli
-
-The `dirty` binary is for running scripts
-
-```sh
-$ dirty frog.lua
-```
-
-If no argument is provided, it'll search for `main.{lua,py}`
-
 ### examples
 
 - **window** basic window and a cube
 - **conf** window / graphics configs
 - **sprite** a 2d animating sprite
-- **cow** displaying 3d models from obj files
-- **mask** simple stencil mask
+- **3d** 3d obj viewer
+- **mask** stencil mask
 - **ttf** drawing text with truetype fonts
 - **geom** basic geomatry / collision detections
 - **dither** image processing
