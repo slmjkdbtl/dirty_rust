@@ -4,46 +4,19 @@
 //! toolkit for things
 
 #![feature(clamp)]
+#![feature(const_fn)]
 #![feature(try_blocks)]
 #![feature(box_syntax)]
 #![feature(trait_alias)]
 #![feature(option_flattening)]
 #![feature(type_alias_impl_trait)]
 
-#![allow(unused_parens)]
 // #![warn(missing_docs)]
+#![allow(unused_parens)]
 #![deny(clippy::implicit_return)]
 
-#[allow(unused_macros)]
-macro_rules! export {
-	($name:ident) => {
-		mod $name;
-		pub use $name::*;
-	}
-}
-
-#[allow(unused_macros)]
-macro_rules! hashmap {
-	($($key:expr => $val:expr),*$(,)?) => {
-		{
-		let mut _tmp = std::collections::HashMap::new();
-		$(_tmp.insert($key, $val);)*
-		_tmp
-		}
-	}
-}
-
-#[allow(unused_macros)]
-macro_rules! hashset {
-	($($item:expr),*$(,)?) => {
-		{
-			let mut _tmp = std::collections::HashSet::new();
-			$(_tmp.insert($item);)*
-			_tmp
-		}
-	};
-}
-
+#[macro_use]
+mod helpers;
 mod res;
 
 pub mod math;

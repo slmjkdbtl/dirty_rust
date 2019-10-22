@@ -85,8 +85,26 @@ impl app::State for ObjViewer {
 			MouseMove(delta) => {
 
 				if ctx.mouse_down(Mouse::Left) {
+
 					self.resetting = false;
 					self.rot += delta;
+
+					if self.rot.x >= 360.0 {
+						self.rot.x = self.rot.x - 360.0;
+					}
+
+					if self.rot.x <= -360.0 {
+						self.rot.x = self.rot.x + 360.0;
+					}
+
+					if self.rot.y >= 360.0 {
+						self.rot.y = self.rot.y - 360.0;
+					}
+
+					if self.rot.y <= -360.0 {
+						self.rot.y = self.rot.y + 360.0;
+					}
+
 				}
 
 			},
@@ -147,9 +165,9 @@ impl app::State for ObjViewer {
 			let dest_dis = self.size;
 			let t = ctx.dt() * 6.0;
 
-			self.rot = math::lerp(self.rot, dest_rot, t);
-			self.pos = math::lerp(self.pos, dest_pos, t);
-			self.dis = math::lerp(self.dis, dest_dis, t);
+			self.rot = self.rot.lerp(dest_rot, t);
+			self.pos = self.pos.lerp(dest_pos, t);
+			self.dis = self.dis.lerp(dest_dis, t);
 
 		}
 
