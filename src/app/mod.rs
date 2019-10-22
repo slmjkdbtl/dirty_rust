@@ -72,6 +72,7 @@ pub struct Ctx {
 	pub(self) mouse_pos: Vec2,
 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(self) scroll_phase: input::ScrollPhase,
 
 	// window
 	pub(self) title: String,
@@ -293,6 +294,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		mouse_pos: vec2!(),
 		gamepad_button_states: HashMap::new(),
 		gamepad_axis_pos: HashMap::new(),
+		scroll_phase: input::ScrollPhase::Solid,
 
 		// window
 		title: conf.title.to_owned(),

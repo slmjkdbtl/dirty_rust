@@ -145,7 +145,7 @@ pub enum Event {
 	MousePress(Mouse),
 	MouseRelease(Mouse),
 	MouseMove(Vec2),
-	Scroll(Vec2),
+	Scroll(Vec2, ScrollPhase),
 	TextInput(char),
 	GamepadPress(GamepadID, GamepadButton),
 	GamepadPressRepeat(GamepadID, GamepadButton),
@@ -213,13 +213,13 @@ pub(super) fn poll(
 	let mut res: Result<()> = Ok(());
 	let mut close = false;
 
-	// TODO: deal with errors inside
 	events_loop.poll_events(|e| {
 
 		res = try {
 
 			use glutin::Event::*;
 			use glutin::WindowEvent::*;
+			use glutin::TouchPhase;
 
 			#[cfg(feature = "imgui")]
 			imgui_events.push(e.clone());
@@ -296,8 +296,21 @@ pub(super) fn poll(
 
 					},
 
-					MouseWheel { delta, .. } => {
-						s.event(&mut ctx, Event::Scroll(delta.into()))?;
+					MouseWheel { delta, phase, .. } => {
+
+						match phase {
+							TouchPhase::Started => {
+								ctx.scroll_phase = ScrollPhase::Solid;
+							},
+							TouchPhase::Ended => {
+								ctx.scroll_phase = ScrollPhase::Trailing;
+							},
+							_ => {},
+						}
+
+						let p = ctx.scroll_phase;
+						s.event(&mut ctx, Event::Scroll(delta.into(), p))?;
+
 					},
 
 					ReceivedCharacter(ch) => {
@@ -655,6 +668,12 @@ gen_buttons!(GamepadButton(ExternGamepadButton), {
 	Left("left") => DPadLeft,
 	Right("right") => DPadRight,
 });
+
+#[derive(Debug, Clone, Copy)]
+pub enum ScrollPhase {
+	Solid,
+	Trailing,
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum GamepadAxis {
