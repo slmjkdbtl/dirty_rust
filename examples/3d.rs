@@ -4,17 +4,9 @@
 
 use dirty::*;
 use dirty::app::*;
+use dirty::math::*;
 use input::Key;
-
-struct ObjViewer {
-	shader: gfx::Shader3D<()>,
-	mesh: gfx::Mesh,
-	size: f32,
-	cam: gfx::PerspectiveCam,
-	dis: f32,
-	rot_x: f32,
-	rot_y: f32,
-}
+use input::Mouse;
 
 fn get_mesh_size(m: &gfx::Mesh) -> f32 {
 
@@ -25,21 +17,35 @@ fn get_mesh_size(m: &gfx::Mesh) -> f32 {
 
 }
 
+struct ObjViewer {
+	shader: gfx::Shader3D<()>,
+	mesh: gfx::Mesh,
+	size: f32,
+	cam: gfx::PerspectiveCam,
+	rot: Vec2,
+	pos: Vec2,
+	dis: f32,
+	resetting: bool,
+}
+
 impl app::State for ObjViewer {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		let mesh = gfx::Mesh::from_obj(ctx, include_str!("res/ok.obj"), None)?;
 		let size = get_mesh_size(&mesh);
+		let dis = size;
+		let pos = vec2!(0);
 
 		let viewer = Self {
 			size: size,
 			mesh: mesh,
-			dis: size,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(0, 0, -size), 0.0, 0.0),
+			pos: pos,
+			dis: dis,
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 2048.0, vec3!(pos.x, pos.y, -dis), 0.0, 0.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
-			rot_x: 0.0,
-			rot_y: 0.0,
+			rot: vec2!(0),
+			resetting: false,
 		};
 
 		return Ok(viewer);
@@ -53,40 +59,47 @@ impl app::State for ObjViewer {
 		match e {
 
 			KeyPress(k) => {
+
 				if k == Key::F {
 					ctx.toggle_fullscreen();
 				}
+
+				if k == Key::Space {
+					self.resetting = true;
+				}
+
 				if k == Key::Esc {
 					ctx.quit();
 				}
+
 			},
 
 			Scroll(s) => {
-				self.dis += s.y * (self.size / 240.0);
+
+				self.resetting = false;
+				self.dis -= s.y * (self.size / 240.0);
 				self.dis = self.dis.clamp(self.size * 0.3, self.size * 3.0);
-				self.cam.set_pos(vec3!(0, 0, -self.dis));
+
 			},
 
 			MouseMove(delta) => {
-				if ctx.mouse_down(input::Mouse::Left) {
-					self.rot_x += delta.x;
-					self.rot_y += delta.y;
+
+				if ctx.mouse_down(Mouse::Left) {
+					self.resetting = false;
+					self.rot += delta;
 				}
+
 			},
 
 			FileDrop(path) => {
 
+				self.resetting = false;
+
 				let content = fs::read_str(&path)?;
 
 				if let Ok(mesh) = gfx::Mesh::from_obj(ctx, &content, None) {
-
 					self.mesh = mesh;
-					self.size = get_mesh_size(&self.mesh);
-					self.dis = self.size;
-					self.cam.set_pos(vec3!(0, 0, -self.dis));
-					self.rot_x = 0.0;
-					self.rot_y = 0.0;
-
+					self.resetting = true;
 				}
 
 			},
@@ -99,9 +112,56 @@ impl app::State for ObjViewer {
 
 	}
 
+	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+
+		let move_speed = self.dis;
+
+		if ctx.key_down(Key::A) {
+			self.resetting = false;
+			self.pos.x -= move_speed * ctx.dt();
+		}
+
+		if ctx.key_down(Key::D) {
+			self.resetting = false;
+			self.pos.x += move_speed * ctx.dt();
+		}
+
+		if ctx.key_down(Key::W) {
+			self.resetting = false;
+			self.pos.y += move_speed * ctx.dt();
+		}
+
+		if ctx.key_down(Key::S) {
+			self.resetting = false;
+			self.pos.y -= move_speed * ctx.dt();
+		}
+
+		self.pos = self.pos.clamp(-vec2!(self.dis), vec2!(self.dis));
+
+		if self.resetting {
+
+			self.size = get_mesh_size(&self.mesh);
+
+			let dest_rot = vec2!(0);
+			let dest_pos = vec2!(0);
+			let dest_dis = self.size;
+			let t = ctx.dt() * 6.0;
+
+			self.rot = math::lerp(self.rot, dest_rot, t);
+			self.pos = math::lerp(self.pos, dest_pos, t);
+			self.dis = math::lerp(self.dis, dest_dis, t);
+
+		}
+
+		return Ok(());
+
+	}
+
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		let center = self.mesh.center();
+
+		self.cam.set_pos(vec3!(self.pos.x, self.pos.y, -self.dis));
 
 		ctx.use_cam(&self.cam, |ctx| {
 
@@ -111,8 +171,8 @@ impl app::State for ObjViewer {
 // 				ctx.draw(&shapes::circle3d(center, 3.0))?;
 
 				ctx.push(&gfx::t()
-					.rotate_y(-self.rot_x.to_radians())
-					.rotate_x(-self.rot_y.to_radians())
+					.rotate_y(-self.rot.x.to_radians())
+					.rotate_x(-self.rot.y.to_radians())
 					.translate_3d(-center)
 				, |ctx| {
 

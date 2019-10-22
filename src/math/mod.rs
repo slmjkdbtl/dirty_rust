@@ -8,17 +8,26 @@ mod mat;
 #[macro_use]
 mod rand;
 
+use std::ops::*;
+
 pub use vec::*;
 pub use mat::*;
 pub use rand::*;
 
+pub trait Lerpable =
+	Copy
+	+ Add<Output = Self>
+	+ Sub<Output = Self>
+	+ Mul<f32, Output = Self>
+	;
+
 /// linear interpolation
-pub fn lerp(from: f32, to: f32, amount: f32) -> f32 {
+pub fn lerp<N: Lerpable>(from: N, to: N, amount: f32) -> N {
 	return from + (to - from) * amount.clamp(0.0, 1.0);
 }
 
 /// cubic interpolation
-pub fn smooth(from: f32, to: f32, amount: f32) -> f32 {
+pub fn smooth<N: Lerpable>(from: N, to: N, amount: f32) -> N {
 
 	let t = amount.clamp(0.0, 1.0);
 	let m = t * t * (3.0 - 2.0 * t);
@@ -27,8 +36,16 @@ pub fn smooth(from: f32, to: f32, amount: f32) -> f32 {
 
 }
 
+pub trait Mappable =
+	Copy
+	+ Add<Output = Self>
+	+ Sub<Output = Self>
+	+ Mul<Output = Self>
+	+ Div<Output = Self>
+	;
+
 /// map a value to another range
-pub fn map(val: f32, a1: f32, a2: f32, b1: f32, b2: f32) -> f32 {
+pub fn map<N: Mappable>(val: N, a1: N, a2: N, b1: N, b2: N) -> N {
 	return b1 + (val - a1) / (a2 - a1) * (b2 - b1);
 }
 

@@ -5,6 +5,8 @@ use std::ops;
 
 use derive_more::*;
 
+use super::*;
+
 // https://github.com/rust-lang/rust/issues/35853
 macro_rules! nested_macro {
 
@@ -169,6 +171,9 @@ gen_vec!(Size(size) -> (w, h): [i32; 2], (0, 0));
 
 mix!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
 mix!(Vec4(x, y, z, w): f32, Quad(x, y, w, h): f32);
+mix!(Vec2(x, y): f32, Pos(x, y): i32);
+mix!(Vec2(x, y): f32, Size(w, h): i32);
+mix!(Pos(x, y): i32, Size(w, h): i32);
 
 impl Vec2 {
 
@@ -207,6 +212,14 @@ impl Vec2 {
 		return f32::sqrt((self.x - other.x).powi(2) + (self.y - other.y).powi(2));
 	}
 
+	/// clamp between 2 values
+	pub fn clamp(self, low: Self, hi: Self) -> Self {
+		return vec2!(
+			self.x.clamp(low.x, hi.x),
+			self.y.clamp(low.y, hi.y),
+		);
+	}
+
 }
 
 impl Vec3 {
@@ -237,6 +250,15 @@ impl Vec3 {
 
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
+	}
+
+	/// clamp between 2 values
+	pub fn clamp(self, low: Self, hi: Self) -> Self {
+		return vec3!(
+			self.x.clamp(low.x, hi.x),
+			self.y.clamp(low.y, hi.y),
+			self.z.clamp(low.z, hi.z),
+		);
 	}
 
 }
