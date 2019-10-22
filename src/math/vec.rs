@@ -260,6 +260,7 @@ impl Vec3 {
         );
 	}
 
+	/// get xy component as a Vec2
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
 	}
@@ -277,10 +278,12 @@ impl Vec3 {
 
 impl Vec4 {
 
+	/// get xy component as a Vec2
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
 	}
 
+	/// get xyz component as a Vec3
 	pub fn xyz(self) -> Vec3 {
 		return vec3!(self.x, self.y, self.z);
 	}

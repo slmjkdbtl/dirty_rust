@@ -14,12 +14,14 @@ pub use vec::*;
 pub use mat::*;
 pub use rand::*;
 
-pub trait Lerp:
+pub trait Lerpable =
 	Copy
 	+ Add<Output = Self>
 	+ Sub<Output = Self>
 	+ Mul<f32, Output = Self>
-{
+	;
+
+pub trait Lerp: Lerpable {
 
 	/// linear interpolation
 	fn lerp(self, to: Self, amount: f32) -> Self {
@@ -38,19 +40,17 @@ pub trait Lerp:
 
 }
 
-impl Lerp for f32 {}
-impl Lerp for Vec2 {}
-impl Lerp for Vec3 {}
-impl Lerp for Vec4 {}
-impl Lerp for Color {}
+impl<T: Lerpable> Lerp for T {}
 
-pub trait Map:
+pub trait Mappable =
 	Copy
 	+ Add<Self, Output = Self>
 	+ Sub<Self, Output = Self>
 	+ Mul<Self, Output = Self>
 	+ Div<Self, Output = Self>
-{
+	;
+
+pub trait Map: Mappable {
 
 	/// map a value to another range
 	fn map(self, a1: Self, a2: Self, b1: Self, b2: Self) -> Self {
@@ -59,11 +59,7 @@ pub trait Map:
 
 }
 
-impl Map for f32 {}
-impl Map for Vec2 {}
-impl Map for Vec3 {}
-impl Map for Vec4 {}
-impl Map for Color {}
+impl<T: Mappable> Map for T {}
 
 /// generate orthographic matrix
 pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {

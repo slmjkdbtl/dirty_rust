@@ -74,11 +74,16 @@ impl app::State for ObjViewer {
 
 			},
 
-			Scroll(s) => {
+			Scroll(s, phase) => {
 
-				self.resetting = false;
-				self.dis -= s.y * (self.size / 240.0);
-				self.dis = self.dis.clamp(self.size * 0.3, self.size * 3.0);
+				if let input::ScrollPhase::Solid = phase {
+					self.resetting = false;
+				}
+
+				if !self.resetting {
+					self.dis -= s.y * (self.size / 240.0);
+					self.dis = self.dis.clamp(self.size * 0.2, self.size * 3.0);
+				}
 
 			},
 
@@ -86,6 +91,7 @@ impl app::State for ObjViewer {
 
 				if ctx.mouse_down(Mouse::Left) {
 
+					// TODO: correctly handle rotation
 					self.resetting = false;
 					self.rot += delta;
 
@@ -132,7 +138,7 @@ impl app::State for ObjViewer {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let move_speed = self.dis;
+		let move_speed = f32::sqrt(self.dis) * 2.0;
 
 		if ctx.key_down(Key::A) {
 			self.resetting = false;
@@ -154,7 +160,9 @@ impl app::State for ObjViewer {
 			self.pos.y -= move_speed * ctx.dt();
 		}
 
-		self.pos = self.pos.clamp(-vec2!(self.dis), vec2!(self.dis));
+		let range = f32::sqrt(self.dis);
+
+		self.pos = self.pos.clamp(-vec2!(range), vec2!(range));
 
 		if self.resetting {
 
