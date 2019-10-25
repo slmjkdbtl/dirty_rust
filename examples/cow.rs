@@ -22,7 +22,7 @@ impl app::State for Game {
 
 		let mut mesh = gfx::Mesh::from_obj(ctx, include_str!("res/cow.obj"), None)?;
 
-		mesh.update(|mut data| {
+		mesh.update(|data| {
 			for m in data {
 				for v in &mut m.vertices {
 					v.color = color!(rand!(), rand!(), rand!(), 1);
@@ -33,7 +33,7 @@ impl app::State for Game {
 		return Ok(Self {
 			mesh: mesh,
 			pix_effect: PixEffect::new(ctx)?,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, -12), 0.0, 0.0),
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, 12), 0.0, 0.0),
 			move_speed: 16.0,
 			eye_speed: 0.16,
 		});
@@ -60,13 +60,12 @@ impl app::State for Game {
 
 				if ctx.is_cursor_locked() {
 
-					let md: Vec2 = delta.into();
 					let mut rx = self.cam.yaw();
 					let mut ry = self.cam.pitch();
 					let dead = 48.0f32.to_radians();
 
-					rx -= md.x * self.eye_speed * ctx.dt();
-					ry -= md.y * self.eye_speed * ctx.dt();
+					rx += delta.x * self.eye_speed * ctx.dt();
+					ry -= delta.y * self.eye_speed * ctx.dt();
 
 					if ry > dead {
 						ry = dead;
@@ -101,11 +100,11 @@ impl app::State for Game {
 		}
 
 		if ctx.key_down(Key::A) {
-			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
+			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
 		if ctx.key_down(Key::D) {
-			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
+			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
 		self.pix_effect.render(ctx, |ctx| {

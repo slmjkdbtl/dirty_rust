@@ -63,9 +63,9 @@ impl PerspectiveCam {
 		self.pitch = pitch;
 
 		self.front = vec3!(
-			self.pitch.cos() * (self.yaw + 90f32.to_radians()).cos(),
+			self.pitch.cos() * (self.yaw - 90f32.to_radians()).cos(),
 			self.pitch.sin(),
-			self.pitch.cos() * (self.yaw + 90f32.to_radians()).sin(),
+			self.pitch.cos() * (self.yaw - 90f32.to_radians()).sin(),
 		).normalize();
 
 	}

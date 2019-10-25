@@ -93,14 +93,14 @@ impl Device {
 
 			return match self.ctx.get_error() {
 				glow::NO_ERROR => Ok(()),
-				glow::INVALID_ENUM => Err(OpenGL("INVALID_ENUM".to_owned())),
-				glow::INVALID_VALUE => Err(OpenGL("INVALID_VALUE".to_owned())),
-				glow::INVALID_OPERATION => Err(OpenGL("INVALID_OPERATION".to_owned())),
-				glow::STACK_OVERFLOW => Err(OpenGL("STACK_OVERFLOW".to_owned())),
-				glow::STACK_UNDERFLOW => Err(OpenGL("STACK_UNDERFLOW".to_owned())),
-				glow::OUT_OF_MEMORY => Err(OpenGL("OUT_OF_MEMORY".to_owned())),
-				glow::INVALID_FRAMEBUFFER_OPERATION => Err(OpenGL("INVALID_FRAMEBUFFER_OPERATION".to_owned())),
-				_ => Err(OpenGL("UNKNOWN".to_owned())),
+				glow::INVALID_ENUM => Err(OpenGL(format!("INVALID_ENUM"))),
+				glow::INVALID_VALUE => Err(OpenGL(format!("INVALID_VALUE"))),
+				glow::INVALID_OPERATION => Err(OpenGL(format!("INVALID_OPERATION"))),
+				glow::STACK_OVERFLOW => Err(OpenGL(format!("STACK_OVERFLOW"))),
+				glow::STACK_UNDERFLOW => Err(OpenGL(format!("STACK_UNDERFLOW"))),
+				glow::OUT_OF_MEMORY => Err(OpenGL(format!("OUT_OF_MEMORY"))),
+				glow::INVALID_FRAMEBUFFER_OPERATION => Err(OpenGL(format!("INVALID_FRAMEBUFFER_OPERATION"))),
+				_ => Err(OpenGL(format!("UNKNOWN"))),
 			};
 
 		}
@@ -120,33 +120,14 @@ impl Device {
 		}
 	}
 
-	pub fn stencil<F: Fn()>(&self, ops: &[StencilDraw<F>]) {
-
-		self.clear(Surface::Stencil);
-		self.enable(Capability::StencilTest);
+	pub fn stencil<R>(&self, func: StencilFunc, ops: StencilOps, f: impl FnOnce() -> R) -> R {
 
 		unsafe {
-			for o in ops {
-				self.ctx.stencil_func(o.func.cmp.into(), o.func.rf, o.func.mask);
-				self.ctx.stencil_op(o.ops.sfail.into(), o.ops.dpfail.into(), o.ops.dppass.into());
-				(o.draw)();
-			}
+			self.ctx.stencil_func(func.cmp.into(), func.rf, func.mask);
+			self.ctx.stencil_op(ops.sfail.into(), ops.dpfail.into(), ops.dppass.into());
+			return f();
 		}
 
-		self.disable(Capability::StencilTest);
-
-	}
-
-	pub fn stencil_op(&self, sfail: StencilOp, dpfail: StencilOp, dppass: StencilOp) {
-		unsafe {
-			self.ctx.stencil_op(sfail.into(), dpfail.into(), dppass.into());
-		}
-	}
-
-	pub fn stencil_func(&self, f: Cmp) {
-		unsafe {
-			self.ctx.stencil_func(f.into(), 1, 0xff);
-		}
 	}
 
 	pub fn cull_face(&self, face: Face) {
