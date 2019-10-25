@@ -2,57 +2,57 @@
 
 //! TUI Utilities
 
+use std::env;
+
 pub use console::style;
 
-use crate::math::Color;
-use crate::Result;
-
-pub struct Term {
-	term: console::Term,
+/// standard term colors
+#[derive(Clone, Copy, Debug)]
+pub enum Color {
+	Black,
+	Red,
+	Green,
+	Yellow,
+	Blue,
+	Magenta,
+	Cyan,
+	White,
 }
 
-impl Term {
+/// standard term styles
+#[derive(Clone, Copy, Debug)]
+pub enum Style {
+	Bold,
+	Italic,
+	Underline,
+}
 
-	pub fn new() -> Self {
-		return Self {
-			term: console::Term::stdout(),
+impl Color {
+
+	pub fn fg_code(&self) -> &str {
+		return match *self {
+			Color::Black => "30",
+			Color::Red => "31",
+			Color::Green => "32",
+			Color::Yellow => "33",
+			Color::Blue => "34",
+			Color::Magenta => "35",
+			Color::Cyan => "36",
+			Color::White => "37",
 		};
 	}
 
-	pub fn write_line(&self, l: &str) -> Result<()> {
-		return Ok(self.term.write_line(l)?);
-	}
-
-	pub fn width(&self) -> u16 {
-		return self.term.size().1;
-	}
-
-	pub fn height(&self) -> u16 {
-		return self.term.size().0;
-	}
-
-	pub fn render_text<S: AsRef<str>>(&self, lines: &[S]) {
-		// ...
-	}
-
-	pub fn render_color(&self, buffer: &[Color]) {
-		// ...
-	}
-
-	pub fn read_line(&self) -> Result<String> {
-		return Ok(self.term.read_line()?);
-	}
-
-	pub fn read_char(&self) -> Result<char> {
-		return Ok(self.term.read_char()?);
-	}
-
-	pub fn clear(&self) -> Result<()> {
-		return Ok(self.term.clear_screen()?);
-	}
-
-	pub fn clear_line(&self) -> Result<()> {
-		return Ok(self.term.clear_line()?);
+	pub fn bg_code(&self) -> &str {
+		return match *self {
+			Color::Black => "40",
+			Color::Red => "41",
+			Color::Green => "42",
+			Color::Yellow => "43",
+			Color::Blue => "44",
+			Color::Magenta => "45",
+			Color::Cyan => "46",
+			Color::White => "47",
+		};
 	}
 
 }

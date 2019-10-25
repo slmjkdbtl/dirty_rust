@@ -14,9 +14,3 @@ pub struct StencilFunc {
 	pub mask: u32,
 }
 
-pub struct StencilDraw<F: Fn()> {
-	pub ops: StencilOps,
-	pub func: StencilFunc,
-	pub draw: F,
-}
-

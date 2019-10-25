@@ -30,6 +30,8 @@ pub use camera::*;
 pub use mesh::*;
 pub use desc::*;
 
+pub trait Action = FnOnce(&mut Ctx) -> Result<()>;
+
 pub trait Gfx {
 
 	// clearing
@@ -45,7 +47,6 @@ pub trait Gfx {
 	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// transform
 	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
@@ -167,38 +168,41 @@ impl Gfx for Ctx {
 	}
 
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-		return self.draw_masked_ex(Cmp::Never, Cmp::Equal, mask, draw);
-	}
 
-	// TODO: use gl::StencilDraw
-	fn draw_masked_ex(&mut self, f1: Cmp, f2: Cmp, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-// 		let d1 = gl::StencilDraw {
-// 			ops: gl::StencilOps {
-// 				sfail: gl::StencilOp::Replace,
-// 				dpfail: gl::StencilOp::Replace,
-// 				dppass: gl::StencilOp::Replace,
-// 			},
-// 			func: gl::StencilFunc {
-// 				cmp: gl::Cmp::Never,
-// 				rf: 1,
-// 				mask: 0xff,
-// 			},
-// 		};
+		let gl = self.gl.clone();
 
 		flush(self);
-		self.gl.clear(gl::Surface::Stencil);
-		self.gl.enable(gl::Capability::StencilTest);
-		self.gl.stencil_func(f1);
-		self.gl.stencil_op(gl::StencilOp::Replace, gl::StencilOp::Replace, gl::StencilOp::Replace);
+		gl.enable(gl::Capability::StencilTest);
+		gl.clear(Surface::Stencil);
 
-		mask(self)?;
+		gl.stencil(gl::StencilFunc {
+			cmp: Cmp::Never,
+			rf: 1,
+			mask: 0xff,
+		}, gl::StencilOps {
+			sfail: gl::StencilOp::Replace,
+			dpfail: gl::StencilOp::Replace,
+			dppass: gl::StencilOp::Replace,
+		}, || {
+			return mask(self);
+		})?;
+
 		flush(self);
-		self.gl.stencil_func(f2);
-		self.gl.stencil_op(gl::StencilOp::Keep, gl::StencilOp::Keep, gl::StencilOp::Keep);
-		draw(self)?;
+
+		gl.stencil(gl::StencilFunc {
+			cmp: Cmp::Equal,
+			rf: 1,
+			mask: 0xff,
+		}, gl::StencilOps {
+			sfail: gl::StencilOp::Keep,
+			dpfail: gl::StencilOp::Keep,
+			dppass: gl::StencilOp::Keep,
+		}, || {
+			return draw(self);
+		})?;
+
 		flush(self);
-		self.gl.disable(gl::Capability::StencilTest);
+		gl.disable(gl::Capability::StencilTest);
 
 		return Ok(());
 
@@ -246,8 +250,10 @@ impl Gfx for Ctx {
 
 	fn to_sc(&self, pt: Vec3) -> Vec2 {
 
+		let (gw, gh) = (self.gwidth(), self.gheight());
 		let pt = self.proj_3d * self.view_3d * self.transform * pt;
-		let pt = (pt / pt.z * 0.5).xy() * vec2!(self.gwidth(), -self.gheight());
+		let pt = (pt / pt.z * 0.5).xy() * vec2!(gw, -gh);
+		let pt = pt - self.conf.origin.as_pt() * vec2!(gw, gh) / 2.0;
 
 		return pt;
 

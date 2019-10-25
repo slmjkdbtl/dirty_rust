@@ -32,6 +32,7 @@ pub use input::Input;
 #[cfg(feature = "imgui")]
 pub use imgui_lib as imgui;
 
+use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
@@ -89,7 +90,7 @@ pub struct Ctx {
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
-	pub(self) gl: gl::Device,
+	pub(self) gl: Rc<gl::Device>,
 
 // 	pub(self) backbuffer: gfx::Canvas,
 
@@ -315,7 +316,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
-		gl: gl,
+		gl: Rc::new(gl),
 
 		proj_2d: proj_2d,
 		view_3d: cam_3d.lookat(),

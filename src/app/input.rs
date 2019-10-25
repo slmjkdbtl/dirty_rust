@@ -495,19 +495,22 @@ macro_rules! gen_buttons {
 			)*
 		}
 
-		impl $type {
+		impl std::str::FromStr for $type {
 
-			#[allow(dead_code)]
-			fn from_str(s: &str) -> Option<Self> {
+			type Err = ();
 
+			fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
 				return match s {
 					$(
-						$str => Some($type::$name),
+						$str => Ok($type::$name),
 					)*
-					_ => None,
+					_ => Err(()),
 				};
-
 			}
+
+		}
+
+		impl $type {
 
 			#[allow(dead_code)]
 			#[cfg(desktop)]

@@ -17,6 +17,7 @@ pub struct Mesh {
 	bbox: (Vec3, Vec3),
 	center: Vec3,
 	meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
+	texture: Option<Texture>,
 }
 
 impl Mesh {
@@ -38,7 +39,7 @@ impl Mesh {
 			let vert_count = m.positions.len() / 3;
 			let mut verts = Vec::with_capacity(vert_count);
 
-			let normals = if m.normals.is_empty() {
+			let normals = if m.normals.len() != vert_count * 3 {
 				gen_normals(&m.positions, &m.indices)
 			} else {
 				m.normals
@@ -62,10 +63,13 @@ impl Mesh {
 				let vy = m.positions[i * 3 + 1];
 				let vz = m.positions[i * 3 + 2];
 
+				let tx = m.texcoords.get(i * 2 + 0).cloned().unwrap_or(0.0);
+				let ty = m.texcoords.get(i * 2 + 1).cloned().unwrap_or(0.0);
+
 				verts.push(Vertex3D {
 					pos: vec3!(vx, vy, vz),
 					normal: normals[i],
-					uv: vec2!(),
+					uv: vec2!(tx, 1.0 - ty),
 					color: color,
 				});
 
@@ -83,7 +87,7 @@ impl Mesh {
 	}
 
 	/// create model with mesh data
-	pub fn from(ctx: &Ctx, meshdata: MeshData) -> Result<Self> {
+	pub fn from(ctx: &Ctx, meshdata: MeshData, tex: Option<Texture>) -> Result<Self> {
 
 		let mut meshes = Vec::with_capacity(meshdata.len());
 
@@ -99,17 +103,26 @@ impl Mesh {
 			meshes: meshes,
 			bbox: (min, max),
 			center: center,
+			texture: tex,
 		});
 
 	}
 
 	/// create model from obj
-	pub fn from_obj(ctx: &Ctx, obj: &str, mtl: Option<&str>) -> Result<Self> {
-		return Self::from(ctx, Self::prepare_obj(obj, mtl)?);
+	pub fn from_obj(ctx: &Ctx, obj: &str, mtl: Option<&str>, tex: Option<Texture>) -> Result<Self> {
+		return Self::from(ctx, Self::prepare_obj(obj, mtl)?, tex);
 	}
 
 	pub(super) fn meshes(&self) -> &[Rc<gl::Mesh<Vertex3D, Uniform3D>>] {
 		return &self.meshes;
+	}
+
+	pub fn set_texture(&mut self, tex: Texture) {
+		self.texture = Some(tex);
+	}
+
+	pub fn texture(&self) -> Option<&Texture> {
+		return self.texture.as_ref();
 	}
 
 	pub fn update(&mut self, f: impl FnOnce(&mut MeshData)) {
