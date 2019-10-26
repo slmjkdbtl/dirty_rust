@@ -66,6 +66,9 @@
 - [gfx] make all shapes cachable
 - [gfx] scale modes
 - [gfx] 3d line
+- [gfx] read aseprite files
+- [gfx] read blender files
+- [gfx] read gltf files
 
 == DONE
 - [http] refactor http

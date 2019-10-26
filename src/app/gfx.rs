@@ -27,7 +27,7 @@ pub use shader::*;
 pub use canvas::*;
 pub use font::*;
 pub use camera::*;
-pub use mesh::*;
+pub use model::*;
 pub use desc::*;
 
 pub trait Action = FnOnce(&mut Ctx) -> Result<()>;

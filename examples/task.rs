@@ -17,7 +17,7 @@ struct Teapot {
 }
 
 struct Game {
-	tasks: TaskPool<Result<gfx::ModelData>>,
+	tasks: TaskPool<Result<gfx::MeshData>>,
 	teapots: Vec<Teapot>,
 	shader: gfx::Shader3D<()>,
 	pix_effect: PixEffect,
@@ -27,7 +27,7 @@ impl Game {
 	fn load_more(&mut self) {
 		for _ in 0..LOAD_COUNT {
 			self.tasks.exec(|| {
-				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?);
+				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?, None);
 			});
 		}
 	}
@@ -41,7 +41,7 @@ impl app::State for Game {
 
 		for _ in 0..LOAD_COUNT {
 			tasks.exec(|| {
-				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?);
+				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?, None);
 			});
 		}
 
@@ -80,12 +80,12 @@ impl app::State for Game {
 			let model = m?;
 			self.teapots.push(Teapot {
 				transform: gfx::t()
-					.translate_3d(vec3!(rand!(-320, 320), rand!(-320, 320), rand!(240, 640)))
+					.translate_3d(vec3!(rand!(-320, 320), rand!(-320, 320), rand!(-640, -240)))
 					.rotate_x(rand!(0f32, 360f32).to_radians())
 					.rotate_y(rand!(0f32, 360f32).to_radians())
 					.rotate_z(rand!(0f32, 360f32).to_radians())
 					,
-				model: gfx::Model::from(ctx, model)?,
+				model: gfx::Model::from(ctx, model, None)?,
 			});
 		}
 
@@ -104,7 +104,7 @@ impl app::State for Game {
 			for t in &self.teapots {
 				ctx.push(&t.transform, |ctx| {
 					ctx.draw_3d_with(&self.shader, &(), |ctx| {
-						ctx.draw(shapes::model(&t.model))?;
+						ctx.draw(&shapes::model(&t.model))?;
 						return Ok(());
 					})?;
 					return Ok(());
@@ -131,7 +131,7 @@ impl app::State for Game {
 			.scale(vec2!(2))
 		, |ctx| {
 			ctx.draw(
-				shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total())),
+				&shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total())),
 			)?;
 			return Ok(());
 		})?;

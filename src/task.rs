@@ -9,6 +9,13 @@ use std::thread;
 pub trait TaskItem = Send + 'static;
 pub trait TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum TaskPhase {
+	StandBy,
+	Working,
+	Done,
+}
+
 pub struct TaskPool<T: TaskItem> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
@@ -39,7 +46,7 @@ impl<T: TaskItem> TaskPool<T> {
 
 	fn adjust(&mut self) {
 
-		self.active.retain(|t| !t.done());
+		self.active.retain(|t| t.phase() != TaskPhase::Done);
 
 		for _ in 0..self.max as usize - self.active.len() {
 			if let Some(mut task) = self.queue.pop_front() {
@@ -92,7 +99,7 @@ impl<T: TaskItem> TaskPool<T> {
 pub struct Task<T: TaskItem> {
 	rx: Option<mpsc::Receiver<T>>,
 	action: Option<Box<dyn TaskAction<T>>>,
-	done: bool,
+	phase: TaskPhase,
 }
 
 impl<T: TaskItem> Task<T> {
@@ -100,8 +107,8 @@ impl<T: TaskItem> Task<T> {
 	pub fn new(f: impl FnOnce() -> T + TaskItem) -> Self {
 		return Self {
 			action: Some(box f),
-			done: false,
 			rx: None,
+			phase: TaskPhase::StandBy,
 		};
 	}
 
@@ -127,6 +134,7 @@ impl<T: TaskItem> Task<T> {
 			});
 
 			self.rx = Some(rx);
+			self.phase = TaskPhase::Working;
 
 		}
 
@@ -136,8 +144,8 @@ impl<T: TaskItem> Task<T> {
 		return self.rx.is_some();
 	}
 
-	pub fn done(&self) -> bool {
-		return self.done;
+	pub fn phase(&self) -> TaskPhase {
+		return self.phase;
 	}
 
 	pub fn poll_blocked(&mut self) -> Option<T> {
@@ -145,7 +153,7 @@ impl<T: TaskItem> Task<T> {
 		let rx = self.rx.as_ref()?;
 		let data = rx.recv().ok()?;
 
-		self.done = true;
+		self.phase = TaskPhase::Done;
 
 		return Some(data);
 
@@ -155,13 +163,13 @@ impl<T: TaskItem> Task<T> {
 
 		let rx = self.rx.as_ref()?;
 
-		if self.done {
+		if self.phase != TaskPhase::Working {
 			return None;
 		}
 
 		let data = rx.try_recv().ok()?;
 
-		self.done = true;
+		self.phase = TaskPhase::Done;
 
 		return Some(data);
 

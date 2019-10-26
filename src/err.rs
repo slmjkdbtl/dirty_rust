@@ -14,6 +14,7 @@ pub enum Error {
 	Lua(String),
 	Gfx(String),
 	Obj(String),
+	Gltf(String),
 	Input(String),
 	OpenGL(String),
 	Json(String),
@@ -46,6 +47,7 @@ impl fmt::Display for Error {
 			Error::Lua(s) => print_err(f, "lua", s),
 			Error::Gfx(s) => print_err(f, "gfx", s),
 			Error::Obj(s) => print_err(f, "obj", s),
+			Error::Gltf(s) => print_err(f, "gltf", s),
 			Error::Input(s) => print_err(f, "input", s),
 			Error::OpenGL(s) => print_err(f, "opengl", s),
 			Error::Json(s) => print_err(f, "json", s),
@@ -158,7 +160,6 @@ impl From<stdweb::web::error::InvalidCharacterError> for Error {
 	}
 }
 
-// TODO: why this doesn't work
 #[cfg(all(feature = "app", web))]
 impl From<stdweb::serde::ConversionError> for Error {
 	fn from(_: stdweb::serde::ConversionError) -> Self {
@@ -180,7 +181,7 @@ impl From<gilrs::Error> for Error {
 	}
 }
 
-#[cfg(feature = "img")]
+#[cfg(feature = "app")]
 impl From<tobj::LoadError> for Error {
 
 	fn from(err: tobj::LoadError) -> Self {
@@ -204,6 +205,13 @@ impl From<tobj::LoadError> for Error {
 
 	}
 
+}
+
+#[cfg(all(feature = "app"))]
+impl From<gltf::Error> for Error {
+	fn from(_: gltf::Error) -> Self {
+		return Error::Gltf(format!(""));
+	}
 }
 
 #[cfg(feature = "http")]

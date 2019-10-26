@@ -9,10 +9,8 @@ use crate::Result;
 
 #[derive(Clone, Debug)]
 pub struct IndexBuffer {
-
 	ctx: Rc<GLCtx>,
 	id: BufferID,
-
 }
 
 impl IndexBuffer {
