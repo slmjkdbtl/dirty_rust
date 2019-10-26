@@ -1054,17 +1054,17 @@ impl<'a> Drawable for Canvas<'a> {
 }
 
 #[derive(Clone)]
-pub struct Mesh<'a> {
-	mesh: &'a gfx::Mesh,
+pub struct Model<'a> {
+	mesh: &'a gfx::Model,
 	color: Color,
 }
 
-pub fn mesh<'a>(m: &'a gfx::Mesh) -> Mesh<'a> {
-	return Mesh::new(m);
+pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
+	return Model::new(m);
 }
 
-impl<'a> Mesh<'a> {
-	pub fn new(m: &'a gfx::Mesh) -> Self {
+impl<'a> Model<'a> {
+	pub fn new(m: &'a gfx::Model) -> Self {
 		return Self {
 			mesh: m,
 			color: color!(1),
@@ -1080,7 +1080,7 @@ impl<'a> Mesh<'a> {
 	}
 }
 
-impl<'a> Drawable for Mesh<'a> {
+impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 

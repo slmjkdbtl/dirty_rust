@@ -72,11 +72,12 @@ app = [
 	"fontdue",
 	"stdweb",
 	"splines",
+	"tobj",
+	"gltf",
 ]
 
 img = [
 	"image",
-	"tobj",
 ]
 
 audio = [
@@ -94,7 +95,8 @@ term = [
 ]
 
 ase = [
-	"aseprite",
+	"ase_json",
+	"ase_bin",
 ]
 
 texpack = [
@@ -150,8 +152,9 @@ glow = { version = "0.3.0-alpha3", optional = true, default-features = false, fe
 fontdue = { version = "0.0", optional = true }
 splines = { version = "3.0", optional = true }
 
-image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", "jpeg", ] }
+image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", "jpeg", "tga", "bmp", ] }
 tobj = { version = "0.1", optional = true }
+gltf = { version = "0.14", optional = true }
 
 # audio
 rodio = { version = "0.9", optional = true, default-features = false, features = [ "vorbis", "mp3", "wav", ] }
@@ -161,7 +164,8 @@ url = { version = "2.1", optional = true }
 httparse = { version = "1.3", optional = true }
 
 # ase
-aseprite = { version = "0.1", optional = true }
+ase_json = { version = "0.1", optional = true, package = "aseprite" }
+ase_bin = { version = "0.1", optional = true, package = "ase" }
 
 # texpack
 sheep = { version = "0.3", optional = true }

@@ -9,7 +9,7 @@ mod canvas;
 mod transform;
 mod font;
 mod camera;
-mod mesh;
+mod model;
 mod desc;
 
 pub mod input;

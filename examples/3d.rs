@@ -6,40 +6,31 @@
 use std::path::Path;
 
 use dirty::*;
+use dirty::task::*;
 use dirty::app::*;
 use dirty::math::*;
 use input::Key;
 use input::Mouse;
 
-fn get_mesh_size(m: &gfx::Mesh) -> f32 {
-
-	let (min, max) = m.bbox();
-	let size = (max - min).mag();
-
-	return size;
-
-}
+type LoadResult = Result<(gfx::MeshData, Option<Vec<u8>>)>;
 
 struct ObjViewer {
 	shader: gfx::Shader3D<()>,
-	mesh: Option<gfx::Mesh>,
-	show_normal: bool,
-	size: f32,
+	model: Option<DisplayedModel>,
 	cam: gfx::PerspectiveCam,
 	rot: Vec2,
 	pos: Vec2,
 	dis: f32,
 	scale: f32,
 	resetting: bool,
+	loader: Task<LoadResult>,
 }
 
-impl ObjViewer {
+fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
 
-	fn load_file(&mut self, ctx: &Ctx, path: impl AsRef<Path>) -> Result<()> {
+	let mut path = path.as_ref().to_owned();
 
-		let mut path = path.as_ref().to_owned();
-
-		self.resetting = false;
+	return Task::exec(move || {
 
 		let obj_src = fs::read_str(&path)?;
 
@@ -50,22 +41,54 @@ impl ObjViewer {
 
 		path.set_extension("png");
 
-		let tex_src = fs::read(&path)
-			.ok()
-			.map(|b| gfx::Texture::from_bytes(ctx, &b).ok())
-			.flatten();
+		let tex_src = fs::read(&path).ok();
+		let meshdata = gfx::Model::prepare_obj(&obj_src, mtl_src)?;
 
-		self.show_normal = tex_src.is_none() && mtl_src.is_none();
+		return Ok((meshdata, tex_src));
 
-		if let Ok(mesh) = gfx::Mesh::from_obj(ctx, &obj_src, mtl_src, tex_src) {
-			self.size = get_mesh_size(&mesh);
-			self.dis = self.size;
-			self.scale = 0.0;
-			self.mesh = Some(mesh);
-			self.resetting = true;
-		}
+	});
+}
 
-		return Ok(());
+impl ObjViewer {
+
+	fn update_model(&mut self, model: gfx::Model) {
+
+		self.resetting = true;
+		let model = DisplayedModel::from(model);
+		self.dis = model.size;
+		self.model = Some(model);
+
+	}
+
+	fn load_file(&mut self, path: impl AsRef<Path>) {
+
+		self.loader = load_file(path);
+		self.model = None;
+		self.scale = 0.0;
+		self.resetting = false;
+
+	}
+
+}
+
+struct DisplayedModel {
+	size: f32,
+	show_normal: bool,
+	model: gfx::Model,
+}
+
+impl DisplayedModel {
+
+	fn from(model: gfx::Model) -> Self {
+
+		let (min, max) = model.bound();
+		let size = (max - min).mag();
+
+		return Self {
+			model: model,
+			show_normal: true,
+			size: size,
+		};
 
 	}
 
@@ -75,22 +98,17 @@ impl app::State for ObjViewer {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let mut viewer = Self {
-			size: 0.0,
-			mesh: None,
+		return Ok(Self {
+			model: None,
 			pos: vec2!(0),
 			dis: 0.0,
-			show_normal: true,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 2048.0, vec3!(), 0.0, 0.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
 			scale: 0.0,
-		};
-
-		viewer.load_file(ctx, "examples/res/kart.obj");
-
-		return Ok(viewer);
+			loader: load_file("examples/res/kart.obj"),
+		});
 
 	}
 
@@ -122,9 +140,11 @@ impl app::State for ObjViewer {
 					self.resetting = false;
 				}
 
-				if !self.resetting {
-					self.dis -= s.y * (self.size / 240.0);
-					self.dis = self.dis.clamp(self.size * 0.2, self.size * 3.0);
+				if let Some(model) = &self.model {
+					if !self.resetting {
+						self.dis -= s.y * (model.size / 240.0);
+						self.dis = self.dis.clamp(model.size * 0.2, model.size * 3.0);
+					}
 				}
 
 			},
@@ -157,8 +177,8 @@ impl app::State for ObjViewer {
 
 			},
 
-			FileDrop(mut path) => {
-				self.load_file(ctx, &path);
+			FileDrop(path) => {
+				self.load_file(&path);
 			},
 
 			_ => {},
@@ -170,6 +190,15 @@ impl app::State for ObjViewer {
 	}
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+
+		if let Some(data) = self.loader.poll() {
+			if let Ok((meshdata, tex)) = data {
+				let tex = tex.map(|b| gfx::Texture::from_bytes(ctx, &b).ok()).flatten();
+				if let Ok(model) = gfx::Model::from(ctx, meshdata, tex) {
+					self.update_model(model);
+				}
+			}
+		}
 
 		let move_speed = f32::sqrt(self.dis) * 2.0;
 
@@ -197,18 +226,22 @@ impl app::State for ObjViewer {
 
 		self.pos = self.pos.clamp(-vec2!(range), vec2!(range));
 
-		if self.resetting {
+		if let Some(model) = &self.model {
 
-			let dest_rot = vec2!(0);
-			let dest_pos = vec2!(0);
-			let dest_scale = 1.0;
-			let dest_dis = self.size;
-			let t = ctx.dt() * 6.0;
+			if self.resetting {
 
-			self.rot = self.rot.lerp(dest_rot, t);
-			self.pos = self.pos.lerp(dest_pos, t);
-			self.scale = self.scale.lerp(dest_scale, t);
-			self.dis = self.dis.lerp(dest_dis, t);
+				let dest_rot = vec2!(0);
+				let dest_pos = vec2!(0);
+				let dest_scale = 1.0;
+				let dest_dis = model.size;
+				let t = ctx.dt() * 4.0;
+
+				self.rot = self.rot.lerp(dest_rot, t);
+				self.pos = self.pos.lerp(dest_pos, t);
+				self.scale = self.scale.lerp(dest_scale, t);
+				self.dis = self.dis.lerp(dest_dis, t);
+
+			}
 
 		}
 
@@ -218,10 +251,10 @@ impl app::State for ObjViewer {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		if let Some(mesh) = &self.mesh {
+		if let Some(model) = &self.model {
 
-			let (max, min) = mesh.bbox();
-			let center = mesh.center();
+			let (max, min) = model.model.bound();
+			let center = model.model.center();
 
 			self.cam.set_pos(vec3!(self.pos.x, self.pos.y, self.dis));
 
@@ -234,13 +267,13 @@ impl app::State for ObjViewer {
 					.translate_3d(-center)
 				, |ctx| {
 
-					if self.show_normal {
+					if model.show_normal {
 						ctx.draw_3d_with(&self.shader, &(), |ctx| {
-							ctx.draw(&shapes::mesh(&mesh))?;
+							ctx.draw(&shapes::model(&model.model))?;
 							return Ok(());
 						})?;
 					} else {
-						ctx.draw(&shapes::mesh(&mesh))?;
+						ctx.draw(&shapes::model(&model.model))?;
 					}
 
 					return Ok(());
@@ -251,16 +284,25 @@ impl app::State for ObjViewer {
 
 			})?;
 
+		} else {
+
+			ctx.push(&gfx::t()
+				.translate(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
+			, |ctx| {
+				ctx.draw(
+					&shapes::text("loading...")
+						.align(gfx::Origin::BottomLeft)
+				)?;
+				return Ok(());
+			})?;
+
 		}
 
 		ctx.push(&gfx::t()
 			.translate(vec2!(24))
 		, |ctx| {
-
 			ctx.draw(&shapes::text("drag .obj files into this window"))?;
-
 			return Ok(());
-
 		})?;
 
 		return Ok(());

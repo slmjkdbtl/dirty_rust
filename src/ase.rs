@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::path::Path;
+use std::io::Cursor;
 use std::collections::HashMap;
 
 use crate::math::*;
@@ -38,7 +39,7 @@ impl SpriteData {
 
 		let mut frames = vec![];
 		let mut anims = HashMap::new();
-		let data: aseprite::SpritesheetData = json::decode(json)?;
+		let data: ase_json::SpritesheetData = json::decode(json)?;
 
 		let width = data.meta.size.w;
 		let height = data.meta.size.h;
@@ -61,7 +62,7 @@ impl SpriteData {
 				let mut from = anim.from;
 				let mut to = anim.to;
 
-				if let aseprite::Direction::Reverse = anim.direction {
+				if let ase_json::Direction::Reverse = anim.direction {
 					std::mem::swap(&mut from, &mut to);
 				}
 
@@ -81,5 +82,11 @@ impl SpriteData {
 
 	}
 
+}
+
+pub use ase_bin::Aseprite;
+
+fn parse(b: &[u8]) -> Result<Aseprite> {
+	return Ok(ase_bin::Aseprite::from_read(&mut Cursor::new(b))?);
 }
 
