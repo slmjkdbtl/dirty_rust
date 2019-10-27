@@ -25,7 +25,6 @@ here's a minimal window setup:
 ```rust
 use dirty::*;
 use dirty::app::*;
-use input::Key;
 
 struct Game;
 
@@ -38,6 +37,7 @@ impl app::State for Game {
 	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
 
 		use input::Event::*;
+		use input::Key;
 
 		match e {
 			KeyPress(k) => {
@@ -52,15 +52,13 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.push(&gfx::t()
-			.translate_3d(vec3!(0, 0, 3))
-			.rotate_y(ctx.time())
-			.rotate_z(ctx.time())
-		, |ctx| {
-			return ctx.draw(&shapes::cube());
-		})?;
+		ctx.draw_t(&gfx::t()
+			.t3(vec3!(0, 0, -3))
+			.ry(ctx.time())
+			.rz(ctx.time())
+		, &shapes::cube())?;
 
 		ctx.draw(&shapes::text("yo"))?;
 
@@ -70,11 +68,10 @@ impl app::State for Game {
 
 }
 
-fn main() {
-	if let Err(err) = app::run::<Game>() {
-		println!("{}", err);
-	}
+fn main() -> Result<()> {
+	return app::run::<Game>();
 }
+
 ```
 
 ### examples

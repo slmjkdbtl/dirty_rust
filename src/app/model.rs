@@ -395,6 +395,11 @@ impl Model {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
+	/// create model from gltf
+	pub fn from_gltf(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_gltf(path)?);
+	}
+
 	pub(super) fn meshes(&self) -> &[Rc<gl::Mesh<Vertex3D, Uniform3D>>] {
 		return &self.meshes;
 	}

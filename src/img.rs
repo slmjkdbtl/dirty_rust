@@ -23,8 +23,10 @@ impl Image {
 	}
 
 	pub fn from_pixels(w: i32, h: i32, data: Vec<u8>) -> Result<Self>{
+		let buf = image::ImageBuffer::from_raw(w as u32, h as u32, data)
+			.ok_or_else(|| Error::Image(format!("incorrect image dimensions")))?;
 		return Ok(Self {
-			handle: image::ImageBuffer::from_raw(w as u32, h as u32, data).ok_or_else(|| Error::Image(format!("container not big enough")))?,
+			handle: buf,
 		});
 	}
 

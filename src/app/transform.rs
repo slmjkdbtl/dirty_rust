@@ -69,6 +69,43 @@ impl Transform {
 
 }
 
+// aliases
+impl Transform {
+
+	pub fn t(&self, p: Vec2) -> Self {
+		return self.translate(p);
+	}
+
+	pub fn r(&self, a: f32) -> Self {
+		return self.rotate(a);
+	}
+
+	pub fn s(&self, s: Vec2) -> Self {
+		return self.scale(s);
+	}
+
+	pub fn t3(&self, p: Vec3) -> Self {
+		return self.translate_3d(p);
+	}
+
+	pub fn rx(&self, a: f32) -> Self {
+		return self.rotate_x(a);
+	}
+
+	pub fn ry(&self, a: f32) -> Self {
+		return self.rotate_y(a);
+	}
+
+	pub fn rz(&self, a: f32) -> Self {
+		return self.rotate_z(a);
+	}
+
+	pub fn s3(&self, s: Vec3) -> Self {
+		return self.scale_3d(s);
+	}
+
+}
+
 impl ops::Mul<Transform> for Mat4 {
 	type Output = Mat4;
 	fn mul(self, m: Transform) -> Self::Output {

@@ -262,10 +262,10 @@ impl app::State for ObjViewer {
 			ctx.use_cam(&self.cam, |ctx| {
 
 				ctx.push(&gfx::t()
-					.scale_3d(vec3!(self.scale))
-					.rotate_y(self.rot.x.to_radians())
-					.rotate_x(self.rot.y.to_radians())
-					.translate_3d(-center)
+					.s3(vec3!(self.scale))
+					.ry(self.rot.x.to_radians())
+					.rx(self.rot.y.to_radians())
+					.t3(-center)
 				, |ctx| {
 
 					if model.show_normal {
@@ -288,7 +288,7 @@ impl app::State for ObjViewer {
 		} else {
 
 			ctx.push(&gfx::t()
-				.translate(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
+				.t(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
 			, |ctx| {
 				ctx.draw(
 					&shapes::text("loading...")
@@ -300,7 +300,7 @@ impl app::State for ObjViewer {
 		}
 
 		ctx.push(&gfx::t()
-			.translate(vec2!(24))
+			.t(vec2!(24))
 		, |ctx| {
 			ctx.draw(&shapes::text("drag .obj files into this window"))?;
 			return Ok(());

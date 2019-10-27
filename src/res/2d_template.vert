@@ -1,6 +1,6 @@
 // wengwengweng
 
-attribute vec2 a_pos;
+attribute vec3 a_pos;
 attribute vec2 a_uv;
 attribute vec4 a_color;
 
