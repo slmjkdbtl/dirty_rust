@@ -21,24 +21,24 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let mut model = gfx::Model::from_obj(ctx, include_str!("res/kart.obj"), None, None)?;
+// 		let mut model = gfx::Model::from_obj(ctx, include_str!("res/kart.obj"), None, None)?;
 
-		model.update(|data| {
-			for m in data {
-				for v in &mut m.vertices {
-					v.color = color!(rand!(), rand!(), rand!(), 1);
-				}
-			}
-		});
+// 		model.update(|data| {
+// 			for m in data {
+// 				for v in &mut m.vertices {
+// 					v.color = color!(rand!(), rand!(), rand!(), 1);
+// 				}
+// 			}
+// 		});
 
-		let model = gfx::Model::from_glb(ctx, include_bytes!("res/buggy.glb"))?;
+		let mut model = gfx::Model::from_glb(ctx, include_bytes!("res/duck.glb"))?;
 
 		return Ok(Self {
 			model: model,
 			pix_effect: PixEffect::new(ctx)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, 12), 0.0, 0.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
-			move_speed: 160.0,
+			move_speed: 240.0,
 			eye_speed: 0.16,
 		});
 
@@ -111,26 +111,17 @@ impl app::State for Game {
 			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
-		let (min, max) = self.model.bound();
-
 		self.pix_effect.render(ctx, |ctx| {
 
 			ctx.clear();
 // 			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.use_cam(&self.cam, |ctx| {
-
-				ctx.draw(&shapes::rect3d(min, max))?;
-
-// 				ctx.push(&gfx::t()
-// 					.rotate_y(ctx.time())
-// 				, |ctx| {
+// 				ctx.draw_3d_with(&self.shader, &(), |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;
 // 					return Ok(());
 // 				})?;
-
 				return Ok(());
-
 			})?;
 
 			return Ok(());
@@ -143,31 +134,9 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-// 		self.pix_effect.draw(ctx, &PixUniform {
-// 			resolution: vec2!(ctx.width(), ctx.height()),
-// 			size: 6.0,
-// 		})?;
-
-		let (min, max) = self.model.bound();
-
-		ctx.use_cam(&self.cam, |ctx| {
-
-			ctx.draw_3d_with(&self.shader, &(), |ctx| {
-				ctx.draw(&shapes::model(&self.model))?;
-				return Ok(());
-			})?;
-
-// 			ctx.draw(&shapes::rect3d(min, max))?;
-
-// 				ctx.push(&gfx::t()
-// 					.rotate_y(ctx.time())
-// 				, |ctx| {
-// 				ctx.draw(&shapes::model(&self.model))?;
-// 					return Ok(());
-// 				})?;
-
-			return Ok(());
-
+		self.pix_effect.draw(ctx, &PixUniform {
+			resolution: vec2!(ctx.width(), ctx.height()),
+			size: 2.0,
 		})?;
 
 		return Ok(());

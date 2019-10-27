@@ -12,7 +12,7 @@ use dirty::math::*;
 use input::Key;
 use input::Mouse;
 
-type LoadResult = Result<(gfx::MeshData, Option<Vec<u8>>)>;
+type LoadResult = Result<gfx::ModelData>;
 
 struct ObjViewer {
 	shader: gfx::Shader3D<()>,
@@ -41,10 +41,12 @@ fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
 
 		path.set_extension("png");
 
-		let tex_src = fs::read(&path).ok();
-		let meshdata = gfx::Model::prepare_obj(&obj_src, mtl_src)?;
+		let img_src = fs::read(&path).ok();
+		let img_src = img_src.as_ref().map(|i| i.as_slice());
 
-		return Ok((meshdata, tex_src));
+		let data = gfx::Model::load_obj(&obj_src, mtl_src, img_src)?;
+
+		return Ok(data);
 
 	});
 }
@@ -192,9 +194,8 @@ impl app::State for ObjViewer {
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		if let Some(data) = self.loader.poll() {
-			if let Ok((meshdata, tex)) = data {
-				let tex = tex.map(|b| gfx::Texture::from_bytes(ctx, &b).ok()).flatten();
-				if let Ok(model) = gfx::Model::from(ctx, meshdata, tex) {
+			if let Ok(data) = data {
+				if let Ok(model) = gfx::Model::from_data(ctx, data) {
 					self.update_model(model);
 				}
 			}
