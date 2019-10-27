@@ -335,7 +335,7 @@ impl Drawable for Polygon {
 			for (i, p) in pts.iter().enumerate() {
 
 				gfx::Vertex2D {
-					pos: ctx.transform * *p,
+					pos: ctx.transform * vec3!(p.x, p.y, 0.0),
 					uv: vec2!(0),
 					color: color,
 				}.push(&mut verts);
@@ -452,13 +452,13 @@ impl Drawable for Gradient {
 			last_pos = Some(s.1);
 
 			Vertex2D {
-				pos: matrix * vec2!(-w / 2.0, -h / 2.0 + h * s.1),
+				pos: matrix * vec3!(-w / 2.0, -h / 2.0 + h * s.1, 0.0),
 				uv: vec2!(0),
 				color: s.0,
 			}.push(&mut verts);
 
 			Vertex2D {
-				pos: matrix * vec2!(w / 2.0, -h / 2.0 + h * s.1),
+				pos: matrix * vec3!(w / 2.0, -h / 2.0 + h * s.1, 0.0),
 				uv: vec2!(0),
 				color: s.0,
 			}.push(&mut verts);

@@ -10,19 +10,20 @@ use crate::gl;
 /// vertex layout for the 2d pipeline
 #[derive(Clone)]
 pub struct Vertex2D {
-	pub pos: Vec2,
+	pub pos: Vec3,
 	pub uv: Vec2,
 	pub color: Color,
 }
 
 impl gl::VertexLayout for Vertex2D {
 
-	const STRIDE: usize = 8;
+	const STRIDE: usize = 9;
 
 	fn push(&self, queue: &mut Vec<f32>) {
 		queue.extend_from_slice(&[
 			self.pos.x,
 			self.pos.y,
+			self.pos.z,
 			self.uv.x,
 			self.uv.y,
 			self.color.r,
@@ -34,7 +35,7 @@ impl gl::VertexLayout for Vertex2D {
 
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[
-			("a_pos", 2),
+			("a_pos", 3),
 			("a_uv", 2),
 			("a_color", 4),
 		];
@@ -171,10 +172,10 @@ impl gl::Shape for QuadShape {
 		let t = self.transform;
 		let q = self.quad;
 		let c = self.color;
-		let p1 = t * (vec2!(-0.5, 0.5));
-		let p2 = t * (vec2!(0.5, 0.5));
-		let p3 = t * (vec2!(0.5, -0.5));
-		let p4 = t * (vec2!(-0.5, -0.5));
+		let p1 = t * (vec3!(-0.5, 0.5, 0.0));
+		let p2 = t * (vec3!(0.5, 0.5, 0.0));
+		let p3 = t * (vec3!(0.5, -0.5, 0.0));
+		let p4 = t * (vec3!(-0.5, -0.5, 0.0));
 
 		let mut u1 = vec2!(q.x, q.y + q.h);
 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);

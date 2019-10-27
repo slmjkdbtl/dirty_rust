@@ -31,7 +31,8 @@ impl app::State for Game {
 // 			}
 // 		});
 
-		let mut model = gfx::Model::from_glb(ctx, include_bytes!("res/duck.glb"))?;
+		let mut model = gfx::Model::from_gltf(ctx, "examples/res/Duck.gltf")?;
+// 		let mut model = gfx::Model::from_glb(ctx, include_bytes!("res/duck.glb"))?;
 
 		return Ok(Self {
 			model: model,
