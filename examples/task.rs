@@ -17,7 +17,7 @@ struct Teapot {
 }
 
 struct Game {
-	tasks: TaskPool<Result<gfx::MeshData>>,
+	tasks: TaskPool<Result<gfx::ModelData>>,
 	teapots: Vec<Teapot>,
 	shader: gfx::Shader3D<()>,
 	pix_effect: PixEffect,
@@ -27,7 +27,7 @@ impl Game {
 	fn load_more(&mut self) {
 		for _ in 0..LOAD_COUNT {
 			self.tasks.exec(|| {
-				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?, None);
+				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
 			});
 		}
 	}
@@ -41,7 +41,7 @@ impl app::State for Game {
 
 		for _ in 0..LOAD_COUNT {
 			tasks.exec(|| {
-				return gfx::Model::prepare_obj(&fs::read_str("examples/res/teapot.obj")?, None);
+				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
 			});
 		}
 
@@ -77,7 +77,7 @@ impl app::State for Game {
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		for m in self.tasks.poll() {
-			let model = m?;
+			let modeldata = m?;
 			self.teapots.push(Teapot {
 				transform: gfx::t()
 					.translate_3d(vec3!(rand!(-320, 320), rand!(-320, 320), rand!(-640, -240)))
@@ -85,7 +85,7 @@ impl app::State for Game {
 					.rotate_y(rand!(0f32, 360f32).to_radians())
 					.rotate_z(rand!(0f32, 360f32).to_radians())
 					,
-				model: gfx::Model::from(ctx, model, None)?,
+				model: gfx::Model::from_data(ctx, modeldata)?,
 			});
 		}
 

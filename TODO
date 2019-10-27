@@ -3,7 +3,6 @@
 == DOING
 - [gfx] investigate the extreme slowness of the 2d renderer
 - [gfx] draw curve
-- [gfx] mesh calculate bounding box
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -68,7 +67,6 @@
 - [gfx] 3d line
 - [gfx] read aseprite files
 - [gfx] read blender files
-- [gfx] read gltf files
 
 == DONE
 - [http] refactor http
@@ -139,4 +137,6 @@
 - [gfx] use Font trait for text rendering
 - [gfx] split into submodules
 - [gfx] ignore obj no mtl error
+- [gfx] mesh calculate bounding box
+- [gfx] read gltf files
 

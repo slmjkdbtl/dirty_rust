@@ -22,6 +22,12 @@ impl Image {
 		});
 	}
 
+	pub fn from_pixels(w: i32, h: i32, data: Vec<u8>) -> Result<Self>{
+		return Ok(Self {
+			handle: image::ImageBuffer::from_raw(w as u32, h as u32, data).ok_or_else(|| Error::Image(format!("container not big enough")))?,
+		});
+	}
+
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let img = image::load_from_memory(data)?

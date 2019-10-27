@@ -2,18 +2,25 @@
 
 use std::rc::Rc;
 use std::io::Cursor;
+use std::path::Path;
 
 use crate::*;
 use super::*;
 use super::gfx::*;
 
 /// mesh data
-pub type MeshData = Vec<gl::MeshData<Vertex3D>>;
+pub type MeshData = gl::MeshData<Vertex3D>;
 
-/// 3d mesh
+/// model data
+pub struct ModelData {
+	meshes: Vec<MeshData>,
+	img: Option<img::Image>,
+}
+
+/// 3d model
 #[derive(Clone)]
 pub struct Model {
-	meshdata: MeshData,
+	meshdata: Vec<MeshData>,
 	bound: (Vec3, Vec3),
 	center: Vec3,
 	meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
@@ -22,42 +29,97 @@ pub struct Model {
 
 impl Model {
 
-	pub fn prepare_glb(bytes: &[u8]) -> Result<MeshData> {
+	pub fn load_file(path: impl AsRef<Path>) -> Result<ModelData> {
 
-		use gltf::buffer::Source;
-		use gltf::Glb;
-		use gltf::Gltf;
+		let path = path.as_ref();
 
-		let glb = Glb::from_slice(bytes)?;
-		let document = Gltf::from_slice(&glb.json)?;
-		let bin = glb.bin.map(|v| v.to_vec()).unwrap();
+		match fs::extname(path)?.as_ref() {
+			"obj" => {},
+			"gltf" => {
+				return Self::load_gltf(path);
+			},
+			_ => {},
+		}
 
+		todo!();
+
+	}
+
+	pub fn from_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_file(path)?);
+	}
+
+	// TODO: reuse code with load_glb
+	pub fn load_gltf(path: impl AsRef<Path>) -> Result<ModelData> {
+
+		let (document, buffers, images) = gltf::import(path)?;
 		let dmeshes = document.meshes();
 		let mut meshes = Vec::with_capacity(dmeshes.len());
+		let mut img = None;
+
+		// TODO: not correct
+		for data in images {
+			img = Some(img::Image::from_pixels(data.width as i32, data.height as i32, data.pixels)?);
+		}
 
 		for mesh in dmeshes {
 
 			for prim in mesh.primitives() {
 
-				let reader = prim.reader(|_| Some(&bin));
+				let reader = prim.reader(|b| Some(&buffers[b.index()]));
 
 				let positions = reader
 					.read_positions()
-					.unwrap()
-					.map(|v| vec3!(v[0], v[1], v[2]))
-					.collect::<Vec<Vec3>>();
-
-				let normals = reader
-					.read_normals()
-					.unwrap()
-					.map(|v| vec3!(v[0], v[1], v[2]))
-					.collect::<Vec<Vec3>>();
+					.map(|positions| {
+						return positions
+							.map(|v| vec3!(v[0], v[1], v[2]))
+							.collect::<Vec<Vec3>>();
+					})
+					.unwrap_or(vec![]);
 
 				let indices = reader
 					.read_indices()
-					.unwrap()
-					.into_u32()
-					.collect::<Vec<u32>>();
+					.map(|indices| {
+						return indices
+							.into_u32()
+							.collect::<Vec<u32>>();
+					})
+					.unwrap_or(vec![]);
+
+				let normals = reader
+					.read_normals()
+					.map(|normals| {
+						return normals
+							.map(|v| vec3!(v[0], v[1], v[2]))
+							.collect::<Vec<Vec3>>();
+					})
+					.unwrap_or(vec![]);
+
+				let normals = if normals.len() != positions.len() {
+					gen_normals(&positions, &indices)
+				} else {
+					normals
+				};
+
+				let colors = reader
+					.read_colors(0)
+					.map(|colors| {
+						return colors
+							.into_rgba_f32()
+							.map(|c| color!(c[0], c[1], c[2], c[3]))
+							.collect::<Vec<Color>>();
+					})
+					.unwrap_or(vec![]);
+
+				let texcoords = reader
+					.read_tex_coords(0)
+					.map(|texcoords| {
+						return texcoords
+							.into_f32()
+							.map(|t| vec2!(t[0], t[1]))
+							.collect::<Vec<Vec2>>();
+					})
+					.unwrap_or(vec![]);
 
 				let mut verts = Vec::with_capacity(positions.len());
 
@@ -66,8 +128,8 @@ impl Model {
 					let v = Vertex3D {
 						pos: positions[i],
 						normal: normals[i],
-						color: color!(1),
-						uv: vec2!(0),
+						color: colors.get(i).cloned().unwrap_or(color!(1)),
+						uv: texcoords.get(i).cloned().unwrap_or(vec2!(0)),
 					};
 
 					verts.push(v);
@@ -83,12 +145,141 @@ impl Model {
 
 		}
 
-		return Ok(meshes);
+		return Ok(ModelData {
+			meshes: meshes,
+			img: img,
+		});
+
+	}
+
+	pub fn load_glb(bytes: &[u8]) -> Result<ModelData> {
+
+		use gltf::Glb;
+		use gltf::Gltf;
+
+		let glb = Glb::from_slice(bytes)?;
+		let document = Gltf::from_slice(&glb.json)?;
+		let bin = glb.bin.ok_or_else(|| Error::Gltf(format!("no bin")))?;
+
+		use gltf::image::Source;
+
+		let mut img = None;
+
+		for image in document.images() {
+
+			match image.source() {
+
+				Source::View { view, .. } => {
+
+					let offset = view.offset();
+					let len = view.length();
+					let buf = &bin[offset..offset + len];
+
+					img = Some(img::Image::from_bytes(buf)?);
+
+				},
+
+				_ => {},
+
+			}
+
+		}
+
+		let dmeshes = document.meshes();
+		let mut meshes = Vec::with_capacity(dmeshes.len());
+
+		for mesh in dmeshes {
+
+			for prim in mesh.primitives() {
+
+				let reader = prim.reader(|_| Some(&bin));
+
+				let positions = reader
+					.read_positions()
+					.map(|positions| {
+						return positions
+							.map(|v| vec3!(v[0], v[1], v[2]))
+							.collect::<Vec<Vec3>>();
+					})
+					.unwrap_or(vec![]);
+
+				let indices = reader
+					.read_indices()
+					.map(|indices| {
+						return indices
+							.into_u32()
+							.collect::<Vec<u32>>();
+					})
+					.unwrap_or(vec![]);
+
+				let normals = reader
+					.read_normals()
+					.map(|normals| {
+						return normals
+							.map(|v| vec3!(v[0], v[1], v[2]))
+							.collect::<Vec<Vec3>>();
+					})
+					.unwrap_or(vec![]);
+
+				let normals = if normals.len() != positions.len() {
+					gen_normals(&positions, &indices)
+				} else {
+					normals
+				};
+
+				let colors = reader
+					.read_colors(0)
+					.map(|colors| {
+						return colors
+							.into_rgba_f32()
+							.map(|c| color!(c[0], c[1], c[2], c[3]))
+							.collect::<Vec<Color>>();
+					})
+					.unwrap_or(vec![]);
+
+				let texcoords = reader
+					.read_tex_coords(0)
+					.map(|texcoords| {
+						return texcoords
+							.into_f32()
+							.map(|t| vec2!(t[0], t[1]))
+							.collect::<Vec<Vec2>>();
+					})
+					.unwrap_or(vec![]);
+
+				let mut verts = Vec::with_capacity(positions.len());
+
+				for i in 0..positions.len() {
+
+					let v = Vertex3D {
+						pos: positions[i],
+						normal: normals[i],
+						color: colors.get(i).cloned().unwrap_or(color!(1)),
+						uv: texcoords.get(i).cloned().unwrap_or(vec2!(0)),
+					};
+
+					verts.push(v);
+
+				}
+
+				meshes.push(gl::MeshData {
+					vertices: verts,
+					indices: indices,
+				});
+
+			}
+
+		}
+
+		return Ok(ModelData {
+			meshes: meshes,
+			img: img,
+		});
 
 	}
 
 	/// load mesh data with materials that's safe to send between threads
-	pub fn prepare_obj(obj: &str, mtl: Option<&str>) -> Result<MeshData> {
+	pub fn load_obj(obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<ModelData> {
 
 		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
 			return mtl
@@ -101,11 +292,16 @@ impl Model {
 		for m in models {
 
 			let m = m.mesh;
-			let vert_count = m.positions.len() / 3;
+			let positions = m.positions
+				.chunks(3)
+				.map(|n| vec3!(n[0], n[1], n[2]))
+				.collect::<Vec<Vec3>>();
+
+			let vert_count = positions.len();
 			let mut verts = Vec::with_capacity(vert_count);
 
 			let normals = if m.normals.len() != vert_count * 3 {
-				gen_normals(&m.positions, &m.indices)
+				gen_normals(&positions, &m.indices)
 			} else {
 				m.normals
 					.chunks(3)
@@ -147,14 +343,30 @@ impl Model {
 
 		}
 
-		return Ok(meshes);
+		let img = if let Some(bytes) = img {
+			Some(img::Image::from_bytes(bytes)?)
+		} else {
+			None
+		};
+
+		return Ok(ModelData {
+			meshes: meshes,
+			img: img,
+		});
 
 	}
 
 	/// create model with mesh data
-	pub fn from(ctx: &Ctx, meshdata: MeshData, tex: Option<Texture>) -> Result<Self> {
+	pub fn from_data(ctx: &Ctx, data: ModelData) -> Result<Self> {
 
+		let meshdata = data.meshes;
 		let mut meshes = Vec::with_capacity(meshdata.len());
+
+		let tex = if let Some(img) = data.img {
+			Some(Texture::from_img(ctx, img)?)
+		} else {
+			None
+		};
 
 		for m in &meshdata {
 			meshes.push(Rc::new(gl::Mesh::from_meshdata(&ctx.gl, m.clone())?));
@@ -174,13 +386,13 @@ impl Model {
 	}
 
 	/// create model from obj
-	pub fn from_obj(ctx: &Ctx, obj: &str, mtl: Option<&str>, tex: Option<Texture>) -> Result<Self> {
-		return Self::from(ctx, Self::prepare_obj(obj, mtl)?, tex);
+	pub fn from_obj(ctx: &Ctx, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_obj(obj, mtl, img)?);
 	}
 
 	/// create model from glb
 	pub fn from_glb(ctx: &Ctx, bytes: &[u8]) -> Result<Self> {
-		return Self::from(ctx, Self::prepare_glb(bytes)?, None);
+		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
 	pub(super) fn meshes(&self) -> &[Rc<gl::Mesh<Vertex3D, Uniform3D>>] {
@@ -195,7 +407,7 @@ impl Model {
 		return self.texture.as_ref();
 	}
 
-	pub fn update(&mut self, f: impl FnOnce(&mut MeshData)) {
+	pub fn update(&mut self, f: impl FnOnce(&mut [MeshData])) {
 
 		use gl::VertexLayout;
 
@@ -225,7 +437,7 @@ impl Model {
 
 	}
 
-	pub fn meshdata(&self) -> &MeshData {
+	pub fn meshdata(&self) -> &[MeshData] {
 		return &self.meshdata;
 	}
 
@@ -239,7 +451,7 @@ impl Model {
 
 }
 
-fn get_bound(meshes: &MeshData) -> (Vec3, Vec3) {
+fn get_bound(meshes: &[MeshData]) -> (Vec3, Vec3) {
 
 	let mut min = vec3!();
 	let mut max = vec3!();
@@ -282,7 +494,7 @@ fn get_bound(meshes: &MeshData) -> (Vec3, Vec3) {
 
 }
 
-fn gen_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
+fn gen_normals(pos: &[Vec3], indices: &[u32]) -> Vec<Vec3> {
 
 	let vert_count = pos.len() / 3;
 	let mut normals = vec![vec3!(0); vert_count];
@@ -294,9 +506,9 @@ fn gen_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 			let i1 = tri[0] as usize;
 			let i2 = tri[1] as usize;
 			let i3 = tri[2] as usize;
-			let v1 = vec3!(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-			let v2 = vec3!(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-			let v3 = vec3!(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+			let v1 = pos[i1];
+			let v2 = pos[i2];
+			let v3 = pos[i3];
 			let normal = Vec3::cross((v2 - v1), (v3 - v1));
 
 			normals[i1] += normal;
@@ -309,43 +521,6 @@ fn gen_normals(pos: &[f32], indices: &[u32]) -> Vec<Vec3> {
 		.into_iter()
 		.map(|p| p.normalize())
 		.collect();
-
-}
-
-pub fn load_gltf(path: impl AsRef<std::path::Path>) -> Result<()> {
-
-	let (document, buffers, images) = gltf::import(path)?;
-
-	for mesh in document.meshes() {
-
-		for prim in mesh.primitives() {
-
-			let reader = prim.reader(|buffer| Some(&buffers[buffer.index()]));
-
-			let vertices = reader
-				.read_positions()
-				.unwrap()
-				.map(|v| vec3!(v[0], v[1], v[2]))
-				.collect::<Vec<Vec3>>();
-
-			let normals = reader
-				.read_normals()
-				.unwrap()
-				.map(|v| vec3!(v[0], v[1], v[2]))
-				.collect::<Vec<Vec3>>();
-
-			let indices = reader
-				.read_indices()
-				.unwrap()
-				.into_u32()
-				.collect::<Vec<u32>>()
-				;
-
-		}
-
-	}
-
-	return Ok(());
 
 }
 
