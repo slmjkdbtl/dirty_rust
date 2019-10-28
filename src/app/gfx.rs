@@ -217,8 +217,8 @@ impl Gfx for Ctx {
 
 	fn coord(&self, coord: Origin) -> Vec2 {
 
-		let w = self.width();
-		let h = self.height();
+		let w = self.gwidth();
+		let h = self.gheight();
 		let orig_pt = self.conf.origin.as_pt();
 		let coord_pt = coord.as_pt();
 

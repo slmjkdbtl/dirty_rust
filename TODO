@@ -71,6 +71,8 @@
 - [gfx] model morphing
 - [gfx] make rect, line and circle independent on polygon (?)
 - [gfx] cull face
+- [gfx] skybox
+- [gfx] billboard
 
 == DONE
 - [http] refactor http
