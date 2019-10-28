@@ -24,6 +24,8 @@ struct ObjViewer {
 	scale: f32,
 	resetting: bool,
 	loader: Task<LoadResult>,
+	wireframe: bool,
+	helping: bool,
 }
 
 fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
@@ -110,6 +112,8 @@ impl app::State for ObjViewer {
 			resetting: false,
 			scale: 0.0,
 			loader: load_file("examples/res/kart.obj"),
+			wireframe: false,
+			helping: false,
 		});
 
 	}
@@ -132,6 +136,14 @@ impl app::State for ObjViewer {
 
 				if k == Key::Esc {
 					ctx.quit();
+				}
+
+				if k == Key::L {
+					self.wireframe = !self.wireframe;
+				}
+
+				if k == Key::H {
+					self.helping = !self.helping;
 				}
 
 			},
@@ -268,13 +280,17 @@ impl app::State for ObjViewer {
 					.t3(-center)
 				, |ctx| {
 
+					let draw_model = |ctx: &mut Ctx| {
+						return ctx.draw(
+							&shapes::model(&model.model)
+								.wireframe(self.wireframe)
+						);
+					};
+
 					if model.show_normal {
-						ctx.draw_3d_with(&self.shader, &(), |ctx| {
-							ctx.draw(&shapes::model(&model.model))?;
-							return Ok(());
-						})?;
+						ctx.draw_3d_with(&self.shader, &(), draw_model)?;
 					} else {
-						ctx.draw(&shapes::model(&model.model))?;
+						draw_model(ctx)?;
 					}
 
 					return Ok(());
@@ -302,8 +318,49 @@ impl app::State for ObjViewer {
 		ctx.push(&gfx::t()
 			.t(vec2!(24))
 		, |ctx| {
+
 			ctx.draw(&shapes::text("drag .obj files into this window"))?;
+
+			ctx.push(&gfx::t()
+				.t(vec2!(0, 22))
+				.s(vec2!(0.8))
+			, |ctx| {
+
+				ctx.draw(&shapes::text("H: help"))?;
+
+				return Ok(());
+
+			})?;
+
 			return Ok(());
+
+		})?;
+
+		ctx.push(&gfx::t()
+			.t(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
+			.s(vec2!(0.8))
+		, |ctx| {
+
+			let mut show = |n: i32, s| {
+				return ctx.draw_t(&gfx::t()
+					.t(vec2!(0, -n * 18))
+				, &shapes::text(s)
+					.align(gfx::Origin::BottomLeft)
+				);
+			};
+
+			if self.helping {
+				show(6, "W/A/S/D:  move")?;
+				show(5, "<drag>:   rotate")?;
+				show(4, "<scroll>: scale")?;
+				show(3, "<space>:  reset")?;
+				show(2, "L:        wireframe")?;
+				show(1, "F:        fullscreen")?;
+				show(0, "<esc>:    quit")?;
+			}
+
+			return Ok(());
+
 		})?;
 
 		return Ok(());

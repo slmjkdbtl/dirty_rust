@@ -18,7 +18,6 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 	#[cfg(feature="gl3")]
 	vao: VertexArray,
 	count: usize,
-	prim: Primitive,
 	uniform_layout: PhantomData<U>,
 }
 
@@ -38,7 +37,6 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 			#[cfg(feature="gl3")]
 			vao: vao,
 			count: indices.len(),
-			prim: Primitive::Triangle,
 			uniform_layout: PhantomData,
 		});
 
@@ -73,7 +71,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 		return &self.ibuf;
 	}
 
-	pub fn draw(&self, pipeline: &Pipeline<V, U>, uniforms: Option<&U>) {
+	pub fn draw(&self, prim: Primitive, pipeline: &Pipeline<V, U>, uniforms: Option<&U>) {
 
 		pipeline.draw(
 			#[cfg(feature="gl3")]
@@ -84,7 +82,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 			Some(&self.ibuf),
 			uniforms,
 			self.count as u32,
-			self.prim,
+			prim,
 		);
 
 	}

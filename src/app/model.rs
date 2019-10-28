@@ -501,7 +501,7 @@ fn get_bound(meshes: &[MeshData]) -> (Vec3, Vec3) {
 
 fn gen_normals(pos: &[Vec3], indices: &[u32]) -> Vec<Vec3> {
 
-	let vert_count = pos.len() / 3;
+	let vert_count = pos.len();
 	let mut normals = vec![vec3!(0); vert_count];
 
 	indices

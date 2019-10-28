@@ -103,8 +103,8 @@ bind_enum!(Cmp(u32) {
 });
 
 bind_enum!(Primitive(u32) {
-	Point => glow::POINT,
-	Line => glow::LINE,
+	Point => glow::POINTS,
+	Line => glow::LINES,
 	Triangle => glow::TRIANGLES,
 	LineStrip => glow::LINE_STRIP,
 	TriangleFan => glow::TRIANGLE_FAN,

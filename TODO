@@ -69,6 +69,8 @@
 - [gfx] read blender files
 - [gfx] allow users to write custom pipeline from scratch
 - [gfx] model morphing
+- [gfx] make rect, line and circle independent on polygon (?)
+- [gfx] cull face
 
 == DONE
 - [http] refactor http
