@@ -79,7 +79,7 @@ fn main() -> Result<()> {
 - **window** basic window and a cube
 - **conf** window / graphics configs
 - **sprite** a 2d animating sprite
-- **3d** 3d obj viewer
+- **3d** 3d model viewer
 - **mask** stencil mask
 - **ttf** drawing text with truetype fonts
 - **geom** basic geomatry / collision detections

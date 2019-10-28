@@ -1,5 +1,7 @@
 // wengwengweng
 
+// TODO: handle load failure
+
 #![feature(clamp)]
 #![feature(option_flattening)]
 
@@ -14,7 +16,7 @@ use input::Mouse;
 
 type LoadResult = Result<gfx::ModelData>;
 
-struct ObjViewer {
+struct Viewer {
 	shader: gfx::Shader3D<()>,
 	model: Option<DisplayedModel>,
 	cam: gfx::PerspectiveCam,
@@ -26,6 +28,7 @@ struct ObjViewer {
 	loader: Task<LoadResult>,
 	wireframe: bool,
 	helping: bool,
+	show_normal: bool,
 }
 
 fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
@@ -34,26 +37,48 @@ fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
 
 	return Task::exec(move || {
 
-		let obj_src = fs::read_str(&path)?;
+		// TODO: use Model::from_file
+		match fs::extname(&path)?.as_ref() {
 
-		path.set_extension("mtl");
+			"obj" => {
 
-		let mtl_src = fs::read_str(&path).ok();
-		let mtl_src = mtl_src.as_ref().map(|s| s.as_str());
+				let obj_src = fs::read_str(&path)?;
 
-		path.set_extension("png");
+				path.set_extension("mtl");
 
-		let img_src = fs::read(&path).ok();
-		let img_src = img_src.as_ref().map(|i| i.as_slice());
+				let mtl_src = fs::read_str(&path).ok();
+				let mtl_src = mtl_src.as_ref().map(|s| s.as_str());
 
-		let data = gfx::Model::load_obj(&obj_src, mtl_src, img_src)?;
+				path.set_extension("png");
 
-		return Ok(data);
+				let img_src = fs::read(&path).ok();
+				let img_src = img_src.as_ref().map(|i| i.as_slice());
+
+				let data = gfx::Model::load_obj(&obj_src, mtl_src, img_src)?;
+
+				return Ok(data);
+
+			},
+
+			"glb" => {
+
+				let bytes = fs::read(&path)?;
+				let data = gfx::Model::load_glb(&bytes)?;
+
+				return Ok(data);
+
+			},
+
+			_ => {
+				return Err(Error::Misc(format!("unrecognized model")));
+			},
+
+		}
 
 	});
 }
 
-impl ObjViewer {
+impl Viewer {
 
 	fn update_model(&mut self, model: gfx::Model) {
 
@@ -77,7 +102,6 @@ impl ObjViewer {
 
 struct DisplayedModel {
 	size: f32,
-	show_normal: bool,
 	model: gfx::Model,
 }
 
@@ -90,7 +114,6 @@ impl DisplayedModel {
 
 		return Self {
 			model: model,
-			show_normal: true,
 			size: size,
 		};
 
@@ -98,7 +121,7 @@ impl DisplayedModel {
 
 }
 
-impl app::State for ObjViewer {
+impl app::State for Viewer {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
@@ -114,6 +137,7 @@ impl app::State for ObjViewer {
 			loader: load_file("examples/res/kart.obj"),
 			wireframe: false,
 			helping: false,
+			show_normal: false,
 		});
 
 	}
@@ -144,6 +168,10 @@ impl app::State for ObjViewer {
 
 				if k == Key::H {
 					self.helping = !self.helping;
+				}
+
+				if k == Key::N {
+					self.show_normal = !self.show_normal;
 				}
 
 			},
@@ -235,7 +263,7 @@ impl app::State for ObjViewer {
 			self.pos.y -= move_speed * ctx.dt();
 		}
 
-		let range = f32::sqrt(self.dis);
+		let range = self.dis;
 
 		self.pos = self.pos.clamp(-vec2!(range), vec2!(range));
 
@@ -258,6 +286,8 @@ impl app::State for ObjViewer {
 
 		}
 
+		self.cam.set_pos(vec3!(self.pos.x, self.pos.y, self.dis));
+
 		return Ok(());
 
 	}
@@ -266,10 +296,7 @@ impl app::State for ObjViewer {
 
 		if let Some(model) = &self.model {
 
-			let (max, min) = model.model.bound();
 			let center = model.model.center();
-
-			self.cam.set_pos(vec3!(self.pos.x, self.pos.y, self.dis));
 
 			ctx.use_cam(&self.cam, |ctx| {
 
@@ -287,7 +314,7 @@ impl app::State for ObjViewer {
 						);
 					};
 
-					if model.show_normal {
+					if self.show_normal {
 						ctx.draw_3d_with(&self.shader, &(), draw_model)?;
 					} else {
 						draw_model(ctx)?;
@@ -301,36 +328,32 @@ impl app::State for ObjViewer {
 
 			})?;
 
-		} else {
-
-			ctx.push(&gfx::t()
-				.t(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
-			, |ctx| {
-				ctx.draw(
-					&shapes::text("loading...")
-						.align(gfx::Origin::BottomLeft)
-				)?;
-				return Ok(());
-			})?;
-
 		}
 
 		ctx.push(&gfx::t()
 			.t(vec2!(24))
 		, |ctx| {
 
-			ctx.draw(&shapes::text("drag .obj files into this window"))?;
+			if self.loader.phase() == TaskPhase::Working {
 
-			ctx.push(&gfx::t()
-				.t(vec2!(0, 22))
-				.s(vec2!(0.8))
-			, |ctx| {
+				ctx.draw(&shapes::text("loading..."))?;
 
-				ctx.draw(&shapes::text("H: help"))?;
+			} else {
 
-				return Ok(());
+				ctx.draw(&shapes::text("drag 3d model files into this window"))?;
 
-			})?;
+				ctx.push(&gfx::t()
+					.t(vec2!(0, 22))
+					.s(vec2!(0.8))
+				, |ctx| {
+
+					ctx.draw(&shapes::text("H: help"))?;
+
+					return Ok(());
+
+				})?;
+
+			}
 
 			return Ok(());
 
@@ -341,22 +364,31 @@ impl app::State for ObjViewer {
 			.s(vec2!(0.8))
 		, |ctx| {
 
-			let mut show = |n: i32, s| {
-				return ctx.draw_t(&gfx::t()
-					.t(vec2!(0, -n * 18))
-				, &shapes::text(s)
-					.align(gfx::Origin::BottomLeft)
-				);
-			};
-
 			if self.helping {
-				show(6, "W/A/S/D:  move")?;
-				show(5, "<drag>:   rotate")?;
-				show(4, "<scroll>: scale")?;
-				show(3, "<space>:  reset")?;
-				show(2, "L:        wireframe")?;
-				show(1, "F:        fullscreen")?;
-				show(0, "<esc>:    quit")?;
+
+				let msg = [
+					"W/A/S/D:  move",
+					"<drag>:   rotate",
+					"<scroll>: scale",
+					"<space>:  reset",
+					"L:        wireframe",
+					"F:        fullscreen",
+					"N:        normal",
+					"<esc>:    quit",
+				];
+
+				for (i, m) in msg
+					.iter()
+					.rev()
+					.enumerate()
+				{
+					ctx.draw_t(&gfx::t()
+						.t(vec2!(0, i as i32 * -18))
+					, &shapes::text(m)
+						.align(gfx::Origin::BottomLeft)
+					)?;
+				}
+
 			}
 
 			return Ok(());
@@ -373,7 +405,7 @@ fn main() {
 
 	if let Err(err) = app::launcher()
 		.origin(gfx::Origin::TopLeft)
-		.run::<ObjViewer>() {
+		.run::<Viewer>() {
 		println!("{}", err);
 	}
 
