@@ -73,13 +73,16 @@ impl<'a> Drawable for Sprite<'a> {
 			flip: self.flip,
 		};
 
-		let uniform = gfx::Uniform2D {
-			proj: ctx.proj_2d,
-			tex: self.tex.clone(),
-			custom: ctx.cur_custom_uniform_2d.clone(),
-		};
-
-		ctx.renderer_2d.push_shape(shape, &ctx.cur_pipeline_2d, &uniform)?;
+		ctx.renderer_2d.push_shape(
+			gl::Primitive::Triangle,
+			shape,
+			&ctx.cur_pipeline_2d,
+			&gfx::Uniform2D {
+				proj: ctx.proj_2d,
+				tex: self.tex.clone(),
+				custom: ctx.cur_custom_uniform_2d.clone(),
+			}
+		)?;
 
 		return Ok(());
 
@@ -346,11 +349,17 @@ impl Drawable for Polygon {
 
 			}
 
-			ctx.renderer_2d.push(&verts, &indices, &ctx.cur_pipeline_2d, &gfx::Uniform2D {
-				proj: ctx.proj_2d,
-				tex: ctx.empty_tex.clone(),
-				custom: ctx.cur_custom_uniform_2d.clone(),
-			})?;
+			ctx.renderer_2d.push(
+				gl::Primitive::Triangle,
+				&verts,
+				&indices,
+				&ctx.cur_pipeline_2d,
+				&gfx::Uniform2D {
+					proj: ctx.proj_2d,
+					tex: ctx.empty_tex.clone(),
+					custom: ctx.cur_custom_uniform_2d.clone(),
+				}
+			)?;
 
 		}
 
@@ -482,11 +491,17 @@ impl Drawable for Gradient {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 2 )
 			.collect();
 
-		ctx.renderer_2d.push(&verts, &indices, &ctx.cur_pipeline_2d, &gfx::Uniform2D {
-			proj: ctx.proj_2d,
-			tex: ctx.empty_tex.clone(),
-			custom: ctx.cur_custom_uniform_2d.clone(),
-		})?;
+		ctx.renderer_2d.push(
+			gl::Primitive::Triangle,
+			&verts,
+			&indices,
+			&ctx.cur_pipeline_2d,
+			&gfx::Uniform2D {
+				proj: ctx.proj_2d,
+				tex: ctx.empty_tex.clone(),
+				custom: ctx.cur_custom_uniform_2d.clone(),
+			}
+		)?;
 
 		return Ok(());
 
@@ -1057,6 +1072,8 @@ impl<'a> Drawable for Canvas<'a> {
 pub struct Model<'a> {
 	mesh: &'a gfx::Model,
 	color: Color,
+	bound: bool,
+	wireframe: bool,
 }
 
 pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
@@ -1068,6 +1085,8 @@ impl<'a> Model<'a> {
 		return Self {
 			mesh: m,
 			color: color!(1),
+			bound: false,
+			wireframe: false,
 		};
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -1076,6 +1095,14 @@ impl<'a> Model<'a> {
 	}
 	pub fn opacity(mut self, a: f32) -> Self {
 		self.color.a = a;
+		return self;
+	}
+	pub fn bound(mut self) -> Self {
+		self.bound = true;
+		return self;
+	}
+	pub fn wireframe(mut self, b: bool) -> Self {
+		self.wireframe = b;
 		return self;
 	}
 }
@@ -1088,15 +1115,30 @@ impl<'a> Drawable for Model<'a> {
 
 		let tex = self.mesh.texture().unwrap_or(&ctx.empty_tex);
 
+		let prim = if self.wireframe {
+			gl::Primitive::Line
+		} else {
+			gl::Primitive::Triangle
+		};
+
 		for m in self.mesh.meshes() {
-			m.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
-				proj: ctx.proj_3d,
-				view: ctx.view_3d,
-				model: ctx.transform,
-				color: self.color,
-				tex: tex.clone(),
-				custom: ctx.cur_custom_uniform_3d.clone(),
-			}));
+			m.draw(
+				prim,
+				&ctx.cur_pipeline_3d,
+				Some(&gfx::Uniform3D {
+					proj: ctx.proj_3d,
+					view: ctx.view_3d,
+					model: ctx.transform,
+					color: self.color,
+					tex: tex.clone(),
+					custom: ctx.cur_custom_uniform_3d.clone(),
+				}),
+			);
+		}
+
+		if self.bound {
+			let (min, max) = self.mesh.bound();
+			ctx.draw(&rect3d(min, max))?;
 		}
 
 		return Ok(());
@@ -1124,14 +1166,18 @@ impl Drawable for Cube {
 
 		ctx.draw_calls += 1;
 
-		ctx.cube_renderer.draw(&ctx.cur_pipeline_3d, Some(&gfx::Uniform3D {
-			proj: ctx.proj_3d,
-			view: ctx.view_3d,
-			model: ctx.transform,
-			color: color!(),
-			tex: ctx.empty_tex.clone(),
-			custom: ctx.cur_custom_uniform_3d.clone(),
-		}));
+		ctx.cube_renderer.draw(
+			gl::Primitive::Triangle,
+			&ctx.cur_pipeline_3d,
+			Some(&gfx::Uniform3D {
+				proj: ctx.proj_3d,
+				view: ctx.view_3d,
+				model: ctx.transform,
+				color: color!(),
+				tex: ctx.empty_tex.clone(),
+				custom: ctx.cur_custom_uniform_3d.clone(),
+			}),
+		);
 
 		return Ok(());
 
@@ -1144,6 +1190,7 @@ pub struct Line3D {
 	p1: Vec3,
 	p2: Vec3,
 	color: Color,
+	width: f32,
 }
 
 pub fn line3d(p1: Vec3, p2: Vec3) -> Line3D {
@@ -1156,6 +1203,7 @@ impl Line3D {
 			p1: p1,
 			p2: p2,
 			color: color!(),
+			width: 1.0,
 		};
 	}
 	pub fn color(mut self, c: Color) -> Self {
@@ -1169,13 +1217,44 @@ impl Drawable for Line3D {
 	// TODO: deal with out of bound
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let p1 = ctx.to_sc(self.p1);
-		let p2 = ctx.to_sc(self.p2);
+		let mut verts = Vec::with_capacity(2 * gfx::Vertex3D::STRIDE);
 
-		ctx.draw(
-			&line(p1, p2)
-				.color(self.color)
+		gfx::Vertex3D {
+			pos: self.p1,
+			normal: vec3!(0),
+			color: self.color,
+			uv: vec2!(0),
+		}.push(&mut verts);
+
+		gfx::Vertex3D {
+			pos: self.p2,
+			normal: vec3!(0),
+			color: self.color,
+			uv: vec2!(0),
+		}.push(&mut verts);
+
+		ctx.renderer_3d.push(
+			gl::Primitive::Line,
+			&verts,
+			&[0, 1],
+			&ctx.cur_pipeline_3d,
+			&gfx::Uniform3D {
+				proj: ctx.proj_3d,
+				view: ctx.view_3d,
+				model: ctx.transform,
+				color: color!(),
+				tex: ctx.empty_tex.clone(),
+				custom: ctx.cur_custom_uniform_3d.clone(),
+			},
 		)?;
+
+// 		let p1 = ctx.to_sc(self.p1);
+// 		let p2 = ctx.to_sc(self.p2);
+
+// 		ctx.draw(
+// 			&line(p1, p2)
+// 				.color(self.color)
+// 		)?;
 
 		return Ok(());
 
@@ -1272,8 +1351,10 @@ impl Drawable for Circle3D {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
+		let spt = ctx.to_sc(self.pt);
+
 		ctx.draw(
-			&circle(ctx.to_sc(self.pt), self.radius)
+			&circle(spt, self.radius)
 				.fill(self.color)
 		)?;
 
@@ -1349,14 +1430,19 @@ impl<'a> Drawable for Sprite3D<'a> {
 				flip: self.flip,
 			};
 
-			ctx.renderer_3d.push_shape(shape, &ctx.cur_pipeline_3d, &gfx::Uniform3D {
-				proj: ctx.proj_3d,
-				view: ctx.view_3d,
-				model: ctx.transform,
-				color: color!(),
-				tex: self.tex.clone(),
-				custom: ctx.cur_custom_uniform_3d.clone(),
-			})?;
+			ctx.renderer_3d.push_shape(
+				gl::Primitive::Triangle,
+				shape,
+				&ctx.cur_pipeline_3d,
+				&gfx::Uniform3D {
+					proj: ctx.proj_3d,
+					view: ctx.view_3d,
+					model: ctx.transform,
+					color: color!(),
+					tex: self.tex.clone(),
+					custom: ctx.cur_custom_uniform_3d.clone(),
+				},
+			)?;
 
 			return Ok(());
 

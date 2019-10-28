@@ -257,10 +257,9 @@ impl Gfx for Ctx {
 
 	fn to_sc(&self, pt: Vec3) -> Vec2 {
 
-		let (gw, gh) = (self.gwidth(), self.gheight());
 		let pt = self.proj_3d * self.view_3d * self.transform * pt;
-		let pt = (pt / pt.z * 0.5).xy() * vec2!(gw, -gh);
-		let pt = pt - self.conf.origin.as_pt() * vec2!(gw, gh) / 2.0;
+		let (gw, gh) = (self.gwidth(), self.gheight());
+		let pt = (pt / pt.z * 0.5).xy() * vec2!(gw, -gh) - self.conf.origin.as_pt() * vec2!(gw, gh) / 2.0;
 
 		return pt;
 

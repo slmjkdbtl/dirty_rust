@@ -15,7 +15,7 @@ pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 	vao: VertexArray,
 	vqueue: Vec<f32>,
 	iqueue: Vec<u32>,
-	prim: Primitive,
+	cur_prim: Option<Primitive>,
 	cur_uniform: Option<U>,
 	cur_pipeline: Option<Pipeline<V, U>>,
 	draw_count: usize,
@@ -40,7 +40,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			vao: vao,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
-			prim: Primitive::Triangle,
+			cur_prim: None,
 			cur_uniform: None,
 			cur_pipeline: None,
 			draw_count: 0,
@@ -50,6 +50,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	pub fn push(
 		&mut self,
+		prim: Primitive,
 		verts: &[f32],
 		indices: &[u32],
 		pipeline: &Pipeline<V, U>,
@@ -57,10 +58,19 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 	) -> Result<()> {
 
 		// TODO: don't use recursion
+		if let Some(cur_prim) = self.cur_prim {
+			if cur_prim != prim {
+				self.flush();
+				return self.push(prim, verts, indices, pipeline, uniform);
+			}
+		} else {
+			self.cur_prim = Some(prim);
+		}
+
 		if let Some(cur_pipeline) = &self.cur_pipeline {
 			if cur_pipeline != pipeline {
 				self.flush();
-				return self.push(verts, indices, pipeline, uniform);
+				return self.push(prim, verts, indices, pipeline, uniform);
 			}
 		} else {
 			self.cur_pipeline = Some(pipeline.clone());
@@ -69,7 +79,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 		if let Some(cur_uniform) = &self.cur_uniform {
 			if cur_uniform != uniform {
 				self.flush();
-				return self.push(verts, indices, pipeline, uniform);
+				return self.push(prim, verts, indices, pipeline, uniform);
 			}
 		} else {
 			self.cur_uniform = Some(uniform.clone());
@@ -77,12 +87,12 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 		if self.vqueue.len() + verts.len() >= self.vqueue.capacity() {
 			self.flush();
-			return self.push(verts, indices, pipeline, uniform);
+			return self.push(prim, verts, indices, pipeline, uniform);
 		}
 
 		if self.iqueue.len() + indices.len() >= self.iqueue.capacity() {
 			self.flush();
-			return self.push(verts, indices, pipeline, uniform);
+			return self.push(prim, verts, indices, pipeline, uniform);
 		}
 
 		let offset = (self.vqueue.len() / V::STRIDE) as u32;
@@ -101,12 +111,13 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	pub fn push_shape<S: Shape>(
 		&mut self,
+		prim: Primitive,
 		shape: S,
 		pipeline: &Pipeline<V, U>,
 		uniform: &U,
 	) -> Result<()> {
 
-		self.push(&[], S::indices(), pipeline, uniform)?;
+		self.push(prim, &[], S::indices(), pipeline, uniform)?;
 		shape.vertices(&mut self.vqueue);
 
 		return Ok(());
@@ -129,6 +140,11 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			None => return,
 		};
 
+		let prim = match self.cur_prim {
+			Some(p) => p,
+			None => return,
+		};
+
 		self.vbuf.data(0, &self.vqueue);
 		self.ibuf.data(0, &self.iqueue);
 
@@ -141,11 +157,12 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			Some(&self.ibuf),
 			Some(uniform),
 			self.iqueue.len() as u32,
-			self.prim,
+			prim,
 		);
 
 		self.cur_pipeline = None;
 		self.cur_uniform = None;
+		self.cur_prim = None;
 		self.vqueue.clear();
 		self.iqueue.clear();
 		self.draw_count += 1;
@@ -160,6 +177,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 		self.cur_pipeline = None;
 		self.cur_uniform = None;
+		self.cur_prim = None;
 		self.vqueue.clear();
 		self.iqueue.clear();
 		self.draw_count = 0;

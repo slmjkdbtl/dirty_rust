@@ -21,17 +21,17 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-// 		let mut model = gfx::Model::from_obj(ctx, include_str!("res/kart.obj"), None, None)?;
+		let mut model = gfx::Model::from_obj(ctx, include_str!("res/kart.obj"), None, None)?;
 
-// 		model.update(|data| {
-// 			for m in data {
-// 				for v in &mut m.vertices {
-// 					v.color = color!(rand!(), rand!(), rand!(), 1);
-// 				}
-// 			}
-// 		});
+		model.update(|data| {
+			for m in data {
+				for v in &mut m.vertices {
+					v.color = color!(rand!(), rand!(), rand!(), 1);
+				}
+			}
+		});
 
-		let mut model = gfx::Model::from_gltf(ctx, "examples/res/Duck.gltf")?;
+// 		let mut model = gfx::Model::from_gltf(ctx, "examples/res/Duck.gltf")?;
 // 		let mut model = gfx::Model::from_glb(ctx, include_bytes!("res/duck.glb"))?;
 
 		return Ok(Self {
@@ -39,7 +39,7 @@ impl app::State for Game {
 			pix_effect: PixEffect::new(ctx)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, 12), 0.0, 0.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
-			move_speed: 240.0,
+			move_speed: 12.0,
 			eye_speed: 0.16,
 		});
 
@@ -114,20 +114,22 @@ impl app::State for Game {
 
 		self.pix_effect.render(ctx, |ctx| {
 
-			ctx.clear();
-// 			ctx.clear_ex(gfx::Surface::Depth);
+// 			ctx.clear();
+			ctx.clear_ex(gfx::Surface::Depth);
 
 			ctx.use_cam(&self.cam, |ctx| {
-// 				ctx.draw_3d_with(&self.shader, &(), |ctx| {
+				ctx.draw_3d_with(&self.shader, &(), |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;
-// 					return Ok(());
-// 				})?;
+					return Ok(());
+				})?;
 				return Ok(());
 			})?;
 
 			return Ok(());
 
 		})?;
+
+		ctx.set_title(&format!("{}", ctx.fps()));
 
 		return Ok(());
 
@@ -137,7 +139,7 @@ impl app::State for Game {
 
 		self.pix_effect.draw(ctx, &PixUniform {
 			resolution: vec2!(ctx.width(), ctx.height()),
-			size: 2.0,
+			size: 3.0,
 		})?;
 
 		return Ok(());
