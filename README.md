@@ -1,7 +1,7 @@
 ![icon](icon.png)
 
 ## DIRTY
-personal toolkit for things
+personal toolkit for games and stuff
 
 ### modules
 - **app** Windowing, Input, and Graphics
@@ -55,7 +55,7 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_t(&gfx::t()
-			.t3(vec3!(0, 0, -3))
+			.t3(vec3!(0, 0, -6))
 			.ry(ctx.time())
 			.rz(ctx.time())
 		, &shapes::cube())?;

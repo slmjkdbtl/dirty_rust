@@ -84,14 +84,13 @@ impl gl::VertexLayout for Vertex3D {
 
 }
 
-// TODO: better name
 /// vertex layout for the cubemap pipeline
 #[derive(Clone)]
-pub struct VertexCMap {
+pub struct VertexCubemap {
 	pub pos: Vec3,
 }
 
-impl gl::VertexLayout for VertexCMap {
+impl gl::VertexLayout for VertexCubemap {
 
 	const STRIDE: usize = 3;
 
@@ -181,13 +180,13 @@ impl gl::UniformLayout for Uniform3D {
 
 /// uniform layout for the cubemap pipeline
 #[derive(Clone, PartialEq)]
-pub(super) struct UniformCMap {
+pub(super) struct UniformCubemap {
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub tex: gl::CubemapTexture,
 }
 
-impl gl::UniformLayout for UniformCMap {
+impl gl::UniformLayout for UniformCubemap {
 
 	fn values(&self) -> UniformValues {
 
@@ -431,14 +430,43 @@ impl gl::Shape for CubeShape {
 			vec3!(0, 1, 0),
 		];
 
+		let colors = [
+			color!(0, 0, 1, 1),
+			color!(0, 1, 1, 1),
+			color!(0, 1, 0, 1),
+			color!(1, 1, 1, 1),
+			color!(1, 1, 1, 1),
+			color!(0, 1, 0, 1),
+			color!(1, 1, 0, 1),
+			color!(1, 0, 0, 1),
+			color!(1, 0, 0, 1),
+			color!(1, 1, 0, 1),
+			color!(1, 1, 1, 1),
+			color!(1, 0, 1, 1),
+			color!(1, 0, 1, 1),
+			color!(1, 1, 1, 1),
+			color!(0, 1, 1, 1),
+			color!(0, 0, 1, 1),
+			color!(1, 1, 1, 1),
+			color!(1, 0, 0, 1),
+			color!(1, 0, 1, 1),
+			color!(0, 0, 1, 1),
+			color!(1, 1, 0, 1),
+			color!(0, 1, 0, 1),
+			color!(0, 1, 1, 1),
+			color!(1, 1, 1, 1),
+		];
+
 		pos
 			.iter()
 			.zip(&normals)
-			.for_each(|(p, n)| {
+			.zip(&colors)
+			// zoop
+			.for_each(|((p, n), c)| {
 				Vertex3D {
 					pos: *p,
 					normal: *n,
-					color: color!(),
+					color: *c,
 					uv: vec2!(),
 				}.push(queue);
 			});
@@ -469,7 +497,7 @@ pub(super) struct CubemapShape;
 
 impl gl::Shape for CubemapShape {
 
-	type Vertex = VertexCMap;
+	type Vertex = VertexCubemap;
 	const COUNT: usize = 8;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
@@ -490,7 +518,7 @@ impl gl::Shape for CubemapShape {
 		pos
 			.into_iter()
 			.for_each(|p| {
-				VertexCMap {
+				VertexCubemap {
 					pos: *p,
 				}.push(queue);
 			});

@@ -1175,7 +1175,7 @@ impl<'a> Drawable for Skybox<'a> {
 		ctx.cubemap_renderer.draw(
 			gl::Primitive::Triangle,
 			&ctx.pipeline_cubemap,
-			&gfx::UniformCMap {
+			&gfx::UniformCubemap {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d.remove_translation(),
 				tex: self.skybox.texture().clone(),

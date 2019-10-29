@@ -71,8 +71,9 @@
 - [gfx] model morphing
 - [gfx] make rect, line and circle independent on polygon (?)
 - [gfx] cull face
-- [gfx] skybox
 - [gfx] billboard
+- [gfx] write framebuffer to cubemap
+- [gfx] instancing
 
 == DONE
 - [http] refactor http
@@ -146,4 +147,5 @@
 - [gfx] mesh calculate bounding box
 - [gfx] read gltf files
 - [gfx] depth buffer in 2d pipeline
+- [gfx] cubemap / skybox
 
