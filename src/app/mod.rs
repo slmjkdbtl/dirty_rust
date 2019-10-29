@@ -11,6 +11,7 @@ mod font;
 mod camera;
 mod model;
 mod desc;
+mod skybox;
 
 pub mod input;
 pub mod window;
@@ -101,6 +102,7 @@ pub struct Ctx {
 	pub(self) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) renderer_3d: gl::BatchedMesh<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(self) cubemap_renderer: gl::Mesh<gfx::VertexCMap, gfx::UniformCMap>,
 
 	pub(self) empty_tex: gfx::Texture,
 
@@ -111,6 +113,8 @@ pub struct Ctx {
 	pub(self) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) cur_custom_uniform_3d: Option<gfx::UniformValues>,
+
+	pub(self) pipeline_cubemap: gl::Pipeline<gfx::VertexCMap, gfx::UniformCMap>,
 
 	pub(self) cur_canvas: Option<gfx::Canvas>,
 
@@ -250,7 +254,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(conf.clear_color);
 
-	let empty_tex = gl::Texture::from(&gl, 1, 1, &[255; 4])?;
+	let empty_tex = gl::Texture2D::from(&gl, 1, 1, &[255; 4])?;
 	let empty_tex = gfx::Texture::from_gl_tex(empty_tex);
 
 	let vert_2d_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", res::DEFAULT_2D_VERT);
@@ -264,6 +268,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
 
+	let pipeline_cmap = gl::Pipeline::new(&gl, res::CUBEMAP_VERT, res::CUBEMAP_FRAG)?;
+
 	use gfx::Camera;
 
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
@@ -271,7 +277,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	let font_img = img::Image::from_bytes(res::CP437_IMG)?;
 	let font_width = font_img.width();
 	let font_height = font_img.height();
-	let font_tex = gl::Texture::from(&gl, font_width, font_height, &font_img.into_raw())?;
+	let font_tex = gl::Texture2D::from(&gl, font_width, font_height, &font_img.into_raw())?;
 	let font_tex = gfx::Texture::from_gl_tex(font_tex);
 
 	let font = gfx::BitmapFont::from_tex(
@@ -316,6 +322,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
+		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 		gl: Rc::new(gl),
 
 		proj_2d: proj_2d,
@@ -331,6 +338,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		default_pipeline_3d: pipeline_3d.clone(),
 		cur_pipeline_3d: pipeline_3d,
 		cur_custom_uniform_3d: None,
+
+		pipeline_cubemap: pipeline_cmap,
 
 		cur_canvas: None,
 

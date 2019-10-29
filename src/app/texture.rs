@@ -12,19 +12,19 @@ use crate::img::Image;
 /// texture
 #[derive(Clone, PartialEq)]
 pub struct Texture {
-	gl_tex: Rc<gl::Texture>,
+	gl_tex: Rc<gl::Texture2D>,
 }
 
 impl Texture {
 
-	pub(super) fn from_gl_tex(gl_tex: gl::Texture) -> Self {
+	pub(super) fn from_gl_tex(gl_tex: gl::Texture2D) -> Self {
 		return Self {
 			gl_tex: Rc::new(gl_tex),
 		};
 	}
 
 	pub fn new(ctx: &Ctx, w: i32, h: i32) -> Result<Self> {
-		return Ok(Self::from_gl_tex(gl::Texture::new(&ctx.gl, w, h)?));
+		return Ok(Self::from_gl_tex(gl::Texture2D::new(&ctx.gl, w, h)?));
 	}
 
 	#[cfg(feature = "img")]
@@ -44,8 +44,8 @@ impl Texture {
 
 	pub fn from_pixels(ctx: &Ctx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
-		let gl_tex = gl::Texture::from(&ctx.gl, w, h, &pixels)?;
-		gl_tex.filter(ctx.conf.texture_filter);
+		let gl_tex = gl::Texture2D::from(&ctx.gl, w, h, &pixels)?;
+		gl_tex.set_filter(ctx.conf.texture_filter);
 		return Ok(Self::from_gl_tex(gl_tex));
 
 	}
@@ -85,7 +85,7 @@ impl Texture {
 
 	}
 
-	pub(super) fn gl_tex(&self) -> &gl::Texture {
+	pub(super) fn gl_tex(&self) -> &gl::Texture2D {
 		return &self.gl_tex;
 	}
 

@@ -8,14 +8,14 @@ pub type UniformValues = Vec<(&'static str, UniformType)>;
 // TODO: -> impl UniformValue
 pub trait UniformLayout: 'static {
 	fn values(&self) -> UniformValues;
-	fn texture(&self) -> Option<&Texture>;
+	fn texture(&self) -> Option<&dyn Texture>;
 }
 
 impl UniformLayout for () {
 	fn values(&self) -> UniformValues {
 		return vec![];
 	}
-	fn texture(&self) -> Option<&Texture> {
+	fn texture(&self) -> Option<&dyn Texture> {
 		return None;
 	}
 }

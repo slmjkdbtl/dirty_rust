@@ -1125,14 +1125,14 @@ impl<'a> Drawable for Model<'a> {
 			m.draw(
 				prim,
 				&ctx.cur_pipeline_3d,
-				Some(&gfx::Uniform3D {
+				&gfx::Uniform3D {
 					proj: ctx.proj_3d,
 					view: ctx.view_3d,
 					model: ctx.transform,
 					color: self.color,
 					tex: tex.clone(),
 					custom: ctx.cur_custom_uniform_3d.clone(),
-				}),
+				},
 			);
 		}
 
@@ -1140,6 +1140,49 @@ impl<'a> Drawable for Model<'a> {
 			let (min, max) = self.mesh.bound();
 			ctx.draw(&rect3d(min, max))?;
 		}
+
+		return Ok(());
+
+	}
+
+}
+
+#[derive(Clone)]
+pub struct Skybox<'a> {
+	skybox: &'a gfx::Skybox,
+}
+
+impl<'a> Skybox<'a> {
+	pub fn new(s: &'a gfx::Skybox) -> Self {
+		return Self {
+			skybox: s,
+		};
+	}
+}
+
+pub fn skybox<'a>(s: &'a gfx::Skybox) -> Skybox<'a> {
+	return Skybox::new(s);
+}
+
+impl<'a> Drawable for Skybox<'a> {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		ctx.draw_calls += 1;
+
+		ctx.gl.disable(gl::Capability::DepthTest);
+
+		ctx.cubemap_renderer.draw(
+			gl::Primitive::Triangle,
+			&ctx.pipeline_cubemap,
+			&gfx::UniformCMap {
+				proj: ctx.proj_3d,
+				view: ctx.view_3d.remove_translation(),
+				tex: self.skybox.texture().clone(),
+			},
+		);
+
+		ctx.gl.enable(gl::Capability::DepthTest);
 
 		return Ok(());
 
@@ -1169,14 +1212,14 @@ impl Drawable for Cube {
 		ctx.cube_renderer.draw(
 			gl::Primitive::Triangle,
 			&ctx.cur_pipeline_3d,
-			Some(&gfx::Uniform3D {
+			&gfx::Uniform3D {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,
 				model: ctx.transform,
 				color: color!(),
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),
-			}),
+			},
 		);
 
 		return Ok(());

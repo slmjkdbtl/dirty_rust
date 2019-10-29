@@ -40,6 +40,16 @@ pub const DEFAULT_3D_VERT: &str = include_str!("3d_default.vert");
 #[cfg(not(feature="gl3"))]
 pub const DEFAULT_3D_FRAG: &str = include_str!("3d_default.frag");
 
+#[cfg(not(feature="gl3"))]
+pub const CUBEMAP_VERT: &str = include_str!("cubemap.vert");
+#[cfg(not(feature="gl3"))]
+pub const CUBEMAP_FRAG: &str = include_str!("cubemap.frag");
+
+#[cfg(feature="gl3")]
+pub const CUBEMAP_VERT: &str = include_str!("cubemap_330.vert");
+#[cfg(feature="gl3")]
+pub const CUBEMAP_FRAG: &str = include_str!("cubemap_330.frag");
+
 pub const CP437_IMG: &[u8] = include_bytes!("CP437.png");
 pub const CP437_COLS: usize = 32;
 pub const CP437_ROWS: usize = 8;

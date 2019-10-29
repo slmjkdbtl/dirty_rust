@@ -54,7 +54,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
-	pub fn from_shape<S: Shape>(device: &Device, shape: S) -> Result<Self> {
+	pub fn from_shape<S: Shape<Vertex = V>>(device: &Device, shape: S) -> Result<Self> {
 
 		let mut verts = Vec::with_capacity(S::COUNT * S::Vertex::STRIDE);
 		shape.vertices(&mut verts);
@@ -71,7 +71,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 		return &self.ibuf;
 	}
 
-	pub fn draw(&self, prim: Primitive, pipeline: &Pipeline<V, U>, uniforms: Option<&U>) {
+	pub fn draw(&self, prim: Primitive, pipeline: &Pipeline<V, U>, uniforms: &U) {
 
 		pipeline.draw(
 			#[cfg(feature="gl3")]
