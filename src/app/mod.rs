@@ -102,7 +102,7 @@ pub struct Ctx {
 	pub(self) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) renderer_3d: gl::BatchedMesh<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) cubemap_renderer: gl::Mesh<gfx::VertexCMap, gfx::UniformCMap>,
+	pub(self) cubemap_renderer: gl::Mesh<gfx::VertexCubemap, gfx::UniformCubemap>,
 
 	pub(self) empty_tex: gfx::Texture,
 
@@ -114,7 +114,7 @@ pub struct Ctx {
 	pub(self) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) cur_custom_uniform_3d: Option<gfx::UniformValues>,
 
-	pub(self) pipeline_cubemap: gl::Pipeline<gfx::VertexCMap, gfx::UniformCMap>,
+	pub(self) pipeline_cubemap: gl::Pipeline<gfx::VertexCubemap, gfx::UniformCubemap>,
 
 	pub(self) cur_canvas: Option<gfx::Canvas>,
 

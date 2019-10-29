@@ -9,7 +9,7 @@ use super::gfx::*;
 #[derive(Clone)]
 pub struct Skybox {
 	tex: gl::CubemapTexture,
-	mesh: Rc<gl::Mesh<VertexCMap, UniformCMap>>,
+	mesh: Rc<gl::Mesh<VertexCubemap, UniformCubemap>>,
 }
 
 impl Skybox {
@@ -52,7 +52,7 @@ impl Skybox {
 
 	}
 
-	pub fn texture(&self) -> &gl::CubemapTexture {
+	pub(super) fn texture(&self) -> &gl::CubemapTexture {
 		return &self.tex;
 	}
 
