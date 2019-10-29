@@ -74,6 +74,7 @@
 - [gfx] billboard
 - [gfx] write framebuffer to cubemap
 - [gfx] instancing
+- [gfx] convert between vertex normal and surface
 
 == DONE
 - [http] refactor http

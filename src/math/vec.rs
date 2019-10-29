@@ -335,6 +335,10 @@ impl Color {
 		return self - color!(v, v, v, 0);
 	}
 
+	pub fn rgb(self) -> Vec3 {
+		return vec3!(self.r, self.g, self.b);
+	}
+
 }
 
 impl From<Color> for [u8; 4] {

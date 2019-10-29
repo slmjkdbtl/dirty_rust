@@ -2,9 +2,6 @@
 
 // TODO: handle load failure
 
-#![feature(clamp)]
-#![feature(option_flattening)]
-
 use std::path::Path;
 
 use dirty::*;

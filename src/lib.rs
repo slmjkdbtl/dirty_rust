@@ -9,7 +9,6 @@
 #![feature(box_syntax)]
 #![feature(trait_alias)]
 #![feature(fixed_size_array)]
-#![feature(option_flattening)]
 #![feature(type_alias_impl_trait)]
 
 // #![warn(missing_docs)]
