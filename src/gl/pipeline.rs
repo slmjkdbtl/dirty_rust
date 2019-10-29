@@ -102,18 +102,16 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 	pub fn draw(
 		&self,
 		vao: Option<&VertexArray>,
-		uniform: Option<&U>,
+		uniform: &U,
 		count: u32,
 		mode: Primitive,
 	) {
 
 		unsafe {
 
-			if let Some(uniform) = uniform {
-				self.send(&uniform);
-			}
+			self.send(&uniform);
 
-			let tex = uniform.map(|u| u.texture()).flatten();
+			let tex = uniform.texture();
 
 			self.ctx.use_program(Some(self.program_id));
 			self.ctx.bind_vertex_array(vao.map(|v| v.id()));
