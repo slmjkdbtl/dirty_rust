@@ -29,6 +29,7 @@ pub use font::*;
 pub use camera::*;
 pub use model::*;
 pub use desc::*;
+pub use skybox::*;
 
 pub trait Action = FnOnce(&mut Ctx) -> Result<()>;
 
@@ -124,8 +125,8 @@ impl Gfx for Ctx {
 		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 		self.cur_canvas = Some(canvas.clone());
 
-		self.proj_2d = flip_matrix(&o_proj_2d);
-		self.proj_3d = flip_matrix(&o_proj_3d);
+		self.proj_2d = o_proj_2d.flip_y();
+		self.proj_3d = o_proj_3d.flip_y();
 		self.transform = Transform::new();
 
 		canvas.gl_fbuf().with(|| -> Result<()> {
@@ -235,7 +236,7 @@ impl Gfx for Ctx {
 		self.proj_3d = cam.projection();
 
 		if self.cur_canvas.is_some() {
-			self.proj_3d = flip_matrix(&self.proj_3d);
+			self.proj_3d = self.proj_3d.flip_y();
 		}
 
 		f(self)?;
@@ -264,22 +265,6 @@ impl Gfx for Ctx {
 		return pt;
 
 	}
-
-}
-
-fn flip_matrix(m: &Mat4) -> Mat4 {
-
-	let mut nm = m.clone();
-
-	if let Some(val) = nm.get_mut(1, 1) {
-		*val = -*val;
-	}
-
-	if let Some(val) = nm.get_mut(3, 1) {
-		*val = -*val;
-	}
-
-	return nm;
 
 }
 

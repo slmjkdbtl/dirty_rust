@@ -29,6 +29,18 @@ pub struct Model {
 
 impl Model {
 
+	// TODO
+	pub fn from_shape(ctx: &Ctx, s: impl gl::Shape<Vertex = Vertex3D>) -> Result<Self> {
+		let mesh = gl::Mesh::from_shape(&ctx.gl, s)?;
+		return Ok(Self {
+			meshdata: vec![],
+			meshes: vec![Rc::new(mesh)],
+			center: vec3!(),
+			bound: (vec3!(), vec3!()),
+			texture: None,
+		});
+	}
+
 	pub fn load_file(path: impl AsRef<Path>) -> Result<ModelData> {
 
 		let path = path.as_ref();

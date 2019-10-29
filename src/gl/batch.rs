@@ -109,7 +109,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	}
 
-	pub fn push_shape<S: Shape>(
+	pub fn push_shape<S: Shape<Vertex = V>>(
 		&mut self,
 		prim: Primitive,
 		shape: S,
@@ -155,7 +155,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			Some(&self.vbuf),
 			#[cfg(not(feature="gl3"))]
 			Some(&self.ibuf),
-			Some(uniform),
+			uniform,
 			self.iqueue.len() as u32,
 			prim,
 		);

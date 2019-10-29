@@ -9,11 +9,9 @@ use crate::Result;
 
 #[derive(Clone, Debug)]
 pub struct Framebuffer {
-
 	ctx: Rc<GLCtx>,
 	id: FramebufferID,
-	tex: Texture,
-
+	tex: Texture2D,
 }
 
 impl Framebuffer {
@@ -26,7 +24,7 @@ impl Framebuffer {
 			let id = ctx.create_framebuffer()?;
 
 			let pixels = vec![0.0 as u8; (w * h * 4) as usize];
-			let tex = Texture::from(&device, w, h, &pixels)?;
+			let tex = Texture2D::from(&device, w, h, &pixels)?;
 
 			let rbo = ctx.create_renderbuffer()?;
 
@@ -88,7 +86,7 @@ impl Framebuffer {
 
 	}
 
-	pub fn tex(&self) -> &Texture {
+	pub fn tex(&self) -> &Texture2D {
 		return &self.tex;
 	}
 

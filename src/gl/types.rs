@@ -37,6 +37,13 @@ bind_enum!(FilterMode(i32) {
 	Linear => glow::LINEAR as i32,
 });
 
+bind_enum!(WrapMode(i32) {
+	ClampToEdge => glow::CLAMP_TO_EDGE as i32,
+	ClampToBorder => glow::CLAMP_TO_BORDER as i32,
+	Repeat => glow::REPEAT as i32,
+	MirroredRepeat => glow::MIRRORED_REPEAT as i32,
+});
+
 bind_enum!(Capability(u32) {
 	Blend => glow::BLEND,
 	CullFace => glow::CULL_FACE,
@@ -109,6 +116,20 @@ bind_enum!(Primitive(u32) {
 	LineStrip => glow::LINE_STRIP,
 	TriangleFan => glow::TRIANGLE_FAN,
 	TriangleStrip => glow::TRIANGLE_STRIP,
+});
+
+bind_enum!(TextureType(u32) {
+	Tex2D => glow::TEXTURE_2D,
+	Cubemap => glow::TEXTURE_CUBE_MAP,
+});
+
+bind_enum!(CubemapSide(u32) {
+	Right => glow::TEXTURE_CUBE_MAP_POSITIVE_X,
+	Left => glow::TEXTURE_CUBE_MAP_NEGATIVE_X,
+	Up => glow::TEXTURE_CUBE_MAP_POSITIVE_Y,
+	Down => glow::TEXTURE_CUBE_MAP_NEGATIVE_Y,
+	Back => glow::TEXTURE_CUBE_MAP_POSITIVE_Z,
+	Front => glow::TEXTURE_CUBE_MAP_NEGATIVE_Z,
 });
 
 bind_enum!(ShaderType(u32) {

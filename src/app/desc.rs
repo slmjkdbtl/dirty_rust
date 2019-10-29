@@ -84,6 +84,33 @@ impl gl::VertexLayout for Vertex3D {
 
 }
 
+// TODO: better name
+/// vertex layout for the cubemap pipeline
+#[derive(Clone)]
+pub struct VertexCMap {
+	pub pos: Vec3,
+}
+
+impl gl::VertexLayout for VertexCMap {
+
+	const STRIDE: usize = 3;
+
+	fn push(&self, queue: &mut Vec<f32>) {
+		queue.extend_from_slice(&[
+			self.pos.x,
+			self.pos.y,
+			self.pos.z,
+		]);
+	}
+
+	fn attrs() -> gl::VertexAttrGroup {
+		return &[
+			("a_pos", 3),
+		];
+	}
+
+}
+
 /// uniform layout for the 2d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform2D {
@@ -108,8 +135,8 @@ impl gl::UniformLayout for Uniform2D {
 
 	}
 
-	fn texture(&self) -> Option<&gl::Texture> {
-		return Some(&self.tex.gl_tex());
+	fn texture(&self) -> Option<&dyn gl::Texture> {
+		return Some(self.tex.gl_tex());
 	}
 
 }
@@ -146,8 +173,33 @@ impl gl::UniformLayout for Uniform3D {
 
 	}
 
-	fn texture(&self) -> Option<&gl::Texture> {
-		return Some(&self.tex.gl_tex());
+	fn texture(&self) -> Option<&dyn gl::Texture> {
+		return Some(self.tex.gl_tex());
+	}
+
+}
+
+/// uniform layout for the cubemap pipeline
+#[derive(Clone, PartialEq)]
+pub(super) struct UniformCMap {
+	pub proj: Mat4,
+	pub view: Mat4,
+	pub tex: gl::CubemapTexture,
+}
+
+impl gl::UniformLayout for UniformCMap {
+
+	fn values(&self) -> UniformValues {
+
+		return vec![
+			("u_proj", self.proj.into()),
+			("u_view", self.view.into()),
+		];
+
+	}
+
+	fn texture(&self) -> Option<&dyn gl::Texture> {
+		return Some(&self.tex);
 	}
 
 }
@@ -319,84 +371,140 @@ pub(super) struct CubeShape;
 impl gl::Shape for CubeShape {
 
 	type Vertex = Vertex3D;
-	const COUNT: usize = 8;
+	const COUNT: usize = 24;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
 
 		use gl::VertexLayout;
 
-		Vertex3D {
-			pos: vec3!(-0.5, -0.5, 0.5),
-			uv: vec2!(),
-			normal: vec3!(-0.41, -0.41, 0.82),
-			color: color!(1, 0, 0, 1),
-		}.push(queue);
+		let pos = [
+			vec3!(-1, -1, 1),
+			vec3!(-1, 1, 1),
+			vec3!(-1, 1, -1),
+			vec3!(-1, -1, -1),
+			vec3!(-1, -1, -1),
+			vec3!(-1, 1, -1),
+			vec3!(1, 1, -1),
+			vec3!(1, -1, -1),
+			vec3!(1, -1, -1),
+			vec3!(1, 1, -1),
+			vec3!(1, 1, 1),
+			vec3!(1, -1, 1),
+			vec3!(1, -1, 1),
+			vec3!(1, 1, 1),
+			vec3!(-1, 1, 1),
+			vec3!(-1, -1, 1),
+			vec3!(-1, -1, -1),
+			vec3!(1, -1, -1),
+			vec3!(1, -1, 1),
+			vec3!(-1, -1, 1),
+			vec3!(1, 1, -1),
+			vec3!(-1, 1, -1),
+			vec3!(-1, 1, 1),
+			vec3!(1, 1, 1),
+		];
 
-		Vertex3D {
-			pos: vec3!(0.5, -0.5, 0.5),
-			uv: vec2!(),
-			normal: vec3!(0.67, -0.67, 0.33),
-			color: color!(0, 1, 0, 1),
-		}.push(queue);
+		let normals = [
+			vec3!(-1, 0, 0),
+			vec3!(-1, 0, 0),
+			vec3!(-1, 0, 0),
+			vec3!(-1, 0, 0),
+			vec3!(0, 0, -1),
+			vec3!(0, 0, -1),
+			vec3!(0, 0, -1),
+			vec3!(0, 0, -1),
+			vec3!(1, 0, 0),
+			vec3!(1, 0, 0),
+			vec3!(1, 0, 0),
+			vec3!(1, 0, 0),
+			vec3!(0, 0, 1),
+			vec3!(0, 0, 1),
+			vec3!(0, 0, 1),
+			vec3!(0, 0, 1),
+			vec3!(0, -1, 0),
+			vec3!(0, -1, 0),
+			vec3!(0, -1, 0),
+			vec3!(0, -1, 0),
+			vec3!(0, 1, 0),
+			vec3!(0, 1, 0),
+			vec3!(0, 1, 0),
+			vec3!(0, 1, 0),
+		];
 
-		Vertex3D {
-			pos: vec3!(0.5, 0.5, 0.5),
-			uv: vec2!(),
-			normal: vec3!(0.41, 0.41, 0.82),
-			color: color!(0, 0, 1, 1),
-		}.push(queue);
-
-		Vertex3D {
-			pos: vec3!(-0.5, 0.5, 0.5),
-			uv: vec2!(),
-			normal: vec3!(-0.67, 0.67, 0.33),
-			color: color!(1, 1, 1, 1),
-		}.push(queue);
-
-		Vertex3D {
-			pos: vec3!(-0.5, -0.5, -0.5),
-			uv: vec2!(),
-			normal: vec3!(-0.67, -0.67, -0.33),
-			color: color!(1, 0, 0, 1),
-		}.push(queue);
-
-		Vertex3D {
-			pos: vec3!(0.5, -0.5, -0.5),
-			uv: vec2!(),
-			normal: vec3!(0.41, -0.41, -0.82),
-			color: color!(0, 1, 0, 1),
-		}.push(queue);
-
-		Vertex3D {
-			pos: vec3!(0.5, 0.5, -0.5),
-			uv: vec2!(),
-			normal: vec3!(0.67, 0.67, -0.33),
-			color: color!(0, 0, 1, 1),
-		}.push(queue);
-
-		Vertex3D {
-			pos: vec3!(-0.5, 0.5, -0.5),
-			uv: vec2!(),
-			normal: vec3!(-0.41, 0.41, -0.82),
-			color: color!(1, 1, 1, 1),
-		}.push(queue);
+		pos
+			.iter()
+			.zip(&normals)
+			.for_each(|(p, n)| {
+				Vertex3D {
+					pos: *p,
+					normal: *n,
+					color: color!(),
+					uv: vec2!(),
+				}.push(queue);
+			});
 
 	}
 
 	fn indices() -> &'static [u32] {
 		return &[
 			0, 1, 2,
-			2, 3, 0,
-			1, 5, 6,
-			6, 2, 1,
-			7, 6, 5,
-			5, 4, 7,
-			4, 0, 3,
-			3, 7, 4,
-			4, 5, 1,
-			1, 0, 4,
-			3, 2, 6,
-			6, 7, 3,
+			0, 2, 3,
+			4, 5, 6,
+			4, 6, 7,
+			8, 9, 10,
+			8, 10, 11,
+			12, 13, 14,
+			12, 14, 15,
+			16, 17, 18,
+			16, 18, 19,
+			20, 21, 22,
+			20, 22, 23,
+		];
+	}
+
+}
+
+/// shape for a cubemap
+pub(super) struct CubemapShape;
+
+impl gl::Shape for CubemapShape {
+
+	type Vertex = VertexCMap;
+	const COUNT: usize = 8;
+
+	fn vertices(&self, queue: &mut Vec<f32>) {
+
+		use gl::VertexLayout;
+
+		let pos = [
+			vec3!(-1, -1, 1),
+			vec3!(-1, 1, 1),
+			vec3!(1, 1, 1),
+			vec3!(1, -1, 1),
+			vec3!(-1, -1, -1),
+			vec3!(-1, 1, -1),
+			vec3!(1, 1, -1),
+			vec3!(1, -1, -1),
+		];
+
+		pos
+			.into_iter()
+			.for_each(|p| {
+				VertexCMap {
+					pos: *p,
+				}.push(queue);
+			});
+
+	}
+
+	fn indices() -> &'static [u32] {
+		return &[
+			0, 2, 1, 0, 3, 2,
+			4, 3, 0, 4, 7, 3,
+			4, 1, 5, 4, 0, 1,
+			3, 6, 2, 3, 7, 6,
+			1, 6, 5, 1, 2, 6,
+			7, 5, 6, 7, 4, 5,
 		];
 	}
 
