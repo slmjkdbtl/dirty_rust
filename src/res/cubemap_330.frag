@@ -1,6 +1,8 @@
 // wengwengweng
 
-varying vec3 v_uv;
+#version 330
+
+in vec3 v_uv;
 
 uniform samplerCube u_tex;
 
