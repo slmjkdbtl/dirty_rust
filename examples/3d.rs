@@ -27,10 +27,10 @@ struct LightUniform {
 
 impl gfx::Uniform for LightUniform {
 	fn values(&self) -> gfx::UniformValues {
-		return vec![
-			("u_light_pos", &self.pos),
-			("u_light_color", &self.color),
-			("u_light_mix", &self.mix),
+		return hashmap![
+			"u_light_pos" => &self.pos,
+			"u_light_color" => &self.color,
+			"u_light_mix" => &self.mix,
 		];
 	}
 }
@@ -161,7 +161,7 @@ impl app::State for Game {
 				ctx.draw_3d_with(&self.shader, &LightUniform {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
-					mix: 0.2,
+					mix: 0.4,
 				}, |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;
 					return Ok(());

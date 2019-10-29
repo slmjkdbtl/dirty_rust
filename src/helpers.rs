@@ -9,23 +9,33 @@ macro_rules! export {
 }
 
 #[allow(unused_macros)]
+#[macro_export]
 macro_rules! hashmap {
 	($($key:expr => $val:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::HashMap::new();
-			$(_tmp.insert($key, $val);)*
-			_tmp
+			if false {
+				_tmp
+			} else {
+				$(_tmp.insert($key, $val);)*
+				_tmp
+			}
 		}
 	}
 }
 
 #[allow(unused_macros)]
+#[macro_export]
 macro_rules! hashset {
 	($($item:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::HashSet::new();
-			$(_tmp.insert($item);)*
-			_tmp
+			if false {
+				_tmp
+			} else {
+				$(_tmp.insert($item);)*
+				_tmp
+			}
 		}
 	};
 }
