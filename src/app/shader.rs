@@ -9,11 +9,11 @@ use super::gfx::*;
 
 /// custom uniform
 pub trait Uniform: Clone {
-	fn values(&self) -> UniformValues;
+	fn values(&self) -> Vec<(&'static str, &dyn gl::IntoUniformValue)>;
 }
 
 impl Uniform for () {
-	fn values(&self) -> UniformValues {
+	fn values(&self) -> Vec<(&'static str, &dyn gl::IntoUniformValue)> {
 		return vec![];
 	}
 }

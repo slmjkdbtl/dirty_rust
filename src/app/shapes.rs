@@ -1150,12 +1150,14 @@ impl<'a> Drawable for Model<'a> {
 #[derive(Clone)]
 pub struct Skybox<'a> {
 	skybox: &'a gfx::Skybox,
+	color: Color,
 }
 
 impl<'a> Skybox<'a> {
 	pub fn new(s: &'a gfx::Skybox) -> Self {
 		return Self {
 			skybox: s,
+			color: color!(1),
 		};
 	}
 }
@@ -1178,6 +1180,7 @@ impl<'a> Drawable for Skybox<'a> {
 			&gfx::UniformCubemap {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d.remove_translation(),
+				color: self.color,
 				tex: self.skybox.texture().clone(),
 			},
 		);

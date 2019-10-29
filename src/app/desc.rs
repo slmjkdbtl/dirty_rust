@@ -115,19 +115,21 @@ impl gl::VertexLayout for VertexCubemap {
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
 	pub tex: Texture,
-	pub custom: Option<UniformValues>,
+	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
 }
 
 impl gl::UniformLayout for Uniform2D {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values = vec![
-			("u_proj", self.proj.into()),
+		let mut values: UniformValues = vec![
+			("u_proj", &self.proj),
 		];
 
 		if let Some(custom) = &self.custom {
-			values.extend(custom.clone());
+			for (name, v) in custom {
+				values.push((name, v));
+			}
 		}
 
 		return values;
@@ -143,29 +145,29 @@ impl gl::UniformLayout for Uniform2D {
 /// uniform layout for the 3d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform3D {
-
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub model: Transform,
 	pub color: Color,
 	pub tex: Texture,
-	pub custom: Option<UniformValues>,
-
+	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
 }
 
 impl gl::UniformLayout for Uniform3D {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values = vec![
-			("u_proj", self.proj.into()),
-			("u_view", self.view.into()),
-			("u_model", self.model.as_mat4().into()),
-			("u_color", self.color.into()),
+		let mut values: UniformValues = vec![
+			("u_proj", &self.proj),
+			("u_view", &self.view),
+			("u_model", &self.model),
+			("u_color", &self.color),
 		];
 
 		if let Some(custom) = &self.custom {
-			values.extend(custom.clone());
+			for (name, v) in custom {
+				values.push((name, v));
+			}
 		}
 
 		return values;
@@ -183,18 +185,18 @@ impl gl::UniformLayout for Uniform3D {
 pub(super) struct UniformCubemap {
 	pub proj: Mat4,
 	pub view: Mat4,
+	pub color: Color,
 	pub tex: gl::CubemapTexture,
 }
 
 impl gl::UniformLayout for UniformCubemap {
 
 	fn values(&self) -> UniformValues {
-
 		return vec![
-			("u_proj", self.proj.into()),
-			("u_view", self.view.into()),
+			("u_proj", &self.proj),
+			("u_view", &self.view),
+			("u_color", &self.color),
 		];
-
 	}
 
 	fn texture(&self) -> Option<&dyn gl::Texture> {
