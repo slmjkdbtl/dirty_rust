@@ -12,7 +12,7 @@
 - [gfx] higer level gl stencil abstraction
 - [gfx] 3d texture
 - [math] tween functions
-- [example] rubiks cube example
+- [misc] rubiks cube example
 - [math] noise function
 - [gfx] sphere
 - [img] image resizing
@@ -54,8 +54,6 @@
 - [gfx] 3d ortho cam
 - [gfx] draw default to a framebuffer
 - [gfx] global scale
-- [gfx] first polygon isn't drawing
-- [gfx] allow z buffer in 2d
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
 - [gfx] text wrapping
 - [gfx] truetype font paddings
@@ -74,14 +72,15 @@
 - [gfx] billboard
 - [gfx] write framebuffer to cubemap
 - [gfx] instancing
-- [gfx] convert between vertex normal and surface
+- [gfx] convert between vertex and surface normal
+- [gl] make gl independent of crate
 
 == DONE
 - [http] refactor http
 - [misc] use cargo feature
 - [app] restructure app module api
 - [misc] massive cleaning
-- [example] sprite example
+- [misc] sprite example
 - [gfx] canvas rendering
 - [gfx] gl3 feature
 - [gfx] better UniformValue interface
@@ -136,6 +135,7 @@
 - [gl] flush batched renderer when shader uniform is sent (?)
 - [gfx] text new line
 - [gfx] use TextAlign instead of offset (?)
+- [gfx] first polygon isn't drawing
 - [gfx] text wrapping
 - [gfx] shape: fill & stroke
 - [gfx] load obj mtl

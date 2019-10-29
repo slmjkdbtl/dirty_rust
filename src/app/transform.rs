@@ -107,7 +107,7 @@ impl Transform {
 }
 
 impl gl::IntoUniformValue for Transform {
-	fn into(&self) -> gl::UniformValue {
+	fn into_uniform(&self) -> gl::UniformValue {
 		return gl::UniformValue::Mat4(self.as_mat4().as_arr());
 	}
 }

@@ -77,12 +77,12 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.ctx.use_program(Some(self.program_id));
 
-			for v in uniform.values() {
+			for (name, value) in uniform.values() {
 
 				// TODO: cache location
-				let loc = self.ctx.get_uniform_location(self.program_id, v.0);
+				let loc = self.ctx.get_uniform_location(self.program_id, name);
 
-				match v.1.into() {
+				match value.into_uniform() {
 					F1(f) => self.ctx.uniform_1_f32(loc, f),
 					F2(f) => self.ctx.uniform_2_f32(loc, f[0], f[1]),
 					F3(f) => self.ctx.uniform_3_f32(loc, f[0], f[1], f[2]),

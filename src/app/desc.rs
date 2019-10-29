@@ -122,13 +122,13 @@ impl gl::UniformLayout for Uniform2D {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values: UniformValues = vec![
-			("u_proj", &self.proj),
+		let mut values: UniformValues = hashmap![
+			"u_proj" => &self.proj,
 		];
 
 		if let Some(custom) = &self.custom {
 			for (name, v) in custom {
-				values.push((name, v));
+				values.insert(name, v);
 			}
 		}
 
@@ -157,16 +157,16 @@ impl gl::UniformLayout for Uniform3D {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values: UniformValues = vec![
-			("u_proj", &self.proj),
-			("u_view", &self.view),
-			("u_model", &self.model),
-			("u_color", &self.color),
+		let mut values: UniformValues = hashmap![
+			"u_proj" => &self.proj,
+			"u_view" => &self.view,
+			"u_model" => &self.model,
+			"u_color" => &self.color,
 		];
 
 		if let Some(custom) = &self.custom {
 			for (name, v) in custom {
-				values.push((name, v));
+				values.insert(name, v);
 			}
 		}
 
@@ -192,10 +192,10 @@ pub(super) struct UniformCubemap {
 impl gl::UniformLayout for UniformCubemap {
 
 	fn values(&self) -> UniformValues {
-		return vec![
-			("u_proj", &self.proj),
-			("u_view", &self.view),
-			("u_color", &self.color),
+		return hashmap![
+			"u_proj" => &self.proj,
+			"u_view" => &self.view,
+			"u_color" => &self.color,
 		];
 	}
 

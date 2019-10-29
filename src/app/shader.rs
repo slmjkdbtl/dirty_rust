@@ -9,14 +9,51 @@ use super::gfx::*;
 
 /// custom uniform
 pub trait Uniform: Clone {
-	fn values(&self) -> Vec<(&'static str, &dyn gl::IntoUniformValue)>;
+	fn values(&self) -> UniformValues;
 }
 
 impl Uniform for () {
-	fn values(&self) -> Vec<(&'static str, &dyn gl::IntoUniformValue)> {
-		return vec![];
+	fn values(&self) -> UniformValues {
+		return hashmap![];
 	}
 }
+
+impl IntoUniformValue for Vec2 {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::F2(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Vec3 {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::F3(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Vec4 {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::F4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Color {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::F4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Quad {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::F4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Mat4 {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::Mat4(self.as_arr());
+	}
+}
+
 
 /// custom shader for 2D
 #[derive(Clone, PartialEq)]

@@ -152,7 +152,7 @@ impl Gfx for Ctx {
 
 		let uniforms = uniform.values()
 			.into_iter()
-			.map(|(n, v)| (n, v.into()))
+			.map(|(n, v)| (n, v.into_uniform()))
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
 		flush(self);
@@ -171,7 +171,7 @@ impl Gfx for Ctx {
 
 		let uniforms = uniform.values()
 			.into_iter()
-			.map(|(n, v)| (n, v.into()))
+			.map(|(n, v)| (n, v.into_uniform()))
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
 		flush(self);
