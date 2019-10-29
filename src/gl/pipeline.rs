@@ -73,7 +73,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 		unsafe {
 
-			use UniformType::*;
+			use UniformValue::*;
 
 			self.ctx.use_program(Some(self.program_id));
 
@@ -82,7 +82,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				// TODO: cache location
 				let loc = self.ctx.get_uniform_location(self.program_id, v.0);
 
-				match v.1 {
+				match v.1.into() {
 					F1(f) => self.ctx.uniform_1_f32(loc, f),
 					F2(f) => self.ctx.uniform_2_f32(loc, f[0], f[1]),
 					F3(f) => self.ctx.uniform_3_f32(loc, f[0], f[1], f[2]),

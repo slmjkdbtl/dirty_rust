@@ -13,8 +13,8 @@ pub struct PixUniform {
 impl gfx::Uniform for PixUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return vec![
-			("resolution", self.resolution.into()),
-			("size", self.size.into()),
+			("resolution", &self.resolution),
+			("size", &self.size),
 		];
 	}
 }

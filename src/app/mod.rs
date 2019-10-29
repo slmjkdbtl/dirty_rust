@@ -108,11 +108,11 @@ pub struct Ctx {
 
 	pub(self) default_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cur_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cur_custom_uniform_2d: Option<gfx::UniformValues>,
+	pub(self) cur_custom_uniform_2d: Option<Vec<(&'static str, gl::UniformValue)>>,
 
 	pub(self) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
 	pub(self) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) cur_custom_uniform_3d: Option<gfx::UniformValues>,
+	pub(self) cur_custom_uniform_3d: Option<Vec<(&'static str, gl::UniformValue)>>,
 
 	pub(self) pipeline_cubemap: gl::Pipeline<gfx::VertexCubemap, gfx::UniformCubemap>,
 

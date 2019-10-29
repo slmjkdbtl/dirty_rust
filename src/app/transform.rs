@@ -106,6 +106,12 @@ impl Transform {
 
 }
 
+impl gl::IntoUniformValue for Transform {
+	fn into(&self) -> gl::UniformValue {
+		return gl::UniformValue::Mat4(self.as_mat4().as_arr());
+	}
+}
+
 impl ops::Mul<Transform> for Mat4 {
 	type Output = Mat4;
 	fn mul(self, m: Transform) -> Self::Output {

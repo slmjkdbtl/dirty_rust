@@ -7,6 +7,7 @@ use crate::math::*;
 use super::*;
 
 pub use gl::UniformValues;
+pub use gl::IntoUniformValue;
 pub use gl::FilterMode;
 pub use gl::Surface;
 pub use gl::Cmp;
@@ -149,9 +150,14 @@ impl Gfx for Ctx {
 
 	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
+		let uniforms = uniform.values()
+			.into_iter()
+			.map(|(n, v)| (n, v.into()))
+			.collect::<Vec<(&'static str, gl::UniformValue)>>();
+
 		flush(self);
 		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.gl_pipeline());
-		self.cur_custom_uniform_2d = Some(uniform.values());
+		self.cur_custom_uniform_2d = Some(uniforms);
 		f(self)?;
 		flush(self);
 		self.cur_pipeline_2d = self.default_pipeline_2d.clone();
@@ -163,9 +169,14 @@ impl Gfx for Ctx {
 
 	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
+		let uniforms = uniform.values()
+			.into_iter()
+			.map(|(n, v)| (n, v.into()))
+			.collect::<Vec<(&'static str, gl::UniformValue)>>();
+
 		flush(self);
 		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.gl_pipeline());
-		self.cur_custom_uniform_3d = Some(uniform.values());
+		self.cur_custom_uniform_3d = Some(uniforms);
 		f(self)?;
 		flush(self);
 		self.cur_pipeline_3d = self.default_pipeline_3d.clone();
