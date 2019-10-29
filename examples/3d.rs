@@ -11,26 +11,48 @@ use pix::*;
 struct Game {
 	model: gfx::Model,
 	pix_effect: PixEffect,
-	shader: gfx::Shader3D<()>,
+	shader: gfx::Shader3D<LightUniform>,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
 	skybox: gfx::Skybox,
 }
 
+#[derive(Clone)]
+struct LightUniform {
+	pos: Vec3,
+	color: Vec3,
+	mix: f32,
+}
+
+impl gfx::Uniform for LightUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return vec![
+			("u_light_pos", &self.pos),
+			("u_light_color", &self.color),
+			("u_light_mix", &self.mix),
+		];
+	}
+}
+
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let mut model = gfx::Model::from_obj(ctx, include_str!("res/kart.obj"), None, None)?;
+		let mut model = gfx::Model::from_obj(
+			ctx,
+			include_str!("res/kart.obj"),
+			Some(include_str!("res/kart.mtl")),
+			None,
+		)?;
 
-		model.update(|data| {
-			for m in data {
-				for v in &mut m.vertices {
-					v.color = color!(rand!(), rand!(), rand!(), 1);
-				}
-			}
-		});
+// 		model.update(|data| {
+// 			for m in data {
+// 				for v in &mut m.vertices {
+// 					v.color = color!(rand!(), rand!(), rand!(), 1);
+// 				}
+// 			}
+// 		});
 
 // 		let mut model = gfx::Model::from_gltf(ctx, "examples/res/Duck.gltf")?;
 // 		let mut model = gfx::Model::from_glb(ctx, include_bytes!("res/duck.glb"))?;
@@ -49,7 +71,7 @@ impl app::State for Game {
 			model: model,
 			pix_effect: PixEffect::new(ctx)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, 12), 0.0, 0.0),
-			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
+			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			move_speed: 12.0,
 			eye_speed: 0.16,
 			skybox: skybox,
@@ -128,13 +150,25 @@ impl app::State for Game {
 			ctx.clear();
 // 			ctx.clear_ex(gfx::Surface::Depth);
 
+			let light_pos = vec3!(ctx.time().sin() * 12.0, 12, ctx.time().cos() * 12.0);
+
 			ctx.use_cam(&self.cam, |ctx| {
+
 				ctx.draw(&shapes::skybox(&self.skybox))?;
-				ctx.draw_3d_with(&self.shader, &(), |ctx| {
+
+				ctx.draw_t(&gfx::t().t3(light_pos), &shapes::cube())?;
+
+				ctx.draw_3d_with(&self.shader, &LightUniform {
+					pos: light_pos,
+					color: vec3!(1, 1, 1),
+					mix: 0.2,
+				}, |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;
 					return Ok(());
 				})?;
+
 				return Ok(());
+
 			})?;
 
 			return Ok(());
