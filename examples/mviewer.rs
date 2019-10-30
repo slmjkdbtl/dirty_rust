@@ -1,6 +1,9 @@
 // wengwengweng
 
 // TODO: handle load failure
+// TODO: lighting
+
+#![feature(clamp)]
 
 use std::path::Path;
 
@@ -131,7 +134,7 @@ impl app::State for Viewer {
 			rot: vec2!(0),
 			resetting: false,
 			scale: 0.0,
-			loader: load_file("examples/res/kart.obj"),
+			loader: load_file("examples/res/truck.obj"),
 			wireframe: false,
 			helping: false,
 			show_normal: false,

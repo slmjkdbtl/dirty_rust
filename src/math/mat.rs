@@ -71,7 +71,7 @@ impl Mat4 {
 
 	}
 
-	pub fn invert(&self) -> Self {
+	pub fn inverse(&self) -> Self {
 
 		let mut nm = [0.0; 16];
 		let m = self.0;

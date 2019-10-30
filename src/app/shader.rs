@@ -54,7 +54,6 @@ impl IntoUniformValue for Mat4 {
 	}
 }
 
-
 /// custom shader for 2D
 #[derive(Clone, PartialEq)]
 pub struct Shader2D<U: Uniform> {

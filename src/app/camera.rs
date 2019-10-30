@@ -7,6 +7,7 @@ use super::*;
 pub trait Camera {
 	fn projection(&self) -> Mat4;
 	fn lookat(&self) -> Mat4;
+	fn pos(&self) -> Vec3;
 }
 
 /// 3d perspective camera
@@ -75,11 +76,6 @@ impl PerspectiveCam {
 		return self.front;
 	}
 
-	/// get cam pos
-	pub fn pos(&self) -> Vec3 {
-		return self.pos;
-	}
-
 	/// get cam yaw
 	pub fn yaw(&self) -> f32 {
 		return self.yaw;
@@ -98,6 +94,9 @@ impl Camera for PerspectiveCam {
 	}
 	fn lookat(&self) -> Mat4 {
 		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+	}
+	fn pos(&self) -> Vec3 {
+		return self.pos;
 	}
 }
 
@@ -166,11 +165,6 @@ impl OrthoCam {
 		return self.front;
 	}
 
-	/// get cam pos
-	pub fn pos(&self) -> Vec3 {
-		return self.pos;
-	}
-
 	/// get cam pitch
 	pub fn yaw(&self) -> f32 {
 		return self.yaw;
@@ -189,6 +183,9 @@ impl Camera for OrthoCam {
 	}
 	fn lookat(&self) -> Mat4 {
 		return math::lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+	}
+	fn pos(&self) -> Vec3 {
+		return self.pos;
 	}
 }
 

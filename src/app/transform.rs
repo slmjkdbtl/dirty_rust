@@ -59,8 +59,8 @@ impl Transform {
 		return self.matrix;
 	}
 
-	pub fn invert(&self) -> Self {
-		return Self::from_mat4(self.matrix.invert());
+	pub fn inverse(&self) -> Self {
+		return Self::from_mat4(self.matrix.inverse());
 	}
 
 	pub fn apply(self, other: &Self) -> Self {

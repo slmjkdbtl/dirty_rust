@@ -1,18 +1,41 @@
 // wengwengweng
 
-uniform vec3 u_light_pos;
-uniform vec3 u_light_color;
-uniform float u_light_mix;
+struct Light {
+	vec3 pos;
+	vec3 color;
+};
+
+struct Material {
+	float diffuse;
+	float specular;
+	float shininess;
+};
+
+uniform Light u_light;
+uniform Material u_material;
+uniform vec3 u_view_pos;
 
 vec4 frag() {
 
 	vec4 obj_color = v_color * texture2D(u_tex, v_uv);
 	vec3 normal = normalize(v_normal);
-	vec3 light_dir = normalize(u_light_pos - v_pos);
-	float df = max(dot(normal, light_dir), 0.0);
-	vec3 df_color = mix(vec3(1), df * u_light_color, u_light_mix);
 
-	return vec4(obj_color.rgb * df_color, obj_color.a);
+	vec3 light_color = vec3(0);
+	vec3 light_dir = normalize(u_light.pos - v_pos);
+
+	// diffuse
+	float df = max(dot(normal, light_dir), 0.0);
+	vec3 df_color = mix(vec3(1), df * u_light.color, u_material.diffuse);
+
+	// specular
+	vec3 view_dir = normalize(u_view_pos - v_pos);
+	vec3 reflect_dir = reflect(-light_dir, normal);
+	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), u_material.shininess);
+	vec3 sp_color = u_material.specular * spec * u_light.color;
+
+	light_color += (df_color + sp_color);
+
+	return vec4(obj_color.rgb * light_color, obj_color.a);
 
 }
 
