@@ -4,6 +4,7 @@ use dirty::*;
 use dirty::app::*;
 use dirty::math::*;
 use input::Key;
+use gfx::Camera;
 
 mod pix;
 use pix::*;
@@ -16,21 +17,28 @@ struct Game {
 	move_speed: f32,
 	eye_speed: f32,
 	skybox: gfx::Skybox,
+	size: f32,
 }
 
 #[derive(Clone)]
 struct LightUniform {
 	pos: Vec3,
 	color: Vec3,
-	mix: f32,
+	diffuse: f32,
+	specular: f32,
+	shininess: f32,
+	view_pos: Vec3,
 }
 
 impl gfx::Uniform for LightUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hashmap![
-			"u_light_pos" => &self.pos,
-			"u_light_color" => &self.color,
-			"u_light_mix" => &self.mix,
+			"u_light.pos" => &self.pos,
+			"u_light.color" => &self.color,
+			"u_material.diffuse" => &self.diffuse,
+			"u_material.specular" => &self.specular,
+			"u_material.shininess" => &self.shininess,
+			"u_view_pos" => &self.view_pos,
 		];
 	}
 }
@@ -39,12 +47,15 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let mut model = gfx::Model::from_obj(
+		let model = gfx::Model::from_obj(
 			ctx,
-			include_str!("res/kart.obj"),
-			Some(include_str!("res/kart.mtl")),
+			include_str!("res/truck.obj"),
+			Some(include_str!("res/truck.mtl")),
 			None,
 		)?;
+
+		let (min, max) = model.bound();
+		let size = (max - min).mag();
 
 // 		model.update(|data| {
 // 			for m in data {
@@ -70,9 +81,10 @@ impl app::State for Game {
 		return Ok(Self {
 			model: model,
 			pix_effect: PixEffect::new(ctx)?,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(0, 0, 12), 0.0, 0.0),
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
-			move_speed: 12.0,
+			size: size,
+			move_speed: size * 2.0,
 			eye_speed: 0.16,
 			skybox: skybox,
 		});
@@ -87,10 +99,16 @@ impl app::State for Game {
 
 			KeyPress(k) => {
 				if k == Key::Esc {
-					ctx.quit();
+					ctx.toggle_cursor_hidden();
+					ctx.toggle_cursor_locked()?;
 				}
 				if k == Key::F {
 					ctx.toggle_fullscreen();
+				}
+				if k == Key::Q {
+					if ctx.key_down(Key::LWin) || ctx.key_down(Key::RWin) {
+						ctx.quit();
+					}
 				}
 			},
 
@@ -150,18 +168,24 @@ impl app::State for Game {
 			ctx.clear();
 // 			ctx.clear_ex(gfx::Surface::Depth);
 
-			let light_pos = vec3!(ctx.time().sin() * 12.0, 12, ctx.time().cos() * 12.0);
+			let light_pos = vec3!(
+				ctx.time().sin() * self.size / 2.0,
+				self.size / 2.0,
+				ctx.time().cos() * self.size / 2.0,
+			);
 
 			ctx.use_cam(&self.cam, |ctx| {
 
 				ctx.draw(&shapes::skybox(&self.skybox))?;
-
-				ctx.draw_t(&gfx::t().t3(light_pos), &shapes::cube())?;
+// 				ctx.draw_t(&gfx::t().t3(light_pos).s3(vec3!(self.size / 24.0)), &shapes::cube())?;
 
 				ctx.draw_3d_with(&self.shader, &LightUniform {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
-					mix: 0.4,
+					diffuse: 0.4,
+					specular: 0.6,
+					shininess: 16.0,
+					view_pos: self.cam.pos(),
 				}, |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;
 					return Ok(());

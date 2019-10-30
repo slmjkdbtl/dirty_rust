@@ -8,6 +8,23 @@ use crate::*;
 use super::*;
 use super::gfx::*;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Material {
+	pub diffuse: f32,
+	pub specular: f32,
+	pub shininess: f32,
+}
+
+impl Default for Material {
+	fn default() -> Self {
+		return Self {
+			diffuse: 0.0,
+			specular: 0.0,
+			shininess: 1.0,
+		};
+	}
+}
+
 /// mesh data
 pub type MeshData = gl::MeshData<Vertex3D>;
 
@@ -25,6 +42,7 @@ pub struct Model {
 	center: Vec3,
 	meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
 	texture: Option<Texture>,
+	material: Option<Material>,
 }
 
 impl Model {
@@ -38,6 +56,7 @@ impl Model {
 			center: vec3!(),
 			bound: (vec3!(), vec3!()),
 			texture: None,
+			material: None,
 		});
 	}
 
@@ -393,6 +412,7 @@ impl Model {
 			bound: (min, max),
 			center: center,
 			texture: tex,
+			material: None,
 		});
 
 	}
@@ -452,6 +472,10 @@ impl Model {
 
 		}
 
+	}
+
+	pub fn set_mtl(&mut self, mtl: Material) {
+		self.material = Some(mtl);
 	}
 
 	pub fn meshdata(&self) -> &[MeshData] {

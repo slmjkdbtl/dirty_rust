@@ -74,6 +74,9 @@
 - [gfx] instancing
 - [gfx] convert between vertex and surface normal
 - [gl] make gl independent of crate
+- [gfx] dynamic number of lights
+- [gfx] integrate lighting
+- [gl] deferred rendering
 
 == DONE
 - [http] refactor http
