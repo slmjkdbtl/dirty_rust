@@ -65,7 +65,6 @@
 - [gfx] 3d line
 - [gfx] read aseprite files
 - [gfx] read blender files
-- [gfx] allow users to write custom pipeline from scratch
 - [gfx] model morphing
 - [gfx] make rect, line and circle independent on polygon (?)
 - [gfx] cull face
@@ -75,8 +74,9 @@
 - [gfx] convert between vertex and surface normal
 - [gl] make gl independent of crate
 - [gfx] dynamic number of lights
-- [gfx] integrate lighting
-- [gl] deferred rendering
+- [gfx] integrate lighting (?)
+- [gl] deferred rendering (?)
+- [gfx] custom pipeline
 
 == DONE
 - [http] refactor http
