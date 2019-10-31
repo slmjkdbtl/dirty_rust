@@ -720,12 +720,12 @@ pub use splines::Interpolation as Interp;
 
 // TODO
 #[derive(Clone)]
-pub struct Curve {
+pub struct Spline {
 	dt: f32,
 	spline: splines::Spline<f32, Vec2>,
 }
 
-impl Curve {
+impl Spline {
 
 	pub fn from_pts(pts: &[(f32, Vec2)]) -> Self {
 
@@ -747,7 +747,7 @@ impl Curve {
 
 }
 
-impl Drawable for Curve {
+impl Drawable for Spline {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 

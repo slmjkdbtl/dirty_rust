@@ -81,7 +81,7 @@ impl app::State for Game {
 		return Ok(Self {
 			model: model,
 			pix_effect: PixEffect::new(ctx)?,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
+			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
 			move_speed: size * 2.0,
@@ -183,7 +183,7 @@ impl app::State for Game {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
 					diffuse: 0.4,
-					specular: 0.6,
+					specular: 0.4,
 					shininess: 16.0,
 					view_pos: self.cam.pos(),
 				}, |ctx| {

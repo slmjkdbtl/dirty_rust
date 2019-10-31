@@ -99,7 +99,7 @@ impl app::State for Game {
 		)?;
 
 		ctx.draw(
-			&Curve::from_pts(&[
+			&Spline::from_pts(&[
 				(0.0, vec2!(-48)),
 				(0.4, vec2!(36, -24)),
 				(1.0, vec2!(48))
