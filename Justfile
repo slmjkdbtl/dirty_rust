@@ -3,9 +3,6 @@
 run example="sprite":
 	cargo run --example {{example}} --release
 
-run-lua example="app":
-	./bin/dirty examples/{{example}}.lua
-
 install:
 	cargo install --force --path .
 
