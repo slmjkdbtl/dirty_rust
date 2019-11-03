@@ -64,7 +64,6 @@ pub mod texpack;
 #[cfg(feature = "clip")]
 pub mod clip;
 
-pub mod bindings;
 pub mod codec;
 
 mod err;

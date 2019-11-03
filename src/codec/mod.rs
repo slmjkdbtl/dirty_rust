@@ -2,6 +2,7 @@
 
 //! Codecs for Common Formats
 
+pub use serde;
 pub use serde::Serialize;
 pub use serde::Deserialize;
 

@@ -1,5 +1,7 @@
 // wengwengweng
 
+pub use random;
+
 use random::seq::SliceRandom;
 use random::Rng as RngTrait;
 use random::SeedableRng;
@@ -10,11 +12,11 @@ pub type RandSeed = u64;
 macro_rules! rand {
 
 	() => {
-		random::random::<f32>()
+		$crate::math::random::random::<f32>()
 	};
 
 	($from:expr, $to:expr) => {
-		random::Rng::gen_range(&mut random::thread_rng(), $from, $to)
+		$crate::math::random::Rng::gen_range(&mut random::thread_rng(), $from, $to)
 	};
 
 	($x:expr) => {
