@@ -154,7 +154,7 @@ pub enum Event {
 	GamepadConnect(GamepadID),
 	GamepadDisconnect(GamepadID),
 	Touch(TouchID, Vec2),
-	Resize(u32, u32),
+	Resize(i32, i32),
 	FileHover(PathBuf),
 	FileHoverCancel,
 	FileDrop(PathBuf),
@@ -321,9 +321,13 @@ pub(super) fn poll(
 
 					Resized(size) => {
 
-						ctx.width = size.width as i32;
-						ctx.height = size.height as i32;
-						s.event(&mut ctx, Event::Resize(size.width as u32, size.height as u32))?;
+						let w = size.width as i32;
+						let h = size.height as i32;
+
+						ctx.width = w;
+						ctx.height = h;
+
+						s.event(&mut ctx, Event::Resize(w, h))?;
 
 					},
 

@@ -3,6 +3,7 @@
 == DOING
 - [gfx] investigate the extreme slowness of the 2d renderer
 - [gfx] draw curve
+- [gfx] scale modes
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -61,7 +62,6 @@
 - [app] global messaging with custom type (?)
 - [gl] shader uniform mismatch
 - [gfx] make all shapes cachable
-- [gfx] scale modes
 - [gfx] 3d line
 - [gfx] read aseprite files
 - [gfx] read blender files
@@ -77,6 +77,7 @@
 - [gfx] integrate lighting (?)
 - [gl] deferred rendering (?)
 - [gfx] custom pipeline
+- [gfx] fix gl viewport weirdness after fullscreen
 
 == DONE
 - [http] refactor http

@@ -64,7 +64,7 @@ impl Default for Conf {
 			clear_color: color!(0, 0, 0, 1),
 			origin: gfx::Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,
-			scale_mode: gfx::ScaleMode::Letterbox,
+			scale_mode: gfx::ScaleMode::Stretch,
 			scale: 1,
 		};
 	}

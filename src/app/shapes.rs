@@ -62,8 +62,8 @@ impl<'a> Drawable for Sprite<'a> {
 
 		// TODO: extremely slow
 		let t = ctx.transform
-			.scale(scale)
-			.translate(offset * -0.5)
+			.s2(scale)
+			.t2(offset * -0.5)
 			;
 
 		let shape = gfx::QuadShape {
@@ -180,7 +180,7 @@ impl<'a> Drawable for Text<'a> {
 // 		ctx.draw(sprite(&tex))?;
 
 		ctx.push(&gfx::t()
-			.translate(offset_pos)
+			.t2(offset_pos)
 		, |ctx| {
 
 			let mut x = 0.0;
@@ -190,7 +190,7 @@ impl<'a> Drawable for Text<'a> {
 				if let Some(quad) = map.get(&ch) {
 
 					ctx.push(&gfx::t()
-						.translate(vec2!(x, 0))
+						.t2(vec2!(x, 0))
 					, |ctx| {
 
 						ctx.draw(
@@ -441,8 +441,8 @@ impl Drawable for Gradient {
 		let mut verts = Vec::with_capacity(4 + 2 * (self.steps.len() - 2) * gfx::Vertex2D::STRIDE);
 
 		let matrix = ctx.transform
-			.translate((self.p1 + self.p2) * 0.5)
-			.rotate(rot - 90f32.to_radians())
+			.t2((self.p1 + self.p2) * 0.5)
+			.r(rot - 90f32.to_radians())
 			.as_mat4();
 
 		let w = self.width;
@@ -664,8 +664,8 @@ impl Drawable for Line {
 
 		ctx.push(&gfx::t()
 
-			.translate((self.p1 + self.p2) * 0.5)
-			.rotate(rot)
+			.t2((self.p1 + self.p2) * 0.5)
+			.r(rot)
 
 		, |ctx| {
 
@@ -1003,7 +1003,7 @@ impl Drawable for Circle {
 		}
 
 		ctx.push(&gfx::t()
-			.translate(self.center)
+			.t2(self.center)
 		, |ctx| {
 
 			let poly = Polygon {
@@ -1057,7 +1057,7 @@ impl<'a> Drawable for Canvas<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
-			.scale(vec2!(1.0 / ctx.dpi() as f32))
+			.s2(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
 			return ctx.draw(&sprite(&self.canvas.tex()).color(self.color));
 		})?;
@@ -1465,8 +1465,8 @@ impl<'a> Drawable for Sprite3D<'a> {
 		let offset = self.offset * -0.5;
 
 		ctx.push(&gfx::t()
-			.scale_3d(vec3!(scale.x, scale.y, 1.0))
-			.translate_3d(vec3!(offset.x, offset.y, 0.0))
+			.s3(vec3!(scale.x, scale.y, 1.0))
+			.t3(vec3!(offset.x, offset.y, 0.0))
 		, |ctx| {
 
 			let shape = gfx::Quad3DShape {

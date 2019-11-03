@@ -25,7 +25,6 @@ use glow::HasContext;
 
 use crate::Error;
 use crate::Result;
-use crate::math::*;
 
 #[cfg(not(web))]
 pub(self) type GLCtx = glow::Context;
@@ -108,9 +107,9 @@ impl Device {
 	}
 
 	// TODO: move these to a RenderPass abstraction?
-	pub fn clear_color(&self, c: Color) {
+	pub fn clear_color(&self, r: f32, g: f32, b: f32, a: f32) {
 		unsafe {
-			self.ctx.clear_color(c.r, c.g, c.b, c.a);
+			self.ctx.clear_color(r, g, b, a);
 		}
 	}
 
@@ -136,7 +135,7 @@ impl Device {
 		}
 	}
 
-	pub fn front_face(&self, dir: Dir) {
+	pub fn front_face(&self, dir: CullMode) {
 		unsafe {
 			self.ctx.front_face(dir.into());
 		}

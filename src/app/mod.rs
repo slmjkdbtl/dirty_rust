@@ -246,13 +246,15 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	};
 
+	let c = conf.clear_color;
+
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
 // 	gl.enable(gl::Capability::CullFace);
 // 	gl.cull_face(gl::Face::Back);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
-	gl.clear_color(conf.clear_color);
+	gl.clear_color(c.r, c.g, c.b, c.a);
 
 	let empty_tex = gl::Texture2D::from(&gl, 1, 1, &[255; 4])?;
 	let empty_tex = gfx::Texture::from_gl_tex(empty_tex);
