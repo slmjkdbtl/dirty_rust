@@ -30,3 +30,9 @@ pub trait State: Sized {
 
 }
 
+impl State for () {
+	fn init(_: &mut Ctx) -> Result<Self> {
+		return Ok(());
+	}
+}
+

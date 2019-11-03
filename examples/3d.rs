@@ -9,6 +9,16 @@ use gfx::Camera;
 mod pix;
 use pix::*;
 
+pub enum Light {
+	Point {
+		pos: Vec3,
+		color: Color,
+	},
+	Directional {
+		dir: Vec3,
+	},
+}
+
 struct Game {
 	model: gfx::Model,
 	pix_effect: PixEffect,

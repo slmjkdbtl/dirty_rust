@@ -14,6 +14,25 @@ pub use vec::*;
 pub use mat::*;
 pub use rand::*;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Dir {
+	Right,
+	Down,
+	Left,
+	Up,
+}
+
+impl Dir {
+	pub fn as_vec2(&self) -> Vec2 {
+		return match self {
+			Dir::Right => vec2!(1, 0),
+			Dir::Down => vec2!(0, 1),
+			Dir::Left => vec2!(-1, 0),
+			Dir::Up => vec2!(0, -1),
+		};
+	}
+}
+
 pub trait Lerpable =
 	Copy
 	+ Add<Output = Self>

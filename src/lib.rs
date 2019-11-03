@@ -8,6 +8,7 @@
 #![feature(try_blocks)]
 #![feature(box_syntax)]
 #![feature(trait_alias)]
+#![feature(bool_to_option)]
 #![feature(fixed_size_array)]
 #![feature(type_alias_impl_trait)]
 

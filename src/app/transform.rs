@@ -23,36 +23,16 @@ impl Transform {
 		};
 	}
 
-	pub fn translate(&self, p: Vec2) -> Self {
-		return Self::from_mat4(self.matrix * Mat4::translate(vec3!(p.x, p.y, 0.0)));
-	}
-
-	pub fn rotate(&self, a: f32) -> Self {
-		return Self::from_mat4(self.matrix * Mat4::rotate(a, vec3!(0, 0, 1)));
-	}
-
-	pub fn scale(&self, s: Vec2) -> Self {
-		return Self::from_mat4(self.matrix * Mat4::scale(vec3!(s.x, s.y, 1.0)));
-	}
-
-	pub fn translate_3d(&self, p: Vec3) -> Self {
+	pub fn translate(&self, p: Vec3) -> Self {
 		return Self::from_mat4(self.matrix * Mat4::translate(p));
 	}
 
-	pub fn scale_3d(&self, s: Vec3) -> Self {
+	pub fn scale(&self, s: Vec3) -> Self {
 		return Self::from_mat4(self.matrix * Mat4::scale(s));
 	}
 
-	pub fn rotate_x(&self, a: f32) -> Self {
-		return Self::from_mat4(self.matrix *  Mat4::rotate(a, vec3!(1, 0, 0)));
-	}
-
-	pub fn rotate_y(&self, a: f32) -> Self {
-		return Self::from_mat4(self.matrix *  Mat4::rotate(a, vec3!(0, 1, 0)));
-	}
-
-	pub fn rotate_z(&self, a: f32) -> Self {
-		return Self::from_mat4(self.matrix *  Mat4::rotate(a, vec3!(0, 0, 1)));
+	pub fn rotate(&self, angle: f32, axis: Vec3) -> Self {
+		return Self::from_mat4(self.matrix *  Mat4::rotate(angle, axis));
 	}
 
 	pub fn as_mat4(&self) -> Mat4 {
@@ -72,36 +52,60 @@ impl Transform {
 // aliases
 impl Transform {
 
-	pub fn t(&self, p: Vec2) -> Self {
+	pub fn t3(&self, p: Vec3) -> Self {
 		return self.translate(p);
 	}
 
+	pub fn t2(&self, p: Vec2) -> Self {
+		return self.t3(vec3!(p.x, p.y, 0.0));
+	}
+
+	pub fn tx(&self, dx: f32) -> Self {
+		return self.t3(vec3!(dx, 0, 0));
+	}
+
+	pub fn ty(&self, dy: f32) -> Self {
+		return self.t3(vec3!(0, dy, 0));
+	}
+
+	pub fn tz(&self, dz: f32) -> Self {
+		return self.t3(vec3!(0, 0, dz));
+	}
+
 	pub fn r(&self, a: f32) -> Self {
-		return self.rotate(a);
-	}
-
-	pub fn s(&self, s: Vec2) -> Self {
-		return self.scale(s);
-	}
-
-	pub fn t3(&self, p: Vec3) -> Self {
-		return self.translate_3d(p);
+		return self.rz(a);
 	}
 
 	pub fn rx(&self, a: f32) -> Self {
-		return self.rotate_x(a);
+		return self.rotate(a, vec3!(1, 0, 0));
 	}
 
 	pub fn ry(&self, a: f32) -> Self {
-		return self.rotate_y(a);
+		return self.rotate(a, vec3!(0, 1, 0));
 	}
 
 	pub fn rz(&self, a: f32) -> Self {
-		return self.rotate_z(a);
+		return self.rotate(a, vec3!(0, 0, 1));
 	}
 
 	pub fn s3(&self, s: Vec3) -> Self {
-		return self.scale_3d(s);
+		return self.scale(s);
+	}
+
+	pub fn s2(&self, s: Vec2) -> Self {
+		return self.s3(vec3!(s.x, s.y, 1.0));
+	}
+
+	pub fn sx(&self, x: f32) -> Self {
+		return self.s3(vec3!(x, 1, 1));
+	}
+
+	pub fn sy(&self, y: f32) -> Self {
+		return self.s3(vec3!(1, y, 1));
+	}
+
+	pub fn sz(&self, z: f32) -> Self {
+		return self.s3(vec3!(1, 1, z));
 	}
 
 }

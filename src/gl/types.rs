@@ -87,7 +87,7 @@ bind_enum!(Face(u32) {
 	FrontAndBack => glow::FRONT_AND_BACK,
 });
 
-bind_enum!(Dir(u32) {
+bind_enum!(CullMode(u32) {
 	Clockwise => glow::CW,
 	CounterClockwise => glow::CCW,
 });
