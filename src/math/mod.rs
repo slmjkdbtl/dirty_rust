@@ -40,7 +40,7 @@ pub trait Lerpable =
 	+ Mul<f32, Output = Self>
 	;
 
-pub trait Lerp: Lerpable {
+pub trait Lerping: Lerpable {
 
 	/// linear interpolation
 	fn lerp(self, to: Self, amount: f32) -> Self {
@@ -59,7 +59,7 @@ pub trait Lerp: Lerpable {
 
 }
 
-impl<T: Lerpable> Lerp for T {}
+impl<T: Lerpable> Lerping for T {}
 
 pub trait Mappable =
 	Copy
@@ -69,7 +69,7 @@ pub trait Mappable =
 	+ Div<Self, Output = Self>
 	;
 
-pub trait Map: Mappable {
+pub trait Mapping: Mappable {
 
 	/// map a value to another range
 	fn map(self, a1: Self, a2: Self, b1: Self, b2: Self) -> Self {
@@ -78,7 +78,7 @@ pub trait Map: Mappable {
 
 }
 
-impl<T: Mappable> Map for T {}
+impl<T: Mappable> Mapping for T {}
 
 /// generate orthographic matrix
 pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {

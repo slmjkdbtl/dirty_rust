@@ -20,6 +20,9 @@ pub mod shapes;
 mod state;
 mod conf;
 
+#[cfg(feature = "gkit")]
+pub mod kit;
+
 pub use state::*;
 pub use conf::*;
 

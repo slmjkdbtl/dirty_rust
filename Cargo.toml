@@ -24,6 +24,7 @@ default = [
 	"img",
 	"audio",
 	"geom",
+	"gkit",
 # 	"http",
 # 	"ui",
 # 	"physics",
@@ -115,6 +116,7 @@ bin = [
 	"bincode",
 ]
 
+gkit = []
 geom = []
 ecs = []
 video = []
