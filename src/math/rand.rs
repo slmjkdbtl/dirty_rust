@@ -20,7 +20,34 @@ macro_rules! rand {
 	};
 
 	($x:expr) => {
-		$crate::rand!(0, $x)
+		$crate::rand!(0.0, $x)
+	};
+
+}
+
+#[macro_export]
+macro_rules! choose {
+
+	($c1:expr, $c2:expr) => {
+		{
+			let _tmp = rand!();
+			if _tmp < 1.0 / 2.0 {
+				$c1
+			} else {
+				$c2
+			}
+		}
+	};
+
+	($c1:expr, $c2:expr, $c3:expr) => {
+		{
+			let _tmp = rand!();
+			if _tmp < 1.0 / 2.0 {
+				$c1
+			} else {
+				$c2
+			}
+		}
 	};
 
 }

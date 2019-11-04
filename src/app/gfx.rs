@@ -53,6 +53,7 @@ pub trait Gfx {
 
 	// transform
 	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+	fn reset(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
 	// coord
 	fn coord(&self, coord: Origin) -> Vec2;
@@ -94,6 +95,18 @@ impl Gfx for Ctx {
 		let ot = self.transform;
 
 		self.transform = ot.apply(t);
+		f(self)?;
+		self.transform = ot;
+
+		return Ok(());
+
+	}
+
+	fn reset(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		let ot = self.transform;
+
+		self.transform = Transform::new();
 		f(self)?;
 		self.transform = ot;
 

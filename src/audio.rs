@@ -32,7 +32,7 @@ struct Effect {
 	speed: f32,
 	volume: f32,
 	repeat: bool,
-	fadein: u64,
+	fadein: f32,
 }
 
 /// a track has more control
@@ -55,7 +55,7 @@ impl Default for Effect {
 			speed: 1.0,
 			volume: 1.0,
 			repeat: false,
-			fadein: 0,
+			fadein: 0.0,
 		};
 	}
 }
@@ -77,6 +77,10 @@ impl Sound {
 
 	pub fn play(&self) -> Result<()> {
 		return Ok(rodio::play_raw(&get_device()?, self.apply().convert_samples()));
+	}
+
+	pub fn into_track(self) -> Result<Track> {
+		return Track::from_sound(self);
 	}
 
 	/// return a new sound with given speed
@@ -115,7 +119,7 @@ impl Sound {
 	}
 
 	/// return a new sound with given fadein time
-	pub fn fadein(&self, time: u64) -> Self {
+	pub fn fadein(&self, time: f32) -> Self {
 		return Self {
 			effect: Effect {
 				fadein: time,
@@ -144,8 +148,8 @@ impl Sound {
 			s
 		};
 
-		let s: Box<S> = if effect.fadein != 0 {
-			box s.fade_in(Duration::from_millis(effect.fadein))
+		let s: Box<S> = if effect.fadein != 0.0 {
+			box s.fade_in(Duration::from_secs_f32(effect.fadein))
 		} else {
 			s
 		};
@@ -164,7 +168,11 @@ impl Sound {
 
 impl Track {
 
-	pub fn from(sound: Sound) -> Result<Self> {
+	pub fn from_bytes(data: &[u8]) -> Result<Self> {
+		return Self::from_sound(Sound::from_bytes(data)?);
+	}
+
+	pub fn from_sound(sound: Sound) -> Result<Self> {
 
 		let device = get_device()?;
 		let sink = Sink::new(&device);
