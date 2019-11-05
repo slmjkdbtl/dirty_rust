@@ -25,7 +25,6 @@
 - [gfx] bevel and miter line join
 - [gfx] ellipse
 - [gfx] integrate projection into camera
-- [gfx] dashed lines
 - [geom] integrate collision detection with shape (?)
 - [misc] wasm
 - [app] upgrade to glutin 0.22
@@ -153,4 +152,5 @@
 - [gfx] read gltf files
 - [gfx] depth buffer in 2d pipeline
 - [gfx] cubemap / skybox
+- [gfx] dashed lines
 

@@ -137,7 +137,7 @@ impl Model {
 					.map(|colors| {
 						return colors
 							.into_rgba_f32()
-							.map(|c| color!(c[0], c[1], c[2], c[3]))
+							.map(|c| rgba!(c[0], c[1], c[2], c[3]))
 							.collect::<Vec<Color>>();
 					})
 					.unwrap_or(vec![]);
@@ -159,7 +159,7 @@ impl Model {
 					let v = Vertex3D {
 						pos: positions[i],
 						normal: normals[i],
-						color: colors.get(i).cloned().unwrap_or(color!(1)),
+						color: colors.get(i).cloned().unwrap_or(rgba!(1)),
 						uv: texcoords.get(i).cloned().unwrap_or(vec2!(0)),
 					};
 
@@ -263,7 +263,7 @@ impl Model {
 					.map(|colors| {
 						return colors
 							.into_rgba_f32()
-							.map(|c| color!(c[0], c[1], c[2], c[3]))
+							.map(|c| rgba!(c[0], c[1], c[2], c[3]))
 							.collect::<Vec<Color>>();
 					})
 					.unwrap_or(vec![]);
@@ -285,7 +285,7 @@ impl Model {
 					let v = Vertex3D {
 						pos: positions[i],
 						normal: normals[i],
-						color: colors.get(i).cloned().unwrap_or(color!(1)),
+						color: colors.get(i).cloned().unwrap_or(rgba!(1)),
 						uv: texcoords.get(i).cloned().unwrap_or(vec2!(0)),
 					};
 
@@ -346,8 +346,8 @@ impl Model {
 
 			let color = mtl
 				.map(|m| m.diffuse)
-				.map(|d| color!(d[0], d[1], d[2], 1.0))
-				.unwrap_or(color!());
+				.map(|d| rgba!(d[0], d[1], d[2], 1.0))
+				.unwrap_or(rgba!());
 
 			for i in 0..vert_count {
 

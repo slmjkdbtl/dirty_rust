@@ -78,7 +78,7 @@ impl gfx::Drawable for Area {
 			ctx.draw(
 				&shapes::polygon(&self.verts)
 					.no_fill()
-					.stroke(color!(0, 1, 1, 1))
+					.stroke(rgba!(0, 1, 1, 1))
 			)?;
 // 			return Ok(());
 // 		})?;

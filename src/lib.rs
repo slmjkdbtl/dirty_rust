@@ -20,6 +20,8 @@
 mod helpers;
 mod res;
 
+pub use helpers::lstatic;
+
 pub mod math;
 pub mod task;
 

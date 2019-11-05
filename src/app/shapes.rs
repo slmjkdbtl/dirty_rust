@@ -22,7 +22,7 @@ impl<'a> Sprite<'a> {
 		return Self {
 			tex: tex,
 			quad: quad!(0, 0, 1, 1),
-			color: color!(1),
+			color: rgba!(1),
 			offset: None,
 			flip: gfx::Flip::None,
 		};
@@ -105,7 +105,7 @@ impl<'a> Text<'a> {
 			content: s,
 			font: None,
 			align: None,
-			color: color!(1),
+			color: rgba!(1),
 			wrap: None,
 		};
 	}
@@ -261,7 +261,7 @@ impl Polygon {
 	pub fn from_pts(pts: &[Vec2]) -> Self {
 		return Self {
 			pts: pts.to_vec(),
-			fill: Some(color!()),
+			fill: Some(rgba!()),
 			stroke: None,
 			radius: None,
 		};
@@ -525,7 +525,7 @@ impl Rect {
 			p2: p2,
 			radius: None,
 			stroke: None,
-			fill: Some(color!(1)),
+			fill: Some(rgba!(1)),
 		};
 	}
 	pub fn from_size(w: f32, h: f32) -> Self {
@@ -621,7 +621,7 @@ impl Line {
 			p1: p1,
 			p2: p2,
 			width: 1.0,
-			color: color!(1),
+			color: rgba!(1),
 			cap: LineCap::Butt,
 			dash: None,
 		};
@@ -659,29 +659,59 @@ impl Drawable for Line {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let len = (self.p2 - self.p1).mag();
-		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
+		if let Some(dash) = self.dash {
 
-		ctx.push(&gfx::t()
+			let dis = Vec2::dis(self.p1, self.p2);
+			let unit = (self.p2 - self.p1).normalize();
+			let count = f32::ceil(dis / (dash.len + dash.interval)) as usize;
 
-			.t2((self.p1 + self.p2) * 0.5)
-			.r(rot)
+			for i in 1..=count {
 
-		, |ctx| {
+				let tp1 = self.p1 + unit * (i - 1) as f32 * dash.len + unit * (i - 1) as f32 * dash.interval;
+				let mut tp2 = self.p1 + unit * i as f32 * dash.len + unit * (i - 1) as f32 * dash.interval;
 
-			let w = len;
-			let h = self.width;
+				if i == count {
+					tp2 = self.p2;
+				}
 
-			ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
+				ctx.draw(&Line {
+					p1: tp1,
+					p2: tp2,
+					width: self.width,
+					color: self.color,
+					cap: self.cap,
+					dash: None,
+				})?;
 
-			if let LineCap::Round = self.cap {
-				ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
-				ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
 			}
 
-			return Ok(());
+		} else {
 
-		})?;
+			let len = (self.p2 - self.p1).mag();
+			let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
+
+			ctx.push(&gfx::t()
+
+				.t2((self.p1 + self.p2) * 0.5)
+				.r(rot)
+
+			, |ctx| {
+
+				let w = len;
+				let h = self.width;
+
+				ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
+
+				if let LineCap::Round = self.cap {
+					ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
+					ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
+				}
+
+				return Ok(());
+
+			})?;
+
+		}
 
 		return Ok(());
 
@@ -790,7 +820,7 @@ impl<'a> Points<'a> {
 		return Self {
 			pts: pts,
 			size: 1.0,
-			color: color!(1),
+			color: rgba!(1),
 			mode: PointMode::Rect,
 		};
 	}
@@ -854,7 +884,7 @@ impl Circle {
 			radius: radius,
 			segments: None,
 			stroke: None,
-			fill: Some(color!(1)),
+			fill: Some(rgba!(1)),
 			range: (0.0, 2.0 * PI),
 		};
 	}
@@ -1039,7 +1069,7 @@ impl<'a> Canvas<'a> {
 	pub fn new(c: &'a gfx::Canvas) -> Self {
 		return Self {
 			canvas: c,
-			color: color!(1),
+			color: rgba!(1),
 		};
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -1084,7 +1114,7 @@ impl<'a> Model<'a> {
 	pub fn new(m: &'a gfx::Model) -> Self {
 		return Self {
 			mesh: m,
-			color: color!(1),
+			color: rgba!(1),
 			bound: false,
 			wireframe: false,
 		};
@@ -1157,7 +1187,7 @@ impl<'a> Skybox<'a> {
 	pub fn new(s: &'a gfx::Skybox) -> Self {
 		return Self {
 			skybox: s,
-			color: color!(1),
+			color: rgba!(1),
 		};
 	}
 }
@@ -1219,7 +1249,7 @@ impl Drawable for Cube {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,
 				model: ctx.transform,
-				color: color!(),
+				color: rgba!(),
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),
 			},
@@ -1248,7 +1278,7 @@ impl Line3D {
 		return Self {
 			p1: p1,
 			p2: p2,
-			color: color!(),
+			color: rgba!(),
 			width: 1.0,
 		};
 	}
@@ -1288,7 +1318,7 @@ impl Drawable for Line3D {
 				proj: ctx.proj_3d,
 				view: ctx.view_3d,
 				model: ctx.transform,
-				color: color!(),
+				color: rgba!(),
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),
 			},
@@ -1324,7 +1354,7 @@ impl Rect3D {
 		return Self {
 			p1: p1,
 			p2: p2,
-			color: color!(),
+			color: rgba!(),
 		};
 	}
 	pub fn color(mut self, c: Color) -> Self {
@@ -1384,7 +1414,7 @@ impl Circle3D {
 		return Self {
 			pt: p,
 			radius: r,
-			color: color!(),
+			color: rgba!(),
 		};
 	}
 	pub fn color(mut self, c: Color) -> Self {
@@ -1430,7 +1460,7 @@ impl<'a> Sprite3D<'a> {
 		return Self {
 			tex: tex,
 			quad: quad!(0, 0, 1, 1),
-			color: color!(1),
+			color: rgba!(1),
 			offset: vec2!(0),
 			flip: gfx::Flip::None,
 		};
@@ -1484,7 +1514,7 @@ impl<'a> Drawable for Sprite3D<'a> {
 					proj: ctx.proj_3d,
 					view: ctx.view_3d,
 					model: ctx.transform,
-					color: color!(),
+					color: rgba!(),
 					tex: self.tex.clone(),
 					custom: ctx.cur_custom_uniform_3d.clone(),
 				},

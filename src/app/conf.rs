@@ -61,7 +61,7 @@ impl Default for Conf {
 			cursor_hidden: false,
 			cursor_locked: false,
 			fps_cap: Some(60),
-			clear_color: color!(0, 0, 0, 1),
+			clear_color: rgba!(0, 0, 0, 1),
 			origin: gfx::Origin::Center,
 			texture_filter: gfx::FilterMode::Nearest,
 			scale_mode: gfx::ScaleMode::Stretch,
