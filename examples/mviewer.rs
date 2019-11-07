@@ -331,7 +331,7 @@ impl app::State for Viewer {
 		}
 
 		ctx.push(&gfx::t()
-			.t(vec2!(24))
+			.t2(vec2!(24))
 		, |ctx| {
 
 			if self.loader.phase() == TaskPhase::Working {
@@ -343,8 +343,8 @@ impl app::State for Viewer {
 				ctx.draw(&shapes::text("drag 3d model files into this window"))?;
 
 				ctx.push(&gfx::t()
-					.t(vec2!(0, 22))
-					.s(vec2!(0.8))
+					.t2(vec2!(0, 22))
+					.s2(vec2!(0.8))
 				, |ctx| {
 
 					ctx.draw(&shapes::text("H: help"))?;
@@ -360,8 +360,8 @@ impl app::State for Viewer {
 		})?;
 
 		ctx.push(&gfx::t()
-			.t(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
-			.s(vec2!(0.8))
+			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
+			.s2(vec2!(0.8))
 		, |ctx| {
 
 			if self.helping {
@@ -383,7 +383,7 @@ impl app::State for Viewer {
 					.enumerate()
 				{
 					ctx.draw_t(&gfx::t()
-						.t(vec2!(0, i as i32 * -18))
+						.t2(vec2!(0, i as i32 * -18))
 					, &shapes::text(m)
 						.align(gfx::Origin::BottomLeft)
 					)?;

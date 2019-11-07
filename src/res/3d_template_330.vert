@@ -23,7 +23,7 @@ void main() {
 	v_pos = (u_model * vec4(a_pos, 1.0)).xyz;
 	v_uv = a_uv;
 	v_color = a_color;
-	v_normal = a_normal;
+	v_normal = normalize((u_model * vec4(a_normal, 1.0)).xyz);
 	gl_Position = vert();
 
 }

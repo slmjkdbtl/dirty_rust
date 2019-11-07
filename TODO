@@ -4,6 +4,8 @@
 - [gfx] investigate the extreme slowness of the 2d renderer
 - [gfx] draw curve
 - [gfx] scale modes
+- [gfx] canvas projection matrix
+- [gfx] z when drawing 3d on top of 2d
 
 == TODO
 - [http] use rustls instead of native-tls

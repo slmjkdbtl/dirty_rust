@@ -178,7 +178,7 @@ impl app::State for Game {
 
 				if let Some(effect) = self.effects.get(cur_effect) {
 
-					ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(color!(0, 1, 1, 1)))?;
+					ctx.draw(shapes::text(&format!("effect: {}", effect.name)).color(rgba!(0, 1, 1, 1)))?;
 
 					if let Some(param) = &effect.param {
 

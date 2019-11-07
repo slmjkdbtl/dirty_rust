@@ -26,7 +26,7 @@ impl app::State for Game {
 
 // 				let b = c.round();
 
-				img.set(x, y, color!(b, b, b, 1))?;
+				img.set(x, y, rgba!(b, b, b, 1))?;
 
 			}
 
@@ -39,7 +39,7 @@ impl app::State for Game {
 					.get(x, y)
 					.expect("oh no");
 
-				let nc = color!(c.r.round(), c.g.round(), c.b.round(), 1);
+				let nc = rgba!(c.r.round(), c.g.round(), c.b.round(), 1);
 
 				img.set(x, y, nc)?;
 
