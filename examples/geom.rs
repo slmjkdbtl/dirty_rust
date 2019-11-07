@@ -52,9 +52,9 @@ impl app::State for Game {
 				ctx.coord(gfx::Origin::Top),
 				ctx.coord(gfx::Origin::Bottom),
 				&[
-					(color!(0.4, 1, 1, 1), 0.0),
-					(color!(1, 1, 0.6, 1), 0.5),
-					(color!(1, 0.4, 0.8, 1), 1.0),
+					(rgba!(0.4, 1, 1, 1), 0.0),
+					(rgba!(1, 1, 0.6, 1), 0.5),
+					(rgba!(1, 0.4, 0.8, 1), 1.0),
 				],
 			)
 				.width(640.0)
@@ -69,25 +69,25 @@ impl app::State for Game {
 
 		ctx.draw(
 			&polygon(&self.pts)
-				.stroke(color!(1.0))
+				.stroke(rgba!(1.0))
 				.no_fill()
 				.line_width(1.0)
 		)?;
 
 		ctx.draw(
 			&circle(vec2!(0), 120.0)
-				.fill(color!(1, 0, 1, 1))
+				.fill(rgba!(1, 0, 1, 1))
 		)?;
 
 		ctx.draw(
 			&rect(vec2!(-72, -54), vec2!(72, 54))
-				.fill(color!(0, 1, 1, 1))
+				.fill(rgba!(0, 1, 1, 1))
 				.radius(12.0)
 		)?;
 
 		ctx.draw(
 			&rect(vec2!(-48, -32), vec2!(48, 32))
-				.stroke(color!(1, 1, 0, 1))
+				.stroke(rgba!(1, 1, 0, 1))
 				.no_fill()
 				.line_width(2.0)
 				.radius(12.0)
@@ -95,7 +95,7 @@ impl app::State for Game {
 
 		ctx.draw(
 			&text("geom")
-				.color(color!(0, 0, 1, 1))
+				.color(rgba!(0, 0, 1, 1))
 		)?;
 
 		ctx.draw(

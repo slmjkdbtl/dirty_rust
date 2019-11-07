@@ -70,7 +70,7 @@ impl app::State for Game {
 // 		model.update(|data| {
 // 			for m in data {
 // 				for v in &mut m.vertices {
-// 					v.color = color!(rand!(), rand!(), rand!(), 1);
+// 					v.color = rgba!(rand!(), rand!(), rand!(), 1);
 // 				}
 // 			}
 // 		});
@@ -193,8 +193,8 @@ impl app::State for Game {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
 					diffuse: 0.4,
-					specular: 0.4,
-					shininess: 16.0,
+					specular: 1.0,
+					shininess: 32.0,
 					view_pos: self.cam.pos(),
 				}, |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;

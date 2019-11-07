@@ -136,7 +136,6 @@ impl Gfx for Ctx {
 		let o_proj_3d = self.proj_3d;
 		let t = self.transform;
 
-		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 		self.cur_canvas = Some(canvas.clone());
 
 		self.proj_2d = o_proj_2d.flip_y();
@@ -145,17 +144,15 @@ impl Gfx for Ctx {
 
 		canvas.gl_fbuf().with(|| -> Result<()> {
 			f(self)?;
+			flush(self);
 			return Ok(());
 		})?;
-
-		flush(self);
 
 		self.transform = t;
 		self.proj_2d = o_proj_2d;
 		self.proj_3d = o_proj_3d;
 
 		self.cur_canvas = None;
-		self.gl.viewport(0, 0, self.width() * self.dpi() as i32, self.height() * self.dpi() as i32);
 
 		return Ok(());
 

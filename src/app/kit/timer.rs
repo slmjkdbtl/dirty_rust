@@ -17,7 +17,11 @@ impl Timer {
 		}
 	}
 
-	pub fn reset(&mut self, time: f32,) {
+	pub fn reset(&mut self) {
+		self.reset_to(self.limit);
+	}
+
+	pub fn reset_to(&mut self, time: f32,) {
 
 		self.time = 0.0;
 		self.limit = time;

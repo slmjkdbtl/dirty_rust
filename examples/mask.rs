@@ -1,4 +1,4 @@
-// wengwengweng
+rgba!gwengweng
 
 use dirty::*;
 use dirty::app::*;
@@ -51,9 +51,9 @@ impl app::State for Game {
 						vec2!(0, -80),
 						vec2!(0, 80),
 						&[
-							(color!(0.4, 1, 1, 1), 0.0),
-							(color!(1, 1, 0.6, 1), 0.5),
-							(color!(1, 0.4, 0.8, 1), 1.0),
+							(rgba!(0.4, 1, 1, 1), 0.0),
+							(rgba!(1, 1, 0.6, 1), 0.5),
+							(rgba!(1, 0.4, 0.8, 1), 1.0),
 						],
 					).width(160.0));
 				});

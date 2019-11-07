@@ -66,9 +66,9 @@ impl app::State for Game {
 		, |ctx| {
 			let fps = ctx.fps();
 			let c = if fps >= 60 {
-				color!(0, 1, 0, 1)
+				rgba!(0, 1, 0, 1)
 			} else {
-				color!(1, 0, 0, 1)
+				rgba!(1, 0, 0, 1)
 			};
 			ctx.draw(&shapes::text(&format!("{}", fps)).color(c))?;
 			return Ok(());
