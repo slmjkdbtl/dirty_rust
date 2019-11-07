@@ -192,9 +192,9 @@ impl app::State for Game {
 				ctx.draw_3d_with(&self.shader, &LightUniform {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
-					diffuse: 0.4,
-					specular: 1.0,
-					shininess: 32.0,
+					diffuse: 0.2,
+					specular: 0.1,
+					shininess: 16.0,
 					view_pos: self.cam.pos(),
 				}, |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;

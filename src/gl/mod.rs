@@ -26,10 +26,10 @@ use glow::HasContext;
 use crate::Error;
 use crate::Result;
 
-#[cfg(not(web))]
 pub(self) type GLCtx = glow::Context;
+
 #[cfg(web)]
-pub(self) type GLCtx = glow::web::Context;
+use webgl_stdweb::WebGL2RenderingContext;
 
 pub(self) type BufferID = <GLCtx as HasContext>::Buffer;
 pub(self) type ProgramID = <GLCtx as HasContext>::Program;
@@ -51,6 +51,13 @@ impl Device {
 	pub fn from_loader<F: FnMut(&str) -> *const std::os::raw::c_void>(f: F) -> Self {
 		return Self {
 			ctx: Rc::new(GLCtx::from_loader_function(f)),
+		};
+	}
+
+	#[cfg(web)]
+	pub fn from_webgl2_ctx(c: WebGL2RenderingContext) -> Self {
+		return Self {
+			ctx: Rc::new(GLCtx::from_webgl2_context(c)),
 		};
 	}
 
