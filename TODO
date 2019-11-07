@@ -79,6 +79,7 @@
 - [gl] deferred rendering (?)
 - [gfx] custom pipeline
 - [gfx] fix gl viewport weirdness after fullscreen
+- [gfx] draw gizmo
 
 == DONE
 - [http] refactor http

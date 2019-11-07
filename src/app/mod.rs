@@ -49,7 +49,7 @@ use glutin::Api;
 #[cfg(not(web))]
 use glutin::GlRequest;
 #[cfg(web)]
-use glow::RenderLoop;
+use glow::HasRenderLoop;
 
 use derive_more::*;
 
@@ -88,15 +88,13 @@ pub struct Ctx {
 
 	#[cfg(not(web))]
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	#[cfg(web)]
-	pub(self) render_loop: glow::web::RenderLoop,
 	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
 
-// 	pub(self) backbuffer: gfx::Canvas,
+//	pub(self) backbuffer: gfx::Canvas,
 
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
@@ -168,7 +166,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 				.with_title_hidden(conf.hide_title)
 				.with_titlebar_transparent(conf.titlebar_transparent)
 				.with_fullsize_content_view(conf.titlebar_transparent)
-// 				.with_disallow_hidpi(!conf.hidpi)
+//				.with_disallow_hidpi(!conf.hidpi)
 				;
 
 		}
@@ -197,37 +195,39 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	};
 
-	// TODO: wait till glow supports stdweb
 	#[cfg(web)]
 	let (gl, render_loop) = {
 
-		use stdweb::web;
-		use web::IElement;
-		use web::INode;
-		use web::html_element::CanvasElement;
-		use stdweb::unstable::TryInto;
+		use stdweb::{
+			traits::*,
+			unstable::TryInto,
+			web::{document, html_element::*},
+		};
 
-		let document = web::document();
+		use webgl_stdweb::WebGL2RenderingContext;
 
-		document.set_title(&conf.title);
-
-		let canvas: CanvasElement = document
-			.create_element("canvas")?
+		let canvas: CanvasElement = document()
+			.create_element("canvas")
+			.unwrap()
 			.try_into()
-			.map_err(|_| Error::Web(format!("failed to create canvas")))?;
+			.unwrap();
 
-		let body = document
+		document()
 			.body()
-			.ok_or(Error::Web(format!("failed to get document body")))?;
+			.unwrap()
+			.append_child(&canvas);
 
-		body.append_child(&canvas);
-		canvas.set_width(conf.width as u32);
-		canvas.set_height(conf.height as u32);
+		canvas.set_width(640);
+		canvas.set_height(480);
 
-		let gl_ctx = canvas.get_context()?;
-		let render_loop = glow::web::RenderLoop::from_request_animation_frame();
+		let webgl2_ctx: WebGL2RenderingContext = canvas
+			.get_context()
+			.unwrap();
 
-		((), render_loop)
+		(
+			gl::Device::from_webgl2_ctx(webgl2_ctx),
+			glow::RenderLoop::from_request_animation_frame(),
+		)
 
 	};
 
@@ -253,8 +253,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
-// 	gl.enable(gl::Capability::CullFace);
-// 	gl.cull_face(gl::Face::Back);
+//	gl.enable(gl::Capability::CullFace);
+//	gl.cull_face(gl::Face::Back);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(c.r, c.g, c.b, c.a);
@@ -317,12 +317,10 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 		#[cfg(not(web))]
 		windowed_ctx: windowed_ctx,
-		#[cfg(web)]
-		render_loop: render_loop,
 		#[cfg(desktop)]
 		gamepad_ctx: gilrs::Gilrs::new()?,
 
-// 		backbuffer: gfx::Canvas,
+//		backbuffer: gfx::Canvas,
 
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
@@ -378,56 +376,70 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let mut s = S::init(&mut ctx)?;
 
-	'run: loop {
+	#[cfg(web)]
+	render_loop.run(move |running: &mut bool| {
 
-		let start_time = Instant::now();
-
-		input::poll(&mut ctx, &mut events_loop, &mut s)?;
-		s.update(&mut ctx)?;
+		s.update(&mut ctx);
 		gfx::begin(&mut ctx);
-		s.draw(&mut ctx)?;
+		s.draw(&mut ctx);
 		gfx::end(&mut ctx);
 
-		#[cfg(feature = "imgui")] {
+	});
 
-			let io = ctx.imgui_ctx.io_mut();
+	#[cfg(not(web))] {
 
-			ctx.imgui_platform.prepare_frame(io, &ctx.windowed_ctx.window())?;
-			io.update_delta_time(start_time);
+		'run: loop {
 
-			let ui = ctx.imgui_ctx.frame();
+			let start_time = Instant::now();
 
-			s.imgui(&ui)?;
+			input::poll(&mut ctx, &mut events_loop, &mut s)?;
+			s.update(&mut ctx)?;
+			gfx::begin(&mut ctx);
+			s.draw(&mut ctx)?;
+			gfx::end(&mut ctx);
 
-			ctx.imgui_platform.prepare_render(&ui, &ctx.windowed_ctx.window());
-			ctx.imgui_renderer.render(ui);
+			#[cfg(feature = "imgui")] {
 
-		}
+				let io = ctx.imgui_ctx.io_mut();
 
-		window::swap(&ctx)?;
+				ctx.imgui_platform.prepare_frame(io, &ctx.windowed_ctx.window())?;
+				io.update_delta_time(start_time);
 
-		if ctx.quit {
-			break 'run;
-		}
+				let ui = ctx.imgui_ctx.frame();
 
-		if let Some(fps_cap) = ctx.conf.fps_cap {
+				s.imgui(&ui)?;
 
-			let real_dt = start_time.elapsed().as_millis();
-			let expected_dt = (1000.0 / fps_cap as f32) as u128;
+				ctx.imgui_platform.prepare_render(&ui, &ctx.windowed_ctx.window());
+				ctx.imgui_renderer.render(ui);
 
-			if real_dt < expected_dt {
-				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
 			}
 
+			window::swap(&ctx)?;
+
+			if ctx.quit {
+				break 'run;
+			}
+
+			if let Some(fps_cap) = ctx.conf.fps_cap {
+
+				let real_dt = start_time.elapsed().as_millis();
+				let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+				if real_dt < expected_dt {
+					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+				}
+
+			}
+
+			ctx.dt.set_inner(start_time.elapsed());
+			ctx.time += ctx.dt;
+			ctx.fps_counter.tick(ctx.dt);
+
 		}
 
-		ctx.dt.set_inner(start_time.elapsed());
-		ctx.time += ctx.dt;
-		ctx.fps_counter.tick(ctx.dt);
+		s.quit(&mut ctx)?;
 
 	}
-
-	s.quit(&mut ctx)?;
 
 	return Ok(());
 

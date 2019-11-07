@@ -3,7 +3,7 @@
 use crate::*;
 use super::*;
 
-pub trait State: Sized {
+pub trait State: 'static + Sized {
 
 	fn init(_: &mut Ctx) -> Result<Self>;
 

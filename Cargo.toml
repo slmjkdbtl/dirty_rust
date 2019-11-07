@@ -57,10 +57,11 @@ app = [
 	"gilrs",
 	"glow",
 	"fontdue",
-	"stdweb",
 	"splines",
 	"tobj",
 	"gltf",
+	"stdweb",
+	"webgl_stdweb",
 ]
 
 img = [
@@ -198,4 +199,5 @@ core-foundation = { version = "0.6", optional = true }
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
 stdweb = { version = "0.4", optional = true }
+webgl_stdweb = { version = "0.3", optional = true }
 
