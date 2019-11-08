@@ -207,22 +207,27 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		use webgl_stdweb::WebGL2RenderingContext;
 
 		let canvas: CanvasElement = document()
-			.create_element("canvas")
-			.unwrap()
+			.create_element("canvas")?
 			.try_into()
-			.unwrap();
+			.map_err(|_| Error::Web(format!("failed to create canvas")))?;
 
-		document()
+		let doc = document();
+
+		let body = doc
 			.body()
-			.unwrap()
+			.ok_or(Error::Web(format!("failed to get document body")))?;
+
+		doc.set_title(&conf.title);
+
+		body
 			.append_child(&canvas);
 
-		canvas.set_width(640);
-		canvas.set_height(480);
+		canvas.set_width(conf.width as u32);
+		canvas.set_height(conf.height as u32);
 
 		let webgl2_ctx: WebGL2RenderingContext = canvas
 			.get_context()
-			.unwrap();
+			.map_err(|_| Error::Web(format!("failed to create canvas")))?;
 
 		(
 			gl::Device::from_webgl2_ctx(webgl2_ctx),

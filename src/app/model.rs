@@ -10,55 +10,82 @@ use super::gfx::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Material {
-	pub diffuse: f32,
-	pub specular: f32,
+	pub ambient: Color,
+	pub diffuse: Color,
+	pub specular: Color,
 	pub shininess: f32,
+}
+
+impl Material {
+
+	fn from_tobj(m: &tobj::Material) -> Self {
+
+		let am = m.ambient;
+		let df = m.diffuse;
+		let sp = m.specular;
+
+		return Self {
+			ambient: rgba!(am[0], am[1], am[2], 1.0),
+			diffuse: rgba!(df[0], df[1], df[2], 1.0),
+			specular: rgba!(sp[0], sp[1], sp[2], 1.0),
+			shininess: m.shininess,
+		};
+
+	}
+
 }
 
 impl Default for Material {
 	fn default() -> Self {
 		return Self {
-			diffuse: 0.0,
-			specular: 0.0,
-			shininess: 1.0,
+			ambient: rgba!(),
+			diffuse: rgba!(),
+			specular: rgba!(),
+			shininess: 0.0,
 		};
 	}
 }
 
 /// mesh data
-pub type MeshData = gl::MeshData<Vertex3D>;
+#[derive(Clone)]
+pub struct MeshData {
+	pub vertices: Vec<Vertex3D>,
+	pub indices: Vec<u32>,
+	pub mtl: Material,
+}
 
 /// model data
+#[derive(Clone)]
 pub struct ModelData {
 	meshes: Vec<MeshData>,
 	img: Option<img::Image>,
 }
 
+#[derive(Clone)]
+pub struct Mesh {
+	gl_mesh: Rc<gl::Mesh<Vertex3D, Uniform3D>>,
+	data: MeshData,
+}
+
+impl Mesh {
+	pub(super) fn gl_mesh(&self) -> &gl::Mesh<Vertex3D, Uniform3D> {
+		return &self.gl_mesh;
+	}
+	pub fn data(&self) -> &MeshData {
+		return &self.data;
+	}
+}
+
 /// 3d model
 #[derive(Clone)]
 pub struct Model {
-	meshdata: Vec<MeshData>,
+	meshes: Vec<Mesh>,
 	bound: (Vec3, Vec3),
 	center: Vec3,
-	meshes: Vec<Rc<gl::Mesh<Vertex3D, Uniform3D>>>,
 	texture: Option<Texture>,
-	material: Option<Material>,
 }
 
 impl Model {
-
-	// TODO
-	pub fn from_shape(ctx: &Ctx, s: impl gl::Shape<Vertex = Vertex3D>) -> Result<Self> {
-		let mesh = gl::Mesh::from_shape(&ctx.gl, s)?;
-		return Ok(Self {
-			meshdata: vec![],
-			meshes: vec![Rc::new(mesh)],
-			center: vec3!(),
-			bound: (vec3!(), vec3!()),
-			texture: None,
-			material: None,
-		});
-	}
 
 	pub fn load_file(path: impl AsRef<Path>) -> Result<ModelData> {
 
@@ -167,9 +194,10 @@ impl Model {
 
 				}
 
-				meshes.push(gl::MeshData {
+				meshes.push(MeshData {
 					vertices: verts,
 					indices: indices,
+					mtl: Material::default(),
 				});
 
 			}
@@ -293,9 +321,10 @@ impl Model {
 
 				}
 
-				meshes.push(gl::MeshData {
+				meshes.push(MeshData {
 					vertices: verts,
 					indices: indices,
+					mtl: Material::default(),
 				});
 
 			}
@@ -342,12 +371,9 @@ impl Model {
 
 			let mtl = m.material_id
 				.map(|id| materials.get(id))
-				.flatten();
-
-			let color = mtl
-				.map(|m| m.diffuse)
-				.map(|d| rgba!(d[0], d[1], d[2], 1.0))
-				.unwrap_or(rgba!());
+				.flatten()
+				.map(|m| Material::from_tobj(m))
+				.unwrap_or_default();
 
 			for i in 0..vert_count {
 
@@ -362,14 +388,15 @@ impl Model {
 					pos: vec3!(vx, vy, vz),
 					normal: normals[i],
 					uv: vec2!(tx, 1.0 - ty),
-					color: color,
+					color: rgba!(1),
 				});
 
 			}
 
-			meshes.push(gl::MeshData {
+			meshes.push(MeshData {
 				vertices: verts,
 				indices: m.indices,
+				mtl: mtl,
 			});
 
 		}
@@ -393,26 +420,28 @@ impl Model {
 		let meshdata = data.meshes;
 		let mut meshes = Vec::with_capacity(meshdata.len());
 
+		let (min, max) = get_bound(&meshdata);
+
 		let tex = if let Some(img) = data.img {
 			Some(Texture::from_img(ctx, img)?)
 		} else {
 			None
 		};
 
-		for m in &meshdata {
-			meshes.push(Rc::new(gl::Mesh::from_meshdata(&ctx.gl, m.clone())?));
+		for m in meshdata {
+			meshes.push(Mesh {
+				gl_mesh: Rc::new(gl::Mesh::from2(&ctx.gl, &m.vertices, &m.indices)?),
+				data: m,
+			});
 		}
 
-		let (min, max) = get_bound(&meshdata);
 		let center = (min + max) / 2.0;
 
 		return Ok(Self {
-			meshdata: meshdata,
 			meshes: meshes,
 			bound: (min, max),
 			center: center,
 			texture: tex,
-			material: None,
 		});
 
 	}
@@ -432,7 +461,7 @@ impl Model {
 		return Self::from_data(ctx, Self::load_gltf(path)?);
 	}
 
-	pub(super) fn meshes(&self) -> &[Rc<gl::Mesh<Vertex3D, Uniform3D>>] {
+	pub(super) fn meshes(&self) -> &[Mesh] {
 		return &self.meshes;
 	}
 
@@ -444,43 +473,35 @@ impl Model {
 		return self.texture.as_ref();
 	}
 
-	pub fn update(&mut self, f: impl FnOnce(&mut [MeshData])) {
+// 	pub fn update(&mut self, f: impl FnOnce(&mut [MeshData])) {
 
-		use gl::VertexLayout;
+// 		use gl::VertexLayout;
 
-		f(&mut self.meshdata);
+// 		f(&mut self.meshdata);
 
-		let (min, max) = get_bound(&self.meshdata);
+// 		let (min, max) = get_bound(&self.meshdata);
 
-		self.center = (min + max) / 2.0;
-		self.bound = (min, max);
+// 		self.center = (min + max) / 2.0;
+// 		self.bound = (min, max);
 
-		for (i, m) in self.meshdata.iter().enumerate() {
+// 		for (i, m) in self.meshdata.iter().enumerate() {
 
-			if let Some(mesh) = self.meshes.get(i) {
+// 			if let Some(mesh) = self.meshes.get(i) {
 
-				let mut queue = Vec::with_capacity(m.vertices.len() * Vertex3D::STRIDE);
+// 				let mut queue = Vec::with_capacity(m.vertices.len() * Vertex3D::STRIDE);
 
-				for v in &m.vertices {
-					v.push(&mut queue);
-				}
+// 				for v in &m.vertices {
+// 					v.push(&mut queue);
+// 				}
 
-				mesh.vbuf().data(0, &queue);
-				mesh.ibuf().data(0, &m.indices);
+// 				mesh.vbuf().data(0, &queue);
+// 				mesh.ibuf().data(0, &m.indices);
 
-			}
+// 			}
 
-		}
+// 		}
 
-	}
-
-	pub fn set_mtl(&mut self, mtl: Material) {
-		self.material = Some(mtl);
-	}
-
-	pub fn meshdata(&self) -> &[MeshData] {
-		return &self.meshdata;
-	}
+// 	}
 
 	pub fn center(&self) -> Vec3 {
 		return self.center;

@@ -10,6 +10,7 @@ use crate::Error;
 
 pub use image::ImageFormat as Format;
 
+#[derive(Clone)]
 pub struct Image {
 	handle: image::RgbaImage,
 }
