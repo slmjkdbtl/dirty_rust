@@ -20,10 +20,9 @@ void main() {
 
 }
 
-// in vec2 v_vert;
-// out vec4 o_color;
-
+// in vec2 vert;
+// out vec4 color;
 // void main() {
-// 	o_color = vec4(v_vert, 0.5, 1.0);
+// 	color = vec4(vert, 0.5, 1.0);
 // }
 

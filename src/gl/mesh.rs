@@ -6,12 +6,6 @@ use super::*;
 use crate::Result;
 
 #[derive(Clone)]
-pub struct MeshData<V: VertexLayout> {
-	pub vertices: Vec<V>,
-	pub indices: Vec<u32>,
-}
-
-#[derive(Clone)]
 pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
@@ -23,7 +17,7 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 
 impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
-	pub fn new(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
+	pub fn from(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
 
 		let vbuf = VertexBuffer::<V>::from(&device, &verts)?;
 		let ibuf = IndexBuffer::from(&device, &indices)?;
@@ -42,15 +36,16 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
-	pub fn from_meshdata(device: &Device, data: MeshData<V>) -> Result<Self> {
+	// TODO: name
+	pub fn from2(device: &Device, verts: &[V], indices: &[u32]) -> Result<Self> {
 
-		let mut verts = Vec::with_capacity(data.vertices.len() * V::STRIDE);
+		let mut queue = Vec::with_capacity(verts.len() * V::STRIDE);
 
-		for v in data.vertices {
-			v.push(&mut verts);
+		for v in verts {
+			v.push(&mut queue);
 		}
 
-		return Self::new(device, &verts, &data.indices);
+		return Self::from(device, &queue, &indices);
 
 	}
 
@@ -59,7 +54,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 		let mut verts = Vec::with_capacity(S::COUNT * S::Vertex::STRIDE);
 		shape.vertices(&mut verts);
 
-		return Self::new(device, &verts, &S::indices());
+		return Self::from(device, &verts, &S::indices());
 
 	}
 

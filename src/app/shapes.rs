@@ -1217,14 +1217,15 @@ impl<'a> Drawable for Model<'a> {
 		};
 
 		for m in self.mesh.meshes() {
-			m.draw(
+			m.gl_mesh().draw(
 				prim,
 				&ctx.cur_pipeline_3d,
 				&gfx::Uniform3D {
 					proj: ctx.proj_3d,
 					view: ctx.view_3d,
 					model: ctx.transform,
-					color: self.color,
+					// TODO: ?
+					color: self.color * m.data().mtl.diffuse,
 					tex: tex.clone(),
 					custom: ctx.cur_custom_uniform_3d.clone(),
 				},

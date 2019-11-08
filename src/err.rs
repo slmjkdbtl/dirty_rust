@@ -165,6 +165,13 @@ impl From<stdweb::serde::ConversionError> for Error {
 	}
 }
 
+// #[cfg(all(feature = "app", web))]
+// impl From<stdweb::serde::ConversionError> for Error {
+// 	fn from(_: stdweb::serde::ConversionError) -> Self {
+// 		return Error::Web(format!("conversion"));
+// 	}
+// }
+
 #[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {
 	fn from(_: rodio::decoder::DecoderError) -> Self {

@@ -6,6 +6,7 @@
 - [gfx] scale modes
 - [gfx] canvas projection matrix
 - [gfx] z when drawing 3d on top of 2d
+- [gfx] wasm blank screen
 
 == TODO
 - [http] use rustls instead of native-tls
