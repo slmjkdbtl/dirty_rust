@@ -256,10 +256,10 @@ impl ops::Mul<Vec2> for Mat4 {
 #[macro_export]
 macro_rules! mat4 {
 	() => {
-		crate::math::Mat4::identity()
+		$crate::math::Mat4::identity()
 	};
 	($($v:expr),+$(,)?) => {
-		crate::math::Mat4::new([ $($v,)+ ])
+		$crate::math::Mat4::new([ $($v,)+ ])
 	};
 }
 

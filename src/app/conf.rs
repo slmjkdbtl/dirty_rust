@@ -26,6 +26,8 @@ pub struct Conf {
 	pub texture_filter: gfx::FilterMode,
 	pub scale_mode: gfx::ScaleMode,
 	pub scale: u8,
+	pub near: f32,
+	pub far: f32,
 }
 
 impl Conf {
@@ -66,6 +68,8 @@ impl Default for Conf {
 			texture_filter: gfx::FilterMode::Nearest,
 			scale_mode: gfx::ScaleMode::Stretch,
 			scale: 1,
+			near: -1024.0,
+			far: 1024.0,
 		};
 	}
 

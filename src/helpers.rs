@@ -11,6 +11,15 @@ macro_rules! export {
 }
 
 #[allow(unused_macros)]
+macro_rules! mexport {
+	($name:ident) => {
+		#[macro_use]
+		mod $name;
+		pub use $name::*;
+	}
+}
+
+#[allow(unused_macros)]
 #[macro_export]
 macro_rules! hashmap {
 	($($key:expr => $val:expr),*$(,)?) => {

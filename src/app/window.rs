@@ -26,7 +26,7 @@ pub trait Window {
 	fn set_title(&mut self, t: &str);
 	fn title(&self) -> &str;
 
-	fn dpi(&self) -> f64;
+	fn dpi(&self) -> f32;
 
 	fn width(&self) -> i32;
 	fn height(&self) -> i32;
@@ -127,12 +127,12 @@ impl Window for Ctx {
 	}
 
 	#[cfg(not(web))]
-	fn dpi(&self) -> f64 {
-		return self.windowed_ctx.window().get_hidpi_factor();
+	fn dpi(&self) -> f32 {
+		return self.windowed_ctx.window().get_hidpi_factor() as f32;
 	}
 
 	#[cfg(web)]
-	fn dpi(&self) -> f64 {
+	fn dpi(&self) -> f32 {
 		return 1.0;
 	}
 

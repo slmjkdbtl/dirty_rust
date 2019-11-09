@@ -135,12 +135,23 @@ impl Gfx for Ctx {
 		let o_proj_2d = self.proj_2d;
 		let o_proj_3d = self.proj_3d;
 		let t = self.transform;
+		let dpi = self.dpi();
 
 		self.cur_canvas = Some(canvas.clone());
 
-		self.proj_2d = o_proj_2d.flip_y();
+		let proj_2d = gfx::OrthoProj {
+			width: canvas.width() as f32 / dpi,
+			height: canvas.height() as f32 / dpi,
+			near: self.conf.near,
+			far: self.conf.far,
+			origin: self.conf.origin,
+		}.as_mat4();
+
+		self.proj_2d = proj_2d.flip_y();
 		self.proj_3d = o_proj_3d.flip_y();
 		self.transform = Transform::new();
+
+		self.gl.viewport(0, 0, canvas.width(), canvas.height());
 
 		canvas.gl_fbuf().with(|| -> Result<()> {
 			f(self)?;
@@ -153,6 +164,13 @@ impl Gfx for Ctx {
 		self.proj_3d = o_proj_3d;
 
 		self.cur_canvas = None;
+
+		self.gl.viewport(
+			0,
+			0,
+			(self.conf.width as f32 * dpi) as i32,
+			(self.conf.height as f32 * dpi) as i32,
+		);
 
 		return Ok(());
 
@@ -364,6 +382,78 @@ pub enum Flip {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub struct PerspProj {
+	pub fov: f32,
+	pub aspect: f32,
+	pub near: f32,
+	pub far: f32,
+}
+
+impl PerspProj {
+
+	pub fn as_mat4(&self) -> Mat4 {
+
+		let f = 1.0 / (self.fov / 2.0).tan();
+
+		return mat4!(
+			-f / self.aspect, 0.0, 0.0, 0.0,
+			0.0, f, 0.0, 0.0,
+			0.0, 0.0, (self.far + self.near) / (self.far - self.near), 1.0,
+			0.0, 0.0, -(2.0 * self.far * self.near) / (self.far - self.near), 0.0,
+		);
+
+	}
+
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct OrthoProj {
+	pub width: f32,
+	pub height: f32,
+	pub near: f32,
+	pub far: f32,
+	pub origin: Origin,
+}
+
+impl OrthoProj {
+
+	pub fn as_mat4(&self) -> Mat4 {
+
+		use Origin::*;
+
+		let w = self.width as f32;
+		let h = self.height as f32;
+		let near = self.near;
+		let far = self.far;
+
+		let (left, right, bottom, top) = match self.origin {
+			TopLeft => (0.0, w, h, 0.0),
+			Top => (-w / 2.0, w / 2.0, h, 0.0),
+			TopRight => (-w, 0.0, h, 0.0),
+			Left => (0.0, w, h / 2.0, -h / 2.0),
+			Center => (-w / 2.0, w / 2.0, h / 2.0, -h / 2.0),
+			Right => (-w, 0.0, h / 2.0, -h / 2.0),
+			BottomLeft => (0.0, w, 0.0, -h),
+			Bottom => (-w / 2.0, w / 2.0, 0.0, -h),
+			BottomRight => (-w, 0.0, 0.0, -h),
+		};
+
+		let tx = -(right + left) / (right - left);
+		let ty = -(top + bottom) / (top - bottom);
+		let tz = -(far + near) / (far - near);
+
+		return mat4!(
+			2.0 / (right - left), 0.0, 0.0, 0.0,
+			0.0, 2.0 / (top - bottom), 0.0, 0.0,
+			0.0, 0.0, 2.0 / (near - far), 0.0,
+			tx, ty, tz, 1.0,
+		);
+
+	}
+
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Origin {
 	TopLeft,
 	Top,
@@ -377,27 +467,6 @@ pub enum Origin {
 }
 
 impl Origin {
-
-	pub fn to_ortho(&self, w: i32, h: i32, near: f32, far: f32) -> Mat4 {
-
-		use Origin::*;
-
-		let w = w as f32;
-		let h = h as f32;
-
-		return match self {
-			TopLeft => ortho(0.0, w, h, 0.0, near, far),
-			Top => ortho(-w / 2.0, w / 2.0, h, 0.0, near, far),
-			TopRight => ortho(-w, 0.0, h, 0.0, near, far),
-			Left => ortho(0.0, w, h / 2.0, -h / 2.0, near, far),
-			Center => ortho(-w / 2.0, w / 2.0, h / 2.0, -h / 2.0, near, far),
-			Right => ortho(-w, 0.0, h / 2.0, -h / 2.0, near, far),
-			BottomLeft => ortho(0.0, w, 0.0, -h, near, far),
-			Bottom => ortho(-w / 2.0, w / 2.0, 0.0, -h, near, far),
-			BottomRight => ortho(-w, 0.0, 0.0, -h, near, far),
-		};
-
-	}
 
 	pub fn as_pt(&self) -> Vec2 {
 

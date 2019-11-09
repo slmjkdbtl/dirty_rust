@@ -1,92 +1,10 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::app::*;
-use dirty::math::*;
+use app::*;
+use kit::*;
+use math::*;
 use input::Key;
-
-struct Sprite {
-
-	tex: gfx::Texture,
-	frames: Vec<Quad>,
-	cur_frame: usize,
-	looping: bool,
-
-}
-
-impl Sprite {
-
-	pub fn new(tex: gfx::Texture) -> Self {
-
-		return Self {
-			tex: tex,
-			frames: vec![quad!(0, 0, 1, 1)],
-			cur_frame: 0,
-			looping: true,
-		};
-	}
-
-	pub fn width(&self) -> f32 {
-		return self.frames[self.cur_frame].w * self.tex.width() as f32;
-	}
-
-	pub fn height(&self) -> f32 {
-		return self.frames[self.cur_frame].h * self.tex.height() as f32;
-	}
-
-	pub fn tex_width(&self) -> i32 {
-		return self.tex.width();
-	}
-
-	pub fn tex_height(&self) -> i32 {
-		return self.tex.height();
-	}
-
-	pub fn slice(&mut self, x: u8, y: u8) {
-
-		let w = 1.0 / x as f32;
-		let h = 1.0 / y as f32;
-
-		self.frames.clear();
-
-		for i in 0..x as usize {
-			for j in 0..y as usize {
-				self.frames.push(quad!(i as f32 * w, j as f32 * h, w, h));
-			}
-		}
-
-	}
-
-	pub fn next(&mut self) {
-		if self.cur_frame < self.frames.len() - 1 {
-			self.cur_frame += 1;
-		} else {
-			if self.looping {
-				self.cur_frame = 0;
-			}
-		}
-	}
-
-	pub fn prev(&mut self) {
-		if self.cur_frame > 0 {
-			self.cur_frame -= 1;
-		} else {
-			if self.looping {
-				self.cur_frame = self.frames.len() - 1;
-			}
-		}
-	}
-
-}
-
-impl gfx::Drawable for Sprite {
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
-		return ctx.draw(
-			&shapes::sprite(&self.tex)
-				.quad(self.frames[self.cur_frame])
-		);
-	}
-}
 
 struct Game {
 	sprite: Sprite,
@@ -96,10 +14,11 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let tex = gfx::Texture::from_bytes(ctx, include_bytes!("res/car.png"))?;
-		let mut sprite = Sprite::new(tex);
+		let mut sprite = Sprite::from_bytes(ctx, include_bytes!("res/car.png"))?;
 
 		sprite.slice(4, 1);
+		sprite.add_anim("run", 0, 3, true);
+		sprite.play("run");
 
 		return Ok(Self {
 			sprite: sprite,
@@ -129,8 +48,8 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		self.sprite.next();
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+		self.sprite.update(ctx.dt());
 
 		return Ok(());
 

@@ -20,8 +20,8 @@ impl Canvas {
 	pub fn new(ctx: &Ctx, width: i32, height: i32) -> Result<Self> {
 
 		let dpi = ctx.dpi();
-		let tw = (width as f64 * dpi) as i32;
-		let th = (height as f64 * dpi) as i32;
+		let tw = (width as f32 * dpi) as i32;
+		let th = (height as f32 * dpi) as i32;
 		let fbuf = gl::Framebuffer::new(&ctx.gl, tw, th)?;
 		let tex = Texture::from_gl_tex(fbuf.tex().clone());
 

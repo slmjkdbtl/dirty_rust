@@ -1,4 +1,2 @@
 // wengwengweng
 
-export!(widget);
-

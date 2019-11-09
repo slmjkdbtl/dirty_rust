@@ -473,18 +473,16 @@ impl Model {
 		return self.texture.as_ref();
 	}
 
-// 	pub fn update(&mut self, f: impl FnOnce(&mut [MeshData])) {
+	// TODO
+	pub fn update(&mut self, f: impl Fn(&mut MeshData)) {
 
-// 		use gl::VertexLayout;
+		use gl::VertexLayout;
 
-// 		f(&mut self.meshdata);
+		for m in &mut self.meshes {
+			f(&mut m.data);
+		}
 
-// 		let (min, max) = get_bound(&self.meshdata);
-
-// 		self.center = (min + max) / 2.0;
-// 		self.bound = (min, max);
-
-// 		for (i, m) in self.meshdata.iter().enumerate() {
+// 		for (i, m) in self.meshes.iter().enumerate() {
 
 // 			if let Some(mesh) = self.meshes.get(i) {
 
@@ -501,7 +499,7 @@ impl Model {
 
 // 		}
 
-// 	}
+	}
 
 	pub fn center(&self) -> Vec3 {
 		return self.center;
