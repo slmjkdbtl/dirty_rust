@@ -271,7 +271,16 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	let frag_2d_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", res::DEFAULT_2D_FRAG);
 
 	let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
-	let proj_2d = conf.origin.to_ortho(conf.width, conf.height, -1024.0, 1024.0);
+
+	let proj_2d = gfx::OrthoProj {
+		width: conf.width as f32,
+		height: conf.height as f32,
+		near: -1024.0,
+		far: 1024.0,
+		origin: conf.origin,
+	};
+
+	let proj_2d = proj_2d.as_mat4();
 
 	let vert_3d_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", res::DEFAULT_3D_VERT);
 	let frag_3d_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", res::DEFAULT_3D_FRAG);

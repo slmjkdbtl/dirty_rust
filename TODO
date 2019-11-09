@@ -4,7 +4,6 @@
 - [gfx] investigate the extreme slowness of the 2d renderer
 - [gfx] draw curve
 - [gfx] scale modes
-- [gfx] canvas projection matrix
 - [gfx] z when drawing 3d on top of 2d
 - [gfx] wasm blank screen
 
@@ -81,6 +80,7 @@
 - [gfx] custom pipeline
 - [gfx] fix gl viewport weirdness after fullscreen
 - [gfx] draw gizmo
+- [gfx] compile glsl 4.x to other versions in runtime (?)
 
 == DONE
 - [http] refactor http
@@ -157,4 +157,5 @@
 - [gfx] depth buffer in 2d pipeline
 - [gfx] cubemap / skybox
 - [gfx] dashed lines
+- [gfx] canvas projection matrix
 

@@ -22,9 +22,10 @@ mod res;
 
 pub use helpers::lstatic;
 
-pub mod math;
 pub mod task;
 
+#[cfg(feature = "app")]
+pub mod math;
 #[cfg(feature = "app")]
 pub mod gl;
 #[cfg(feature = "app")]

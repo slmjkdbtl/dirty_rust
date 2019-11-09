@@ -4,8 +4,6 @@ use std::collections::HashMap;
 
 use crate::*;
 use app::*;
-use super::*;
-use crate::math::*;
 
 #[derive(Clone)]
 pub struct Sprite {
