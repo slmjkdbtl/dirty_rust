@@ -1,7 +1,5 @@
 // wengwengweng
 
-pub use lazy_static::lazy_static as lstatic;
-
 #[allow(unused_macros)]
 macro_rules! export {
 	($name:ident) => {
