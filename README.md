@@ -81,6 +81,7 @@ fn main() -> Result<()> {
 - **sprite** a 2d animating sprite
 - **3d** 3d rendering testbed
 - **mviewer** 3d model viewer
+- **synth** minimal audio synth
 - **mask** stencil mask
 - **ttf** drawing text with truetype fonts
 - **geom** basic geomatry / collision detections

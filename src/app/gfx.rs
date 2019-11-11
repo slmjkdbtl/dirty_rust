@@ -453,7 +453,7 @@ impl OrthoProj {
 
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Origin {
 	TopLeft,
 	Top,

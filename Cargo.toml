@@ -70,6 +70,7 @@ img = [
 
 audio = [
 	"rodio",
+	"cpal",
 ]
 
 http = [
@@ -147,6 +148,7 @@ gltf = { version = "0.14", optional = true }
 
 # audio
 rodio = { version = "0.9", optional = true, default-features = false, features = [ "vorbis", "mp3", "wav", ] }
+cpal = { version = "0.10", optional = true }
 
 # http
 url = { version = "2.1", optional = true }
@@ -168,7 +170,7 @@ imgui-opengl-renderer = { version = "0.6", optional = true }
 clipboard = { version = "0.5", optional = true }
 
 # osc
-rosc = { version = "0.2", optional = true }
+rosc = { version = "0.3", optional = true }
 
 # json
 serde_json = { version = "1.0", optional = true }
