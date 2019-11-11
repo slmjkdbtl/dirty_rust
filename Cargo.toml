@@ -25,6 +25,7 @@ default = [
 	"audio",
 	"geom",
 	"gkit",
+	"synth",
 # 	"http",
 # 	"ui",
 # 	"physics",
@@ -70,6 +71,9 @@ img = [
 
 audio = [
 	"rodio",
+]
+
+synth = [
 	"cpal",
 ]
 
@@ -148,6 +152,8 @@ gltf = { version = "0.14", optional = true }
 
 # audio
 rodio = { version = "0.9", optional = true, default-features = false, features = [ "vorbis", "mp3", "wav", ] }
+
+# synth
 cpal = { version = "0.10", optional = true }
 
 # http

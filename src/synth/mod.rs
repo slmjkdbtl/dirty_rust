@@ -1,24 +1,21 @@
 // wengwengweng
 
+export!(envelope);
+export!(note);
+export!(waveforms);
+
+use std::f32::consts::PI;
 use std::sync::Arc;
 use std::sync::Mutex;
-use cpal::traits::{DeviceTrait, EventLoopTrait, HostTrait};
+
+use cpal::traits::*;
+
 use crate::*;
 
 const FREQ_A: f32 = 440.0;
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Waveform {
-	Sine,
-	Saw,
-	Square,
-	Noise,
-	NoiseWalk,
-}
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Note {
-	C, D, E, F, G, A, B,
+pub fn osc(wav: Waveform, freq: f32, dt: f32) -> f32 {
+	return wav.osc(freq, dt);
 }
 
 pub fn get_note_freq(t: i32) -> f32 {
@@ -117,4 +114,5 @@ pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
 	return Ok(());
 
 }
+
 

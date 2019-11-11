@@ -179,21 +179,21 @@ impl From<rodio::decoder::DecoderError> for Error {
 	}
 }
 
-#[cfg(feature = "audio")]
+#[cfg(feature = "synth")]
 impl From<cpal::PlayStreamError> for Error {
 	fn from(_: cpal::PlayStreamError) -> Self {
 		return Error::Audio(format!("failed to play audio stream"));
 	}
 }
 
-#[cfg(feature = "audio")]
+#[cfg(feature = "synth")]
 impl From<cpal::BuildStreamError> for Error {
 	fn from(_: cpal::BuildStreamError) -> Self {
 		return Error::Audio(format!("failed to build audio stream"));
 	}
 }
 
-#[cfg(feature = "audio")]
+#[cfg(feature = "synth")]
 impl From<cpal::DefaultFormatError> for Error {
 	fn from(_: cpal::DefaultFormatError) -> Self {
 		return Error::Audio(format!("default format error"));
