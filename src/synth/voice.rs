@@ -2,8 +2,8 @@
 
 use super::*;
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub struct Note {
+#[derive(Clone, Copy, Debug)]
+pub struct Voice {
 	life: f32,
 	afterlife: f32,
 	released: bool,
@@ -12,7 +12,7 @@ pub struct Note {
 	envelope: Envelope,
 }
 
-impl Note {
+impl Voice {
 
 	pub fn new(e: Envelope) -> Self {
 		return Self {

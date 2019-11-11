@@ -3,7 +3,7 @@
 //! Software Synthesizer
 
 export!(envelope);
-export!(note);
+export!(voice);
 export!(wav);
 
 use std::sync::Arc;

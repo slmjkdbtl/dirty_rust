@@ -114,7 +114,7 @@ impl app::State for Game {
 
 						synth.notes.push(Note {
 							freq: synth::get_note_freq(index as i32 + (NOTE_OFFSET + self.octave * 12)),
-							life: synth::Note::new(e),
+							voice: synth::Voice::new(e),
 							key: k,
 						});
 
@@ -196,23 +196,23 @@ impl app::State for Game {
 }
 
 struct Note {
-	life: synth::Note,
+	voice: synth::Voice,
 	freq: f32,
 	key: Key,
 }
 
 impl Note {
 	fn tick(&mut self, dt: f32) {
-		self.life.update(dt);
+		self.voice.update(dt);
 	}
 	fn sound(&self, wav: synth::Waveform, time: f32) -> f32 {
-		return self.life.amp() * wav.osc(self.freq, time);
+		return self.voice.amp() * wav.osc(self.freq, time);
 	}
 	fn dead(&self) -> bool {
-		return self.life.dead();
+		return self.voice.dead();
 	}
 	fn release(&mut self) {
-		self.life.release();
+		self.voice.release();
 	}
 }
 
