@@ -5,10 +5,10 @@
 use std::path::PathBuf;
 use std::collections::HashSet;
 
-use lazy_static::lazy_static as lstatic;
+use once_cell::sync::Lazy;
 
-lstatic! {
-	pub(super) static ref INVALID_CHARS: HashSet<char> = hashset![
+static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
+	return hashset![
 		'\u{7f}',
 		'\r',
 		'\n',
@@ -31,7 +31,7 @@ lstatic! {
 		'\u{f70e}',
 		'\u{f70f}',
 	];
-}
+});
 
 #[cfg(desktop)]
 pub use gilrs::GamepadId as GamepadID;

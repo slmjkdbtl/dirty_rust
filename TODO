@@ -1,7 +1,7 @@
 # wengwengweng
 
 == DOING
-- [synth] popping sound every second
+- [synth] better APi
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -160,4 +160,6 @@
 - [gfx] dashed lines
 - [gfx] canvas projection matrix
 - [synth] polyphony
+- [synth] popping sound every second
+- [synth] static
 

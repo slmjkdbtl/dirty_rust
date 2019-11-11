@@ -3,7 +3,7 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Voice {
+pub struct Life {
 	life: f32,
 	afterlife: f32,
 	released: bool,
@@ -12,7 +12,7 @@ pub struct Voice {
 	envelope: Envelope,
 }
 
-impl Voice {
+impl Life {
 
 	pub fn new(e: Envelope) -> Self {
 		return Self {

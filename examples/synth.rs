@@ -4,55 +4,59 @@
 
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::collections::VecDeque;
+use std::collections::HashMap;
 
 use dirty::*;
 use app::*;
+use synth::*;
 use input::Key;
 
-const NOTE_KEYS: [Key; 17] = [
-	Key::A,
-	Key::W,
-	Key::S,
-	Key::E,
-	Key::D,
-	Key::F,
-	Key::T,
-	Key::G,
-	Key::Y,
-	Key::H,
-	Key::U,
-	Key::J,
-	Key::K,
-	Key::O,
-	Key::L,
-	Key::P,
-	Key::Semicolon,
-];
+fn key_to_note(k: Key, o: i32) -> Option<NoteOctave> {
 
-const NOTE_OFFSET: i32 = -9;
+	return match k {
+		Key::A => Some(NoteOctave::new(Note::C, o)),
+		Key::W => Some(NoteOctave::new(Note::Csh, o)),
+		Key::S => Some(NoteOctave::new(Note::D, o)),
+		Key::E => Some(NoteOctave::new(Note::Dsh, o)),
+		Key::D => Some(NoteOctave::new(Note::E, o)),
+		Key::F => Some(NoteOctave::new(Note::F, o)),
+		Key::T => Some(NoteOctave::new(Note::Fsh, o)),
+		Key::G => Some(NoteOctave::new(Note::G, o)),
+		Key::Y => Some(NoteOctave::new(Note::Gsh, o)),
+		Key::H => Some(NoteOctave::new(Note::A, o)),
+		Key::U => Some(NoteOctave::new(Note::Ash, o)),
+		Key::J => Some(NoteOctave::new(Note::B, o)),
+		Key::K => Some(NoteOctave::new(Note::C, o + 1)),
+		Key::O => Some(NoteOctave::new(Note::Csh, o + 1)),
+		Key::L => Some(NoteOctave::new(Note::D, o + 1)),
+		Key::P => Some(NoteOctave::new(Note::Dsh, o + 1)),
+		Key::Semicolon => Some(NoteOctave::new(Note::E, o + 1)),
+		_ => None,
+	};
+
+}
 
 struct Game {
-	synth: Arc<Mutex<Synth>>,
 	octave: i32,
+	waveform: Waveform,
+	envelope: Envelope,
+	pressed: HashMap<Key, NoteOctave>,
 }
 
 impl app::State for Game {
 
 	fn init(_: &mut app::Ctx) -> Result<Self> {
 
-		let mut synth = Synth::new();
-
-		synth.set_volume(0.2);
-		synth.set_waveform(synth::Waveform::Saw);
-
-		let synth = Arc::new(Mutex::new(synth));
-
-		synth::run(synth.clone())?;
-
 		return Ok(Self {
-			synth: synth,
-			octave: 0,
+			octave: -1,
+			waveform: Waveform::Saw,
+			pressed: hashmap![],
+			envelope: Envelope {
+				attack: 0.01,
+				decay: 0.01,
+				sustain: 1.0,
+				release: 1.0,
+			},
 		});
 	}
 
@@ -76,49 +80,43 @@ impl app::State for Game {
 					self.octave -= 1;
 				}
 
-				if let Ok(mut synth) = self.synth.lock() {
+				if k == Key::Up {
+					// ...
+				}
 
-					let vol = synth.volume();
+				if k == Key::Down {
+					// ...
+				}
 
-					if k == Key::Up {
-						synth.set_volume(vol + 0.1);
-					}
+				if k == Key::Key1 {
+					self.waveform = Waveform::Sine;
+				}
 
-					if k == Key::Down {
-						synth.set_volume(vol - 0.1);
-					}
+				if k == Key::Key2 {
+					self.waveform = Waveform::Triangle;
+				}
 
-					if k == Key::Key1 {
-						synth.set_waveform(synth::Waveform::Sine);
-					}
+				if k == Key::Key3 {
+					self.waveform = Waveform::Square;
+				}
 
-					if k == Key::Key2 {
-						synth.set_waveform(synth::Waveform::Triangle);
-					}
+				if k == Key::Key4 {
+					self.waveform = Waveform::Saw;
+				}
 
-					if k == Key::Key3 {
-						synth.set_waveform(synth::Waveform::Square);
-					}
+				if k == Key::Key5 {
+					self.waveform = Waveform::Noise;
+				}
 
-					if k == Key::Key4 {
-						synth.set_waveform(synth::Waveform::Saw);
-					}
+				if let Some(note) = key_to_note(k, self.octave) {
 
-					if k == Key::Key5 {
-						synth.set_waveform(synth::Waveform::Noise);
-					}
+					self.pressed.insert(k, note);
 
-					if let Some(index) = NOTE_KEYS.iter().position(|&x| x == k) {
+					let v = build_voice(note)
+						.waveform(self.waveform)
+						.build();
 
-						let e = synth.envelope;
-
-						synth.notes.push(Note {
-							freq: synth::get_note_freq(index as i32 + (NOTE_OFFSET + self.octave * 12)),
-							voice: synth::Voice::new(e),
-							key: k,
-						});
-
-					}
+					play(v);
 
 				}
 
@@ -126,12 +124,8 @@ impl app::State for Game {
 
 			KeyRelease(k) => {
 
-				if let Ok(mut synth) = self.synth.lock() {
-					for n in &mut synth.notes {
-						if n.key == k {
-							n.release();
-						}
-					}
+				if let Some(n) = self.pressed.get(&k) {
+					synth::release(*n);
 				}
 
 			},
@@ -144,32 +138,16 @@ impl app::State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
-
-		if let Ok(mut synth) = self.synth.lock() {
-
-			for n in &mut synth.notes {
-				n.tick(ctx.dt());
-			}
-
-			synth.notes.retain(|n| !n.dead());
-
-		}
-
-		return Ok(());
-
-	}
-
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		if let Ok(synth) = self.synth.lock() {
+		if let Some(buf) = synth::buf() {
 
 			let mut last = None;
-			let height = 240.0;
-			let len = synth.buf.len() as f32;
+			let height = 120.0;
+			let len = buf.len() as f32;
 			let dis = ctx.gwidth() as f32 / len;
 
-			for (i, buf) in synth.buf.iter().enumerate() {
+			for (i, buf) in buf.iter().enumerate() {
 
 				if let Some(last) = last {
 
@@ -190,94 +168,6 @@ impl app::State for Game {
 		}
 
 		return Ok(());
-
-	}
-
-}
-
-struct Note {
-	voice: synth::Voice,
-	freq: f32,
-	key: Key,
-}
-
-impl Note {
-	fn tick(&mut self, dt: f32) {
-		self.voice.update(dt);
-	}
-	fn sound(&self, wav: synth::Waveform, time: f32) -> f32 {
-		return self.voice.amp() * wav.osc(self.freq, time);
-	}
-	fn dead(&self) -> bool {
-		return self.voice.dead();
-	}
-	fn release(&mut self) {
-		self.voice.release();
-	}
-}
-
-struct Synth {
-	waveform: synth::Waveform,
-	volume: f32,
-	envelope: synth::Envelope,
-	notes: Vec<Note>,
-	buf: VecDeque<f32>,
-}
-
-impl Synth {
-
-	fn new() -> Self {
-		return Synth {
-			waveform: synth::Waveform::Sine,
-			volume: 1.0,
-			notes: vec![],
-			buf: VecDeque::with_capacity(100),
-			envelope: synth::Envelope {
-				attack: 0.05,
-				decay: 0.0,
-				sustain: 1.0,
-				release: 2.0,
-			},
-		};
-	}
-
-	fn volume(&self) -> f32 {
-		return self.volume;
-	}
-
-	fn set_volume(&mut self, v: f32) {
-		self.volume = v.clamp(0.0, 1.0);
-	}
-
-	fn set_envelope(&mut self, e: synth::Envelope) {
-		self.envelope = e;
-	}
-
-	fn set_waveform(&mut self, w: synth::Waveform) {
-		self.waveform = w;
-	}
-
-}
-
-impl synth::Stream for Synth {
-
-	fn data(&mut self, time: f32) -> f32 {
-
-		let mut sound = 0.0;
-
-		for n in &mut self.notes {
-			sound += n.sound(self.waveform, time);
-		}
-
-		sound *= self.volume;
-
-		if self.buf.len() >= self.buf.capacity() {
-			self.buf.pop_front();
-		}
-
-		self.buf.push_back(sound);
-
-		return sound;
 
 	}
 
