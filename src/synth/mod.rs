@@ -1,10 +1,11 @@
 // wengwengweng
 
+//! Software Synthesizer
+
 export!(envelope);
 export!(note);
 export!(wav);
 
-use std::f32::consts::PI;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -15,17 +16,19 @@ use crate::*;
 const FREQ_A: f32 = 440.0;
 
 pub fn get_note_freq(t: i32) -> f32 {
-	return FREQ_A * f32::powi(f32::powf(2.0, 1.0 / 12.0), t);
+	return f32::ceil(FREQ_A * f32::powi(f32::powf(2.0, 1.0 / 12.0), t));
 }
 
 pub trait Stream: Send + Sync {
 	fn data(&mut self, time: f32) -> f32;
 }
 
-pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
+pub fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
 
 	let host = cpal::default_host();
-	let device = host.default_output_device().expect("failed to find a default output device");
+	let device = host
+		.default_output_device()
+		.ok_or(Error::Audio(format!("failed to get default output device")))?;
 	let format = device.default_output_format()?;
 	let event_loop = host.event_loop();
 	let stream_id = event_loop.build_output_stream(&device, &format)?;
@@ -59,10 +62,15 @@ pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
 					for sample in buffer.chunks_mut(format.channels as usize) {
 
 						let dt = tick();
-						let value = ((synth.lock().unwrap().data(dt) * 0.5 + 0.5) * std::u16::MAX as f32) as u16;
 
-						for out in sample.iter_mut() {
-							*out = value;
+						if let Ok(mut stream) = stream.lock() {
+
+							let value = ((stream.data(dt) * 0.5 + 0.5) * std::u16::MAX as f32) as u16;
+
+							for out in sample.iter_mut() {
+								*out = value;
+							}
+
 						}
 
 					}
@@ -74,10 +82,15 @@ pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
 					for sample in buffer.chunks_mut(format.channels as usize) {
 
 						let dt = tick();
-						let value = (synth.lock().unwrap().data(dt) * std::i16::MAX as f32) as i16;
 
-						for out in sample.iter_mut() {
-							*out = value;
+						if let Ok(mut stream) = stream.lock() {
+
+							let value = (stream.data(dt) * std::i16::MAX as f32) as i16;
+
+							for out in sample.iter_mut() {
+								*out = value;
+							}
+
 						}
 
 					}
@@ -89,10 +102,15 @@ pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
 					for sample in buffer.chunks_mut(format.channels as usize) {
 
 						let dt = tick();
-						let value = synth.lock().unwrap().data(dt);
 
-						for out in sample.iter_mut() {
-							*out = value;
+						if let Ok(mut stream) = stream.lock() {
+
+							let value = stream.data(dt);
+
+							for out in sample.iter_mut() {
+								*out = value;
+							}
+
 						}
 
 					}
@@ -110,5 +128,4 @@ pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
 	return Ok(());
 
 }
-
 
