@@ -1,7 +1,7 @@
 # wengwengweng
 
 == DOING
-- [synth] polyphony
+- [synth] popping sound every second
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -159,4 +159,5 @@
 - [gfx] cubemap / skybox
 - [gfx] dashed lines
 - [gfx] canvas projection matrix
+- [synth] polyphony
 

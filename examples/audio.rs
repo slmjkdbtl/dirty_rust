@@ -13,8 +13,8 @@ impl app::State for Game {
 
 	fn init(_: &mut app::Ctx) -> Result<Self> {
 
-		let sound = Sound::from_bytes(include_bytes!("res/yo.ogg")).unwrap();
-		let track = Track::from(sound)?;
+		let sound = Sound::from_bytes(include_bytes!("res/yo.ogg"))?;
+		let track = Track::from_sound(sound)?;
 
 		track.play();
 
@@ -48,12 +48,12 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		if self.track.is_playing() {
-			ctx.draw(shapes::text("playing"))?;
+			ctx.draw(&shapes::text("playing"))?;
 		} else {
-			ctx.draw(shapes::text("paused"))?;
+			ctx.draw(&shapes::text("paused"))?;
 		}
 
 		return Ok(());

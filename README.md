@@ -11,6 +11,7 @@ personal toolkit for games and stuff
 - **geom** Common Collision Detections
 - **physics** Simple Physics Simulation
 - **http** Simple HTTP Client & Server
+- **synth** Software Synthesizer
 - **term** TUI Utilities
 
 All the modules can be configured with cargo feature:
