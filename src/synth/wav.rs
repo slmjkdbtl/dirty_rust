@@ -40,3 +40,7 @@ impl Waveform {
 	}
 }
 
+pub fn osc(wav: Waveform, freq: f32, dt: f32) -> f32 {
+	return wav.osc(freq, dt);
+}
+

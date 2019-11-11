@@ -2,7 +2,7 @@
 
 export!(envelope);
 export!(note);
-export!(waveforms);
+export!(wav);
 
 use std::f32::consts::PI;
 use std::sync::Arc;
@@ -14,16 +14,12 @@ use crate::*;
 
 const FREQ_A: f32 = 440.0;
 
-pub fn osc(wav: Waveform, freq: f32, dt: f32) -> f32 {
-	return wav.osc(freq, dt);
-}
-
 pub fn get_note_freq(t: i32) -> f32 {
 	return FREQ_A * f32::powi(f32::powf(2.0, 1.0 / 12.0), t);
 }
 
 pub trait Stream: Send + Sync {
-	fn data(&self, dt: f32) -> f32;
+	fn data(&mut self, time: f32) -> f32;
 }
 
 pub fn run(synth: Arc<Mutex<dyn Stream>>) -> Result<()> {
