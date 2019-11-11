@@ -46,6 +46,9 @@ pub mod geom;
 #[cfg(feature = "physics")]
 pub mod physics;
 
+#[cfg(feature = "synth")]
+pub mod synth;
+
 #[cfg(feature = "http")]
 pub mod http;
 

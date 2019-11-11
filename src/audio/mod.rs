@@ -2,8 +2,6 @@
 
 //! Sound Loading & playback
 
-pub mod synth;
-
 use std::io::Cursor;
 use std::time::Duration;
 

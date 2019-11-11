@@ -9,23 +9,51 @@ use app::*;
 use input::Key;
 use input::Mouse;
 
+const NOTE_KEYS: [Key; 13] = [
+	Key::A,
+	Key::W,
+	Key::S,
+	Key::E,
+	Key::D,
+	Key::F,
+	Key::T,
+	Key::G,
+	Key::Y,
+	Key::H,
+	Key::U,
+	Key::J,
+	Key::K,
+];
+
+const NOTE_OFFSET: i32 = -9;
+
 struct Game {
-	a: Arc<Mutex<Synth>>,
+	synth: Arc<Mutex<Synth>>,
+	note: Option<synth::Note>,
+	envelope: synth::Envelope,
 }
 
 impl app::State for Game {
 
 	fn init(_: &mut app::Ctx) -> Result<Self> {
 
-		let a = Arc::new(Mutex::new(Synth {
+		let synth = Arc::new(Mutex::new(Synth {
 			freq: 0.0,
-			waveform: synth::Waveform::Square,
+			waveform: synth::Waveform::Saw,
+			volume: 0.1,
 		}));
 
-		synth::run(a.clone());
+		synth::run(synth.clone())?;
 
 		return Ok(Self {
-			a: a,
+			synth: synth,
+			note: None,
+			envelope: synth::Envelope {
+				attack: 0.0,
+				decay: 1.0,
+				sustain: 0.0,
+				release: 0.0,
+			},
 		});
 	}
 
@@ -34,12 +62,30 @@ impl app::State for Game {
 		use input::Event::*;
 
 		match e {
+
 			KeyPress(k) => {
+
 				if k == Key::Esc {
 					ctx.quit();
 				}
+
+				let mut synth = self.synth.lock().unwrap();
+
+				if let Some(index) = NOTE_KEYS.iter().position(|&x| x == k) {
+					synth.freq = synth::get_note_freq(index as i32 + NOTE_OFFSET);
+					self.note = Some(synth::Note::new(self.envelope));
+				}
+
 			},
+
+			KeyRelease(k) => {
+				if let Some(note) = &mut self.note {
+					note.release();
+				}
+			},
+
 			_ => {},
+
 		}
 
 		return Ok(());
@@ -48,26 +94,18 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let mut a = self.a.lock().unwrap();
-		let keys = ctx.down_keys();
+		let mut synth = self.synth.lock().unwrap();
 
-		let offset = 9;
-
-		use Key::*;
-
-		let kk = vec![
-			A, W, S, E, D, F, T, G, Y, H, U, J, K,
-		];
-
-		a.freq = 0.0;
-
-		for k in keys {
-			if let Some(index) = kk.iter().position(|&x| x == k) {
-				a.freq = synth::get_note_freq(index as i32 - offset);
+		if let Some(note) = &mut self.note {
+			note.update(ctx.dt());
+			synth.volume = note.amp();
+			if note.dead() {
+				self.note = None;
 			}
 		}
 
 		return Ok(());
+
 	}
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
@@ -87,33 +125,13 @@ impl app::State for Game {
 struct Synth {
 	freq: f32,
 	waveform: synth::Waveform,
+	volume: f32,
 }
 
-use audio::synth;
-
 impl synth::Stream for Synth {
-
 	fn data(&self, dt: f32) -> f32 {
-
-		use synth::Waveform;
-
-		match self.waveform {
-			Waveform::Sine => {
-				return f32::sin(self.freq * 2.0 * PI * dt);
-			},
-			Waveform::Square => {
-				let o = f32::sin(self.freq * 2.0 * PI * dt);
-				if o >= 0.0 {
-					return 0.2;
-				} else {
-					return -0.2;
-				}
-			},
-			_ => return 0.0,
-		}
-
+		return synth::osc(self.waveform, self.freq, dt) * self.volume;
 	}
-
 }
 
 fn main() -> Result<()> {
