@@ -175,7 +175,28 @@ impl From<stdweb::serde::ConversionError> for Error {
 #[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {
 	fn from(_: rodio::decoder::DecoderError) -> Self {
-		return Error::Audio("failed to decode".into());
+		return Error::Audio(format!("failed to decode"));
+	}
+}
+
+#[cfg(feature = "audio")]
+impl From<cpal::PlayStreamError> for Error {
+	fn from(_: cpal::PlayStreamError) -> Self {
+		return Error::Audio(format!("failed to play audio stream"));
+	}
+}
+
+#[cfg(feature = "audio")]
+impl From<cpal::BuildStreamError> for Error {
+	fn from(_: cpal::BuildStreamError) -> Self {
+		return Error::Audio(format!("failed to build audio stream"));
+	}
+}
+
+#[cfg(feature = "audio")]
+impl From<cpal::DefaultFormatError> for Error {
+	fn from(_: cpal::DefaultFormatError) -> Self {
+		return Error::Audio(format!("default format error"));
 	}
 }
 

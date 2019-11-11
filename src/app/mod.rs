@@ -275,8 +275,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 	let proj_2d = gfx::OrthoProj {
 		width: conf.width as f32,
 		height: conf.height as f32,
-		near: -1024.0,
-		far: 1024.0,
+		near: conf.near,
+		far: conf.far,
 		origin: conf.origin,
 	};
 

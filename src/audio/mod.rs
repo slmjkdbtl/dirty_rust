@@ -2,7 +2,8 @@
 
 //! Sound Loading & playback
 
-use std::path::Path;
+pub mod synth;
+
 use std::io::Cursor;
 use std::time::Duration;
 
@@ -10,12 +11,6 @@ use rodio::Source;
 use rodio::Decoder;
 use rodio::Sink;
 use rodio::source::Buffered;
-
-#[cfg(feature = "fs")]
-use crate::fs;
-
-#[cfg(not(feature = "fs"))]
-use std::fs;
 
 use crate::Result;
 use crate::Error;
