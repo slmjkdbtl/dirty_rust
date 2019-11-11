@@ -9,7 +9,7 @@ use app::*;
 use input::Key;
 use input::Mouse;
 
-const NOTE_KEYS: [Key; 13] = [
+const NOTE_KEYS: [Key; 15] = [
 	Key::A,
 	Key::W,
 	Key::S,
@@ -23,14 +23,15 @@ const NOTE_KEYS: [Key; 13] = [
 	Key::U,
 	Key::J,
 	Key::K,
+	Key::O,
+	Key::L,
 ];
 
 const NOTE_OFFSET: i32 = -9;
 
 struct Game {
 	synth: Arc<Mutex<Synth>>,
-	note: Option<synth::Note>,
-	envelope: synth::Envelope,
+	octave: i32,
 }
 
 impl app::State for Game {
@@ -38,22 +39,22 @@ impl app::State for Game {
 	fn init(_: &mut app::Ctx) -> Result<Self> {
 
 		let synth = Arc::new(Mutex::new(Synth {
-			freq: 0.0,
-			waveform: synth::Waveform::Saw,
+			wav: synth::Waveform::Triangle,
 			volume: 0.1,
+			notes: vec![],
+			envelope: synth::Envelope {
+				attack: 0.05,
+				decay: 0.0,
+				sustain: 1.0,
+				release: 2.0,
+			},
 		}));
 
 		synth::run(synth.clone())?;
 
 		return Ok(Self {
 			synth: synth,
-			note: None,
-			envelope: synth::Envelope {
-				attack: 0.0,
-				decay: 1.0,
-				sustain: 0.0,
-				release: 0.0,
-			},
+			octave: 0,
 		});
 	}
 
@@ -69,19 +70,37 @@ impl app::State for Game {
 					ctx.quit();
 				}
 
+				if k == Key::Z {
+					self.octave -= 1;
+				}
+
+				if k == Key::X {
+					self.octave += 1;
+				}
+
 				let mut synth = self.synth.lock().unwrap();
 
 				if let Some(index) = NOTE_KEYS.iter().position(|&x| x == k) {
-					synth.freq = synth::get_note_freq(index as i32 + NOTE_OFFSET);
-					self.note = Some(synth::Note::new(self.envelope));
+					let e = synth.envelope;
+					synth.notes.push(Note {
+						freq: synth::get_note_freq(index as i32 + (NOTE_OFFSET + self.octave * 12)),
+						life: synth::Note::new(e),
+						key: k,
+					});
 				}
 
 			},
 
 			KeyRelease(k) => {
-				if let Some(note) = &mut self.note {
-					note.release();
+
+				let mut synth = self.synth.lock().unwrap();
+
+				for n in &mut synth.notes {
+					if n.key == k {
+						n.release();
+					}
 				}
+
 			},
 
 			_ => {},
@@ -96,13 +115,11 @@ impl app::State for Game {
 
 		let mut synth = self.synth.lock().unwrap();
 
-		if let Some(note) = &mut self.note {
-			note.update(ctx.dt());
-			synth.volume = note.amp();
-			if note.dead() {
-				self.note = None;
-			}
+		for n in &mut synth.notes {
+			n.tick(ctx.dt());
 		}
+
+		synth.notes.retain(|n| !n.dead());
 
 		return Ok(());
 
@@ -122,15 +139,41 @@ impl app::State for Game {
 
 }
 
-struct Synth {
+struct Note {
+	life: synth::Note,
 	freq: f32,
-	waveform: synth::Waveform,
+	key: Key,
+}
+
+impl Note {
+	fn tick(&mut self, dt: f32) {
+		self.life.update(dt);
+	}
+	fn sound(&self, wav: synth::Waveform, time: f32) -> f32 {
+		return self.life.amp() * wav.osc(self.freq, time);
+	}
+	fn dead(&self) -> bool {
+		return self.life.dead();
+	}
+	fn release(&mut self) {
+		self.life.release();
+	}
+}
+
+struct Synth {
+	wav: synth::Waveform,
 	volume: f32,
+	envelope: synth::Envelope,
+	notes: Vec<Note>,
 }
 
 impl synth::Stream for Synth {
-	fn data(&self, dt: f32) -> f32 {
-		return synth::osc(self.waveform, self.freq, dt) * self.volume;
+	fn data(&mut self, time: f32) -> f32 {
+		let mut sound = 0.0;
+		for n in &mut self.notes {
+			sound += n.sound(self.wav, time);
+		}
+		return sound * self.volume;
 	}
 }
 

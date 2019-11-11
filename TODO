@@ -1,11 +1,7 @@
 # wengwengweng
 
 == DOING
-- [gfx] investigate the extreme slowness of the 2d renderer
-- [gfx] draw curve
-- [gfx] scale modes
-- [gfx] z when drawing 3d on top of 2d
-- [gfx] wasm blank screen
+- [synth] polyphony
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -81,6 +77,11 @@
 - [gfx] fix gl viewport weirdness after fullscreen
 - [gfx] draw gizmo
 - [gfx] compile glsl 4.x to other versions in runtime (?)
+- [gfx] investigate the extreme slowness of the 2d renderer
+- [gfx] draw curve
+- [gfx] scale modes
+- [gfx] z when drawing 3d on top of 2d
+- [gfx] wasm blank screen
 
 == DONE
 - [http] refactor http
