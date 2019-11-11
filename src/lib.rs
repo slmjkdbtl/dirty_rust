@@ -20,8 +20,6 @@
 mod helpers;
 mod res;
 
-pub use helpers::lstatic;
-
 pub mod task;
 
 #[cfg(feature = "app")]
