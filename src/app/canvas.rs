@@ -23,7 +23,7 @@ impl CanvasBuilder {
 	}
 	pub fn build(self, ctx: &Ctx) -> Result<Canvas> {
 
-		let (w, h) = self.size.unwrap_or((ctx.gwidth(), ctx.gheight()));
+		let (w, h) = self.size.unwrap_or((ctx.gwidth() as i32, ctx.gheight() as i32));
 		let dpi = ctx.dpi();
 		let tw = (w as f32 * dpi) as i32;
 		let th = (h as f32 * dpi) as i32;

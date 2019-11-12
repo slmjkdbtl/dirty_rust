@@ -49,3 +49,18 @@ macro_rules! hashset {
 	};
 }
 
+#[allow(unused_macros)]
+#[macro_export]
+macro_rules! btreemap {
+	($($key:expr => $val:expr),*$(,)?) => {
+		{
+			let mut _tmp = std::collections::BTreeMap::new();
+			if false {
+				_tmp
+			} else {
+				$(_tmp.insert($key, $val);)*
+				_tmp
+			}
+		}
+	}
+}

@@ -25,7 +25,7 @@ pub trait Stream: Send + Sync {
 }
 
 pub struct Synth {
-	notes: HashMap<NoteOctave, Voice>,
+	notes: HashMap<Note, Voice>,
 	volume: f32,
 	last_time: f32,
 	buf: VecDeque<f32>,
@@ -63,7 +63,7 @@ impl Synth {
 
 	}
 
-	pub fn release(&mut self, n: NoteOctave) {
+	pub fn release(&mut self, n: Note) {
 
 		if let Some(n) = self.notes.get_mut(&n) {
 			n.release();
@@ -144,7 +144,7 @@ pub fn play_oneshot(n: Voice) {
 
 }
 
-pub fn release(note: NoteOctave) {
+pub fn release(note: Note) {
 
 	let mut synth = match SYNTH.lock() {
 		Ok(s) => s,
@@ -168,7 +168,7 @@ pub fn buf() -> Option<OwningRef<MutexGuard<'static, Synth>, VecDeque<f32>>> {
 
 }
 
-pub fn build_voice(note: NoteOctave) -> VoiceBuilder {
+pub fn build_voice(note: Note) -> VoiceBuilder {
 	return Voice::builder(note);
 }
 

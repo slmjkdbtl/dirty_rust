@@ -271,7 +271,7 @@ pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 	todo!();
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Shape2D<'a> {
 	Point(Vec2),
 	Circle(Vec2, f32),

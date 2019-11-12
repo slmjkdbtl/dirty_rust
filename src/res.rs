@@ -73,6 +73,11 @@ pub const PROGGY_COLS: usize = 95;
 pub const PROGGY_ROWS: usize = 1;
 pub const PROGGY_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
 
+pub const F04B03_IMG: &[u8] = include_bytes!("fonts/04b03.png");
+pub const F04B03_COLS: usize = 97;
+pub const F04B03_ROWS: usize = 1;
+pub const F04B03_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
+
 // pub const PROGGY_IMG: &[u8] = include_bytes!("fonts/proggy2.png");
 // pub const PROGGY_COLS: usize = 95;
 // pub const PROGGY_ROWS: usize = 1;

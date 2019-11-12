@@ -30,8 +30,8 @@ pub trait Window {
 
 	fn width(&self) -> i32;
 	fn height(&self) -> i32;
-	fn gwidth(&self) -> i32;
-	fn gheight(&self) -> i32;
+	fn gwidth(&self) -> f32;
+	fn gheight(&self) -> f32;
 
 	fn set_mouse_pos(&mut self, p: Vec2) -> Result<()>;
 
@@ -144,12 +144,12 @@ impl Window for Ctx {
 		return self.height;
 	}
 
-	fn gwidth(&self) -> i32 {
-		return self.conf.width;
+	fn gwidth(&self) -> f32 {
+		return self.conf.width as f32 / self.conf.scale;
 	}
 
-	fn gheight(&self) -> i32 {
-		return self.conf.height;
+	fn gheight(&self) -> f32 {
+		return self.conf.height as f32 / self.conf.scale;
 	}
 
 	fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
