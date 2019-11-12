@@ -6,13 +6,13 @@ use super::*;
 pub struct Voice {
 	pub(super) life: Life,
 	pub(super) waveform: Waveform,
-	pub(super) note: NoteOctave,
+	pub(super) note: Note,
 	pub(super) volume: f32,
 }
 
 impl Voice {
 
-	pub(super) fn builder(note: NoteOctave) -> VoiceBuilder {
+	pub(super) fn builder(note: Note) -> VoiceBuilder {
 		return VoiceBuilder {
 			volume: 1.0,
 			note: note,
@@ -46,7 +46,7 @@ impl Voice {
 
 #[derive(Clone, Copy, Debug)]
 pub struct VoiceBuilder {
-	note: NoteOctave,
+	note: Note,
 	envelope: Envelope,
 	waveform: Waveform,
 	volume: f32,

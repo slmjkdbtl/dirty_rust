@@ -2,8 +2,6 @@
 
 #![feature(clamp)]
 
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::collections::HashMap;
 
 use dirty::*;
@@ -11,26 +9,26 @@ use app::*;
 use synth::*;
 use input::Key;
 
-fn key_to_note(k: Key, o: i32) -> Option<NoteOctave> {
+fn key_to_note(k: Key, o: i32) -> Option<Note> {
 
 	return match k {
-		Key::A => Some(NoteOctave::new(Note::C, o)),
-		Key::W => Some(NoteOctave::new(Note::Csh, o)),
-		Key::S => Some(NoteOctave::new(Note::D, o)),
-		Key::E => Some(NoteOctave::new(Note::Dsh, o)),
-		Key::D => Some(NoteOctave::new(Note::E, o)),
-		Key::F => Some(NoteOctave::new(Note::F, o)),
-		Key::T => Some(NoteOctave::new(Note::Fsh, o)),
-		Key::G => Some(NoteOctave::new(Note::G, o)),
-		Key::Y => Some(NoteOctave::new(Note::Gsh, o)),
-		Key::H => Some(NoteOctave::new(Note::A, o)),
-		Key::U => Some(NoteOctave::new(Note::Ash, o)),
-		Key::J => Some(NoteOctave::new(Note::B, o)),
-		Key::K => Some(NoteOctave::new(Note::C, o + 1)),
-		Key::O => Some(NoteOctave::new(Note::Csh, o + 1)),
-		Key::L => Some(NoteOctave::new(Note::D, o + 1)),
-		Key::P => Some(NoteOctave::new(Note::Dsh, o + 1)),
-		Key::Semicolon => Some(NoteOctave::new(Note::E, o + 1)),
+		Key::A => Some(Note::C(o)),
+		Key::W => Some(Note::Csh(o)),
+		Key::S => Some(Note::D(o)),
+		Key::E => Some(Note::Dsh(o)),
+		Key::D => Some(Note::E(o)),
+		Key::F => Some(Note::F(o)),
+		Key::T => Some(Note::Fsh(o)),
+		Key::G => Some(Note::G(o)),
+		Key::Y => Some(Note::Gsh(o)),
+		Key::H => Some(Note::A(o)),
+		Key::U => Some(Note::Ash(o)),
+		Key::J => Some(Note::B(o)),
+		Key::K => Some(Note::C(o + 1)),
+		Key::O => Some(Note::Csh(o + 1)),
+		Key::L => Some(Note::D(o + 1)),
+		Key::P => Some(Note::Dsh(o + 1)),
+		Key::Semicolon => Some(Note::E(o + 1)),
 		_ => None,
 	};
 
@@ -40,7 +38,7 @@ struct Game {
 	octave: i32,
 	waveform: Waveform,
 	envelope: Envelope,
-	pressed: HashMap<Key, NoteOctave>,
+	pressed: HashMap<Key, Note>,
 }
 
 impl app::State for Game {
@@ -114,6 +112,7 @@ impl app::State for Game {
 
 					let v = build_voice(note)
 						.waveform(self.waveform)
+						.envelope(self.envelope)
 						.build();
 
 					play(v);
@@ -151,7 +150,6 @@ impl app::State for Game {
 
 				if let Some(last) = last {
 
-					let r = i as f32 / len;
 					let ay = last * height;
 					let by = buf * height;
 					let ax = -len / 2.0 * dis + (i - 1) as f32 * dis;

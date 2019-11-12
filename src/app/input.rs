@@ -84,7 +84,7 @@ impl Input for app::Ctx {
 	}
 
 	fn mouse_pos(&self) -> Vec2 {
-		return self.mouse_pos;
+		return self.mouse_pos / self.conf.scale;
 	}
 
 }

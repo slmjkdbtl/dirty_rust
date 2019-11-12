@@ -28,7 +28,6 @@
 - [misc] wasm
 - [app] upgrade to glutin 0.22
 - [gfx] try draw cubes with batched renderer
-- [gfx] postprocessing (chaining shader + canvas)
 - [gfx] fallback font
 - [gfx] obj load all objects
 - [gfx] quad renderer's matrix calculation is slow
@@ -52,7 +51,6 @@
 - [gfx] npatch
 - [gfx] 3d ortho cam
 - [gfx] draw default to a framebuffer
-- [gfx] global scale
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
 - [gfx] text wrapping
 - [gfx] truetype font paddings
@@ -83,6 +81,9 @@
 - [gfx] scale modes
 - [gfx] z when drawing 3d on top of 2d
 - [gfx] wasm blank screen
+- [audio] use cpal directly instead of rodio
+- [synth] recording
+- [audio] input
 
 == DONE
 - [http] refactor http
@@ -162,4 +163,5 @@
 - [gfx] canvas projection matrix
 - [synth] polyphony
 - [synth] static
+- [gfx] global scale
 

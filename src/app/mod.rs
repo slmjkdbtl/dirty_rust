@@ -293,7 +293,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
-	let font_img = img::Image::from_bytes(res::CP437_IMG)?;
+	let font_img = img::Image::from_bytes(res::F04B03_IMG)?;
 	let font_width = font_img.width();
 	let font_height = font_img.height();
 	let font_tex = gl::Texture2D::from(&gl, font_width, font_height, &font_img.into_raw())?;
@@ -301,9 +301,9 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let font = gfx::BitmapFont::from_tex(
 		font_tex,
-		res::CP437_COLS,
-		res::CP437_ROWS,
-		res::CP437_CHARS,
+		res::F04B03_COLS,
+		res::F04B03_ROWS,
+		res::F04B03_CHARS,
 	)?;
 
 	let mut ctx = Ctx {
@@ -409,7 +409,11 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 			input::poll(&mut ctx, &mut events_loop, &mut s)?;
 			s.update(&mut ctx)?;
 			gfx::begin(&mut ctx);
-			s.draw(&mut ctx)?;
+
+			ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
+				return s.draw(&mut cc);
+			})?;
+
 			gfx::end(&mut ctx);
 
 			#[cfg(feature = "imgui")] {
@@ -633,7 +637,7 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn scale(mut self, s: u8) -> Self {
+	pub fn scale(mut self, s: f32) -> Self {
 		self.conf.scale = s;
 		return self;
 	}
