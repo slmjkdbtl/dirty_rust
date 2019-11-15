@@ -84,6 +84,7 @@
 - [audio] use cpal directly instead of rodio
 - [synth] recording
 - [audio] input
+- [misc] SIMD vecs
 
 == DONE
 - [http] refactor http

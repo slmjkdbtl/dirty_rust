@@ -661,27 +661,38 @@ impl Drawable for Line {
 
 		if let Some(dash) = self.dash {
 
-			let dis = Vec2::dis(self.p1, self.p2);
-			let unit = (self.p2 - self.p1).normalize();
-			let count = f32::ceil(dis / (dash.len + dash.interval)) as usize;
+			let diff = self.p2 - self.p1;
+			let nd = diff.normalize();
+			let len = diff.mag();
+			let mut l = 0.0;
+			let mut nxt_p1 = self.p1;
 
-			for i in 1..=count {
+			loop {
 
-				let tp1 = self.p1 + unit * (i - 1) as f32 * dash.len + unit * (i - 1) as f32 * dash.interval;
-				let mut tp2 = self.p1 + unit * i as f32 * dash.len + unit * (i - 1) as f32 * dash.interval;
+				let p1 = nxt_p1;
+				let mut p2 = nxt_p1 + nd * dash.len;
 
-				if i == count {
-					tp2 = self.p2;
+				l += dash.len;
+
+				if l >= len {
+					p2 = self.p2;
 				}
 
 				ctx.draw(&Line {
-					p1: tp1,
-					p2: tp2,
+					p1: p1,
+					p2: p2,
 					width: self.width,
 					color: self.color,
 					cap: self.cap,
 					dash: None,
 				})?;
+
+				nxt_p1 = p2 + nd * dash.interval;
+				l += dash.interval;
+
+				if l >= len {
+					break;
+				}
 
 			}
 
@@ -703,8 +714,8 @@ impl Drawable for Line {
 				ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
 
 				if let LineCap::Round = self.cap {
-					ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0))?;
-					ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0))?;
+					ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0).fill(self.color))?;
+					ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0).fill(self.color))?;
 				}
 
 				return Ok(());
