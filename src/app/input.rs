@@ -44,13 +44,11 @@ use super::*;
 use crate::*;
 
 pub trait Input {
-
 	fn down_keys(&self) -> HashSet<Key>;
 	fn key_down(&self, key: Key) -> bool;
 	fn mouse_down(&self, mouse: Mouse) -> bool;
 	fn mouse_pos(&self) -> Vec2;
 	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool;
-
 }
 
 impl Input for app::Ctx {
@@ -84,7 +82,14 @@ impl Input for app::Ctx {
 	}
 
 	fn mouse_pos(&self) -> Vec2 {
-		return self.mouse_pos / self.conf.scale;
+
+		let (w, h) = (self.width, self.height);
+		let (gw, gh) = (self.gwidth(), self.gheight());
+		let x = self.mouse_pos.x * gw as f32 / w as f32;
+		let y = self.mouse_pos.y * gh as f32 / h as f32;
+
+		return vec2!(x, y);
+
 	}
 
 }
@@ -359,7 +364,8 @@ pub(super) fn poll(
 
 				DeviceEvent { event, .. } => match event {
 					glutin::DeviceEvent::MouseMotion { delta } => {
-						s.event(&mut ctx, Event::MouseMove(vec2!(delta.0, delta.1)))?;
+						let scale = ctx.conf.scale;
+						s.event(&mut ctx, Event::MouseMove(vec2!(delta.0, delta.1) / scale))?;
 					},
 					_ => (),
 				},

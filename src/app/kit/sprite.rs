@@ -62,6 +62,11 @@ impl Sprite {
 
 	}
 
+	#[cfg(feature = "ase")]
+	pub fn from_bytes_ase(ctx: &app::Ctx, img: &[u8], json: &str) -> Result<Self> {
+		return Self::from_ase(ctx, gfx::Texture::from_bytes(ctx, img)?, json);
+	}
+
 	pub fn width(&self) -> f32 {
 		return self.frames[self.cur_frame].w * self.tex.width() as f32;
 	}

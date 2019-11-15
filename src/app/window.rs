@@ -9,6 +9,8 @@ use super::*;
 use crate::math::*;
 use crate::*;
 
+pub use glutin::MouseCursor;
+
 pub trait Window {
 
 	fn set_fullscreen(&mut self, b: bool);
@@ -22,6 +24,8 @@ pub trait Window {
 	fn set_cursor_locked(&mut self, b: bool) -> Result<()>;
 	fn is_cursor_locked(&self) -> bool;
 	fn toggle_cursor_locked(&mut self) -> Result<()>;
+
+	fn set_cursor(&self, c: MouseCursor);
 
 	fn set_title(&mut self, t: &str);
 	fn title(&self) -> &str;
@@ -108,6 +112,10 @@ impl Window for Ctx {
 
 	fn toggle_cursor_locked(&mut self) -> Result<()> {
 		return self.set_cursor_locked(!self.is_cursor_locked());
+	}
+
+	fn set_cursor(&self, c: MouseCursor) {
+		self.windowed_ctx.window().set_cursor(c);
 	}
 
 	fn set_title(&mut self, t: &str) {

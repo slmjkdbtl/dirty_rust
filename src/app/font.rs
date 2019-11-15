@@ -89,7 +89,7 @@ impl Font for BitmapFont {
 pub struct TruetypeFont {
 	font: fontdue::Font,
 	size: i32,
-	cur_pt: Pos,
+	cur_pt: Pt,
 	map: HashMap<char, Quad>,
 	tex: Texture,
 }
@@ -111,7 +111,7 @@ impl TruetypeFont {
 			font: font,
 			size: size,
 			map: HashMap::new(),
-			cur_pt: pos!(0, 0),
+			cur_pt: pt!(0, 0),
 			tex: tex,
 		});
 
@@ -160,7 +160,7 @@ impl TruetypeFont {
 				));
 
 				x += w;
-				self.cur_pt = pos!(x, y);
+				self.cur_pt = pt!(x, y);
 
 			}
 
