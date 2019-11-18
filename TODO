@@ -85,6 +85,7 @@
 - [synth] recording
 - [audio] input
 - [misc] SIMD vecs
+- [audio] let user choose audio device
 
 == DONE
 - [http] refactor http

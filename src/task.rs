@@ -19,14 +19,20 @@ pub enum TaskPhase {
 pub struct TaskPool<T: TaskItem> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
-	max: u32,
+	max: usize,
 	completed: usize,
 	total: usize,
 }
 
+impl<T: TaskItem> Default for TaskPool<T> {
+	fn default() -> Self {
+		return Self::new(num_cpus::get());
+	}
+}
+
 impl<T: TaskItem> TaskPool<T> {
 
-	pub fn new(max: u32) -> Self {
+	pub fn new(max: usize) -> Self {
 		return Self {
 			queue: VecDeque::new(),
 			active: vec![],

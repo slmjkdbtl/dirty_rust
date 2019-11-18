@@ -75,6 +75,10 @@ impl Sprite {
 		return self.frames[self.cur_frame].h * self.tex.height() as f32;
 	}
 
+	pub fn tex(&self) -> &gfx::Texture {
+		return &self.tex;
+	}
+
 	pub fn tex_width(&self) -> i32 {
 		return self.tex.width();
 	}

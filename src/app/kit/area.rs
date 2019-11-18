@@ -57,6 +57,15 @@ impl Area {
 
 	}
 
+	pub fn collides(&self, other: &Self) -> (bool, Vec2) {
+
+		return geom::sat(
+			&self.gverts,
+			&other.gverts,
+		);
+
+	}
+
 	pub fn overlaps(&self, other: &Self) -> bool {
 
 		use geom::Shape2D::*;

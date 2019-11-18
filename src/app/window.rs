@@ -9,7 +9,7 @@ use super::*;
 use crate::math::*;
 use crate::*;
 
-pub use glutin::MouseCursor;
+pub use glutin::MouseCursor as CursorStyle;
 
 pub trait Window {
 
@@ -25,7 +25,7 @@ pub trait Window {
 	fn is_cursor_locked(&self) -> bool;
 	fn toggle_cursor_locked(&mut self) -> Result<()>;
 
-	fn set_cursor(&self, c: MouseCursor);
+	fn set_cursor(&self, c: CursorStyle);
 
 	fn set_title(&mut self, t: &str);
 	fn title(&self) -> &str;
@@ -114,7 +114,7 @@ impl Window for Ctx {
 		return self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
-	fn set_cursor(&self, c: MouseCursor) {
+	fn set_cursor(&self, c: CursorStyle) {
 		self.windowed_ctx.window().set_cursor(c);
 	}
 

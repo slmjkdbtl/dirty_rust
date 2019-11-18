@@ -22,6 +22,11 @@ pub use res::PROGGY_COLS;
 pub use res::PROGGY_ROWS;
 pub use res::PROGGY_CHARS;
 
+pub use res::F04B03_IMG;
+pub use res::F04B03_COLS;
+pub use res::F04B03_ROWS;
+pub use res::F04B03_CHARS;
+
 pub use texture::*;
 pub use transform::*;
 pub use shader::*;
