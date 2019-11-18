@@ -33,7 +33,7 @@ impl Waveform {
 				if freq == 0.0 {
 					0.0
 				} else {
-					rand!(-1.0, 1.0)
+					math::rand((-1.0, 1.0))
 				}
 			},
 		};
