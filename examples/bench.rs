@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use dirty::math::*;
 use dirty::app::*;
 use input::Key;
 
@@ -54,7 +55,7 @@ impl app::State for Game {
 
 		for _ in 0..self.count {
 			ctx.push(&gfx::t()
-				.translate(vec2!(rand!(-w, w) as f32 * 0.5, rand!(-h, h) as f32 * 0.5))
+				.t2(vec2!(rand((-w, w)) as f32 * 0.5, rand((-h, h)) as f32 * 0.5))
 			, |ctx| {
 				ctx.draw(&shapes::sprite(&self.tex))?;
 				return Ok(());
@@ -62,7 +63,7 @@ impl app::State for Game {
 		}
 
 		ctx.push(&gfx::t()
-			.scale(vec2!(6))
+			.s2(vec2!(6))
 		, |ctx| {
 			let fps = ctx.fps();
 			let c = if fps >= 60 {
@@ -75,8 +76,8 @@ impl app::State for Game {
 		})?;
 
 		ctx.push(&gfx::t()
-			.translate(vec2!(0, 64))
-			.scale(vec2!(1.5))
+			.t2(vec2!(0, 64))
+			.s2(vec2!(1.5))
 		, |ctx| {
 			ctx.draw(&shapes::text(&format!("{} bunnies", self.count)))?;
 			return Ok(());

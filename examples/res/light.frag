@@ -18,7 +18,7 @@ uniform vec3 u_view_pos;
 vec4 frag() {
 
 	vec4 obj_color = v_color * u_color * texture2D(u_tex, v_uv);
-	vec3 normal = normalize(v_normal);
+	vec3 normal = normalize((u_model * vec4(v_normal, 1.0)).xyz);
 
 	vec3 light_color = vec3(0);
 	vec3 light_dir = normalize(u_light.pos - v_pos);

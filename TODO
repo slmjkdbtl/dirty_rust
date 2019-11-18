@@ -86,6 +86,7 @@
 - [audio] input
 - [misc] SIMD vecs
 - [audio] let user choose audio device
+- [misc] set default font
 
 == DONE
 - [http] refactor http

@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use dirty::math::*;
 use dirty::app::*;
 use dirty::task::TaskPool;
 use input::Key;
@@ -8,7 +9,7 @@ use input::Key;
 mod pix;
 use pix::*;
 
-const THREAD_COUNT: u32 = 1;
+const THREAD_COUNT: usize = 1;
 const LOAD_COUNT: usize = 120;
 
 struct Teapot {
@@ -27,7 +28,7 @@ impl Game {
 	fn load_more(&mut self) {
 		for _ in 0..LOAD_COUNT {
 			self.tasks.exec(|| {
-				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
+				return gfx::Model::load_obj(&fs::read_str("examples/res/ok.obj")?, None, None);
 			});
 		}
 	}
@@ -80,10 +81,10 @@ impl app::State for Game {
 			let modeldata = m?;
 			self.teapots.push(Teapot {
 				transform: gfx::t()
-					.translate_3d(vec3!(rand!(-320, 320), rand!(-320, 320), rand!(-640, -240)))
-					.rotate_x(rand!(0f32, 360f32).to_radians())
-					.rotate_y(rand!(0f32, 360f32).to_radians())
-					.rotate_z(rand!(0f32, 360f32).to_radians())
+					.t3(vec3!(rand((-320, 320)), rand((-320, 320)), rand((-640, -240))))
+					.rx(rand((0.0, 360.0)).to_radians())
+					.ry(rand((0.0, 360.0)).to_radians())
+					.rz(rand((0.0, 360.0)).to_radians())
 					,
 				model: gfx::Model::from_data(ctx, modeldata)?,
 			});
@@ -91,9 +92,9 @@ impl app::State for Game {
 
 		for t in &mut self.teapots {
 			t.transform = t.transform
-				.rotate_x(ctx.dt())
-				.rotate_y(ctx.dt())
-				.rotate_z(ctx.dt())
+				.rx(ctx.dt())
+				.ry(ctx.dt())
+				.rz(ctx.dt())
 				;
 		}
 
@@ -127,8 +128,8 @@ impl app::State for Game {
 		})?;
 
 		ctx.push(&gfx::t()
-			.translate(vec2!(32))
-			.scale(vec2!(2))
+			.t2(vec2!(32))
+			.s2(vec2!(2))
 		, |ctx| {
 			ctx.draw(
 				&shapes::text(&format!("{}/{}", self.tasks.completed(), self.tasks.total())),
