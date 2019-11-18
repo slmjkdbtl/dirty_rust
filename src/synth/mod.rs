@@ -7,6 +7,7 @@ export!(life);
 export!(wav);
 export!(note);
 export!(voice);
+export!(scale);
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -25,7 +26,7 @@ pub trait Stream: Send + Sync {
 }
 
 pub struct Synth {
-	notes: HashMap<Note, Voice>,
+	notes: HashMap<NoteO, Voice>,
 	volume: f32,
 	last_time: f32,
 	buf: VecDeque<f32>,
@@ -63,7 +64,7 @@ impl Synth {
 
 	}
 
-	pub fn release(&mut self, n: Note) {
+	pub fn release(&mut self, n: NoteO) {
 
 		if let Some(n) = self.notes.get_mut(&n) {
 			n.release();
@@ -144,7 +145,7 @@ pub fn play_oneshot(n: Voice) {
 
 }
 
-pub fn release(note: Note) {
+pub fn release(note: NoteO) {
 
 	let mut synth = match SYNTH.lock() {
 		Ok(s) => s,
@@ -168,7 +169,7 @@ pub fn buf() -> Option<OwningRef<MutexGuard<'static, Synth>, VecDeque<f32>>> {
 
 }
 
-pub fn build_voice(note: Note) -> VoiceBuilder {
+pub fn build_voice(note: NoteO) -> VoiceBuilder {
 	return Voice::builder(note);
 }
 

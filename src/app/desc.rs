@@ -518,7 +518,7 @@ impl gl::Shape for CubemapShape {
 		];
 
 		pos
-			.into_iter()
+			.iter()
 			.for_each(|p| {
 				VertexCubemap {
 					pos: *p,
