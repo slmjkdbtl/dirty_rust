@@ -1,6 +1,7 @@
 // wengwengweng
 
 use super::*;
+use timer::*;
 use crate::app::*;
 
 pub enum Primitive<'a> {
@@ -68,23 +69,25 @@ pub struct ParticleConf {
 	size_start: (f32, f32),
 	size_end: (f32, f32),
 	num: (usize, usize),
+	max: usize,
 }
 
 impl Default for ParticleConf {
 	fn default() -> Self {
 		return Self {
 			pos: vec2!(),
-			offset: (vec2!(0), vec2!(0)),
-			life: (3.0, 5.0),
+			offset: (vec2!(-32, -16), vec2!(32, 16)),
+			life: (1.0, 3.0),
 			color_start: (rgba!(0.9, 0.3, 0, 0.4), rgba!(1, 0.3, 0, 0.5)),
 			color_end: rgba!(0.2, 0.2, 1, 0),
 			speed: (96.0, 240.0),
-			acc: (vec2!(0, 2), vec2!(0, 2)),
-			vel: (vec2!(-0.5, -1.2), vec2!(0.5, -1.2)),
+			acc: (vec2!(-0.1, -0.5), vec2!(0.1, -0.5)),
+			vel: (vec2!(-0.2, -0.5), vec2!(0.2, -0.5)),
 			rate: (0.02, 0.05),
 			size_start: (12.0, 36.0),
 			size_end: (0.0, 0.0),
-			num: (12, 16),
+			num: (16, 24),
+			max: 1024,
 		};
 	}
 }
@@ -208,21 +211,24 @@ impl ParticleSystem {
 
 		for _ in 0..rand_t(self.conf.num) {
 
+			if self.count() <= self.conf.max {
 
-			let p = Particle {
-				timer: Timer::new(rand_t(self.conf.life)),
-				pos: self.conf.pos + rand_t(self.conf.offset),
-				acc: rand_t(self.conf.acc),
-				vel: rand_t(self.conf.vel),
-				speed: rand_t(self.conf.speed),
-				color_start: rand_t(self.conf.color_start),
-				color_end: self.conf.color_end,
-				size_start: rand_t(self.conf.size_start),
-				size_end: rand_t(self.conf.size_end),
-				dead: false,
-			};
+				let p = Particle {
+					timer: Timer::new(rand_t(self.conf.life)),
+					pos: self.conf.pos + rand_t(self.conf.offset),
+					acc: rand_t(self.conf.acc),
+					vel: rand_t(self.conf.vel),
+					speed: rand_t(self.conf.speed),
+					color_start: rand_t(self.conf.color_start),
+					color_end: self.conf.color_end,
+					size_start: rand_t(self.conf.size_start),
+					size_end: rand_t(self.conf.size_end),
+					dead: false,
+				};
 
-			self.particles.push(p);
+				self.particles.push(p);
+
+			}
 
 		}
 

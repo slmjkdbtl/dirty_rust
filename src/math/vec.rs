@@ -137,7 +137,7 @@ macro_rules! gen_vec {
 
 		impl fmt::Display for $name {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				return write!(f, "{}({})", stringify!($sname), vec![$(format!("{}", self.$member)),+].join(", "));
+				return write!(f, "{}({})", stringify!($sname), [$(format!("{}", self.$member)),+].join(", "));
 			}
 		}
 

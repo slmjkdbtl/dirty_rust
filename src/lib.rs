@@ -38,9 +38,6 @@ pub mod img;
 #[cfg(feature = "audio")]
 pub mod audio;
 
-#[cfg(feature = "geom")]
-pub mod geom;
-
 #[cfg(feature = "physics")]
 pub mod physics;
 
