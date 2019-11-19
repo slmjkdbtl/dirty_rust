@@ -9,6 +9,7 @@ personal toolkit for games and stuff
 - **audio** Sound Loading & Playback
 - **fs** Common File System Functions
 - **geom** Common Collision Detections
+- **gkit** Gamedev Kit
 - **physics** Simple Physics Simulation
 - **http** Simple HTTP Client & Server
 - **synth** Software Synthesizer
@@ -84,6 +85,7 @@ fn main() -> Result<()> {
 - **mviewer** 3d model viewer
 - **synth** minimal software synthesizer
 - **mask** stencil mask
+- **particle** particle system
 - **ttf** drawing text with truetype fonts
 - **geom** basic geomatry / collision detections
 - **dither** image processing

@@ -23,9 +23,6 @@ mod conf;
 #[cfg(feature = "gkit")]
 pub mod kit;
 
-#[cfg(feature = "ui")]
-pub mod ui;
-
 pub use state::*;
 pub use conf::*;
 
