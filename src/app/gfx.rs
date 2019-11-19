@@ -56,6 +56,9 @@ pub trait Gfx {
 	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 
+	// blend
+	fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
+
 	// transform
 	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
 	fn reset(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
@@ -260,6 +263,21 @@ impl Gfx for Ctx {
 
 	}
 
+	fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		let default = Blend::Alpha.to_gl();
+		let b = b.to_gl();
+
+		flush(self);
+		self.gl.blend_func(b.0, b.1);
+		f(self)?;
+		flush(self);
+		self.gl.blend_func(default.0, default.1);
+
+		return Ok(());
+
+	}
+
 	fn coord(&self, coord: Origin) -> Vec2 {
 
 		let w = self.gwidth();
@@ -456,6 +474,21 @@ impl OrthoProj {
 
 	}
 
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Blend {
+	Alpha,
+	Add,
+}
+
+impl Blend {
+	fn to_gl(&self) -> (gl::BlendFac, gl::BlendFac) {
+		return match self {
+			Blend::Alpha => (gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha),
+			Blend::Add => (gl::BlendFac::SrcAlpha, gl::BlendFac::One),
+		};
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

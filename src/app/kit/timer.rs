@@ -29,6 +29,10 @@ impl Timer {
 
 	}
 
+	pub fn progress(&self) -> f32 {
+		return self.time / self.limit;
+	}
+
 	pub fn tick(&mut self, dt: f32) -> bool {
 
 		self.time += dt;

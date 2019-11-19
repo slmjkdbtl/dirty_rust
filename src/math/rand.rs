@@ -4,155 +4,95 @@ use super::*;
 
 use random;
 use random::seq::SliceRandom;
-use random::Rng as RngTrait;
 use random::SeedableRng;
 
 pub type RandSeed = u64;
 
 pub trait Rand {
-	type Output;
-	fn gen_rand(&self) -> Self::Output;
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output;
+	fn gen_rand(r1: Self, r2: Self) -> Self;
+	fn gen_rand_from_rng(r1: Self, r2: Self, rng: &mut Rng) -> Self;
 }
 
-impl Rand for f32 {
+macro_rules! impl_rand {
 
-	type Output = f32;
+	($ty:ty) => {
 
-	fn gen_rand(&self) -> Self::Output {
-		return rand((0.0, *self));
-	}
+		impl Rand for $ty {
 
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-		return rng.gen((0.0, *self));
-	}
+			fn gen_rand(r1: Self, r2: Self) -> Self {
+				if r1 == r2 {
+					return r1;
+				}
+				return random::Rng::gen_range(&mut random::thread_rng(), <$ty>::min(r1, r2), <$ty>::max(r1, r2));
+			}
 
-}
+			fn gen_rand_from_rng(r1: Self, r2: Self, rng: &mut Rng) -> Self {
+				if r1 == r2 {
+					return r1;
+				}
+				return random::Rng::gen_range(&mut rng.rng, <$ty>::min(r1, r2), <$ty>::max(r1, r2));
+			}
 
-impl Rand for i32 {
-
-	type Output = i32;
-
-	fn gen_rand(&self) -> Self::Output {
-		return rand((0, *self));
-	}
-
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-		return rng.gen((0, *self));
-	}
-
-}
-
-impl Rand for (i32, i32) {
-
-	type Output = i32;
-
-	fn gen_rand(&self) -> Self::Output {
-		if self.0 == self.1 {
-			return self.0;
-		} else {
-			return random::Rng::gen_range(&mut random::thread_rng(), i32::min(self.0, self.1), i32::max(self.0, self.1));
 		}
+
 	}
 
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-		if self.0 == self.1 {
-			return self.0;
-		} else {
-			return random::Rng::gen_range(&mut rng.rng, i32::min(self.0, self.1), i32::max(self.0, self.1));
+}
+
+macro_rules! impl_rand_vec {
+
+	($ty:ty, $($mem:ident),*$(,)?) => {
+
+		impl Rand for $ty {
+
+			fn gen_rand(r1: Self, r2: Self) -> Self {
+				return Self {
+					$(
+						$mem: rand(r1.$mem, r2.$mem),
+					)*
+				};
+			}
+
+			fn gen_rand_from_rng(r1: Self, r2: Self, rng: &mut Rng) -> Self {
+				return Self {
+					$(
+						$mem: rng.gen(r1.$mem, r2.$mem),
+					)*
+				};
+			}
+
 		}
-	}
-
-}
-
-impl Rand for (f32, f32) {
-
-	type Output = f32;
-
-	fn gen_rand(&self) -> Self::Output {
-		if self.0 == self.1 {
-			return self.0;
-		} else {
-			return random::Rng::gen_range(&mut random::thread_rng(), f32::min(self.0, self.1), f32::max(self.0, self.1));
-		}
-	}
-
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-		if self.0 == self.1 {
-			return self.0;
-		} else {
-			return random::Rng::gen_range(&mut rng.rng, f32::min(self.0, self.1), f32::max(self.0, self.1));
-		}
-	}
-
-}
-
-impl Rand for (Vec2, Vec2) {
-
-	type Output = Vec2;
-
-	fn gen_rand(&self) -> Self::Output {
-
-		let x = rand((self.0.x, self.1.x));
-		let y = rand((self.0.y, self.1.y));
-
-		return vec2!(x, y);
-
-	}
-
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-
-		let x = rng.gen((self.0.x, self.1.x));
-		let y = rng.gen((self.0.y, self.1.y));
-
-		return vec2!(x, y);
 
 	}
 
 }
 
-impl Rand for (Vec3, Vec3) {
+impl_rand!(f32);
+impl_rand!(f64);
+impl_rand!(i8);
+impl_rand!(i16);
+impl_rand!(i32);
+impl_rand!(i64);
+impl_rand!(u8);
+impl_rand!(u16);
+impl_rand!(u32);
+impl_rand!(u64);
+impl_rand!(usize);
+impl_rand_vec!(Vec2, x, y);
+impl_rand_vec!(Vec3, x, y, z);
+impl_rand_vec!(Vec4, x, y, z, w);
+impl_rand_vec!(Color, r, g, b, a);
 
-	type Output = Vec3;
-
-	fn gen_rand(&self) -> Self::Output {
-
-		let x = rand((self.0.x, self.1.x));
-		let y = rand((self.0.y, self.1.y));
-		let z = rand((self.0.z, self.1.z));
-
-		return vec3!(x, y, z);
-
-	}
-
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-
-		let x = rng.gen((self.0.x, self.1.x));
-		let y = rng.gen((self.0.y, self.1.y));
-		let z = rng.gen((self.0.z, self.1.z));
-
-		return vec3!(x, y, z);
-
-	}
-
+pub fn rand<R: Rand>(r1: R, r2: R) -> R {
+	return R::gen_rand(r1, r2);
 }
 
-impl<'a, T> Rand for &'a [T] {
-
-	type Output = Option<&'a T>;
-
-	fn gen_rand(&self) -> Self::Output {
-		return self.choose(&mut random::thread_rng())
-	}
-
-	fn gen_rand_with_seed(&self, rng: &mut Rng) -> Self::Output {
-		return self.choose(&mut rng.rng)
-	}
-
+pub fn rand_t<R: Rand>(r: (R, R)) -> R {
+	return R::gen_rand(r.0, r.1);
 }
 
-pub fn rand<R: Rand>(r: R) -> R::Output {
-	return r.gen_rand();
+pub fn rand_from<'a, T>(t: &'a [T]) -> Option<&'a T> {
+	return t.choose(&mut random::thread_rng())
 }
 
 pub struct Rng {
@@ -173,9 +113,55 @@ impl Rng {
 		};
 	}
 
-	pub fn gen<R: Rand>(&mut self, r: R) -> R::Output {
-		return r.gen_rand_with_seed(self);
+	pub fn gen<R: Rand>(&mut self, r1: R, r2: R) -> R {
+		return R::gen_rand_from_rng(r1, r2, self);
 	}
 
 }
 
+#[macro_export]
+macro_rules! choose {
+
+	($c1:expr, $c2:expr) => {
+		{
+			let _rnd = rand((0.0, 1.0));
+			let _step = 1.0 / 2.0;
+			if _rnd < _step * 1.0 {
+				$c1
+			} else {
+				$c2
+			}
+		}
+	};
+
+	($c1:expr, $c2:expr, $c3:expr) => {
+		{
+			let _rnd = rand((0.0, 1.0));
+			let _step = 1.0 / 3.0;
+			if _rnd < _step * 1.0 {
+				$c1
+			} else if _rnd > _step * 1.0 && _rnd < _step * 2.0 {
+				$c2
+			} else {
+				$c3
+			}
+		}
+	};
+
+	($c1:expr, $c2:expr, $c3:expr, $c4: expr) => {
+		{
+			let _rnd = rand((0.0, 1.0));
+			let _step = 1.0 / 4.0;
+			if _rnd < _step * 1.0 {
+				$c1
+			} else if _rnd > _step * 1.0 && _rnd < _step * 2.0 {
+				$c2
+			} else if _rnd > _step * 2.0 && _rnd < _step * 3.0 {
+				$c3
+			} else {
+				$c4
+			}
+		}
+	};
+
+}

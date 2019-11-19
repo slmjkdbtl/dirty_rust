@@ -45,7 +45,7 @@ impl app::State for Game {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+		ctx.set_title(&format!("FPS: {} DCS: {} PTC: {}", ctx.fps(), ctx.draw_calls(), self.particles.count()));
 		self.particles.update(ctx.dt());
 		self.particles.set_pos(ctx.mouse_pos());
 
@@ -55,7 +55,10 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw(&self.particles)?;
+		ctx.use_blend(gfx::Blend::Add, |ctx| {
+			ctx.draw(&self.particles)?;
+			return Ok(());
+		})?;
 
 		return Ok(());
 
