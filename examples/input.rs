@@ -18,7 +18,7 @@ impl app::State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -28,7 +28,7 @@ impl app::State for Game {
 			self.events.pop_front();
 		}
 
-		match e {
+		match *e {
 			KeyPress(k) => {
 				if k == Key::Esc {
 					ctx.quit();
@@ -41,15 +41,15 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		for (i, e) in self.events.iter().enumerate() {
 			ctx.push(&gfx::t()
-				.scale(vec2!(i) / 3.0)
-				.translate(vec2!(0, i * 6))
+				.s2(vec2!(i) / 3.0)
+				.t2(vec2!(0, i * 6))
 			, |ctx| {
 				ctx.draw(
-					shapes::text(&format!("{:?}", e))
+					&shapes::text(&format!("{:?}", e))
 						.align(gfx::Origin::TopLeft)
 						.opacity(i as f32 / self.events.len() as f32)
 				)?;

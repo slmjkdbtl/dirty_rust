@@ -3,6 +3,8 @@
 == DOING
 - [synth] better API
 - [synth] popping sound every second
+- [gfx] canvas projection
+- [gfx] fix fullscreen canvas, ignore resize for now
 
 == TODO
 - [http] use rustls instead of native-tls

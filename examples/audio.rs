@@ -24,11 +24,11 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
-		match e {
+		match *e {
 			KeyPress(k) => {
 				if k == Key::Esc {
 					ctx.quit();

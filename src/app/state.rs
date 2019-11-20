@@ -7,7 +7,7 @@ pub trait State: 'static + Sized {
 
 	fn init(_: &mut Ctx) -> Result<Self>;
 
-	fn event(&mut self, _: &mut Ctx, _: input::Event) -> Result<()> {
+	fn event(&mut self, _: &mut Ctx, _: &input::Event) -> Result<()> {
 		return Ok(());
 	}
 

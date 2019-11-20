@@ -22,14 +22,16 @@ impl app::State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
+				match *k {
+					Key::F => ctx.toggle_fullscreen(),
+					Key::Esc => ctx.quit(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -44,7 +46,7 @@ impl app::State for Game {
 		use shapes::*;
 
 		ctx.push(&gfx::t()
-			.scale(vec2!(12))
+			.s2(vec2!(12))
 		, |ctx| {
 			ctx.draw(
 				&text("营养过剩")

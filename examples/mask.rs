@@ -1,4 +1,4 @@
-rgba!gwengweng
+// wengwengweng
 
 use dirty::*;
 use dirty::app::*;
@@ -18,11 +18,11 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
-		match e {
+		match *e {
 			KeyPress(k) => {
 				if k == Key::Esc {
 					ctx.quit();
@@ -38,14 +38,14 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.push(&gfx::t()
-			.scale(vec2!(2))
+			.s2(vec2!(2))
 		, |ctx| {
 
 			ctx.draw_masked(|ctx| {
 				return ctx.draw(&shapes::sprite(&self.mask));
 			}, |ctx| {
 				return ctx.push(&gfx::t()
-					.translate(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
+					.t2(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
 				, |ctx| {
 					return ctx.draw(&shapes::gradient(
 						vec2!(0, -80),

@@ -26,25 +26,26 @@ here's a minimal window setup:
 
 ```rust
 use dirty::*;
-use dirty::app::*;
+use app::*;
+use input::Key;
 
 struct Game;
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(_: &mut app::Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-		use input::Key;
 
 		match e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
+				match *k {
+					Key::Esc => ctx.quit(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -54,7 +55,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw_t(&gfx::t()
 			.t3(vec3!(0, 0, -6))
@@ -71,7 +72,7 @@ impl app::State for Game {
 }
 
 fn main() -> Result<()> {
-	return app::run::<Game>();
+	return run::<Game>();
 }
 
 ```
