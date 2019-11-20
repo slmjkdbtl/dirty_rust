@@ -115,7 +115,7 @@ impl Ctx {
 			height: canvas.height() as f32 / dpi,
 			near: self.conf.near,
 			far: self.conf.far,
-			origin: self.conf.origin,
+			origin: canvas.origin(),
 		}.as_mat4();
 
 		self.proj_2d = proj_2d.flip_y();
@@ -139,8 +139,8 @@ impl Ctx {
 		self.gl.viewport(
 			0,
 			0,
-			(self.conf.width as f32 * dpi) as i32,
-			(self.conf.height as f32 * dpi) as i32,
+			(self.width as f32 * dpi) as i32,
+			(self.height as f32 * dpi) as i32,
 		);
 
 		return Ok(());

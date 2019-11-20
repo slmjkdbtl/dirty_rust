@@ -3,7 +3,6 @@
 use dirty::*;
 use app::*;
 use kit::*;
-use math::*;
 use input::Key;
 
 struct Game {
@@ -22,7 +21,10 @@ impl app::State for Game {
 		sprite.play("run");
 
 		return Ok(Self {
-			canvas: gfx::Canvas::new(ctx, 320, 480)?,
+			canvas: gfx::Canvas::builder()
+				.origin(gfx::Origin::Center)
+				.size(320, 480)
+				.build(ctx)?,
 			sprite: sprite,
 		});
 
@@ -57,7 +59,6 @@ impl app::State for Game {
 			ctx.clear();
 			ctx.draw(&shapes::rect(vec2!(-1000), vec2!(1000)).fill(rgba!(0, 0, 1, 1)))?;
 			ctx.draw(&shapes::rect(vec2!(-100), vec2!(100)).fill(rgba!(1, 0, 1, 1)))?;
-			ctx.draw(&self.sprite)?;
 			return Ok(());
 		})?;
 
@@ -68,6 +69,7 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw(&shapes::canvas(&self.canvas))?;
+		ctx.draw(&self.sprite)?;
 
 		return Ok(());
 
@@ -78,7 +80,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-// 		.origin(gfx::Origin::TopRight)
+		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}
