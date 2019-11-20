@@ -16,8 +16,8 @@ pub struct Particle {
 	speed: f32,
 	color_start: Color,
 	color_end: Color,
-	size_start: f32,
-	size_end: f32,
+	size_start: Vec2,
+	size_end: Vec2,
 	dead: bool,
 }
 
@@ -46,7 +46,7 @@ impl gfx::Drawable for Particle {
 		let color = self.color_start.lerp(self.color_end, t);
 
 		ctx.draw(
-			&shapes::rect(self.pos - vec2!(size) / 2.0, self.pos + vec2!(size) / 2.0)
+			&shapes::rect(self.pos - size / 2.0, self.pos + size / 2.0)
 				.fill(color)
 		)?;
 
@@ -57,105 +57,22 @@ impl gfx::Drawable for Particle {
 }
 
 pub struct ParticleConf {
-	pos: Vec2,
-	offset: (Vec2, Vec2),
-	life: (f32, f32),
-	color_start: (Color, Color),
-	color_end: Color,
-	speed: (f32, f32),
-	acc: (Vec2, Vec2),
-	vel: (Vec2, Vec2),
-	rate: (f32, f32),
-	size_start: (f32, f32),
-	size_end: (f32, f32),
-	num: (usize, usize),
-	max: usize,
-}
-
-impl Default for ParticleConf {
-	fn default() -> Self {
-		return Self {
-			pos: vec2!(),
-			offset: (vec2!(-32, -16), vec2!(32, 16)),
-			life: (1.0, 3.0),
-			color_start: (rgba!(0.9, 0.3, 0, 0.4), rgba!(1, 0.3, 0, 0.5)),
-			color_end: rgba!(0.2, 0.2, 1, 0),
-			speed: (96.0, 240.0),
-			acc: (vec2!(-0.1, -0.5), vec2!(0.1, -0.5)),
-			vel: (vec2!(-0.2, -0.5), vec2!(0.2, -0.5)),
-			rate: (0.02, 0.05),
-			size_start: (12.0, 36.0),
-			size_end: (0.0, 0.0),
-			num: (16, 24),
-			max: 1024,
-		};
-	}
-}
-
-pub struct ParticleSystemBuilder {
-	conf: ParticleConf,
-}
-
-impl ParticleSystemBuilder {
-	pub fn pos(mut self, p: Vec2) -> Self {
-		self.conf.pos = p;
-		return self;
-	}
-	pub fn offset(mut self, min: Vec2, max: Vec2) -> Self {
-		self.conf.offset = (min, max);
-		return self;
-	}
-	pub fn life(mut self, min: f32, max: f32) -> Self {
-		self.conf.life = (min, max);
-		return self;
-	}
-	pub fn color_start(mut self, min: Color, max: Color) -> Self {
-		self.conf.color_start = (min, max);
-		return self;
-	}
-	pub fn color_end(mut self, c: Color) -> Self {
-		self.conf.color_end = c;
-		return self;
-	}
-	pub fn speed(mut self, min: f32, max: f32) -> Self {
-		self.conf.speed = (min, max);
-		return self;
-	}
-	pub fn acc(mut self, min: Vec2, max: Vec2) -> Self {
-		self.conf.acc = (min, max);
-		return self;
-	}
-	pub fn vel(mut self, min: Vec2, max: Vec2) -> Self {
-		self.conf.vel = (min, max);
-		return self;
-	}
-	pub fn rate(mut self, min: f32, max: f32) -> Self {
-		self.conf.rate = (min, max);
-		return self;
-	}
-	pub fn size_start(mut self, min: f32, max: f32) -> Self {
-		self.conf.size_start = (min, max);
-		return self;
-	}
-	pub fn size_end(mut self, min: f32, max: f32) -> Self {
-		self.conf.size_end = (min, max);
-		return self;
-	}
-	pub fn num(mut self, min: usize, max: usize) -> Self {
-		self.conf.num = (min, max);
-		return self;
-	}
-	pub fn build(self) -> ParticleSystem {
-		return ParticleSystem {
-			particles: Vec::with_capacity(256),
-			spawn_timer: Timer::new(rand_t(self.conf.rate)),
-			conf: self.conf,
-			paused: false,
-		};
-	}
+	pub offset: (Vec2, Vec2),
+	pub life: (f32, f32),
+	pub color_start: (Color, Color),
+	pub color_end: Color,
+	pub speed: (f32, f32),
+	pub acc: (Vec2, Vec2),
+	pub vel: (Vec2, Vec2),
+	pub rate: (f32, f32),
+	pub size_start: (Vec2, Vec2),
+	pub size_end: (Vec2, Vec2),
+	pub num: (usize, usize),
+	pub max: usize,
 }
 
 pub struct ParticleSystem {
+	pos: Vec2,
 	particles: Vec<Particle>,
 	conf: ParticleConf,
 	spawn_timer: Timer,
@@ -164,9 +81,13 @@ pub struct ParticleSystem {
 
 impl ParticleSystem {
 
-	pub fn builder() -> ParticleSystemBuilder {
-		return ParticleSystemBuilder {
-			conf: ParticleConf::default(),
+	pub fn from_conf(conf: ParticleConf) -> Self {
+		return Self {
+			pos: vec2!(),
+			spawn_timer: Timer::new(rand_t(conf.rate)),
+			particles: Vec::with_capacity(256),
+			paused: false,
+			conf: conf,
 		};
 	}
 
@@ -203,8 +124,20 @@ impl ParticleSystem {
 		self.paused = false;
 	}
 
+	pub fn conf_mut(&mut self) -> &mut ParticleConf {
+		return &mut self.conf;
+	}
+
+	pub fn conf(&self) -> &ParticleConf {
+		return &self.conf;
+	}
+
 	pub fn set_pos(&mut self, p: Vec2) {
-		self.conf.pos = p;
+		self.pos = p;
+	}
+
+	pub fn pos(&self) -> Vec2 {
+		return self.pos;
 	}
 
 	pub fn emit(&mut self) {
@@ -215,7 +148,7 @@ impl ParticleSystem {
 
 				let p = Particle {
 					timer: Timer::new(rand_t(self.conf.life)),
-					pos: self.conf.pos + rand_t(self.conf.offset),
+					pos: self.pos + rand_t(self.conf.offset),
 					acc: rand_t(self.conf.acc),
 					vel: rand_t(self.conf.vel),
 					speed: rand_t(self.conf.speed),
