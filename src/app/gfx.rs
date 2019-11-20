@@ -39,46 +39,9 @@ pub use skybox::*;
 
 pub trait Action = FnOnce(&mut Ctx) -> Result<()>;
 
-pub trait Gfx {
+impl Ctx {
 
-	// clearing
-	fn clear(&mut self);
-	fn clear_ex(&mut self, s: Surface);
-
-	// stats
-	fn draw_calls(&self) -> usize;
-
-	// drawing
-	fn draw(&mut self, s: &impl Drawable) -> Result<()>;
-	fn draw_t(&mut self, t: &Transform, s: &impl Drawable) -> Result<()>;
-	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-
-	// blend
-	fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-
-	// transform
-	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-	fn reset(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-
-	// coord
-	fn coord(&self, coord: Origin) -> Vec2;
-
-	// camera
-	fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()>;
-
-	// query
-	fn default_font(&self) -> &BitmapFont;
-	fn transform(&self) -> Transform;
-	fn to_sc(&self, pt: Vec3) -> Vec2;
-
-}
-
-impl Gfx for Ctx {
-
-	fn clear(&mut self) {
+	pub fn clear(&mut self) {
 
 		flush(self);
 		self.gl.clear(Surface::Color);
@@ -87,18 +50,18 @@ impl Gfx for Ctx {
 
 	}
 
-	fn clear_ex(&mut self, s: Surface) {
+	pub fn clear_ex(&mut self, s: Surface) {
 
 		flush(self);
 		self.gl.clear(s);
 
 	}
 
-	fn draw_calls(&self) -> usize {
+	pub fn draw_calls(&self) -> usize {
 		return self.draw_calls_last;
 	}
 
-	fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let ot = self.transform;
 
@@ -110,7 +73,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn reset(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn reset(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let ot = self.transform;
 
@@ -122,17 +85,17 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw(&mut self, shape: &impl Drawable) -> Result<()> {
+	pub fn draw(&mut self, shape: &impl Drawable) -> Result<()> {
 		return shape.draw(self);
 	}
 
-	fn draw_t(&mut self, t: &Transform, shape: &impl Drawable) -> Result<()> {
+	pub fn draw_t(&mut self, t: &Transform, shape: &impl Drawable) -> Result<()> {
 		return self.push(t, |ctx| {
 			return ctx.draw(shape);
 		});
 	}
 
-	fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
 			return Err(Error::Gfx(format!("cannot use canvas inside a canvas call")));
@@ -184,7 +147,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let uniforms = uniform.values()
 			.into_iter()
@@ -203,7 +166,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let uniforms = uniform.values()
 			.into_iter()
@@ -222,7 +185,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let gl = self.gl.clone();
 
@@ -263,7 +226,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let default = Blend::Alpha.to_gl();
 		let b = b.to_gl();
@@ -278,7 +241,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn coord(&self, coord: Origin) -> Vec2 {
+	pub fn coord(&self, coord: Origin) -> Vec2 {
 
 		let w = self.gwidth();
 		let h = self.gheight();
@@ -289,7 +252,7 @@ impl Gfx for Ctx {
 
 	}
 
-	fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let oview_3d = self.view_3d;
 		let oproj_3d = self.proj_3d;
@@ -310,15 +273,15 @@ impl Gfx for Ctx {
 
 	}
 
-	fn default_font(&self) -> &BitmapFont {
+	pub fn default_font(&self) -> &BitmapFont {
 		return &self.default_font;
 	}
 
-	fn transform(&self) -> Transform {
+	pub fn transform(&self) -> Transform {
 		return self.transform;
 	}
 
-	fn to_sc(&self, pt: Vec3) -> Vec2 {
+	pub fn to_sc(&self, pt: Vec3) -> Vec2 {
 
 		let pt = self.proj_3d * self.view_3d * self.transform * pt;
 		let (gw, gh) = (self.gwidth(), self.gheight());

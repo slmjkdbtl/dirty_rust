@@ -29,10 +29,6 @@ pub use conf::*;
 use crate::*;
 use crate::math::*;
 
-pub use gfx::Gfx;
-pub use window::Window;
-pub use input::Input;
-
 #[cfg(feature = "imgui")]
 pub use imgui_lib as imgui;
 
@@ -293,11 +289,7 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
-	let font_img = img::Image::from_bytes(res::F04B03_IMG)?;
-	let font_width = font_img.width();
-	let font_height = font_img.height();
-	let font_tex = gl::Texture2D::from(&gl, font_width, font_height, &font_img.into_raw())?;
-	let font_tex = gfx::Texture::from_gl_tex(font_tex);
+	let font_tex = gfx::Texture::from_bytes(&gl, res::F04B03_IMG)?;
 
 	let font = gfx::BitmapFont::from_tex(
 		font_tex,
@@ -679,6 +671,22 @@ impl FPSCounter {
 
 }
 
+pub trait GfxCtx {
+	fn gl_ctx(&self) -> &gl::Device;
+}
+
+impl GfxCtx for Ctx {
+	fn gl_ctx(&self) -> &gl::Device {
+		return &self.gl;
+	}
+}
+
+impl GfxCtx for gl::Device {
+	fn gl_ctx(&self) -> &gl::Device {
+		return self;
+	}
+}
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Platform {
 	Mobile,
@@ -700,3 +708,4 @@ pub fn platform() -> Platform {
 	return Platform::Unknown;
 
 }
+
