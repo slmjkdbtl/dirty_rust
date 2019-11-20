@@ -7,6 +7,7 @@ use crate::*;
 use super::*;
 use super::gfx::*;
 
+#[derive(Clone)]
 pub struct CanvasBuilder {
 	origin: Option<Origin>,
 	size: Option<(i32, i32)>,
@@ -84,6 +85,11 @@ impl Canvas {
 	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 		return self.tex.save(path);
+	}
+
+	/// get underlying texture for the canvas
+	pub fn origin(&self) -> gfx::Origin {
+		return self.origin;
 	}
 
 	pub(super) fn gl_fbuf(&self) -> &gl::Framebuffer {

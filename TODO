@@ -3,14 +3,11 @@
 == DOING
 - [synth] better API
 - [synth] popping sound every second
-- [gfx] canvas projection
-- [gfx] fix fullscreen canvas, ignore resize for now
 
 == TODO
 - [http] use rustls instead of native-tls
 - [misc] async fs
 - [misc] async http
-- [gfx] fix resize framebuffer weirdness
 - [gfx] higer level gl stencil abstraction
 - [gfx] 3d texture
 - [math] tween functions
@@ -89,6 +86,7 @@
 - [misc] SIMD vecs
 - [audio] let user choose audio device
 - [misc] set default font
+- [gfx] resize weirdness
 
 == DONE
 - [http] refactor http
@@ -169,4 +167,6 @@
 - [synth] polyphony
 - [synth] static
 - [gfx] global scale
+- [gfx] canvas projection
+- [gfx] fix fullscreen canvas, ignore resize for now
 
