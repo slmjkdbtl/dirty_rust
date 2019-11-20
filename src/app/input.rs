@@ -43,17 +43,9 @@ pub type TouchID = u64;
 use super::*;
 use crate::*;
 
-pub trait Input {
-	fn down_keys(&self) -> HashSet<Key>;
-	fn key_down(&self, key: Key) -> bool;
-	fn mouse_down(&self, mouse: Mouse) -> bool;
-	fn mouse_pos(&self) -> Vec2;
-	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool;
-}
+impl Ctx {
 
-impl Input for app::Ctx {
-
-	fn down_keys(&self) -> HashSet<Key> {
+	pub fn down_keys(&self) -> HashSet<Key> {
 
 		use ButtonState::*;
 
@@ -65,15 +57,15 @@ impl Input for app::Ctx {
 
 	}
 
-	fn key_down(&self, key: Key) -> bool {
+	pub fn key_down(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Down) || key_pressed(self, key);
 	}
 
-	fn mouse_down(&self, mouse: Mouse) -> bool {
+	pub fn mouse_down(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Down) || mouse_pressed(self, mouse);
 	}
 
-	fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Down) || gamepad_pressed(self, id, button);
 		} else {
@@ -81,7 +73,7 @@ impl Input for app::Ctx {
 		}
 	}
 
-	fn mouse_pos(&self) -> Vec2 {
+	pub fn mouse_pos(&self) -> Vec2 {
 
 		let (w, h) = (self.width, self.height);
 		let (gw, gh) = (self.gwidth(), self.gheight());

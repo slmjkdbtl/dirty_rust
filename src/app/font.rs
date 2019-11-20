@@ -97,7 +97,7 @@ pub struct TruetypeFont {
 impl TruetypeFont {
 
 	/// parse a truetype file from bytes
-	pub fn from_bytes(ctx: &Ctx, b: &[u8], size: i32) -> Result<Self> {
+	pub fn from_bytes(ctx: &impl GfxCtx, b: &[u8], size: i32) -> Result<Self> {
 
 		let font = fontdue::Font::from_bytes(b)?;
 		let (max_w, max_h) = (size * 32, size * 32);
