@@ -125,11 +125,11 @@ impl app::State for Sim {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
-		match e {
+		match *e {
 			KeyPress(k) => {
 				if k == Key::Esc {
 					ctx.quit();
@@ -151,15 +151,13 @@ impl app::State for Sim {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
-
-		use shapes::*;
+	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		for (i, row) in self.grids.iter().enumerate() {
 			for (j, g) in row.iter().enumerate() {
 				if let Some(c) = g {
 					ctx.draw(
-						rect(vec2!(i as i32 * GRID_SIZE, j as i32 * GRID_SIZE), vec2!((i + 1) as i32 * GRID_SIZE, (j + 1) as i32 * GRID_SIZE))
+						&shapes::rect(vec2!(i as i32 * GRID_SIZE, j as i32 * GRID_SIZE), vec2!((i + 1) as i32 * GRID_SIZE, (j + 1) as i32 * GRID_SIZE))
 							.fill(GRIDS[*c as usize])
 					)?;
 				}
@@ -167,10 +165,10 @@ impl app::State for Sim {
 		}
 
 		ctx.push(&gfx::t()
-			.translate(vec2!(16))
+			.t2(vec2!(16))
 		, |ctx| {
 			ctx.draw(
-				shapes::text(&format!("{}", self.count))
+				&shapes::text(&format!("{}", self.count))
 					.align(gfx::Origin::TopLeft)
 			)?;
 			return Ok(());

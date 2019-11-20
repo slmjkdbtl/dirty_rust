@@ -55,17 +55,17 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
-				}
-				if k == Key::Space {
-					self.load_more();
+				match *k {
+					Key::F => ctx.toggle_fullscreen(),
+					Key::Esc => ctx.quit(),
+					Key::Space => self.load_more(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -81,10 +81,10 @@ impl app::State for Game {
 			let modeldata = m?;
 			self.teapots.push(Teapot {
 				transform: gfx::t()
-					.t3(vec3!(rand((-320, 320)), rand((-320, 320)), rand((-640, -240))))
-					.rx(rand((0.0, 360.0)).to_radians())
-					.ry(rand((0.0, 360.0)).to_radians())
-					.rz(rand((0.0, 360.0)).to_radians())
+					.t3(vec3!(rand(-320, 320), rand(-320, 320), rand(-640, -240)))
+					.rx(rand(0f32, 360f32).to_radians())
+					.ry(rand(0f32, 360f32).to_radians())
+					.rz(rand(0f32, 360f32).to_radians())
 					,
 				model: gfx::Model::from_data(ctx, modeldata)?,
 			});

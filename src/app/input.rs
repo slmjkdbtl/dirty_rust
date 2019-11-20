@@ -235,11 +235,11 @@ pub(super) fn poll(
 
 									glutin::ElementState::Pressed => {
 
-										s.event(&mut ctx, Event::KeyPressRepeat(key))?;
+										s.event(&mut ctx, &Event::KeyPressRepeat(key))?;
 
 										if key_up(ctx, key) || key_released(ctx, key) {
 											ctx.key_states.insert(key, ButtonState::Pressed);
-											s.event(&mut ctx, Event::KeyPress(key))?;
+											s.event(&mut ctx, &Event::KeyPress(key))?;
 										}
 
 									},
@@ -247,7 +247,7 @@ pub(super) fn poll(
 									glutin::ElementState::Released => {
 										if ctx.key_down(key) || key_pressed(ctx, key) {
 											ctx.key_states.insert(key, ButtonState::Released);
-											s.event(&mut ctx, Event::KeyRelease(key))?;
+											s.event(&mut ctx, &Event::KeyRelease(key))?;
 										}
 									},
 
@@ -268,13 +268,13 @@ pub(super) fn poll(
 								glutin::ElementState::Pressed => {
 									if mouse_up(ctx, button) || mouse_released(ctx, button) {
 										ctx.mouse_states.insert(button, ButtonState::Pressed);
-										s.event(&mut ctx, Event::MousePress(button))?;
+										s.event(&mut ctx, &Event::MousePress(button))?;
 									}
 								},
 								glutin::ElementState::Released => {
 									if ctx.mouse_down(button) || mouse_pressed(ctx, button) {
 										ctx.mouse_states.insert(button, ButtonState::Released);
-										s.event(&mut ctx, Event::MouseRelease(button))?;
+										s.event(&mut ctx, &Event::MouseRelease(button))?;
 									}
 								},
 
@@ -306,13 +306,13 @@ pub(super) fn poll(
 						}
 
 						let p = ctx.scroll_phase;
-						s.event(&mut ctx, Event::Scroll(delta.into(), p))?;
+						s.event(&mut ctx, &Event::Scroll(delta.into(), p))?;
 
 					},
 
 					ReceivedCharacter(ch) => {
 						if !INVALID_CHARS.contains(&ch) {
-							s.event(&mut ctx, Event::TextInput(ch))?;
+							s.event(&mut ctx, &Event::TextInput(ch))?;
 						}
 					},
 
@@ -324,28 +324,28 @@ pub(super) fn poll(
 						ctx.width = w;
 						ctx.height = h;
 
-						s.event(&mut ctx, Event::Resize(w, h))?;
+						s.event(&mut ctx, &Event::Resize(w, h))?;
 
 					},
 
 					Touch(touch) => {
-						s.event(&mut ctx, Event::Touch(touch.id, touch.location.into()))?;
+						s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()))?;
 					},
 
 					HoveredFile(path) => {
-						s.event(&mut ctx, Event::FileHover(path))?;
+						s.event(&mut ctx, &Event::FileHover(path))?;
 					},
 
 					HoveredFileCancelled => {
-						s.event(&mut ctx, Event::FileHoverCancel)?;
+						s.event(&mut ctx, &Event::FileHoverCancel)?;
 					},
 
 					DroppedFile(path) => {
-						s.event(&mut ctx, Event::FileDrop(path))?;
+						s.event(&mut ctx, &Event::FileDrop(path))?;
 					},
 
 					Focused(b) => {
-						s.event(&mut ctx, Event::Focus(b))?;
+						s.event(&mut ctx, &Event::Focus(b))?;
 					},
 
 					CloseRequested => close = true,
@@ -357,7 +357,7 @@ pub(super) fn poll(
 				DeviceEvent { event, .. } => match event {
 					glutin::DeviceEvent::MouseMotion { delta } => {
 						let scale = ctx.conf.scale;
-						s.event(&mut ctx, Event::MouseMove(vec2!(delta.0, delta.1) / scale))?;
+						s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1) / scale))?;
 					},
 					_ => (),
 				},
@@ -401,7 +401,7 @@ pub(super) fn poll(
 							.or_insert(HashMap::new())
 							.insert(button, ButtonState::Pressed);
 
-						s.event(&mut ctx, Event::GamepadPress(id, button))?;
+						s.event(&mut ctx, &Event::GamepadPress(id, button))?;
 
 					}
 
@@ -411,7 +411,7 @@ pub(super) fn poll(
 
 			ButtonRepeated(button, ..) => {
 				if let Some(button) = GamepadButton::from_extern(button) {
-					s.event(&mut ctx, Event::GamepadPressRepeat(id, button))?;
+					s.event(&mut ctx, &Event::GamepadPressRepeat(id, button))?;
 				}
 			},
 
@@ -426,7 +426,7 @@ pub(super) fn poll(
 							.or_insert(HashMap::new())
 							.insert(button, ButtonState::Released);
 
-						s.event(&mut ctx, Event::GamepadRelease(id, button))?;
+						s.event(&mut ctx, &Event::GamepadRelease(id, button))?;
 
 					}
 
@@ -445,19 +445,19 @@ pub(super) fn poll(
 				match axis {
 					gilrs::ev::Axis::LeftStickX => {
 						pos.0.x = val;
-						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
 					},
 					gilrs::ev::Axis::LeftStickY => {
 						pos.0.y = val;
-						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
 					},
 					gilrs::ev::Axis::RightStickX => {
 						pos.1.x = val;
-						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
 					},
 					gilrs::ev::Axis::RightStickY => {
 						pos.1.y = val;
-						s.event(&mut ctx, Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
 					},
 					_ => {},
 
@@ -468,11 +468,11 @@ pub(super) fn poll(
 			},
 
 			Connected => {
-				s.event(&mut ctx, Event::GamepadConnect(id))?;
+				s.event(&mut ctx, &Event::GamepadConnect(id))?;
 			},
 
 			Disconnected => {
-				s.event(&mut ctx, Event::GamepadDisconnect(id))?;
+				s.event(&mut ctx, &Event::GamepadDisconnect(id))?;
 			},
 
 			_ => {},

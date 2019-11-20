@@ -142,7 +142,7 @@ impl app::State for Viewer {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -150,28 +150,14 @@ impl app::State for Viewer {
 
 			KeyPress(k) => {
 
-				if k == Key::F {
-					ctx.toggle_fullscreen();
-				}
-
-				if k == Key::Space {
-					self.resetting = true;
-				}
-
-				if k == Key::Esc {
-					ctx.quit();
-				}
-
-				if k == Key::L {
-					self.wireframe = !self.wireframe;
-				}
-
-				if k == Key::H {
-					self.helping = !self.helping;
-				}
-
-				if k == Key::N {
-					self.show_normal = !self.show_normal;
+				match *k {
+					Key::F => ctx.toggle_fullscreen(),
+					Key::Esc => ctx.quit(),
+					Key::Space => self.resetting = true,
+					Key::L => self.wireframe = !self.wireframe,
+					Key::H => self.helping = !self.helping,
+					Key::N => self.show_normal = !self.show_normal,
+					_ => {},
 				}
 
 			},
@@ -197,7 +183,7 @@ impl app::State for Viewer {
 
 					// TODO: correctly handle rotation
 					self.resetting = false;
-					self.rot += delta;
+					self.rot += *delta;
 
 					if self.rot.x >= 360.0 {
 						self.rot.x = self.rot.x - 360.0;

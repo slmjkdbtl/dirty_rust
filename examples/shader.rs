@@ -18,10 +18,10 @@ struct TwistUniform {
 
 impl gfx::Uniform for TwistUniform {
 	fn values(&self) -> gfx::UniformValues {
-		return vec![
-			("resolution", self.resolution.into()),
-			("mouse", self.mouse.into()),
-			("time", self.time.into()),
+		return hashmap![
+			"resolution" => &self.resolution,
+			"mouse" => &self.mouse,
+			"time" => &self.time,
 		];
 	}
 }
@@ -38,17 +38,16 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
-				}
-				if k == Key::F {
-					ctx.toggle_fullscreen();
+				match *k {
+					Key::Esc => ctx.quit(),
+					Key::F => ctx.toggle_fullscreen(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -69,7 +68,7 @@ impl app::State for Game {
 		}, |ctx| {
 
 			ctx.draw(
-				shapes::rect(
+				&shapes::rect(
 					ctx.coord(gfx::Origin::TopLeft) + vec2!(48),
 					ctx.coord(gfx::Origin::BottomRight) - vec2!(48)
 				)

@@ -20,11 +20,11 @@ impl app::State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
-		match e {
+		match *e {
 			KeyPress(k) => {
 				if k == Key::Esc {
 					ctx.quit();
@@ -55,7 +55,7 @@ impl app::State for Game {
 
 		for _ in 0..self.count {
 			ctx.push(&gfx::t()
-				.t2(vec2!(rand((-w, w)) as f32 * 0.5, rand((-h, h)) as f32 * 0.5))
+				.t2(vec2!(rand(-w, w) as f32 * 0.5, rand(-h, h) as f32 * 0.5))
 			, |ctx| {
 				ctx.draw(&shapes::sprite(&self.tex))?;
 				return Ok(());

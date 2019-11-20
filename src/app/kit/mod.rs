@@ -1,8 +1,8 @@
 // wengwengweng
 
-pub mod timer;
-pub mod sprite;
-pub mod area;
-pub mod particle;
-pub mod geom;
+export!(timer);
+export!(sprite);
+export!(area);
+export!(particle);
+export!(geom);
 

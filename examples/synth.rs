@@ -9,26 +9,26 @@ use app::*;
 use synth::*;
 use input::Key;
 
-fn key_to_note(k: Key, o: i32) -> Option<Note> {
+fn key_to_note(k: Key, o: i32) -> Option<NoteO> {
 
 	return match k {
-		Key::A => Some(Note::C(o)),
-		Key::W => Some(Note::Csh(o)),
-		Key::S => Some(Note::D(o)),
-		Key::E => Some(Note::Dsh(o)),
-		Key::D => Some(Note::E(o)),
-		Key::F => Some(Note::F(o)),
-		Key::T => Some(Note::Fsh(o)),
-		Key::G => Some(Note::G(o)),
-		Key::Y => Some(Note::Gsh(o)),
-		Key::H => Some(Note::A(o)),
-		Key::U => Some(Note::Ash(o)),
-		Key::J => Some(Note::B(o)),
-		Key::K => Some(Note::C(o + 1)),
-		Key::O => Some(Note::Csh(o + 1)),
-		Key::L => Some(Note::D(o + 1)),
-		Key::P => Some(Note::Dsh(o + 1)),
-		Key::Semicolon => Some(Note::E(o + 1)),
+		Key::A => Some((Note::C, o).into()),
+		Key::W => Some((Note::Csh, o).into()),
+		Key::S => Some((Note::D, o).into()),
+		Key::E => Some((Note::Dsh, o).into()),
+		Key::D => Some((Note::E, o).into()),
+		Key::F => Some((Note::F, o).into()),
+		Key::T => Some((Note::Fsh, o).into()),
+		Key::G => Some((Note::G, o).into()),
+		Key::Y => Some((Note::Gsh, o).into()),
+		Key::H => Some((Note::A, o).into()),
+		Key::U => Some((Note::Ash, o).into()),
+		Key::J => Some((Note::B, o).into()),
+		Key::K => Some((Note::C, o + 1).into()),
+		Key::O => Some((Note::Csh, o + 1).into()),
+		Key::L => Some((Note::D, o + 1).into()),
+		Key::P => Some((Note::Dsh, o + 1).into()),
+		Key::Semicolon => Some((Note::E, o + 1).into()),
 		_ => None,
 	};
 
@@ -38,7 +38,7 @@ struct Game {
 	octave: i32,
 	waveform: Waveform,
 	envelope: Envelope,
-	pressed: HashMap<Key, Note>,
+	pressed: HashMap<Key, NoteO>,
 }
 
 impl app::State for Game {
@@ -58,7 +58,7 @@ impl app::State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -66,49 +66,24 @@ impl app::State for Game {
 
 			KeyPress(k) => {
 
-				if k == Key::Esc {
-					ctx.quit();
+				match *k {
+					Key::Esc => ctx.quit(),
+					Key::F => ctx.toggle_fullscreen(),
+					Key::Up => {},
+					Key::Down => {},
+					Key::Left => self.octave -= 1,
+					Key::Right => self.octave += 1,
+					Key::Key1 => self.waveform = Waveform::Sine,
+					Key::Key2 => self.waveform = Waveform::Triangle,
+					Key::Key3 => self.waveform = Waveform::Square,
+					Key::Key4 => self.waveform = Waveform::Saw,
+					Key::Key5 => self.waveform = Waveform::Noise,
+					_ => {},
 				}
 
-				if k == Key::Right {
-					self.octave += 1;
-				}
+				if let Some(note) = key_to_note(*k, self.octave) {
 
-				if k == Key::Left {
-					self.octave -= 1;
-				}
-
-				if k == Key::Up {
-					// ...
-				}
-
-				if k == Key::Down {
-					// ...
-				}
-
-				if k == Key::Key1 {
-					self.waveform = Waveform::Sine;
-				}
-
-				if k == Key::Key2 {
-					self.waveform = Waveform::Triangle;
-				}
-
-				if k == Key::Key3 {
-					self.waveform = Waveform::Square;
-				}
-
-				if k == Key::Key4 {
-					self.waveform = Waveform::Saw;
-				}
-
-				if k == Key::Key5 {
-					self.waveform = Waveform::Noise;
-				}
-
-				if let Some(note) = key_to_note(k, self.octave) {
-
-					self.pressed.insert(k, note);
+					self.pressed.insert(*k, note);
 
 					let v = build_voice(note)
 						.waveform(self.waveform)
@@ -123,7 +98,7 @@ impl app::State for Game {
 
 			KeyRelease(k) => {
 
-				if let Some(n) = self.pressed.get(&k) {
+				if let Some(n) = self.pressed.get(k) {
 					synth::release(*n);
 				}
 

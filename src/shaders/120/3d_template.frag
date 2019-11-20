@@ -7,6 +7,7 @@ varying vec4 v_color;
 
 uniform sampler2D u_tex;
 uniform vec4 u_color;
+uniform mat4 u_model;
 
 ###REPLACE###
 
