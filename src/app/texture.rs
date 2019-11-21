@@ -61,11 +61,11 @@ impl Texture {
 		return self.gl_tex.get_data(self.width(), self.height());
 	}
 
-	pub(super) fn data(&self, data: &[u8]) {
+	pub fn data(&self, data: &[u8]) {
 		self.gl_tex.data(data);
 	}
 
-	pub(super) fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
+	pub fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
 		self.gl_tex.sub_data(x, y, w, h, data);
 	}
 

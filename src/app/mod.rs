@@ -90,8 +90,6 @@ pub struct Ctx {
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
 
-//	pub(self) backbuffer: gfx::Canvas,
-
 	pub(self) proj_2d: math::Mat4,
 	pub(self) proj_3d: math::Mat4,
 	pub(self) view_3d: math::Mat4,
@@ -326,8 +324,6 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 		#[cfg(desktop)]
 		gamepad_ctx: gilrs::Gilrs::new()?,
 
-//		backbuffer: gfx::Canvas,
-
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
@@ -369,6 +365,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	};
 
+	let backbuffer = gfx::Canvas::new(&ctx, ctx.width, ctx.height)?;
+
 	if ctx.conf.cursor_hidden {
 		ctx.set_cursor_hidden(true);
 	}
@@ -402,9 +400,14 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 			s.update(&mut ctx)?;
 			gfx::begin(&mut ctx);
 
-			ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
-				return s.draw(&mut cc);
+			ctx.draw_on(&backbuffer, |ctx| {
+				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
+					return s.draw(&mut cc);
+				})?;
+				return Ok(());
 			})?;
+
+			ctx.draw(&shapes::canvas(&backbuffer))?;
 
 			gfx::end(&mut ctx);
 
