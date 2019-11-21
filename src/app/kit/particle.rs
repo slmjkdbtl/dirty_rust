@@ -75,28 +75,49 @@ pub struct ParticleSystem {
 	pos: Vec2,
 	particles: Vec<Particle>,
 	conf: ParticleConf,
-	spawn_timer: Timer,
+	spawn_timer: Option<Timer>,
 	paused: bool,
 }
 
 impl ParticleSystem {
 
 	pub fn from_conf(conf: ParticleConf) -> Self {
+
+		let rate = rand_t(conf.rate);
+		let timer = if rate == 0.0 {
+			None
+		} else {
+			Some(Timer::new(1.0 / rate))
+		};
+
 		return Self {
 			pos: vec2!(),
-			spawn_timer: Timer::new(rand_t(conf.rate)),
+			spawn_timer: timer,
 			particles: Vec::with_capacity(256),
 			paused: false,
 			conf: conf,
 		};
+
 	}
 
 	pub fn update(&mut self, dt: f32) {
 
-		if !self.paused {
-			if self.spawn_timer.tick(dt) {
-				self.spawn_timer.reset_to(rand_t(self.conf.rate));
-				self.emit();
+		if let Some(timer) = &mut self.spawn_timer {
+			if !self.paused {
+				if timer.tick(dt) {
+					let rate = rand_t(self.conf.rate);
+					if rate == 0.0 {
+						self.spawn_timer = None;
+					} else {
+						timer.reset_to(1.0 / rate)
+					};
+					self.emit();
+				}
+			}
+		} else {
+			let rate = rand_t(self.conf.rate);
+			if rate != 0.0 {
+				self.spawn_timer = Some(Timer::new(1.0 / rate));
 			}
 		}
 

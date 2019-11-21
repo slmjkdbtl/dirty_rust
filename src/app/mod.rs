@@ -401,14 +401,18 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 			gfx::begin(&mut ctx);
 
 			ctx.draw_on(&backbuffer, |ctx| {
+
+				ctx.clear();
+
 				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
 					return s.draw(&mut cc);
 				})?;
+
 				return Ok(());
+
 			})?;
 
 			ctx.draw(&shapes::canvas(&backbuffer))?;
-
 			gfx::end(&mut ctx);
 
 			#[cfg(feature = "imgui")] {

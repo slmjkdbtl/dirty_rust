@@ -3,7 +3,6 @@
 use dirty::*;
 use app::*;
 use kit::*;
-use particle::*;
 use math::*;
 use input::Key;
 
@@ -23,7 +22,7 @@ impl app::State for Game {
 			speed: (96.0, 240.0),
 			acc: (vec2!(-0.1, -0.5), vec2!(0.1, -0.5)),
 			vel: (vec2!(-0.2, -0.5), vec2!(0.2, -0.5)),
-			rate: (0.02, 0.05),
+			rate: (20.0, 50.0),
 			size_start: (vec2!(12), vec2!(36)),
 			size_end: (vec2!(0), vec2!(0)),
 			num: (16, 24),

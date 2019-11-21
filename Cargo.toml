@@ -34,7 +34,7 @@ default = [
 # 	"texpack",
 # 	"imgui",
 # 	"clip",
-# 	"vr",
+# 	"xr",
 # 	"osc",
 # 	"json",
 # 	"bin",
@@ -103,8 +103,8 @@ clip = [
 	"clipboard",
 ]
 
-vr = [
-	"openvr",
+xr = [
+	"openxr",
 ]
 
 osc = [
@@ -180,8 +180,8 @@ serde_json = { version = "1.0", optional = true }
 # bin
 bincode = { version = "1.2", optional = true }
 
-# vr
-openvr = { version = "0.6", optional = true }
+# xr
+openxr = { version = "0.10", optional = true }
 
 # rayon = "1.0"
 # ketos = "0.11"
