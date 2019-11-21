@@ -98,7 +98,7 @@ impl Ctx {
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
-			return Err(Error::Gfx(format!("cannot use canvas inside a canvas call")));
+			return Err(Error::Gfx(format!("cannot use canvas inside a canvas")));
 		}
 
 		flush(self);
