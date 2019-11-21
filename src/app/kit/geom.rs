@@ -12,7 +12,8 @@ fn rect_rect(r1: (Vec2, Vec2), r2: (Vec2, Vec2)) -> bool {
 	let (p1, p2) = r1;
 	let (p3, p4) = r2;
 
-	return p1.x <= p3.x && p2.x >= p4.x && p1.y <= p3.y && p2.y >= p4.y;
+	return p2.x >= p3.x && p1.x <= p4.x && p2.y >= p3.y && p1.y <= p4.y;
+
 }
 
 fn line_rect(line: (Vec2, Vec2), rect: (Vec2, Vec2)) -> bool {
