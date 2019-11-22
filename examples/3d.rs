@@ -6,9 +6,6 @@ use dirty::math::*;
 use input::Key;
 use gfx::Camera;
 
-mod pix;
-use pix::*;
-
 pub enum Light {
 	Point {
 		pos: Vec3,
@@ -21,13 +18,44 @@ pub enum Light {
 
 struct Game {
 	model: gfx::Model,
-	pix_effect: PixEffect,
+	canvas: gfx::Canvas,
+	canvas2: gfx::Canvas,
+	vhs_shader: gfx::Shader2D<VHSUniform>,
+	pix_shader: gfx::Shader2D<PixUniform>,
 	shader: gfx::Shader3D<LightUniform>,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
 	skybox: gfx::Skybox,
 	size: f32,
+}
+
+#[derive(Clone)]
+pub struct PixUniform {
+	pub resolution: Vec2,
+	pub size: f32,
+}
+
+impl gfx::Uniform for PixUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hashmap![
+			"u_resolution" => &self.resolution,
+			"u_size" => &self.size,
+		];
+	}
+}
+
+#[derive(Clone)]
+pub struct VHSUniform {
+	pub intensity: Vec2,
+}
+
+impl gfx::Uniform for VHSUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hashmap![
+			"u_intensity" => &self.intensity,
+		];
+	}
 }
 
 #[derive(Clone)]
@@ -90,7 +118,10 @@ impl app::State for Game {
 
 		return Ok(Self {
 			model: model,
-			pix_effect: PixEffect::new(ctx)?,
+			vhs_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/vhs.frag"))?,
+			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
+			canvas: gfx::Canvas::new(ctx, 640, 480)?,
+			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
@@ -173,10 +204,9 @@ impl app::State for Game {
 			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalize() * ctx.dt() * self.move_speed);
 		}
 
-		self.pix_effect.render(ctx, |ctx| {
+		ctx.draw_on(&self.canvas, |ctx| {
 
 			ctx.clear();
-// 			ctx.clear_ex(gfx::Surface::Depth);
 
 			let light_pos = vec3!(
 				ctx.time().sin() * self.size / 2.0,
@@ -209,6 +239,17 @@ impl app::State for Game {
 
 		})?;
 
+		ctx.draw_on(&self.canvas2, |ctx| {
+			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
+				size: 3.0,
+				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+			}, |ctx| {
+				ctx.draw(&shapes::canvas(&self.canvas))?;
+				return Ok(());
+			})?;
+			return Ok(());
+		})?;
+
 		ctx.set_title(&format!("{}", ctx.fps()));
 
 		return Ok(());
@@ -217,9 +258,11 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		self.pix_effect.draw(ctx, &PixUniform {
-			resolution: vec2!(ctx.gwidth(), ctx.gheight()),
-			size: 4.0,
+		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
+			intensity: vec2!(15),
+		}, |ctx| {
+			ctx.draw(&shapes::canvas(&self.canvas2))?;
+			return Ok(());
 		})?;
 
 		return Ok(());

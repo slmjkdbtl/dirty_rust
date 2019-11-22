@@ -156,18 +156,20 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 				for attr in iter_attrs(&self.attrs) {
 
-					let index = self.ctx.get_attrib_location(self.program_id, &attr.name) as u32;
+					if let Some(index) = self.ctx.get_attrib_location(self.program_id, &attr.name) {
 
-					self.ctx.vertex_attrib_pointer_f32(
-						index,
-						attr.size,
-						glow::FLOAT,
-						false,
-						(V::STRIDE * mem::size_of::<f32>()) as i32,
-						(attr.offset * mem::size_of::<f32>()) as i32,
-					);
+						self.ctx.vertex_attrib_pointer_f32(
+							index as u32,
+							attr.size,
+							glow::FLOAT,
+							false,
+							(V::STRIDE * mem::size_of::<f32>()) as i32,
+							(attr.offset * mem::size_of::<f32>()) as i32,
+						);
 
-					self.ctx.enable_vertex_attrib_array(index);
+						self.ctx.enable_vertex_attrib_array(index as u32);
+
+					}
 
 				}
 
