@@ -13,8 +13,8 @@ pub struct PixUniform {
 impl gfx::Uniform for PixUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hashmap![
-			"resolution" => &self.resolution,
-			"size" => &self.size,
+			"u_resolution" => &self.resolution,
+			"u_size" => &self.size,
 		];
 	}
 }

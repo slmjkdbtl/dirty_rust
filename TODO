@@ -87,6 +87,7 @@
 - [audio] let user choose audio device
 - [misc] set default font
 - [gfx] resize weirdness
+- [gfx] postprocessing (chaining canvas + shaders)
 
 == DONE
 - [http] refactor http

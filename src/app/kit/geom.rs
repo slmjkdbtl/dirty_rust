@@ -5,7 +5,8 @@
 // some code borrowed from [p5.collide2dD](https://github.com/bmoren/p5.collide2D)
 
 use crate::*;
-use crate::math::*;
+use app::*;
+use math::*;
 
 fn rect_rect(r1: (Vec2, Vec2), r2: (Vec2, Vec2)) -> bool {
 
@@ -59,12 +60,16 @@ fn rect_circle(rect: (Vec2, Vec2), circle: (Vec2, f32)) -> bool {
 
 }
 
+// TODO
+fn poly_circle(poly: &[Vec2], circle: (Vec2, f32)) -> bool {
+	return false;
+}
+
 fn point_circle(pt: Vec2, circle: (Vec2, f32)) -> bool {
 	let (center, radius) = circle;
 	return Vec2::dis(pt, center) < radius;
 }
 
-// TODO
 fn line_circle(line: (Vec2, Vec2), circle: (Vec2, f32)) -> bool {
 
 	let (p1, p2) = line;
@@ -77,7 +82,6 @@ fn line_circle(line: (Vec2, Vec2), circle: (Vec2, f32)) -> bool {
 
 }
 
-// TODO
 fn point_line(pt: Vec2, line: (Vec2, Vec2)) -> bool {
 
 	let (p1, p2) = line;
@@ -279,7 +283,6 @@ pub enum Shape2D<'a> {
 	Rect(Vec2, Vec2),
 	Line(Vec2, Vec2),
 	Polygon(&'a[Vec2]),
-	Ray(Vec2, f32),
 }
 
 impl<'a> From<&'a [Vec2]> for Shape2D<'a> {
@@ -308,10 +311,7 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 					return line_circle((p1, p2), (center, radius));
 				},
 				Polygon(verts) => {
-					todo!();
-				},
-				Ray(pt, angle) => {
-					todo!();
+					return poly_circle(verts, (center, radius));
 				},
 			}
 		},
@@ -332,9 +332,6 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 				Polygon(verts) => {
 					return poly_poly(&verts, &[p1, vec2!(p2.x, p1.y), p2, vec2!(p1.x, p2.y)]);
 				},
-				Ray(pt, angle) => {
-					todo!();
-				},
 			}
 		},
 		Point(pt) => {
@@ -352,9 +349,6 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 				Polygon(verts) => {
 					return point_poly(pt, &verts);
 				},
-				Ray(pt, angle) => {
-					todo!();
-				},
 			}
 		},
 		Line(p1, p2) => {
@@ -370,9 +364,6 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 				Polygon(verts) => {
 					return line_poly((p1, p2), &verts);
 				},
-				Ray(pt, angle) => {
-					todo!();
-				},
 			}
 		},
 		Polygon(ref verts) => {
@@ -386,28 +377,9 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 				Polygon(verts2) => {
 					return poly_poly(&verts, &verts2);
 				},
-				Ray(pt, angle) => {
-					todo!();
-				},
-			}
-		},
-		Ray(pt, angle) => {
-			match s2 {
-				Circle(..)
-				| Rect(..)
-				| Point(..)
-				| Line(..)
-				| Polygon(..) => {
-					return overlaps(s2, s1);
-				},
-				Ray(pt, angle) => {
-					todo!();
-				},
 			}
 		},
 	}
-
-	return false;
 
 }
 
