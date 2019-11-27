@@ -342,33 +342,47 @@ impl<'a> Text<'a> {
 
 			for ch in self.content.chars() {
 
-				if let Some((tex, quad)) = font.get(ch) {
+				if ch == '\n' {
 
-					let gw = tex.width() as f32 * quad.w;
+					lines.push(RenderedLine {
+						text: std::mem::replace(&mut l, String::new()),
+						width: pw,
+					});
 
-					if let Some(wrap) = self.wrap {
+					pw = 0.0;
+					ph += gh;
 
-						if pw + gw > wrap {
+				} else {
 
-							lines.push(RenderedLine {
-								text: std::mem::replace(&mut l, String::new()),
-								width: pw,
-							});
+					if let Some((tex, quad)) = font.get(ch) {
 
-							pw = 0.0;
-							ph += gh;
-							pw += gw;
-							l.push(ch);
+						let gw = tex.width() as f32 * quad.w;
+
+						if let Some(wrap) = self.wrap {
+
+							if pw + gw > wrap {
+
+								lines.push(RenderedLine {
+									text: std::mem::replace(&mut l, String::new()),
+									width: pw,
+								});
+
+								pw = 0.0;
+								ph += gh;
+								pw += gw;
+								l.push(ch);
+
+							} else {
+								pw += gw;
+								l.push(ch);
+							}
 
 						} else {
-							pw += gw;
+
 							l.push(ch);
+							pw += gw;
+
 						}
-
-					} else {
-
-						l.push(ch);
-						pw += gw;
 
 					}
 

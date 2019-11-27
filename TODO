@@ -6,7 +6,7 @@
 - [gfx] multiple textures
 - [misc] custom default font
 - [gfx] custom default 2d/3d pipeline
-- [gfx] text calculate cursor pos
+- [gfx] text cursor pos mult with alignment
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -172,4 +172,6 @@
 - [gfx] canvas projection
 - [gfx] fix fullscreen canvas, ignore resize for now
 - [gfx] text wrapping
+- [gfx] text calculate cursor pos
+- [gfx] text break line with \n
 
