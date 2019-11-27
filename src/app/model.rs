@@ -461,7 +461,7 @@ impl Model {
 		return Self::from_data(ctx, Self::load_gltf(path)?);
 	}
 
-	pub(super) fn meshes(&self) -> &[Mesh] {
+	pub fn meshes(&self) -> &[Mesh] {
 		return &self.meshes;
 	}
 

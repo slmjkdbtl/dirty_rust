@@ -47,7 +47,7 @@ impl gfx::Uniform for PixUniform {
 
 #[derive(Clone)]
 pub struct VHSUniform {
-	pub intensity: Vec2,
+	pub intensity: f32,
 }
 
 impl gfx::Uniform for VHSUniform {
@@ -222,8 +222,8 @@ impl app::State for Game {
 				ctx.draw_3d_with(&self.shader, &LightUniform {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
-					diffuse: 0.2,
-					specular: 0.1,
+					diffuse: 0.4,
+					specular: 0.4,
 					shininess: 16.0,
 					view_pos: self.cam.pos(),
 				}, |ctx| {
@@ -241,7 +241,7 @@ impl app::State for Game {
 
 		ctx.draw_on(&self.canvas2, |ctx| {
 			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-				size: 3.0,
+				size: 4.0,
 				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
 			}, |ctx| {
 				ctx.draw(&shapes::canvas(&self.canvas))?;
@@ -259,7 +259,7 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
-			intensity: vec2!(15),
+			intensity: 9.0,
 		}, |ctx| {
 			ctx.draw(&shapes::canvas(&self.canvas2))?;
 			return Ok(());

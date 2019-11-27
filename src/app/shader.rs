@@ -9,14 +9,15 @@ use super::gfx::*;
 
 /// custom uniform
 pub trait Uniform: Clone {
-	fn values(&self) -> UniformValues;
-}
-
-impl Uniform for () {
 	fn values(&self) -> UniformValues {
 		return hashmap![];
 	}
+	fn textures(&self) -> Vec<&gfx::Texture> {
+		return vec![];
+	}
 }
+
+impl Uniform for () {}
 
 impl IntoUniformValue for Vec2 {
 	fn into_uniform(&self) -> gl::UniformValue {

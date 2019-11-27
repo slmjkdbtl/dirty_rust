@@ -11,20 +11,18 @@ pub type CharMap = HashMap<char, Quad>;
 
 /// general functionalities of a font
 pub trait Font {
-	fn texture(&self) -> &Texture;
-	fn map(&self) -> &CharMap;
+	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)>;
+	fn height(&self) -> f32;
 }
 
 /// bitmap font
 #[derive(Clone, PartialEq)]
 pub struct BitmapFont {
-
 	tex: Texture,
 	map: HashMap<char, Quad>,
 	quad_size: Vec2,
 	grid_width: i32,
 	grid_height: i32,
-
 }
 
 impl BitmapFont {
@@ -69,19 +67,24 @@ impl BitmapFont {
 		return self.grid_width;
 	}
 
-	/// get height of a char
-	pub fn height(&self) -> i32 {
-		return self.grid_height;
+	/// get width of a quad
+	pub fn quad_width(&self) -> f32 {
+		return self.quad_size.x;
+	}
+
+	/// get height of a quad
+	pub fn quad_height(&self) -> f32 {
+		return self.quad_size.y;
 	}
 
 }
 
 impl Font for BitmapFont {
-	fn texture(&self) -> &Texture {
-		return &self.tex;
+	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)> {
+		return self.map.get(&ch).map(|quad| (&self.tex, *quad));
 	}
-	fn map(&self) -> &CharMap {
-		return &self.map;
+	fn height(&self) -> f32 {
+		return self.grid_height as f32;
 	}
 }
 
@@ -193,11 +196,11 @@ impl TruetypeFont {
 }
 
 impl Font for TruetypeFont {
-	fn texture(&self) -> &Texture {
-		return &self.tex;
+	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)> {
+		return self.map.get(&ch).map(|quad| (&self.tex, *quad));
 	}
-	fn map(&self) -> &CharMap {
-		return &self.map;
+	fn height(&self) -> f32 {
+		return self.size as f32;
 	}
 }
 
