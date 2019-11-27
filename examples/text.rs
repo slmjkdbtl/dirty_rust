@@ -43,6 +43,7 @@ impl State for Game {
 		let text = shapes::text(&s)
 			.wrap(64.0)
 			.align(gfx::Origin::TopLeft)
+			.render(ctx)
 			;
 
 		let cpos = text.cursor_pos(ctx, ctx.time() as i32);
