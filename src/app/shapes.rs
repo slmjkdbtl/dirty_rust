@@ -212,6 +212,7 @@ pub struct Text<'a> {
 	color: Color,
 	align: Option<gfx::Origin>,
 	wrap: Option<f32>,
+	line_height: f32,
 }
 
 impl<'a> Text<'a> {
@@ -222,6 +223,7 @@ impl<'a> Text<'a> {
 			align: None,
 			color: rgba!(1),
 			wrap: None,
+			line_height: 0.0,
 		};
 	}
 	pub fn font(mut self, f: &'a dyn gfx::Font) -> Self {
@@ -244,6 +246,115 @@ impl<'a> Text<'a> {
 		self.wrap = Some(wrap);
 		return self;
 	}
+	pub fn line_height(mut self, h: f32) -> Self {
+		self.line_height = h;
+		return self;
+	}
+}
+
+impl<'a> Text<'a> {
+
+	fn render_lines(&self, font: &dyn gfx::Font) -> (f32, f32, Vec<(String, f32)>) {
+
+		// TODO: \n for new line?
+		let gh = font.height() + self.line_height;
+		let mut lines = vec![];
+
+		let (pw, ph) = {
+
+			let (mut pw, mut ph) = (0.0, 0.0);
+			let mut l = String::new();
+
+			for ch in self.content.chars() {
+
+				if let Some((tex, quad)) = font.get(ch) {
+
+					let gw = tex.width() as f32 * quad.w;
+
+					if let Some(wrap) = self.wrap {
+
+						if pw + gw > wrap {
+
+							lines.push((std::mem::replace(&mut l, String::new()), pw));
+							pw = 0.0;
+							ph += gh;
+							pw += gw;
+							l.push(ch);
+
+						} else {
+							pw += gw;
+							l.push(ch);
+						}
+
+					} else {
+
+						l.push(ch);
+						pw += gw;
+
+					}
+
+				}
+
+			}
+
+			lines.push((l, pw));
+
+			if let Some(wrap) = self.wrap {
+				(wrap, ph)
+			} else {
+				(pw, ph)
+			}
+
+		};
+
+		return (pw, ph, lines);
+
+	}
+
+	// TODO: tidy up
+	pub fn cursor_pos(&self, ctx: &Ctx, cpos: i32) -> Option<Vec2> {
+
+		let align = self.align.unwrap_or(ctx.conf.origin);
+		let font = self.font.unwrap_or(&ctx.default_font);
+		let offset = (align.as_pt() + vec2!(1)) * 0.5;
+		let gh = font.height();
+		let (pw, ph, lines) = self.render_lines(font);
+		let mut tl = 0;
+
+		for (y, (l, w)) in lines.iter().enumerate() {
+
+			tl += l.len() as i32;
+
+			if cpos > tl {
+				continue;
+			} else {
+
+				let mut x = 0.0;
+				let ox = (pw - w) * offset.x;
+				let ccpos = cpos - tl + l.len() as i32;
+
+				for (i, ch) in l.chars().enumerate() {
+
+					if let Some((tex, quad)) = font.get(ch) {
+
+						let gw = tex.width() as f32 * quad.w;
+						x += gw;
+
+						if i as i32 == ccpos {
+							return Some(vec2!(x + ox, y as f32 * gh));
+						}
+
+					}
+				}
+
+			}
+
+		}
+
+		return None;
+
+	}
+
 }
 
 pub fn text<'a>(s: &'a str) -> Text<'a> {
@@ -254,72 +365,42 @@ impl<'a> Drawable for Text<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let font = self.font.unwrap_or(&ctx.default_font);
-		// TODO: no clone plz
-		let tex = font.texture().clone();
-		let map = font.map().clone();
-		let (tw, th) = (tex.width(), tex.height());
-
-		// TODO: wrapping
-		// TODO: \n for new line?
-
-		let (pw, ph) = {
-
-			let (mut pw, mut ph) = (0.0, 0.0);
-
-			for ch in self.content.chars() {
-
-				if let Some(quad) = map.get(&ch) {
-
-					let gw = tw as f32 * quad.w;
-					let gh = th as f32 * quad.h;
-
-					if gh > ph {
-						ph = gh;
-					}
-
-					pw += gw;
-
-				}
-
-			}
-
-			(pw, ph)
-
-		};
-
+		let dfont = ctx.default_font.clone();
+		let font = self.font.unwrap_or(&dfont);
+		let gh = font.height() + self.line_height;
 		let align = self.align.unwrap_or(ctx.conf.origin);
+
+		let (pw, ph, lines) = self.render_lines(font);
+
 		let offset = (align.as_pt() + vec2!(1)) * 0.5;
 		let offset_pos = -offset * vec2!(pw, ph);
-
-// 		ctx.draw(sprite(&tex))?;
 
 		ctx.push(&gfx::t()
 			.t2(offset_pos)
 		, |ctx| {
 
-			let mut x = 0.0;
+			for (y, (l, w)) in lines.into_iter().enumerate() {
 
-			for ch in self.content.chars() {
+				let mut x = 0.0;
+				let ox = (pw - w) * offset.x;
 
-				if let Some(quad) = map.get(&ch) {
+				for ch in l.chars() {
 
-					ctx.push(&gfx::t()
-						.t2(vec2!(x, 0))
-					, |ctx| {
+					if let Some((tex, quad)) = font.get(ch) {
 
-						ctx.draw(
-							&shapes::sprite(&tex)
-								.offset(vec2!(-1))
-								.quad(*quad)
-								.color(self.color)
+						let gw = tex.width() as f32 * quad.w;
+
+						ctx.draw_t(&gfx::t()
+							.t2(vec2!(x + ox, y as f32 * gh))
+						, &shapes::sprite(&tex)
+							.offset(vec2!(-1))
+							.quad(quad)
+							.color(self.color)
 						)?;
 
-						x += tw as f32 * quad.w;
+						x += gw;
 
-						return Ok(());
-
-					})?;
+					}
 
 				}
 

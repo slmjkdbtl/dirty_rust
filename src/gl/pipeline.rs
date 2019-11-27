@@ -111,12 +111,13 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.send(&uniform);
 
-			let tex = uniform.texture();
+			let textures = uniform.textures();
 
 			self.ctx.use_program(Some(self.program_id));
 			self.ctx.bind_vertex_array(vao.map(|v| v.id()));
 
-			if let Some(tex) = tex {
+			for (i, tex) in textures.iter().enumerate() {
+				self.ctx.active_texture(glow::TEXTURE0 + i as u32);
 				self.ctx.bind_texture(tex.r#type().into(), Some(tex.id()));
 			}
 
@@ -125,7 +126,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			self.ctx.bind_vertex_array(None);
 			self.ctx.use_program(None);
 
-			if let Some(tex) = tex {
+			for (i, tex) in textures.iter().enumerate() {
+				self.ctx.active_texture(glow::TEXTURE0 + i as u32);
 				self.ctx.bind_texture(tex.r#type().into(), None);
 			}
 
@@ -147,7 +149,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.send(&uniform);
 
-			let tex = uniform.texture();
+			let textures = uniform.textures();
 
 			self.ctx.use_program(Some(self.program_id));
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, vbuf.map(|b| b.id()));
@@ -177,7 +179,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, ibuf.map(|b| b.id()));
 
-			if let Some(tex) = tex {
+			for (i, tex) in textures.iter().enumerate() {
+				self.ctx.active_texture(glow::TEXTURE0 + i as u32);
 				self.ctx.bind_texture(tex.r#type().into(), Some(tex.id()));
 			}
 
@@ -187,7 +190,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, None);
 			self.ctx.use_program(None);
 
-			if let Some(tex) = tex {
+			for (i, tex) in textures.iter().enumerate() {
+				self.ctx.active_texture(glow::TEXTURE0 + i as u32);
 				self.ctx.bind_texture(tex.r#type().into(), None);
 			}
 

@@ -3,6 +3,10 @@
 == DOING
 - [synth] better API
 - [synth] popping sound every second
+- [gfx] multiple textures
+- [misc] custom default font
+- [gfx] custom default 2d/3d pipeline
+- [gfx] text calculate cursor pos
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -51,7 +55,6 @@
 - [gfx] 3d ortho cam
 - [gfx] draw default to a framebuffer
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
-- [gfx] text wrapping
 - [gfx] truetype font paddings
 - [gfx] 3d extruded text
 - [app] global messaging with custom type (?)
@@ -85,7 +88,6 @@
 - [audio] input
 - [misc] SIMD vecs
 - [audio] let user choose audio device
-- [misc] set default font
 - [gfx] resize weirdness
 - [gfx] postprocessing (chaining canvas + shaders)
 
@@ -150,7 +152,6 @@
 - [gfx] text new line
 - [gfx] use TextAlign instead of offset (?)
 - [gfx] first polygon isn't drawing
-- [gfx] text wrapping
 - [gfx] shape: fill & stroke
 - [gfx] load obj mtl
 - [gfx] fix vertex normal calculation
@@ -170,4 +171,5 @@
 - [gfx] global scale
 - [gfx] canvas projection
 - [gfx] fix fullscreen canvas, ignore resize for now
+- [gfx] text wrapping
 

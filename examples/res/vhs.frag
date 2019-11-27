@@ -2,7 +2,7 @@
 
 // took idea from https://www.shadertoy.com/view/XlsczN
 
-uniform vec2 u_intensity;
+uniform float u_intensity;
 
 vec3 rgb2yiq(vec3 c){
 	return vec3(
@@ -25,10 +25,10 @@ vec2 circle(float start, float pts, float pt) {
 	return vec2(-(0.3 + rad), cos(rad));
 }
 
-vec3 blur(sampler2D samp, vec2 uv, vec2 d) {
+vec3 blur(sampler2D samp, vec2 uv, float d) {
 
 	float start = 2.0 / 14.0;
-	vec2 scale = d * 0.0001;
+	vec2 scale = vec2(d) * 0.0001;
 
 	vec3 n0 = texture2D(samp, uv + circle(start, 14.0, 0.0) * scale).rgb;
 	vec3 n1 = texture2D(samp, uv + circle(start, 14.0, 1.0) * scale).rgb;
@@ -73,7 +73,7 @@ vec3 blur(sampler2D samp, vec2 uv, vec2 d) {
 vec4 frag() {
 
 	vec4 color = texture2D(u_tex, v_uv) * v_color;
-	vec2 c = u_intensity;
+	float c = u_intensity;
 
 	color.xyz = blur(u_tex, v_uv, c);
 	float y = rgb2yiq(color.xyz).r;

@@ -136,8 +136,8 @@ impl gl::UniformLayout for Uniform2D {
 
 	}
 
-	fn texture(&self) -> Option<&dyn gl::Texture> {
-		return Some(self.tex.gl_tex());
+	fn textures(&self) -> Vec<&dyn gl::Texture> {
+		return vec![self.tex.gl_tex()];
 	}
 
 }
@@ -174,8 +174,8 @@ impl gl::UniformLayout for Uniform3D {
 
 	}
 
-	fn texture(&self) -> Option<&dyn gl::Texture> {
-		return Some(self.tex.gl_tex());
+	fn textures(&self) -> Vec<&dyn gl::Texture> {
+		return vec![self.tex.gl_tex()];
 	}
 
 }
@@ -199,8 +199,8 @@ impl gl::UniformLayout for UniformCubemap {
 		];
 	}
 
-	fn texture(&self) -> Option<&dyn gl::Texture> {
-		return Some(&self.tex);
+	fn textures(&self) -> Vec<&dyn gl::Texture> {
+		return vec![&self.tex];
 	}
 
 }

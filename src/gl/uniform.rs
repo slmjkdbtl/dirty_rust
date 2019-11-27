@@ -18,15 +18,15 @@ impl IntoUniformValue for UniformValue {
 
 pub trait UniformLayout: 'static {
 	fn values(&self) -> UniformValues;
-	fn texture(&self) -> Option<&dyn Texture>;
+	fn textures(&self) -> Vec<&dyn Texture>;
 }
 
 impl UniformLayout for () {
 	fn values(&self) -> UniformValues {
 		return hashmap![];
 	}
-	fn texture(&self) -> Option<&dyn Texture> {
-		return None;
+	fn textures(&self) -> Vec<&dyn Texture> {
+		return vec![];
 	}
 }
 
