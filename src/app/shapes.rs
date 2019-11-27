@@ -252,88 +252,55 @@ impl<'a> Text<'a> {
 	}
 }
 
-impl<'a> Text<'a> {
+pub struct RenderedLine {
+	text: String,
+	width: f32,
+}
 
-	fn render_lines(&self, font: &dyn gfx::Font) -> (f32, f32, Vec<(String, f32)>) {
+pub struct RenderedText<'a> {
+	width: f32,
+	height: f32,
+	lines: Vec<RenderedLine>,
+	align: gfx::Origin,
+	font: Option<&'a dyn gfx::Font>,
+	line_height: f32,
+	color: Color,
+}
 
-		// TODO: \n for new line?
-		let gh = font.height() + self.line_height;
-		let mut lines = vec![];
+impl<'a> RenderedText<'a> {
 
-		let (pw, ph) = {
-
-			let (mut pw, mut ph) = (0.0, 0.0);
-			let mut l = String::new();
-
-			for ch in self.content.chars() {
-
-				if let Some((tex, quad)) = font.get(ch) {
-
-					let gw = tex.width() as f32 * quad.w;
-
-					if let Some(wrap) = self.wrap {
-
-						if pw + gw > wrap {
-
-							lines.push((std::mem::replace(&mut l, String::new()), pw));
-							pw = 0.0;
-							ph += gh;
-							pw += gw;
-							l.push(ch);
-
-						} else {
-							pw += gw;
-							l.push(ch);
-						}
-
-					} else {
-
-						l.push(ch);
-						pw += gw;
-
-					}
-
-				}
-
-			}
-
-			lines.push((l, pw));
-
-			if let Some(wrap) = self.wrap {
-				(wrap, ph)
-			} else {
-				(pw, ph)
-			}
-
-		};
-
-		return (pw, ph, lines);
-
+	pub fn width(&self) -> f32 {
+		return self.width;
 	}
 
-	// TODO: tidy up
+	pub fn height(&self) -> f32 {
+		return self.height;
+	}
+
 	pub fn cursor_pos(&self, ctx: &Ctx, cpos: i32) -> Option<Vec2> {
 
-		let align = self.align.unwrap_or(ctx.conf.origin);
+		if cpos == 0 {
+			return Some(vec2!());
+		}
+
 		let font = self.font.unwrap_or(&ctx.default_font);
-		let offset = (align.as_pt() + vec2!(1)) * 0.5;
-		let gh = font.height();
-		let (pw, ph, lines) = self.render_lines(font);
+		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let gh = font.height() + self.line_height;
 		let mut tl = 0;
 
-		for (y, (l, w)) in lines.iter().enumerate() {
+		for (y, line) in self.lines.iter().enumerate() {
 
-			tl += l.len() as i32;
+			tl += line.text.len() as i32;
 
 			if cpos > tl {
 				continue;
 			} else {
 
 				let mut x = 0.0;
-				let ox = (pw - w) * offset.x;
-				let ccpos = cpos - tl + l.len() as i32;
+				let ox = (self.width - line.width) * offset.x;
+				let ccpos = cpos - tl + line.text.len() as i32 - 1;
 
-				for (i, ch) in l.chars().enumerate() {
+				for (i, ch) in line.text.chars().enumerate() {
 
 					if let Some((tex, quad)) = font.get(ch) {
 
@@ -357,34 +324,110 @@ impl<'a> Text<'a> {
 
 }
 
+impl<'a> Text<'a> {
+
+	pub fn render(&self, ctx: &Ctx) -> RenderedText<'a> {
+
+		// TODO: \n for new line?
+		let font = self.font.unwrap_or(&ctx.default_font);
+		let gh = font.height() + self.line_height;
+		let mut lines = vec![];
+
+		let (pw, ph) = {
+
+			let (mut pw, mut ph) = (0.0, 0.0);
+			let mut l = String::new();
+
+			ph += gh;
+
+			for ch in self.content.chars() {
+
+				if let Some((tex, quad)) = font.get(ch) {
+
+					let gw = tex.width() as f32 * quad.w;
+
+					if let Some(wrap) = self.wrap {
+
+						if pw + gw > wrap {
+
+							lines.push(RenderedLine {
+								text: std::mem::replace(&mut l, String::new()),
+								width: pw,
+							});
+
+							pw = 0.0;
+							ph += gh;
+							pw += gw;
+							l.push(ch);
+
+						} else {
+							pw += gw;
+							l.push(ch);
+						}
+
+					} else {
+
+						l.push(ch);
+						pw += gw;
+
+					}
+
+				}
+
+			}
+
+			lines.push(RenderedLine {
+				text: l,
+				width: pw,
+			});
+
+			if let Some(wrap) = self.wrap {
+				(wrap, ph)
+			} else {
+				(pw, ph)
+			}
+
+		};
+
+		return RenderedText {
+			width: pw,
+			height: ph,
+			lines: lines,
+			align: self.align.unwrap_or(ctx.conf.origin),
+			font: self.font,
+			line_height: self.line_height,
+			color: self.color,
+		};
+
+	}
+
+}
+
 pub fn text<'a>(s: &'a str) -> Text<'a> {
 	return Text::new(s);
 }
 
-impl<'a> Drawable for Text<'a> {
+impl<'a> Drawable for RenderedText<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let dfont = ctx.default_font.clone();
 		let font = self.font.unwrap_or(&dfont);
 		let gh = font.height() + self.line_height;
-		let align = self.align.unwrap_or(ctx.conf.origin);
 
-		let (pw, ph, lines) = self.render_lines(font);
-
-		let offset = (align.as_pt() + vec2!(1)) * 0.5;
-		let offset_pos = -offset * vec2!(pw, ph);
+		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let offset_pos = -offset * vec2!(self.width, self.height);
 
 		ctx.push(&gfx::t()
 			.t2(offset_pos)
 		, |ctx| {
 
-			for (y, (l, w)) in lines.into_iter().enumerate() {
+			for (y, line) in self.lines.iter().enumerate() {
 
 				let mut x = 0.0;
-				let ox = (pw - w) * offset.x;
+				let ox = (self.width - line.width) * offset.x;
 
-				for ch in l.chars() {
+				for ch in line.text.chars() {
 
 					if let Some((tex, quad)) = font.get(ch) {
 
@@ -409,6 +452,18 @@ impl<'a> Drawable for Text<'a> {
 			return Ok(());
 
 		})?;
+
+		return Ok(());
+
+	}
+
+}
+
+impl<'a> Drawable for Text<'a> {
+
+	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+
+		ctx.draw(&self.render(ctx))?;
 
 		return Ok(());
 
