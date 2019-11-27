@@ -174,4 +174,5 @@
 - [gfx] text wrapping
 - [gfx] text calculate cursor pos
 - [gfx] text break line with \n
+- [gfx] text wrap break word
 

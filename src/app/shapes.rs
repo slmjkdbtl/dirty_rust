@@ -205,13 +205,19 @@ impl<'a> gfx::Drawable for TexFill<'a> {
 
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct TextWrap {
+	width: f32,
+	break_word: bool,
+}
+
 #[derive(Clone)]
 pub struct Text<'a> {
 	content: &'a str,
 	font: Option<&'a dyn gfx::Font>,
 	color: Color,
 	align: Option<gfx::Origin>,
-	wrap: Option<f32>,
+	wrap: Option<TextWrap>,
 	line_height: f32,
 }
 
@@ -242,8 +248,11 @@ impl<'a> Text<'a> {
 		self.align = Some(o);
 		return self;
 	}
-	pub fn wrap(mut self, wrap: f32) -> Self {
-		self.wrap = Some(wrap);
+	pub fn wrap(mut self, width: f32, break_word: bool) -> Self {
+		self.wrap = Some(TextWrap {
+			width: width,
+			break_word: break_word,
+		});
 		return self;
 	}
 	pub fn line_height(mut self, h: f32) -> Self {
@@ -252,11 +261,13 @@ impl<'a> Text<'a> {
 	}
 }
 
+#[derive(Clone, Debug)]
 pub struct RenderedLine {
 	text: String,
 	width: f32,
 }
 
+#[derive(Clone)]
 pub struct RenderedText<'a> {
 	width: f32,
 	height: f32,
@@ -328,56 +339,119 @@ impl<'a> Text<'a> {
 
 	pub fn render(&self, ctx: &Ctx) -> RenderedText<'a> {
 
-		// TODO: \n for new line?
 		let font = self.font.unwrap_or(&ctx.default_font);
 		let gh = font.height() + self.line_height;
 		let mut lines = vec![];
+		let mut pw = 0.0;
+		let mut ph = font.height();
+		let mut l = String::new();
 
-		let (pw, ph) = {
+		match self.wrap {
 
-			let (mut pw, mut ph) = (0.0, 0.0);
-			let mut l = String::new();
+			Some(wrap) => {
 
-			ph += gh;
+				let mut last_space: Option<RenderedLine> = None;
 
-			for ch in self.content.chars() {
+				for ch in self.content.chars() {
 
-				if ch == '\n' {
+					if ch == '\n' {
 
-					lines.push(RenderedLine {
-						text: std::mem::replace(&mut l, String::new()),
-						width: pw,
-					});
+						lines.push(RenderedLine {
+							text: std::mem::replace(&mut l, String::new()),
+							width: pw,
+						});
 
-					pw = 0.0;
-					ph += gh;
+						pw = 0.0;
+						ph += gh;
 
-				} else {
+					} else {
 
-					if let Some((tex, quad)) = font.get(ch) {
+						if let Some((tex, quad)) = font.get(ch) {
 
-						let gw = tex.width() as f32 * quad.w;
+							let gw = tex.width() as f32 * quad.w;
 
-						if let Some(wrap) = self.wrap {
+							if pw + gw > wrap.width {
 
-							if pw + gw > wrap {
+								if let Some(last_space) = last_space.take() {
 
-								lines.push(RenderedLine {
-									text: std::mem::replace(&mut l, String::new()),
-									width: pw,
-								});
+									pw = wrap.width - last_space.width;
+									ph += gh;
+									l = l.replace(&last_space.text, "");
+									l.push(ch);
+									lines.push(last_space);
 
-								pw = 0.0;
-								ph += gh;
-								pw += gw;
-								l.push(ch);
+								} else {
+
+									lines.push(RenderedLine {
+										text: std::mem::replace(&mut l, String::new()),
+										width: pw,
+									});
+
+									pw = 0.0;
+									ph += gh;
+									pw += gw;
+									l.push(ch);
+
+								}
 
 							} else {
+
 								pw += gw;
 								l.push(ch);
+
 							}
 
-						} else {
+						}
+
+						if !wrap.break_word {
+							if ch == ' ' {
+								last_space = Some(RenderedLine {
+									text: l.clone(),
+									width: pw,
+								});
+							}
+						}
+
+					}
+
+				}
+
+				lines.push(RenderedLine {
+					text: l,
+					width: pw,
+				});
+
+				return RenderedText {
+					width: wrap.width,
+					height: ph,
+					lines: lines,
+					align: self.align.unwrap_or(ctx.conf.origin),
+					font: self.font,
+					line_height: self.line_height,
+					color: self.color,
+				};
+
+			},
+
+			None => {
+
+				for ch in self.content.chars() {
+
+					if ch == '\n' {
+
+						lines.push(RenderedLine {
+							text: std::mem::replace(&mut l, String::new()),
+							width: pw,
+						});
+
+						pw = 0.0;
+						ph += gh;
+
+					} else {
+
+						if let Some((tex, quad)) = font.get(ch) {
+
+							let gw = tex.width() as f32 * quad.w;
 
 							l.push(ch);
 							pw += gw;
@@ -388,30 +462,24 @@ impl<'a> Text<'a> {
 
 				}
 
-			}
+				lines.push(RenderedLine {
+					text: l,
+					width: pw,
+				});
 
-			lines.push(RenderedLine {
-				text: l,
-				width: pw,
-			});
+				return RenderedText {
+					width: pw,
+					height: ph,
+					lines: lines,
+					align: self.align.unwrap_or(ctx.conf.origin),
+					font: self.font,
+					line_height: self.line_height,
+					color: self.color,
+				};
 
-			if let Some(wrap) = self.wrap {
-				(wrap, ph)
-			} else {
-				(pw, ph)
-			}
+			},
 
-		};
-
-		return RenderedText {
-			width: pw,
-			height: ph,
-			lines: lines,
-			align: self.align.unwrap_or(ctx.conf.origin),
-			font: self.font,
-			line_height: self.line_height,
-			color: self.color,
-		};
+		}
 
 	}
 
