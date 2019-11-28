@@ -290,12 +290,14 @@ impl<'a> RenderedText<'a> {
 
 	pub fn cursor_pos(&self, ctx: &Ctx, cpos: i32) -> Option<Vec2> {
 
+		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let offset_pos = -offset * vec2!(self.width, self.height);
+
 		if cpos == 0 {
-			return Some(vec2!());
+			return Some(offset_pos);
 		}
 
 		let font = self.font.unwrap_or(&ctx.default_font);
-		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
 		let gh = font.height() + self.line_height;
 		let mut tl = 0;
 
@@ -319,7 +321,7 @@ impl<'a> RenderedText<'a> {
 						x += gw;
 
 						if i as i32 == ccpos {
-							return Some(vec2!(x + ox, y as f32 * gh));
+							return Some(offset_pos + vec2!(x + ox, y as f32 * gh));
 						}
 
 					}
@@ -575,7 +577,7 @@ pub enum LineCap {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-struct Stroke {
+pub struct Stroke {
 	width: f32,
 	join: LineJoin,
 	dash: Option<LineDash>,
