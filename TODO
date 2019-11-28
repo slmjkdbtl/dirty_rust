@@ -5,8 +5,8 @@
 - [synth] popping sound every second
 - [gfx] multiple textures
 - [misc] custom default font
-- [gfx] custom default 2d/3d pipeline
-- [gfx] text cursor pos mult with alignment
+- [misc] custom default 2d/3d pipeline
+- [gfx] postprocessing (chaining canvas + shaders)
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -89,7 +89,6 @@
 - [misc] SIMD vecs
 - [audio] let user choose audio device
 - [gfx] resize weirdness
-- [gfx] postprocessing (chaining canvas + shaders)
 
 == DONE
 - [http] refactor http
@@ -175,4 +174,5 @@
 - [gfx] text calculate cursor pos
 - [gfx] text break line with \n
 - [gfx] text wrap break word
+- [gfx] text cursor pos mult with alignment
 

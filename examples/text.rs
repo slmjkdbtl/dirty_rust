@@ -41,7 +41,7 @@ impl State for Game {
 		let s = format!("{}", ctx.time() as i32).repeat(12);
 
 		let text = shapes::text(&s)
-			.wrap(64.0)
+			.wrap(64.0, true)
 // 			.align(gfx::Origin::TopLeft)
 			.render(ctx)
 			;
@@ -66,7 +66,7 @@ impl State for Game {
 
 fn main() -> Result<()> {
 	return launcher()
-		.origin(gfx::Origin::TopLeft)
+// 		.origin(gfx::Origin::TopLeft)
 		.run::<Game>();
 }
 
