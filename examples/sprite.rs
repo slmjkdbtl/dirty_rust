@@ -3,7 +3,6 @@
 use dirty::*;
 use app::*;
 use kit::*;
-use math::*;
 use input::Key;
 
 struct Game {

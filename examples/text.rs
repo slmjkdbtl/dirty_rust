@@ -32,21 +32,25 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
+		let size = 14.0;
+		let t = (ctx.time() * 2.0) as i32;
+
 		ctx.draw(
-			&shapes::rect(vec2!(0), vec2!(64))
+			&shapes::Rect::from_size(64.0, 64.0)
 				.no_fill()
 				.stroke(rgba!(1))
 		)?;
 
-		let s = format!("{}", ctx.time() as i32).repeat(12);
+		let s = format!("{}", t).repeat(12);
 
 		let text = shapes::text(&s)
 			.wrap(64.0, true)
+			.size(size)
 // 			.align(gfx::Origin::TopLeft)
 			.render(ctx)
 			;
 
-		let cpos = text.cursor_pos(ctx, ctx.time() as i32);
+		let cpos = text.cursor_pos(ctx, t);
 
 		ctx.draw(
 			&text
@@ -54,7 +58,7 @@ impl State for Game {
 
 		if let Some(cpos) = cpos {
 			ctx.draw(
-				&shapes::line(cpos, cpos + vec2!(0, 8))
+				&shapes::line(cpos, cpos + vec2!(0, size))
 			)?;
 		}
 
@@ -66,7 +70,7 @@ impl State for Game {
 
 fn main() -> Result<()> {
 	return launcher()
-// 		.origin(gfx::Origin::TopLeft)
+		.origin(gfx::Origin::TopLeft)
 		.run::<Game>();
 }
 
