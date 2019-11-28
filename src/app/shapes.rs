@@ -70,14 +70,14 @@ impl<'a> Drawable for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let tw = self.tex.width() as f32;
-		let th = self.tex.height() as f32;
+		let tw = self.tex.width() as f32 * self.quad.w;
+		let th = self.tex.height() as f32 * self.quad.h;
 
 		let scale = match (self.width, self.height) {
 			(Some(w), Some(h)) => vec2!(w, h),
 			(Some(w), None) => vec2!(w, w * th / tw),
 			(None, Some(h)) => vec2!(h * tw / th, h),
-			(None, None) => vec2!(tw, th) * vec2!(self.quad.w, self.quad.h),
+			(None, None) => vec2!(tw, th),
 		};
 
 		let offset = self.offset.unwrap_or(ctx.conf.origin.as_pt());
@@ -289,82 +289,8 @@ impl<'a> Text<'a> {
 	}
 }
 
-#[derive(Clone, Debug)]
-pub struct RenderedLine {
-	text: String,
-	width: f32,
-}
-
-#[derive(Clone)]
-pub struct RenderedText<'a> {
-	width: f32,
-	height: f32,
-	lines: Vec<RenderedLine>,
-	align: gfx::Origin,
-	font: Option<&'a dyn gfx::Font>,
-	line_sep: f32,
-	color: Color,
-	size: Option<f32>,
-}
-
-impl<'a> RenderedText<'a> {
-
-	pub fn width(&self) -> f32 {
-		return self.width;
-	}
-
-	pub fn height(&self) -> f32 {
-		return self.height;
-	}
-
-	pub fn cursor_pos(&self, ctx: &Ctx, cpos: i32) -> Option<Vec2> {
-
-		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
-		let offset_pos = -offset * vec2!(self.width, self.height);
-
-		if cpos == 0 {
-			return Some(offset_pos);
-		}
-
-		let font = self.font.unwrap_or(&ctx.default_font);
-		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
-		let gh = font.height() + self.line_sep;
-		let mut tl = 0;
-
-		for (y, line) in self.lines.iter().enumerate() {
-
-			tl += line.text.len() as i32;
-
-			if cpos > tl {
-				continue;
-			} else {
-
-				let mut x = 0.0;
-				let ox = (self.width - line.width) * offset.x;
-				let ccpos = cpos - tl + line.text.len() as i32 - 1;
-
-				for (i, ch) in line.text.chars().enumerate() {
-
-					if let Some((tex, quad)) = font.get(ch) {
-
-						let gw = tex.width() as f32 * quad.w;
-						x += gw;
-
-						if i as i32 == ccpos {
-							return Some(offset_pos + vec2!(ox, 0) + vec2!(x, y as f32 * gh) * scale);
-						}
-
-					}
-				}
-
-			}
-
-		}
-
-		return None;
-
-	}
-
+pub fn text<'a>(s: &'a str) -> Text<'a> {
+	return Text::new(s);
 }
 
 impl<'a> Text<'a> {
@@ -373,7 +299,7 @@ impl<'a> Text<'a> {
 
 		let font = self.font.unwrap_or(&ctx.default_font);
 		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
-		let gh = font.height() * scale + self.line_sep;
+		let gh = font.height() * scale;
 		let mut lines = vec![];
 		let mut pw = 0.0;
 		let mut ph = gh;
@@ -396,6 +322,7 @@ impl<'a> Text<'a> {
 
 						pw = 0.0;
 						ph += gh;
+						ph += self.line_sep;
 
 					} else {
 
@@ -409,6 +336,7 @@ impl<'a> Text<'a> {
 
 									pw = wrap.width - last_space.width;
 									ph += gh;
+									ph += self.line_sep;
 									l = l.replace(&last_space.text, "");
 									l.push(ch);
 									lines.push(last_space);
@@ -422,6 +350,7 @@ impl<'a> Text<'a> {
 
 									pw = 0.0;
 									ph += gh;
+									ph += self.line_sep;
 									pw += gw;
 									l.push(ch);
 
@@ -480,6 +409,7 @@ impl<'a> Text<'a> {
 
 						pw = 0.0;
 						ph += gh;
+						ph += self.line_sep;
 
 					} else {
 
@@ -520,8 +450,82 @@ impl<'a> Text<'a> {
 
 }
 
-pub fn text<'a>(s: &'a str) -> Text<'a> {
-	return Text::new(s);
+#[derive(Clone, Debug)]
+pub struct RenderedLine {
+	text: String,
+	width: f32,
+}
+
+#[derive(Clone)]
+pub struct RenderedText<'a> {
+	width: f32,
+	height: f32,
+	lines: Vec<RenderedLine>,
+	align: gfx::Origin,
+	font: Option<&'a dyn gfx::Font>,
+	line_sep: f32,
+	color: Color,
+	size: Option<f32>,
+}
+
+impl<'a> RenderedText<'a> {
+
+	pub fn width(&self) -> f32 {
+		return self.width;
+	}
+
+	pub fn height(&self) -> f32 {
+		return self.height;
+	}
+
+	pub fn cursor_pos(&self, ctx: &Ctx, cpos: i32) -> Option<Vec2> {
+
+		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let offset_pos = -offset * vec2!(self.width, self.height);
+
+		if cpos == 0 {
+			return Some(offset_pos);
+		}
+
+		let font = self.font.unwrap_or(&ctx.default_font);
+		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
+		let gh = font.height() * scale + self.line_sep;
+		let mut tl = 0;
+
+		for (y, line) in self.lines.iter().enumerate() {
+
+			tl += line.text.len() as i32;
+
+			if cpos > tl {
+				continue;
+			} else {
+
+				let mut x = 0.0;
+				let ox = (self.width - line.width) * offset.x;
+				let ccpos = cpos - tl + line.text.len() as i32 - 1;
+
+				for (i, ch) in line.text.chars().enumerate() {
+
+					if let Some((tex, quad)) = font.get(ch) {
+
+						let gw = tex.width() as f32 * quad.w * scale;
+						x += gw;
+
+						if i as i32 == ccpos {
+							return Some(offset_pos + vec2!(x + ox, y as f32 * gh));
+						}
+
+					}
+				}
+
+			}
+
+		}
+
+		return None;
+
+	}
+
 }
 
 impl<'a> Drawable for RenderedText<'a> {
@@ -531,29 +535,29 @@ impl<'a> Drawable for RenderedText<'a> {
 		let dfont = ctx.default_font.clone();
 		let font = self.font.unwrap_or(&dfont);
 		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
-		let gh = font.height() + self.line_sep;
+		let gh = font.height() * scale + self.line_sep;
 
 		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
 		let offset_pos = -offset * vec2!(self.width, self.height);
 
 		ctx.push(&gfx::t()
 			.t2(offset_pos)
-			.s2(vec2!(scale))
 		, |ctx| {
 
 			for (y, line) in self.lines.iter().enumerate() {
 
 				let mut x = 0.0;
-				let ox = (self.width - line.width) * offset.x / scale;
+				let ox = (self.width - line.width) * offset.x;
 
 				for ch in line.text.chars() {
 
 					if let Some((tex, quad)) = font.get(ch) {
 
-						let gw = tex.width() as f32 * quad.w;
+						let gw = tex.width() as f32 * quad.w * scale;
 
 						ctx.draw_t(&gfx::t()
 							.t2(vec2!(x + ox, y as f32 * gh))
+							.s2(vec2!(scale))
 						, &shapes::sprite(&tex)
 							.offset(vec2!(-1))
 							.quad(quad)
@@ -898,6 +902,7 @@ impl Rect {
 			fill: Some(rgba!(1)),
 		};
 	}
+	// TODO: respect origin
 	pub fn from_size(w: f32, h: f32) -> Self {
 		return Self::from_pts(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
 	}

@@ -5,8 +5,8 @@
 - [synth] popping sound every second
 - [gfx] multiple textures
 - [misc] custom default 2d/3d pipeline
-- [gfx] text set size
 - [gfx] postprocessing (chaining canvas + shaders)
+- [gfx] tidy text rendering layout code
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -176,4 +176,5 @@
 - [gfx] text wrap break word
 - [gfx] text cursor pos mult with alignment
 - [misc] custom default font
+- [gfx] text set size
 
