@@ -4,7 +4,6 @@
 - [synth] better API
 - [synth] popping sound every second
 - [gfx] multiple textures
-- [misc] custom default font
 - [misc] custom default 2d/3d pipeline
 - [gfx] postprocessing (chaining canvas + shaders)
 
@@ -175,4 +174,5 @@
 - [gfx] text break line with \n
 - [gfx] text wrap break word
 - [gfx] text cursor pos mult with alignment
+- [misc] custom default font
 

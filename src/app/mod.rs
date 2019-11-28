@@ -3,6 +3,7 @@
 /// Windowing, Input, and Graphics
 
 pub mod gfx;
+mod res;
 mod texture;
 mod shader;
 mod canvas;
@@ -129,7 +130,7 @@ pub struct Ctx {
 
 }
 
-fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
+fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(not(web))]
 	let (windowed_ctx, mut events_loop, gl) =  {
@@ -287,14 +288,8 @@ fn run_with_conf<S: State>(conf: Conf) -> Result<()> {
 
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
-	let font_tex = gfx::Texture::from_bytes(&gl, res::F04B03_IMG)?;
-
-	let font = gfx::BitmapFont::from_tex(
-		font_tex,
-		res::F04B03_COLS,
-		res::F04B03_ROWS,
-		res::F04B03_CHARS,
-	)?;
+	let font_data = conf.default_font.take().unwrap_or(res::CP437_DATA);
+	let font = gfx::BitmapFont::from_data(&gl, font_data)?;
 
 	let mut ctx = Ctx {
 
@@ -638,6 +633,11 @@ impl Launcher {
 
 	pub fn scale(mut self, s: f32) -> Self {
 		self.conf.scale = s;
+		return self;
+	}
+
+	pub fn default_font(mut self, f: gfx::BitmapFontData) -> Self {
+		self.conf.default_font = Some(f);
 		return self;
 	}
 
