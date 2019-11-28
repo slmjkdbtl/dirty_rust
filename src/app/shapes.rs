@@ -2,6 +2,7 @@
 
 //! Common Drawing Primitives
 
+use std::mem;
 use std::f32::consts::PI;
 
 use super::*;
@@ -15,6 +16,8 @@ pub struct Sprite<'a> {
 	offset: Option<Vec2>,
 	flip: gfx::Flip,
 	color: Color,
+	width: Option<f32>,
+	height: Option<f32>,
 }
 
 impl<'a> Sprite<'a> {
@@ -25,6 +28,8 @@ impl<'a> Sprite<'a> {
 			color: rgba!(1),
 			offset: None,
 			flip: gfx::Flip::None,
+			width: None,
+			height: None,
 		};
 	}
 	pub fn quad(mut self, quad: Quad) -> Self {
@@ -47,6 +52,14 @@ impl<'a> Sprite<'a> {
 		self.flip = flip;
 		return self;
 	}
+	pub fn width(mut self, w: f32) -> Self {
+		self.width = Some(w);
+		return self;
+	}
+	pub fn height(mut self, h: f32) -> Self {
+		self.height = Some(h);
+		return self;
+	}
 }
 
 pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
@@ -57,7 +70,16 @@ impl<'a> Drawable for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
+		let tw = self.tex.width() as f32;
+		let th = self.tex.height() as f32;
+
+		let scale = match (self.width, self.height) {
+			(Some(w), Some(h)) => vec2!(w, h),
+			(Some(w), None) => vec2!(w, w * th / tw),
+			(None, Some(h)) => vec2!(h * tw / th, h),
+			(None, None) => vec2!(tw, th) * vec2!(self.quad.w, self.quad.h),
+		};
+
 		let offset = self.offset.unwrap_or(ctx.conf.origin.as_pt());
 
 		// TODO: extremely slow
@@ -218,7 +240,8 @@ pub struct Text<'a> {
 	color: Color,
 	align: Option<gfx::Origin>,
 	wrap: Option<TextWrap>,
-	line_height: f32,
+	size: Option<f32>,
+	line_sep: f32,
 }
 
 impl<'a> Text<'a> {
@@ -229,7 +252,8 @@ impl<'a> Text<'a> {
 			align: None,
 			color: rgba!(1),
 			wrap: None,
-			line_height: 0.0,
+			line_sep: 0.0,
+			size: None,
 		};
 	}
 	pub fn font(mut self, f: &'a dyn gfx::Font) -> Self {
@@ -248,6 +272,10 @@ impl<'a> Text<'a> {
 		self.align = Some(o);
 		return self;
 	}
+	pub fn size(mut self, s: f32) -> Self {
+		self.size = Some(s);
+		return self;
+	}
 	pub fn wrap(mut self, width: f32, break_word: bool) -> Self {
 		self.wrap = Some(TextWrap {
 			width: width,
@@ -255,8 +283,8 @@ impl<'a> Text<'a> {
 		});
 		return self;
 	}
-	pub fn line_height(mut self, h: f32) -> Self {
-		self.line_height = h;
+	pub fn line_sep(mut self, h: f32) -> Self {
+		self.line_sep = h;
 		return self;
 	}
 }
@@ -274,8 +302,9 @@ pub struct RenderedText<'a> {
 	lines: Vec<RenderedLine>,
 	align: gfx::Origin,
 	font: Option<&'a dyn gfx::Font>,
-	line_height: f32,
+	line_sep: f32,
 	color: Color,
+	size: Option<f32>,
 }
 
 impl<'a> RenderedText<'a> {
@@ -298,7 +327,8 @@ impl<'a> RenderedText<'a> {
 		}
 
 		let font = self.font.unwrap_or(&ctx.default_font);
-		let gh = font.height() + self.line_height;
+		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
+		let gh = font.height() + self.line_sep;
 		let mut tl = 0;
 
 		for (y, line) in self.lines.iter().enumerate() {
@@ -321,7 +351,7 @@ impl<'a> RenderedText<'a> {
 						x += gw;
 
 						if i as i32 == ccpos {
-							return Some(offset_pos + vec2!(x + ox, y as f32 * gh));
+							return Some(offset_pos + vec2!(ox, 0) + vec2!(x, y as f32 * gh) * scale);
 						}
 
 					}
@@ -342,10 +372,11 @@ impl<'a> Text<'a> {
 	pub fn render(&self, ctx: &Ctx) -> RenderedText<'a> {
 
 		let font = self.font.unwrap_or(&ctx.default_font);
-		let gh = font.height() + self.line_height;
+		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
+		let gh = font.height() * scale + self.line_sep;
 		let mut lines = vec![];
 		let mut pw = 0.0;
-		let mut ph = font.height();
+		let mut ph = gh;
 		let mut l = String::new();
 
 		match self.wrap {
@@ -359,7 +390,7 @@ impl<'a> Text<'a> {
 					if ch == '\n' {
 
 						lines.push(RenderedLine {
-							text: std::mem::replace(&mut l, String::new()),
+							text: mem::replace(&mut l, String::new()),
 							width: pw,
 						});
 
@@ -370,7 +401,7 @@ impl<'a> Text<'a> {
 
 						if let Some((tex, quad)) = font.get(ch) {
 
-							let gw = tex.width() as f32 * quad.w;
+							let gw = tex.width() as f32 * quad.w * scale;
 
 							if pw + gw > wrap.width {
 
@@ -385,7 +416,7 @@ impl<'a> Text<'a> {
 								} else {
 
 									lines.push(RenderedLine {
-										text: std::mem::replace(&mut l, String::new()),
+										text: mem::replace(&mut l, String::new()),
 										width: pw,
 									});
 
@@ -429,8 +460,9 @@ impl<'a> Text<'a> {
 					lines: lines,
 					align: self.align.unwrap_or(ctx.conf.origin),
 					font: self.font,
-					line_height: self.line_height,
+					line_sep: self.line_sep,
 					color: self.color,
+					size: self.size,
 				};
 
 			},
@@ -442,7 +474,7 @@ impl<'a> Text<'a> {
 					if ch == '\n' {
 
 						lines.push(RenderedLine {
-							text: std::mem::replace(&mut l, String::new()),
+							text: mem::replace(&mut l, String::new()),
 							width: pw,
 						});
 
@@ -475,8 +507,9 @@ impl<'a> Text<'a> {
 					lines: lines,
 					align: self.align.unwrap_or(ctx.conf.origin),
 					font: self.font,
-					line_height: self.line_height,
+					line_sep: self.line_sep,
 					color: self.color,
+					size: self.size,
 				};
 
 			},
@@ -497,19 +530,21 @@ impl<'a> Drawable for RenderedText<'a> {
 
 		let dfont = ctx.default_font.clone();
 		let font = self.font.unwrap_or(&dfont);
-		let gh = font.height() + self.line_height;
+		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
+		let gh = font.height() + self.line_sep;
 
 		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
 		let offset_pos = -offset * vec2!(self.width, self.height);
 
 		ctx.push(&gfx::t()
 			.t2(offset_pos)
+			.s2(vec2!(scale))
 		, |ctx| {
 
 			for (y, line) in self.lines.iter().enumerate() {
 
 				let mut x = 0.0;
-				let ox = (self.width - line.width) * offset.x;
+				let ox = (self.width - line.width) * offset.x / scale;
 
 				for ch in line.text.chars() {
 

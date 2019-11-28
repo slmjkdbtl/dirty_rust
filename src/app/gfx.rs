@@ -262,10 +262,6 @@ impl Ctx {
 
 	}
 
-	pub fn default_font(&self) -> &BitmapFont {
-		return &self.default_font;
-	}
-
 	pub fn transform(&self) -> Transform {
 		return self.transform;
 	}
@@ -280,6 +276,10 @@ impl Ctx {
 
 	}
 
+	pub fn default_font(&self) -> &impl Font {
+		return &self.default_font;
+	}
+
 }
 
 pub(super) fn begin(ctx: &mut Ctx) {
@@ -287,42 +287,6 @@ pub(super) fn begin(ctx: &mut Ctx) {
 	ctx.draw_calls_last = ctx.draw_calls;
 	ctx.draw_calls = 0;
 	ctx.clear();
-
-// 	let w = ctx.width as f32;
-// 	let h = ctx.height as f32;
-// 	let gw = ctx.conf.width as f32;
-// 	let gh = ctx.conf.height as f32;
-// 	let dpi = ctx.dpi() as f32;
-
-// 	ctx.gl.viewport(0, 0, (gw * dpi) as i32, (gh * dpi) as i32);
-
-// 	match ctx.conf.scale_mode {
-
-// 		ScaleMode::Letterbox => {
-
-// 			let aspect = w / h;
-// 			let g_aspect = gw / gh;
-
-// 			let scale = if aspect > g_aspect {
-// 				h / gh
-// 			} else {
-// 				w / gw
-// 			};
-
-// 			let x = (w - gw * scale) / 2.0;
-// 			let y = (h - gh * scale) / 2.0;
-
-// 			ctx.gl.viewport(0, 0, (gw * dpi) as i32, (gh * dpi) as i32);
-
-// 		},
-
-// 		ScaleMode::Stretch => {
-
-// 			ctx.gl.viewport(0, 0, (w * dpi) as i32, (h * dpi) as i32);
-
-// 		},
-
-// 	}
 
 }
 

@@ -5,6 +5,7 @@
 - [synth] popping sound every second
 - [gfx] multiple textures
 - [misc] custom default 2d/3d pipeline
+- [gfx] text set size
 - [gfx] postprocessing (chaining canvas + shaders)
 
 == TODO
