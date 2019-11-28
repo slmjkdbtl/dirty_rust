@@ -15,35 +15,68 @@ pub trait Font {
 	fn height(&self) -> f32;
 }
 
+#[derive(Clone, Debug)]
+pub struct BitmapFontData {
+	pub(super) img: &'static [u8],
+	pub(super) gw: u8,
+	pub(super) gh: u8,
+	pub(super) chars: &'static str,
+}
+
+impl BitmapFontData {
+	pub const fn new(img: &'static [u8], gw: u8, gh: u8, chars: &'static str) -> Self {
+		return Self {
+			img: img,
+			gw: gw,
+			gh: gh,
+			chars: chars,
+		};
+	}
+}
+
 /// bitmap font
 #[derive(Clone, PartialEq)]
 pub struct BitmapFont {
 	tex: Texture,
 	map: HashMap<char, Quad>,
 	quad_size: Vec2,
-	grid_width: i32,
-	grid_height: i32,
+	grid_width: u8,
+	grid_height: u8,
 }
 
 impl BitmapFont {
 
+	pub fn from_data(ctx: &impl GfxCtx, data: BitmapFontData) -> Result<Self> {
+
+		let font_tex = gfx::Texture::from_bytes(ctx, &data.img)?;
+
+		return Ok(Self::from_tex(
+			font_tex,
+			data.gw,
+			data.gh,
+			data.chars,
+		)?);
+
+	}
+
 	/// creat a bitmap font from a texture, and grid of characters
-	pub fn from_tex(tex: Texture, cols: usize, rows: usize, chars: &str) -> Result<Self> {
+	pub fn from_tex(tex: Texture, gw: u8, gh: u8, chars: &'static str) -> Result<Self> {
 
 		let mut map = HashMap::new();
-		let quad_size = vec2!(1.0 / cols as f32, 1.0 / rows as f32);
-		let tw = tex.width() as i32;
-		let th = tex.height() as i32;
+		let tw = tex.width();
+		let th = tex.height();
+		let quad_size = vec2!(gw as f32 / tw as f32, gh as f32 / th as f32);
+		let cols = tw / gw as i32;
 
-		if (tw % cols as i32 != 0 || th % rows as i32 != 0) {
-			return Err(Error::Gfx("bitmap font texture size or column / row count not correct".into()));
+		if (tw % gw as i32 != 0 || th % gh as i32 != 0) {
+			return Err(Error::Gfx("bitmap font grid size not correct".into()));
 		}
 
 		for (i, ch) in chars.chars().enumerate() {
 
 			map.insert(ch, quad!(
-				(i % cols) as f32 * quad_size.x,
-				(i / cols) as f32 * quad_size.y,
+				(i as i32 % cols) as f32 * quad_size.x,
+				(i as i32 / cols) as f32 * quad_size.y,
 				quad_size.x,
 				quad_size.y
 			));
@@ -51,30 +84,18 @@ impl BitmapFont {
 		}
 
 		return Ok(Self {
-
 			tex: tex,
 			map: map,
 			quad_size: quad_size,
-			grid_width: tw as i32 / cols as i32,
-			grid_height: th as i32 / rows as i32,
-
+			grid_width: gw,
+			grid_height: gh,
 		});
 
 	}
 
 	/// get width of a char
 	pub fn width(&self) -> i32 {
-		return self.grid_width;
-	}
-
-	/// get width of a quad
-	pub fn quad_width(&self) -> f32 {
-		return self.quad_size.x;
-	}
-
-	/// get height of a quad
-	pub fn quad_height(&self) -> f32 {
-		return self.quad_size.y;
+		return self.grid_width as i32;
 	}
 
 }

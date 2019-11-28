@@ -28,6 +28,7 @@ pub struct Conf {
 	pub scale: f32,
 	pub near: f32,
 	pub far: f32,
+	pub default_font: Option<gfx::BitmapFontData>,
 }
 
 impl Conf {
@@ -70,6 +71,7 @@ impl Default for Conf {
 			scale: 1.0,
 			near: -1024.0,
 			far: 1024.0,
+			default_font: None,
 		};
 	}
 

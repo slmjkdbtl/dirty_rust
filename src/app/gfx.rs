@@ -12,20 +12,9 @@ pub use gl::FilterMode;
 pub use gl::Surface;
 pub use gl::Cmp;
 
-pub use res::CP437_IMG;
-pub use res::CP437_COLS;
-pub use res::CP437_ROWS;
-pub use res::CP437_CHARS;
-
-pub use res::PROGGY_IMG;
-pub use res::PROGGY_COLS;
-pub use res::PROGGY_ROWS;
-pub use res::PROGGY_CHARS;
-
-pub use res::F04B03_IMG;
-pub use res::F04B03_COLS;
-pub use res::F04B03_ROWS;
-pub use res::F04B03_CHARS;
+pub use res::CP437_DATA;
+pub use res::PROGGY_DATA;
+pub use res::F04B03_DATA;
 
 pub use texture::*;
 pub use transform::*;

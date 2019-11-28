@@ -18,7 +18,6 @@
 
 #[macro_use]
 mod helpers;
-mod res;
 
 pub mod task;
 
