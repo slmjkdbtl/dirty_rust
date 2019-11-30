@@ -147,7 +147,7 @@ impl app::State for Game {
 					ctx.toggle_fullscreen();
 				}
 				if k == Key::Q {
-					if ctx.key_down(Key::LWin) || ctx.key_down(Key::RWin) {
+					if ctx.key_mods().meta {
 						ctx.quit();
 					}
 				}

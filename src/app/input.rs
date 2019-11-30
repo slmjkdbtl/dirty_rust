@@ -9,15 +9,21 @@ use once_cell::sync::Lazy;
 
 static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hashset![
+		// backspace
 		'\u{7f}',
+		// return
 		'\r',
 		'\n',
+		// esc
 		'\u{1b}',
+		// unknown?
 		'\u{8}',
+		// up/down/left/right
 		'\u{f700}',
 		'\u{f701}',
 		'\u{f702}',
 		'\u{f703}',
+		// f1 - f12
 		'\u{f704}',
 		'\u{f705}',
 		'\u{f706}',
@@ -43,12 +49,20 @@ pub type TouchID = u64;
 use super::*;
 use crate::*;
 
+// TODO: wait for winit's official impl
+fn is_private_use_char(c: char) -> bool {
+	match c {
+		'\u{E000}'..='\u{F8FF}' | '\u{F0000}'..='\u{FFFFD}' | '\u{100000}'..='\u{10FFFD}' => true,
+		_ => false,
+	}
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct KeyMod {
 	pub shift: bool,
 	pub ctrl: bool,
 	pub alt: bool,
-	pub cmd: bool,
+	pub meta: bool,
 }
 
 impl Ctx {
@@ -145,7 +159,7 @@ impl Ctx {
 			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
 			ctrl: self.key_down(Key::LCtrl) || self.key_down(Key::RCtrl),
 			alt: self.key_down(Key::LAlt) || self.key_down(Key::RAlt),
-			cmd: self.key_down(Key::LWin) || self.key_down(Key::RWin),
+			meta: self.key_down(Key::LMeta) || self.key_down(Key::RMeta),
 		};
 	}
 
@@ -160,7 +174,7 @@ pub enum Event {
 	MouseRelease(Mouse),
 	MouseMove(Vec2),
 	Scroll(Vec2, ScrollPhase),
-	TextInput(char),
+	CharInput(char),
 	GamepadPress(GamepadID, GamepadButton),
 	GamepadPressRepeat(GamepadID, GamepadButton),
 	GamepadRelease(GamepadID, GamepadButton),
@@ -328,8 +342,8 @@ pub(super) fn poll(
 					},
 
 					ReceivedCharacter(ch) => {
-						if !INVALID_CHARS.contains(&ch) {
-							s.event(&mut ctx, &Event::TextInput(ch))?;
+						if !INVALID_CHARS.contains(&ch) && !ch.is_control() && !is_private_use_char(ch) {
+							s.event(&mut ctx, &Event::CharInput(ch))?;
 						}
 					},
 
@@ -659,8 +673,8 @@ gen_buttons!(Key(ExternKey), {
 	RShift("rshift") => RShift,
 	LAlt("lalt") => LAlt,
 	RAlt("ralt") => RAlt,
-	LWin("lwin") => LWin,
-	RWin("rwin") => RWin,
+	LMeta("lmeta") => LWin,
+	RMeta("rmeta") => RWin,
 	LCtrl("lctrl") => LControl,
 	RCtrl("rctrl") => RControl,
 });

@@ -301,8 +301,8 @@ impl<'a> Text<'a> {
 		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
 		let gh = font.height() * scale;
 		let mut lines = vec![];
-		let mut pw = 0.0;
-		let mut ph = gh;
+		let mut cx = 0.0;
+		let mut cy = gh;
 		let mut l = String::new();
 
 		match self.wrap {
@@ -317,12 +317,12 @@ impl<'a> Text<'a> {
 
 						lines.push(RenderedLine {
 							text: mem::replace(&mut l, String::new()),
-							width: pw,
+							width: cx,
 						});
 
-						pw = 0.0;
-						ph += gh;
-						ph += self.line_sep;
+						cx = 0.0;
+						cy += gh;
+						cy += self.line_sep;
 
 					} else {
 
@@ -330,13 +330,13 @@ impl<'a> Text<'a> {
 
 							let gw = tex.width() as f32 * quad.w * scale;
 
-							if pw + gw > wrap.width {
+							if cx + gw > wrap.width {
 
 								if let Some(last_space) = last_space.take() {
 
-									pw = wrap.width - last_space.width;
-									ph += gh;
-									ph += self.line_sep;
+									cx = wrap.width - last_space.width;
+									cy += gh;
+									cy += self.line_sep;
 									l = l.replace(&last_space.text, "");
 									l.push(ch);
 									lines.push(last_space);
@@ -345,20 +345,20 @@ impl<'a> Text<'a> {
 
 									lines.push(RenderedLine {
 										text: mem::replace(&mut l, String::new()),
-										width: pw,
+										width: cx,
 									});
 
-									pw = 0.0;
-									ph += gh;
-									ph += self.line_sep;
-									pw += gw;
+									cx = 0.0;
+									cy += gh;
+									cy += self.line_sep;
+									cx += gw;
 									l.push(ch);
 
 								}
 
 							} else {
 
-								pw += gw;
+								cx += gw;
 								l.push(ch);
 
 							}
@@ -369,7 +369,7 @@ impl<'a> Text<'a> {
 							if ch == ' ' {
 								last_space = Some(RenderedLine {
 									text: l.clone(),
-									width: pw,
+									width: cx,
 								});
 							}
 						}
@@ -380,12 +380,12 @@ impl<'a> Text<'a> {
 
 				lines.push(RenderedLine {
 					text: l,
-					width: pw,
+					width: cx,
 				});
 
 				return RenderedText {
 					width: wrap.width,
-					height: ph,
+					height: cy,
 					lines: lines,
 					align: self.align.unwrap_or(ctx.conf.origin),
 					font: self.font,
@@ -404,12 +404,12 @@ impl<'a> Text<'a> {
 
 						lines.push(RenderedLine {
 							text: mem::replace(&mut l, String::new()),
-							width: pw,
+							width: cx,
 						});
 
-						pw = 0.0;
-						ph += gh;
-						ph += self.line_sep;
+						cx = 0.0;
+						cy += gh;
+						cy += self.line_sep;
 
 					} else {
 
@@ -418,7 +418,7 @@ impl<'a> Text<'a> {
 							let gw = tex.width() as f32 * quad.w;
 
 							l.push(ch);
-							pw += gw;
+							cx += gw;
 
 						}
 
@@ -428,12 +428,12 @@ impl<'a> Text<'a> {
 
 				lines.push(RenderedLine {
 					text: l,
-					width: pw,
+					width: cx,
 				});
 
 				return RenderedText {
-					width: pw,
-					height: ph,
+					width: cx,
+					height: cy,
 					lines: lines,
 					align: self.align.unwrap_or(ctx.conf.origin),
 					font: self.font,
@@ -478,6 +478,7 @@ impl<'a> RenderedText<'a> {
 		return self.height;
 	}
 
+	// TODO: cursor on last char of line 1 or first char of line 2?
 	pub fn cursor_pos(&self, ctx: &Ctx, cpos: i32) -> Option<Vec2> {
 
 		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
@@ -524,6 +525,11 @@ impl<'a> RenderedText<'a> {
 
 		return None;
 
+	}
+
+	// TODO
+	pub fn pos_cursor(&self, ctx: Ctx, pos: Vec2) -> Option<i32> {
+		return None;
 	}
 
 }
