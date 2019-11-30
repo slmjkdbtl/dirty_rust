@@ -1,8 +1,9 @@
 // wengwengweng
 
-export!(timer);
-export!(sprite);
-export!(area);
-export!(particle);
-export!(geom);
+pub mod timer;
+pub mod sprite;
+pub mod area;
+pub mod particle;
+pub mod geom;
+pub mod textedit;
 

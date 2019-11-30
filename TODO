@@ -4,8 +4,6 @@
 - [synth] better API
 - [synth] popping sound every second
 - [gfx] multiple textures
-- [misc] custom default 2d/3d pipeline
-- [gfx] postprocessing (chaining canvas + shaders)
 - [gfx] tidy text rendering layout code
 
 == TODO
@@ -89,6 +87,7 @@
 - [misc] SIMD vecs
 - [audio] let user choose audio device
 - [gfx] resize weirdness
+- [misc] custom default 2d/3d pipeline
 
 == DONE
 - [http] refactor http
