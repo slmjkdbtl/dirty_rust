@@ -3,6 +3,7 @@
 #[cfg(feature = "clip")]
 use crate::clip;
 
+use std::fmt;
 use std::collections::HashSet;
 
 pub type Line = i32;
@@ -20,6 +21,12 @@ impl CursorPos {
 			line: l,
 			col: c,
 		};
+	}
+}
+
+impl fmt::Display for CursorPos {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		return write!(f, "({}, {})", self.line, self.col);
 	}
 }
 
@@ -93,18 +100,21 @@ pub struct TextBuffer {
 impl TextBuffer {
 
 	pub fn new() -> Self {
+		return Self::with_conf(Conf::default());
+	}
 
+	pub fn with_conf(conf: Conf) -> Self {
 		return Self {
-			conf: Conf::default(),
+			conf: conf,
 			cursor: CursorPos::default(),
 			lines: vec![String::new()],
 			undo_stack: vec![],
 			redo_stack: vec![],
 			modified: false,
 		};
-
 	}
 
+	/// set content
 	pub fn set_content(&mut self, content: &str) {
 		self.lines = content
 			.split('\n')
@@ -112,26 +122,32 @@ impl TextBuffer {
 			.collect();
 	}
 
+	/// get lines
 	pub fn lines(&self) -> &[String] {
 		return &self.lines;
 	}
 
+	/// get content as a String, lines joined with '\n'
 	pub fn content(&self) -> String {
 		return self.lines.join("\n");
 	}
 
+	/// get current cursor pos
 	pub fn cursor(&self) -> CursorPos {
 		return self.cursor;
 	}
 
+	/// get specified line
 	pub fn get_line_at(&self, ln: Line) -> Option<&String> {
 		return self.lines.get(ln as usize - 1);
 	}
 
+	/// get current line
 	pub fn get_line(&self) -> Option<&String> {
 		return self.get_line_at(self.cursor.line);
 	}
 
+	/// set specified line
 	pub fn set_line_at(&mut self, ln: Line, content: &str) {
 
 		if self.get_line_at(ln).is_some() {
@@ -148,10 +164,12 @@ impl TextBuffer {
 
 	}
 
+	/// set current line
 	pub fn set_line(&mut self, content: &str) {
 		self.set_line_at(self.cursor.line, content);
 	}
 
+	/// insert str at specified position
 	pub fn insert_str_at(&mut self, mut pos: CursorPos, text: &str) -> CursorPos {
 
 		if let Some(mut line) = self.get_line_at(pos.line).map(Clone::clone) {
@@ -161,7 +179,7 @@ impl TextBuffer {
 			self.set_line_at(pos.line, &line);
 			pos.col += text.len() as Col;
 
-			return self.cursor_bound(pos);
+			return self.clamp_cursor(pos);
 
 		}
 
@@ -169,10 +187,12 @@ impl TextBuffer {
 
 	}
 
+	/// insert str at current cursor position
 	pub fn insert_str(&mut self, text: &str) {
 		self.cursor = self.insert_str_at(self.cursor, text);
 	}
 
+	/// insert char at specified position
 	pub fn insert_at(&mut self, mut pos: CursorPos, ch: char) -> CursorPos {
 
 		if !ch.is_ascii() {
@@ -190,7 +210,7 @@ impl TextBuffer {
 			self.set_line_at(pos.line, &line);
 			pos.col += 1;
 
-			return self.cursor_bound(pos);
+			return self.clamp_cursor(pos);
 
 		}
 
@@ -198,6 +218,7 @@ impl TextBuffer {
 
 	}
 
+	/// insert char at current cursor pos
 	pub fn insert(&mut self, ch: char) {
 		self.cursor = self.insert_at(self.cursor, ch);
 	}
@@ -257,7 +278,7 @@ impl TextBuffer {
 			pos.line += 1;
 			pos.col = 1;
 
-			return self.cursor_bound(pos);
+			return self.clamp_cursor(pos);
 
 		}
 
@@ -388,17 +409,18 @@ impl TextBuffer {
 
 	}
 
-	pub fn cursor_bound(&self, pos: CursorPos) -> CursorPos {
+	/// clamp cursor to editing position
+	pub fn clamp_cursor(&self, pos: CursorPos) -> CursorPos {
 
 		if pos.col < 1 {
-			return self.cursor_bound(CursorPos {
+			return self.clamp_cursor(CursorPos {
 				col: 1,
 				.. pos
 			});
 		}
 
 		if pos.line < 1 {
-			return self.cursor_bound(CursorPos {
+			return self.clamp_cursor(CursorPos {
 				line: 1,
 				.. pos
 			});
@@ -410,7 +432,7 @@ impl TextBuffer {
 
 			if pos.col > len {
 
-				return self.cursor_bound(CursorPos {
+				return self.clamp_cursor(CursorPos {
 					col: len,
 					.. pos
 				});
@@ -422,7 +444,7 @@ impl TextBuffer {
 		let lines = self.lines.len() as Line;
 
 		if pos.line > lines && lines > 0 {
-			return self.cursor_bound(CursorPos {
+			return self.clamp_cursor(CursorPos {
 				line: lines,
 				.. pos
 			});
@@ -432,8 +454,9 @@ impl TextBuffer {
 
 	}
 
+	/// move cursor to specified position, clamped
 	pub fn move_to(&mut self, pos: CursorPos) {
-		self.cursor = self.cursor_bound(pos);
+		self.cursor = self.clamp_cursor(pos);
 	}
 
 	/// move current cursor left
@@ -570,7 +593,7 @@ impl TextBuffer {
 
 			pos.col = index as Col + 1;
 
-			return self.cursor_bound(pos);
+			return self.clamp_cursor(pos);
 
 		}
 
@@ -588,7 +611,7 @@ impl TextBuffer {
 
 		if let Some(line) = self.get_line_at(pos.line) {
 			pos.col = line.len() as Col + 1;
-			return self.cursor_bound(pos);
+			return self.clamp_cursor(pos);
 		}
 
 		return pos;
@@ -693,14 +716,32 @@ impl TextBuffer {
 }
 
 #[test]
-fn buf_actions() {
+fn textbuf_actions() {
 
 	let mut buf = TextBuffer::new();
 
+	let check_content = |b: &TextBuffer, s: &str| {
+
+		let content1 = b.content();
+		let content2 = String::from(s);
+
+		assert_eq!(content1, content2, "content should be {}, found {}", content2, content1);
+
+	};
+
+	let check_cursor = |b: &TextBuffer, l: Line, c: Col| {
+
+		let pos1 = b.cursor();
+		let pos2 = CursorPos::new(l, c);
+
+		assert_eq!(pos1, pos2, "cursor should be {}, found {}", pos2, pos1);
+
+	};
+
 	buf.insert_str("1234567890");
 
-	assert_eq!(buf.content(), String::from("1234567890"));
-	assert_eq!(buf.cursor(), CursorPos::new(1, 11));
+	check_content(&buf, "1234567890");
+	check_cursor(&buf, 1, 11);
 
 	buf.move_right();
 	buf.move_up();
@@ -715,42 +756,42 @@ fn buf_actions() {
 	buf.insert_str("abc");
 	buf.insert(' ');
 
-	assert_eq!(buf.content(), String::from("1234567 abc 890"));
-	assert_eq!(buf.cursor(), CursorPos::new(1, 13));
+	check_content(&buf, "1234567 abc 890");
+	check_cursor(&buf, 1, 13);
 	buf.move_prev_word();
-	assert_eq!(buf.cursor(), CursorPos::new(1, 9));
+	check_cursor(&buf, 1, 9);
 	buf.move_prev_word();
-	assert_eq!(buf.cursor(), CursorPos::new(1, 1));
+	check_cursor(&buf, 1, 1);
 	buf.move_next_word();
-	assert_eq!(buf.cursor(), CursorPos::new(1, 8));
+	check_cursor(&buf, 1, 8);
 	buf.move_next_word();
-	assert_eq!(buf.cursor(), CursorPos::new(1, 12));
+	check_cursor(&buf, 1, 12);
 	buf.move_next_word();
-	assert_eq!(buf.cursor(), CursorPos::new(1, 16));
+	check_cursor(&buf, 1, 16);
 	buf.move_prev_word();
-	assert_eq!(buf.cursor(), CursorPos::new(1, 13));
+	check_cursor(&buf, 1, 13);
 
 	buf.del();
 	buf.del();
 
-	assert_eq!(buf.content(), String::from("1234567 ab890"));
-	assert_eq!(buf.cursor(), CursorPos::new(1, 11));
+	check_content(&buf, "1234567 ab890");
+	check_cursor(&buf, 1, 11);
 
 	buf.del_word();
 	buf.move_left();
 
-	assert_eq!(buf.content(), String::from("1234567 890"));
-	assert_eq!(buf.cursor(), CursorPos::new(1, 8));
+	check_content(&buf, "1234567 890");
+	check_cursor(&buf, 1, 8);
 
 	buf.break_line();
 
-	assert_eq!(buf.content(), String::from("1234567\n 890"));
-	assert_eq!(buf.cursor(), CursorPos::new(2, 1));
+	check_content(&buf, "1234567\n 890");
+	check_cursor(&buf, 2, 1);
 
 	buf.move_line_end();
-	assert_eq!(buf.cursor(), CursorPos::new(2, 5));
+	check_cursor(&buf, 2, 5);
 	buf.move_line_start();
-	assert_eq!(buf.cursor(), CursorPos::new(2, 2));
+	check_cursor(&buf, 2, 2);
 
 }
 

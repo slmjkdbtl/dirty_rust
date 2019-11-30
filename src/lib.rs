@@ -17,7 +17,7 @@
 #![deny(clippy::implicit_return)]
 
 #[macro_use]
-mod helpers;
+pub mod helpers;
 
 pub mod task;
 

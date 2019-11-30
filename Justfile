@@ -6,6 +6,9 @@ run example="sprite":
 install:
 	cargo install --force --path .
 
+test:
+	cargo test --release --tests
+
 build:
 	cargo build --release
 
