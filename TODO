@@ -88,6 +88,7 @@
 - [audio] let user choose audio device
 - [gfx] resize weirdness
 - [misc] custom default 2d/3d pipeline
+- [misc] tool for generating italic and bold bitmap fonts
 
 == DONE
 - [http] refactor http
