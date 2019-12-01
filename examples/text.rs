@@ -69,6 +69,7 @@ impl State for Game {
 }
 
 fn main() -> Result<()> {
+
 	return launcher()
 // 		.origin(gfx::Origin::TopLeft)
 		.run::<Game>();

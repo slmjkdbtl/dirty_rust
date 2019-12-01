@@ -122,7 +122,7 @@ impl gl::UniformLayout for Uniform2D {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values: UniformValues = hashmap![
+		let mut values: UniformValues = hmap![
 			"u_proj" => &self.proj,
 		];
 
@@ -157,7 +157,7 @@ impl gl::UniformLayout for Uniform3D {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values: UniformValues = hashmap![
+		let mut values: UniformValues = hmap![
 			"u_proj" => &self.proj,
 			"u_view" => &self.view,
 			"u_model" => &self.model,
@@ -192,7 +192,7 @@ pub(super) struct UniformCubemap {
 impl gl::UniformLayout for UniformCubemap {
 
 	fn values(&self) -> UniformValues {
-		return hashmap![
+		return hmap![
 			"u_proj" => &self.proj,
 			"u_view" => &self.view,
 			"u_color" => &self.color,

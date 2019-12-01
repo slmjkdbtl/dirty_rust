@@ -37,7 +37,7 @@ impl Synth {
 	pub fn new() -> Self {
 		return Synth {
 			volume: 1.0,
-			notes: hashmap![],
+			notes: hmap![],
 			last_time: 0.0,
 			buf: VecDeque::with_capacity(100),
 		};
