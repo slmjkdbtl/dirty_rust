@@ -10,7 +10,7 @@ use super::gfx::*;
 /// custom uniform
 pub trait Uniform: Clone {
 	fn values(&self) -> UniformValues {
-		return hashmap![];
+		return hmap![];
 	}
 	fn textures(&self) -> Vec<&gfx::Texture> {
 		return vec![];

@@ -23,7 +23,7 @@ pub trait UniformLayout: 'static {
 
 impl UniformLayout for () {
 	fn values(&self) -> UniformValues {
-		return hashmap![];
+		return hmap![];
 	}
 	fn textures(&self) -> Vec<&dyn Texture> {
 		return vec![];

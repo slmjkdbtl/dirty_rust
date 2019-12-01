@@ -327,12 +327,21 @@ impl Color {
 		return (self.r + self.g + self.b) / 3.0;
 	}
 
-	pub fn lighten(self, v: f32) -> Self {
-		return self + rgba!(v, v, v, 0);
+	pub fn clamp(self, c1: Self, c2: Self) -> Self {
+		return rgba!(
+			self.r.clamp(c1.r, c2.r),
+			self.g.clamp(c1.g, c2.g),
+			self.b.clamp(c1.b, c2.b),
+			self.a.clamp(c1.a, c2.a),
+		);
+	}
+
+	pub fn brighten(self, v: f32) -> Self {
+		return (self + rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
 	}
 
 	pub fn darken(self, v: f32) -> Self {
-		return self - rgba!(v, v, v, 0);
+		return (self - rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
 	}
 
 	pub fn rgb(self) -> Vec3 {

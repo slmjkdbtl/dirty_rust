@@ -5,6 +5,7 @@
 - [synth] popping sound every second
 - [gfx] multiple textures
 - [gfx] tidy text rendering layout code
+- [kit] 3 types of text edit: input, area, code editor
 
 == TODO
 - [http] use rustls instead of native-tls

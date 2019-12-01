@@ -1,5 +1,7 @@
 // wengwengweng
 
+pub use once_cell;
+
 #[allow(unused_macros)]
 macro_rules! export {
 	($name:ident) => {
@@ -17,9 +19,8 @@ macro_rules! mexport {
 	}
 }
 
-#[allow(unused_macros)]
 #[macro_export]
-macro_rules! hashmap {
+macro_rules! hmap {
 	($($key:expr => $val:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::HashMap::new();
@@ -33,9 +34,8 @@ macro_rules! hashmap {
 	}
 }
 
-#[allow(unused_macros)]
 #[macro_export]
-macro_rules! hashset {
+macro_rules! hset {
 	($($item:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::HashSet::new();
@@ -49,9 +49,8 @@ macro_rules! hashset {
 	};
 }
 
-#[allow(unused_macros)]
 #[macro_export]
-macro_rules! btreemap {
+macro_rules! bmap {
 	($($key:expr => $val:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::BTreeMap::new();
@@ -65,9 +64,8 @@ macro_rules! btreemap {
 	}
 }
 
-#[allow(unused_macros)]
 #[macro_export]
-macro_rules! btreeset {
+macro_rules! bset {
 	($($item:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::BTreeSet::new();
@@ -81,12 +79,26 @@ macro_rules! btreeset {
 	}
 }
 
-#[allow(unused_macros)]
 #[macro_export]
-macro_rules! vecdeque {
+macro_rules! vecd {
 	($($item:expr),*$(,)?) => {
 		{
 			let mut _tmp = std::collections::VecDeque::new();
+			if false {
+				_tmp
+			} else {
+				$(_tmp.push_back($item);)*
+				_tmp
+			}
+		}
+	}
+}
+
+#[macro_export]
+macro_rules! llist {
+	($($item:expr),*$(,)?) => {
+		{
+			let mut _tmp = std::collections::LinkedList::new();
 			if false {
 				_tmp
 			} else {
@@ -120,27 +132,32 @@ pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&panic::Location>) + Send 
 #[test]
 fn collection_macros() {
 
-	hashmap![
+	hmap![
 		"123" => 123,
 		"456" => 456,
 	];
 
-	btreemap![
+	bmap![
 		"123" => 123,
 		"456" => 456,
 	];
 
-	hashset![
+	hset![
 		123,
 		456,
 	];
 
-	btreeset![
+	bset![
 		123,
 		456,
 	];
 
-	vecdeque![
+	vecd![
+		123,
+		456,
+	];
+
+	llist![
 		123,
 		456,
 	];

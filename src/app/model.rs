@@ -344,7 +344,7 @@ impl Model {
 		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
 			return mtl
 				.map(|m| tobj::load_mtl_buf(&mut Cursor::new(m)))
-				.unwrap_or(Ok((vec![], hashmap![])));
+				.unwrap_or(Ok((vec![], hmap![])));
 		})?;
 
 		let mut meshes = Vec::with_capacity(models.len());

@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use once_cell::sync::Lazy;
 
 static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
-	return hashset![
+	return hset![
 		// backspace
 		'\u{7f}',
 		// return
@@ -429,7 +429,7 @@ pub(super) fn poll(
 						ctx
 							.gamepad_button_states
 							.entry(id)
-							.or_insert(HashMap::new())
+							.or_insert(hmap![])
 							.insert(button, ButtonState::Pressed);
 
 						s.event(&mut ctx, &Event::GamepadPress(id, button))?;
@@ -454,7 +454,7 @@ pub(super) fn poll(
 						ctx
 							.gamepad_button_states
 							.entry(id)
-							.or_insert(HashMap::new())
+							.or_insert(hmap![])
 							.insert(button, ButtonState::Released);
 
 						s.event(&mut ctx, &Event::GamepadRelease(id, button))?;
