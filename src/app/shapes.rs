@@ -242,6 +242,8 @@ pub struct Text<'a> {
 	wrap: Option<TextWrap>,
 	size: Option<f32>,
 	line_sep: f32,
+	italic: Option<f32>,
+	bold: Option<f32>,
 }
 
 impl<'a> Text<'a> {
@@ -254,6 +256,8 @@ impl<'a> Text<'a> {
 			wrap: None,
 			line_sep: 0.0,
 			size: None,
+			italic: None,
+			bold: None,
 		};
 	}
 	pub fn font(mut self, f: &'a dyn gfx::Font) -> Self {
@@ -285,6 +289,14 @@ impl<'a> Text<'a> {
 	}
 	pub fn line_sep(mut self, h: f32) -> Self {
 		self.line_sep = h;
+		return self;
+	}
+	pub fn italic(mut self, i: f32) -> Self {
+		self.italic = Some(i);
+		return self;
+	}
+	pub fn bold(mut self, i: f32) -> Self {
+		self.bold = Some(i);
 		return self;
 	}
 }
@@ -392,6 +404,8 @@ impl<'a> Text<'a> {
 					line_sep: self.line_sep,
 					color: self.color,
 					size: self.size,
+					italic: self.italic,
+					bold: self.bold,
 				};
 
 			},
@@ -440,6 +454,8 @@ impl<'a> Text<'a> {
 					line_sep: self.line_sep,
 					color: self.color,
 					size: self.size,
+					italic: self.italic,
+					bold: self.bold,
 				};
 
 			},
@@ -466,6 +482,8 @@ pub struct RenderedText<'a> {
 	line_sep: f32,
 	color: Color,
 	size: Option<f32>,
+	italic: Option<f32>,
+	bold: Option<f32>,
 }
 
 impl<'a> RenderedText<'a> {
@@ -564,6 +582,8 @@ impl<'a> Drawable for RenderedText<'a> {
 						ctx.draw_t(&gfx::t()
 							.t2(vec2!(x + ox, y as f32 * gh))
 							.s2(vec2!(scale))
+							.skx(-self.italic.unwrap_or(0.0))
+							.sx(self.bold.unwrap_or(0.0) + 1.0)
 						, &shapes::sprite(&tex)
 							.offset(vec2!(-1))
 							.quad(quad)

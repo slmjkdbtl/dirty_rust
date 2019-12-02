@@ -35,6 +35,10 @@ impl Transform {
 		return Self::from_mat4(self.matrix *  Mat4::rotate(angle, axis));
 	}
 
+	pub fn skew(&self, s: Vec3) -> Self {
+		return Self::from_mat4(self.matrix * Mat4::skew(s));
+	}
+
 	pub fn as_mat4(&self) -> Mat4 {
 		return self.matrix;
 	}
@@ -106,6 +110,18 @@ impl Transform {
 
 	pub fn sz(&self, z: f32) -> Self {
 		return self.s3(vec3!(1, 1, z));
+	}
+
+	pub fn sk2(&self, s: Vec2) -> Self {
+		return self.skew(vec3!(s.x, s.y, 0));
+	}
+
+	pub fn skx(&self, x: f32) -> Self {
+		return self.sk2(vec2!(x, 0));
+	}
+
+	pub fn sky(&self, y: f32) -> Self {
+		return self.sk2(vec2!(0, y));
 	}
 
 }

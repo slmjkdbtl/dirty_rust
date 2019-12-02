@@ -48,6 +48,16 @@ impl Mat4 {
 		]);
 	}
 
+	// TODO: 3d
+	pub fn skew(sk: Vec3) -> Self {
+		return Self([
+			1.0, sk.y, 0.0, 0.0,
+			sk.x, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		]);
+	}
+
 	pub fn rotate(rot: f32, axis: Vec3) -> Self {
 
 		let mut m = Self::identity();

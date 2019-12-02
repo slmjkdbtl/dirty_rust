@@ -6,6 +6,7 @@
 - [gfx] multiple textures
 - [gfx] tidy text rendering layout code
 - [kit] 3 types of text edit: input, area, code editor
+- [misc] good looking italic / bold text
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -89,7 +90,6 @@
 - [audio] let user choose audio device
 - [gfx] resize weirdness
 - [misc] custom default 2d/3d pipeline
-- [misc] tool for generating italic and bold bitmap fonts
 
 == DONE
 - [http] refactor http
