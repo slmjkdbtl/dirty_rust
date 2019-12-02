@@ -6,7 +6,8 @@
 - [gfx] multiple textures
 - [gfx] tidy text rendering layout code
 - [kit] 3 types of text edit: input, area, code editor
-- [misc] good looking italic / bold text
+- [misc] bold text
+- [gfx] text character spacing
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -178,4 +179,5 @@
 - [gfx] text cursor pos mult with alignment
 - [misc] custom default font
 - [gfx] text set size
+- [misc] italic text
 
