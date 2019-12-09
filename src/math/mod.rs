@@ -8,5 +8,4 @@ export!(vec);
 export!(lerp);
 export!(map);
 export!(dir);
-export!(noise);
 

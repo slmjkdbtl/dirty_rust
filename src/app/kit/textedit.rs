@@ -832,54 +832,6 @@ impl TextArea {
 		return self.prev_word_at(self.cursor);
 	}
 
-	/// get the position that a line starts, ignoring tabs and spaces
-	pub fn line_start_at(&self, mut pos: CursorPos) -> CursorPos {
-
-		if let Some(line) = self.get_line_at(pos.line) {
-
-			let mut index = 0;
-
-			for (i, ch) in line.chars().enumerate() {
-				if ch != '\t' && ch != ' ' {
-					index = i;
-					break;
-				} else if i == line.len() - 1 {
-					index = i + 1;
-				}
-			}
-
-			pos.col = index as Col + 1;
-
-			return self.clamp_cursor(pos);
-
-		}
-
-		return pos;
-
-	}
-
-	/// line_start_at() with cursor movement
-	pub fn move_line_start(&mut self) {
-		self.cursor = self.line_start_at(self.cursor);
-	}
-
-	/// get the position that a line ends
-	pub fn line_end_at(&self, mut pos: CursorPos) -> CursorPos {
-
-		if let Some(line) = self.get_line_at(pos.line) {
-			pos.col = line.len() as Col + 1;
-			return self.clamp_cursor(pos);
-		}
-
-		return pos;
-
-	}
-
-	/// line_end_at() with cursor movement
-	pub fn move_line_end(&mut self) {
-		self.cursor = self.line_end_at(self.cursor);
-	}
-
 	/// get current state for undo/redo
 	fn get_state(&self) -> TextAreaState {
 
@@ -936,6 +888,54 @@ impl TextArea {
 			self.set_state(state);
 		}
 
+	}
+
+	/// get the position that a line starts, ignoring tabs and spaces
+	pub fn line_start_at(&self, mut pos: CursorPos) -> CursorPos {
+
+		if let Some(line) = self.get_line_at(pos.line) {
+
+			let mut index = 0;
+
+			for (i, ch) in line.chars().enumerate() {
+				if ch != '\t' && ch != ' ' {
+					index = i;
+					break;
+				} else if i == line.len() - 1 {
+					index = i + 1;
+				}
+			}
+
+			pos.col = index as Col + 1;
+
+			return self.clamp_cursor(pos);
+
+		}
+
+		return pos;
+
+	}
+
+	/// line_start_at() with cursor movement
+	pub fn move_line_start(&mut self) {
+		self.cursor = self.line_start_at(self.cursor);
+	}
+
+	/// get the position that a line ends
+	pub fn line_end_at(&self, mut pos: CursorPos) -> CursorPos {
+
+		if let Some(line) = self.get_line_at(pos.line) {
+			pos.col = line.len() as Col + 1;
+			return self.clamp_cursor(pos);
+		}
+
+		return pos;
+
+	}
+
+	/// line_end_at() with cursor movement
+	pub fn move_line_end(&mut self) {
+		self.cursor = self.line_end_at(self.cursor);
 	}
 
 }

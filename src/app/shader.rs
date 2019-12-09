@@ -5,7 +5,8 @@ use std::marker::PhantomData;
 
 use crate::*;
 use super::*;
-use super::gfx::*;
+use gfx::*;
+use res::shader::*;
 
 /// custom uniform
 pub trait Uniform: Clone {
@@ -75,7 +76,7 @@ impl<U: Uniform> Shader2D<U> {
 	pub fn from_frag(ctx: &Ctx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
-			res::DEFAULT_2D_VERT,
+			DEFAULT_2D_VERT,
 			&frag,
 		);
 	}
@@ -85,15 +86,15 @@ impl<U: Uniform> Shader2D<U> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
-			res::DEFAULT_2D_FRAG,
+			DEFAULT_2D_FRAG,
 		);
 	}
 
 	/// custom vertex & fragment shader
 	pub fn from_vert_frag(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
 
-		let vert_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
-		let frag_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
+		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
+		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
 
 		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(&ctx.gl, &vert_src, &frag_src)?));
 
@@ -125,7 +126,7 @@ impl<U: Uniform> Shader3D<U> {
 	pub fn from_frag(ctx: &Ctx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
-			res::DEFAULT_3D_VERT,
+			DEFAULT_3D_VERT,
 			&frag,
 		);
 	}
@@ -135,15 +136,15 @@ impl<U: Uniform> Shader3D<U> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
-			res::DEFAULT_3D_FRAG,
+			DEFAULT_3D_FRAG,
 		);
 	}
 
 	/// custom vertex & fragment shader
 	pub fn from_vert_frag(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
 
-		let vert_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
-		let frag_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
+		let vert_src = TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
+		let frag_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
 
 		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(&ctx.gl, &vert_src, &frag_src)?));
 

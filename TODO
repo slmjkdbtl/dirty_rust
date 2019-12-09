@@ -5,9 +5,9 @@
 - [synth] popping sound every second
 - [gfx] multiple textures
 - [gfx] tidy text rendering layout code
-- [kit] 3 types of text edit: input, area, code editor
 - [misc] bold text
 - [gfx] text character spacing
+- [gfx] poisson dist
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -91,6 +91,7 @@
 - [audio] let user choose audio device
 - [gfx] resize weirdness
 - [misc] custom default 2d/3d pipeline
+- [gfx] text wrap hyphonation
 
 == DONE
 - [http] refactor http
@@ -180,4 +181,5 @@
 - [misc] custom default font
 - [gfx] text set size
 - [misc] italic text
+- [kit] input + textarea
 

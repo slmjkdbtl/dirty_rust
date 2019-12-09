@@ -21,6 +21,15 @@ impl Area {
 		};
 	}
 
+	pub fn from_rect(p1: Vec2, p2: Vec2) -> Self {
+		return Self::new(&[
+			p1,
+			vec2!(p2.x, p1.y),
+			p2,
+			vec2!(p1.x, p2.y),
+		]);
+	}
+
 	pub fn from_sprite(s: &Sprite) -> Self {
 		return Self::new(&s.verts());
 	}
@@ -77,20 +86,20 @@ impl Area {
 
 	}
 
+	pub fn shape(&self) -> shapes::Polygon {
+		return shapes::polygon(&self.verts)
+			.no_fill()
+			.stroke(rgba!(0, 1, 1, 1))
+			;
+	}
+
 }
 
 impl gfx::Drawable for Area {
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
-// 		ctx.reset(|ctx| {
-			ctx.draw(
-				&shapes::polygon(&self.verts)
-					.no_fill()
-					.stroke(rgba!(0, 1, 1, 1))
-			)?;
-// 			return Ok(());
-// 		})?;
+		ctx.draw(&self.shape())?;
 
 		return Ok(());
 

@@ -2,7 +2,7 @@
 
 use dirty::*;
 use app::*;
-use kit::*;
+use kit::particle::*;
 use math::*;
 use input::Key;
 

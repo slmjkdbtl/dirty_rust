@@ -3,7 +3,7 @@
 /// Windowing, Input, and Graphics
 
 pub mod gfx;
-mod res;
+pub mod res;
 mod texture;
 mod shader;
 mod canvas;
@@ -262,8 +262,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let empty_tex = gl::Texture2D::from(&gl, 1, 1, &[255; 4])?;
 	let empty_tex = gfx::Texture::from_gl_tex(empty_tex);
 
-	let vert_2d_src = res::TEMPLATE_2D_VERT.replace("###REPLACE###", res::DEFAULT_2D_VERT);
-	let frag_2d_src = res::TEMPLATE_2D_FRAG.replace("###REPLACE###", res::DEFAULT_2D_FRAG);
+	use res::shader::*;
+	use res::font::*;
+
+	let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
+	let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
 	let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
 
@@ -277,18 +280,18 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let proj_2d = proj_2d.as_mat4();
 
-	let vert_3d_src = res::TEMPLATE_3D_VERT.replace("###REPLACE###", res::DEFAULT_3D_VERT);
-	let frag_3d_src = res::TEMPLATE_3D_FRAG.replace("###REPLACE###", res::DEFAULT_3D_FRAG);
+	let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
+	let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
 
 	let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
 
-	let pipeline_cmap = gl::Pipeline::new(&gl, res::CUBEMAP_VERT, res::CUBEMAP_FRAG)?;
+	let pipeline_cmap = gl::Pipeline::new(&gl, CUBEMAP_VERT, CUBEMAP_FRAG)?;
 
 	use gfx::Camera;
 
 	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
-	let font_data = conf.default_font.take().unwrap_or(res::CP437_DATA);
+	let font_data = conf.default_font.take().unwrap_or(CP437);
 	let font = gfx::BitmapFont::from_data(&gl, font_data)?;
 
 	let mut ctx = Ctx {

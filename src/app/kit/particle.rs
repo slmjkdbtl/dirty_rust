@@ -8,6 +8,7 @@ pub enum Primitive<'a> {
 	Texture(&'a gfx::Texture),
 }
 
+#[derive(Clone)]
 pub struct Particle {
 	timer: Timer,
 	pos: Vec2,
@@ -56,6 +57,7 @@ impl gfx::Drawable for Particle {
 
 }
 
+#[derive(Clone)]
 pub struct ParticleConf {
 	pub offset: (Vec2, Vec2),
 	pub life: (f32, f32),
@@ -71,6 +73,7 @@ pub struct ParticleConf {
 	pub max: usize,
 }
 
+#[derive(Clone)]
 pub struct ParticleSystem {
 	pos: Vec2,
 	particles: Vec<Particle>,
