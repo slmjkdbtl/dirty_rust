@@ -12,10 +12,6 @@ pub use gl::FilterMode;
 pub use gl::Surface;
 pub use gl::Cmp;
 
-pub use res::CP437_DATA;
-pub use res::PROGGY_DATA;
-pub use res::F04B03_DATA;
-
 pub use texture::*;
 pub use transform::*;
 pub use shader::*;

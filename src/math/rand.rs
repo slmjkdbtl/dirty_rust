@@ -136,6 +136,35 @@ pub fn rand_from<'a, T>(t: &'a [T]) -> Option<&'a T> {
 	return t.choose(&mut random::thread_rng())
 }
 
+pub fn rand_by_cell(p1: Vec2, p2: Vec2, c: usize, r: usize, p: f32, count: (usize, usize)) -> Vec<Vec2> {
+
+	let mut pts = vec![];
+	let gw = (p2.x - p1.x) / c as f32;
+	let gh = (p2.y - p1.y) / r as f32;
+
+	for i in 0..c {
+
+		for j in 0..r {
+
+			if rand(0.0, 1.0) < p {
+
+				let pp1 = p1 + vec2!(i as f32 * gw, j as f32 * gh);
+				let pp2 = pp1 + vec2!(gw, gh);
+
+				for _ in 0..rand_t(count) {
+					pts.push(rand(pp1, pp2));
+				}
+
+			}
+
+		}
+
+	}
+
+	return pts;
+
+}
+
 pub struct Rng {
 	rng: random::rngs::StdRng,
 }

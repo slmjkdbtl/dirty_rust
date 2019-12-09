@@ -344,6 +344,11 @@ impl Color {
 		return (self - rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
 	}
 
+	pub fn a(mut self, a: f32) -> Self {
+		self.a = a;
+		return self;
+	}
+
 	pub fn rgb(self) -> Vec3 {
 		return vec3!(self.r, self.g, self.b);
 	}

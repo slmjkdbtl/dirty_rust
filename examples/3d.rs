@@ -38,7 +38,7 @@ pub struct PixUniform {
 
 impl gfx::Uniform for PixUniform {
 	fn values(&self) -> gfx::UniformValues {
-		return hashmap![
+		return hmap![
 			"u_resolution" => &self.resolution,
 			"u_size" => &self.size,
 		];
@@ -52,7 +52,7 @@ pub struct VHSUniform {
 
 impl gfx::Uniform for VHSUniform {
 	fn values(&self) -> gfx::UniformValues {
-		return hashmap![
+		return hmap![
 			"u_intensity" => &self.intensity,
 		];
 	}
@@ -70,7 +70,7 @@ struct LightUniform {
 
 impl gfx::Uniform for LightUniform {
 	fn values(&self) -> gfx::UniformValues {
-		return hashmap![
+		return hmap![
 			"u_light.pos" => &self.pos,
 			"u_light.color" => &self.color,
 			"u_material.diffuse" => &self.diffuse,
