@@ -48,7 +48,7 @@ impl app::State for Game {
 		return Ok(Self {
 			octave: -1,
 			waveform: Waveform::Saw,
-			pressed: hashmap![],
+			pressed: hmap![],
 			envelope: Envelope {
 				attack: 0.01,
 				decay: 0.01,
@@ -66,9 +66,15 @@ impl app::State for Game {
 
 			KeyPress(k) => {
 
+				let mods = ctx.key_mods();
+
 				match *k {
 					Key::Esc => ctx.quit(),
-					Key::F => ctx.toggle_fullscreen(),
+					Key::F => {
+						if mods.meta {
+							ctx.toggle_fullscreen()
+						}
+					},
 					Key::Up => {},
 					Key::Down => {},
 					Key::Left => self.octave -= 1,

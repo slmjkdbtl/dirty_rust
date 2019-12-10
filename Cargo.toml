@@ -23,8 +23,8 @@ default = [
 	"app",
 	"img",
 	"gkit",
-# 	"audio",
-# 	"synth",
+	"audio",
+	"synth",
 # 	"http",
 # 	"physics",
 # 	"term",
@@ -182,10 +182,9 @@ bincode = { version = "1.2", optional = true }
 # xr
 openxr = { version = "0.10", optional = true }
 
-# rayon = "1.0"
-# ketos = "0.11"
-# laminar = "0.2"
-# sokol = "0.2"
+# rayon = "1.2"
+# laminar = "0.3"
+# sokol = "0.3"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 # TODO: glutin 0.22
