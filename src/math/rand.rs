@@ -138,7 +138,7 @@ pub fn rand_from<'a, T>(t: &'a [T]) -> Option<&'a T> {
 
 pub fn rand_by_cell(p1: Vec2, p2: Vec2, c: usize, r: usize, p: f32, count: (usize, usize)) -> Vec<Vec2> {
 
-	let mut pts = vec![];
+	let mut pts = Vec::with_capacity(c * r);
 	let gw = (p2.x - p1.x) / c as f32;
 	let gh = (p2.y - p1.y) / r as f32;
 
