@@ -69,8 +69,9 @@ pub mod shader {
 
 pub mod font {
 
-	use super::super::gfx::BitmapFontData;
+	use super::super::app::gfx::BitmapFontData;
 
+	// http://www.dsg4.com/04/extra/bitmap/index.html
 	pub const F04B03: BitmapFontData = BitmapFontData::new(
 		include_bytes!("fonts/04b03.png"),
 		6,
@@ -78,6 +79,7 @@ pub mod font {
 		r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##,
 	);
 
+	// https://en.wikipedia.org/wiki/Code_page_437
 	pub const CP437: BitmapFontData = BitmapFontData::new(
 		include_bytes!("fonts/CP437.png"),
 		9,
@@ -85,6 +87,7 @@ pub mod font {
 		r##" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"##,
 	);
 
+	// http://upperbounds.net
 	pub const PROGGY: BitmapFontData = BitmapFontData::new(
 		include_bytes!("fonts/proggy.png"),
 		7,

@@ -487,33 +487,25 @@ impl Time {
 	}
 }
 
-pub trait App {
-	fn quit(&mut self);
-	fn dt(&self) -> f32;
-	fn time(&self) -> f32;
-	fn fps(&self) -> u16;
-	fn conf(&self) -> &Conf;
-}
+impl Ctx {
 
-impl App for Ctx {
-
-	fn quit(&mut self) {
+	pub fn quit(&mut self) {
 		self.quit = true;
 	}
 
-	fn dt(&self) -> f32 {
+	pub fn dt(&self) -> f32 {
 		return self.dt.as_secs();
 	}
 
-	fn time(&self) -> f32 {
+	pub fn time(&self) -> f32 {
 		return self.time.as_secs();
 	}
 
-	fn fps(&self) -> u16 {
+	pub fn fps(&self) -> u16 {
 		return self.fps_counter.fps();
 	}
 
-	fn conf(&self) -> &Conf {
+	pub fn conf(&self) -> &Conf {
 		return &self.conf;
 	}
 
