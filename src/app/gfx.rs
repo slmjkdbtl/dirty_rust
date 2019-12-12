@@ -392,6 +392,7 @@ impl OrthoProj {
 pub enum Blend {
 	Alpha,
 	Add,
+	Replace,
 }
 
 impl Blend {
@@ -399,6 +400,7 @@ impl Blend {
 		return match self {
 			Blend::Alpha => (gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha),
 			Blend::Add => (gl::BlendFac::SrcAlpha, gl::BlendFac::One),
+			Blend::Replace => (gl::BlendFac::One, gl::BlendFac::Zero),
 		};
 	}
 }

@@ -95,5 +95,13 @@ pub mod font {
 		r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##,
 	);
 
+	// http://pelulamu.net/unscii/
+	pub const UNSCII: BitmapFontData = BitmapFontData::new(
+		include_bytes!("fonts/unscii.png"),
+		8,
+		8,
+		r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##,
+	);
+
 }
 
