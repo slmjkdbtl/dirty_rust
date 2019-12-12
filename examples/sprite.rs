@@ -33,8 +33,8 @@ impl app::State for Game {
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => ctx.quit(),
-					Key::F => ctx.toggle_fullscreen(),
+					Key::Escape => ctx.quit(),
+					Key::F => ctx.toggle_fullscreen()?,
 					_ => {},
 				}
 			},

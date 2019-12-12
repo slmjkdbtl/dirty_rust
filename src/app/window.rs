@@ -2,116 +2,118 @@
 
 //! Window Operations
 
-#[cfg(not(web))]
-use glutin::dpi::*;
-
 use super::*;
-use crate::math::*;
 use crate::*;
 
-pub use glutin::MouseCursor as CursorStyle;
+pub use sdl2::mouse::SystemCursor as CursorStyle;
 
 impl Ctx {
 
-	#[cfg(not(web))]
-	pub fn set_fullscreen(&mut self, b: bool) {
+	pub fn set_fullscreen(&mut self, b: bool) -> Result<()> {
 
-		let window = self.windowed_ctx.window();
+		#[cfg(not(web))] {
 
-		if b {
-			window.set_fullscreen(Some(window.get_current_monitor()));
-		} else {
-			window.set_fullscreen(None);
+			use sdl2::video::FullscreenType;
+
+			self.window.set_fullscreen(if b {
+				FullscreenType::Desktop
+			} else {
+				FullscreenType::Off
+			})?;
+
 		}
 
+		return Ok(());
+
 	}
 
-	#[cfg(web)]
-	pub fn set_fullscreen(&mut self, b: bool) {
-		// ...
-	}
-
-	#[cfg(not(web))]
 	pub fn is_fullscreen(&self) -> bool {
-		return self.windowed_ctx.window().get_fullscreen().is_some();
+		#[cfg(not(web))] {
+			return self.window.fullscreen_state() != sdl2::video::FullscreenType::Off;
+		}
+		#[cfg(web)] {
+			return false;
+		}
 	}
 
-	#[cfg(web)]
-	pub fn is_fullscreen(&self) -> bool {
-		return false;
+	pub fn toggle_fullscreen(&mut self) -> Result<()> {
+		return self.set_fullscreen(!self.is_fullscreen());
 	}
 
-	pub fn toggle_fullscreen(&mut self) {
-		self.set_fullscreen(!self.is_fullscreen());
-	}
-
-	#[cfg(not(web))]
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		self.windowed_ctx.window().hide_cursor(b);
-		self.cursor_hidden = b;
-	}
-
-	#[cfg(web)]
-	pub fn set_cursor_hidden(&mut self, b: bool) {
-		// ...
+		#[cfg(not(web))] {
+			self.sdl_ctx.mouse().show_cursor(b);
+		}
 	}
 
 	pub fn is_cursor_hidden(&self) -> bool {
-		return self.cursor_hidden;
+		#[cfg(not(web))] {
+			return self.sdl_ctx.mouse().is_cursor_showing();
+		}
+		#[cfg(web)] {
+			return false;
+		}
 	}
 
 	pub fn toggle_cursor_hidden(&mut self) {
 		self.set_cursor_hidden(!self.is_cursor_hidden());
 	}
 
-	#[cfg(not(web))]
-	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
-		self.windowed_ctx.window().grab_cursor(b)?;
-		self.cursor_locked = b;
+	pub fn set_cursor_relative(&mut self, b: bool) {
+		#[cfg(not(web))] {
+			self.sdl_ctx.mouse().set_relative_mouse_mode(b);
+		}
+	}
+
+	pub fn is_cursor_relative(&self) -> bool {
+		return self.sdl_ctx.mouse().relative_mouse_mode();
+	}
+
+	pub fn toggle_cursor_relative(&mut self) {
+		return self.set_cursor_relative(!self.is_cursor_relative());
+	}
+
+	pub fn set_cursor(&self, c: CursorStyle) -> Result<()> {
+		#[cfg(not(web))] {
+			sdl2::mouse::Cursor::from_system(c)?.set();
+		}
 		return Ok(());
 	}
 
-	#[cfg(web)]
-	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
-		return Ok(());
-	}
-
-	pub fn is_cursor_locked(&self) -> bool {
-		return self.cursor_locked;
-	}
-
-	pub fn toggle_cursor_locked(&mut self) -> Result<()> {
-		return self.set_cursor_locked(!self.is_cursor_locked());
-	}
-
-	pub fn set_cursor(&self, c: CursorStyle) {
-		self.windowed_ctx.window().set_cursor(c);
+	pub fn set_custom_cursor(&self, c: &Cursor) {
+		#[cfg(not(web))] {
+			c.sdl_cursor.set();
+		}
 	}
 
 	pub fn set_title(&mut self, t: &str) {
-
-		self.title = t.to_owned();
-
-		#[cfg(not(web))]
-		self.windowed_ctx.window().set_title(t);
-
-		#[cfg(web)]
-		stdweb::web::document().set_title(t);
-
+		#[cfg(not(web))] {
+			self.window.set_title(t);
+		}
+		#[cfg(web)] {
+			stdweb::web::document().set_title(t);
+		}
 	}
 
 	pub fn title(&self) -> &str {
 		return &self.title;
 	}
 
-	#[cfg(not(web))]
 	pub fn dpi(&self) -> f32 {
-		return self.windowed_ctx.window().get_hidpi_factor() as f32;
-	}
 
-	#[cfg(web)]
-	pub fn dpi(&self) -> f32 {
-		return 1.0;
+		#[cfg(not(web))] {
+
+			let (w, h) = self.window.size();
+			let (dw, dh) = self.window.drawable_size();
+
+			return dw as f32 / w as f32;
+
+		}
+
+		#[cfg(web)] {
+			return 1.0;
+		}
+
 	}
 
 	pub fn width(&self) -> i32 {
@@ -130,59 +132,16 @@ impl Ctx {
 		return self.conf.height as f32 / self.conf.scale;
 	}
 
-	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
-
-		let offset = self.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(self.width(), self.height());
-		let mpos = p + offset;
-
-		#[cfg(not(web))]
-		self.windowed_ctx.window().set_cursor_position(mpos.into())?;
-		self.mouse_pos = mpos;
-
-		return Ok(());
-
-	}
-
 }
 
-pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
-	#[cfg(not(web))]
-	ctx.windowed_ctx.swap_buffers()?;
-	return Ok(());
+// TODO
+pub struct Cursor {
+	sdl_cursor: sdl2::mouse::Cursor,
 }
 
-#[cfg(not(web))]
-impl From<glutin::MouseScrollDelta> for Vec2 {
-	fn from(delta: glutin::MouseScrollDelta) -> Self {
-		use glutin::MouseScrollDelta;
-		match delta {
-			MouseScrollDelta::PixelDelta(pos) => {
-				return vec2!(pos.x, pos.y);
-			},
-			MouseScrollDelta::LineDelta(x, y) => {
-				return vec2!(x, y);
-			}
-		};
-	}
-}
-
-#[cfg(not(web))]
-impl From<Vec2> for LogicalPosition {
-	fn from(pos: Vec2) -> Self {
-		return Self {
-			x: pos.x as f64,
-			y: pos.y as f64,
-		};
-	}
-}
-
-#[cfg(not(web))]
-impl From<LogicalPosition> for Vec2 {
-	fn from(pos: LogicalPosition) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
+pub(super) fn swap(ctx: &app::Ctx) {
+	#[cfg(not(web))] {
+		ctx.window.gl_swap_window();
 	}
 }
 

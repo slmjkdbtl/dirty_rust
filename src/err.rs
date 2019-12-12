@@ -113,41 +113,9 @@ impl From<image::ImageError> for Error {
 }
 
 #[cfg(all(feature = "app", not(web)))]
-impl From<glutin::CreationError> for Error {
-
-	fn from(err: glutin::CreationError) -> Self {
-
-		use glutin::CreationError::*;
-
-		let msg = match err {
-			OsError(..) => "".into(),
-			NotSupported(..) => "".into(),
-			NoBackendAvailable(..) => "no backend available".into(),
-			RobustnessNotSupported => "robustness not supported".into(),
-			OpenGlVersionNotSupported => "opengl version not supported".into(),
-			NoAvailablePixelFormat => "pixel format not available".into(),
-			PlatformSpecific(s) => format!("{}", s),
-			Window(..) => "window creation error".into(),
-			CreationErrors(..) => "window creation error".into(),
-		};
-
-		return Error::Window(msg);
-
-	}
-
-}
-
-#[cfg(all(feature = "app", not(web)))]
-impl From<glutin::ContextError> for Error {
-	fn from(_: glutin::ContextError) -> Self {
-		return Error::Window("failed to create window context".into());
-	}
-}
-
-#[cfg(all(feature = "app", not(web)))]
-impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
-	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
-		return Error::Window("failed to create window context".into());
+impl From<sdl2::video::WindowBuildError> for Error {
+	fn from(_: sdl2::video::WindowBuildError) -> Self {
+		return Error::Window(format!("failed to build window"));
 	}
 }
 
@@ -164,13 +132,6 @@ impl From<stdweb::serde::ConversionError> for Error {
 		return Error::Web(format!("conversion"));
 	}
 }
-
-// #[cfg(all(feature = "app", web))]
-// impl From<stdweb::serde::ConversionError> for Error {
-// 	fn from(_: stdweb::serde::ConversionError) -> Self {
-// 		return Error::Web(format!("conversion"));
-// 	}
-// }
 
 #[cfg(feature = "audio")]
 impl From<rodio::decoder::DecoderError> for Error {
@@ -197,13 +158,6 @@ impl From<cpal::BuildStreamError> for Error {
 impl From<cpal::DefaultFormatError> for Error {
 	fn from(_: cpal::DefaultFormatError) -> Self {
 		return Error::Audio(format!("default format error"));
-	}
-}
-
-#[cfg(all(feature = "app", not(mobile), not(web)))]
-impl From<gilrs::Error> for Error {
-	fn from(_: gilrs::Error) -> Self {
-		return Error::Input("gamepad error".into());
 	}
 }
 
