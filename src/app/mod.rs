@@ -44,7 +44,8 @@ use derive_more::*;
 use input::ButtonState;
 use input::Key;
 use input::Mouse;
-// use input::GamepadButton;
+use input::GamepadButton;
+use input::GamepadID;
 
 const DRAW_COUNT: usize = 65536;
 const NEAR_2D: f32 = -1024.0;
@@ -66,15 +67,16 @@ pub struct Ctx {
 	pub(self) key_states: HashMap<Key, ButtonState>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Vec2,
-// 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
-// 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 
 	// window
 	#[cfg(not(web))]
 	pub(self) sdl_ctx: sdl2::Sdl,
 	#[cfg(not(web))]
 	pub(self) window: sdl2::video::Window,
-	pub(self) title: String,
+	#[cfg(not(web))]
+	pub(self) video_sys: sdl2::VideoSubsystem,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -114,7 +116,7 @@ pub struct Ctx {
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(not(web))]
-	let (sdl_ctx, window, mut event_loop, gl, gl_ctx) = {
+	let (sdl_ctx, window, video_sys, mut event_loop, gl, gl_ctx) = {
 
 		let sdl_ctx = sdl2::init()?;
 		let video = sdl_ctx.video()?;
@@ -161,7 +163,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			SwapInterval::Immediate
 		})?;
 
-		(sdl_ctx, window, event_loop, gl, gl_ctx)
+		(sdl_ctx, window, video, event_loop, gl, gl_ctx)
 
 	};
 
@@ -263,16 +265,16 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		mouse_pos: vec2!(),
-// 		gamepad_button_states: HashMap::new(),
-// 		gamepad_axis_pos: HashMap::new(),
+		gamepad_button_states: HashMap::new(),
+		gamepad_axis_pos: HashMap::new(),
 
 		// window
-		title: conf.title.to_owned(),
-
 		#[cfg(not(web))]
 		window: window,
 		#[cfg(not(web))]
 		sdl_ctx: sdl_ctx,
+		#[cfg(not(web))]
+		video_sys: video_sys,
 
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,

@@ -58,9 +58,6 @@ pub mod ase;
 #[cfg(feature = "texpack")]
 pub mod texpack;
 
-#[cfg(feature = "clip")]
-pub mod clip;
-
 pub mod codec;
 
 mod err;

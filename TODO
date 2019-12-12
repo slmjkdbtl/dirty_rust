@@ -9,7 +9,8 @@
 - [gfx] text character spacing
 - [math] poisson dist
 - [window] custom mouse cursor (sdl???)
-- [window] scale modes & mouse pos
+- [input] gamepad
+- [gfx] canvas give original size
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -184,4 +185,5 @@
 - [misc] italic text
 - [kit] input + textarea
 - [app] switch to sdl
+- [window] scale modes & mouse pos
 

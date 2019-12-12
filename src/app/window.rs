@@ -73,8 +73,10 @@ impl Ctx {
 		return self.set_cursor_relative(!self.is_cursor_relative());
 	}
 
+	// TODO: store system cursors
 	pub fn set_cursor(&self, c: CursorStyle) -> Result<()> {
 		#[cfg(not(web))] {
+			// drops and disappears
 			sdl2::mouse::Cursor::from_system(c)?.set();
 		}
 		return Ok(());
@@ -96,17 +98,17 @@ impl Ctx {
 	}
 
 	pub fn title(&self) -> &str {
-		return &self.title;
+		return self.window.title();
 	}
 
 	pub fn dpi(&self) -> f32 {
 
 		#[cfg(not(web))] {
 
-			let (w, h) = self.window.size();
-			let (dw, dh) = self.window.drawable_size();
+			let (_, h) = self.window.size();
+			let (_, dh) = self.window.drawable_size();
 
-			return dw as f32 / w as f32;
+			return dh as f32 / h as f32;
 
 		}
 
@@ -132,11 +134,36 @@ impl Ctx {
 		return self.conf.height as f32 / self.conf.scale;
 	}
 
+	pub fn get_clipboard(&self) -> Option<String> {
+		return self.video_sys.clipboard().clipboard_text().ok();
+	}
+
+	pub fn set_clipboard(&self, s: &str) -> Result<()> {
+		return Ok(self.video_sys.clipboard().set_clipboard_text(s)?);
+	}
+
 }
 
-// TODO
 pub struct Cursor {
 	sdl_cursor: sdl2::mouse::Cursor,
+}
+
+impl Cursor {
+
+	pub fn from_img(img: img::Image, hotx: i32, hoty: i32) -> Result<Self> {
+
+		let w = img.width() as u32;
+		let h = img.height() as u32;
+		let mut pixels = img.into_raw();
+		let surface = sdl2::surface::Surface::from_data(&mut pixels, w, h, w * 4, sdl2::pixels::PixelFormatEnum::ABGR8888)?;
+		let c = sdl2::mouse::Cursor::from_surface(&surface, hotx, hoty)?;
+
+		return Ok(Self {
+			sdl_cursor: c,
+		});
+
+	}
+
 }
 
 pub(super) fn swap(ctx: &app::Ctx) {
