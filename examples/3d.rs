@@ -139,9 +139,9 @@ impl app::State for Game {
 		match *e {
 
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.toggle_cursor_hidden();
-					ctx.toggle_cursor_locked()?;
+				if k == Key::Escape {
+// 					ctx.toggle_cursor_hidden();
+					ctx.toggle_cursor_relative();
 				}
 				if k == Key::F {
 					ctx.toggle_fullscreen();
@@ -155,7 +155,7 @@ impl app::State for Game {
 
 			MouseMove(delta) => {
 
-				if ctx.is_cursor_locked() {
+				if ctx.is_cursor_relative() {
 
 					let mut rx = self.cam.yaw();
 					let mut ry = self.cam.pitch();
@@ -274,8 +274,8 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.cursor_locked(true)
-		.cursor_hidden(true)
+		.cursor_relative(true)
+		.resizable(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}

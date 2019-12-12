@@ -30,21 +30,12 @@ pub use conf::*;
 use crate::*;
 use crate::math::*;
 
-#[cfg(feature = "imgui")]
-pub use imgui_lib as imgui;
-
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
-#[cfg(not(web))]
-use glutin::dpi::*;
-#[cfg(not(web))]
-use glutin::Api;
-#[cfg(not(web))]
-use glutin::GlRequest;
 #[cfg(web)]
 use glow::HasRenderLoop;
 
@@ -53,8 +44,7 @@ use derive_more::*;
 use input::ButtonState;
 use input::Key;
 use input::Mouse;
-use input::GamepadID;
-use input::GamepadButton;
+// use input::GamepadButton;
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -72,21 +62,17 @@ pub struct Ctx {
 	pub(self) key_states: HashMap<Key, ButtonState>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Vec2,
-	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
-	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
-	pub(self) scroll_phase: input::ScrollPhase,
+// 	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+// 	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 
 	// window
+	#[cfg(not(web))]
+	pub(self) sdl_ctx: sdl2::Sdl,
+	#[cfg(not(web))]
+	pub(self) window: sdl2::video::Window,
 	pub(self) title: String,
-	pub(self) cursor_hidden: bool,
-	pub(self) cursor_locked: bool,
 	pub(self) width: i32,
 	pub(self) height: i32,
-
-	#[cfg(not(web))]
-	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
-	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -121,72 +107,53 @@ pub struct Ctx {
 
 	pub(self) transform: gfx::Transform,
 
-	#[cfg(feature = "imgui")]
-	pub(self) imgui_ctx: imgui::Context,
-	#[cfg(feature = "imgui")]
-	pub(self) imgui_platform: imgui_winit_support::WinitPlatform,
-	#[cfg(feature = "imgui")]
-	pub(self) imgui_renderer: imgui_opengl_renderer::Renderer,
-
 }
 
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(not(web))]
-	let (windowed_ctx, mut events_loop, gl) =  {
+	let (window, mut event_loop, gl, gl_ctx, sdl_ctx) =  {
 
-		let events_loop = glutin::EventsLoop::new();
+		let sdl_ctx = sdl2::init()?;
+		let video = sdl_ctx.video()?;
+		let gl_attr = video.gl_attr();
 
-		let mut window_builder = glutin::WindowBuilder::new()
-			.with_title(conf.title.to_owned())
-			.with_resizable(conf.resizable)
-			.with_transparency(conf.transparent)
-			.with_decorations(!conf.borderless)
-			.with_always_on_top(conf.always_on_top)
-			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-			.with_multitouch()
-			;
+		gl_attr.set_context_profile(sdl2::video::GLProfile::Compatibility);
+		gl_attr.set_context_version(2, 1);
+
+		let mut window = video.window(&conf.title, conf.width, conf.height);
+
+		window.opengl();
+
+		if conf.hidpi {
+			window.allow_highdpi();
+		}
+
+		if conf.resizable {
+			window.resizable();
+		}
 
 		if conf.fullscreen {
-			window_builder = window_builder
-				.with_fullscreen(Some(events_loop.get_primary_monitor()));
+			window.fullscreen();
 		}
 
-		#[cfg(target_os = "macos")] {
-
-			use glutin::os::macos::WindowBuilderExt;
-
-			window_builder = window_builder
-				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
-				.with_title_hidden(conf.hide_title)
-				.with_titlebar_transparent(conf.titlebar_transparent)
-				.with_fullsize_content_view(conf.titlebar_transparent)
-//				.with_disallow_hidpi(!conf.hidpi)
-				;
-
+		if conf.borderless {
+			window.borderless();
 		}
 
-		let mut ctx_builder = glutin::ContextBuilder::new()
-			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
-			;
+		let window = window
+			.build()?;
 
-		#[cfg(feature = "gl3")] {
-			ctx_builder = ctx_builder
-				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
-				.with_gl_profile(glutin::GlProfile::Core)
-				;
-		}
-
-		let windowed_ctx = unsafe {
-			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
-		};
+		let gl_ctx = window.gl_create_context()?;
+		let event_loop = sdl_ctx.event_pump()?;
 
 		let gl = gl::Device::from_loader(|s| {
-			windowed_ctx.get_proc_address(s) as *const _
+			video.gl_get_proc_address(s) as *const _
 		});
 
-		(windowed_ctx, events_loop, gl)
+		video.gl_set_swap_interval(sdl2::video::SwapInterval::Immediate);
+
+		(window, event_loop, gl, gl_ctx, sdl_ctx)
 
 	};
 
@@ -228,24 +195,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			gl::Device::from_webgl2_ctx(webgl2_ctx),
 			glow::RenderLoop::from_request_animation_frame(),
 		)
-
-	};
-
-	#[cfg(feature = "imgui")]
-	let (imgui_ctx, imgui_platform, imgui_renderer) = {
-
-		use imgui_winit_support::{HiDpiMode, WinitPlatform};
-		use imgui_opengl_renderer::Renderer;
-
-		let mut ctx = imgui::Context::create();
-		let mut platform = WinitPlatform::init(&mut ctx);
-
-		ctx.set_ini_filename(None);
-		platform.attach_window(ctx.io_mut(), &windowed_ctx.window(), HiDpiMode::Locked(1.0));
-
-		let renderer = Renderer::new(&mut ctx, |s| windowed_ctx.get_proc_address(s) as *const _);
-
-		(ctx, platform, renderer)
 
 	};
 
@@ -306,21 +255,18 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		mouse_pos: vec2!(),
-		gamepad_button_states: HashMap::new(),
-		gamepad_axis_pos: HashMap::new(),
-		scroll_phase: input::ScrollPhase::Solid,
+// 		gamepad_button_states: HashMap::new(),
+// 		gamepad_axis_pos: HashMap::new(),
 
 		// window
 		title: conf.title.to_owned(),
-		width: conf.width,
-		height: conf.height,
-		cursor_hidden: conf.cursor_hidden,
-		cursor_locked: conf.cursor_locked,
+		width: conf.width as i32,
+		height: conf.height as i32,
 
 		#[cfg(not(web))]
-		windowed_ctx: windowed_ctx,
-		#[cfg(desktop)]
-		gamepad_ctx: gilrs::Gilrs::new()?,
+		window: window,
+		#[cfg(not(web))]
+		sdl_ctx: sdl_ctx,
 
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
@@ -352,13 +298,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		transform: gfx::Transform::new(),
 
-		#[cfg(feature = "imgui")]
-		imgui_ctx: imgui_ctx,
-		#[cfg(feature = "imgui")]
-		imgui_platform: imgui_platform,
-		#[cfg(feature = "imgui")]
-		imgui_renderer: imgui_renderer,
-
 		conf: conf,
 
 	};
@@ -369,12 +308,12 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		ctx.set_cursor_hidden(true);
 	}
 
-	if ctx.conf.cursor_locked {
-		ctx.set_cursor_locked(true)?;
+	if ctx.conf.cursor_relative {
+		ctx.set_cursor_relative(true);
 	}
 
 	ctx.clear();
-	window::swap(&ctx)?;
+	window::swap(&ctx);
 
 	let mut s = S::init(&mut ctx)?;
 
@@ -394,7 +333,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			let start_time = Instant::now();
 
-			input::poll(&mut ctx, &mut events_loop, &mut s)?;
+			input::poll(&mut ctx, &mut event_loop, &mut s)?;
 			s.update(&mut ctx)?;
 			gfx::begin(&mut ctx);
 
@@ -412,24 +351,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			ctx.draw(&shapes::canvas(&backbuffer))?;
 			gfx::end(&mut ctx);
-
-			#[cfg(feature = "imgui")] {
-
-				let io = ctx.imgui_ctx.io_mut();
-
-				ctx.imgui_platform.prepare_frame(io, &ctx.windowed_ctx.window())?;
-				io.update_delta_time(start_time);
-
-				let ui = ctx.imgui_ctx.frame();
-
-				s.imgui(&ui)?;
-
-				ctx.imgui_platform.prepare_render(&ui, &ctx.windowed_ctx.window());
-				ctx.imgui_renderer.render(ui);
-
-			}
-
-			window::swap(&ctx)?;
+			window::swap(&ctx);
 
 			if ctx.quit {
 				break 'run;
@@ -535,7 +457,7 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn size(mut self, w: i32, h: i32) -> Self {
+	pub fn size(mut self, w: u32, h: u32) -> Self {
 		self.conf.width = w;
 		self.conf.height = h;
 		return self;
@@ -571,33 +493,8 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn cursor_locked(mut self, b: bool) -> Self {
-		self.conf.cursor_locked = b;
-		return self;
-	}
-
-	pub fn hide_title(mut self, b: bool) -> Self {
-		self.conf.hide_title = b;
-		return self;
-	}
-
-	pub fn hide_titlebar_buttons(mut self, b: bool) -> Self {
-		self.conf.hide_titlebar_buttons = b;
-		return self;
-	}
-
-	pub fn titlebar_transparent(mut self, b: bool) -> Self {
-		self.conf.titlebar_transparent = b;
-		return self;
-	}
-
-	pub fn transparent(mut self, b: bool) -> Self {
-		self.conf.transparent = b;
-		return self;
-	}
-
-	pub fn always_on_top(mut self, b: bool) -> Self {
-		self.conf.always_on_top = b;
+	pub fn cursor_relative(mut self, b: bool) -> Self {
+		self.conf.cursor_relative = b;
 		return self;
 	}
 
