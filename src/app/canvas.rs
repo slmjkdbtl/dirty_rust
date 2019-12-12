@@ -66,6 +66,7 @@ impl Canvas {
 
 	}
 
+	// TODO: give original size
 	/// get canvas width
 	pub fn width(&self) -> i32 {
 		return self.tex.width();

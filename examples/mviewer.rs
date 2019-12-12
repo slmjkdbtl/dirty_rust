@@ -151,7 +151,7 @@ impl app::State for Viewer {
 			KeyPress(k) => {
 
 				match *k {
-					Key::F => ctx.toggle_fullscreen(),
+					Key::F => ctx.toggle_fullscreen()?,
 					Key::Escape => ctx.quit(),
 					Key::Space => self.resetting = true,
 					Key::L => self.wireframe = !self.wireframe,
