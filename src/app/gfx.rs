@@ -98,8 +98,8 @@ impl Ctx {
 		let proj_2d = gfx::OrthoProj {
 			width: canvas.width() as f32 / dpi,
 			height: canvas.height() as f32 / dpi,
-			near: self.conf.near,
-			far: self.conf.far,
+			near: NEAR_2D,
+			far: FAR_2D,
 			origin: canvas.origin(),
 		}.as_mat4();
 
@@ -115,20 +115,48 @@ impl Ctx {
 			return Ok(());
 		})?;
 
+		self.cur_canvas = None;
 		self.transform = t;
 		self.proj_2d = o_proj_2d;
 		self.proj_3d = o_proj_3d;
-
-		self.cur_canvas = None;
-
-		self.gl.viewport(
-			0,
-			0,
-			(self.width as f32 * dpi) as i32,
-			(self.height as f32 * dpi) as i32,
-		);
+		self.reset_viewport();
 
 		return Ok(());
+
+	}
+
+	pub(super) fn cur_viewport(&self) -> (Vec2, f32, f32) {
+
+		let (gw, gh) = (self.conf.width as f32, self.conf.height as f32);
+		let (w, h) = (self.width() as f32, self.height() as f32);
+
+		return match self.conf.scale_mode {
+			ScaleMode::Stretch => {
+				(vec2!(0), w, h)
+			},
+			ScaleMode::Letterbox => {
+				let aspect = gw / gh;
+				if w / h > aspect {
+					(vec2!((w - h * aspect) * 0.5, 0), h * aspect, h)
+				} else {
+					(vec2!(0, (h - w / aspect) * 0.5), w, w / aspect)
+				}
+			},
+		};
+
+	}
+
+	fn reset_viewport(&self) {
+
+		let dpi = self.dpi();
+		let (pos, aw, ah) = self.cur_viewport();
+
+		self.gl.viewport(
+			(pos.x * dpi) as i32,
+			(pos.y * dpi) as i32,
+			(aw * dpi) as i32,
+			(ah * dpi) as i32,
+		);
 
 	}
 
@@ -283,6 +311,7 @@ pub(super) fn begin(ctx: &mut Ctx) {
 	ctx.draw_calls_last = ctx.draw_calls;
 	ctx.draw_calls = 0;
 	ctx.clear();
+	ctx.reset_viewport();
 
 }
 

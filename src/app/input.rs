@@ -92,14 +92,7 @@ impl Ctx {
 // 	}
 
 	pub fn mouse_pos(&self) -> Vec2 {
-
-		let (w, h) = (self.width, self.height);
-		let (gw, gh) = (self.gwidth(), self.gheight());
-		let x = self.mouse_pos.x * gw as f32 / w as f32;
-		let y = self.mouse_pos.y * gh as f32 / h as f32;
-
-		return vec2!(x, y);
-
+		return self.mouse_pos;
 	}
 
 	fn key_pressed(&self, key: Key) -> bool {
@@ -294,7 +287,14 @@ pub(super) fn poll(
 				let scale = ctx.conf.scale;
 
 				s.event(&mut ctx, &Event::MouseMove(vec2!(xrel, yrel) / scale))?;
-				ctx.mouse_pos = vec2!(x, y) / scale;
+
+				let (w, h) = (ctx.width() as f32, ctx.height() as f32);
+				let (gw, gh) = (ctx.gwidth() as f32, ctx.gheight() as f32);
+				let offset = (ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5)) * vec2!(w, h);
+				let (pos, aw, ah) = ctx.cur_viewport();
+				let mpos = (vec2!(x, y) - offset - pos) * vec2!(gw / aw, gh / ah);
+
+				ctx.mouse_pos = mpos;
 
 			},
 
@@ -311,7 +311,11 @@ pub(super) fn poll(
 
 			SDLEvent::TextInput { text, .. } => {
 				for ch in text.chars() {
-					if !INVALID_CHARS.contains(&ch) && !ch.is_control() && !is_private_use_char(ch) {
+					if
+						!INVALID_CHARS.contains(&ch)
+						&& !ch.is_control()
+						&& !is_private_use_char(ch)
+					{
 						s.event(&mut ctx, &Event::CharInput(ch))?;
 					}
 				}

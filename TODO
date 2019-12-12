@@ -9,6 +9,7 @@
 - [gfx] text character spacing
 - [math] poisson dist
 - [window] custom mouse cursor (sdl???)
+- [window] scale modes & mouse pos
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -82,7 +83,6 @@
 - [gfx] compile glsl 4.x to other versions in runtime (?)
 - [gfx] investigate the extreme slowness of the 2d renderer
 - [gfx] draw curve
-- [gfx] scale modes
 - [gfx] z when drawing 3d on top of 2d
 - [gfx] wasm blank screen
 - [audio] use cpal directly instead of rodio
@@ -183,4 +183,5 @@
 - [gfx] text set size
 - [misc] italic text
 - [kit] input + textarea
+- [app] switch to sdl
 

@@ -21,8 +21,6 @@ pub struct Conf {
 	pub texture_filter: gfx::FilterMode,
 	pub scale_mode: gfx::ScaleMode,
 	pub scale: f32,
-	pub near: f32,
-	pub far: f32,
 	pub default_font: Option<gfx::BitmapFontData>,
 }
 
@@ -46,8 +44,6 @@ impl Default for Conf {
 			texture_filter: gfx::FilterMode::Nearest,
 			scale_mode: gfx::ScaleMode::Stretch,
 			scale: 1.0,
-			near: -1024.0,
-			far: 1024.0,
 			default_font: None,
 		};
 	}

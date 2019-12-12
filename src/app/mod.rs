@@ -46,6 +46,10 @@ use input::Key;
 use input::Mouse;
 // use input::GamepadButton;
 
+const DRAW_COUNT: usize = 65536;
+const NEAR_2D: f32 = -1024.0;
+const FAR_2D: f32 = 1024.0;
+
 // TODO: make this lighter
 /// Manages Ctx
 pub struct Ctx {
@@ -71,8 +75,6 @@ pub struct Ctx {
 	#[cfg(not(web))]
 	pub(self) window: sdl2::video::Window,
 	pub(self) title: String,
-	pub(self) width: i32,
-	pub(self) height: i32,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -112,7 +114,7 @@ pub struct Ctx {
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(not(web))]
-	let (window, mut event_loop, gl, gl_ctx, sdl_ctx) =  {
+	let (sdl_ctx, window, mut event_loop, gl, gl_ctx) = {
 
 		let sdl_ctx = sdl2::init()?;
 		let video = sdl_ctx.video()?;
@@ -151,9 +153,15 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			video.gl_get_proc_address(s) as *const _
 		});
 
-		video.gl_set_swap_interval(sdl2::video::SwapInterval::Immediate);
+		use sdl2::video::SwapInterval;
 
-		(window, event_loop, gl, gl_ctx, sdl_ctx)
+		video.gl_set_swap_interval(if conf.vsync {
+			SwapInterval::VSync
+		} else {
+			SwapInterval::Immediate
+		})?;
+
+		(sdl_ctx, window, event_loop, gl, gl_ctx)
 
 	};
 
@@ -222,8 +230,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let proj_2d = gfx::OrthoProj {
 		width: conf.width as f32,
 		height: conf.height as f32,
-		near: conf.near,
-		far: conf.far,
+		near: NEAR_2D,
+		far: FAR_2D,
 		origin: conf.origin,
 	};
 
@@ -260,16 +268,14 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		// window
 		title: conf.title.to_owned(),
-		width: conf.width as i32,
-		height: conf.height as i32,
 
 		#[cfg(not(web))]
 		window: window,
 		#[cfg(not(web))]
 		sdl_ctx: sdl_ctx,
 
-		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, 65536, 65536)?,
-		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, 65536, 65536)?,
+		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
+		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 		gl: Rc::new(gl),
@@ -302,7 +308,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	let backbuffer = gfx::Canvas::new(&ctx, ctx.width, ctx.height)?;
+	let backbuffer = gfx::Canvas::new(&ctx, ctx.conf.width as i32, ctx.conf.height as i32)?;
 
 	if ctx.conf.cursor_hidden {
 		ctx.set_cursor_hidden(true);

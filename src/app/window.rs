@@ -117,11 +117,11 @@ impl Ctx {
 	}
 
 	pub fn width(&self) -> i32 {
-		return self.width;
+		return self.window.size().0 as i32;
 	}
 
 	pub fn height(&self) -> i32 {
-		return self.height;
+		return self.window.size().1 as i32;
 	}
 
 	pub fn gwidth(&self) -> f32 {

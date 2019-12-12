@@ -276,6 +276,7 @@ fn main() {
 	if let Err(err) = app::launcher()
 		.cursor_relative(true)
 		.resizable(true)
+		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Game>() {
 		println!("{}", err);
 	}
