@@ -7,7 +7,8 @@
 - [gfx] tidy text rendering layout code
 - [misc] bold text
 - [gfx] text character spacing
-- [gfx] poisson dist
+- [math] poisson dist
+- [window] custom mouse cursor (sdl???)
 
 == TODO
 - [http] use rustls instead of native-tls

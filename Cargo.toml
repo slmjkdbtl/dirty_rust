@@ -52,6 +52,7 @@ fs = [
 
 app = [
 	"glutin",
+# 	"sdl2",
 	"gilrs",
 	"glow",
 	"fontdue",
@@ -189,6 +190,7 @@ openxr = { version = "0.10", optional = true }
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 # TODO: glutin 0.22
 glutin = { version = "0.21", optional = true }
+# sdl2 = { version = "0.32", optional = true }
 
 [target.'cfg(all(not(target_os="ios"), not(target_os="android"), not(target_arch="wasm32")))'.dependencies]
 gilrs = { version = "0.7", optional = true }
