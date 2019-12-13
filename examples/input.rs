@@ -30,7 +30,7 @@ impl app::State for Game {
 
 		match *e {
 			KeyPress(k) => {
-				if k == Key::Esc {
+				if k == Key::Escape {
 					ctx.quit();
 				}
 			},
@@ -45,7 +45,7 @@ impl app::State for Game {
 
 		for (i, e) in self.events.iter().enumerate() {
 			ctx.push(&gfx::t()
-				.s2(vec2!(i) / 3.0)
+				.s2(vec2!(i) / 6.0)
 				.t2(vec2!(0, i * 6))
 			, |ctx| {
 				ctx.draw(

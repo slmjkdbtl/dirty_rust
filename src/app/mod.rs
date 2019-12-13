@@ -44,7 +44,6 @@ use derive_more::*;
 use input::ButtonState;
 use input::Key;
 use input::Mouse;
-use input::GamepadButton;
 use input::GamepadID;
 
 const DRAW_COUNT: usize = 65536;
@@ -67,8 +66,7 @@ pub struct Ctx {
 	pub(self) key_states: HashMap<Key, ButtonState>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Vec2,
-	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
-	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(self) gamepads: HashMap<GamepadID, input::Gamepad>,
 
 	// window
 	#[cfg(not(web))]
@@ -77,6 +75,8 @@ pub struct Ctx {
 	pub(self) window: sdl2::video::Window,
 	#[cfg(not(web))]
 	pub(self) video_sys: sdl2::VideoSubsystem,
+	#[cfg(not(web))]
+	pub(self) gamepad_sys: sdl2::GameControllerSubsystem,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -116,11 +116,32 @@ pub struct Ctx {
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(not(web))]
-	let (sdl_ctx, window, video_sys, mut event_loop, gl, gl_ctx) = {
+	let (
+		sdl_ctx,
+		window,
+		video_sys,
+		gamepad_sys,
+		mut event_loop,
+		gamepads,
+		gl,
+		gl_ctx
+	) = {
 
 		let sdl_ctx = sdl2::init()?;
 		let video = sdl_ctx.video()?;
+		let gamepad = sdl_ctx.game_controller()?;
 		let gl_attr = video.gl_attr();
+
+		let num_joysticks = gamepad.num_joysticks().unwrap_or(0);
+		let mut gamepads = hmap![];
+
+		for id in 0..num_joysticks {
+			if gamepad.is_game_controller(id) {
+				if let Ok(c) = gamepad.open(id) {
+					gamepads.insert(id as i32, input::Gamepad::new(c));
+				}
+			}
+		}
 
 		gl_attr.set_context_profile(sdl2::video::GLProfile::Compatibility);
 		gl_attr.set_context_version(2, 1);
@@ -163,7 +184,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			SwapInterval::Immediate
 		})?;
 
-		(sdl_ctx, window, video, event_loop, gl, gl_ctx)
+		(sdl_ctx, window, video, gamepad, event_loop, gamepads, gl, gl_ctx)
 
 	};
 
@@ -265,8 +286,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		mouse_pos: vec2!(),
-		gamepad_button_states: HashMap::new(),
-		gamepad_axis_pos: HashMap::new(),
+		gamepads: gamepads,
 
 		// window
 		#[cfg(not(web))]
@@ -275,6 +295,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		sdl_ctx: sdl_ctx,
 		#[cfg(not(web))]
 		video_sys: video_sys,
+		#[cfg(not(web))]
+		gamepad_sys: gamepad_sys,
 
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
