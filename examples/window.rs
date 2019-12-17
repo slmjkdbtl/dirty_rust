@@ -19,7 +19,7 @@ impl State for Game {
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => ctx.quit(),
+					Key::Escape => ctx.quit(),
 					_ => {},
 				}
 			},

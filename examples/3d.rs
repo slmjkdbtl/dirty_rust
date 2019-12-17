@@ -20,8 +20,13 @@ struct Game {
 	model: gfx::Model,
 	canvas: gfx::Canvas,
 	canvas2: gfx::Canvas,
+	canvas3: gfx::Canvas,
+	canvas4: gfx::Canvas,
+	canvas5: gfx::Canvas,
+	blur_shader: gfx::Shader2D<BlurUniform>,
 	vhs_shader: gfx::Shader2D<VHSUniform>,
 	pix_shader: gfx::Shader2D<PixUniform>,
+	filter_shader: gfx::Shader2D<FilterUniform>,
 	shader: gfx::Shader3D<LightUniform>,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
@@ -46,6 +51,21 @@ impl gfx::Uniform for PixUniform {
 }
 
 #[derive(Clone)]
+pub struct BlurUniform {
+	pub dir: Vec2,
+	pub resolution: Vec2,
+}
+
+impl gfx::Uniform for BlurUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hmap![
+			"u_dir" => &self.dir,
+			"u_resolution" => &self.resolution,
+		];
+	}
+}
+
+#[derive(Clone)]
 pub struct VHSUniform {
 	pub intensity: f32,
 }
@@ -54,6 +74,19 @@ impl gfx::Uniform for VHSUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_intensity" => &self.intensity,
+		];
+	}
+}
+
+#[derive(Clone)]
+pub struct FilterUniform {
+	pub threshold: f32,
+}
+
+impl gfx::Uniform for FilterUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hmap![
+			"u_threshold" => &self.threshold,
 		];
 	}
 }
@@ -120,8 +153,13 @@ impl app::State for Game {
 			model: model,
 			vhs_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/vhs.frag"))?,
 			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
+			blur_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/blur.frag"))?,
+			filter_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/filter.frag"))?,
 			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
+			canvas3: gfx::Canvas::new(ctx, 640, 480)?,
+			canvas4: gfx::Canvas::new(ctx, 640, 480)?,
+			canvas5: gfx::Canvas::new(ctx, 640, 480)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
@@ -139,9 +177,10 @@ impl app::State for Game {
 		match *e {
 
 			KeyPress(k) => {
-				if k == Key::Escape {
-// 					ctx.toggle_cursor_hidden();
-					ctx.toggle_cursor_relative();
+				if k == Key::Esc {
+					ctx.toggle_cursor_hidden();
+					ctx.toggle_cursor_locked();
+// 					ctx.toggle_cursor_relative();
 				}
 				if k == Key::F {
 					ctx.toggle_fullscreen();
@@ -155,7 +194,7 @@ impl app::State for Game {
 
 			MouseMove(delta) => {
 
-				if ctx.is_cursor_relative() {
+				if ctx.is_cursor_hidden() {
 
 					let mut rx = self.cam.yaw();
 					let mut ry = self.cam.pitch();
@@ -240,11 +279,35 @@ impl app::State for Game {
 		})?;
 
 		ctx.draw_on(&self.canvas2, |ctx| {
-			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-				size: 4.0,
-				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+			ctx.clear();
+			ctx.draw_2d_with(&self.filter_shader, &FilterUniform {
+				threshold: 0.0,
 			}, |ctx| {
 				ctx.draw(&shapes::canvas(&self.canvas))?;
+				return Ok(());
+			})?;
+			return Ok(());
+		})?;
+
+		ctx.draw_on(&self.canvas3, |ctx| {
+			ctx.clear();
+			ctx.draw_2d_with(&self.blur_shader, &BlurUniform {
+				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+				dir: vec2!(9, 0),
+			}, |ctx| {
+				ctx.draw(&shapes::canvas(&self.canvas2))?;
+				return Ok(());
+			})?;
+			return Ok(());
+		})?;
+
+		ctx.draw_on(&self.canvas4, |ctx| {
+			ctx.clear();
+			ctx.draw_2d_with(&self.blur_shader, &BlurUniform {
+				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+				dir: vec2!(0, 9),
+			}, |ctx| {
+				ctx.draw(&shapes::canvas(&self.canvas3))?;
 				return Ok(());
 			})?;
 			return Ok(());
@@ -258,12 +321,18 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
-			intensity: 9.0,
-		}, |ctx| {
-			ctx.draw(&shapes::canvas(&self.canvas2))?;
-			return Ok(());
-		})?;
+// 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
+// 			intensity: 24.0,
+// 		}, |ctx| {
+// 			ctx.draw(&shapes::canvas(&self.canvas2))?;
+// 			return Ok(());
+// 		})?;
+
+// 		ctx.use_blend(gfx::Blend::Add, |ctx| {
+// 			ctx.draw(&shapes::canvas(&self.canvas))?;
+			ctx.draw(&shapes::canvas(&self.canvas4))?;
+// 			return Ok(());
+// 		})?;
 
 		return Ok(());
 
@@ -274,7 +343,9 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.cursor_relative(true)
+// 		.cursor_relative(true)
+		.cursor_hidden(true)
+		.cursor_locked(true)
 		.resizable(true)
 		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Game>() {

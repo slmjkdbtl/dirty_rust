@@ -36,6 +36,12 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
+#[cfg(not(web))]
+use glutin::dpi::*;
+#[cfg(not(web))]
+use glutin::Api;
+#[cfg(not(web))]
+use glutin::GlRequest;
 #[cfg(web)]
 use glow::HasRenderLoop;
 
@@ -45,6 +51,7 @@ use input::ButtonState;
 use input::Key;
 use input::Mouse;
 use input::GamepadID;
+use input::GamepadButton;
 
 const DRAW_COUNT: usize = 65536;
 const NEAR_2D: f32 = -1024.0;
@@ -66,17 +73,23 @@ pub struct Ctx {
 	pub(self) key_states: HashMap<Key, ButtonState>,
 	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
 	pub(self) mouse_pos: Vec2,
-	pub(self) gamepads: HashMap<GamepadID, input::Gamepad>,
+	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(self) scroll_phase: input::ScrollPhase,
 
 	// window
+	pub(self) title: String,
+	pub(self) cursor_hidden: bool,
+	pub(self) cursor_locked: bool,
+	pub(self) width: i32,
+	pub(self) height: i32,
+
+	pub(self) clipboard_ctx: clipboard::ClipboardContext,
+
 	#[cfg(not(web))]
-	pub(self) sdl_ctx: sdl2::Sdl,
-	#[cfg(not(web))]
-	pub(self) window: sdl2::video::Window,
-	#[cfg(not(web))]
-	pub(self) video_sys: sdl2::VideoSubsystem,
-	#[cfg(not(web))]
-	pub(self) gamepad_sys: sdl2::GameControllerSubsystem,
+	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
+	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
+	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -116,75 +129,60 @@ pub struct Ctx {
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(not(web))]
-	let (
-		sdl_ctx,
-		window,
-		video_sys,
-		gamepad_sys,
-		mut event_loop,
-		gamepads,
-		gl,
-		gl_ctx
-	) = {
+	let (windowed_ctx, mut events_loop, gl) =  {
 
-		let sdl_ctx = sdl2::init()?;
-		let video = sdl_ctx.video()?;
-		let gamepad = sdl_ctx.game_controller()?;
-		let gl_attr = video.gl_attr();
+		let events_loop = glutin::EventsLoop::new();
 
-		let num_joysticks = gamepad.num_joysticks().unwrap_or(0);
-		let mut gamepads = hmap![];
-
-		for id in 0..num_joysticks {
-			if gamepad.is_game_controller(id) {
-				if let Ok(c) = gamepad.open(id) {
-					gamepads.insert(id as i32, input::Gamepad::new(c));
-				}
-			}
-		}
-
-		gl_attr.set_context_profile(sdl2::video::GLProfile::Compatibility);
-		gl_attr.set_context_version(2, 1);
-
-		let mut window = video.window(&conf.title, conf.width, conf.height);
-
-		window.opengl();
-
-		if conf.hidpi {
-			window.allow_highdpi();
-		}
-
-		if conf.resizable {
-			window.resizable();
-		}
+		let mut window_builder = glutin::WindowBuilder::new()
+			.with_title(conf.title.to_owned())
+			.with_resizable(conf.resizable)
+			.with_transparency(conf.transparent)
+			.with_decorations(!conf.borderless)
+			.with_always_on_top(conf.always_on_top)
+			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
+			.with_multitouch()
+			;
 
 		if conf.fullscreen {
-			window.fullscreen();
+			window_builder = window_builder
+				.with_fullscreen(Some(events_loop.get_primary_monitor()));
 		}
 
-		if conf.borderless {
-			window.borderless();
+		#[cfg(target_os = "macos")] {
+
+			use glutin::os::macos::WindowBuilderExt;
+
+			window_builder = window_builder
+				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
+				.with_title_hidden(conf.hide_title)
+				.with_titlebar_transparent(conf.titlebar_transparent)
+				.with_fullsize_content_view(conf.titlebar_transparent)
+//				.with_disallow_hidpi(!conf.hidpi)
+				;
+
 		}
 
-		let window = window
-			.build()?;
+		let mut ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
+			;
 
-		let gl_ctx = window.gl_create_context()?;
-		let event_loop = sdl_ctx.event_pump()?;
+		#[cfg(feature = "gl3")] {
+			ctx_builder = ctx_builder
+				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+				.with_gl_profile(glutin::GlProfile::Core)
+				;
+		}
+
+		let windowed_ctx = unsafe {
+			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
+		};
 
 		let gl = gl::Device::from_loader(|s| {
-			video.gl_get_proc_address(s) as *const _
+			windowed_ctx.get_proc_address(s) as *const _
 		});
 
-		use sdl2::video::SwapInterval;
-
-		video.gl_set_swap_interval(if conf.vsync {
-			SwapInterval::VSync
-		} else {
-			SwapInterval::Immediate
-		})?;
-
-		(sdl_ctx, window, video, gamepad, event_loop, gamepads, gl, gl_ctx)
+		(windowed_ctx, events_loop, gl)
 
 	};
 
@@ -253,8 +251,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let proj_2d = gfx::OrthoProj {
 		width: conf.width as f32,
 		height: conf.height as f32,
-		near: NEAR_2D,
-		far: FAR_2D,
+		near: conf.near,
+		far: conf.far,
 		origin: conf.origin,
 	};
 
@@ -286,17 +284,23 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		key_states: HashMap::new(),
 		mouse_states: HashMap::new(),
 		mouse_pos: vec2!(),
-		gamepads: gamepads,
+		gamepad_button_states: HashMap::new(),
+		gamepad_axis_pos: HashMap::new(),
+		scroll_phase: input::ScrollPhase::Solid,
 
 		// window
+		title: conf.title.to_owned(),
+		width: conf.width,
+		height: conf.height,
+		cursor_hidden: conf.cursor_hidden,
+		cursor_locked: conf.cursor_locked,
+
+		clipboard_ctx: clipboard::ClipboardProvider::new()?,
+
 		#[cfg(not(web))]
-		window: window,
-		#[cfg(not(web))]
-		sdl_ctx: sdl_ctx,
-		#[cfg(not(web))]
-		video_sys: video_sys,
-		#[cfg(not(web))]
-		gamepad_sys: gamepad_sys,
+		windowed_ctx: windowed_ctx,
+		#[cfg(desktop)]
+		gamepad_ctx: gilrs::Gilrs::new()?,
 
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
@@ -332,18 +336,18 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	let backbuffer = gfx::Canvas::new(&ctx, ctx.conf.width as i32, ctx.conf.height as i32)?;
+	let backbuffer = gfx::Canvas::new(&ctx, ctx.width, ctx.height)?;
 
 	if ctx.conf.cursor_hidden {
 		ctx.set_cursor_hidden(true);
 	}
 
-	if ctx.conf.cursor_relative {
-		ctx.set_cursor_relative(true);
+	if ctx.conf.cursor_locked {
+		ctx.set_cursor_locked(true)?;
 	}
 
 	ctx.clear();
-	window::swap(&ctx);
+	window::swap(&ctx)?;
 
 	let mut s = S::init(&mut ctx)?;
 
@@ -363,7 +367,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			let start_time = Instant::now();
 
-			input::poll(&mut ctx, &mut event_loop, &mut s)?;
+			input::poll(&mut ctx, &mut events_loop, &mut s)?;
 			s.update(&mut ctx)?;
 			gfx::begin(&mut ctx);
 
@@ -381,7 +385,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			ctx.draw(&shapes::canvas(&backbuffer))?;
 			gfx::end(&mut ctx);
-			window::swap(&ctx);
+			window::swap(&ctx)?;
 
 			if ctx.quit {
 				break 'run;
@@ -487,7 +491,7 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn size(mut self, w: u32, h: u32) -> Self {
+	pub fn size(mut self, w: i32, h: i32) -> Self {
 		self.conf.width = w;
 		self.conf.height = h;
 		return self;
@@ -523,8 +527,33 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn cursor_relative(mut self, b: bool) -> Self {
-		self.conf.cursor_relative = b;
+	pub fn cursor_locked(mut self, b: bool) -> Self {
+		self.conf.cursor_locked = b;
+		return self;
+	}
+
+	pub fn hide_title(mut self, b: bool) -> Self {
+		self.conf.hide_title = b;
+		return self;
+	}
+
+	pub fn hide_titlebar_buttons(mut self, b: bool) -> Self {
+		self.conf.hide_titlebar_buttons = b;
+		return self;
+	}
+
+	pub fn titlebar_transparent(mut self, b: bool) -> Self {
+		self.conf.titlebar_transparent = b;
+		return self;
+	}
+
+	pub fn transparent(mut self, b: bool) -> Self {
+		self.conf.transparent = b;
+		return self;
+	}
+
+	pub fn always_on_top(mut self, b: bool) -> Self {
+		self.conf.always_on_top = b;
 		return self;
 	}
 

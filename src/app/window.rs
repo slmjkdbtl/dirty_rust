@@ -2,128 +2,126 @@
 
 //! Window Operations
 
+#[cfg(not(web))]
+use glutin::dpi::*;
+
+use clipboard::ClipboardProvider;
+
 use super::*;
+use crate::math::*;
 use crate::*;
 
-pub use sdl2::mouse::SystemCursor as CursorStyle;
+pub use glutin::MouseCursor as CursorStyle;
 
 impl Ctx {
 
-	pub fn set_fullscreen(&mut self, b: bool) -> Result<()> {
+	#[cfg(not(web))]
+	pub fn set_fullscreen(&mut self, b: bool) {
 
-		#[cfg(not(web))] {
+		let window = self.windowed_ctx.window();
 
-			use sdl2::video::FullscreenType;
-
-			self.window.set_fullscreen(if b {
-				FullscreenType::Desktop
-			} else {
-				FullscreenType::Off
-			})?;
-
+		if b {
+			window.set_fullscreen(Some(window.get_current_monitor()));
+		} else {
+			window.set_fullscreen(None);
 		}
-
-		return Ok(());
 
 	}
 
+	#[cfg(web)]
+	pub fn set_fullscreen(&mut self, b: bool) {
+		// ...
+	}
+
+	#[cfg(not(web))]
 	pub fn is_fullscreen(&self) -> bool {
-		#[cfg(not(web))] {
-			return self.window.fullscreen_state() != sdl2::video::FullscreenType::Off;
-		}
-		#[cfg(web)] {
-			return false;
-		}
+		return self.windowed_ctx.window().get_fullscreen().is_some();
 	}
 
-	pub fn toggle_fullscreen(&mut self) -> Result<()> {
-		return self.set_fullscreen(!self.is_fullscreen());
+	#[cfg(web)]
+	pub fn is_fullscreen(&self) -> bool {
+		return false;
 	}
 
+	pub fn toggle_fullscreen(&mut self) {
+		self.set_fullscreen(!self.is_fullscreen());
+	}
+
+	#[cfg(not(web))]
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		#[cfg(not(web))] {
-			self.sdl_ctx.mouse().show_cursor(b);
-		}
+		self.windowed_ctx.window().hide_cursor(b);
+		self.cursor_hidden = b;
+	}
+
+	#[cfg(web)]
+	pub fn set_cursor_hidden(&mut self, b: bool) {
+		// ...
 	}
 
 	pub fn is_cursor_hidden(&self) -> bool {
-		#[cfg(not(web))] {
-			return self.sdl_ctx.mouse().is_cursor_showing();
-		}
-		#[cfg(web)] {
-			return false;
-		}
+		return self.cursor_hidden;
 	}
 
 	pub fn toggle_cursor_hidden(&mut self) {
 		self.set_cursor_hidden(!self.is_cursor_hidden());
 	}
 
-	pub fn set_cursor_relative(&mut self, b: bool) {
-		#[cfg(not(web))] {
-			self.sdl_ctx.mouse().set_relative_mouse_mode(b);
-		}
-	}
-
-	pub fn is_cursor_relative(&self) -> bool {
-		return self.sdl_ctx.mouse().relative_mouse_mode();
-	}
-
-	pub fn toggle_cursor_relative(&mut self) {
-		return self.set_cursor_relative(!self.is_cursor_relative());
-	}
-
-	// TODO: store system cursors
-	pub fn set_cursor(&self, c: CursorStyle) -> Result<()> {
-		#[cfg(not(web))] {
-			// drops and disappears
-			sdl2::mouse::Cursor::from_system(c)?.set();
-		}
+	#[cfg(not(web))]
+	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
+		self.windowed_ctx.window().grab_cursor(b)?;
+		self.cursor_locked = b;
 		return Ok(());
 	}
 
-	pub fn set_custom_cursor(&self, c: &Cursor) {
-		#[cfg(not(web))] {
-			c.sdl_cursor.set();
-		}
+	#[cfg(web)]
+	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
+		return Ok(());
+	}
+
+	pub fn is_cursor_locked(&self) -> bool {
+		return self.cursor_locked;
+	}
+
+	pub fn toggle_cursor_locked(&mut self) -> Result<()> {
+		return self.set_cursor_locked(!self.is_cursor_locked());
+	}
+
+	pub fn set_cursor(&self, c: CursorStyle) {
+		self.windowed_ctx.window().set_cursor(c);
 	}
 
 	pub fn set_title(&mut self, t: &str) {
-		#[cfg(not(web))] {
-			self.window.set_title(t);
-		}
-		#[cfg(web)] {
-			stdweb::web::document().set_title(t);
-		}
+
+		self.title = t.to_owned();
+
+		#[cfg(not(web))]
+		self.windowed_ctx.window().set_title(t);
+
+		#[cfg(web)]
+		stdweb::web::document().set_title(t);
+
 	}
 
 	pub fn title(&self) -> &str {
-		return self.window.title();
+		return &self.title;
 	}
 
+	#[cfg(not(web))]
 	pub fn dpi(&self) -> f32 {
+		return self.windowed_ctx.window().get_hidpi_factor() as f32;
+	}
 
-		#[cfg(not(web))] {
-
-			let (_, h) = self.window.size();
-			let (_, dh) = self.window.drawable_size();
-
-			return dh as f32 / h as f32;
-
-		}
-
-		#[cfg(web)] {
-			return 1.0;
-		}
-
+	#[cfg(web)]
+	pub fn dpi(&self) -> f32 {
+		return 1.0;
 	}
 
 	pub fn width(&self) -> i32 {
-		return self.window.size().0 as i32;
+		return self.width;
 	}
 
 	pub fn height(&self) -> i32 {
-		return self.window.size().1 as i32;
+		return self.height;
 	}
 
 	pub fn gwidth(&self) -> f32 {
@@ -134,41 +132,67 @@ impl Ctx {
 		return self.conf.height as f32 / self.conf.scale;
 	}
 
-	pub fn get_clipboard(&self) -> Option<String> {
-		return self.video_sys.clipboard().clipboard_text().ok();
+	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
+
+		let offset = self.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(self.width(), self.height());
+		let mpos = p + offset;
+
+		#[cfg(not(web))]
+		self.windowed_ctx.window().set_cursor_position(mpos.into())?;
+		self.mouse_pos = mpos;
+
+		return Ok(());
+
 	}
 
-	pub fn set_clipboard(&self, s: &str) -> Result<()> {
-		return Ok(self.video_sys.clipboard().set_clipboard_text(s)?);
+	pub fn get_clipboard(&mut self) -> Option<String> {
+		return self.clipboard_ctx.get_contents().ok();
 	}
 
-}
-
-pub struct Cursor {
-	sdl_cursor: sdl2::mouse::Cursor,
-}
-
-impl Cursor {
-
-	pub fn from_img(img: img::Image, hotx: i32, hoty: i32) -> Result<Self> {
-
-		let w = img.width() as u32;
-		let h = img.height() as u32;
-		let mut pixels = img.into_raw();
-		let surface = sdl2::surface::Surface::from_data(&mut pixels, w, h, w * 4, sdl2::pixels::PixelFormatEnum::ABGR8888)?;
-		let c = sdl2::mouse::Cursor::from_surface(&surface, hotx, hoty)?;
-
-		return Ok(Self {
-			sdl_cursor: c,
-		});
-
+	pub fn set_clipboard(&mut self, s: &str) -> Result<()> {
+		return Ok(self.clipboard_ctx.set_contents(s.to_owned())?);
 	}
 
 }
 
-pub(super) fn swap(ctx: &app::Ctx) {
-	#[cfg(not(web))] {
-		ctx.window.gl_swap_window();
+pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
+	#[cfg(not(web))]
+	ctx.windowed_ctx.swap_buffers()?;
+	return Ok(());
+}
+
+#[cfg(not(web))]
+impl From<glutin::MouseScrollDelta> for Vec2 {
+	fn from(delta: glutin::MouseScrollDelta) -> Self {
+		use glutin::MouseScrollDelta;
+		match delta {
+			MouseScrollDelta::PixelDelta(pos) => {
+				return vec2!(pos.x, pos.y);
+			},
+			MouseScrollDelta::LineDelta(x, y) => {
+				return vec2!(x, y);
+			}
+		};
+	}
+}
+
+#[cfg(not(web))]
+impl From<Vec2> for LogicalPosition {
+	fn from(pos: Vec2) -> Self {
+		return Self {
+			x: pos.x as f64,
+			y: pos.y as f64,
+		};
+	}
+}
+
+#[cfg(not(web))]
+impl From<LogicalPosition> for Vec2 {
+	fn from(pos: LogicalPosition) -> Self {
+		return Self {
+			x: pos.x as f32,
+			y: pos.y as f32,
+		};
 	}
 }
 
