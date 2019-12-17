@@ -49,8 +49,10 @@ fs = [
 ]
 
 app = [
-	"sdl2",
+	"glutin",
 	"glow",
+	"gilrs",
+	"clipboard",
 	"fontdue",
 	"splines",
 	"tobj",
@@ -126,6 +128,7 @@ glob = { version = "0.3", optional = true }
 
 # app
 glow = { version = "0.3.0-alpha3", optional = true, default-features = false, features = [ "stdweb", ] }
+clipboard = { version = "0.5", optional = true }
 fontdue = { version = "0.0", optional = true }
 splines = { version = "3.0", optional = true }
 image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", "jpeg", "tga", "bmp", ] }
@@ -136,7 +139,7 @@ gltf = { version = "0.14", optional = true }
 rodio = { version = "0.10", optional = true, default-features = false, features = [ "vorbis", "mp3", "wav", ] }
 
 # synth
-cpal = { version = "0.10", optional = true }
+cpal = { version = "0.11", optional = true }
 
 # http
 url = { version = "2.1", optional = true }
@@ -166,10 +169,10 @@ openxr = { version = "0.10", optional = true }
 # sokol = "0.3"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
-# https://github.com/Rust-SDL2/rust-sdl2/issues/883
-sdl2 = { git = "https://github.com/Rust-SDL2/rust-sdl2/", optional = true, features = ["static-link", "bundled"] }
+glutin = { version = "0.21", optional = true }
 
 [target.'cfg(all(not(target_os="ios"), not(target_os="android"), not(target_arch="wasm32")))'.dependencies]
+gilrs = { version = "0.7", optional = true }
 console = { version = "0.9", optional = true }
 native-tls = { version = "0.2", optional = true }
 serial = { version = "0.4", optional = true }

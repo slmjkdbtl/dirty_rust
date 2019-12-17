@@ -33,8 +33,8 @@ impl app::State for Game {
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Escape => ctx.quit(),
-					Key::F => ctx.toggle_fullscreen()?,
+					Key::Esc => ctx.quit(),
+					Key::F => ctx.toggle_fullscreen(),
 					_ => {},
 				}
 			},
@@ -67,7 +67,7 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.resizable(true)
+// 		.resizable(true)
 		.run::<Game>() {
 		println!("{}", err);
 	}
