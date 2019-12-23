@@ -9,7 +9,6 @@
 - [gfx] text character spacing
 - [math] poisson dist
 - [window] custom mouse cursor (sdl???)
-- [input] gamepad
 - [gfx] canvas give original size
 
 == TODO
