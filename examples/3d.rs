@@ -321,16 +321,16 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-// 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
-// 			intensity: 24.0,
-// 		}, |ctx| {
-// 			ctx.draw(&shapes::canvas(&self.canvas2))?;
-// 			return Ok(());
-// 		})?;
+		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
+			intensity: 24.0,
+		}, |ctx| {
+			ctx.draw(&shapes::canvas(&self.canvas))?;
+			return Ok(());
+		})?;
 
 // 		ctx.use_blend(gfx::Blend::Add, |ctx| {
 // 			ctx.draw(&shapes::canvas(&self.canvas))?;
-			ctx.draw(&shapes::canvas(&self.canvas4))?;
+// 			ctx.draw(&shapes::canvas(&self.canvas4))?;
 // 			return Ok(());
 // 		})?;
 

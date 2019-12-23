@@ -13,7 +13,6 @@ struct Game {
 impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
-
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/bunny.png"))?,
 			count: 10000,
@@ -24,13 +23,12 @@ impl app::State for Game {
 
 		use input::Event::*;
 
-		match *e {
+		match e {
 			KeyPress(k) => {
-				if k == Key::Escape {
-					ctx.quit();
-				}
-				if k == Key::Space {
-					self.count += 500;
+				match *k {
+					Key::Esc => ctx.quit(),
+					Key::Space => self.count += 500,
+					_ => {},
 				}
 			},
 			_ => {},

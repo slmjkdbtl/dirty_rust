@@ -15,47 +15,40 @@ pub use glutin::MouseCursor as CursorStyle;
 
 impl Ctx {
 
-	#[cfg(not(web))]
 	pub fn set_fullscreen(&mut self, b: bool) {
 
-		let window = self.windowed_ctx.window();
+		#[cfg(not(web))] {
 
-		if b {
-			window.set_fullscreen(Some(window.get_current_monitor()));
-		} else {
-			window.set_fullscreen(None);
+			let window = self.windowed_ctx.window();
+
+			if b {
+				window.set_fullscreen(Some(window.get_current_monitor()));
+			} else {
+				window.set_fullscreen(None);
+			}
+
 		}
 
 	}
 
-	#[cfg(web)]
-	pub fn set_fullscreen(&mut self, b: bool) {
-		// ...
-	}
-
-	#[cfg(not(web))]
 	pub fn is_fullscreen(&self) -> bool {
+
+		#[cfg(not(web))]
 		return self.windowed_ctx.window().get_fullscreen().is_some();
-	}
 
-	#[cfg(web)]
-	pub fn is_fullscreen(&self) -> bool {
+		#[cfg(web)]
 		return false;
+
 	}
 
 	pub fn toggle_fullscreen(&mut self) {
 		self.set_fullscreen(!self.is_fullscreen());
 	}
 
-	#[cfg(not(web))]
 	pub fn set_cursor_hidden(&mut self, b: bool) {
+		#[cfg(not(web))]
 		self.windowed_ctx.window().hide_cursor(b);
 		self.cursor_hidden = b;
-	}
-
-	#[cfg(web)]
-	pub fn set_cursor_hidden(&mut self, b: bool) {
-		// ...
 	}
 
 	pub fn is_cursor_hidden(&self) -> bool {
@@ -66,16 +59,14 @@ impl Ctx {
 		self.set_cursor_hidden(!self.is_cursor_hidden());
 	}
 
-	#[cfg(not(web))]
 	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
+
+		#[cfg(not(web))]
 		self.windowed_ctx.window().grab_cursor(b)?;
 		self.cursor_locked = b;
-		return Ok(());
-	}
 
-	#[cfg(web)]
-	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
 		return Ok(());
+
 	}
 
 	pub fn is_cursor_locked(&self) -> bool {
@@ -106,14 +97,14 @@ impl Ctx {
 		return &self.title;
 	}
 
-	#[cfg(not(web))]
 	pub fn dpi(&self) -> f32 {
-		return self.windowed_ctx.window().get_hidpi_factor() as f32;
-	}
 
-	#[cfg(web)]
-	pub fn dpi(&self) -> f32 {
+		#[cfg(not(web))]
+		return self.windowed_ctx.window().get_hidpi_factor() as f32;
+
+		#[cfg(web)]
 		return 1.0;
+
 	}
 
 	pub fn width(&self) -> i32 {
@@ -134,8 +125,11 @@ impl Ctx {
 
 	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
 
-		let offset = self.conf.origin.as_pt() / 2.0 + vec2!(0.5) * vec2!(self.width(), self.height());
-		let mpos = p + offset;
+		let (w, h) = (self.width() as f32, self.height() as f32);
+		let offset = (self.conf.origin.as_pt() / 2.0 + vec2!(0.5)) * vec2!(w, h);
+		let (gw, gh) = (self.gwidth() as f32, self.gheight() as f32);
+		let (vpos, vw, vh) = self.cur_viewport();
+		let mpos = p / vec2!(gw / vw, gh / vh) + vpos + offset;
 
 		#[cfg(not(web))]
 		self.windowed_ctx.window().set_cursor_position(mpos.into())?;

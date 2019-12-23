@@ -180,6 +180,8 @@ pub enum Event {
 	FileHoverCancel,
 	FileDrop(PathBuf),
 	Focus(bool),
+	CursorEnter,
+	CursorLeave,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -372,11 +374,11 @@ pub(super) fn poll(
 					},
 
 					WEvent::CursorEntered { .. } => {
-						// ...
+						s.event(&mut ctx, &Event::CursorEnter)?;
 					},
 
 					WEvent::CursorLeft { .. } => {
-						// ...
+						s.event(&mut ctx, &Event::CursorLeave)?;
 					},
 
 					WEvent::CloseRequested => {
@@ -439,6 +441,7 @@ pub(super) fn poll(
 			},
 
 			ButtonReleased(button, ..) => {
+
 				if let Some(button) = GamepadButton::from_extern(button) {
 
 					if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
@@ -678,10 +681,10 @@ gen_buttons!(Mouse(ExternMouse), {
 });
 
 gen_buttons!(GamepadButton(ExternGamepadButton), {
-	South("south") => South,
-	East("east") => East,
-	West("west") => West,
-	North("north") => North,
+	A("a") => South,
+	B("b") => East,
+	X("x") => West,
+	Y("y") => North,
 	LBumper("lbumper") => LeftTrigger,
 	LTrigger("ltrigger") => LeftTrigger2,
 	RBumper("rbumper") => RightTrigger,
