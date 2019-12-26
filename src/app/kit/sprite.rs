@@ -39,7 +39,7 @@ impl Sprite {
 	#[cfg(feature = "ase")]
 	pub fn load_ase(&mut self, json: &str) -> Result<()> {
 
-		let data = ase::SpriteData::from_json(json)?;
+		let data = ase::parse(json)?;
 
 		self.frames = data.frames;
 
