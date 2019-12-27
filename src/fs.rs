@@ -134,7 +134,8 @@ pub fn extname(path: impl AsRef<Path>) -> Result<String> {
 		.extension()
 		.ok_or(Error::Fs(format!("failed to get extname: {}", path.display())))?
 		.to_os_string()
-		.into_string().map_err(|_| Error::Fs(format!("failed to get extname: {}", path.display())))?
+		.into_string()
+		.map_err(|_| Error::Fs(format!("failed to get extname: {}", path.display())))?
 	);
 
 }

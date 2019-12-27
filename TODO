@@ -1,15 +1,6 @@
 # wengwengweng
 
 == DOING
-- [synth] better API
-- [synth] popping sound every second
-- [gfx] multiple textures
-- [gfx] tidy text rendering layout code
-- [misc] bold text
-- [gfx] text character spacing
-- [math] poisson dist
-- [window] custom mouse cursor (sdl???)
-- [gfx] canvas give original size
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -93,6 +84,15 @@
 - [gfx] resize weirdness
 - [misc] custom default 2d/3d pipeline
 - [gfx] text wrap hyphonation
+- [window] custom mouse cursor
+- [synth] better API
+- [synth] popping sound every second
+- [gfx] multiple textures
+- [gfx] tidy text rendering layout code
+- [gfx] bold text
+- [gfx] text character spacing
+- [math] poisson dist
+- [fs] less plain wrappers
 
 == DONE
 - [http] refactor http
@@ -185,4 +185,5 @@
 - [kit] input + textarea
 - [app] switch to sdl
 - [window] scale modes & mouse pos
+- [gfx] canvas give original size
 

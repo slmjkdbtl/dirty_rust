@@ -96,8 +96,8 @@ impl Ctx {
 		self.cur_canvas = Some(canvas.clone());
 
 		let proj_2d = gfx::OrthoProj {
-			width: canvas.width() as f32 / dpi,
-			height: canvas.height() as f32 / dpi,
+			width: canvas.width() as f32,
+			height: canvas.height() as f32,
 			near: NEAR_2D,
 			far: FAR_2D,
 			origin: canvas.origin(),
@@ -107,7 +107,7 @@ impl Ctx {
 		self.proj_3d = o_proj_3d.flip_y();
 		self.transform = Transform::new();
 
-		self.gl.viewport(0, 0, canvas.width(), canvas.height());
+		self.gl.viewport(0, 0, (canvas.width() as f32 * dpi) as i32, (canvas.height() as f32 * dpi) as i32);
 
 		canvas.gl_fbuf().with(|| -> Result<()> {
 			f(self)?;
