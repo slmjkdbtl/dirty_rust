@@ -7,13 +7,10 @@ personal toolkit for games and stuff
 - **app** Windowing, Input, and Graphics
 - **img** Image Loading & Writing
 - **audio** Sound Loading & Playback
-- **fs** Common File System Functions
-- **geom** Common Collision Detections
 - **gkit** Gamedev Kit
 - **physics** Simple Physics Simulation
-- **http** Simple HTTP Client & Server
 - **synth** Software Synthesizer
-- **term** TUI Utilities
+- **term** CLI Utilities
 
 All the modules can be configured with cargo feature:
 
@@ -76,23 +73,6 @@ fn main() -> Result<()> {
 }
 
 ```
-
-### examples
-
-- **window** basic window and a cube
-- **conf** window / graphics configs
-- **sprite** a 2d animating sprite
-- **3d** 3d rendering testbed
-- **mviewer** 3d model viewer
-- **synth** minimal software synthesizer
-- **mask** stencil mask
-- **particle** particle system
-- **ttf** drawing text with truetype fonts
-- **geom** basic geomatry / collision detections
-- **dither** image processing
-- **task** load resources on a different thread
-- **request** making an http/https request
-- **server** a simple http server
 
 ### facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
