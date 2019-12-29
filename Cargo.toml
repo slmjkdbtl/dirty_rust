@@ -115,6 +115,7 @@ gl3 = []
 
 [dependencies]
 random = { version = "0.7", package = "rand" }
+noise = "0.6"
 derive_more = "0.99"
 once_cell = "1.2"
 owning_ref = "0.4"

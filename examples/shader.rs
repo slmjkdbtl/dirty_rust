@@ -18,7 +18,7 @@ struct TwistUniform {
 
 impl gfx::Uniform for TwistUniform {
 	fn values(&self) -> gfx::UniformValues {
-		return hashmap![
+		return hmap![
 			"resolution" => &self.resolution,
 			"mouse" => &self.mouse,
 			"time" => &self.time,
