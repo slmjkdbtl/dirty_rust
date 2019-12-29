@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! TUI Utilities
+//! CLI Utilities
 
 use std::env;
 
