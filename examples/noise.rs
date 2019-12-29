@@ -4,20 +4,51 @@ use dirty::*;
 use app::*;
 use input::Key;
 
-use math::NoiseFn;
-use math::Seedable;
+use math::noise::*;
 
 struct Game {
-	perlin: math::Perlin,
-	seed: u32,
+	tex: gfx::Texture,
+}
+
+fn gen(w: i32, h: i32, scale: f64, noise: &impl NoiseFn<[f64; 2]>) -> Vec<u8> {
+
+	let mut buf = Vec::with_capacity((w * h * 4) as usize);
+
+	for j in 0..h {
+
+		for i in 0..w {
+
+			let depth = noise.get([
+				i as f64 / w as f64 / scale,
+				j as f64 / h as f64 / scale,
+			]);
+
+			let c = ((depth + 1.0) / 2.0 * 255.0) as u8;
+
+			buf.extend_from_slice(&[c, c, c, 255]);
+
+		}
+
+	}
+
+	return buf;
+
 }
 
 impl State for Game {
 
 	fn init(ctx: &mut Ctx) -> Result<Self> {
+
+		let seed = math::rand(0, 65536);
+		let noise = Fbm::new()
+			.set_seed(seed);
+		let w = ctx.width();
+		let h = ctx.height();
+
+		let img = img::Image::from_pixels(w, h, gen(w, h, 0.3, &noise))?;
+
 		return Ok(Self {
-			perlin: math::Perlin::new(),
-			seed: 0,
+			tex: gfx::Texture::from_img(ctx, img)?,
 		});
 	}
 
@@ -26,17 +57,34 @@ impl State for Game {
 		use input::Event::*;
 
 		match e {
+
 			KeyPress(k) => {
+
 				match *k {
+
 					Key::Esc => ctx.quit(),
+
 					Key::Space => {
-						self.seed += 1;
-						self.perlin.set_seed(self.seed);
+
+						let noise = Fbm::new()
+							.set_seed(math::rand(0, 65536));
+
+						let w = ctx.width();
+						let h = ctx.height();
+						let img = img::Image::from_pixels(w, h, gen(w, h, 0.3, &noise))?;
+
+						self.tex = gfx::Texture::from_img(ctx, img)?;
+
 					},
+
 					_ => {},
+
 				}
+
 			},
+
 			_ => {},
+
 		}
 
 		return Ok(());
@@ -45,21 +93,7 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		let gw = ctx.gwidth() as i32;
-		let mut last_pt = None;
-
-		for x in -gw..gw as i32 {
-
-			let y = self.perlin.get([x as f64 / 100.0 + ctx.time() as f64; 2]) * 120.0;
-			let pt = vec2!(x, y);
-
-			if let Some(last_pt) = last_pt {
-				ctx.draw(&shapes::line(last_pt, pt))?;
-			}
-
-			last_pt = Some(pt);
-
-		}
+		ctx.draw(&shapes::sprite(&self.tex))?;
 
 		return Ok(());
 
@@ -69,7 +103,7 @@ impl State for Game {
 
 fn main() -> Result<()> {
 	return launcher()
-		.scale(2.0)
+// 		.scale(2.0)
 		.run::<Game>();
 }
 

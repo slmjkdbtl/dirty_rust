@@ -9,3 +9,5 @@ export!(lerp);
 export!(map);
 export!(dir);
 
+pub use noise;
+
