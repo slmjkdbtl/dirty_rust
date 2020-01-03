@@ -36,7 +36,7 @@ impl NoiseType {
 			NoiseType::Billow => "billow",
 			NoiseType::Worley => "worley",
 			NoiseType::RidgedMulti => "ridged multi",
-			NoiseType::Turbulence => "turbulence",
+			NoiseType::Turbulence => "turbulence (fbm)",
 		};
 	}
 }

@@ -110,6 +110,35 @@ impl gl::VertexLayout for VertexCubemap {
 
 }
 
+// #[derive(Clone, PartialEq)]
+// pub struct CustomUniform {
+// 	pub values: Vec<(&'static str, gl::UniformValue)>,
+// 	pub textures: Vec<&dyn gl::Texture>,
+// }
+
+// impl CustomUniform {
+
+// 	fn from_uniform(u: impl Uniform) -> Self {
+
+// 		let values = u.values()
+// 			.into_iter()
+// 			.map(|(n, v)| (n, v.into_uniform()))
+// 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
+
+// 		let textures = u.textures()
+// 			.into_iter()
+// 			.map(|t| t.gl_tex())
+// 			.collect::<Vec<&dyn gl::Texture>>();
+
+// 		return Self {
+// 			values: values,
+// 			textures: textures,
+// 		};
+
+// 	}
+
+// }
+
 /// uniform layout for the 2d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform2D {
@@ -137,7 +166,11 @@ impl gl::UniformLayout for Uniform2D {
 	}
 
 	fn textures(&self) -> Vec<&dyn gl::Texture> {
-		return vec![self.tex.gl_tex()];
+
+		let textures: Vec<&dyn gl::Texture> = vec![self.tex.gl_tex()];
+
+		return textures;
+
 	}
 
 }

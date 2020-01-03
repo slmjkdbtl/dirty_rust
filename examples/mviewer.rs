@@ -151,8 +151,8 @@ impl app::State for Viewer {
 			KeyPress(k) => {
 
 				match *k {
-					Key::F => ctx.toggle_fullscreen()?,
-					Key::Escape => ctx.quit(),
+					Key::F => ctx.toggle_fullscreen(),
+					Key::Esc => ctx.quit(),
 					Key::Space => self.resetting = true,
 					Key::L => self.wireframe = !self.wireframe,
 					Key::H => self.helping = !self.helping,
@@ -162,11 +162,11 @@ impl app::State for Viewer {
 
 			},
 
-			Scroll(s) => {
+			Scroll(s, phase) => {
 
-// 				if let input::ScrollPhase::Solid = phase {
-// 					self.resetting = false;
-// 				}
+				if let input::ScrollPhase::Solid = phase {
+					self.resetting = false;
+				}
 
 				if let Some(model) = &self.model {
 					if !self.resetting {
