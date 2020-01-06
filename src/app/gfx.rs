@@ -385,8 +385,8 @@ impl OrthoProj {
 
 		use Origin::*;
 
-		let w = self.width as f32;
-		let h = self.height as f32;
+		let w = self.width;
+		let h = self.height;
 		let near = self.near;
 		let far = self.far;
 
@@ -395,7 +395,7 @@ impl OrthoProj {
 			Top => (-w / 2.0, w / 2.0, h, 0.0),
 			TopRight => (-w, 0.0, h, 0.0),
 			Left => (0.0, w, h / 2.0, -h / 2.0),
-			Center => (-w / 2.0, w / 2.0, h / 2.0, -h / 2.0),
+			Center => (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0),
 			Right => (-w, 0.0, h / 2.0, -h / 2.0),
 			BottomLeft => (0.0, w, 0.0, -h),
 			Bottom => (-w / 2.0, w / 2.0, 0.0, -h),

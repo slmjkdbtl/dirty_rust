@@ -3,6 +3,8 @@
 == DOING
 - [gfx] inline text style
 - [gfx] multiple textures
+- [misc] profile render / update time seperately
+- [misc] profile graph
 
 == TODO
 - [http] use rustls instead of native-tls

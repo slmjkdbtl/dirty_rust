@@ -19,10 +19,9 @@ type LoadResult = Result<gfx::ModelData>;
 struct Viewer {
 	shader: gfx::Shader3D<()>,
 	model: Option<DisplayedModel>,
-	cam: gfx::PerspectiveCam,
+	cam: gfx::OrthoCam,
 	rot: Vec2,
 	pos: Vec2,
-	dis: f32,
 	scale: f32,
 	resetting: bool,
 	loader: Task<LoadResult>,
@@ -84,7 +83,6 @@ impl Viewer {
 
 		self.resetting = true;
 		let model = DisplayedModel::from(model);
-		self.dis = model.size;
 		self.model = Some(model);
 
 	}
@@ -128,15 +126,14 @@ impl app::State for Viewer {
 		return Ok(Self {
 			model: None,
 			pos: vec2!(0),
-			dis: 0.0,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 2048.0, vec3!(), 0.0, 0.0),
+			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
-			scale: 0.0,
 			loader: load_file("examples/res/truck.obj"),
 			wireframe: false,
 			helping: false,
+			scale: 0.0,
 			show_normal: false,
 		});
 
@@ -169,10 +166,16 @@ impl app::State for Viewer {
 				}
 
 				if let Some(model) = &self.model {
+
 					if !self.resetting {
-						self.dis -= s.y * (model.size / 240.0);
-						self.dis = self.dis.clamp(model.size * 0.2, model.size * 3.0);
+
+						let orig_scale = 480.0 / model.size;
+
+						self.scale += s.y * (1.0 / model.size);
+						self.scale = self.scale.clamp(orig_scale * 0.2, orig_scale * 1.6);
+
 					}
+
 				}
 
 			},
@@ -227,52 +230,44 @@ impl app::State for Viewer {
 			}
 		}
 
-		let move_speed = f32::sqrt(self.dis) * 2.0;
-
-		if ctx.key_down(Key::A) {
-			self.resetting = false;
-			self.pos.x -= move_speed * ctx.dt();
-		}
-
-		if ctx.key_down(Key::D) {
-			self.resetting = false;
-			self.pos.x += move_speed * ctx.dt();
-		}
-
-		if ctx.key_down(Key::W) {
-			self.resetting = false;
-			self.pos.y += move_speed * ctx.dt();
-		}
-
-		if ctx.key_down(Key::S) {
-			self.resetting = false;
-			self.pos.y -= move_speed * ctx.dt();
-		}
-
-		let range = self.dis;
-
-		self.pos = self.pos.clamp(-vec2!(range), vec2!(range));
-
 		if let Some(model) = &self.model {
+
+			let move_speed = 480.0;
+
+			if ctx.key_down(Key::A) {
+				self.resetting = false;
+				self.pos.x -= move_speed * ctx.dt();
+			}
+
+			if ctx.key_down(Key::D) {
+				self.resetting = false;
+				self.pos.x += move_speed * ctx.dt();
+			}
+
+			if ctx.key_down(Key::W) {
+				self.resetting = false;
+				self.pos.y -= move_speed * ctx.dt();
+			}
+
+			if ctx.key_down(Key::S) {
+				self.resetting = false;
+				self.pos.y += move_speed * ctx.dt();
+			}
 
 			if self.resetting {
 
 				let dest_rot = vec2!(0);
 				let dest_pos = vec2!(0);
-				let dest_scale = 1.0;
-				let dest_dis = model.size;
+				let dest_scale = 480.0 / model.size;
 				let t = ctx.dt() * 4.0;
 
 				self.rot = self.rot.lerp(dest_rot, t);
 				self.pos = self.pos.lerp(dest_pos, t);
 				self.scale = self.scale.lerp(dest_scale, t);
-				self.dis = self.dis.lerp(dest_dis, t);
 
 			}
 
 		}
-
-		self.cam.set_pos(vec3!(self.pos.x, self.pos.y, self.dis));
 
 		return Ok(());
 
@@ -287,6 +282,7 @@ impl app::State for Viewer {
 			ctx.use_cam(&self.cam, |ctx| {
 
 				ctx.push(&gfx::t()
+					.t2(self.pos)
 					.s3(vec3!(self.scale))
 					.ry(self.rot.x.to_radians())
 					.rx(self.rot.y.to_radians())
