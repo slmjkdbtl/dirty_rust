@@ -8,7 +8,7 @@ use super::gfx::*;
 use crate::gl;
 
 /// vertex layout for the 2d pipeline
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Vertex2D {
 	pub pos: Vec3,
 	pub uv: Vec2,
@@ -44,7 +44,7 @@ impl gl::VertexLayout for Vertex2D {
 }
 
 /// vertex layout for the 3d pipeline
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Vertex3D {
 	pub pos: Vec3,
 	pub uv: Vec2,
