@@ -81,6 +81,22 @@ impl Mat4 {
 
 	}
 
+	pub fn rotate_quat(q: Vec4) -> Self {
+
+		return Self::new([
+			q.w, q.z, -q.y, q.x,
+			-q.z, q.w, q.x, q.y,
+			q.y, -q.x, q.w, q.z,
+			-q.x, -q.y, -q.z, q.w,
+		]) * Self::new([
+			q.w, q.z, -q.y, -q.x,
+			-q.z, q.w, q.x, -q.y,
+			q.y, -q.x, q.w, -q.z,
+			q.x, q.y, q.z, q.w,
+		]);
+
+	}
+
 	pub fn inverse(&self) -> Self {
 
 		let mut nm = [0.0; 16];
