@@ -246,12 +246,12 @@ impl app::State for Viewer {
 
 			if ctx.key_down(Key::W) {
 				self.resetting = false;
-				self.pos.y -= move_speed * ctx.dt();
+				self.pos.y += move_speed * ctx.dt();
 			}
 
 			if ctx.key_down(Key::S) {
 				self.resetting = false;
-				self.pos.y += move_speed * ctx.dt();
+				self.pos.y -= move_speed * ctx.dt();
 			}
 
 			if self.resetting {

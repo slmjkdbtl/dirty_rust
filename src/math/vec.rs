@@ -349,10 +349,45 @@ impl Color {
 		return self;
 	}
 
-	pub fn rgb(self) -> Vec3 {
+	pub fn rgb(&self) -> Vec3 {
 		return vec3!(self.r, self.g, self.b);
 	}
 
+	pub fn to_srgb(&self) -> Self {
+		return Self {
+			r: linear_to_srgb(self.r),
+			g: linear_to_srgb(self.g),
+			b: linear_to_srgb(self.b),
+			a: self.a,
+		}
+	}
+
+	pub fn to_linear(&self) -> Self {
+		return Self {
+			r: srgb_to_linear(self.r),
+			g: srgb_to_linear(self.g),
+			b: srgb_to_linear(self.b),
+			a: self.a,
+		}
+	}
+
+}
+
+// http://entropymine.com/imageworsener/srgbformula/
+fn linear_to_srgb(v: f32) -> f32 {
+	if v <= 0.0031308 && v >= 0.0 {
+		return v * 12.92;
+	} else {
+		return 1.055 * f32::powf(v, 1.0 / 2.4) - 0.055;
+	}
+}
+
+fn srgb_to_linear(v: f32) -> f32 {
+	if v <= 0.04045 && v >= 0.0 {
+		return v / 12.92;
+	} else {
+		return f32::powf((v + 0.055) / 1.055, 2.4);
+	}
 }
 
 impl From<Color> for [u8; 4] {

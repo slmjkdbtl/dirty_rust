@@ -56,15 +56,16 @@ impl<'a> Drawable for Model<'a> {
 		};
 
 		for m in self.mesh.meshes() {
+			let data = m.data();
 			m.gl_mesh().draw(
 				prim,
 				&ctx.cur_pipeline_3d,
 				&gfx::Uniform3D {
 					proj: ctx.proj_3d,
 					view: ctx.view_3d,
-					model: ctx.transform,
+					model: ctx.transform.apply(&data.transform),
 					// TODO: ?
-					color: self.color * m.data().mtl.diffuse,
+					color: self.color,
 					tex: tex.clone(),
 					custom: ctx.cur_custom_uniform_3d.clone(),
 				},
