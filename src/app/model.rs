@@ -85,7 +85,7 @@ pub struct Model {
 	texture: Option<Texture>,
 }
 
-fn handle_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Transform, node: gltf::Node) {
+fn handle_gltf_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Transform, node: gltf::Node) {
 
 	use gltf::scene::Transform;
 
@@ -99,6 +99,7 @@ fn handle_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Transfor
 		Transform::Decomposed { translation, rotation, scale, } =>
 			gfx::Transform::new()
 				.t3(vec3!(translation[0], translation[1], translation[2]))
+				.rq(vec4!(rotation[0], rotation[1], rotation[2], rotation[3]))
 				.s3((vec3!(scale[0], scale[1], scale[2])))
 	};
 
@@ -190,7 +191,7 @@ fn handle_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Transfor
 	}
 
 	for cnode in node.children() {
-		handle_node(bin, meshes, transform, cnode);
+		handle_gltf_node(bin, meshes, transform, cnode);
 	}
 
 }
@@ -234,7 +235,7 @@ impl Model {
 
 		for scene in document.scenes() {
 			for node in scene.nodes() {
-				handle_node(&bin, &mut meshes, gfx::Transform::new(), node);
+				handle_gltf_node(&bin, &mut meshes, gfx::Transform::new(), node);
 			}
 		}
 

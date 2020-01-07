@@ -35,6 +35,10 @@ impl Transform {
 		return Self::from_mat4(self.matrix *  Mat4::rotate(angle, axis));
 	}
 
+	pub fn rotate_quat(&self, q: Vec4) -> Self {
+		return Self::from_mat4(self.matrix *  Mat4::rotate_quat(q));
+	}
+
 	pub fn skew(&self, s: Vec3) -> Self {
 		return Self::from_mat4(self.matrix * Mat4::skew(s));
 	}
@@ -90,6 +94,10 @@ impl Transform {
 
 	pub fn rz(&self, a: f32) -> Self {
 		return self.rotate(a, vec3!(0, 0, 1));
+	}
+
+	pub fn rq(&self, q: Vec4) -> Self {
+		return self.rotate_quat(q);
 	}
 
 	pub fn s3(&self, s: Vec3) -> Self {
