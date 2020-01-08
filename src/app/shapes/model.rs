@@ -6,8 +6,8 @@ use super::*;
 pub struct Model<'a> {
 	mesh: &'a gfx::Model,
 	color: Color,
-	bound: bool,
-	wireframe: bool,
+	draw_bound: bool,
+	draw_wireframe: bool,
 }
 
 pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
@@ -19,8 +19,8 @@ impl<'a> Model<'a> {
 		return Self {
 			mesh: m,
 			color: rgba!(1),
-			bound: false,
-			wireframe: false,
+			draw_bound: false,
+			draw_wireframe: false,
 		};
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -31,12 +31,12 @@ impl<'a> Model<'a> {
 		self.color.a = a;
 		return self;
 	}
-	pub fn bound(mut self) -> Self {
-		self.bound = true;
+	pub fn draw_bound(mut self) -> Self {
+		self.draw_bound = true;
 		return self;
 	}
-	pub fn wireframe(mut self, b: bool) -> Self {
-		self.wireframe = b;
+	pub fn draw_wireframe(mut self, b: bool) -> Self {
+		self.draw_wireframe = b;
 		return self;
 	}
 }
@@ -49,7 +49,7 @@ impl<'a> Drawable for Model<'a> {
 
 		let tex = self.mesh.texture().unwrap_or(&ctx.empty_tex);
 
-		let prim = if self.wireframe {
+		let prim = if self.draw_wireframe {
 			gl::Primitive::Line
 		} else {
 			gl::Primitive::Triangle
@@ -72,7 +72,7 @@ impl<'a> Drawable for Model<'a> {
 			);
 		}
 
-		if self.bound {
+		if self.draw_bound {
 			let (min, max) = self.mesh.bound();
 			ctx.draw(&rect3d(min, max))?;
 		}

@@ -172,7 +172,7 @@ impl app::State for Viewer {
 						let orig_scale = 480.0 / model.size;
 
 						self.scale += s.y * (1.0 / model.size);
-						self.scale = self.scale.clamp(orig_scale * 0.2, orig_scale * 1.6);
+						self.scale = self.scale.clamp(orig_scale * 0.2, orig_scale * 2.4);
 
 					}
 
@@ -292,7 +292,8 @@ impl app::State for Viewer {
 					let draw_model = |ctx: &mut Ctx| {
 						return ctx.draw(
 							&shapes::model(&model.model)
-								.wireframe(self.wireframe)
+								.draw_wireframe(self.wireframe)
+								.draw_bound()
 						);
 					};
 

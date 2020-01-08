@@ -118,6 +118,11 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
+		let model = gfx::Model::from_glb(
+			ctx,
+			include_bytes!("res/btfly.glb"),
+		)?;
+
 		let model = gfx::Model::from_obj(
 			ctx,
 			include_str!("res/truck.obj"),
@@ -280,8 +285,9 @@ impl app::State for Game {
 
 		ctx.draw_on(&self.canvas2, |ctx| {
 			ctx.clear();
-			ctx.draw_2d_with(&self.filter_shader, &FilterUniform {
-				threshold: 0.0,
+			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
+				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+				size: 3.0,
 			}, |ctx| {
 				ctx.draw(&shapes::canvas(&self.canvas))?;
 				return Ok(());
@@ -291,25 +297,7 @@ impl app::State for Game {
 
 		ctx.draw_on(&self.canvas3, |ctx| {
 			ctx.clear();
-			ctx.draw_2d_with(&self.blur_shader, &BlurUniform {
-				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
-				dir: vec2!(9, 0),
-			}, |ctx| {
-				ctx.draw(&shapes::canvas(&self.canvas2))?;
-				return Ok(());
-			})?;
-			return Ok(());
-		})?;
-
-		ctx.draw_on(&self.canvas4, |ctx| {
-			ctx.clear();
-			ctx.draw_2d_with(&self.blur_shader, &BlurUniform {
-				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
-				dir: vec2!(0, 9),
-			}, |ctx| {
-				ctx.draw(&shapes::canvas(&self.canvas3))?;
-				return Ok(());
-			})?;
+			ctx.draw(&shapes::canvas(&self.canvas2))?;
 			return Ok(());
 		})?;
 
@@ -322,9 +310,9 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
-			intensity: 24.0,
+			intensity: 16.0,
 		}, |ctx| {
-			ctx.draw(&shapes::canvas(&self.canvas))?;
+			ctx.draw(&shapes::canvas(&self.canvas3))?;
 			return Ok(());
 		})?;
 

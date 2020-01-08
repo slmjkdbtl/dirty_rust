@@ -87,21 +87,14 @@ pub struct Model {
 
 fn handle_gltf_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Transform, node: gltf::Node) {
 
-	use gltf::scene::Transform;
+	let mat = node.transform().matrix();
 
-	let transform = match node.transform() {
-		Transform::Matrix { matrix, } => gfx::Transform::from_mat4(mat4!(
-			matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
-			matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3],
-			matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
-			matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3],
-		)),
-		Transform::Decomposed { translation, rotation, scale, } =>
-			gfx::Transform::new()
-				.t3(vec3!(translation[0], translation[1], translation[2]))
-				.rq(vec4!(rotation[0], rotation[1], rotation[2], rotation[3]))
-				.s3((vec3!(scale[0], scale[1], scale[2])))
-	};
+	let transform = gfx::Transform::from_mat4(mat4!(
+		mat[0][0], mat[0][1], mat[0][2], mat[0][3],
+		mat[1][0], mat[1][1], mat[1][2], mat[1][3],
+		mat[2][0], mat[2][1], mat[2][2], mat[2][3],
+		mat[3][0], mat[3][1], mat[3][2], mat[3][3],
+	));
 
 	let transform = ptransform.apply(&transform);
 
@@ -296,7 +289,7 @@ impl Model {
 					pos: vec3!(vx, vy, vz),
 					normal: normals[i],
 					uv: vec2!(tx, 1.0 - ty),
-					color: mtl.diffuse,
+					color: mtl.diffuse.to_srgb(),
 				});
 
 			}
@@ -423,31 +416,14 @@ fn get_bound(meshes: &[MeshData]) -> (Vec3, Vec3) {
 
 		for v in &m.vertices {
 
-			let pos = v.pos;
+			let pos = m.transform * v.pos;
 
-			if pos.x < min.x {
-				min.x = pos.x;
-			}
-
-			if pos.y < min.y {
-				min.y = pos.y;
-			}
-
-			if pos.z < min.z {
-				min.z = pos.z;
-			}
-
-			if pos.x > max.x {
-				max.x = pos.x;
-			}
-
-			if pos.y > max.y {
-				max.y = pos.y;
-			}
-
-			if pos.z > max.z {
-				max.z = pos.z;
-			}
+			min.x = f32::min(pos.x, min.x);
+			min.y = f32::min(pos.y, min.y);
+			min.z = f32::min(pos.z, min.z);
+			max.x = f32::max(pos.x, max.x);
+			max.y = f32::max(pos.y, max.y);
+			max.z = f32::max(pos.z, max.z);
 
 		}
 
