@@ -289,7 +289,7 @@ impl Model {
 					pos: vec3!(vx, vy, vz),
 					normal: normals[i],
 					uv: vec2!(tx, 1.0 - ty),
-					color: mtl.diffuse.to_srgb(),
+					color: mtl.diffuse,
 				});
 
 			}
