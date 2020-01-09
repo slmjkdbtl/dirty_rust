@@ -9,8 +9,8 @@ use super::gfx::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct CanvasConf {
-	size: (i32, i32),
-	origin: Origin,
+	pub size: (i32, i32),
+	pub origin: Origin,
 }
 
 /// framebuffer for off-screen rendering
@@ -71,7 +71,18 @@ impl Canvas {
 	/// capture and save to an image
 	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
-		return self.tex.save(path);
+
+		let image = image::ImageBuffer::from_raw(
+			self.tex.width() as u32,
+			self.tex.height() as u32,
+			self.tex.get_pixels()
+		).ok_or(Error::Image(format!("failed to write image")))?;
+		let image = image::DynamicImage::ImageRgba8(image).flipv();
+
+		image.save(path)?;
+
+		return Ok(());
+
 	}
 
 	/// get underlying texture for the canvas

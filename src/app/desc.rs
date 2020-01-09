@@ -258,28 +258,35 @@ impl gl::Shape for QuadShape {
 		let t = self.transform;
 		let q = self.quad;
 		let c = self.color;
+
 		let p1 = t * (vec3!(-0.5, 0.5, 0.0));
 		let p2 = t * (vec3!(0.5, 0.5, 0.0));
 		let p3 = t * (vec3!(0.5, -0.5, 0.0));
 		let p4 = t * (vec3!(-0.5, -0.5, 0.0));
 
-		let mut u1 = vec2!(q.x, q.y + q.h);
-		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
-		let mut u3 = vec2!(q.x + q.w, q.y);
-		let mut u4 = vec2!(q.x, q.y);
+		// TODO: flip img instead of tex coord
+		let mut u1 = vec2!(q.x, q.y);
+		let mut u2 = vec2!(q.x + q.w, q.y);
+		let mut u3 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u4 = vec2!(q.x, q.y + q.h);
+
+// 		let mut u1 = vec2!(q.x, q.y + q.h);
+// 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+// 		let mut u3 = vec2!(q.x + q.w, q.y);
+// 		let mut u4 = vec2!(q.x, q.y);
 
 		match self.flip {
 			Flip::X => {
 				mem::swap(&mut u1, &mut u2);
-				mem::swap(&mut u4, &mut u3);
+				mem::swap(&mut u3, &mut u4);
 			},
 			Flip::Y => {
-				mem::swap(&mut u2, &mut u3);
 				mem::swap(&mut u1, &mut u4);
+				mem::swap(&mut u2, &mut u3);
 			},
 			Flip::XY => {
-				mem::swap(&mut u2, &mut u4);
 				mem::swap(&mut u1, &mut u3);
+				mem::swap(&mut u2, &mut u4);
 			},
 			_ => {},
 		}

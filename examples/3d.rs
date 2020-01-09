@@ -20,9 +20,6 @@ struct Game {
 	model: gfx::Model,
 	canvas: gfx::Canvas,
 	canvas2: gfx::Canvas,
-	canvas3: gfx::Canvas,
-	canvas4: gfx::Canvas,
-	canvas5: gfx::Canvas,
 	blur_shader: gfx::Shader2D<BlurUniform>,
 	vhs_shader: gfx::Shader2D<VHSUniform>,
 	pix_shader: gfx::Shader2D<PixUniform>,
@@ -162,9 +159,6 @@ impl app::State for Game {
 			filter_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/filter.frag"))?,
 			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
-			canvas3: gfx::Canvas::new(ctx, 640, 480)?,
-			canvas4: gfx::Canvas::new(ctx, 640, 480)?,
-			canvas5: gfx::Canvas::new(ctx, 640, 480)?,
 			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
@@ -179,21 +173,18 @@ impl app::State for Game {
 
 		use input::Event::*;
 
-		match *e {
+		match e {
 
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.toggle_cursor_hidden();
-					ctx.toggle_cursor_locked();
-// 					ctx.toggle_cursor_relative();
-				}
-				if k == Key::F {
-					ctx.toggle_fullscreen();
-				}
-				if k == Key::Q {
-					if ctx.key_mods().meta {
-						ctx.quit();
-					}
+				let mods = ctx.key_mods();
+				match *k {
+					Key::Esc => {
+						ctx.toggle_cursor_hidden();
+						ctx.toggle_cursor_locked()?;
+					},
+					Key::F => ctx.toggle_fullscreen(),
+					Key::Q if mods.meta => ctx.quit(),
+					_ => {},
 				}
 			},
 
@@ -295,12 +286,6 @@ impl app::State for Game {
 			return Ok(());
 		})?;
 
-		ctx.draw_on(&self.canvas3, |ctx| {
-			ctx.clear();
-			ctx.draw(&shapes::canvas(&self.canvas2))?;
-			return Ok(());
-		})?;
-
 		ctx.set_title(&format!("{}", ctx.fps()));
 
 		return Ok(());
@@ -312,15 +297,9 @@ impl app::State for Game {
 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
 			intensity: 16.0,
 		}, |ctx| {
-			ctx.draw(&shapes::canvas(&self.canvas3))?;
+			ctx.draw(&shapes::canvas(&self.canvas2))?;
 			return Ok(());
 		})?;
-
-// 		ctx.use_blend(gfx::Blend::Add, |ctx| {
-// 			ctx.draw(&shapes::canvas(&self.canvas))?;
-// 			ctx.draw(&shapes::canvas(&self.canvas4))?;
-// 			return Ok(());
-// 		})?;
 
 		return Ok(());
 

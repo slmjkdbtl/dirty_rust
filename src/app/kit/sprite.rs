@@ -189,6 +189,7 @@ impl Sprite {
 	pub fn shape(&self) -> shapes::Sprite {
 		return shapes::sprite(&self.tex)
 			.quad(self.frames[self.cur_frame])
+			// TODO: use shape offse
 			.offset(self.offset)
 			;
 	}

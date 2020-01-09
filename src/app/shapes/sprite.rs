@@ -73,7 +73,12 @@ impl<'a> Drawable for Sprite<'a> {
 			(None, None) => vec2!(tw, th),
 		};
 
-		let offset = self.offset.unwrap_or(ctx.conf.origin.as_pt());
+		let origin = ctx.cur_canvas
+			.as_ref()
+			.map(|c| c.origin())
+			.unwrap_or(ctx.conf.origin);
+
+		let offset = self.offset.unwrap_or(origin.as_pt());
 
 		// TODO: extremely slow
 		let t = ctx.transform

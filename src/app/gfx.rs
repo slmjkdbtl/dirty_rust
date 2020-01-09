@@ -50,7 +50,7 @@ impl Ctx {
 
 		let ot = self.transform;
 
-		self.transform = ot.apply(t);
+		self.transform = ot * *t;
 		f(self)?;
 		self.transform = ot;
 
@@ -88,14 +88,13 @@ impl Ctx {
 
 		flush(self);
 
-		let o_proj_2d = self.proj_2d;
-		let o_proj_3d = self.proj_3d;
 		let t = self.transform;
 		let dpi = self.dpi();
+		let o_proj_2d = self.proj_2d;
 
 		self.cur_canvas = Some(canvas.clone());
 
-		let proj_2d = gfx::OrthoProj {
+		self.proj_2d = gfx::OrthoProj {
 			width: canvas.width() as f32,
 			height: canvas.height() as f32,
 			near: NEAR_2D,
@@ -103,8 +102,6 @@ impl Ctx {
 			origin: canvas.origin(),
 		}.as_mat4();
 
-		self.proj_2d = proj_2d.flip_y();
-		self.proj_3d = o_proj_3d.flip_y();
 		self.transform = Transform::new();
 
 		self.gl.viewport(0, 0, (canvas.width() as f32 * dpi) as i32, (canvas.height() as f32 * dpi) as i32);
@@ -118,7 +115,6 @@ impl Ctx {
 		self.cur_canvas = None;
 		self.transform = t;
 		self.proj_2d = o_proj_2d;
-		self.proj_3d = o_proj_3d;
 		self.reset_viewport();
 
 		return Ok(());
@@ -273,10 +269,6 @@ impl Ctx {
 		self.view_3d = cam.lookat();
 		self.proj_3d = cam.projection();
 
-		if self.cur_canvas.is_some() {
-			self.proj_3d = self.proj_3d.flip_y();
-		}
-
 		f(self)?;
 
 		self.view_3d = oview_3d;
@@ -391,27 +383,27 @@ impl OrthoProj {
 		let far = self.far;
 
 		let (left, right, bottom, top) = match self.origin {
-			TopLeft => (0.0, w, h, 0.0),
-			Top => (-w / 2.0, w / 2.0, h, 0.0),
-			TopRight => (-w, 0.0, h, 0.0),
-			Left => (0.0, w, h / 2.0, -h / 2.0),
+			TopLeft => (0.0, w, -h, 0.0),
+			Top => (-w / 2.0, w / 2.0, -h, 0.0),
+			TopRight => (-w, 0.0, -h, 0.0),
+			Left => (0.0, w, -h / 2.0, h / 2.0),
 			Center => (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0),
-			Right => (-w, 0.0, h / 2.0, -h / 2.0),
-			BottomLeft => (0.0, w, 0.0, -h),
-			Bottom => (-w / 2.0, w / 2.0, 0.0, -h),
-			BottomRight => (-w, 0.0, 0.0, -h),
+			Right => (-w, 0.0, -h / 2.0, h / 2.0),
+			BottomLeft => (0.0, w, 0.0, h),
+			Bottom => (-w / 2.0, w / 2.0, 0.0, h),
+			BottomRight => (-w, 0.0, 0.0, h),
 		};
 
 		let tx = -(right + left) / (right - left);
 		let ty = -(top + bottom) / (top - bottom);
 		let tz = -(far + near) / (far - near);
 
-		return mat4!(
+		return Mat4::new([
 			2.0 / (right - left), 0.0, 0.0, 0.0,
 			0.0, 2.0 / (top - bottom), 0.0, 0.0,
-			0.0, 0.0, 2.0 / (near - far), 0.0,
+			0.0, 0.0, -2.0 / (far - near), 0.0,
 			tx, ty, tz, 1.0,
-		);
+		]);
 
 	}
 
@@ -454,15 +446,15 @@ impl Origin {
 		use Origin::*;
 
 		return match self {
-			TopLeft => vec2!(-1, -1),
-			Top => vec2!(0, -1),
-			TopRight => vec2!(1, -1),
+			TopLeft => vec2!(-1, 1),
+			Top => vec2!(0, 1),
+			TopRight => vec2!(1, 1),
 			Left => vec2!(-1, 0),
 			Center => vec2!(0, 0),
 			Right => vec2!(1, 0),
-			BottomLeft => vec2!(-1, 1),
-			Bottom => vec2!(0, 1),
-			BottomRight => vec2!(1, 1),
+			BottomLeft => vec2!(-1, -1),
+			Bottom => vec2!(0, -1),
+			BottomRight => vec2!(1, -1),
 		};
 
 	}
