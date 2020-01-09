@@ -51,10 +51,6 @@ impl Transform {
 		return Self::from_mat4(self.matrix.inverse());
 	}
 
-	pub fn apply(self, other: &Self) -> Self {
-		return Self::from_mat4(self.matrix * other.matrix);
-	}
-
 }
 
 // aliases
@@ -144,6 +140,13 @@ impl ops::Mul<Transform> for Mat4 {
 	type Output = Mat4;
 	fn mul(self, m: Transform) -> Self::Output {
 		return self * m.as_mat4();
+	}
+}
+
+impl ops::Mul<Transform> for Transform {
+	type Output = Transform;
+	fn mul(self, other: Transform) -> Self::Output {
+		return Self::from_mat4(self.matrix * other.matrix);
 	}
 }
 

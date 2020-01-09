@@ -2,7 +2,6 @@
 
 use std::rc::Rc;
 use std::io::Cursor;
-use std::path::Path;
 
 use crate::*;
 use super::*;
@@ -10,37 +9,16 @@ use super::gfx::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Material {
-	pub ambient: Color,
-	pub diffuse: Color,
-	pub specular: Color,
+	pub diffuse: f32,
+	pub specular: f32,
 	pub shininess: f32,
-}
-
-impl Material {
-
-	fn from_tobj(m: &tobj::Material) -> Self {
-
-		let am = m.ambient;
-		let df = m.diffuse;
-		let sp = m.specular;
-
-		return Self {
-			ambient: rgba!(am[0], am[1], am[2], 1.0),
-			diffuse: rgba!(df[0], df[1], df[2], 1.0),
-			specular: rgba!(sp[0], sp[1], sp[2], 1.0),
-			shininess: m.shininess,
-		};
-
-	}
-
 }
 
 impl Default for Material {
 	fn default() -> Self {
 		return Self {
-			ambient: rgba!(),
-			diffuse: rgba!(),
-			specular: rgba!(),
+			diffuse: 0.0,
+			specular: 0.0,
 			shininess: 0.0,
 		};
 	}
@@ -96,7 +74,7 @@ fn handle_gltf_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Tra
 		mat[3][0], mat[3][1], mat[3][2], mat[3][3],
 	));
 
-	let transform = ptransform.apply(&transform);
+	let transform = ptransform * transform;
 
 	if let Some(mesh) = node.mesh() {
 
@@ -270,11 +248,13 @@ impl Model {
 					.collect()
 			};
 
-			let mtl = m.material_id
+			let mcolor = m.material_id
 				.map(|id| materials.get(id))
 				.flatten()
-				.map(|m| Material::from_tobj(m))
-				.unwrap_or_default();
+				.map(|m| m.diffuse)
+				.map(|c| rgba!(c[0], c[1], c[2], 1))
+				.unwrap_or(rgba!(1))
+				;
 
 			for i in 0..vert_count {
 
@@ -289,7 +269,7 @@ impl Model {
 					pos: vec3!(vx, vy, vz),
 					normal: normals[i],
 					uv: vec2!(tx, 1.0 - ty),
-					color: mtl.diffuse,
+					color: mcolor,
 				});
 
 			}

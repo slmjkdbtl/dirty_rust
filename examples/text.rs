@@ -39,7 +39,7 @@ impl State for Game {
 		let text = shapes::text(&s)
 			.wrap(64.0, true)
 			.size(size)
-			.line_sep(12.0)
+			.line_spacing(12.0)
 // 			.align(gfx::Origin::TopLeft)
 			.render(ctx)
 			;

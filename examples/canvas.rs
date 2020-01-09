@@ -3,6 +3,7 @@
 use dirty::*;
 use app::*;
 use kit::*;
+use sprite::*;
 use input::Key;
 
 struct Game {
@@ -21,10 +22,10 @@ impl app::State for Game {
 		sprite.play("run");
 
 		return Ok(Self {
-			canvas: gfx::Canvas::builder()
-				.origin(gfx::Origin::Center)
-				.size(320, 480)
-				.build(ctx)?,
+			canvas: gfx::Canvas::from_conf(ctx, &gfx::CanvasConf {
+				size: (240, 240),
+				origin: gfx::Origin::Center,
+			})?,
 			sprite: sprite,
 		});
 
@@ -36,11 +37,10 @@ impl app::State for Game {
 
 		match *e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
-				}
-				if k == Key::F {
-					ctx.toggle_fullscreen();
+				match k {
+					Key::Esc => ctx.quit(),
+					Key::F => ctx.toggle_fullscreen(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -57,8 +57,8 @@ impl app::State for Game {
 
 		ctx.draw_on(&self.canvas, |ctx| {
 			ctx.clear();
-			ctx.draw(&shapes::rect(vec2!(-1000), vec2!(1000)).fill(rgba!(0, 0, 1, 1)))?;
-			ctx.draw(&shapes::rect(vec2!(-100), vec2!(100)).fill(rgba!(1, 0, 1, 1)))?;
+			ctx.draw(&shapes::rect(vec2!(-1000, 1000), vec2!(1000, -1000)).fill(rgba!(0, 1, 1, 1)))?;
+			ctx.draw(&self.sprite)?;
 			return Ok(());
 		})?;
 
@@ -69,7 +69,6 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw(&shapes::canvas(&self.canvas))?;
-		ctx.draw(&self.sprite)?;
 
 		return Ok(());
 

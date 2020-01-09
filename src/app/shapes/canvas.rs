@@ -36,7 +36,11 @@ impl<'a> Drawable for Canvas<'a> {
 		ctx.push(&gfx::t()
 			.s2(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
-			return ctx.draw(&sprite(&self.canvas.tex()).color(self.color));
+			return ctx.draw(
+				&sprite(&self.canvas.tex())
+					.color(self.color)
+					.flip(gfx::Flip::Y)
+			);
 		})?;
 
 		return Ok(());

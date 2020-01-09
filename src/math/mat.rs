@@ -182,22 +182,6 @@ impl Mat4 {
 
 	}
 
-	pub fn flip_y(&self) -> Self {
-
-		let mut nm = self.clone();
-
-		if let Some(val) = nm.get_mut(1, 1) {
-			*val = -*val;
-		}
-
-		if let Some(val) = nm.get_mut(3, 1) {
-			*val = -*val;
-		}
-
-		return nm;
-
-	}
-
 }
 
 impl Default for Mat4 {

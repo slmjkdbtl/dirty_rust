@@ -25,9 +25,9 @@ struct Viewer {
 	scale: f32,
 	resetting: bool,
 	loader: Task<LoadResult>,
-	wireframe: bool,
+	draw_wireframe: bool,
+	draw_bound: bool,
 	helping: bool,
-	show_normal: bool,
 }
 
 fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
@@ -126,15 +126,15 @@ impl app::State for Viewer {
 		return Ok(Self {
 			model: None,
 			pos: vec2!(0),
-			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0),
+			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0, gfx::Origin::Center),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
 			loader: load_file("examples/res/truck.obj"),
-			wireframe: false,
+			draw_wireframe: false,
+			draw_bound: false,
 			helping: false,
 			scale: 0.0,
-			show_normal: false,
 		});
 
 	}
@@ -147,13 +147,16 @@ impl app::State for Viewer {
 
 			KeyPress(k) => {
 
+				let mods = ctx.key_mods();
+
 				match *k {
 					Key::F => ctx.toggle_fullscreen(),
 					Key::Esc => ctx.quit(),
+					Key::Q if mods.meta => ctx.quit(),
 					Key::Space => self.resetting = true,
-					Key::L => self.wireframe = !self.wireframe,
+					Key::L => self.draw_wireframe = !self.draw_wireframe,
+					Key::B => self.draw_bound = !self.draw_bound,
 					Key::H => self.helping = !self.helping,
-					Key::N => self.show_normal = !self.show_normal,
 					_ => {},
 				}
 
@@ -172,7 +175,7 @@ impl app::State for Viewer {
 						let orig_scale = 480.0 / model.size;
 
 						self.scale += s.y * (1.0 / model.size);
-						self.scale = self.scale.clamp(orig_scale * 0.2, orig_scale * 2.4);
+						self.scale = self.scale.clamp(orig_scale * 0.2, orig_scale * 3.2);
 
 					}
 
@@ -236,22 +239,22 @@ impl app::State for Viewer {
 
 			if ctx.key_down(Key::A) {
 				self.resetting = false;
-				self.pos.x -= move_speed * ctx.dt();
+				self.pos.x += move_speed * ctx.dt();
 			}
 
 			if ctx.key_down(Key::D) {
 				self.resetting = false;
-				self.pos.x += move_speed * ctx.dt();
+				self.pos.x -= move_speed * ctx.dt();
 			}
 
 			if ctx.key_down(Key::W) {
 				self.resetting = false;
-				self.pos.y += move_speed * ctx.dt();
+				self.pos.y -= move_speed * ctx.dt();
 			}
 
 			if ctx.key_down(Key::S) {
 				self.resetting = false;
-				self.pos.y -= move_speed * ctx.dt();
+				self.pos.y += move_speed * ctx.dt();
 			}
 
 			if self.resetting {
@@ -289,19 +292,13 @@ impl app::State for Viewer {
 					.t3(-center)
 				, |ctx| {
 
-					let draw_model = |ctx: &mut Ctx| {
+					ctx.draw_3d_with(&self.shader, &(), |ctx| {
 						return ctx.draw(
 							&shapes::model(&model.model)
-								.draw_wireframe(self.wireframe)
-								.draw_bound()
+								.draw_wireframe(self.draw_wireframe)
+								.draw_bound(self.draw_bound)
 						);
-					};
-
-					if self.show_normal {
-						ctx.draw_3d_with(&self.shader, &(), draw_model)?;
-					} else {
-						draw_model(ctx)?;
-					}
+					})?;
 
 					return Ok(());
 
@@ -314,7 +311,7 @@ impl app::State for Viewer {
 		}
 
 		ctx.push(&gfx::t()
-			.t2(vec2!(24))
+			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
 		, |ctx| {
 
 			if self.loader.phase() == TaskPhase::Working {
@@ -326,7 +323,7 @@ impl app::State for Viewer {
 				ctx.draw(&shapes::text("drag 3d model files into this window"))?;
 
 				ctx.push(&gfx::t()
-					.t2(vec2!(0, 22))
+					.t2(vec2!(0, -22))
 					.s2(vec2!(0.8))
 				, |ctx| {
 
@@ -343,7 +340,7 @@ impl app::State for Viewer {
 		})?;
 
 		ctx.push(&gfx::t()
-			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, -24))
+			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
 			.s2(vec2!(0.8))
 		, |ctx| {
 
@@ -355,8 +352,8 @@ impl app::State for Viewer {
 					"<scroll>: scale",
 					"<space>:  reset",
 					"L:        wireframe",
+					"B:        bound",
 					"F:        fullscreen",
-					"N:        normal",
 					"<esc>:    quit",
 				];
 
@@ -366,7 +363,7 @@ impl app::State for Viewer {
 					.enumerate()
 				{
 					ctx.draw_t(&gfx::t()
-						.t2(vec2!(0, i as i32 * -18))
+						.t2(vec2!(0, i as i32 * 18))
 					, &shapes::text(m)
 						.align(gfx::Origin::BottomLeft)
 					)?;

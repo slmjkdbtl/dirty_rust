@@ -69,21 +69,6 @@ impl Texture {
 		self.gl_tex.sub_data(x, y, w, h, data);
 	}
 
-	#[cfg(feature = "img")]
-	pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
-
-		image::save_buffer(
-			path,
-			&self.get_pixels(),
-			self.width() as u32,
-			self.height() as u32,
-			image::ColorType::RGBA(8),
-		)?;
-
-		return Ok(());
-
-	}
-
 	pub(super) fn gl_tex(&self) -> &gl::Texture2D {
 		return &self.gl_tex;
 	}

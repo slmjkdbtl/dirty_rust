@@ -31,8 +31,8 @@ impl<'a> Model<'a> {
 		self.color.a = a;
 		return self;
 	}
-	pub fn draw_bound(mut self) -> Self {
-		self.draw_bound = true;
+	pub fn draw_bound(mut self, b: bool) -> Self {
+		self.draw_bound = b;
 		return self;
 	}
 	pub fn draw_wireframe(mut self, b: bool) -> Self {
@@ -63,7 +63,7 @@ impl<'a> Drawable for Model<'a> {
 				&gfx::Uniform3D {
 					proj: ctx.proj_3d,
 					view: ctx.view_3d,
-					model: ctx.transform.apply(&data.transform),
+					model: ctx.transform * data.transform,
 					// TODO: ?
 					color: self.color,
 					tex: tex.clone(),

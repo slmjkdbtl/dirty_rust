@@ -54,8 +54,8 @@ use input::GamepadID;
 use input::GamepadButton;
 
 const DRAW_COUNT: usize = 65536;
-const NEAR_2D: f32 = -1024.0;
-const FAR_2D: f32 = 1024.0;
+const NEAR_2D: f32 = -2048.0;
+const FAR_2D: f32 = 2048.0;
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -375,8 +375,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 				ctx.clear();
 
-				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
-					return s.draw(&mut cc);
+				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut ctx| {
+					return s.draw(&mut ctx);
 				})?;
 
 				return Ok(());
