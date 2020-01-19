@@ -235,7 +235,7 @@ impl ops::Mul<Vec4> for Mat4 {
 			pt.x * m[1] + pt.y * m[5] + pt.z * m[9] + pt.w * m[13],
 			pt.x * m[2] + pt.y * m[6] + pt.z * m[10] + pt.w * m[14],
 			pt.x * m[3] + pt.y * m[7] + pt.z * m[11] + pt.w * m[15]
-		)
+		);
 
 	}
 

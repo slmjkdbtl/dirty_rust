@@ -396,6 +396,7 @@ fn get_bound(meshes: &[MeshData]) -> (Vec3, Vec3) {
 
 		for v in &m.vertices {
 
+			// TODO: is this really necessary??
 			let pos = m.transform * v.pos;
 
 			min.x = f32::min(pos.x, min.x);

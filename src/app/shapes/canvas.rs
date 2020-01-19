@@ -38,6 +38,7 @@ impl<'a> Drawable for Canvas<'a> {
 		, |ctx| {
 			return ctx.draw(
 				&sprite(&self.canvas.tex())
+					.offset(vec2!(-1, -1))
 					.color(self.color)
 					.flip(gfx::Flip::Y)
 			);

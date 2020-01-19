@@ -231,8 +231,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
-//	gl.enable(gl::Capability::CullFace);
-//	gl.cull_face(gl::Face::Back);
+// 	gl.enable(gl::Capability::CullFace);
+// 	gl.cull_face(gl::Face::Back);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(c.r, c.g, c.b, c.a);
@@ -253,7 +253,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		height: conf.height as f32,
 		near: conf.near,
 		far: conf.far,
-		origin: conf.origin,
 	};
 
 	let proj_2d = proj_2d.as_mat4();
@@ -564,11 +563,6 @@ impl Launcher {
 
 	pub fn clear_color(mut self, c: Color) -> Self {
 		self.conf.clear_color = c;
-		return self;
-	}
-
-	pub fn origin(mut self, o: gfx::Origin) -> Self {
-		self.conf.origin = o;
 		return self;
 	}
 

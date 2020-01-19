@@ -265,15 +265,15 @@ impl gl::Shape for QuadShape {
 		let p4 = t * (vec3!(-0.5, -0.5, 0.0));
 
 		// TODO: flip img instead of tex coord
-		let mut u1 = vec2!(q.x, q.y);
-		let mut u2 = vec2!(q.x + q.w, q.y);
-		let mut u3 = vec2!(q.x + q.w, q.y + q.h);
-		let mut u4 = vec2!(q.x, q.y + q.h);
+// 		let mut u1 = vec2!(q.x, q.y);
+// 		let mut u2 = vec2!(q.x + q.w, q.y);
+// 		let mut u3 = vec2!(q.x + q.w, q.y + q.h);
+// 		let mut u4 = vec2!(q.x, q.y + q.h);
 
-// 		let mut u1 = vec2!(q.x, q.y + q.h);
-// 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
-// 		let mut u3 = vec2!(q.x + q.w, q.y);
-// 		let mut u4 = vec2!(q.x, q.y);
+		let mut u1 = vec2!(q.x, q.y + q.h);
+		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u3 = vec2!(q.x + q.w, q.y);
+		let mut u4 = vec2!(q.x, q.y);
 
 		match self.flip {
 			Flip::X => {

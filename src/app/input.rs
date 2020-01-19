@@ -305,12 +305,11 @@ pub(super) fn poll(
 
 					WEvent::CursorMoved { position, .. } => {
 
-						let (w, h) = (ctx.width() as f32, ctx.height() as f32);
-						let offset = (ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5)) * vec2!(w, h);
-						let (gw, gh) = (ctx.gwidth() as f32, ctx.gheight() as f32);
-						let (vpos, vw, vh) = ctx.cur_viewport();
 						let mpos: Vec2 = position.into();
-						let mpos = (mpos - offset - vpos) * vec2!(gw / vw, gh / vh);
+						let (vpos, vw, vh) = ctx.cur_viewport();
+						let (gw, gh) = (ctx.gwidth(), ctx.gheight());
+						let mpos = mpos - vpos;
+						let mpos = mpos * vec2!(gw / vw, gh / vh);
 
 						ctx.mouse_pos = mpos;
 

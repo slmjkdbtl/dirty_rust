@@ -57,6 +57,9 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw(&self.sprite)?;
+		ctx.draw_t(&gfx::t().t2(vec2!(ctx.time() * 60.0)), &self.sprite)?;
+
+		ctx.draw(&shapes::polygon(&[vec2!(200), vec2!(120, 240), vec2!(240, 320)]))?;
 
 		return Ok(());
 

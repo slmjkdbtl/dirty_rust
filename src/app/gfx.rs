@@ -99,7 +99,6 @@ impl Ctx {
 			height: canvas.height() as f32,
 			near: NEAR_2D,
 			far: FAR_2D,
-			origin: canvas.origin(),
 		}.as_mat4();
 
 		self.transform = Transform::new();
@@ -254,7 +253,7 @@ impl Ctx {
 
 		let w = self.gwidth();
 		let h = self.gheight();
-		let orig_pt = self.conf.origin.as_pt();
+		let orig_pt = vec2!(0);
 		let coord_pt = coord.as_pt();
 
 		return (coord_pt - orig_pt) / 2.0 * vec2!(w, h);
@@ -280,16 +279,6 @@ impl Ctx {
 
 	pub fn transform(&self) -> Transform {
 		return self.transform;
-	}
-
-	pub fn to_sc(&self, pt: Vec3) -> Vec2 {
-
-		let pt = self.proj_3d * self.view_3d * self.transform * pt;
-		let (gw, gh) = (self.gwidth(), self.gheight());
-		let pt = (pt / pt.z * 0.5).xy() * vec2!(gw, -gh) - self.conf.origin.as_pt() * vec2!(gw, gh) / 2.0;
-
-		return pt;
-
 	}
 
 	pub fn default_font(&self) -> &impl Font {
@@ -368,32 +357,18 @@ pub struct OrthoProj {
 	pub height: f32,
 	pub near: f32,
 	pub far: f32,
-	pub origin: Origin,
 }
 
 impl OrthoProj {
 
 	pub fn as_mat4(&self) -> Mat4 {
 
-		use Origin::*;
-
 		let w = self.width;
 		let h = self.height;
 		let near = self.near;
 		let far = self.far;
 
-		let (left, right, bottom, top) = match self.origin {
-			TopLeft => (0.0, w, -h, 0.0),
-			Top => (-w / 2.0, w / 2.0, -h, 0.0),
-			TopRight => (-w, 0.0, -h, 0.0),
-			Left => (0.0, w, -h / 2.0, h / 2.0),
-			Center => (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0),
-			Right => (-w, 0.0, -h / 2.0, h / 2.0),
-			BottomLeft => (0.0, w, 0.0, h),
-			Bottom => (-w / 2.0, w / 2.0, 0.0, h),
-			BottomRight => (-w, 0.0, 0.0, h),
-		};
-
+		let (left, right, bottom, top) = (0.0, w, h, 0.0);
 		let tx = -(right + left) / (right - left);
 		let ty = -(top + bottom) / (top - bottom);
 		let tz = -(far + near) / (far - near);
@@ -446,15 +421,15 @@ impl Origin {
 		use Origin::*;
 
 		return match self {
-			TopLeft => vec2!(-1, 1),
-			Top => vec2!(0, 1),
-			TopRight => vec2!(1, 1),
+			TopLeft => vec2!(-1, -1),
+			Top => vec2!(0, -1),
+			TopRight => vec2!(1, -1),
 			Left => vec2!(-1, 0),
 			Center => vec2!(0, 0),
 			Right => vec2!(1, 0),
-			BottomLeft => vec2!(-1, -1),
-			Bottom => vec2!(0, -1),
-			BottomRight => vec2!(1, -1),
+			BottomLeft => vec2!(-1, 1),
+			Bottom => vec2!(0, 1),
+			BottomRight => vec2!(1, 1),
 		};
 
 	}
