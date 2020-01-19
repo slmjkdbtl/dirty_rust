@@ -123,13 +123,12 @@ impl Ctx {
 		return self.conf.height as f32 / self.conf.scale;
 	}
 
-	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
+	pub fn set_mouse_pos(&mut self, mpos: Vec2) -> Result<()> {
 
-		let (w, h) = (self.width() as f32, self.height() as f32);
-		let offset = (self.conf.origin.as_pt() / 2.0 + vec2!(0.5)) * vec2!(w, h);
-		let (gw, gh) = (self.gwidth() as f32, self.gheight() as f32);
 		let (vpos, vw, vh) = self.cur_viewport();
-		let mpos = p / vec2!(gw / vw, gh / vh) + vpos + offset;
+		let (gw, gh) = (self.gwidth(), self.gheight());
+		let mpos = mpos / vec2!(gw / vw, gh / vh);
+		let mpos = mpos + vpos;
 
 		#[cfg(not(web))]
 		self.windowed_ctx.window().set_cursor_position(mpos.into())?;

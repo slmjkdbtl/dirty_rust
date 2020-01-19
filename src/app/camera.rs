@@ -107,20 +107,18 @@ pub struct OrthoCam {
 	height: f32,
 	near: f32,
 	far: f32,
-	origin: gfx::Origin,
 }
 
 impl OrthoCam {
 
 	/// create new orthographic camera
-	pub fn new(width: f32, height: f32, near: f32, far: f32, origin: gfx::Origin) -> Self {
+	pub fn new(width: f32, height: f32, near: f32, far: f32) -> Self {
 
 		return Self {
 			width: width,
 			height: height,
 			near: near,
 			far: far,
-			origin: origin,
 		};
 
 	}
@@ -134,7 +132,6 @@ impl Camera for OrthoCam {
 			height: self.height,
 			near: self.near,
 			far: self.far,
-			origin: self.origin,
 		}.as_mat4();
 	}
 	fn lookat(&self) -> Mat4 {

@@ -138,7 +138,7 @@ splines = { version = "3.0", optional = true }
 gilrs = { version = "0.7", optional = true }
 image = { version = "0.22", optional = true, default-features = false, features = [ "png_codec", "jpeg", "tga", "bmp", ] }
 tobj = { version = "0.1", optional = true }
-gltf = { version = "0.14", optional = true }
+gltf = { version = "0.15", optional = true }
 
 # audio
 rodio = { version = "0.10", optional = true, default-features = false, features = [ "vorbis", "mp3", "wav", ] }

@@ -19,12 +19,12 @@ pub struct Sprite {
 
 impl Sprite {
 
-	pub fn from_tex(ctx: &app::Ctx, tex: gfx::Texture) -> Self {
+	pub fn from_tex(tex: gfx::Texture) -> Self {
 		return Self {
 			tex: tex,
 			frames: vec![quad!(0, 0, 1, 1)],
 			cur_frame: 0,
-			offset: ctx.conf().origin.as_pt(),
+			offset: vec2!(0),
 			anims: HashMap::new(),
 			cur_anim: None,
 			timer: 0.0,
@@ -33,7 +33,7 @@ impl Sprite {
 	}
 
 	pub fn from_bytes(ctx: &app::Ctx, b: &[u8]) -> Result<Self> {
-		return Ok(Self::from_tex(ctx, gfx::Texture::from_bytes(ctx, b)?));
+		return Ok(Self::from_tex(gfx::Texture::from_bytes(ctx, b)?));
 	}
 
 	#[cfg(feature = "ase")]

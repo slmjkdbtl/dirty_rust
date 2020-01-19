@@ -125,8 +125,8 @@ impl app::State for Viewer {
 
 		return Ok(Self {
 			model: None,
-			pos: vec2!(0),
-			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0, gfx::Origin::Center),
+			pos: vec2!(ctx.gwidth(), ctx.gheight()) / 2.0,
+			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
@@ -260,7 +260,7 @@ impl app::State for Viewer {
 			if self.resetting {
 
 				let dest_rot = vec2!(0);
-				let dest_pos = vec2!(0);
+				let dest_pos = vec2!(ctx.gwidth(), ctx.gheight()) / 2.0;
 				let dest_scale = 480.0 / model.size;
 				let t = ctx.dt() * 4.0;
 
@@ -300,6 +300,11 @@ impl app::State for Viewer {
 						);
 					})?;
 
+					if self.draw_bound {
+						let (min, max) = model.model.bound();
+						ctx.draw(&shapes::rect3d(min, max))?;
+					}
+
 					return Ok(());
 
 				})?;
@@ -311,23 +316,33 @@ impl app::State for Viewer {
 		}
 
 		ctx.push(&gfx::t()
-			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
+			.t2(vec2!(24))
+			.tz(320.0)
 		, |ctx| {
 
 			if self.loader.phase() == TaskPhase::Working {
 
-				ctx.draw(&shapes::text("loading..."))?;
+				ctx.draw(
+					&shapes::text("loading...")
+						.align(gfx::Origin::TopLeft)
+				)?;
 
 			} else {
 
-				ctx.draw(&shapes::text("drag 3d model files into this window"))?;
+				ctx.draw(
+					&shapes::text("drag 3d model files into this window")
+						.align(gfx::Origin::TopLeft)
+				)?;
 
 				ctx.push(&gfx::t()
-					.t2(vec2!(0, -22))
+					.t2(vec2!(0, 22))
 					.s2(vec2!(0.8))
 				, |ctx| {
 
-					ctx.draw(&shapes::text("H: help"))?;
+					ctx.draw(
+						&shapes::text("H: help")
+							.align(gfx::Origin::TopLeft)
+					)?;
 
 					return Ok(());
 
@@ -340,8 +355,9 @@ impl app::State for Viewer {
 		})?;
 
 		ctx.push(&gfx::t()
-			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
+			.t2(vec2!(24, ctx.gheight() - 24.0))
 			.s2(vec2!(0.8))
+			.tz(320.0)
 		, |ctx| {
 
 			if self.helping {
@@ -363,7 +379,7 @@ impl app::State for Viewer {
 					.enumerate()
 				{
 					ctx.draw_t(&gfx::t()
-						.t2(vec2!(0, i as i32 * 18))
+						.t2(vec2!(0, i as i32 * -18))
 					, &shapes::text(m)
 						.align(gfx::Origin::BottomLeft)
 					)?;
@@ -384,7 +400,7 @@ impl app::State for Viewer {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.origin(gfx::Origin::TopLeft)
+		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Viewer>() {
 		println!("{}", err);
 	}
