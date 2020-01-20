@@ -8,10 +8,20 @@ use crate::*;
 use app::*;
 use math::*;
 
+fn fix_pt_pair(rect: (Vec2, Vec2)) -> (Vec2, Vec2) {
+
+	let (p1, p2) = rect;
+	let pp1 = vec2!(f32::min(p1.x, p2.x), f32::min(p1.y, p2.y));
+	let pp2 = vec2!(f32::max(p1.x, p2.x), f32::max(p1.y, p2.y));
+
+	return (pp1, pp2);
+
+}
+
 fn rect_rect(r1: (Vec2, Vec2), r2: (Vec2, Vec2)) -> bool {
 
-	let (p1, p2) = r1;
-	let (p3, p4) = r2;
+	let (p1, p2) = fix_pt_pair(r1);
+	let (p3, p4) = fix_pt_pair(r2);
 
 	return p2.x >= p3.x && p1.x <= p4.x && p2.y >= p3.y && p1.y <= p4.y;
 
@@ -19,8 +29,8 @@ fn rect_rect(r1: (Vec2, Vec2), r2: (Vec2, Vec2)) -> bool {
 
 fn line_rect(line: (Vec2, Vec2), rect: (Vec2, Vec2)) -> bool {
 
-	let (p1, p2) = line;
-	let (p3, p4) = rect;
+	let (p1, p2) = fix_pt_pair(line);
+	let (p3, p4) = fix_pt_pair(rect);
 
 	if point_rect(p1, rect) || point_rect(p2, rect) {
 		return true;
@@ -40,7 +50,7 @@ fn line_rect(line: (Vec2, Vec2), rect: (Vec2, Vec2)) -> bool {
 
 fn rect_circle(rect: (Vec2, Vec2), circle: (Vec2, f32)) -> bool {
 
-	let (p1, p2) = rect;
+	let (p1, p2) = fix_pt_pair(rect);
 	let (center, radius) = circle;
 	let mut test = center;
 
@@ -72,7 +82,7 @@ fn point_circle(pt: Vec2, circle: (Vec2, f32)) -> bool {
 
 fn line_circle(line: (Vec2, Vec2), circle: (Vec2, f32)) -> bool {
 
-	let (p1, p2) = line;
+	let (p1, p2) = fix_pt_pair(line);
 
 	if point_circle(p1, circle) || point_circle(p2, circle) {
 		return true;
@@ -84,7 +94,7 @@ fn line_circle(line: (Vec2, Vec2), circle: (Vec2, f32)) -> bool {
 
 fn point_line(pt: Vec2, line: (Vec2, Vec2)) -> bool {
 
-	let (p1, p2) = line;
+	let (p1, p2) = fix_pt_pair(line);
 
 	// get distance from the point to the two ends of the line
 	let d1 = Vec2::dis(pt, p1);
@@ -112,8 +122,8 @@ fn circle_circle(c1: (Vec2, f32), c2: (Vec2, f32)) -> bool {
 
 fn line_line(l1: (Vec2, Vec2), l2: (Vec2, Vec2)) -> bool {
 
-	let (p1, p2) = l1;
-	let (p3, p4) = l2;
+	let (p1, p2) = fix_pt_pair(l1);
+	let (p3, p4) = fix_pt_pair(l2);
 
 	let a = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
 	let b = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
@@ -167,7 +177,7 @@ fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 }
 
 fn point_rect(pt: Vec2, rect: (Vec2, Vec2)) -> bool {
-	let (p1, p2) = rect;
+	let (p1, p2) = fix_pt_pair(rect);
 	return pt.x >= p1.x && pt.x <= p2.x && pt.y >= p1.y && pt.y <= p2.y;
 }
 

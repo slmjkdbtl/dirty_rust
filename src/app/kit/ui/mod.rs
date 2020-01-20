@@ -9,4 +9,5 @@ export!(widget);
 export!(panel);
 export!(select);
 export!(input);
+export!(checkbox);
 

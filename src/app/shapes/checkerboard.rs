@@ -7,18 +7,18 @@ pub struct Checkerboard {
 	size: f32,
 	c1: Color,
 	c2: Color,
-	w: f32,
-	h: f32,
+	p1: Vec2,
+	p2: Vec2,
 }
 
 impl Checkerboard {
-	pub fn new(w: f32, h: f32, s: f32) -> Self {
+	pub fn new(p1: Vec2, p2: Vec2, s: f32) -> Self {
 		return Self {
 			size: s,
 			c1: rgba!(0.5, 0.5, 0.5, 1),
 			c2: rgba!(0.75, 0.75, 0.75, 1),
-			w: w,
-			h: h,
+			p1: p1,
+			p2: p2,
 		};
 	}
 	pub fn color(mut self, c1: Color, c2: Color) -> Self {
@@ -28,35 +28,43 @@ impl Checkerboard {
 	}
 }
 
-pub fn checkerboard(w: f32, h: f32, s: f32) -> Checkerboard {
-	return Checkerboard::new(w, h, s);
+pub fn checkerboard(p1: Vec2, p2: Vec2, s: f32) -> Checkerboard {
+	return Checkerboard::new(p1, p2, s);
 }
 
 impl gfx::Drawable for Checkerboard {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let col = f32::ceil(self.w / self.size) as i32;
-		let row = f32::ceil(self.h / self.size) as i32;
+		let p1 = vec2!(f32::min(self.p1.x, self.p2.x), f32::min(self.p1.y, self.p2.y));
+		let p2 = vec2!(f32::max(self.p1.x, self.p2.x), f32::max(self.p1.y, self.p2.y));
 
-		for i in 0..col {
+		let mut p = p1;
+		let mut g = true;
+		let mut dir = 1.0;
 
-			for j in 0..row {
+		while p.y < p2.y {
 
-				let c = if (i + j) % 2 == 0 {
-					rgba!(0.5, 0.5, 0.5, 1)
-				} else {
-					rgba!(0.75, 0.75, 0.75, 1)
-				};
+			let x = f32::min(p.x + self.size, p2.x);
+			let y = f32::min(p.y + self.size, p2.y);
 
-				ctx.draw(
-					&rect(
-						vec2!(i as f32 * self.size, j as f32 * self.size),
-						vec2!((i + 1) as f32 * self.size, (j + 1) as f32 * self.size),
-					)
-						.fill(c)
-				)?;
+			let color = if g {
+				rgba!(0.5, 0.5, 0.5, 1)
+			} else {
+				rgba!(0.75, 0.75, 0.75, 1)
+			};
 
+			g = !g;
+
+			ctx.draw(&rect(p, vec2!(x, y)).fill(color))?;
+
+			let nx = p.x + self.size * dir;
+
+			if nx >= p2.x || nx < p1.x {
+				p.y += self.size;
+				dir = -dir;
+			} else {
+				p.x = nx;
 			}
 
 		}
