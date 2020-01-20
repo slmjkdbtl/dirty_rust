@@ -125,7 +125,7 @@ impl app::State for Viewer {
 
 		return Ok(Self {
 			model: None,
-			pos: vec2!(ctx.gwidth(), ctx.gheight()) / 2.0,
+			pos: vec2!(0),
 			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
@@ -249,18 +249,18 @@ impl app::State for Viewer {
 
 			if ctx.key_down(Key::W) {
 				self.resetting = false;
-				self.pos.y -= move_speed * ctx.dt();
+				self.pos.y += move_speed * ctx.dt();
 			}
 
 			if ctx.key_down(Key::S) {
 				self.resetting = false;
-				self.pos.y += move_speed * ctx.dt();
+				self.pos.y -= move_speed * ctx.dt();
 			}
 
 			if self.resetting {
 
 				let dest_rot = vec2!(0);
-				let dest_pos = vec2!(ctx.gwidth(), ctx.gheight()) / 2.0;
+				let dest_pos = vec2!(0);
 				let dest_scale = 480.0 / model.size;
 				let t = ctx.dt() * 4.0;
 
@@ -285,6 +285,7 @@ impl app::State for Viewer {
 			ctx.use_cam(&self.cam, |ctx| {
 
 				ctx.push(&gfx::t()
+// 					.t2(vec2!(ctx.time() * 120.0))
 					.t2(self.pos)
 					.s3(vec3!(self.scale))
 					.ry(self.rot.x.to_radians())
@@ -316,7 +317,7 @@ impl app::State for Viewer {
 		}
 
 		ctx.push(&gfx::t()
-			.t2(vec2!(24))
+			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
 			.tz(320.0)
 		, |ctx| {
 
@@ -335,7 +336,7 @@ impl app::State for Viewer {
 				)?;
 
 				ctx.push(&gfx::t()
-					.t2(vec2!(0, 22))
+					.ty(-22.0)
 					.s2(vec2!(0.8))
 				, |ctx| {
 
@@ -355,7 +356,7 @@ impl app::State for Viewer {
 		})?;
 
 		ctx.push(&gfx::t()
-			.t2(vec2!(24, ctx.gheight() - 24.0))
+			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
 			.s2(vec2!(0.8))
 			.tz(320.0)
 		, |ctx| {
@@ -379,7 +380,7 @@ impl app::State for Viewer {
 					.enumerate()
 				{
 					ctx.draw_t(&gfx::t()
-						.t2(vec2!(0, i as i32 * -18))
+						.t2(vec2!(0, i as i32 * 18))
 					, &shapes::text(m)
 						.align(gfx::Origin::BottomLeft)
 					)?;

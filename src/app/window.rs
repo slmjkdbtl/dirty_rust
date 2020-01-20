@@ -127,6 +127,7 @@ impl Ctx {
 
 		let (vpos, vw, vh) = self.cur_viewport();
 		let (gw, gh) = (self.gwidth(), self.gheight());
+		let mpos = vec2!(gw / 2.0 + mpos.x, gh / 2.0 - mpos.y);
 		let mpos = mpos / vec2!(gw / vw, gh / vh);
 		let mpos = mpos + vpos;
 

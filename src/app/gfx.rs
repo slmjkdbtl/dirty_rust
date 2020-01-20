@@ -253,10 +253,9 @@ impl Ctx {
 
 		let w = self.gwidth();
 		let h = self.gheight();
-		let orig_pt = vec2!(0);
 		let coord_pt = coord.as_pt();
 
-		return (coord_pt - orig_pt) / 2.0 * vec2!(w, h);
+		return coord_pt / 2.0 * vec2!(w, h);
 
 	}
 
@@ -368,7 +367,7 @@ impl OrthoProj {
 		let near = self.near;
 		let far = self.far;
 
-		let (left, right, bottom, top) = (0.0, w, h, 0.0);
+		let (left, right, bottom, top) = (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0);
 		let tx = -(right + left) / (right - left);
 		let ty = -(top + bottom) / (top - bottom);
 		let tz = -(far + near) / (far - near);
@@ -421,15 +420,15 @@ impl Origin {
 		use Origin::*;
 
 		return match self {
-			TopLeft => vec2!(-1, -1),
-			Top => vec2!(0, -1),
-			TopRight => vec2!(1, -1),
+			TopLeft => vec2!(-1, 1),
+			Top => vec2!(0, 1),
+			TopRight => vec2!(1, 1),
 			Left => vec2!(-1, 0),
 			Center => vec2!(0, 0),
 			Right => vec2!(1, 0),
-			BottomLeft => vec2!(-1, 1),
-			Bottom => vec2!(0, 1),
-			BottomRight => vec2!(1, 1),
+			BottomLeft => vec2!(-1, -1),
+			Bottom => vec2!(0, -1),
+			BottomRight => vec2!(1, -1),
 		};
 
 	}
