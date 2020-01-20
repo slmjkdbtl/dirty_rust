@@ -24,7 +24,7 @@ impl<T: ToString> Select<T> {
 
 impl<T: ToString> Widget for Select<T> {
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &app::input::Event) {
+	fn event(&mut self, ctx: &mut app::Ctx, panel: &PanelCtx, e: &app::input::Event) {
 
 		use app::input::Event::*;
 		use app::input::Mouse;
@@ -43,23 +43,25 @@ impl<T: ToString> Widget for Select<T> {
 
 	}
 
-	fn draw(&self, ctx: &mut app::Ctx, info: &PanelCtx) -> Result<RenderResult> {
+	fn draw(&self, ctx: &mut app::Ctx, panel: &PanelCtx) -> Result<()> {
 
 		if let Some(option) = self.cur_option() {
-			ctx.draw(
-				&shapes::text(&option.to_string())
-					.align(gfx::Origin::TopLeft)
-			)?;
+// 			ctx.draw(
+// 				&shapes::text(&option.to_string())
+// 					.align(gfx::Origin::TopLeft)
+// 			)?;
 		}
 
 		for option in &self.options {
 			// ...
 		}
 
-		return Ok(RenderResult {
-			height: 0.0,
-		});
+		return Ok(());
 
+	}
+
+	fn height(&self, theme: &Theme) -> f32 {
+		return 0.0;
 	}
 
 }
