@@ -310,6 +310,7 @@ pub(super) fn poll(
 						let (gw, gh) = (ctx.gwidth(), ctx.gheight());
 						let mpos = mpos - vpos;
 						let mpos = mpos * vec2!(gw / vw, gh / vh);
+						let mpos = vec2!(mpos.x - gw / 2.0, gh / 2.0 - mpos.y);
 
 						ctx.mouse_pos = mpos;
 

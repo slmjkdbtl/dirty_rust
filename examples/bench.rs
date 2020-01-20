@@ -48,8 +48,8 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let w = ctx.width() as i32;
-		let h = ctx.height() as i32;
+		let w = ctx.gwidth() as i32;
+		let h = ctx.gheight() as i32;
 
 		for _ in 0..self.count {
 			ctx.push(&gfx::t()
@@ -74,7 +74,7 @@ impl app::State for Game {
 		})?;
 
 		ctx.push(&gfx::t()
-			.t2(vec2!(0, 64))
+			.ty(-64.0)
 			.s2(vec2!(1.5))
 		, |ctx| {
 			ctx.draw(&shapes::text(&format!("{} bunnies", self.count)))?;

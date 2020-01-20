@@ -370,19 +370,20 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			s.update(&mut ctx)?;
 			gfx::begin(&mut ctx);
 
-			ctx.draw_on(&backbuffer, |ctx| {
+			ctx.draw_on(&backbuffer, |mut ctx| {
 
 				ctx.clear();
-
-				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut ctx| {
-					return s.draw(&mut ctx);
-				})?;
+				s.draw(&mut ctx)?;
 
 				return Ok(());
 
 			})?;
 
-			ctx.draw(&shapes::canvas(&backbuffer))?;
+			ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut ctx| {
+				ctx.draw(&shapes::canvas(&backbuffer))?;
+				return Ok(());
+			})?;
+
 			gfx::end(&mut ctx);
 			window::swap(&ctx)?;
 
