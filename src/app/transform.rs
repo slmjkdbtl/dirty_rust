@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Transform {
 	pub pos: Vec3,
 	pub rot: Vec4,
