@@ -29,15 +29,21 @@ impl Default for Material {
 pub struct MeshData {
 	pub vertices: Vec<Vertex3D>,
 	pub indices: Vec<u32>,
-	pub transform: Transform,
+}
+
+#[derive(Clone)]
+pub struct NodeData {
+	pub id: usize,
 	pub children: Vec<usize>,
+	pub transform: Transform,
+	pub meshes: Option<Vec<MeshData>>,
 }
 
 /// model data
 #[derive(Clone)]
 pub struct ModelData {
-	meshes: HashMap<usize, MeshData>,
-	nodes: Vec<usize>,
+	nodes: HashMap<usize, NodeData>,
+	scene: Vec<usize>,
 	img: Option<img::Image>,
 	anims: HashMap<usize, Anim>,
 }
@@ -46,6 +52,14 @@ pub struct ModelData {
 pub struct Mesh {
 	gl_mesh: Rc<gl::Mesh<Vertex3D, Uniform3D>>,
 	data: MeshData,
+}
+
+#[derive(Clone)]
+pub struct Node {
+	pub meshes: Option<Vec<Mesh>>,
+	pub id: usize,
+	pub children: Vec<usize>,
+	pub transform: Transform,
 }
 
 impl Mesh {
@@ -60,28 +74,30 @@ impl Mesh {
 /// 3d model
 #[derive(Clone)]
 pub struct Model {
-	meshes: HashMap<usize, Mesh>,
+	nodes: HashMap<usize, Node>,
 	anims: HashMap<usize, Anim>,
+	scene: Vec<usize>,
 	bound: (Vec3, Vec3),
-	center: Vec3,
-	nodes: Vec<usize>,
 	texture: Option<Texture>,
 }
 
-fn read_gltf_node(bin: &[u8], meshes: &mut HashMap<usize, MeshData>, node: gltf::Node) {
+// TODO: deal with non-mesh nodes
+fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::Node) {
 
-	if let Some(mesh) = node.mesh() {
+	let id = node.index();
+	let (pos, rot, scale) = node.transform().decomposed();
 
-		let id = node.index();
-		let (pos, rot, scale) = node.transform().decomposed();
+	let transform = Transform {
+		pos: vec3!(pos[0], pos[1], pos[2]),
+		rot: vec4!(rot[0], rot[1], rot[2], rot[3]),
+		scale: vec3!(scale[0], scale[1], scale[2]),
+	};
 
-		let transform = Transform {
-			pos: vec3!(pos[0], pos[1], pos[2]),
-			rot: vec4!(rot[0], rot[1], rot[2], rot[3]),
-			scale: vec3!(scale[0], scale[1], scale[2]),
-		};
+	let meshes = node.mesh().map(|mesh| {
 
-		for prim in mesh.primitives() {
+		return mesh
+			.primitives()
+			.map(|prim| {
 
 			let reader = prim.reader(|_| Some(&bin));
 
@@ -154,19 +170,24 @@ fn read_gltf_node(bin: &[u8], meshes: &mut HashMap<usize, MeshData>, node: gltf:
 
 			}
 
-			meshes.insert(id, MeshData {
+			return MeshData {
 				vertices: verts,
 				indices: indices,
-				transform: transform.clone(),
-				children: node.children().map(|c| c.index()).collect(),
-			});
+			};
 
-		}
+		}).collect();
 
-	}
+	});
 
-	for cnode in node.children() {
-		read_gltf_node(bin, meshes, cnode);
+	nodes.insert(id, NodeData {
+		id: id,
+		children: node.children().map(|c| c.index()).collect(),
+		transform: transform,
+		meshes: meshes,
+	});
+
+	for c in node.children() {
+		read_gltf_node(bin, nodes, c);
 	}
 
 }
@@ -371,19 +392,19 @@ impl Model {
 		}
 
 		// mesh
-		let mut meshes = HashMap::with_capacity(document.meshes().len());
-		let mut nodes = vec![];
+		let mut nodes = HashMap::with_capacity(document.nodes().len());
+		let mut scene = vec![];
 
-		for scene in document.scenes() {
-			for node in scene.nodes() {
-				nodes.push(node.index());
-				read_gltf_node(&bin, &mut meshes, node);
+		for s in document.scenes() {
+			for n in s.nodes() {
+				scene.push(n.index());
+				read_gltf_node(&bin, &mut nodes, n);
 			}
 		}
 
 		return Ok(ModelData {
-			meshes: meshes,
 			nodes: nodes,
+			scene: scene,
 			img: img,
 			anims: anims,
 		});
@@ -399,12 +420,12 @@ impl Model {
 				.unwrap_or(Ok((vec![], hmap![])));
 		})?;
 
-		let mut nodes = Vec::with_capacity(models.len());
-		let mut meshes = HashMap::with_capacity(models.len());
+		let mut scene = Vec::with_capacity(models.len());
+		let mut nodes = HashMap::with_capacity(models.len());
 
 		for (i, m) in models.into_iter().enumerate() {
 
-			nodes.push(i);
+			scene.push(i);
 
 			let m = m.mesh;
 			let positions = m.positions
@@ -450,11 +471,14 @@ impl Model {
 
 			}
 
-			meshes.insert(i, MeshData {
-				vertices: verts,
-				indices: m.indices,
-				transform: gfx::Transform::new(),
+			nodes.insert(i, NodeData {
+				id: i,
 				children: vec![],
+				transform: gfx::Transform::new(),
+				meshes: Some(vec![MeshData {
+					vertices: verts,
+					indices: m.indices,
+				}]),
 			});
 
 		}
@@ -466,8 +490,8 @@ impl Model {
 		};
 
 		return Ok(ModelData {
-			meshes: meshes,
 			nodes: nodes,
+			scene: scene,
 			img: img,
 			anims: hmap![],
 		});
@@ -477,32 +501,38 @@ impl Model {
 	/// create model with mesh data
 	pub fn from_data(ctx: &Ctx, data: ModelData) -> Result<Self> {
 
-		let meshdata = data.meshes;
-		let mut meshes = HashMap::with_capacity(meshdata.len());
-
-		let (min, max) = get_bound(&meshdata);
-
 		let tex = if let Some(img) = data.img {
 			Some(Texture::from_img(ctx, img)?)
 		} else {
 			None
 		};
 
-		for (id, m) in meshdata {
-			meshes.insert(id, Mesh {
-				gl_mesh: Rc::new(gl::Mesh::from2(&ctx.gl, &m.vertices, &m.indices)?),
-				data: m,
-			});
-		}
+		let anims = data.anims;
+		let scene = data.scene;
 
-		let center = (min + max) / 2.0;
+		let nodes = data.nodes.into_iter().map(|(id, node)| {
+			let meshes = node.meshes.map(|meshes| {
+				return meshes.into_iter().map(|m| {
+					return Mesh {
+						// TODO: no unwrap
+						gl_mesh: Rc::new(gl::Mesh::from2(&ctx.gl, &m.vertices, &m.indices).unwrap()),
+						data: m,
+					};
+				}).collect::<Vec<Mesh>>();
+			});
+			return (id, Node {
+				id: node.id,
+				children: node.children,
+				transform: node.transform,
+				meshes: meshes,
+			});
+		}).collect::<HashMap<usize, Node>>();
 
 		return Ok(Self {
-			meshes: meshes,
-			bound: (min, max),
-			anims: data.anims,
-			nodes: data.nodes,
-			center: center,
+			bound: get_bound(&nodes, &scene),
+			nodes: nodes,
+			anims: anims,
+			scene: scene,
 			texture: tex,
 		});
 
@@ -518,16 +548,16 @@ impl Model {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
-	pub fn get_mesh(&self, id: usize) -> Option<&Mesh> {
-		return self.meshes.get(&id);
+	pub fn get_node(&self, id: usize) -> Option<&Node> {
+		return self.nodes.get(&id);
 	}
 
 	pub fn get_anim(&self, id: usize) -> Option<&Anim> {
 		return self.anims.get(&id);
 	}
 
-	pub fn nodes(&self) -> &[usize] {
-		return &self.nodes;
+	pub fn scene(&self) -> &[usize] {
+		return &self.scene;
 	}
 
 	pub fn set_texture(&mut self, tex: Texture) {
@@ -538,36 +568,9 @@ impl Model {
 		return self.texture.as_ref();
 	}
 
-	// TODO
-	pub fn update(&mut self, f: impl Fn(&mut MeshData)) {
-
-		use gl::VertexLayout;
-
-// 		for m in &mut self.meshes {
-// 			f(&mut m.data);
-// 		}
-
-// 		for (i, m) in self.meshes.iter().enumerate() {
-
-// 			if let Some(mesh) = self.meshes.get(i) {
-
-// 				let mut queue = Vec::with_capacity(m.vertices.len() * Vertex3D::STRIDE);
-
-// 				for v in &m.vertices {
-// 					v.push(&mut queue);
-// 				}
-
-// 				mesh.vbuf().data(0, &queue);
-// 				mesh.ibuf().data(0, &m.indices);
-
-// 			}
-
-// 		}
-
-	}
-
 	pub fn center(&self) -> Vec3 {
-		return self.center;
+		let (min, max) = self.bound();
+		return (min + max) / 2.0
 	}
 
 	pub fn bound(&self) -> (Vec3, Vec3) {
@@ -576,29 +579,55 @@ impl Model {
 
 }
 
-fn get_bound(meshes: &HashMap<usize, MeshData>) -> (Vec3, Vec3) {
+fn get_bound_inner(
+	min: &mut Vec3,
+	max: &mut Vec3,
+	transform: Mat4,
+	nodes: &HashMap<usize, Node>,
+	scene: &[usize],
+) {
 
-	let mut min = vec3!();
-	let mut max = vec3!();
+	for id in scene {
 
-	for (_, m) in meshes {
+		if let Some(node) = nodes.get(id) {
 
-		let tr = m.transform.as_mat4();
+			let tr = transform * node.transform.as_mat4();
 
-		for v in &m.vertices {
+			if let Some(meshes) = &node.meshes {
 
-			let pos = tr * v.pos;
+				for m in meshes {
 
-			min.x = f32::min(pos.x, min.x);
-			min.y = f32::min(pos.y, min.y);
-			min.z = f32::min(pos.z, min.z);
-			max.x = f32::max(pos.x, max.x);
-			max.y = f32::max(pos.y, max.y);
-			max.z = f32::max(pos.z, max.z);
+					for v in &m.data.vertices {
+
+						let pos = tr * v.pos;
+
+						min.x = f32::min(pos.x, min.x);
+						min.y = f32::min(pos.y, min.y);
+						min.z = f32::min(pos.z, min.z);
+						max.x = f32::max(pos.x, max.x);
+						max.y = f32::max(pos.y, max.y);
+						max.z = f32::max(pos.z, max.z);
+
+					}
+
+				}
+
+			}
+
+			get_bound_inner(min, max, tr, nodes, &node.children);
 
 		}
 
 	}
+
+}
+
+fn get_bound(nodes: &HashMap<usize, Node>, scene: &[usize]) -> (Vec3, Vec3) {
+
+	let mut min = vec3!();
+	let mut max = vec3!();
+
+	get_bound_inner(&mut min, &mut max, mat4!(), nodes, scene);
 
 	return (min, max);
 

@@ -45,7 +45,7 @@ impl<'a> Drawable for Model<'a> {
 			gl::Primitive::Triangle
 		};
 
-		for t in self.model.nodes() {
+		for t in self.model.scene() {
 			draw_mesh(ctx, prim, &self.model, Mat4::identity(), *t);
 		}
 
@@ -57,42 +57,50 @@ impl<'a> Drawable for Model<'a> {
 
 fn draw_mesh(ctx: &mut Ctx, prim: gl::Primitive, model: &gfx::Model, ptr: Mat4, id: usize) {
 
-	if let Some(mesh) = model.get_mesh(id) {
+	if let Some(node) = model.get_node(id) {
 
-		let data = mesh.data();
-		let tex = model.texture().unwrap_or(&ctx.empty_tex);
-		let mut tr = data.transform.clone();
+		let mut tr = node.transform;
 
 		if let Some(anim) = model.get_anim(id) {
 
-// 			let t = ctx.time();
-// 			let tt = t - f32::floor(t / 0.5) * 0.5;
-// 			let (pos, rot, scale) = anim.get_transform(tt);
+			let t = ctx.time();
+			let tt = t - f32::floor(t / 0.5) * 0.5;
+			let (pos, rot, scale) = anim.get_transform(tt);
 
-// 			tr.pos = pos.unwrap_or(tr.pos);
-// 			tr.rot = rot.unwrap_or(tr.rot);
-// 			tr.scale = scale.unwrap_or(tr.scale);
+			tr.pos = pos.unwrap_or(tr.pos);
+			tr.rot = rot.unwrap_or(tr.rot);
+			tr.scale = scale.unwrap_or(tr.scale);
 
 		}
 
 		let tr = ptr * tr.as_mat4();
 
-		ctx.draw_calls += 1;
+		if let Some(meshes) = &node.meshes {
 
-		mesh.gl_mesh().draw(
-			prim,
-			&ctx.cur_pipeline_3d,
-			&gfx::Uniform3D {
-				proj: ctx.proj_3d,
-				view: ctx.view_3d,
-				model: ctx.transform * tr,
-				color: rgba!(1),
-				tex: tex.clone(),
-				custom: ctx.cur_custom_uniform_3d.clone(),
-			},
-		);
+			for mesh in meshes {
 
-		for c in &data.children {
+				let tex = model.texture().unwrap_or(&ctx.empty_tex);
+
+				ctx.draw_calls += 1;
+
+				mesh.gl_mesh().draw(
+					prim,
+					&ctx.cur_pipeline_3d,
+					&gfx::Uniform3D {
+						proj: ctx.proj_3d,
+						view: ctx.view_3d,
+						model: ctx.transform * tr,
+						color: rgba!(1),
+						tex: tex.clone(),
+						custom: ctx.cur_custom_uniform_3d.clone(),
+					},
+				);
+
+			}
+
+		}
+
+		for c in &node.children {
 			draw_mesh(ctx, prim, model, tr, *c);
 		}
 
