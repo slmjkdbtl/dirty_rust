@@ -122,7 +122,7 @@ pub struct Ctx {
 	pub(self) draw_calls_last: usize,
 	pub(self) draw_calls: usize,
 
-	pub(self) transform: gfx::Transform,
+	pub(self) transform: Mat4,
 
 }
 
@@ -329,7 +329,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		draw_calls: 0,
 		draw_calls_last: 0,
 
-		transform: gfx::Transform::new(),
+		transform: mat4!(),
 
 		conf: conf,
 
@@ -379,7 +379,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			})?;
 
-			ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut ctx| {
+			ctx.push(mat4!().s2(vec2!(ctx.conf.scale)), |mut ctx| {
 				ctx.draw(&shapes::canvas(&backbuffer))?;
 				return Ok(());
 			})?;

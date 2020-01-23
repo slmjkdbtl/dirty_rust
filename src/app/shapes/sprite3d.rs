@@ -56,13 +56,13 @@ impl<'a> Drawable for Sprite3D<'a> {
 		let scale = vec2!(self.tex.width(), self.tex.height()) * vec2!(self.quad.w, self.quad.h);
 		let offset = self.offset * -0.5;
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.s3(vec3!(scale.x, scale.y, 1.0))
 			.t3(vec3!(offset.x, offset.y, 0.0))
 		, |ctx| {
 
 			let shape = gfx::Quad3DShape {
-				transform: ctx.transform.as_mat4(),
+				transform: ctx.transform,
 				quad: self.quad,
 				color: self.color,
 				flip: self.flip,

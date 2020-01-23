@@ -98,7 +98,7 @@ impl Drawable for Line {
 			let len = (self.p2 - self.p1).mag();
 			let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
 
-			ctx.push(&gfx::t()
+			ctx.push(mat4!()
 
 				.t2((self.p1 + self.p2) * 0.5)
 				.r(rot)

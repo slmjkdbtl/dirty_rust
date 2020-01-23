@@ -105,7 +105,7 @@ impl Widget for CheckBox {
 		}
 
 		ctx.draw_t(
-			&gfx::t()
+			mat4!()
 				.t2(vec2!(fh + 9.0, -1.0)),
 			&shapes::text(&self.text)
 				.size(fh)

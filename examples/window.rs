@@ -32,7 +32,7 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_t(&gfx::t()
+		ctx.draw_t(mat4!()
 			.t3(vec3!(0, 0, -6))
 			.ry(ctx.time())
 			.rz(ctx.time())

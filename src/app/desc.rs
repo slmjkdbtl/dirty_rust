@@ -180,7 +180,7 @@ impl gl::UniformLayout for Uniform2D {
 pub(super) struct Uniform3D {
 	pub proj: Mat4,
 	pub view: Mat4,
-	pub model: Transform,
+	pub model: Mat4,
 	pub color: Color,
 	pub tex: Texture,
 	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,

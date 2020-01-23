@@ -29,14 +29,17 @@ impl Default for Material {
 pub struct MeshData {
 	pub vertices: Vec<Vertex3D>,
 	pub indices: Vec<u32>,
-	pub transform: gfx::Transform,
+	pub transform: Transform,
+	pub children: Vec<usize>,
 }
 
 /// model data
 #[derive(Clone)]
 pub struct ModelData {
-	meshes: Vec<MeshData>,
+	meshes: HashMap<usize, MeshData>,
+	nodes: Vec<usize>,
 	img: Option<img::Image>,
+	anims: HashMap<usize, Anim>,
 }
 
 #[derive(Clone)]
@@ -57,26 +60,26 @@ impl Mesh {
 /// 3d model
 #[derive(Clone)]
 pub struct Model {
-	meshes: Vec<Mesh>,
+	meshes: HashMap<usize, Mesh>,
+	anims: HashMap<usize, Anim>,
 	bound: (Vec3, Vec3),
 	center: Vec3,
+	nodes: Vec<usize>,
 	texture: Option<Texture>,
 }
 
-fn handle_gltf_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Transform, node: gltf::Node) {
-
-	let mat = node.transform().matrix();
-
-	let transform = gfx::Transform::from_mat4(mat4!(
-		mat[0][0], mat[0][1], mat[0][2], mat[0][3],
-		mat[1][0], mat[1][1], mat[1][2], mat[1][3],
-		mat[2][0], mat[2][1], mat[2][2], mat[2][3],
-		mat[3][0], mat[3][1], mat[3][2], mat[3][3],
-	));
-
-	let transform = ptransform * transform;
+fn read_gltf_node(bin: &[u8], meshes: &mut HashMap<usize, MeshData>, node: gltf::Node) {
 
 	if let Some(mesh) = node.mesh() {
+
+		let id = node.index();
+		let (pos, rot, scale) = node.transform().decomposed();
+
+		let transform = Transform {
+			pos: vec3!(pos[0], pos[1], pos[2]),
+			rot: vec4!(rot[0], rot[1], rot[2], rot[3]),
+			scale: vec3!(scale[0], scale[1], scale[2]),
+		};
 
 		for prim in mesh.primitives() {
 
@@ -151,10 +154,11 @@ fn handle_gltf_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Tra
 
 			}
 
-			meshes.push(MeshData {
+			meshes.insert(id, MeshData {
 				vertices: verts,
 				indices: indices,
-				transform: transform,
+				transform: transform.clone(),
+				children: node.children().map(|c| c.index()).collect(),
 			});
 
 		}
@@ -162,7 +166,91 @@ fn handle_gltf_node(bin: &[u8], meshes: &mut Vec<MeshData>, ptransform: gfx::Tra
 	}
 
 	for cnode in node.children() {
-		handle_gltf_node(bin, meshes, transform, cnode);
+		read_gltf_node(bin, meshes, cnode);
+	}
+
+}
+
+type Track<T> = Vec<(f32, T)>;
+
+#[derive(Clone, Debug)]
+pub struct Anim {
+	pos: Option<Track<Vec3>>,
+	rot: Option<Track<Vec4>>,
+	scale: Option<Track<Vec3>>,
+}
+
+fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
+
+	if let Some((k, _)) = track.first() {
+		if *k > t {
+			return None;
+		}
+	}
+
+	if let Some((k, val)) = track.last() {
+		if *k <= t {
+			return Some(*val);
+		}
+	}
+
+	for i in 0..track.len() - 1 {
+
+		let (k1, pos1) = track[i];
+		let (k2, pos2) = track[i + 1];
+
+		if t >= k1 && t <= k2 {
+			let dt = t - k1;
+			return Some(pos1.lerp(pos2, dt));
+		}
+
+	}
+
+	return None;
+
+}
+
+impl Anim {
+
+	pub fn len(&self) -> f32 {
+
+		let t1 = self.pos
+			.as_ref()
+			.map(|track| track.last().map(|(t, _)| *t))
+			.flatten()
+			.unwrap_or(0.0);
+
+		let t2 = self.rot.as_ref()
+			.map(|track| track.last().map(|(t, _)| *t))
+			.flatten()
+			.unwrap_or(0.0);
+
+		let t3 = self.scale.as_ref()
+			.map(|track| track.last().map(|(t, _)| *t))
+			.flatten()
+			.unwrap_or(0.0);
+
+		return t1.max(t2).max(t3);
+
+	}
+
+	pub fn get_transform(&self, t: f32) -> (Option<Vec3>, Option<Vec4>, Option<Vec3>) {
+
+		return (
+			self.pos
+				.as_ref()
+				.map(|track| get_track_val(&track, t))
+				.flatten(),
+			self.rot
+				.as_ref()
+				.map(|track| get_track_val(&track, t))
+				.flatten(),
+			self.scale
+				.as_ref()
+				.map(|track| get_track_val(&track, t))
+				.flatten(),
+		);
+
 	}
 
 }
@@ -174,17 +262,19 @@ impl Model {
 		use gltf::Glb;
 		use gltf::Gltf;
 
+		// init
 		let glb = Glb::from_slice(bytes)?;
 		let document = Gltf::from_slice(&glb.json)?;
 		let bin = glb.bin.ok_or_else(|| Error::Gltf(format!("no bin")))?;
 
+		// image
 		use gltf::image::Source;
 
 		let mut img = None;
 
-		for image in document.images() {
+		for i in document.images() {
 
-			match image.source() {
+			match i.source() {
 
 				Source::View { view, .. } => {
 
@@ -202,17 +292,100 @@ impl Model {
 
 		}
 
-		let mut meshes = Vec::with_capacity(document.meshes().len());
+		// anims
+		let mut anims: HashMap<usize, Anim> = hmap![];
+
+		for a in document.animations() {
+
+			for c in a.channels() {
+
+				let reader = c.reader(|_| Some(&bin));
+				let node_id = c.target().node().index();
+				let sampler = c.sampler();
+
+				let mut anim = anims.entry(node_id).or_insert(Anim {
+					pos: None,
+					rot: None,
+					scale: None,
+				});
+
+				// TODO
+				use gltf::animation::Interpolation;
+
+				match sampler.interpolation() {
+					Interpolation::Linear => {},
+					Interpolation::Step => {},
+					Interpolation::CubicSpline => {},
+				};
+
+				let times: Vec<f32> = reader
+					.read_inputs()
+					.ok_or(Error::Gltf(format!("failed to read anim")))?
+					.collect();
+
+				use gltf::animation::util::ReadOutputs;
+
+				match reader
+					.read_outputs()
+					.ok_or(Error::Gltf(format!("failed to read anim")))? {
+
+					ReadOutputs::Translations(translations) => {
+						let mut values = Vec::with_capacity(times.len());
+						for (i, v) in translations.enumerate() {
+							let t = times
+								.get(i)
+								.ok_or(Error::Gltf(format!("failed to read anim")))?;
+							values.push((*t, vec3!(v[0], v[1], v[2])));
+						}
+						anim.pos = Some(values);
+					}
+
+					ReadOutputs::Rotations(rotations) => {
+						let mut values = Vec::with_capacity(times.len());
+						for (i, v) in rotations.into_f32().enumerate() {
+							let t = times
+								.get(i)
+								.ok_or(Error::Gltf(format!("failed to read anim")))?;
+							values.push((*t, vec4!(v[0], v[1], v[2], v[3])));
+						}
+						anim.rot = Some(values);
+					}
+
+					ReadOutputs::Scales(scales) => {
+						let mut values = Vec::with_capacity(times.len());
+						for (i, v) in scales.enumerate() {
+							let t = times
+								.get(i)
+								.ok_or(Error::Gltf(format!("failed to read anim")))?;
+							values.push((*t, vec3!(v[0], v[1], v[2])));
+						}
+						anim.scale = Some(values);
+					}
+
+					_ => {}
+
+				};
+
+			}
+
+		}
+
+		// mesh
+		let mut meshes = HashMap::with_capacity(document.meshes().len());
+		let mut nodes = vec![];
 
 		for scene in document.scenes() {
 			for node in scene.nodes() {
-				handle_gltf_node(&bin, &mut meshes, gfx::Transform::new(), node);
+				nodes.push(node.index());
+				read_gltf_node(&bin, &mut meshes, node);
 			}
 		}
 
 		return Ok(ModelData {
 			meshes: meshes,
+			nodes: nodes,
 			img: img,
+			anims: anims,
 		});
 
 	}
@@ -226,9 +399,12 @@ impl Model {
 				.unwrap_or(Ok((vec![], hmap![])));
 		})?;
 
-		let mut meshes = Vec::with_capacity(models.len());
+		let mut nodes = Vec::with_capacity(models.len());
+		let mut meshes = HashMap::with_capacity(models.len());
 
-		for m in models {
+		for (i, m) in models.into_iter().enumerate() {
+
+			nodes.push(i);
 
 			let m = m.mesh;
 			let positions = m.positions
@@ -274,10 +450,11 @@ impl Model {
 
 			}
 
-			meshes.push(MeshData {
+			meshes.insert(i, MeshData {
 				vertices: verts,
 				indices: m.indices,
 				transform: gfx::Transform::new(),
+				children: vec![],
 			});
 
 		}
@@ -290,7 +467,9 @@ impl Model {
 
 		return Ok(ModelData {
 			meshes: meshes,
+			nodes: nodes,
 			img: img,
+			anims: hmap![],
 		});
 
 	}
@@ -299,7 +478,7 @@ impl Model {
 	pub fn from_data(ctx: &Ctx, data: ModelData) -> Result<Self> {
 
 		let meshdata = data.meshes;
-		let mut meshes = Vec::with_capacity(meshdata.len());
+		let mut meshes = HashMap::with_capacity(meshdata.len());
 
 		let (min, max) = get_bound(&meshdata);
 
@@ -309,8 +488,8 @@ impl Model {
 			None
 		};
 
-		for m in meshdata {
-			meshes.push(Mesh {
+		for (id, m) in meshdata {
+			meshes.insert(id, Mesh {
 				gl_mesh: Rc::new(gl::Mesh::from2(&ctx.gl, &m.vertices, &m.indices)?),
 				data: m,
 			});
@@ -321,6 +500,8 @@ impl Model {
 		return Ok(Self {
 			meshes: meshes,
 			bound: (min, max),
+			anims: data.anims,
+			nodes: data.nodes,
 			center: center,
 			texture: tex,
 		});
@@ -337,8 +518,16 @@ impl Model {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
-	pub fn meshes(&self) -> &[Mesh] {
-		return &self.meshes;
+	pub fn get_mesh(&self, id: usize) -> Option<&Mesh> {
+		return self.meshes.get(&id);
+	}
+
+	pub fn get_anim(&self, id: usize) -> Option<&Anim> {
+		return self.anims.get(&id);
+	}
+
+	pub fn nodes(&self) -> &[usize] {
+		return &self.nodes;
 	}
 
 	pub fn set_texture(&mut self, tex: Texture) {
@@ -354,9 +543,9 @@ impl Model {
 
 		use gl::VertexLayout;
 
-		for m in &mut self.meshes {
-			f(&mut m.data);
-		}
+// 		for m in &mut self.meshes {
+// 			f(&mut m.data);
+// 		}
 
 // 		for (i, m) in self.meshes.iter().enumerate() {
 
@@ -387,17 +576,18 @@ impl Model {
 
 }
 
-fn get_bound(meshes: &[MeshData]) -> (Vec3, Vec3) {
+fn get_bound(meshes: &HashMap<usize, MeshData>) -> (Vec3, Vec3) {
 
 	let mut min = vec3!();
 	let mut max = vec3!();
 
-	for m in meshes {
+	for (_, m) in meshes {
+
+		let tr = m.transform.as_mat4();
 
 		for v in &m.vertices {
 
-			// TODO: is this really necessary??
-			let pos = m.transform * v.pos;
+			let pos = tr * v.pos;
 
 			min.x = f32::min(pos.x, min.x);
 			min.y = f32::min(pos.y, min.y);
