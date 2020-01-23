@@ -5,9 +5,8 @@
 use std::mem;
 use std::f32::consts::PI;
 
-use crate::Result;
-use crate::Error;
-use super::math::*;
+use crate::*;
+use crate::math::*;
 use super::gfx;
 use super::app::Ctx;
 use super::gl;

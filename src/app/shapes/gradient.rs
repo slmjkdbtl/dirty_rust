@@ -45,7 +45,7 @@ impl Drawable for Gradient {
 		let matrix = ctx.transform
 			.t2((self.p1 + self.p2) * 0.5)
 			.r(rot - 90f32.to_radians())
-			.as_mat4();
+			;
 
 		let w = self.width;
 		let h = Vec2::dis(self.p1, self.p2);

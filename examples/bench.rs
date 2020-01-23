@@ -52,7 +52,7 @@ impl app::State for Game {
 		let h = ctx.gheight() as i32;
 
 		for _ in 0..self.count {
-			ctx.push(&gfx::t()
+			ctx.push(mat4!()
 				.t2(vec2!(rand(-w, w) as f32 * 0.5, rand(-h, h) as f32 * 0.5))
 			, |ctx| {
 				ctx.draw(&shapes::sprite(&self.tex))?;
@@ -60,7 +60,7 @@ impl app::State for Game {
 			})?;
 		}
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.s2(vec2!(6))
 		, |ctx| {
 			let fps = ctx.fps();
@@ -73,7 +73,7 @@ impl app::State for Game {
 			return Ok(());
 		})?;
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.ty(-64.0)
 			.s2(vec2!(1.5))
 		, |ctx| {

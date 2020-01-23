@@ -200,7 +200,7 @@ impl Widget for Input {
 		}
 
 		ctx.draw_t(
-			&gfx::t().t2(vec2!(6, -h - 6.0)),
+			mat4!().t2(vec2!(6, -h - 6.0)),
 			&text,
 		)?;
 

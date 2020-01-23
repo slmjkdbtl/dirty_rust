@@ -4,9 +4,8 @@ use super::*;
 
 #[derive(Clone)]
 pub struct Model<'a> {
-	mesh: &'a gfx::Model,
+	model: &'a gfx::Model,
 	color: Color,
-	draw_bound: bool,
 	draw_wireframe: bool,
 }
 
@@ -17,9 +16,8 @@ pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
 impl<'a> Model<'a> {
 	pub fn new(m: &'a gfx::Model) -> Self {
 		return Self {
-			mesh: m,
+			model: m,
 			color: rgba!(1),
-			draw_bound: false,
 			draw_wireframe: false,
 		};
 	}
@@ -29,10 +27,6 @@ impl<'a> Model<'a> {
 	}
 	pub fn opacity(mut self, a: f32) -> Self {
 		self.color.a = a;
-		return self;
-	}
-	pub fn draw_bound(mut self, b: bool) -> Self {
-		self.draw_bound = b;
 		return self;
 	}
 	pub fn draw_wireframe(mut self, b: bool) -> Self {
@@ -45,39 +39,62 @@ impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_calls += 1;
-
-		let tex = self.mesh.texture().unwrap_or(&ctx.empty_tex);
-
 		let prim = if self.draw_wireframe {
 			gl::Primitive::Line
 		} else {
 			gl::Primitive::Triangle
 		};
 
-		for m in self.mesh.meshes() {
-			let data = m.data();
-			m.gl_mesh().draw(
-				prim,
-				&ctx.cur_pipeline_3d,
-				&gfx::Uniform3D {
-					proj: ctx.proj_3d,
-					view: ctx.view_3d,
-					model: ctx.transform * data.transform,
-					// TODO: ?
-					color: self.color,
-					tex: tex.clone(),
-					custom: ctx.cur_custom_uniform_3d.clone(),
-				},
-			);
-		}
-
-		if self.draw_bound {
-			let (min, max) = self.mesh.bound();
-			ctx.draw(&rect3d(min, max))?;
+		for t in self.model.nodes() {
+			draw_mesh(ctx, prim, &self.model, Mat4::identity(), *t);
 		}
 
 		return Ok(());
+
+	}
+
+}
+
+fn draw_mesh(ctx: &mut Ctx, prim: gl::Primitive, model: &gfx::Model, ptr: Mat4, id: usize) {
+
+	if let Some(mesh) = model.get_mesh(id) {
+
+		let data = mesh.data();
+		let tex = model.texture().unwrap_or(&ctx.empty_tex);
+		let mut tr = data.transform.clone();
+
+		if let Some(anim) = model.get_anim(id) {
+
+// 			let t = ctx.time();
+// 			let tt = t - f32::floor(t / 0.5) * 0.5;
+// 			let (pos, rot, scale) = anim.get_transform(tt);
+
+// 			tr.pos = pos.unwrap_or(tr.pos);
+// 			tr.rot = rot.unwrap_or(tr.rot);
+// 			tr.scale = scale.unwrap_or(tr.scale);
+
+		}
+
+		let tr = ptr * tr.as_mat4();
+
+		ctx.draw_calls += 1;
+
+		mesh.gl_mesh().draw(
+			prim,
+			&ctx.cur_pipeline_3d,
+			&gfx::Uniform3D {
+				proj: ctx.proj_3d,
+				view: ctx.view_3d,
+				model: ctx.transform * tr,
+				color: rgba!(1),
+				tex: tex.clone(),
+				custom: ctx.cur_custom_uniform_3d.clone(),
+			},
+		);
+
+		for c in &data.children {
+			draw_mesh(ctx, prim, model, tr, *c);
+		}
 
 	}
 

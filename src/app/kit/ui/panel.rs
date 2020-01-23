@@ -134,7 +134,7 @@ impl Panel {
 
 		let theme = &self.theme;
 
-		ctx.push(&gfx::t().t2(self.pos), |ctx| {
+		ctx.push(mat4!().t2(self.pos), |ctx| {
 
 			ctx.draw(
 				&shapes::rect(vec2!(0), vec2!(self.width, -self.height))
@@ -153,20 +153,20 @@ impl Panel {
 			)?;
 
 			ctx.draw_t(
-				&gfx::t().t2(vec2!(theme.padding.x, -theme.padding.y / 2.0)),
+				mat4!().t2(vec2!(theme.padding.x, -theme.padding.y / 2.0)),
 				&shapes::text(&self.title)
 					.size(theme.font_size)
 					.color(theme.title_color)
 					.align(gfx::Origin::TopLeft)
 			)?;
 
-			ctx.push(&gfx::t().t2(vec2!(theme.padding.x, -theme.padding.y - bar_height)), |ctx| {
+			ctx.push(mat4!().t2(vec2!(theme.padding.x, -theme.padding.y - bar_height)), |ctx| {
 
 				let mut y = 0.0;
 
 				for w in widgets {
 
-					ctx.push(&gfx::t().t2(vec2!(0, -y)), |ctx| {
+					ctx.push(mat4!().t2(vec2!(0, -y)), |ctx| {
 
 						let pctx = PanelCtx {
 							width: self.width,

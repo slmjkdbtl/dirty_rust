@@ -46,11 +46,11 @@ impl Ctx {
 		return self.draw_calls_last;
 	}
 
-	pub fn push(&mut self, t: &Transform, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn push(&mut self, t: Mat4, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let ot = self.transform;
 
-		self.transform = ot * *t;
+		self.transform = ot * t;
 		f(self)?;
 		self.transform = ot;
 
@@ -62,7 +62,7 @@ impl Ctx {
 
 		let ot = self.transform;
 
-		self.transform = Transform::new();
+		self.transform = mat4!();
 		f(self)?;
 		self.transform = ot;
 
@@ -74,7 +74,7 @@ impl Ctx {
 		return shape.draw(self);
 	}
 
-	pub fn draw_t(&mut self, t: &Transform, shape: &impl Drawable) -> Result<()> {
+	pub fn draw_t(&mut self, t: Mat4, shape: &impl Drawable) -> Result<()> {
 		return self.push(t, |ctx| {
 			return ctx.draw(shape);
 		});
@@ -101,7 +101,7 @@ impl Ctx {
 			far: FAR_2D,
 		}.as_mat4();
 
-		self.transform = Transform::new();
+		self.transform = mat4!();
 
 		self.gl.viewport(0, 0, (canvas.width() as f32 * dpi) as i32, (canvas.height() as f32 * dpi) as i32);
 
@@ -276,7 +276,7 @@ impl Ctx {
 
 	}
 
-	pub fn transform(&self) -> Transform {
+	pub fn transform(&self) -> Mat4 {
 		return self.transform;
 	}
 
@@ -298,7 +298,7 @@ pub(super) fn begin(ctx: &mut Ctx) {
 pub(super) fn end(ctx: &mut Ctx) {
 
 	flush(ctx);
-	ctx.transform = Transform::new();
+	ctx.transform = mat4!();
 	ctx.draw_calls += ctx.renderer_2d.draw_count();
 	ctx.draw_calls += ctx.renderer_3d.draw_count();
 	ctx.renderer_2d.clear();

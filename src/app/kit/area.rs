@@ -34,10 +34,10 @@ impl Area {
 		return Self::new(&s.verts());
 	}
 
-	pub fn apply(&mut self, t: &gfx::Transform) {
+	pub fn apply(&mut self, t: Mat4) {
 		self.gverts = self.verts
 			.iter()
-			.map(|p| *t * *p)
+			.map(|p| t * *p)
 			.collect();
 	}
 

@@ -97,7 +97,7 @@ impl From<&image::Rgba<u8>> for Color {
 
 impl From<Color> for image::Rgba<u8> {
 	fn from(c: Color) -> image::Rgba<u8> {
-		return image::Rgba(c.to_rgba());
+		return image::Rgba(c.as_u8());
 	}
 }
 

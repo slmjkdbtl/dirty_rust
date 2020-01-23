@@ -167,7 +167,7 @@ impl Drawable for Circle {
 			pts.push(self.center);
 		}
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.t2(self.center)
 		, |ctx| {
 

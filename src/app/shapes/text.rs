@@ -344,7 +344,7 @@ impl<'a> Drawable for RenderedText<'a> {
 		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
 		let offset_pos = -offset * vec2!(self.width, self.height);
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.t2(offset_pos)
 		, |ctx| {
 
@@ -361,7 +361,7 @@ impl<'a> Drawable for RenderedText<'a> {
 						let italic = -self.italic.unwrap_or(0.0);
 						let bold = self.bold.unwrap_or(0.0) + 1.0;
 
-						ctx.draw_t(&gfx::t()
+						ctx.draw_t(mat4!()
 							.t2(vec2!(x + ox, y as f32 * gh))
 							.s2(vec2!(scale))
 							.skx(italic)

@@ -33,7 +33,7 @@ impl<'a> Drawable for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.s2(vec2!(1.0 / ctx.dpi() as f32))
 		, |ctx| {
 			return ctx.draw(

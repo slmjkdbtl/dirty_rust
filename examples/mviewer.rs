@@ -1,7 +1,6 @@
 // wengwengweng
 
 // TODO: handle load failure
-// TODO: lighting
 
 #![feature(clamp)]
 
@@ -28,6 +27,23 @@ struct Viewer {
 	draw_wireframe: bool,
 	draw_bound: bool,
 	helping: bool,
+	pix_shader: gfx::Shader2D<PixUniform>,
+	canvas: gfx::Canvas,
+}
+
+#[derive(Clone)]
+struct PixUniform {
+	resolution: Vec2,
+	size: f32,
+}
+
+impl gfx::Uniform for PixUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hmap![
+			"u_resolution" => &self.resolution,
+			"u_size" => &self.size,
+		];
+	}
 }
 
 fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
@@ -135,6 +151,8 @@ impl app::State for Viewer {
 			draw_bound: false,
 			helping: false,
 			scale: 0.0,
+			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
+			canvas: gfx::Canvas::new(ctx, ctx.gwidth() as i32, ctx.gheight() as i32)?,
 		});
 
 	}
@@ -175,7 +193,7 @@ impl app::State for Viewer {
 						let orig_scale = 480.0 / model.size;
 
 						self.scale += s.y * (1.0 / model.size);
-						self.scale = self.scale.clamp(orig_scale * 0.2, orig_scale * 3.2);
+						self.scale = self.scale.clamp(orig_scale * 0.1, orig_scale * 3.2);
 
 					}
 
@@ -225,6 +243,8 @@ impl app::State for Viewer {
 
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+
 		if let Some(data) = self.loader.poll() {
 			if let Ok(data) = data {
 				if let Ok(model) = gfx::Model::from_data(ctx, data) {
@@ -249,12 +269,12 @@ impl app::State for Viewer {
 
 			if ctx.key_down(Key::W) {
 				self.resetting = false;
-				self.pos.y += move_speed * ctx.dt();
+				self.pos.y -= move_speed * ctx.dt();
 			}
 
 			if ctx.key_down(Key::S) {
 				self.resetting = false;
-				self.pos.y -= move_speed * ctx.dt();
+				self.pos.y += move_speed * ctx.dt();
 			}
 
 			if self.resetting {
@@ -272,51 +292,66 @@ impl app::State for Viewer {
 
 		}
 
+		ctx.draw_on(&self.canvas, |ctx| {
+
+			ctx.clear();
+
+			if let Some(model) = &self.model {
+
+				let center = model.model.center();
+
+				ctx.use_cam(&self.cam, |ctx| {
+
+					ctx.push(mat4!()
+						.t2(self.pos)
+						.s3(vec3!(self.scale))
+						.ry(self.rot.x.to_radians())
+						.rx(self.rot.y.to_radians())
+						.t3(-center)
+					, |ctx| {
+
+						ctx.draw_3d_with(&self.shader, &(), |ctx| {
+							ctx.draw(
+								&shapes::model(&model.model)
+									.draw_wireframe(self.draw_wireframe)
+							)?;
+							return Ok(());
+						})?;
+
+						if self.draw_bound {
+							let (min, max) = model.model.bound();
+							ctx.draw(&shapes::rect3d(min, max))?;
+						}
+
+						return Ok(());
+
+					})?;
+
+					return Ok(());
+
+				})?;
+
+			}
+
+			return Ok(());
+
+		})?;
+
 		return Ok(());
 
 	}
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		if let Some(model) = &self.model {
+		ctx.draw_2d_with(&self.pix_shader, &PixUniform {
+			resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+			size: 2.0,
+		}, |ctx| {
+			ctx.draw(&shapes::canvas(&self.canvas))?;
+			return Ok(());
+		})?;
 
-			let center = model.model.center();
-
-			ctx.use_cam(&self.cam, |ctx| {
-
-				ctx.push(&gfx::t()
-// 					.t2(vec2!(ctx.time() * 120.0))
-					.t2(self.pos)
-					.s3(vec3!(self.scale))
-					.ry(self.rot.x.to_radians())
-					.rx(self.rot.y.to_radians())
-					.t3(-center)
-				, |ctx| {
-
-					ctx.draw_3d_with(&self.shader, &(), |ctx| {
-						return ctx.draw(
-							&shapes::model(&model.model)
-								.draw_wireframe(self.draw_wireframe)
-								.draw_bound(self.draw_bound)
-						);
-					})?;
-
-					if self.draw_bound {
-						let (min, max) = model.model.bound();
-						ctx.draw(&shapes::rect3d(min, max))?;
-					}
-
-					return Ok(());
-
-				})?;
-
-				return Ok(());
-
-			})?;
-
-		}
-
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
 			.tz(320.0)
 		, |ctx| {
@@ -335,7 +370,7 @@ impl app::State for Viewer {
 						.align(gfx::Origin::TopLeft)
 				)?;
 
-				ctx.push(&gfx::t()
+				ctx.push(mat4!()
 					.ty(-22.0)
 					.s2(vec2!(0.8))
 				, |ctx| {
@@ -355,7 +390,7 @@ impl app::State for Viewer {
 
 		})?;
 
-		ctx.push(&gfx::t()
+		ctx.push(mat4!()
 			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
 			.s2(vec2!(0.8))
 			.tz(320.0)
@@ -379,7 +414,7 @@ impl app::State for Viewer {
 					.rev()
 					.enumerate()
 				{
-					ctx.draw_t(&gfx::t()
+					ctx.draw_t(mat4!()
 						.t2(vec2!(0, i as i32 * 18))
 					, &shapes::text(m)
 						.align(gfx::Origin::BottomLeft)

@@ -59,7 +59,7 @@ impl<'a> gfx::Drawable for TexFill<'a> {
 		let pw = self.p2.x - self.p1.x;
 		let ph = self.p2.y - self.p1.y;
 
-		ctx.push(&gfx::t().t2(self.p1), |ctx| {
+		ctx.push(mat4!().t2(self.p1), |ctx| {
 
 			match self.mode {
 
@@ -89,7 +89,7 @@ impl<'a> gfx::Drawable for TexFill<'a> {
 							};
 
 							ctx.draw_t(
-								&gfx::t()
+								mat4!()
 									.t2(vec2!(i * tw, j * th))
 									,
 								&sprite(&self.tex)

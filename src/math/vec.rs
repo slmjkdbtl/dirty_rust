@@ -312,7 +312,7 @@ impl Color {
 
 	}
 
-	pub fn to_rgba(&self) -> [u8; 4] {
+	pub fn as_u8(&self) -> [u8; 4] {
 
 		return [
 			(self.r * 255.0) as u8,

@@ -82,7 +82,7 @@ impl<'a> Drawable for Sprite<'a> {
 			;
 
 		let shape = gfx::QuadShape {
-			transform: t.as_mat4(),
+			transform: t,
 			quad: self.quad,
 			color: self.color,
 			flip: self.flip,
