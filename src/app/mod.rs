@@ -54,8 +54,8 @@ use input::GamepadID;
 use input::GamepadButton;
 
 const DRAW_COUNT: usize = 65536;
-const NEAR_2D: f32 = -2048.0;
-const FAR_2D: f32 = 2048.0;
+const NEAR_2D: f32 = -1024.0;
+const FAR_2D: f32 = 1024.0;
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -68,6 +68,7 @@ pub struct Ctx {
 	pub(self) dt: Time,
 	pub(self) time: Time,
 	pub(self) fps_counter: FPSCounter,
+	pub(self) last_frame_time: Instant,
 
 	// input
 	pub(self) key_states: HashMap<Key, ButtonState>,
@@ -131,26 +132,26 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	#[cfg(not(web))]
 	let (windowed_ctx, mut events_loop, gl) =  {
 
-		let events_loop = glutin::EventsLoop::new();
+		let events_loop = glutin::event_loop::EventLoop::new();
 
-		let mut window_builder = glutin::WindowBuilder::new()
+		let mut window_builder = glutin::window::WindowBuilder::new()
 			.with_title(conf.title.to_owned())
 			.with_resizable(conf.resizable)
-			.with_transparency(conf.transparent)
+// 			.with_transparency(conf.transparent)
 			.with_decorations(!conf.borderless)
 			.with_always_on_top(conf.always_on_top)
-			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-			.with_multitouch()
+			.with_inner_size(LogicalSize::new(conf.width as f64, conf.height as f64))
+// 			.with_multitouch()
 			;
 
-		if conf.fullscreen {
-			window_builder = window_builder
-				.with_fullscreen(Some(events_loop.get_primary_monitor()));
-		}
+// 		if conf.fullscreen {
+// 			window_builder = window_builder
+// 				.with_fullscreen(Some(events_loop.get_primary_monitor()));
+// 		}
 
 		#[cfg(target_os = "macos")] {
 
-			use glutin::os::macos::WindowBuilderExt;
+			use glutin::platform::macos::WindowBuilderExtMacOS;
 
 			window_builder = window_builder
 				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
@@ -231,8 +232,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
-// 	gl.enable(gl::Capability::CullFace);
-// 	gl.cull_face(gl::Face::Back);
+//	gl.enable(gl::Capability::CullFace);
+//	gl.cull_face(gl::Face::Back);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(c.r, c.g, c.b, c.a);
@@ -278,6 +279,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		dt: Time::new(0.0),
 		time: Time::new(0.0),
 		fps_counter: FPSCounter::new(),
+		last_frame_time: Instant::now(),
 
 		// input
 		key_states: HashMap::new(),
@@ -360,57 +362,302 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	});
 
-	#[cfg(not(web))] {
+	#[cfg(not(web))]
+	events_loop.run(move |event, _, flow| {
 
-		'run: loop {
+		use glutin::event_loop::ControlFlow;
+		use glutin::event::WindowEvent as WEvent;
+		use glutin::event::DeviceEvent as DEvent;
+		use glutin::event::TouchPhase;
+		use glutin::event::ElementState;
+		use input::*;
 
-			let start_time = Instant::now();
+		let mut res: Result<()> = Ok(());
 
-			input::poll(&mut ctx, &mut events_loop, &mut s)?;
-			s.update(&mut ctx)?;
-			gfx::begin(&mut ctx);
+		*flow = ControlFlow::Poll;
 
-			ctx.draw_on(&backbuffer, |mut ctx| {
+		match event {
 
-				ctx.clear();
-				s.draw(&mut ctx)?;
+			glutin::event::Event::LoopDestroyed => return,
 
-				return Ok(());
+			glutin::event::Event::WindowEvent { ref event, .. } => match event {
+				WEvent::CloseRequested => {
+					*flow = ControlFlow::Exit;
+				},
+				WEvent::KeyboardInput { input, .. } => {
 
-			})?;
+					if let Some(kc) = input.virtual_keycode {
 
-			ctx.push(mat4!().s2(vec2!(ctx.conf.scale)), |mut ctx| {
-				ctx.draw(&shapes::canvas(&backbuffer))?;
-				return Ok(());
-			})?;
+						if let Some(key) = Key::from_extern(kc) {
 
-			gfx::end(&mut ctx);
-			window::swap(&ctx)?;
+							match input.state {
 
-			if ctx.quit {
-				break 'run;
-			}
+								ElementState::Pressed => {
 
-			if let Some(fps_cap) = ctx.conf.fps_cap {
+									s.event(&mut ctx, &Event::KeyPressRepeat(key));
 
-				let real_dt = start_time.elapsed().as_millis();
-				let expected_dt = (1000.0 / fps_cap as f32) as u128;
+									if ctx.key_up(key) || ctx.key_released(key) {
+										ctx.key_states.insert(key, ButtonState::Pressed);
+										s.event(&mut ctx, &Event::KeyPress(key));
+									}
 
-				if real_dt < expected_dt {
-					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+								},
+
+								ElementState::Released => {
+									if ctx.key_down(key) || ctx.key_pressed(key) {
+										ctx.key_states.insert(key, ButtonState::Released);
+										s.event(&mut ctx, &Event::KeyRelease(key));
+									}
+								},
+
+							}
+
+						}
+
+					}
+
+				},
+
+				WEvent::MouseInput { button, state, .. } => {
+
+					if let Some(button) = Mouse::from_extern(*button) {
+
+						match state {
+
+							ElementState::Pressed => {
+								if ctx.mouse_up(button) || ctx.mouse_released(button) {
+									ctx.mouse_states.insert(button, ButtonState::Pressed);
+									s.event(&mut ctx, &Event::MousePress(button));
+								}
+							},
+							ElementState::Released => {
+								if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+									ctx.mouse_states.insert(button, ButtonState::Released);
+									s.event(&mut ctx, &Event::MouseRelease(button));
+								}
+							},
+
+						}
+
+					}
+
+				},
+
+				WEvent::CursorMoved { position, .. } => {
+
+					let mpos: Vec2 = (*position).into();
+					let (vpos, vw, vh) = ctx.cur_viewport();
+					let (gw, gh) = (ctx.gwidth(), ctx.gheight());
+					let mpos = mpos - vpos;
+					let mpos = mpos * vec2!(gw / vw, gh / vh);
+					let mpos = vec2!(mpos.x - gw / 2.0, gh / 2.0 - mpos.y);
+
+					ctx.mouse_pos = mpos;
+
+				},
+
+				WEvent::MouseWheel { delta, phase, .. } => {
+
+					match phase {
+						TouchPhase::Started => {
+							ctx.scroll_phase = ScrollPhase::Solid;
+						},
+						TouchPhase::Ended => {
+							ctx.scroll_phase = ScrollPhase::Trailing;
+						},
+						_ => {},
+					}
+
+					let p = ctx.scroll_phase;
+					s.event(&mut ctx, &Event::Scroll((*delta).into(), p));
+
+				},
+
+				WEvent::ReceivedCharacter(ch) => {
+					if !INVALID_CHARS.contains(&ch) && !ch.is_control() && !is_private_use_char(*ch) {
+						s.event(&mut ctx, &Event::CharInput(*ch));
+					}
+				},
+
+				WEvent::Resized(size) => {
+
+					let dpi = ctx.dpi() as f64;
+					let lsize: LogicalSize<f64> = size.to_logical(dpi);
+					let w = lsize.width as i32;
+					let h = lsize.height as i32;
+
+					ctx.width = w;
+					ctx.height = h;
+					ctx.windowed_ctx.resize(lsize.to_physical(dpi));
+
+					s.event(&mut ctx, &Event::Resize(w, h));
+
+				},
+
+				WEvent::Touch(touch) => {
+					s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()));
+				},
+
+				WEvent::HoveredFile(path) => {
+					s.event(&mut ctx, &Event::FileHover(path.to_path_buf()));
+				},
+
+				WEvent::HoveredFileCancelled => {
+					s.event(&mut ctx, &Event::FileHoverCancel);
+				},
+
+				WEvent::DroppedFile(path) => {
+					s.event(&mut ctx, &Event::FileDrop(path.to_path_buf()));
+				},
+
+				WEvent::Focused(b) => {
+					s.event(&mut ctx, &Event::Focus(*b));
+				},
+
+				WEvent::CursorEntered { .. } => {
+					s.event(&mut ctx, &Event::CursorEnter);
+				},
+
+				WEvent::CursorLeft { .. } => {
+					s.event(&mut ctx, &Event::CursorLeave);
+				},
+				_ => (),
+			},
+
+			glutin::event::Event::DeviceEvent { event, .. } => match event {
+				DEvent::MouseMotion { delta } => {
+					let scale = ctx.conf.scale;
+					s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1) / scale));
+				},
+				_ => (),
+			},
+
+			glutin::event::Event::MainEventsCleared => {
+
+				if let Some(fps_cap) = ctx.conf.fps_cap {
+
+					let real_dt = ctx.last_frame_time.elapsed().as_millis();
+					let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+					if real_dt < expected_dt {
+						thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+					}
+
 				}
 
-			}
+				ctx.dt.set_inner(ctx.last_frame_time.elapsed());
+				ctx.time += ctx.dt;
+				ctx.fps_counter.tick(ctx.dt);
 
-			ctx.dt.set_inner(start_time.elapsed());
-			ctx.time += ctx.dt;
-			ctx.fps_counter.tick(ctx.dt);
+				ctx.last_frame_time = Instant::now();
+
+				for state in ctx.key_states.values_mut() {
+					if state == &ButtonState::Pressed {
+						*state = ButtonState::Down;
+					} else if state == &ButtonState::Released {
+						*state = ButtonState::Up;
+					}
+				}
+
+				for state in ctx.mouse_states.values_mut() {
+					if state == &ButtonState::Pressed {
+						*state = ButtonState::Down;
+					} else if state == &ButtonState::Released {
+						*state = ButtonState::Up;
+					}
+				}
+
+				for states in ctx.gamepad_button_states.values_mut() {
+					for state in states.values_mut() {
+						if state == &ButtonState::Pressed {
+							*state = ButtonState::Down;
+						} else if state == &ButtonState::Released {
+							*state = ButtonState::Up;
+						}
+					}
+				}
+
+				s.update(&mut ctx);
+				gfx::begin(&mut ctx);
+
+				ctx.draw_on(&backbuffer, |ctx| {
+
+					ctx.clear();
+
+					ctx.push(mat4!().s2(vec2!(ctx.conf.scale)), |mut cc| {
+						return s.draw(&mut cc);
+					});
+
+					return Ok(());
+
+				});
+
+				ctx.draw(&shapes::canvas(&backbuffer));
+				gfx::end(&mut ctx);
+				window::swap(&ctx);
+
+				if ctx.quit {
+					*flow = ControlFlow::Exit;
+				}
+
+			},
+
+			_ => (),
 
 		}
 
-		s.quit(&mut ctx)?;
+	});
 
-	}
+// 	#[cfg(not(web))] {
+
+// 		'run: loop {
+
+// 			let start_time = Instant::now();
+
+// 			input::poll(&mut ctx, &mut events_loop, &mut s)?;
+// 			s.update(&mut ctx)?;
+// 			gfx::begin(&mut ctx);
+
+// 			ctx.draw_on(&backbuffer, |ctx| {
+
+// 				ctx.clear();
+
+// 				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
+// 					return s.draw(&mut cc);
+// 				})?;
+
+// 				return Ok(());
+
+// 			})?;
+
+// 			ctx.draw(&shapes::canvas(&backbuffer))?;
+// 			gfx::end(&mut ctx);
+// 			window::swap(&ctx)?;
+
+// 			if ctx.quit {
+// 				break 'run;
+// 			}
+
+// 			if let Some(fps_cap) = ctx.conf.fps_cap {
+
+// 				let real_dt = start_time.elapsed().as_millis();
+// 				let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+// 				if real_dt < expected_dt {
+// 					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+// 				}
+
+// 			}
+
+// 			ctx.dt.set_inner(start_time.elapsed());
+// 			ctx.time += ctx.dt;
+// 			ctx.fps_counter.tick(ctx.dt);
+
+// 		}
+
+// 		s.quit(&mut ctx)?;
+
+// 	}
 
 	return Ok(());
 

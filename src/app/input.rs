@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 use once_cell::sync::Lazy;
 
-static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
+pub(super) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hset![
 		// backspace
 		'\u{7f}',
@@ -50,7 +50,7 @@ use super::*;
 use crate::*;
 
 // TODO: wait for winit's official impl
-fn is_private_use_char(c: char) -> bool {
+pub(super) fn is_private_use_char(c: char) -> bool {
 	match c {
 		'\u{E000}'..='\u{F8FF}' | '\u{F0000}'..='\u{FFFFD}' | '\u{100000}'..='\u{10FFFD}' => true,
 		_ => false,
@@ -99,31 +99,31 @@ impl Ctx {
 		return self.mouse_pos;
 	}
 
-	fn key_pressed(&self, key: Key) -> bool {
+	pub(super) fn key_pressed(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
 	}
 
-	fn key_released(&self, key: Key) -> bool {
+	pub(super) fn key_released(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Released);
 	}
 
-	fn key_up(&self, key: Key) -> bool {
+	pub(super) fn key_up(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Up) || self.key_states.get(&key).is_none();
 	}
 
-	fn mouse_pressed(&self, mouse: Mouse) -> bool {
+	pub(super) fn mouse_pressed(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
 	}
 
-	fn mouse_released(&self, mouse: Mouse) -> bool {
+	pub(super) fn mouse_released(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
 	}
 
-	fn mouse_up(&self, mouse: Mouse) -> bool {
+	pub(super) fn mouse_up(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Up) || self.mouse_states.get(&mouse).is_none();
 	}
 
-	fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub(super) fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
 		} else {
@@ -131,7 +131,7 @@ impl Ctx {
 		}
 	}
 
-	fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub(super) fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Pressed);
 		} else {
@@ -139,7 +139,7 @@ impl Ctx {
 		}
 	}
 
-	fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub(super) fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Released);
 		} else {
@@ -200,312 +200,312 @@ pub(super) fn poll(ctx: &mut app::Ctx) -> Result<()> {
 #[cfg(not(web))]
 pub(super) fn poll(
 	mut ctx: &mut app::Ctx,
-	events_loop: &mut glutin::EventsLoop,
+	events_loop: &mut glutin::event_loop::EventLoop<()>,
 	s: &mut impl app::State,
 ) -> Result<()> {
 
-	for state in ctx.key_states.values_mut() {
-		if state == &ButtonState::Pressed {
-			*state = ButtonState::Down;
-		} else if state == &ButtonState::Released {
-			*state = ButtonState::Up;
-		}
-	}
+// 	for state in ctx.key_states.values_mut() {
+// 		if state == &ButtonState::Pressed {
+// 			*state = ButtonState::Down;
+// 		} else if state == &ButtonState::Released {
+// 			*state = ButtonState::Up;
+// 		}
+// 	}
 
-	for state in ctx.mouse_states.values_mut() {
-		if state == &ButtonState::Pressed {
-			*state = ButtonState::Down;
-		} else if state == &ButtonState::Released {
-			*state = ButtonState::Up;
-		}
-	}
+// 	for state in ctx.mouse_states.values_mut() {
+// 		if state == &ButtonState::Pressed {
+// 			*state = ButtonState::Down;
+// 		} else if state == &ButtonState::Released {
+// 			*state = ButtonState::Up;
+// 		}
+// 	}
 
-	for states in ctx.gamepad_button_states.values_mut() {
-		for state in states.values_mut() {
-			if state == &ButtonState::Pressed {
-				*state = ButtonState::Down;
-			} else if state == &ButtonState::Released {
-				*state = ButtonState::Up;
-			}
-		}
-	}
+// 	for states in ctx.gamepad_button_states.values_mut() {
+// 		for state in states.values_mut() {
+// 			if state == &ButtonState::Pressed {
+// 				*state = ButtonState::Down;
+// 			} else if state == &ButtonState::Released {
+// 				*state = ButtonState::Up;
+// 			}
+// 		}
+// 	}
 
-	let mut res: Result<()> = Ok(());
+// 	let mut res: Result<()> = Ok(());
 
-	events_loop.poll_events(|e| {
+// 	events_loop.poll_events(|e| {
 
-		res = try {
+// 		res = try {
 
-			use glutin::WindowEvent as WEvent;
-			use glutin::DeviceEvent as DEvent;
-			use glutin::TouchPhase;
+// 			use glutin::WindowEvent as WEvent;
+// 			use glutin::DeviceEvent as DEvent;
+// 			use glutin::TouchPhase;
 
-			match e {
+// 			match e {
 
-				glutin::Event::WindowEvent { event, .. } => match event {
+// 				glutin::Event::WindowEvent { event, .. } => match event {
 
-					WEvent::KeyboardInput { input, .. } => {
+// 					WEvent::KeyboardInput { input, .. } => {
 
-						if let Some(kc) = input.virtual_keycode {
+// 						if let Some(kc) = input.virtual_keycode {
 
-							if let Some(key) = Key::from_extern(kc) {
+// 							if let Some(key) = Key::from_extern(kc) {
 
-								match input.state {
+// 								match input.state {
 
-									glutin::ElementState::Pressed => {
+// 									glutin::ElementState::Pressed => {
 
-										s.event(&mut ctx, &Event::KeyPressRepeat(key))?;
+// 										s.event(&mut ctx, &Event::KeyPressRepeat(key))?;
 
-										if ctx.key_up(key) || ctx.key_released(key) {
-											ctx.key_states.insert(key, ButtonState::Pressed);
-											s.event(&mut ctx, &Event::KeyPress(key))?;
-										}
+// 										if ctx.key_up(key) || ctx.key_released(key) {
+// 											ctx.key_states.insert(key, ButtonState::Pressed);
+// 											s.event(&mut ctx, &Event::KeyPress(key))?;
+// 										}
 
-									},
+// 									},
 
-									glutin::ElementState::Released => {
-										if ctx.key_down(key) || ctx.key_pressed(key) {
-											ctx.key_states.insert(key, ButtonState::Released);
-											s.event(&mut ctx, &Event::KeyRelease(key))?;
-										}
-									},
+// 									glutin::ElementState::Released => {
+// 										if ctx.key_down(key) || ctx.key_pressed(key) {
+// 											ctx.key_states.insert(key, ButtonState::Released);
+// 											s.event(&mut ctx, &Event::KeyRelease(key))?;
+// 										}
+// 									},
 
-								}
+// 								}
 
-							}
+// 							}
 
-						}
+// 						}
 
-					},
+// 					},
 
-					WEvent::MouseInput { button, state, .. } => {
+// 					WEvent::MouseInput { button, state, .. } => {
 
-						if let Some(button) = Mouse::from_extern(button) {
+// 						if let Some(button) = Mouse::from_extern(button) {
 
-							match state {
+// 							match state {
 
-								glutin::ElementState::Pressed => {
-									if ctx.mouse_up(button) || ctx.mouse_released(button) {
-										ctx.mouse_states.insert(button, ButtonState::Pressed);
-										s.event(&mut ctx, &Event::MousePress(button))?;
-									}
-								},
-								glutin::ElementState::Released => {
-									if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
-										ctx.mouse_states.insert(button, ButtonState::Released);
-										s.event(&mut ctx, &Event::MouseRelease(button))?;
-									}
-								},
+// 								glutin::ElementState::Pressed => {
+// 									if ctx.mouse_up(button) || ctx.mouse_released(button) {
+// 										ctx.mouse_states.insert(button, ButtonState::Pressed);
+// 										s.event(&mut ctx, &Event::MousePress(button))?;
+// 									}
+// 								},
+// 								glutin::ElementState::Released => {
+// 									if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+// 										ctx.mouse_states.insert(button, ButtonState::Released);
+// 										s.event(&mut ctx, &Event::MouseRelease(button))?;
+// 									}
+// 								},
 
-							}
+// 							}
 
-						}
+// 						}
 
-					},
+// 					},
 
-					WEvent::CursorMoved { position, .. } => {
+// 					WEvent::CursorMoved { position, .. } => {
 
-						let mpos: Vec2 = position.into();
-						let (vpos, vw, vh) = ctx.cur_viewport();
-						let (gw, gh) = (ctx.gwidth(), ctx.gheight());
-						let mpos = mpos - vpos;
-						let mpos = mpos * vec2!(gw / vw, gh / vh);
-						let mpos = vec2!(mpos.x - gw / 2.0, gh / 2.0 - mpos.y);
+// 						let (w, h) = (ctx.width() as f32, ctx.height() as f32);
+// 						let offset = (ctx.conf.origin.as_pt() / 2.0 + vec2!(0.5)) * vec2!(w, h);
+// 						let (gw, gh) = (ctx.gwidth() as f32, ctx.gheight() as f32);
+// 						let (vpos, vw, vh) = ctx.cur_viewport();
+// 						let mpos: Vec2 = position.into();
+// 						let mpos = (mpos - offset - vpos) * vec2!(gw / vw, gh / vh);
 
-						ctx.mouse_pos = mpos;
+// 						ctx.mouse_pos = mpos;
 
-					},
+// 					},
 
-					WEvent::MouseWheel { delta, phase, .. } => {
+// 					WEvent::MouseWheel { delta, phase, .. } => {
 
-						match phase {
-							TouchPhase::Started => {
-								ctx.scroll_phase = ScrollPhase::Solid;
-							},
-							TouchPhase::Ended => {
-								ctx.scroll_phase = ScrollPhase::Trailing;
-							},
-							_ => {},
-						}
+// 						match phase {
+// 							TouchPhase::Started => {
+// 								ctx.scroll_phase = ScrollPhase::Solid;
+// 							},
+// 							TouchPhase::Ended => {
+// 								ctx.scroll_phase = ScrollPhase::Trailing;
+// 							},
+// 							_ => {},
+// 						}
 
-						let p = ctx.scroll_phase;
-						s.event(&mut ctx, &Event::Scroll(delta.into(), p))?;
+// 						let p = ctx.scroll_phase;
+// 						s.event(&mut ctx, &Event::Scroll(delta.into(), p))?;
 
-					},
+// 					},
 
-					WEvent::ReceivedCharacter(ch) => {
-						if !INVALID_CHARS.contains(&ch) && !ch.is_control() && !is_private_use_char(ch) {
-							s.event(&mut ctx, &Event::CharInput(ch))?;
-						}
-					},
+// 					WEvent::ReceivedCharacter(ch) => {
+// 						if !INVALID_CHARS.contains(&ch) && !ch.is_control() && !is_private_use_char(ch) {
+// 							s.event(&mut ctx, &Event::CharInput(ch))?;
+// 						}
+// 					},
 
-					WEvent::Resized(size) => {
+// 					WEvent::Resized(size) => {
 
-						let psize = size.to_physical(ctx.dpi() as f64);
-						let w = size.width as i32;
-						let h = size.height as i32;
+// 						let psize = size.to_physical(ctx.dpi() as f64);
+// 						let w = size.width as i32;
+// 						let h = size.height as i32;
 
-						ctx.width = w;
-						ctx.height = h;
-						ctx.windowed_ctx.resize(psize);
+// 						ctx.width = w;
+// 						ctx.height = h;
+// 						ctx.windowed_ctx.resize(psize);
 
-						s.event(&mut ctx, &Event::Resize(w, h))?;
+// 						s.event(&mut ctx, &Event::Resize(w, h))?;
 
-					},
+// 					},
 
-					WEvent::Touch(touch) => {
-						s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()))?;
-					},
+// 					WEvent::Touch(touch) => {
+// 						s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()))?;
+// 					},
 
-					WEvent::HoveredFile(path) => {
-						s.event(&mut ctx, &Event::FileHover(path))?;
-					},
+// 					WEvent::HoveredFile(path) => {
+// 						s.event(&mut ctx, &Event::FileHover(path))?;
+// 					},
 
-					WEvent::HoveredFileCancelled => {
-						s.event(&mut ctx, &Event::FileHoverCancel)?;
-					},
+// 					WEvent::HoveredFileCancelled => {
+// 						s.event(&mut ctx, &Event::FileHoverCancel)?;
+// 					},
 
-					WEvent::DroppedFile(path) => {
-						s.event(&mut ctx, &Event::FileDrop(path))?;
-					},
+// 					WEvent::DroppedFile(path) => {
+// 						s.event(&mut ctx, &Event::FileDrop(path))?;
+// 					},
 
-					WEvent::Focused(b) => {
-						s.event(&mut ctx, &Event::Focus(b))?;
-					},
+// 					WEvent::Focused(b) => {
+// 						s.event(&mut ctx, &Event::Focus(b))?;
+// 					},
 
-					WEvent::CursorEntered { .. } => {
-						s.event(&mut ctx, &Event::CursorEnter)?;
-					},
+// 					WEvent::CursorEntered { .. } => {
+// 						s.event(&mut ctx, &Event::CursorEnter)?;
+// 					},
 
-					WEvent::CursorLeft { .. } => {
-						s.event(&mut ctx, &Event::CursorLeave)?;
-					},
+// 					WEvent::CursorLeft { .. } => {
+// 						s.event(&mut ctx, &Event::CursorLeave)?;
+// 					},
 
-					WEvent::CloseRequested => {
-						ctx.quit = true;
-					},
+// 					WEvent::CloseRequested => {
+// 						ctx.quit = true;
+// 					},
 
-					_ => {},
+// 					_ => {},
 
-				},
+// 				},
 
-				glutin::Event::DeviceEvent { event, .. } => match event {
-					DEvent::MouseMotion { delta } => {
-						let scale = ctx.conf.scale;
-						s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1) / scale))?;
-					},
-					_ => (),
-				},
+// 				glutin::Event::DeviceEvent { event, .. } => match event {
+// 					DEvent::MouseMotion { delta } => {
+// 						let scale = ctx.conf.scale;
+// 						s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1) / scale))?;
+// 					},
+// 					_ => (),
+// 				},
 
-				_ => {},
+// 				_ => {},
 
-			};
+// 			};
 
-		};
+// 		};
 
-	});
+// 	});
 
-	res?;
+// 	res?;
 
-	#[cfg(desktop)]
-	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+// 	#[cfg(desktop)]
+// 	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
 
-		use gilrs::ev::EventType::*;
+// 		use gilrs::ev::EventType::*;
 
-		match event {
+// 		match event {
 
-			ButtonPressed(button, ..) => {
+// 			ButtonPressed(button, ..) => {
 
-				if let Some(button) = GamepadButton::from_extern(button) {
+// 				if let Some(button) = GamepadButton::from_extern(button) {
 
-					if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
+// 					if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
 
-						ctx
-							.gamepad_button_states
-							.entry(id)
-							.or_insert(hmap![])
-							.insert(button, ButtonState::Pressed);
+// 						ctx
+// 							.gamepad_button_states
+// 							.entry(id)
+// 							.or_insert(hmap![])
+// 							.insert(button, ButtonState::Pressed);
 
-						s.event(&mut ctx, &Event::GamepadPress(id, button))?;
+// 						s.event(&mut ctx, &Event::GamepadPress(id, button))?;
 
-					}
+// 					}
 
-				}
+// 				}
 
-			},
+// 			},
 
-			ButtonRepeated(button, ..) => {
-				if let Some(button) = GamepadButton::from_extern(button) {
-					s.event(&mut ctx, &Event::GamepadPressRepeat(id, button))?;
-				}
-			},
+// 			ButtonRepeated(button, ..) => {
+// 				if let Some(button) = GamepadButton::from_extern(button) {
+// 					s.event(&mut ctx, &Event::GamepadPressRepeat(id, button))?;
+// 				}
+// 			},
 
-			ButtonReleased(button, ..) => {
+// 			ButtonReleased(button, ..) => {
 
-				if let Some(button) = GamepadButton::from_extern(button) {
+// 				if let Some(button) = GamepadButton::from_extern(button) {
 
-					if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
+// 					if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
 
-						ctx
-							.gamepad_button_states
-							.entry(id)
-							.or_insert(hmap![])
-							.insert(button, ButtonState::Released);
+// 						ctx
+// 							.gamepad_button_states
+// 							.entry(id)
+// 							.or_insert(hmap![])
+// 							.insert(button, ButtonState::Released);
 
-						s.event(&mut ctx, &Event::GamepadRelease(id, button))?;
+// 						s.event(&mut ctx, &Event::GamepadRelease(id, button))?;
 
-					}
+// 					}
 
-				}
+// 				}
 
-			},
+// 			},
 
-			AxisChanged(axis, val, ..) => {
+// 			AxisChanged(axis, val, ..) => {
 
-				let mut pos = ctx.gamepad_axis_pos
-					.entry(id)
-					.or_insert((vec2!(), vec2!()))
-					.clone()
-					;
+// 				let mut pos = ctx.gamepad_axis_pos
+// 					.entry(id)
+// 					.or_insert((vec2!(), vec2!()))
+// 					.clone()
+// 					;
 
-				match axis {
-					gilrs::ev::Axis::LeftStickX => {
-						pos.0.x = val;
-						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
-					},
-					gilrs::ev::Axis::LeftStickY => {
-						pos.0.y = val;
-						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
-					},
-					gilrs::ev::Axis::RightStickX => {
-						pos.1.x = val;
-						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
-					},
-					gilrs::ev::Axis::RightStickY => {
-						pos.1.y = val;
-						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
-					},
-					_ => {},
+// 				match axis {
+// 					gilrs::ev::Axis::LeftStickX => {
+// 						pos.0.x = val;
+// 						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+// 					},
+// 					gilrs::ev::Axis::LeftStickY => {
+// 						pos.0.y = val;
+// 						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+// 					},
+// 					gilrs::ev::Axis::RightStickX => {
+// 						pos.1.x = val;
+// 						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+// 					},
+// 					gilrs::ev::Axis::RightStickY => {
+// 						pos.1.y = val;
+// 						s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+// 					},
+// 					_ => {},
 
-				}
+// 				}
 
-				ctx.gamepad_axis_pos.insert(id, pos);
+// 				ctx.gamepad_axis_pos.insert(id, pos);
 
-			},
+// 			},
 
-			Connected => {
-				s.event(&mut ctx, &Event::GamepadConnect(id))?;
-			},
+// 			Connected => {
+// 				s.event(&mut ctx, &Event::GamepadConnect(id))?;
+// 			},
 
-			Disconnected => {
-				s.event(&mut ctx, &Event::GamepadDisconnect(id))?;
-			},
+// 			Disconnected => {
+// 				s.event(&mut ctx, &Event::GamepadDisconnect(id))?;
+// 			},
 
-			_ => {},
+// 			_ => {},
 
-		}
+// 		}
 
-	}
+// 	}
 
 	return Ok(());
 
@@ -542,7 +542,7 @@ macro_rules! gen_buttons {
 
 			#[allow(dead_code)]
 			#[cfg(desktop)]
-			fn from_extern(s: $xtype) -> Option<Self> {
+			pub fn from_extern(s: $xtype) -> Option<Self> {
 				return match s {
 					$(
 						<$xtype>::$xname => Some($type::$name),
@@ -554,12 +554,12 @@ macro_rules! gen_buttons {
 			// TODO
 			#[allow(dead_code)]
 			#[cfg(not(desktop))]
-			fn from_extern(s: $xtype) -> Option<Self> {
+			pub fn from_extern(s: $xtype) -> Option<Self> {
 				return None;
 			}
 
 			#[allow(dead_code)]
-			fn as_str(&self) -> &'static str {
+			pub fn as_str(&self) -> &'static str {
 				return match self {
 					$(
 						$type::$name => $str,
@@ -569,7 +569,7 @@ macro_rules! gen_buttons {
 
 			#[allow(dead_code)]
 			#[cfg(desktop)]
-			fn as_extern(&self) -> $xtype {
+			pub fn as_extern(&self) -> $xtype {
 				return match self {
 					$(
 						$type::$name => <$xtype>::$xname,
@@ -584,9 +584,9 @@ macro_rules! gen_buttons {
 }
 
 #[cfg(not(web))]
-use glutin::VirtualKeyCode as ExternKey;
+use glutin::event::VirtualKeyCode as ExternKey;
 #[cfg(not(web))]
-use glutin::MouseButton as ExternMouse;
+use glutin::event::MouseButton as ExternMouse;
 #[cfg(web)]
 struct ExternKey;
 #[cfg(web)]

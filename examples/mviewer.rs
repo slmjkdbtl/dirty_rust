@@ -432,6 +432,7 @@ impl app::State for Viewer {
 fn main() {
 
 	if let Err(err) = app::launcher()
+		.resizable(true)
 		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Viewer>() {
 		println!("{}", err);

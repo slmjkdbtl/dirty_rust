@@ -11,7 +11,7 @@ use super::*;
 use crate::math::*;
 use crate::*;
 
-pub use glutin::MouseCursor as CursorStyle;
+pub use glutin::window::CursorIcon as CursorStyle;
 
 impl Ctx {
 
@@ -22,7 +22,7 @@ impl Ctx {
 			let window = self.windowed_ctx.window();
 
 			if b {
-				window.set_fullscreen(Some(window.get_current_monitor()));
+				window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
 			} else {
 				window.set_fullscreen(None);
 			}
@@ -34,7 +34,7 @@ impl Ctx {
 	pub fn is_fullscreen(&self) -> bool {
 
 		#[cfg(not(web))]
-		return self.windowed_ctx.window().get_fullscreen().is_some();
+		return self.windowed_ctx.window().fullscreen().is_some();
 
 		#[cfg(web)]
 		return false;
@@ -47,7 +47,7 @@ impl Ctx {
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
 		#[cfg(not(web))]
-		self.windowed_ctx.window().hide_cursor(b);
+		self.windowed_ctx.window().set_cursor_visible(!b);
 		self.cursor_hidden = b;
 	}
 
@@ -62,7 +62,7 @@ impl Ctx {
 	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
 
 		#[cfg(not(web))]
-		self.windowed_ctx.window().grab_cursor(b)?;
+		self.windowed_ctx.window().set_cursor_grab(b);
 		self.cursor_locked = b;
 
 		return Ok(());
@@ -78,7 +78,7 @@ impl Ctx {
 	}
 
 	pub fn set_cursor(&self, c: CursorStyle) {
-		self.windowed_ctx.window().set_cursor(c);
+		self.windowed_ctx.window().set_cursor_icon(c);
 	}
 
 	pub fn set_title(&mut self, t: &str) {
@@ -100,7 +100,7 @@ impl Ctx {
 	pub fn dpi(&self) -> f32 {
 
 		#[cfg(not(web))]
-		return self.windowed_ctx.window().get_hidpi_factor() as f32;
+		return self.windowed_ctx.window().scale_factor() as f32;
 
 		#[cfg(web)]
 		return 1.0;
@@ -131,8 +131,8 @@ impl Ctx {
 		let mpos = mpos / vec2!(gw / vw, gh / vh);
 		let mpos = mpos + vpos;
 
-		#[cfg(not(web))]
-		self.windowed_ctx.window().set_cursor_position(mpos.into())?;
+// 		#[cfg(not(web))]
+// 		self.windowed_ctx.window().set_cursor_position(mpos.into())?;
 		self.mouse_pos = mpos;
 
 		return Ok(());
@@ -156,9 +156,9 @@ pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
 }
 
 #[cfg(not(web))]
-impl From<glutin::MouseScrollDelta> for Vec2 {
-	fn from(delta: glutin::MouseScrollDelta) -> Self {
-		use glutin::MouseScrollDelta;
+impl From<glutin::event::MouseScrollDelta> for Vec2 {
+	fn from(delta: glutin::event::MouseScrollDelta) -> Self {
+		use glutin::event::MouseScrollDelta;
 		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
 				return vec2!(pos.x, pos.y);
@@ -171,7 +171,7 @@ impl From<glutin::MouseScrollDelta> for Vec2 {
 }
 
 #[cfg(not(web))]
-impl From<Vec2> for LogicalPosition {
+impl From<Vec2> for LogicalPosition<f64> {
 	fn from(pos: Vec2) -> Self {
 		return Self {
 			x: pos.x as f64,
@@ -181,8 +181,28 @@ impl From<Vec2> for LogicalPosition {
 }
 
 #[cfg(not(web))]
-impl From<LogicalPosition> for Vec2 {
-	fn from(pos: LogicalPosition) -> Self {
+impl From<LogicalPosition<f64>> for Vec2 {
+	fn from(pos: LogicalPosition<f64>) -> Self {
+		return Self {
+			x: pos.x as f32,
+			y: pos.y as f32,
+		};
+	}
+}
+
+#[cfg(not(web))]
+impl From<PhysicalPosition<f64>> for Vec2 {
+	fn from(pos: PhysicalPosition<f64>) -> Self {
+		return Self {
+			x: pos.x as f32,
+			y: pos.y as f32,
+		};
+	}
+}
+
+#[cfg(not(web))]
+impl From<PhysicalPosition<i32>> for Vec2 {
+	fn from(pos: PhysicalPosition<i32>) -> Self {
 		return Self {
 			x: pos.x as f32,
 			y: pos.y as f32,
