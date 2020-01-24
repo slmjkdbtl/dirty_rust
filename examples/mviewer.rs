@@ -25,6 +25,7 @@ struct Viewer {
 	resetting: bool,
 	loader: Task<LoadResult>,
 	draw_wireframe: bool,
+	run_anim: bool,
 	draw_bound: bool,
 	helping: bool,
 	pix_shader: gfx::Shader2D<PixUniform>,
@@ -149,6 +150,7 @@ impl app::State for Viewer {
 			loader: load_file("examples/res/truck.obj"),
 			draw_wireframe: false,
 			draw_bound: false,
+			run_anim: true,
 			helping: false,
 			scale: 0.0,
 			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
@@ -175,6 +177,7 @@ impl app::State for Viewer {
 					Key::L => self.draw_wireframe = !self.draw_wireframe,
 					Key::B => self.draw_bound = !self.draw_bound,
 					Key::H => self.helping = !self.helping,
+					Key::T => self.run_anim = !self.run_anim,
 					_ => {},
 				}
 
@@ -310,10 +313,19 @@ impl app::State for Viewer {
 						.t3(-center)
 					, |ctx| {
 
+						let t = if self.run_anim {
+							let anim_len = model.model.anim_len();
+							let t = ctx.time();
+							t - f32::floor(t / anim_len) * anim_len
+						} else {
+							0.0
+						};
+
 						ctx.draw_3d_with(&self.shader, &(), |ctx| {
 							ctx.draw(
 								&shapes::model(&model.model)
 									.draw_wireframe(self.draw_wireframe)
+									.time(t)
 							)?;
 							return Ok(());
 						})?;
@@ -406,6 +418,7 @@ impl app::State for Viewer {
 					"L:        wireframe",
 					"B:        bound",
 					"F:        fullscreen",
+					"T:        anim",
 					"<esc>:    quit",
 				];
 
