@@ -145,8 +145,8 @@ impl From<glutin::ContextError> for Error {
 }
 
 #[cfg(all(feature = "app", not(web)))]
-impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)> for Error {
-	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::Window>, glutin::ContextError)) -> Self {
+impl From<(glutin::ContextWrapper<glutin::NotCurrent, glutin::window::Window>, glutin::ContextError)> for Error {
+	fn from(_: (glutin::ContextWrapper<glutin::NotCurrent, glutin::window::Window>, glutin::ContextError)) -> Self {
 		return Error::Window("failed to create window context".into());
 	}
 }

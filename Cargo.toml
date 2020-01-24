@@ -177,7 +177,7 @@ openxr = { version = "0.10", optional = true }
 # sokol = "0.3"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
-glutin = { version = "0.21", optional = true }
+glutin = { version = "0.22", optional = true }
 
 [target.'cfg(all(not(target_os="ios"), not(target_os="android"), not(target_arch="wasm32")))'.dependencies]
 console = { version = "0.9", optional = true }
