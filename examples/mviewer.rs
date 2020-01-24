@@ -17,7 +17,7 @@ type LoadResult = Result<gfx::ModelData>;
 
 struct Viewer {
 	shader: gfx::Shader3D<()>,
-	model: Option<DisplayedModel>,
+	model: Option<gfx::Model>,
 	cam: gfx::OrthoCam,
 	rot: Vec2,
 	pos: Vec2,
@@ -99,7 +99,6 @@ impl Viewer {
 	fn update_model(&mut self, model: gfx::Model) {
 
 		self.resetting = true;
-		let model = DisplayedModel::from(model);
 		self.model = Some(model);
 
 	}
@@ -110,27 +109,6 @@ impl Viewer {
 		self.model = None;
 		self.scale = 0.0;
 		self.resetting = false;
-
-	}
-
-}
-
-struct DisplayedModel {
-	size: f32,
-	model: gfx::Model,
-}
-
-impl DisplayedModel {
-
-	fn from(model: gfx::Model) -> Self {
-
-		let (min, max) = model.bound();
-		let size = (max - min).mag();
-
-		return Self {
-			model: model,
-			size: size,
-		};
 
 	}
 
@@ -193,9 +171,11 @@ impl app::State for Viewer {
 
 					if !self.resetting {
 
-						let orig_scale = 480.0 / model.size;
+						let (min, max) = model.bound();
+						let size = (max - min).mag();
+						let orig_scale = 480.0 / size;
 
-						self.scale += s.y * (1.0 / model.size);
+						self.scale += s.y * (1.0 / size);
 						self.scale = self.scale.clamp(orig_scale * 0.1, orig_scale * 3.2);
 
 					}
@@ -282,9 +262,12 @@ impl app::State for Viewer {
 
 			if self.resetting {
 
+				let (min, max) = model.bound();
+				let size = (max - min).mag();
+
 				let dest_rot = vec2!(0);
 				let dest_pos = vec2!(0);
-				let dest_scale = 480.0 / model.size;
+				let dest_scale = 480.0 / size;
 				let t = ctx.dt() * 4.0;
 
 				self.rot = self.rot.lerp(dest_rot, t);
@@ -301,7 +284,7 @@ impl app::State for Viewer {
 
 			if let Some(model) = &self.model {
 
-				let center = model.model.center();
+				let center = model.center();
 
 				ctx.use_cam(&self.cam, |ctx| {
 
@@ -314,7 +297,7 @@ impl app::State for Viewer {
 					, |ctx| {
 
 						let t = if self.run_anim {
-							let anim_len = model.model.anim_len();
+							let anim_len = model.anim_len();
 							let t = ctx.time();
 							t - f32::floor(t / anim_len) * anim_len
 						} else {
@@ -323,7 +306,7 @@ impl app::State for Viewer {
 
 						ctx.draw_3d_with(&self.shader, &(), |ctx| {
 							ctx.draw(
-								&shapes::model(&model.model)
+								&shapes::model(&model)
 									.draw_wireframe(self.draw_wireframe)
 									.time(t)
 							)?;
@@ -331,7 +314,7 @@ impl app::State for Viewer {
 						})?;
 
 						if self.draw_bound {
-							let (min, max) = model.model.bound();
+							let (min, max) = model.bound();
 							ctx.draw(&shapes::rect3d(min, max))?;
 						}
 

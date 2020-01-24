@@ -49,7 +49,7 @@ impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		for t in self.model.scene() {
+		for t in self.model.root_nodes() {
 			draw_mesh(ctx, &self, Mat4::identity(), *t);
 		}
 
@@ -78,29 +78,24 @@ fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
 		}
 
 		let tr = ptr * tr.as_mat4();
+		let tex = model.texture().unwrap_or(&ctx.empty_tex);
 
-		if let Some(meshes) = &node.meshes {
+		for mesh in &node.meshes {
 
-			let tex = model.texture().unwrap_or(&ctx.empty_tex);
+			ctx.draw_calls += 1;
 
-			for mesh in meshes {
-
-				ctx.draw_calls += 1;
-
-				mesh.gl_mesh().draw(
-					dctx.prim,
-					&ctx.cur_pipeline_3d,
-					&gfx::Uniform3D {
-						proj: ctx.proj_3d,
-						view: ctx.view_3d,
-						model: ctx.transform * tr,
-						color: rgba!(1),
-						tex: tex.clone(),
-						custom: ctx.cur_custom_uniform_3d.clone(),
-					},
-				);
-
-			}
+			mesh.gl_mesh().draw(
+				dctx.prim,
+				&ctx.cur_pipeline_3d,
+				&gfx::Uniform3D {
+					proj: ctx.proj_3d,
+					view: ctx.view_3d,
+					model: ctx.transform * tr,
+					color: rgba!(1),
+					tex: tex.clone(),
+					custom: ctx.cur_custom_uniform_3d.clone(),
+				},
+			);
 
 		}
 

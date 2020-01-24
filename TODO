@@ -5,11 +5,9 @@
 - [gfx] multiple textures
 - [misc] profile render / update time seperately
 - [misc] profile graph
-- [misc] gltf animation
-- [misc] gltf skeleton
-- [misc] figure out blender/gltf srgb/linear color conversion
+- [misc] gltf morph
 - [misc] integrate lighting into gkit
-- [gfx] fix canvas offset
+- [gfx] oblique projection
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -194,4 +192,7 @@
 - [app] switch to sdl
 - [window] scale modes & mouse pos
 - [gfx] canvas give original size
+- [gfx] gltf animation
+- [gfx] 3d model node structure
+- [misc] figure out blender/gltf srgb/linear color conversion
 
