@@ -7,24 +7,6 @@ use crate::*;
 use super::*;
 use super::gfx::*;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Material {
-	pub diffuse: f32,
-	pub specular: f32,
-	pub shininess: f32,
-}
-
-impl Default for Material {
-	fn default() -> Self {
-		return Self {
-			diffuse: 0.0,
-			specular: 0.0,
-			shininess: 0.0,
-		};
-	}
-}
-
-/// mesh data
 #[derive(Clone)]
 pub struct MeshData {
 	pub vertices: Vec<Vertex3D>,
@@ -36,14 +18,14 @@ pub struct NodeData {
 	pub id: usize,
 	pub children: Vec<usize>,
 	pub transform: Transform,
-	pub meshes: Option<Vec<MeshData>>,
+	pub meshes: Vec<MeshData>,
 }
 
 /// model data
 #[derive(Clone)]
 pub struct ModelData {
 	nodes: HashMap<usize, NodeData>,
-	scene: Vec<usize>,
+	root_nodes: Vec<usize>,
 	img: Option<img::Image>,
 	anims: HashMap<usize, Anim>,
 	anim_len: f32,
@@ -57,7 +39,7 @@ pub struct Mesh {
 
 #[derive(Clone)]
 pub struct Node {
-	pub meshes: Option<Vec<Mesh>>,
+	pub meshes: Vec<Mesh>,
 	pub id: usize,
 	pub children: Vec<usize>,
 	pub transform: Transform,
@@ -72,13 +54,94 @@ impl Mesh {
 	}
 }
 
+type Track<T> = Vec<(f32, T)>;
+
+#[derive(Clone, Debug)]
+pub struct Anim {
+	pos: Track<Vec3>,
+	rot: Track<Vec4>,
+	scale: Track<Vec3>,
+}
+
+fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
+
+	if track.is_empty() {
+		return None;
+	}
+
+	if let Some((k, _)) = track.first() {
+		if *k > t {
+			return None;
+		}
+	}
+
+	if let Some((k, val)) = track.last() {
+		if *k <= t {
+			return Some(*val);
+		}
+	}
+
+	for i in 0..track.len() - 1 {
+
+		let (k1, pos1) = track[i];
+		let (k2, pos2) = track[i + 1];
+
+		if t >= k1 && t <= k2 {
+			let dt = t - k1;
+			return Some(pos1.lerp(pos2, dt));
+		}
+
+	}
+
+	return None;
+
+}
+
+impl Anim {
+
+	pub fn len(&self) -> f32 {
+
+		let t1 = self.pos
+			.last()
+			.map(|(t, _)| *t)
+			.unwrap_or(0.0);
+
+		let t2 = self.rot
+			.last()
+			.map(|(t, _)| *t)
+			.unwrap_or(0.0);
+
+		let t3 = self.scale
+			.last()
+			.map(|(t, _)| *t)
+			.unwrap_or(0.0);
+
+		return t1
+			.max(t2)
+			.max(t3)
+			;
+
+	}
+
+	pub fn get_transform(&self, t: f32) -> (Option<Vec3>, Option<Vec4>, Option<Vec3>) {
+
+		return (
+			get_track_val(&self.pos, t),
+			get_track_val(&self.rot, t),
+			get_track_val(&self.scale, t),
+		);
+
+	}
+
+}
+
 /// 3d model
 #[derive(Clone)]
 pub struct Model {
 	nodes: HashMap<usize, Node>,
 	anims: HashMap<usize, Anim>,
 	anim_len: f32,
-	scene: Vec<usize>,
+	root_nodes: Vec<usize>,
 	bound: (Vec3, Vec3),
 	texture: Option<Texture>,
 }
@@ -178,7 +241,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 		}).collect();
 
-	});
+	}).unwrap_or(vec![]);
 
 	nodes.insert(id, NodeData {
 		id: id,
@@ -189,87 +252,6 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 	for c in node.children() {
 		read_gltf_node(bin, nodes, c);
-	}
-
-}
-
-type Track<T> = Vec<(f32, T)>;
-
-#[derive(Clone, Debug)]
-pub struct Anim {
-	pos: Track<Vec3>,
-	rot: Track<Vec4>,
-	scale: Track<Vec3>,
-}
-
-fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
-
-	if track.is_empty() {
-		return None;
-	}
-
-	if let Some((k, _)) = track.first() {
-		if *k > t {
-			return None;
-		}
-	}
-
-	if let Some((k, val)) = track.last() {
-		if *k <= t {
-			return Some(*val);
-		}
-	}
-
-	for i in 0..track.len() - 1 {
-
-		let (k1, pos1) = track[i];
-		let (k2, pos2) = track[i + 1];
-
-		if t >= k1 && t <= k2 {
-			let dt = t - k1;
-			return Some(pos1.lerp(pos2, dt));
-		}
-
-	}
-
-	return None;
-
-}
-
-impl Anim {
-
-	pub fn len(&self) -> f32 {
-
-		let t1 = self.pos
-			.last()
-			.map(|(t, _)| *t)
-			.unwrap_or(0.0);
-
-		let t2 = self.rot
-			.last()
-			.map(|(t, _)| *t)
-			.unwrap_or(0.0);
-
-		let t3 = self.scale
-			.last()
-			.map(|(t, _)| *t)
-			.unwrap_or(0.0);
-
-		return t1
-			.max(t2)
-			.max(t3)
-			;
-
-	}
-
-	pub fn get_transform(&self, t: f32) -> (Option<Vec3>, Option<Vec4>, Option<Vec3>) {
-
-		return (
-			get_track_val(&self.pos, t),
-			get_track_val(&self.rot, t),
-			get_track_val(&self.scale, t),
-		);
-
 	}
 
 }
@@ -397,18 +379,18 @@ impl Model {
 
 		// mesh
 		let mut nodes = HashMap::with_capacity(document.nodes().len());
-		let mut scene = vec![];
+		let mut root_nodes = vec![];
 
 		for s in document.scenes() {
 			for n in s.nodes() {
-				scene.push(n.index());
+				root_nodes.push(n.index());
 				read_gltf_node(&bin, &mut nodes, n);
 			}
 		}
 
 		return Ok(ModelData {
 			nodes: nodes,
-			scene: scene,
+			root_nodes: root_nodes,
 			img: img,
 			anims: anims,
 			anim_len: anim_len,
@@ -425,12 +407,12 @@ impl Model {
 				.unwrap_or(Ok((vec![], hmap![])));
 		})?;
 
-		let mut scene = Vec::with_capacity(models.len());
+		let mut root_nodes = Vec::with_capacity(models.len());
 		let mut nodes = HashMap::with_capacity(models.len());
 
 		for (i, m) in models.into_iter().enumerate() {
 
-			scene.push(i);
+			root_nodes.push(i);
 
 			let m = m.mesh;
 			let positions = m.positions
@@ -480,10 +462,10 @@ impl Model {
 				id: i,
 				children: vec![],
 				transform: gfx::Transform::new(),
-				meshes: Some(vec![MeshData {
+				meshes: vec![MeshData {
 					vertices: verts,
 					indices: m.indices,
-				}]),
+				}],
 			});
 
 		}
@@ -496,7 +478,7 @@ impl Model {
 
 		return Ok(ModelData {
 			nodes: nodes,
-			scene: scene,
+			root_nodes: root_nodes,
 			img: img,
 			anims: hmap![],
 			anim_len: 0.0,
@@ -515,18 +497,16 @@ impl Model {
 
 		let anims = data.anims;
 		let anim_len = data.anim_len;
-		let scene = data.scene;
+		let root_nodes = data.root_nodes;
 
 		let nodes = data.nodes.into_iter().map(|(id, node)| {
-			let meshes = node.meshes.map(|meshes| {
-				return meshes.into_iter().map(|m| {
-					return Mesh {
-						// TODO: no unwrap
-						gl_mesh: Rc::new(gl::Mesh::from2(&ctx.gl, &m.vertices, &m.indices).unwrap()),
-						data: m,
-					};
-				}).collect::<Vec<Mesh>>();
-			});
+			let meshes = node.meshes.into_iter().map(|m| {
+				return Mesh {
+					// TODO: no unwrap
+					gl_mesh: Rc::new(gl::Mesh::from2(&ctx.gl, &m.vertices, &m.indices).unwrap()),
+					data: m,
+				};
+			}).collect::<Vec<Mesh>>();
 			return (id, Node {
 				id: node.id,
 				children: node.children,
@@ -536,11 +516,11 @@ impl Model {
 		}).collect::<HashMap<usize, Node>>();
 
 		return Ok(Self {
-			bound: get_bound(&nodes, &scene),
+			bound: get_bound(&nodes, &root_nodes),
 			nodes: nodes,
 			anim_len: anim_len,
 			anims: anims,
-			scene: scene,
+			root_nodes: root_nodes,
 			texture: tex,
 		});
 
@@ -568,12 +548,8 @@ impl Model {
 		return self.anim_len;
 	}
 
-	pub fn scene(&self) -> &[usize] {
-		return &self.scene;
-	}
-
-	pub fn set_texture(&mut self, tex: Texture) {
-		self.texture = Some(tex);
+	pub fn root_nodes(&self) -> &[usize] {
+		return &self.root_nodes;
 	}
 
 	pub fn texture(&self) -> Option<&Texture> {
@@ -596,31 +572,27 @@ fn get_bound_inner(
 	max: &mut Vec3,
 	transform: Mat4,
 	nodes: &HashMap<usize, Node>,
-	scene: &[usize],
+	list: &[usize],
 ) {
 
-	for id in scene {
+	for id in list {
 
 		if let Some(node) = nodes.get(id) {
 
 			let tr = transform * node.transform.as_mat4();
 
-			if let Some(meshes) = &node.meshes {
+			for m in &node.meshes {
 
-				for m in meshes {
+				for v in &m.data.vertices {
 
-					for v in &m.data.vertices {
+					let pos = tr * v.pos;
 
-						let pos = tr * v.pos;
-
-						min.x = f32::min(pos.x, min.x);
-						min.y = f32::min(pos.y, min.y);
-						min.z = f32::min(pos.z, min.z);
-						max.x = f32::max(pos.x, max.x);
-						max.y = f32::max(pos.y, max.y);
-						max.z = f32::max(pos.z, max.z);
-
-					}
+					min.x = f32::min(pos.x, min.x);
+					min.y = f32::min(pos.y, min.y);
+					min.z = f32::min(pos.z, min.z);
+					max.x = f32::max(pos.x, max.x);
+					max.y = f32::max(pos.y, max.y);
+					max.z = f32::max(pos.z, max.z);
 
 				}
 
@@ -634,12 +606,12 @@ fn get_bound_inner(
 
 }
 
-fn get_bound(nodes: &HashMap<usize, Node>, scene: &[usize]) -> (Vec3, Vec3) {
+fn get_bound(nodes: &HashMap<usize, Node>, list: &[usize]) -> (Vec3, Vec3) {
 
 	let mut min = vec3!();
 	let mut max = vec3!();
 
-	get_bound_inner(&mut min, &mut max, mat4!(), nodes, scene);
+	get_bound_inner(&mut min, &mut max, mat4!(), nodes, list);
 
 	return (min, max);
 
