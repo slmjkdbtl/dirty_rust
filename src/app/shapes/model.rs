@@ -6,7 +6,8 @@ use super::*;
 pub struct Model<'a> {
 	model: &'a gfx::Model,
 	color: Color,
-	draw_wireframe: bool,
+	prim: gl::Primitive,
+	time: f32,
 }
 
 pub fn model<'a>(m: &'a gfx::Model) -> Model<'a> {
@@ -18,7 +19,8 @@ impl<'a> Model<'a> {
 		return Self {
 			model: m,
 			color: rgba!(1),
-			draw_wireframe: false,
+			prim: gl::Primitive::Triangle,
+			time: 0.0,
 		};
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -29,8 +31,16 @@ impl<'a> Model<'a> {
 		self.color.a = a;
 		return self;
 	}
+	pub fn time(mut self, t: f32) -> Self {
+		self.time = t;
+		return self;
+	}
 	pub fn draw_wireframe(mut self, b: bool) -> Self {
-		self.draw_wireframe = b;
+		if b {
+			self.prim = gl::Primitive::Line;
+		} else {
+			self.prim = gl::Primitive::Triangle;
+		}
 		return self;
 	}
 }
@@ -39,14 +49,8 @@ impl<'a> Drawable for Model<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let prim = if self.draw_wireframe {
-			gl::Primitive::Line
-		} else {
-			gl::Primitive::Triangle
-		};
-
 		for t in self.model.scene() {
-			draw_mesh(ctx, prim, &self.model, Mat4::identity(), *t);
+			draw_mesh(ctx, &self, Mat4::identity(), *t);
 		}
 
 		return Ok(());
@@ -55,7 +59,9 @@ impl<'a> Drawable for Model<'a> {
 
 }
 
-fn draw_mesh(ctx: &mut Ctx, prim: gl::Primitive, model: &gfx::Model, ptr: Mat4, id: usize) {
+fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
+
+	let model = &dctx.model;
 
 	if let Some(node) = model.get_node(id) {
 
@@ -63,9 +69,7 @@ fn draw_mesh(ctx: &mut Ctx, prim: gl::Primitive, model: &gfx::Model, ptr: Mat4, 
 
 		if let Some(anim) = model.get_anim(id) {
 
-			let t = ctx.time();
-			let tt = t - f32::floor(t / 0.5) * 0.5;
-			let (pos, rot, scale) = anim.get_transform(tt);
+			let (pos, rot, scale) = anim.get_transform(dctx.time);
 
 			tr.pos = pos.unwrap_or(tr.pos);
 			tr.rot = rot.unwrap_or(tr.rot);
@@ -77,14 +81,14 @@ fn draw_mesh(ctx: &mut Ctx, prim: gl::Primitive, model: &gfx::Model, ptr: Mat4, 
 
 		if let Some(meshes) = &node.meshes {
 
-			for mesh in meshes {
+			let tex = model.texture().unwrap_or(&ctx.empty_tex);
 
-				let tex = model.texture().unwrap_or(&ctx.empty_tex);
+			for mesh in meshes {
 
 				ctx.draw_calls += 1;
 
 				mesh.gl_mesh().draw(
-					prim,
+					dctx.prim,
 					&ctx.cur_pipeline_3d,
 					&gfx::Uniform3D {
 						proj: ctx.proj_3d,
@@ -101,7 +105,7 @@ fn draw_mesh(ctx: &mut Ctx, prim: gl::Primitive, model: &gfx::Model, ptr: Mat4, 
 		}
 
 		for c in &node.children {
-			draw_mesh(ctx, prim, model, tr, *c);
+			draw_mesh(ctx, dctx, tr, *c);
 		}
 
 	}

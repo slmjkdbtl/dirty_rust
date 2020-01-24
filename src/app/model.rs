@@ -46,6 +46,7 @@ pub struct ModelData {
 	scene: Vec<usize>,
 	img: Option<img::Image>,
 	anims: HashMap<usize, Anim>,
+	anim_len: f32,
 }
 
 #[derive(Clone)]
@@ -76,12 +77,12 @@ impl Mesh {
 pub struct Model {
 	nodes: HashMap<usize, Node>,
 	anims: HashMap<usize, Anim>,
+	anim_len: f32,
 	scene: Vec<usize>,
 	bound: (Vec3, Vec3),
 	texture: Option<Texture>,
 }
 
-// TODO: deal with non-mesh nodes
 fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::Node) {
 
 	let id = node.index();
@@ -196,12 +197,16 @@ type Track<T> = Vec<(f32, T)>;
 
 #[derive(Clone, Debug)]
 pub struct Anim {
-	pos: Option<Track<Vec3>>,
-	rot: Option<Track<Vec4>>,
-	scale: Option<Track<Vec3>>,
+	pos: Track<Vec3>,
+	rot: Track<Vec4>,
+	scale: Track<Vec3>,
 }
 
 fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
+
+	if track.is_empty() {
+		return None;
+	}
 
 	if let Some((k, _)) = track.first() {
 		if *k > t {
@@ -236,40 +241,33 @@ impl Anim {
 	pub fn len(&self) -> f32 {
 
 		let t1 = self.pos
-			.as_ref()
-			.map(|track| track.last().map(|(t, _)| *t))
-			.flatten()
+			.last()
+			.map(|(t, _)| *t)
 			.unwrap_or(0.0);
 
-		let t2 = self.rot.as_ref()
-			.map(|track| track.last().map(|(t, _)| *t))
-			.flatten()
+		let t2 = self.rot
+			.last()
+			.map(|(t, _)| *t)
 			.unwrap_or(0.0);
 
-		let t3 = self.scale.as_ref()
-			.map(|track| track.last().map(|(t, _)| *t))
-			.flatten()
+		let t3 = self.scale
+			.last()
+			.map(|(t, _)| *t)
 			.unwrap_or(0.0);
 
-		return t1.max(t2).max(t3);
+		return t1
+			.max(t2)
+			.max(t3)
+			;
 
 	}
 
 	pub fn get_transform(&self, t: f32) -> (Option<Vec3>, Option<Vec4>, Option<Vec3>) {
 
 		return (
-			self.pos
-				.as_ref()
-				.map(|track| get_track_val(&track, t))
-				.flatten(),
-			self.rot
-				.as_ref()
-				.map(|track| get_track_val(&track, t))
-				.flatten(),
-			self.scale
-				.as_ref()
-				.map(|track| get_track_val(&track, t))
-				.flatten(),
+			get_track_val(&self.pos, t),
+			get_track_val(&self.rot, t),
+			get_track_val(&self.scale, t),
 		);
 
 	}
@@ -325,9 +323,9 @@ impl Model {
 				let sampler = c.sampler();
 
 				let mut anim = anims.entry(node_id).or_insert(Anim {
-					pos: None,
-					rot: None,
-					scale: None,
+					pos: vec![],
+					rot: vec![],
+					scale: vec![],
 				});
 
 				// TODO
@@ -358,7 +356,7 @@ impl Model {
 								.ok_or(Error::Gltf(format!("failed to read anim")))?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
 						}
-						anim.pos = Some(values);
+						anim.pos = values;
 					}
 
 					ReadOutputs::Rotations(rotations) => {
@@ -369,7 +367,7 @@ impl Model {
 								.ok_or(Error::Gltf(format!("failed to read anim")))?;
 							values.push((*t, vec4!(v[0], v[1], v[2], v[3])));
 						}
-						anim.rot = Some(values);
+						anim.rot = values;
 					}
 
 					ReadOutputs::Scales(scales) => {
@@ -380,7 +378,7 @@ impl Model {
 								.ok_or(Error::Gltf(format!("failed to read anim")))?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
 						}
-						anim.scale = Some(values);
+						anim.scale = values;
 					}
 
 					_ => {}
@@ -389,6 +387,12 @@ impl Model {
 
 			}
 
+		}
+
+		let mut anim_len = 0.0f32;
+
+		for a in anims.values() {
+			anim_len = anim_len.max(a.len());
 		}
 
 		// mesh
@@ -407,6 +411,7 @@ impl Model {
 			scene: scene,
 			img: img,
 			anims: anims,
+			anim_len: anim_len,
 		});
 
 	}
@@ -494,6 +499,7 @@ impl Model {
 			scene: scene,
 			img: img,
 			anims: hmap![],
+			anim_len: 0.0,
 		});
 
 	}
@@ -508,6 +514,7 @@ impl Model {
 		};
 
 		let anims = data.anims;
+		let anim_len = data.anim_len;
 		let scene = data.scene;
 
 		let nodes = data.nodes.into_iter().map(|(id, node)| {
@@ -531,6 +538,7 @@ impl Model {
 		return Ok(Self {
 			bound: get_bound(&nodes, &scene),
 			nodes: nodes,
+			anim_len: anim_len,
 			anims: anims,
 			scene: scene,
 			texture: tex,
@@ -554,6 +562,10 @@ impl Model {
 
 	pub fn get_anim(&self, id: usize) -> Option<&Anim> {
 		return self.anims.get(&id);
+	}
+
+	pub fn anim_len(&self) -> f32 {
+		return self.anim_len;
 	}
 
 	pub fn scene(&self) -> &[usize] {
