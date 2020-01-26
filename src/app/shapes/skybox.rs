@@ -33,8 +33,8 @@ impl<'a> Drawable for Skybox<'a> {
 			gl::Primitive::Triangle,
 			&ctx.pipeline_cubemap,
 			&gfx::UniformCubemap {
-				proj: ctx.proj_3d,
-				view: ctx.view_3d.remove_translation(),
+				proj: ctx.proj,
+				view: ctx.view.remove_translation(),
 				color: self.color,
 				tex: self.skybox.texture().clone(),
 			},

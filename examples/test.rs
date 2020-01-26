@@ -79,7 +79,6 @@ impl State for Game {
 fn main() -> Result<()> {
 	return launcher()
 		.default_font(res::font::UNSCII)
-		.scale_mode(gfx::ScaleMode::Letterbox)
 		.resizable(true)
 		.run::<Game>();
 }

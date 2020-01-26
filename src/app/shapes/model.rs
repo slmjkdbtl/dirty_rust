@@ -88,8 +88,8 @@ fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
 				dctx.prim,
 				&ctx.cur_pipeline_3d,
 				&gfx::Uniform3D {
-					proj: ctx.proj_3d,
-					view: ctx.view_3d,
+					proj: ctx.proj,
+					view: ctx.view,
 					model: ctx.transform * tr,
 					color: rgba!(1),
 					tex: tex.clone(),

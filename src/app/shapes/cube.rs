@@ -25,8 +25,8 @@ impl Drawable for Cube {
 			gl::Primitive::Triangle,
 			&ctx.cur_pipeline_3d,
 			&gfx::Uniform3D {
-				proj: ctx.proj_3d,
-				view: ctx.view_3d,
+				proj: ctx.proj,
+				view: ctx.view,
 				model: ctx.transform,
 				color: rgba!(),
 				tex: ctx.empty_tex.clone(),

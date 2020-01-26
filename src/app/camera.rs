@@ -7,7 +7,6 @@ use super::*;
 pub trait Camera {
 	fn projection(&self) -> Mat4;
 	fn lookat(&self) -> Mat4;
-	fn pos(&self) -> Vec3;
 }
 
 /// 3d perspective camera
@@ -86,6 +85,10 @@ impl PerspectiveCam {
 		return self.pitch;
 	}
 
+	pub fn pos(&self) -> Vec3 {
+		return self.pos;
+	}
+
 }
 
 impl Camera for PerspectiveCam {
@@ -95,18 +98,15 @@ impl Camera for PerspectiveCam {
 	fn lookat(&self) -> Mat4 {
 		return lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
 	}
-	fn pos(&self) -> Vec3 {
-		return self.pos;
-	}
 }
 
 /// orthographics camera
 #[derive(Clone)]
 pub struct OrthoCam {
-	width: f32,
-	height: f32,
-	near: f32,
-	far: f32,
+	pub width: f32,
+	pub height: f32,
+	pub near: f32,
+	pub far: f32,
 }
 
 impl OrthoCam {
@@ -136,9 +136,6 @@ impl Camera for OrthoCam {
 	}
 	fn lookat(&self) -> Mat4 {
 		return mat4!();
-	}
-	fn pos(&self) -> Vec3 {
-		return vec3!();
 	}
 }
 

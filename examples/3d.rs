@@ -277,7 +277,7 @@ impl app::State for Game {
 		ctx.draw_on(&self.canvas2, |ctx| {
 			ctx.clear();
 			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-				resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+				resolution: vec2!(ctx.width(), ctx.height()),
 				size: 3.0,
 			}, |ctx| {
 				ctx.draw(&shapes::canvas(&self.canvas))?;
@@ -314,7 +314,6 @@ fn main() {
 		.cursor_hidden(true)
 		.cursor_locked(true)
 		.resizable(true)
-		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Game>() {
 		println!("{}", err);
 	}
