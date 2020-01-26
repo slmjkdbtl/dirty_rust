@@ -108,7 +108,7 @@ impl Drawable for Polygon {
 				&indices,
 				&ctx.cur_pipeline_2d,
 				&gfx::Uniform2D {
-					proj: ctx.proj_2d,
+					proj: ctx.proj,
 					tex: ctx.empty_tex.clone(),
 					custom: ctx.cur_custom_uniform_2d.clone(),
 				}

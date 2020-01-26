@@ -47,6 +47,8 @@ use glow::HasRenderLoop;
 
 use derive_more::*;
 
+use gfx::Camera;
+
 use input::ButtonState;
 use input::Key;
 use input::Mouse;
@@ -54,8 +56,8 @@ use input::GamepadID;
 use input::GamepadButton;
 
 const DRAW_COUNT: usize = 65536;
-const NEAR_2D: f32 = -1024.0;
-const FAR_2D: f32 = 1024.0;
+const NEAR: f32 = -1024.0;
+const FAR: f32 = 1024.0;
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -95,9 +97,8 @@ pub struct Ctx {
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
 
-	pub(self) proj_2d: math::Mat4,
-	pub(self) proj_3d: math::Mat4,
-	pub(self) view_3d: math::Mat4,
+	pub(self) proj: Mat4,
+	pub(self) view: Mat4,
 
 	pub(self) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
 	pub(self) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
@@ -238,6 +239,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(c.r, c.g, c.b, c.a);
 
+	let cam = gfx::OrthoCam::new(conf.width as f32, conf.height as f32, NEAR, FAR);
+
 	let empty_tex = gl::Texture2D::from(&gl, 1, 1, &[255; 4])?;
 	let empty_tex = gfx::Texture::from_gl_tex(empty_tex);
 
@@ -249,25 +252,12 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
 
-	let proj_2d = gfx::OrthoProj {
-		width: conf.width as f32,
-		height: conf.height as f32,
-		near: conf.near,
-		far: conf.far,
-	};
-
-	let proj_2d = proj_2d.as_mat4();
-
 	let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
 	let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
 
 	let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
 
 	let pipeline_cmap = gl::Pipeline::new(&gl, CUBEMAP_VERT, CUBEMAP_FRAG)?;
-
-	use gfx::Camera;
-
-	let cam_3d = gfx::PerspectiveCam::new(60.0, conf.width as f32 / conf.height as f32, 0.1, 1024.0, vec3!(), 0.0, 0.0);
 
 	let font_data = conf.default_font.take().unwrap_or(CP437);
 	let font = gfx::BitmapFont::from_data(&gl, font_data)?;
@@ -309,9 +299,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 		gl: Rc::new(gl),
 
-		proj_2d: proj_2d,
-		view_3d: cam_3d.lookat(),
-		proj_3d: cam_3d.projection(),
+		proj: cam.projection(),
+		view: cam.lookat(),
 
 		empty_tex: empty_tex,
 
@@ -446,11 +435,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 				WEvent::CursorMoved { position, .. } => {
 
 					let mpos: Vec2 = (*position).into();
-					let (vpos, vw, vh) = ctx.cur_viewport();
-					let (gw, gh) = (ctx.gwidth(), ctx.gheight());
-					let mpos = mpos - vpos;
-					let mpos = mpos * vec2!(gw / vw, gh / vh);
-					let mpos = vec2!(mpos.x - gw / 2.0, gh / 2.0 - mpos.y);
+					let (w, h) = (ctx.width as f32, ctx.height as f32);
+					let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
 
 					ctx.mouse_pos = mpos;
 
@@ -488,7 +474,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 					ctx.width = w;
 					ctx.height = h;
-					ctx.windowed_ctx.resize(lsize.to_physical(dpi));
+					ctx.reset_default_cam();
+					ctx.windowed_ctx.resize(*size);
 
 					s.event(&mut ctx, &Event::Resize(w, h));
 
@@ -526,13 +513,12 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			glutin::event::Event::DeviceEvent { event, .. } => match event {
 				DEvent::MouseMotion { delta } => {
-					let scale = ctx.conf.scale;
-					s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1) / scale));
+					s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1)));
 				},
 				_ => (),
 			},
 
-			glutin::event::Event::MainEventsCleared => {
+			glutin::event::Event::RedrawRequested(_) => {
 
 				if let Some(fps_cap) = ctx.conf.fps_cap {
 
@@ -579,20 +565,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 				s.update(&mut ctx);
 				gfx::begin(&mut ctx);
-
-				ctx.draw_on(&backbuffer, |ctx| {
-
-					ctx.clear();
-
-					ctx.push(mat4!().s2(vec2!(ctx.conf.scale)), |mut cc| {
-						return s.draw(&mut cc);
-					});
-
-					return Ok(());
-
-				});
-
-				ctx.draw(&shapes::canvas(&backbuffer));
+				s.draw(&mut ctx);
 				gfx::end(&mut ctx);
 				window::swap(&ctx);
 
@@ -600,6 +573,10 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					*flow = ControlFlow::Exit;
 				}
 
+			},
+
+			glutin::event::Event::MainEventsCleared => {
+				ctx.windowed_ctx.window().request_redraw();
 			},
 
 			_ => (),
@@ -816,16 +793,6 @@ impl Launcher {
 
 	pub fn texture_filter(mut self, f: gfx::FilterMode) -> Self {
 		self.conf.texture_filter = f;
-		return self;
-	}
-
-	pub fn scale_mode(mut self, m: gfx::ScaleMode) -> Self {
-		self.conf.scale_mode = m;
-		return self;
-	}
-
-	pub fn scale(mut self, s: f32) -> Self {
-		self.conf.scale = s;
 		return self;
 	}
 

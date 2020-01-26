@@ -132,7 +132,7 @@ impl app::State for Viewer {
 			helping: false,
 			scale: 0.0,
 			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
-			canvas: gfx::Canvas::new(ctx, ctx.gwidth() as i32, ctx.gheight() as i32)?,
+			canvas: gfx::Canvas::new(ctx, ctx.width() as i32, ctx.height() as i32)?,
 		});
 
 	}
@@ -339,7 +339,7 @@ impl app::State for Viewer {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-			resolution: vec2!(ctx.gwidth(), ctx.gheight()),
+			resolution: vec2!(ctx.width(), ctx.height()),
 			size: 2.0,
 		}, |ctx| {
 			ctx.draw(&shapes::canvas(&self.canvas))?;
@@ -433,7 +433,6 @@ fn main() {
 
 	if let Err(err) = app::launcher()
 		.resizable(true)
-		.scale_mode(gfx::ScaleMode::Letterbox)
 		.run::<Viewer>() {
 		println!("{}", err);
 	}

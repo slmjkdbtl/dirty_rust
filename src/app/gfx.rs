@@ -90,16 +90,15 @@ impl Ctx {
 
 		let t = self.transform;
 		let dpi = self.dpi();
-		let o_proj_2d = self.proj_2d;
 
 		self.cur_canvas = Some(canvas.clone());
 
-		self.proj_2d = gfx::OrthoProj {
-			width: canvas.width() as f32,
-			height: canvas.height() as f32,
-			near: NEAR_2D,
-			far: FAR_2D,
-		}.as_mat4();
+		self.apply_cam(&OrthoCam::new(
+			canvas.width() as f32,
+			canvas.height() as f32,
+			NEAR,
+			FAR,
+		));
 
 		self.transform = mat4!();
 
@@ -113,44 +112,39 @@ impl Ctx {
 
 		self.cur_canvas = None;
 		self.transform = t;
-		self.proj_2d = o_proj_2d;
+
+		self.reset_default_cam();
 		self.reset_viewport();
 
 		return Ok(());
 
 	}
 
-	pub(super) fn cur_viewport(&self) -> (Vec2, f32, f32) {
+	pub(super) fn apply_cam(&mut self, cam: &Camera) {
+		self.proj = cam.projection();
+		self.view = cam.lookat();
+	}
 
-		let (gw, gh) = (self.conf.width as f32, self.conf.height as f32);
-		let (w, h) = (self.width() as f32, self.height() as f32);
+	pub(super) fn reset_default_cam(&mut self) {
 
-		return match self.conf.scale_mode {
-			ScaleMode::Stretch => {
-				(vec2!(0), w, h)
-			},
-			ScaleMode::Letterbox => {
-				let aspect = gw / gh;
-				if w / h > aspect {
-					(vec2!((w - h * aspect) * 0.5, 0), h * aspect, h)
-				} else {
-					(vec2!(0, (h - w / aspect) * 0.5), w, w / aspect)
-				}
-			},
-		};
+		self.apply_cam(&OrthoCam::new(
+			self.width() as f32,
+			self.height() as f32,
+			NEAR,
+			FAR,
+		));
 
 	}
 
 	fn reset_viewport(&self) {
 
 		let dpi = self.dpi();
-		let (pos, aw, ah) = self.cur_viewport();
 
 		self.gl.viewport(
-			(pos.x * dpi) as i32,
-			(pos.y * dpi) as i32,
-			(aw * dpi) as i32,
-			(ah * dpi) as i32,
+			0,
+			0,
+			(self.width as f32 * dpi) as i32,
+			(self.height as f32 * dpi) as i32,
 		);
 
 	}
@@ -250,27 +244,21 @@ impl Ctx {
 	}
 
 	pub fn coord(&self, coord: Origin) -> Vec2 {
-
-		let w = self.gwidth();
-		let h = self.gheight();
-		let coord_pt = coord.as_pt();
-
-		return coord_pt / 2.0 * vec2!(w, h);
-
+		return coord.as_pt() / 2.0 * vec2!(self.width, self.height);
 	}
 
 	pub fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let oview_3d = self.view_3d;
-		let oproj_3d = self.proj_3d;
+		let oview = self.view;
+		let oproj = self.proj;
 
-		self.view_3d = cam.lookat();
-		self.proj_3d = cam.projection();
+		self.view = cam.lookat();
+		self.proj = cam.projection();
 
 		f(self)?;
 
-		self.view_3d = oview_3d;
-		self.proj_3d = oproj_3d;
+		self.view = oview;
+		self.proj = oproj;
 
 		return Ok(());
 
