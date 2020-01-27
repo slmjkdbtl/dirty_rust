@@ -159,7 +159,7 @@ impl app::State for Game {
 			filter_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/filter.frag"))?,
 			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
-			cam: gfx::PerspectiveCam::new(60.0, ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
+			cam: gfx::PerspectiveCam::new(60f32.to_radians(), ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
 			move_speed: size * 2.0,
@@ -174,6 +174,13 @@ impl app::State for Game {
 		use input::Event::*;
 
 		match e {
+
+			Resize(w, h) => {
+
+				self.canvas = gfx::Canvas::new(ctx, *w, *h)?;
+				self.canvas2 = gfx::Canvas::new(ctx, *w, *h)?;
+
+			},
 
 			KeyPress(k) => {
 				let mods = ctx.key_mods();

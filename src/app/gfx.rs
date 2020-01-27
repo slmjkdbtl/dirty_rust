@@ -28,7 +28,7 @@ impl Ctx {
 
 	pub fn clear(&mut self) {
 
-		flush(self);
+		self.flush();
 		self.gl.clear(Surface::Color);
 		self.gl.clear(Surface::Depth);
 		self.gl.clear(Surface::Stencil);
@@ -37,7 +37,7 @@ impl Ctx {
 
 	pub fn clear_ex(&mut self, s: Surface) {
 
-		flush(self);
+		self.flush();
 		self.gl.clear(s);
 
 	}
@@ -80,33 +80,63 @@ impl Ctx {
 		});
 	}
 
+	pub(super) fn flush(&mut self) {
+		self.renderer_2d.flush();
+		self.renderer_3d.flush();
+	}
+
+	pub(super) fn begin_frame(&mut self) {
+
+		self.draw_calls_last = self.draw_calls;
+		self.draw_calls = 0;
+		self.clear();
+
+	}
+
+	pub(super) fn end_frame(&mut self) {
+
+		self.flush();
+		self.transform = mat4!();
+		self.draw_calls += self.renderer_2d.draw_count();
+		self.draw_calls += self.renderer_3d.draw_count();
+		self.renderer_2d.clear();
+		self.renderer_3d.clear();
+
+	}
+
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
 			return Err(format!("cannot use canvas inside a canvas"));
 		}
 
-		flush(self);
+		self.flush();
 
 		let t = self.transform;
 		let dpi = self.dpi();
+		let (cw, ch) = (canvas.width(), canvas.height());
 
 		self.cur_canvas = Some(canvas.clone());
 
 		self.apply_cam(&OrthoCam::new(
-			canvas.width() as f32,
-			canvas.height() as f32,
+			cw as f32,
+			ch as f32,
 			NEAR,
 			FAR,
 		));
 
 		self.transform = mat4!();
 
-		self.gl.viewport(0, 0, (canvas.width() as f32 * dpi) as i32, (canvas.height() as f32 * dpi) as i32);
+		self.gl.viewport(
+			0,
+			0,
+			(cw as f32 * dpi) as i32,
+			(ch as f32 * dpi) as i32,
+		);
 
 		canvas.gl_fbuf().with(|| -> Result<()> {
 			f(self)?;
-			flush(self);
+			self.flush();
 			return Ok(());
 		})?;
 
@@ -114,7 +144,13 @@ impl Ctx {
 		self.transform = t;
 
 		self.reset_default_cam();
-		self.reset_viewport();
+
+		self.gl.viewport(
+			0,
+			0,
+			(self.width as f32 * dpi) as i32,
+			(self.height as f32 * dpi) as i32,
+		);
 
 		return Ok(());
 
@@ -136,19 +172,6 @@ impl Ctx {
 
 	}
 
-	fn reset_viewport(&self) {
-
-		let dpi = self.dpi();
-
-		self.gl.viewport(
-			0,
-			0,
-			(self.width as f32 * dpi) as i32,
-			(self.height as f32 * dpi) as i32,
-		);
-
-	}
-
 	pub fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let uniforms = uniform.values()
@@ -156,11 +179,11 @@ impl Ctx {
 			.map(|(n, v)| (n, v.into_uniform()))
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
-		flush(self);
+		self.flush();
 		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.gl_pipeline());
 		self.cur_custom_uniform_2d = Some(uniforms);
 		f(self)?;
-		flush(self);
+		self.flush();
 		self.cur_pipeline_2d = self.default_pipeline_2d.clone();
 		self.cur_custom_uniform_2d = None;
 
@@ -175,11 +198,11 @@ impl Ctx {
 			.map(|(n, v)| (n, v.into_uniform()))
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
-		flush(self);
+		self.flush();
 		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.gl_pipeline());
 		self.cur_custom_uniform_3d = Some(uniforms);
 		f(self)?;
-		flush(self);
+		self.flush();
 		self.cur_pipeline_3d = self.default_pipeline_3d.clone();
 		self.cur_custom_uniform_3d = None;
 
@@ -191,7 +214,7 @@ impl Ctx {
 
 		let gl = self.gl.clone();
 
-		flush(self);
+		self.flush();
 		gl.enable(gl::Capability::StencilTest);
 		gl.clear(Surface::Stencil);
 
@@ -207,7 +230,7 @@ impl Ctx {
 			return mask(self);
 		})?;
 
-		flush(self);
+		self.flush();
 
 		gl.stencil(gl::StencilFunc {
 			cmp: Cmp::Equal,
@@ -221,7 +244,7 @@ impl Ctx {
 			return draw(self);
 		})?;
 
-		flush(self);
+		self.flush();
 		gl.disable(gl::Capability::StencilTest);
 
 		return Ok(());
@@ -233,10 +256,10 @@ impl Ctx {
 		let default = Blend::Alpha.to_gl();
 		let b = b.to_gl();
 
-		flush(self);
+		self.flush();
 		self.gl.blend_func(b.0, b.1);
 		f(self)?;
-		flush(self);
+		self.flush();
 		self.gl.blend_func(default.0, default.1);
 
 		return Ok(());
@@ -274,101 +297,12 @@ impl Ctx {
 
 }
 
-pub(super) fn begin(ctx: &mut Ctx) {
-
-	ctx.draw_calls_last = ctx.draw_calls;
-	ctx.draw_calls = 0;
-	ctx.clear();
-	ctx.reset_viewport();
-
-}
-
-pub(super) fn end(ctx: &mut Ctx) {
-
-	flush(ctx);
-	ctx.transform = mat4!();
-	ctx.draw_calls += ctx.renderer_2d.draw_count();
-	ctx.draw_calls += ctx.renderer_3d.draw_count();
-	ctx.renderer_2d.clear();
-	ctx.renderer_3d.clear();
-
-}
-
-pub(super) fn flush(ctx: &mut Ctx) {
-	ctx.renderer_2d.flush();
-	ctx.renderer_3d.flush();
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum ScaleMode {
-	Letterbox,
-	Stretch,
-}
-
 #[derive(Debug, Clone, Copy)]
 pub enum Flip {
 	None,
 	X,
 	Y,
 	XY,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct PerspProj {
-	pub fov: f32,
-	pub aspect: f32,
-	pub near: f32,
-	pub far: f32,
-}
-
-impl PerspProj {
-
-	pub fn as_mat4(&self) -> Mat4 {
-
-		let f = 1.0 / (self.fov / 2.0).tan();
-
-		return mat4!(
-			-f / self.aspect, 0.0, 0.0, 0.0,
-			0.0, f, 0.0, 0.0,
-			0.0, 0.0, (self.far + self.near) / (self.far - self.near), 1.0,
-			0.0, 0.0, -(2.0 * self.far * self.near) / (self.far - self.near), 0.0,
-		);
-
-	}
-
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct OrthoProj {
-	pub width: f32,
-	pub height: f32,
-	pub near: f32,
-	pub far: f32,
-}
-
-impl OrthoProj {
-
-	pub fn as_mat4(&self) -> Mat4 {
-
-		let w = self.width;
-		let h = self.height;
-		let near = self.near;
-		let far = self.far;
-
-		let (left, right, bottom, top) = (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0);
-		let tx = -(right + left) / (right - left);
-		let ty = -(top + bottom) / (top - bottom);
-		let tz = -(far + near) / (far - near);
-
-		return Mat4::new([
-			2.0 / (right - left), 0.0, 0.0, 0.0,
-			0.0, 2.0 / (top - bottom), 0.0, 0.0,
-			0.0, 0.0, -2.0 / (far - near), 0.0,
-			tx, ty, tz, 1.0,
-		]);
-
-	}
-
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

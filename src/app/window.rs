@@ -128,13 +128,13 @@ impl Ctx {
 
 	}
 
-}
+	pub(super) fn swap(&self) -> Result<()> {
+		self.windowed_ctx
+			.swap_buffers()
+			.map_err(|_| format!("failed to swap buffer"))?;
+		return Ok(());
+	}
 
-pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
-	ctx.windowed_ctx
-		.swap_buffers()
-		.map_err(|_| format!("failed to swap buffer"))?;
-	return Ok(());
 }
 
 impl From<glutin::event::MouseScrollDelta> for Vec2 {
