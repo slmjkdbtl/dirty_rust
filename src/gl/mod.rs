@@ -23,7 +23,6 @@ use std::marker::PhantomData;
 
 use glow::HasContext;
 
-use crate::Error;
 use crate::Result;
 
 pub(self) type GLCtx = glow::Context;
@@ -95,18 +94,16 @@ impl Device {
 
 		unsafe {
 
-			use Error::OpenGL;
-
 			return match self.ctx.get_error() {
 				glow::NO_ERROR => Ok(()),
-				glow::INVALID_ENUM => Err(OpenGL(format!("invalid enum"))),
-				glow::INVALID_VALUE => Err(OpenGL(format!("invalid value"))),
-				glow::INVALID_OPERATION => Err(OpenGL(format!("invalid operation"))),
-				glow::STACK_OVERFLOW => Err(OpenGL(format!("stack overflow"))),
-				glow::STACK_UNDERFLOW => Err(OpenGL(format!("stack underflow"))),
-				glow::OUT_OF_MEMORY => Err(OpenGL(format!("out of memory"))),
-				glow::INVALID_FRAMEBUFFER_OPERATION => Err(OpenGL(format!("invalid framebuffer operation"))),
-				_ => Err(OpenGL(format!("unknown error"))),
+				glow::INVALID_ENUM => Err(format!("opengl: invalid enum")),
+				glow::INVALID_VALUE => Err(format!("opengl: invalid value")),
+				glow::INVALID_OPERATION => Err(format!("opengl: invalid operation")),
+				glow::STACK_OVERFLOW => Err(format!("opengl: stack overflow")),
+				glow::STACK_UNDERFLOW => Err(format!("opengl: stack underflow")),
+				glow::OUT_OF_MEMORY => Err(format!("opengl: out of memory")),
+				glow::INVALID_FRAMEBUFFER_OPERATION => Err(format!("opengl: invalid framebuffer operation")),
+				_ => Err(format!("opengl: unknown error")),
 			};
 
 		}

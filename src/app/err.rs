@@ -1,6 +1,0 @@
-// wengwengweng
-
-pub enum GfxError {
-	// ...
-}
-

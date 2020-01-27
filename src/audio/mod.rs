@@ -11,7 +11,6 @@ use rodio::Sink;
 use rodio::source::Buffered;
 
 use crate::Result;
-use crate::Error;
 
 /// base struct containing sound data and effects data
 #[derive(Clone)]
@@ -35,7 +34,7 @@ pub struct Track {
 
 fn get_device() -> Result<rodio::Device> {
 	return rodio::default_output_device()
-		.ok_or(Error::Audio("failed to get output device".into()));
+		.ok_or(format!("failed to get audio output device"));
 }
 
 pub fn play(s: &Sound) -> Result<()> {
@@ -59,7 +58,8 @@ impl Sound {
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let cursor = Cursor::new(data.to_owned());
-		let source = Decoder::new(cursor)?;
+		let source = Decoder::new(cursor)
+			.map_err(|_| format!("failed to parse sound from file"))?;
 
 		return Ok(Self {
 			buffer: source.buffered(),

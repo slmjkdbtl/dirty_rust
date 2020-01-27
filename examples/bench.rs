@@ -48,8 +48,8 @@ impl app::State for Game {
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		let w = ctx.gwidth() as i32;
-		let h = ctx.gheight() as i32;
+		let w = ctx.width();
+		let h = ctx.height();
 
 		for _ in 0..self.count {
 			ctx.push(mat4!()

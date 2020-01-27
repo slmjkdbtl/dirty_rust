@@ -8,7 +8,6 @@
 - [misc] gltf morph
 - [misc] integrate lighting into gkit
 - [gfx] oblique projection
-- [gfx] resize canvas
 
 == TODO
 - [http] use rustls instead of native-tls

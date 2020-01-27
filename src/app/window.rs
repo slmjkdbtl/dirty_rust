@@ -2,7 +2,6 @@
 
 //! Window Operations
 
-#[cfg(not(web))]
 use glutin::dpi::*;
 
 use clipboard::ClipboardProvider;
@@ -17,28 +16,18 @@ impl Ctx {
 
 	pub fn set_fullscreen(&mut self, b: bool) {
 
-		#[cfg(not(web))] {
+		let window = self.windowed_ctx.window();
 
-			let window = self.windowed_ctx.window();
-
-			if b {
-				window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
-			} else {
-				window.set_fullscreen(None);
-			}
-
+		if b {
+			window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
+		} else {
+			window.set_fullscreen(None);
 		}
 
 	}
 
 	pub fn is_fullscreen(&self) -> bool {
-
-		#[cfg(not(web))]
 		return self.windowed_ctx.window().fullscreen().is_some();
-
-		#[cfg(web)]
-		return false;
-
 	}
 
 	pub fn toggle_fullscreen(&mut self) {
@@ -46,7 +35,6 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		#[cfg(not(web))]
 		self.windowed_ctx.window().set_cursor_visible(!b);
 		self.cursor_hidden = b;
 	}
@@ -61,8 +49,11 @@ impl Ctx {
 
 	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
 
-		#[cfg(not(web))]
-		self.windowed_ctx.window().set_cursor_grab(b);
+		self.windowed_ctx
+			.window()
+			.set_cursor_grab(b)
+			.map_err(|_| format!("failed to set mouse cursor"))?;
+
 		self.cursor_locked = b;
 
 		return Ok(());
@@ -85,11 +76,7 @@ impl Ctx {
 
 		self.title = t.to_owned();
 
-		#[cfg(not(web))]
 		self.windowed_ctx.window().set_title(t);
-
-		#[cfg(web)]
-		stdweb::web::document().set_title(t);
 
 	}
 
@@ -98,13 +85,7 @@ impl Ctx {
 	}
 
 	pub fn dpi(&self) -> f32 {
-
-		#[cfg(not(web))]
 		return self.windowed_ctx.window().scale_factor() as f32;
-
-		#[cfg(web)]
-		return 1.0;
-
 	}
 
 	pub fn width(&self) -> i32 {
@@ -119,9 +100,14 @@ impl Ctx {
 
 		let (w, h) = (self.width as f32, self.height as f32);
 		let mpos = vec2!(w / 2.0 + mpos.x, h / 2.0 - mpos.y);
+		let g_mpos: LogicalPosition<f64> = mpos.into();
 
-// 		#[cfg(not(web))]
-// 		self.windowed_ctx.window().set_cursor_position(mpos.into());
+		self.windowed_ctx
+			.window()
+			.set_cursor_position(g_mpos)
+			.map_err(|_| format!("failed to set mouse position"))?
+			;
+
 		self.mouse_pos = mpos;
 
 		return Ok(());
@@ -133,18 +119,24 @@ impl Ctx {
 	}
 
 	pub fn set_clipboard(&mut self, s: &str) -> Result<()> {
-		return Ok(self.clipboard_ctx.set_contents(s.to_owned())?);
+
+		self.clipboard_ctx
+			.set_contents(s.to_owned())
+			.map_err(|_| format!("failed to set clipboard"))?;
+
+		return Ok(());
+
 	}
 
 }
 
 pub(super) fn swap(ctx: &app::Ctx) -> Result<()> {
-	#[cfg(not(web))]
-	ctx.windowed_ctx.swap_buffers()?;
+	ctx.windowed_ctx
+		.swap_buffers()
+		.map_err(|_| format!("failed to swap buffer"))?;
 	return Ok(());
 }
 
-#[cfg(not(web))]
 impl From<glutin::event::MouseScrollDelta> for Vec2 {
 	fn from(delta: glutin::event::MouseScrollDelta) -> Self {
 		use glutin::event::MouseScrollDelta;
@@ -159,7 +151,6 @@ impl From<glutin::event::MouseScrollDelta> for Vec2 {
 	}
 }
 
-#[cfg(not(web))]
 impl From<Vec2> for LogicalPosition<f64> {
 	fn from(pos: Vec2) -> Self {
 		return Self {
@@ -169,7 +160,6 @@ impl From<Vec2> for LogicalPosition<f64> {
 	}
 }
 
-#[cfg(not(web))]
 impl From<LogicalPosition<f64>> for Vec2 {
 	fn from(pos: LogicalPosition<f64>) -> Self {
 		return Self {
@@ -179,7 +169,6 @@ impl From<LogicalPosition<f64>> for Vec2 {
 	}
 }
 
-#[cfg(not(web))]
 impl From<PhysicalPosition<f64>> for Vec2 {
 	fn from(pos: PhysicalPosition<f64>) -> Self {
 		return Self {
@@ -189,7 +178,6 @@ impl From<PhysicalPosition<f64>> for Vec2 {
 	}
 }
 
-#[cfg(not(web))]
 impl From<PhysicalPosition<i32>> for Vec2 {
 	fn from(pos: PhysicalPosition<i32>) -> Self {
 		return Self {
