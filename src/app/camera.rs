@@ -92,12 +92,24 @@ impl PerspectiveCam {
 }
 
 impl Camera for PerspectiveCam {
+
 	fn projection(&self) -> Mat4 {
-		return perspective(self.fov.to_radians(), self.aspect, self.near, self.far);
+
+		let f = 1.0 / (self.fov / 2.0).tan();
+
+		return mat4!(
+			-f / self.aspect, 0.0, 0.0, 0.0,
+			0.0, f, 0.0, 0.0,
+			0.0, 0.0, (self.far + self.near) / (self.far - self.near), 1.0,
+			0.0, 0.0, -(2.0 * self.far * self.near) / (self.far - self.near), 0.0,
+		);
+
 	}
+
 	fn lookat(&self) -> Mat4 {
 		return lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
 	}
+
 }
 
 /// orthographics camera
@@ -126,29 +138,31 @@ impl OrthoCam {
 }
 
 impl Camera for OrthoCam {
+
 	fn projection(&self) -> Mat4 {
-		return gfx::OrthoProj {
-			width: self.width,
-			height: self.height,
-			near: self.near,
-			far: self.far,
-		}.as_mat4();
+
+		let w = self.width;
+		let h = self.height;
+		let near = self.near;
+		let far = self.far;
+
+		let (left, right, bottom, top) = (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0);
+		let tx = -(right + left) / (right - left);
+		let ty = -(top + bottom) / (top - bottom);
+		let tz = -(far + near) / (far - near);
+
+		return Mat4::new([
+			2.0 / (right - left), 0.0, 0.0, 0.0,
+			0.0, 2.0 / (top - bottom), 0.0, 0.0,
+			0.0, 0.0, -2.0 / (far - near), 0.0,
+			tx, ty, tz, 1.0,
+		]);
+
 	}
+
 	fn lookat(&self) -> Mat4 {
 		return mat4!();
 	}
-}
-
-fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Mat4 {
-
-	let f = 1.0 / (fov / 2.0).tan();
-
-	return mat4!(
-		-f / aspect, 0.0, 0.0, 0.0,
-		0.0, f, 0.0, 0.0,
-		0.0, 0.0, (far + near) / (far - near), 1.0,
-		0.0, 0.0, -(2.0 * far * near) / (far - near), 0.0,
-	);
 
 }
 

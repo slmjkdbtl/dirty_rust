@@ -286,10 +286,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	}
 
 	ctx.clear();
-	window::swap(&ctx)?;
+	ctx.swap()?;
 
 	let mut s = S::init(&mut ctx)?;
 
+	// TODO: deal with error inside
 	event_loop.run(move |event, _, flow| {
 
 		use glutin::event_loop::ControlFlow;
@@ -502,10 +503,10 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 				}
 
 				s.update(&mut ctx);
-				gfx::begin(&mut ctx);
+				ctx.begin_frame();
 				s.draw(&mut ctx);
-				gfx::end(&mut ctx);
-				window::swap(&ctx);
+				ctx.end_frame();
+				ctx.swap();
 
 				if ctx.quit {
 					*flow = ControlFlow::Exit;

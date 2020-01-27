@@ -48,8 +48,6 @@ impl State for Game {
 }
 
 fn main() -> Result<()> {
-	return launcher()
-		.transparent(true)
-		.run::<Game>();
+	return run::<Game>();
 }
 
