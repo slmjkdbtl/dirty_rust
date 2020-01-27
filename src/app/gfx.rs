@@ -80,30 +80,6 @@ impl Ctx {
 		});
 	}
 
-	pub(super) fn flush(&mut self) {
-		self.renderer_2d.flush();
-		self.renderer_3d.flush();
-	}
-
-	pub(super) fn begin_frame(&mut self) {
-
-		self.draw_calls_last = self.draw_calls;
-		self.draw_calls = 0;
-		self.clear();
-
-	}
-
-	pub(super) fn end_frame(&mut self) {
-
-		self.flush();
-		self.transform = mat4!();
-		self.draw_calls += self.renderer_2d.draw_count();
-		self.draw_calls += self.renderer_3d.draw_count();
-		self.renderer_2d.clear();
-		self.renderer_3d.clear();
-
-	}
-
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
@@ -153,22 +129,6 @@ impl Ctx {
 		);
 
 		return Ok(());
-
-	}
-
-	pub(super) fn apply_cam(&mut self, cam: &dyn Camera) {
-		self.proj = cam.projection();
-		self.view = cam.lookat();
-	}
-
-	pub(super) fn reset_default_cam(&mut self) {
-
-		self.apply_cam(&OrthoCam::new(
-			self.width() as f32,
-			self.height() as f32,
-			NEAR,
-			FAR,
-		));
 
 	}
 
@@ -293,6 +253,46 @@ impl Ctx {
 
 	pub fn default_font(&self) -> &impl Font {
 		return &self.default_font;
+	}
+
+	pub(super) fn flush(&mut self) {
+		self.renderer_2d.flush();
+		self.renderer_3d.flush();
+	}
+
+	pub(super) fn begin_frame(&mut self) {
+
+		self.draw_calls_last = self.draw_calls;
+		self.draw_calls = 0;
+		self.clear();
+
+	}
+
+	pub(super) fn end_frame(&mut self) {
+
+		self.flush();
+		self.transform = mat4!();
+		self.draw_calls += self.renderer_2d.draw_count();
+		self.draw_calls += self.renderer_3d.draw_count();
+		self.renderer_2d.clear();
+		self.renderer_3d.clear();
+
+	}
+
+	pub(super) fn apply_cam(&mut self, cam: &dyn Camera) {
+		self.proj = cam.projection();
+		self.view = cam.lookat();
+	}
+
+	pub(super) fn reset_default_cam(&mut self) {
+
+		self.apply_cam(&OrthoCam::new(
+			self.width() as f32,
+			self.height() as f32,
+			NEAR,
+			FAR,
+		));
+
 	}
 
 }

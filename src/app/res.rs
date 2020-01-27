@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Global Resources
+
 pub mod shader {
 
 	#[cfg(web)]

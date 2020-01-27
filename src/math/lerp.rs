@@ -11,12 +11,10 @@ pub trait Lerpable =
 
 pub trait Lerping: Lerpable {
 
-	/// linear interpolation
 	fn lerp(self, to: Self, amount: f32) -> Self {
 		return self + (to - self) * amount.clamp(0.0, 1.0);
 	}
 
-	/// cubic interpolation
 	fn smooth(self, to: Self, amount: f32) -> Self {
 
 		let t = amount.clamp(0.0, 1.0);

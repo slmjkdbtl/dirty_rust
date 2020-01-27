@@ -1,7 +1,7 @@
 // wengwengweng
 
 //! # DIRTY
-//! toolkit for things
+//! Toolkit for Games & Interactive Experiences
 
 #![feature(clamp)]
 #![feature(const_fn)]
@@ -12,7 +12,6 @@
 #![feature(fixed_size_array)]
 #![feature(type_alias_impl_trait)]
 
-// #![warn(missing_docs)]
 #![allow(unused_parens)]
 #![deny(clippy::implicit_return)]
 

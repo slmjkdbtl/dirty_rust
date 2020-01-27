@@ -375,7 +375,6 @@ impl TextArea {
 		};
 	}
 
-	/// set content
 	pub fn set_content(&mut self, content: &str) {
 		self.lines = content
 			.split('\n')
@@ -383,32 +382,26 @@ impl TextArea {
 			.collect();
 	}
 
-	/// get lines
 	pub fn lines(&self) -> &[String] {
 		return &self.lines;
 	}
 
-	/// get content as a String, lines joined with '\n'
 	pub fn content(&self) -> String {
 		return self.lines.join("\n");
 	}
 
-	/// get current cursor pos
 	pub fn cursor(&self) -> CursorPos {
 		return self.cursor;
 	}
 
-	/// get specified line
 	pub fn get_line_at(&self, ln: Line) -> Option<&String> {
 		return self.lines.get(ln as usize - 1);
 	}
 
-	/// get current line
 	pub fn get_line(&self) -> Option<&String> {
 		return self.get_line_at(self.cursor.line);
 	}
 
-	/// set specified line
 	pub fn set_line_at(&mut self, ln: Line, content: &str) {
 
 		if self.get_line_at(ln).is_some() {
@@ -425,12 +418,10 @@ impl TextArea {
 
 	}
 
-	/// set current line
 	pub fn set_line(&mut self, content: &str) {
 		self.set_line_at(self.cursor.line, content);
 	}
 
-	/// insert str at specified position
 	pub fn insert_str_at(&mut self, mut pos: CursorPos, text: &str) -> CursorPos {
 
 		if let Some(mut line) = self.get_line_at(pos.line).map(Clone::clone) {
@@ -448,12 +439,10 @@ impl TextArea {
 
 	}
 
-	/// insert str at current cursor position
 	pub fn insert_str(&mut self, text: &str) {
 		self.cursor = self.insert_str_at(self.cursor, text);
 	}
 
-	/// insert char at specified position
 	pub fn insert_at(&mut self, mut pos: CursorPos, ch: char) -> CursorPos {
 
 		if !ch.is_ascii() {
@@ -479,12 +468,10 @@ impl TextArea {
 
 	}
 
-	/// insert char at current cursor pos
 	pub fn insert(&mut self, ch: char) {
 		self.cursor = self.insert_at(self.cursor, ch);
 	}
 
-	/// delete secified line
 	pub fn del_line_at(&mut self, ln: Line) -> Line {
 
 		if ln as usize <= self.lines.len() {
@@ -508,17 +495,14 @@ impl TextArea {
 
 	}
 
-	/// delete current line
 	pub fn del_line(&mut self) {
 		self.cursor.line = self.del_line_at(self.cursor.line);
 	}
 
-	/// get char at position
 	pub fn char_at(&self, pos: CursorPos) -> Option<char> {
 		return self.get_line_at(pos.line)?.chars().nth(pos.col as usize - 1);
 	}
 
-	/// break and insert new line, calculating indent
 	pub fn break_line_at(&mut self, mut pos: CursorPos) -> CursorPos {
 
 		if let Some(line) = self.get_line_at(pos.line).map(Clone::clone) {
@@ -547,12 +531,10 @@ impl TextArea {
 
 	}
 
-	/// break_line_at() with cursor movement
 	pub fn break_line(&mut self) {
 		self.cursor = self.break_line_at(self.cursor);
 	}
 
-	/// delete char at specified position
 	pub fn del_at(&mut self, mut pos: CursorPos) -> CursorPos {
 
 		if let Some(mut line) = self.get_line_at(pos.line).map(Clone::clone) {
@@ -589,12 +571,10 @@ impl TextArea {
 
 	}
 
-	/// delete char at current cursor
 	pub fn del(&mut self) {
 		self.cursor = self.del_at(self.cursor);
 	}
 
-	/// delete the word at specified position
 	pub fn del_word_at(&mut self, mut pos: CursorPos) -> CursorPos {
 
 		if let Some(line) = self.get_line_at(pos.line).map(Clone::clone) {
@@ -632,14 +612,12 @@ impl TextArea {
 
 	}
 
-	/// delete the word before the cursor
 	pub fn del_word(&mut self) {
 		let pos = self.del_word_at(self.cursor);
 		self.move_to(pos);
 	}
 
 	// TODO: multiline
-	/// delete a range of text
 	pub fn del_range(&mut self, r: (CursorPos, CursorPos)) -> CursorPos {
 
 		let (start, end) = r;
@@ -666,7 +644,6 @@ impl TextArea {
 
 	}
 
-	/// clamp cursor to editing position
 	pub fn clamp_cursor(&self, pos: CursorPos) -> CursorPos {
 
 		if pos.col < 1 {
@@ -711,12 +688,10 @@ impl TextArea {
 
 	}
 
-	/// move cursor to specified position, clamped
 	pub fn move_to(&mut self, pos: CursorPos) {
 		self.cursor = self.clamp_cursor(pos);
 	}
 
-	/// move current cursor left
 	pub fn move_left(&mut self) {
 		self.move_to(CursorPos {
 			col: self.cursor.col - 1,
@@ -724,7 +699,6 @@ impl TextArea {
 		});
 	}
 
-	/// move current cursor right
 	pub fn move_right(&mut self) {
 		self.move_to(CursorPos {
 			col: self.cursor.col + 1,
@@ -732,7 +706,6 @@ impl TextArea {
 		});
 	}
 
-	/// move current cursor up
 	pub fn move_up(&mut self) {
 		self.move_to(CursorPos {
 			line: self.cursor.line - 1,
@@ -740,7 +713,6 @@ impl TextArea {
 		});
 	}
 
-	/// move current cursor down
 	pub fn move_down(&mut self) {
 		self.move_to(CursorPos {
 			line: self.cursor.line + 1,
@@ -748,21 +720,18 @@ impl TextArea {
 		});
 	}
 
-	/// move to the previous word
 	pub fn move_prev_word(&mut self) {
 		if let Some(pos) = self.prev_word() {
 			self.move_to(pos);
 		}
 	}
 
-	/// move to the next word
 	pub fn move_next_word(&mut self) {
 		if let Some(pos) = self.next_word() {
 			self.move_to(pos);
 		}
 	}
 
-	/// get next word position at specified position
 	pub fn next_word_at(&self, pos: CursorPos) -> Option<CursorPos> {
 
 		let line = self.get_line_at(pos.line)?;
@@ -791,12 +760,10 @@ impl TextArea {
 
 	}
 
-	/// get next word position at current cursor
 	pub fn next_word(&self) -> Option<CursorPos> {
 		return self.next_word_at(self.cursor);
 	}
 
-	/// get previous word position at specified position
 	pub fn prev_word_at(&self, pos: CursorPos) -> Option<CursorPos> {
 
 		let line = self.get_line_at(pos.line)?;
@@ -827,12 +794,10 @@ impl TextArea {
 
 	}
 
-	/// get previous word position at current cursor
 	pub fn prev_word(&self) -> Option<CursorPos> {
 		return self.prev_word_at(self.cursor);
 	}
 
-	/// get current state for undo/redo
 	fn get_state(&self) -> TextAreaState {
 
 		return TextAreaState {
@@ -843,7 +808,6 @@ impl TextArea {
 
 	}
 
-	/// set current state
 	fn set_state(&mut self, state: TextAreaState) {
 
 		self.lines = state.lines;
@@ -852,7 +816,6 @@ impl TextArea {
 
 	}
 
-	/// push current state to undo stack
 	pub fn push_undo(&mut self) {
 
 		let state = self.get_state();
@@ -865,12 +828,10 @@ impl TextArea {
 
 	}
 
-	/// push current state to redo stack
 	pub fn push_redo(&mut self) {
 		self.redo_stack.push(self.get_state());
 	}
 
-	/// undo
 	pub fn undo(&mut self) {
 
 		if let Some(state) = self.undo_stack.pop() {
@@ -880,7 +841,6 @@ impl TextArea {
 
 	}
 
-	/// redo
 	pub fn redo(&mut self) {
 
 		if let Some(state) = self.redo_stack.pop() {
@@ -890,7 +850,6 @@ impl TextArea {
 
 	}
 
-	/// get the position that a line starts, ignoring tabs and spaces
 	pub fn line_start_at(&self, mut pos: CursorPos) -> CursorPos {
 
 		if let Some(line) = self.get_line_at(pos.line) {
@@ -916,12 +875,10 @@ impl TextArea {
 
 	}
 
-	/// line_start_at() with cursor movement
 	pub fn move_line_start(&mut self) {
 		self.cursor = self.line_start_at(self.cursor);
 	}
 
-	/// get the position that a line ends
 	pub fn line_end_at(&self, mut pos: CursorPos) -> CursorPos {
 
 		if let Some(line) = self.get_line_at(pos.line) {
@@ -933,7 +890,6 @@ impl TextArea {
 
 	}
 
-	/// line_end_at() with cursor movement
 	pub fn move_line_end(&mut self) {
 		self.cursor = self.line_end_at(self.cursor);
 	}

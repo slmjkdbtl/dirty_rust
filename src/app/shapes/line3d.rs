@@ -65,14 +65,6 @@ impl Drawable for Line3D {
 			},
 		)?;
 
-// 		let p1 = ctx.to_sc(self.p1);
-// 		let p2 = ctx.to_sc(self.p2);
-
-// 		ctx.draw(
-// 			&line(p1, p2)
-// 				.color(self.color)
-// 		)?;
-
 		return Ok(());
 
 	}

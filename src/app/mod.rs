@@ -1,6 +1,6 @@
 // wengwengweng
 
-/// Windowing, Input, and Graphics
+//! Windowing, Input, and Graphics
 
 pub mod gfx;
 pub mod res;
@@ -37,8 +37,8 @@ use std::time::Instant;
 use std::time::Duration;
 
 use glutin::dpi::*;
-use glutin::Api;
 use glutin::GlRequest;
+use glutin::event_loop::ControlFlow;
 
 use derive_more::*;
 
@@ -54,8 +54,6 @@ const DRAW_COUNT: usize = 65536;
 const NEAR: f32 = -4096.0;
 const FAR: f32 = 4096.0;
 
-// TODO: make this lighter
-/// Manages Ctx
 pub struct Ctx {
 
 	pub(self) conf: Conf,
@@ -153,12 +151,12 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		let mut ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
+			.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
 			;
 
 		#[cfg(feature = "gl3")] {
 			ctx_builder = ctx_builder
-				.with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+				.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (3, 3)))
 				.with_gl_profile(glutin::GlProfile::Core)
 				;
 		}
@@ -209,7 +207,10 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let pipeline_cmap = gl::Pipeline::new(&gl, CUBEMAP_VERT, CUBEMAP_FRAG)?;
 
-	let font_data = conf.default_font.take().unwrap_or(CP437);
+	let font_data = conf.default_font
+		.take()
+		.unwrap_or(CP437);
+
 	let font = gfx::BitmapFont::from_data(&gl, font_data)?;
 
 	let mut ctx = Ctx {
@@ -286,82 +287,63 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	}
 
 	ctx.clear();
-	ctx.swap()?;
+	ctx.swap_buffers()?;
 
 	let mut s = S::init(&mut ctx)?;
 
-	// TODO: deal with error inside
 	event_loop.run(move |event, _, flow| {
+		match deal_with_event(&mut ctx, &mut s, event) {
+			Ok(f) => {
+				*flow = f;
+			},
+			Err(err) => {
+				eprintln!("{}", err);
+				*flow = ControlFlow::Poll;
+			},
+		}
+	});
 
-		use glutin::event_loop::ControlFlow;
-		use glutin::event::WindowEvent as WEvent;
-		use glutin::event::DeviceEvent as DEvent;
-		use glutin::event::TouchPhase;
-		use glutin::event::ElementState;
-		use input::*;
+}
 
-		let mut res: Result<()> = Ok(());
+fn deal_with_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::Event<()>) -> Result<ControlFlow> {
 
-		*flow = ControlFlow::Poll;
+	use glutin::event::WindowEvent as WEvent;
+	use glutin::event::DeviceEvent as DEvent;
+	use glutin::event::TouchPhase;
+	use glutin::event::ElementState;
+	use input::*;
 
-		match event {
+	match event {
 
-			glutin::event::Event::LoopDestroyed => return,
+		glutin::event::Event::LoopDestroyed => return Ok(ControlFlow::Exit),
 
-			glutin::event::Event::WindowEvent { ref event, .. } => match event {
-				WEvent::CloseRequested => {
-					*flow = ControlFlow::Exit;
-				},
-				WEvent::KeyboardInput { input, .. } => {
+		glutin::event::Event::WindowEvent { ref event, .. } => match event {
+			WEvent::CloseRequested => {
+				return Ok(ControlFlow::Exit);
+			},
+			WEvent::KeyboardInput { input, .. } => {
 
-					if let Some(kc) = input.virtual_keycode {
+				if let Some(kc) = input.virtual_keycode {
 
-						if let Some(key) = Key::from_extern(kc) {
+					if let Some(key) = Key::from_extern(kc) {
 
-							match input.state {
-
-								ElementState::Pressed => {
-
-									s.event(&mut ctx, &Event::KeyPressRepeat(key));
-
-									if ctx.key_up(key) || ctx.key_released(key) {
-										ctx.key_states.insert(key, ButtonState::Pressed);
-										s.event(&mut ctx, &Event::KeyPress(key));
-									}
-
-								},
-
-								ElementState::Released => {
-									if ctx.key_down(key) || ctx.key_pressed(key) {
-										ctx.key_states.insert(key, ButtonState::Released);
-										s.event(&mut ctx, &Event::KeyRelease(key));
-									}
-								},
-
-							}
-
-						}
-
-					}
-
-				},
-
-				WEvent::MouseInput { button, state, .. } => {
-
-					if let Some(button) = Mouse::from_extern(*button) {
-
-						match state {
+						match input.state {
 
 							ElementState::Pressed => {
-								if ctx.mouse_up(button) || ctx.mouse_released(button) {
-									ctx.mouse_states.insert(button, ButtonState::Pressed);
-									s.event(&mut ctx, &Event::MousePress(button));
+
+								s.event(&mut ctx, &Event::KeyPressRepeat(key))?;
+
+								if ctx.key_up(key) || ctx.key_released(key) {
+									ctx.key_states.insert(key, ButtonState::Pressed);
+									s.event(&mut ctx, &Event::KeyPress(key))?;
 								}
+
 							},
+
 							ElementState::Released => {
-								if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
-									ctx.mouse_states.insert(button, ButtonState::Released);
-									s.event(&mut ctx, &Event::MouseRelease(button));
+								if ctx.key_down(key) || ctx.key_pressed(key) {
+									ctx.key_states.insert(key, ButtonState::Released);
+									s.event(&mut ctx, &Event::KeyRelease(key))?;
 								}
 							},
 
@@ -369,160 +351,187 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 					}
 
-				},
+				}
 
-				WEvent::CursorMoved { position, .. } => {
+			},
 
-					let mpos: Vec2 = (*position).into();
-					let (w, h) = (ctx.width as f32, ctx.height as f32);
-					let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
+			WEvent::MouseInput { button, state, .. } => {
 
-					ctx.mouse_pos = mpos;
+				if let Some(button) = Mouse::from_extern(*button) {
 
-				},
+					match state {
 
-				WEvent::MouseWheel { delta, phase, .. } => {
-
-					match phase {
-						TouchPhase::Started => {
-							ctx.scroll_phase = ScrollPhase::Solid;
+						ElementState::Pressed => {
+							if ctx.mouse_up(button) || ctx.mouse_released(button) {
+								ctx.mouse_states.insert(button, ButtonState::Pressed);
+								s.event(&mut ctx, &Event::MousePress(button))?;
+							}
 						},
-						TouchPhase::Ended => {
-							ctx.scroll_phase = ScrollPhase::Trailing;
+						ElementState::Released => {
+							if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+								ctx.mouse_states.insert(button, ButtonState::Released);
+								s.event(&mut ctx, &Event::MouseRelease(button))?;
+							}
 						},
-						_ => {},
+
 					}
 
-					let p = ctx.scroll_phase;
-					s.event(&mut ctx, &Event::Scroll((*delta).into(), p));
-
-				},
-
-				WEvent::ReceivedCharacter(ch) => {
-					if !INVALID_CHARS.contains(&ch) && !ch.is_control() && !is_private_use_char(*ch) {
-						s.event(&mut ctx, &Event::CharInput(*ch));
-					}
-				},
-
-				WEvent::Resized(size) => {
-
-					let dpi = ctx.dpi() as f64;
-					let lsize: LogicalSize<f64> = size.to_logical(dpi);
-					let w = lsize.width as i32;
-					let h = lsize.height as i32;
-
-					ctx.width = w;
-					ctx.height = h;
-					ctx.reset_default_cam();
-					ctx.windowed_ctx.resize(*size);
-
-					s.event(&mut ctx, &Event::Resize(w, h));
-
-				},
-
-				WEvent::Touch(touch) => {
-					s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()));
-				},
-
-				WEvent::HoveredFile(path) => {
-					s.event(&mut ctx, &Event::FileHover(path.to_path_buf()));
-				},
-
-				WEvent::HoveredFileCancelled => {
-					s.event(&mut ctx, &Event::FileHoverCancel);
-				},
-
-				WEvent::DroppedFile(path) => {
-					s.event(&mut ctx, &Event::FileDrop(path.to_path_buf()));
-				},
-
-				WEvent::Focused(b) => {
-					s.event(&mut ctx, &Event::Focus(*b));
-				},
-
-				WEvent::CursorEntered { .. } => {
-					s.event(&mut ctx, &Event::CursorEnter);
-				},
-
-				WEvent::CursorLeft { .. } => {
-					s.event(&mut ctx, &Event::CursorLeave);
-				},
-				_ => (),
-			},
-
-			glutin::event::Event::DeviceEvent { event, .. } => match event {
-				DEvent::MouseMotion { delta } => {
-					s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1)));
-				},
-				_ => (),
-			},
-
-			glutin::event::Event::RedrawRequested(_) => {
-
-				if let Some(fps_cap) = ctx.conf.fps_cap {
-
-					let real_dt = ctx.last_frame_time.elapsed().as_millis();
-					let expected_dt = (1000.0 / fps_cap as f32) as u128;
-
-					if real_dt < expected_dt {
-						thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
-					}
-
-				}
-
-				ctx.dt.set_inner(ctx.last_frame_time.elapsed());
-				ctx.time += ctx.dt;
-				ctx.fps_counter.tick(ctx.dt);
-
-				ctx.last_frame_time = Instant::now();
-
-				for state in ctx.key_states.values_mut() {
-					if state == &ButtonState::Pressed {
-						*state = ButtonState::Down;
-					} else if state == &ButtonState::Released {
-						*state = ButtonState::Up;
-					}
-				}
-
-				for state in ctx.mouse_states.values_mut() {
-					if state == &ButtonState::Pressed {
-						*state = ButtonState::Down;
-					} else if state == &ButtonState::Released {
-						*state = ButtonState::Up;
-					}
-				}
-
-				for states in ctx.gamepad_button_states.values_mut() {
-					for state in states.values_mut() {
-						if state == &ButtonState::Pressed {
-							*state = ButtonState::Down;
-						} else if state == &ButtonState::Released {
-							*state = ButtonState::Up;
-						}
-					}
-				}
-
-				s.update(&mut ctx);
-				ctx.begin_frame();
-				s.draw(&mut ctx);
-				ctx.end_frame();
-				ctx.swap();
-
-				if ctx.quit {
-					*flow = ControlFlow::Exit;
 				}
 
 			},
 
-			glutin::event::Event::MainEventsCleared => {
-				ctx.windowed_ctx.window().request_redraw();
+			WEvent::CursorMoved { position, .. } => {
+
+				let mpos: Vec2 = (*position).into();
+				let (w, h) = (ctx.width as f32, ctx.height as f32);
+				let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
+
+				ctx.mouse_pos = mpos;
+
 			},
 
+			WEvent::MouseWheel { delta, phase, .. } => {
+
+				match phase {
+					TouchPhase::Started => {
+						ctx.scroll_phase = ScrollPhase::Solid;
+					},
+					TouchPhase::Ended => {
+						ctx.scroll_phase = ScrollPhase::Trailing;
+					},
+					_ => {},
+				}
+
+				let p = ctx.scroll_phase;
+				s.event(&mut ctx, &Event::Scroll((*delta).into(), p))?;
+
+			},
+
+			WEvent::ReceivedCharacter(ch) => {
+				if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
+					s.event(&mut ctx, &Event::CharInput(*ch))?;
+				}
+			},
+
+			WEvent::Resized(size) => {
+
+				let dpi = ctx.dpi() as f64;
+				let lsize: LogicalSize<f64> = size.to_logical(dpi);
+				let w = lsize.width as i32;
+				let h = lsize.height as i32;
+
+				ctx.width = w;
+				ctx.height = h;
+				ctx.reset_default_cam();
+				ctx.windowed_ctx.resize(*size);
+
+				s.event(&mut ctx, &Event::Resize(w, h))?;
+
+			},
+
+			WEvent::Touch(touch) => {
+				s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()))?;
+			},
+
+			WEvent::HoveredFile(path) => {
+				s.event(&mut ctx, &Event::FileHover(path.to_path_buf()))?;
+			},
+
+			WEvent::HoveredFileCancelled => {
+				s.event(&mut ctx, &Event::FileHoverCancel)?;
+			},
+
+			WEvent::DroppedFile(path) => {
+				s.event(&mut ctx, &Event::FileDrop(path.to_path_buf()))?;
+			},
+
+			WEvent::Focused(b) => {
+				s.event(&mut ctx, &Event::Focus(*b))?;
+			},
+
+			WEvent::CursorEntered { .. } => {
+				s.event(&mut ctx, &Event::CursorEnter)?;
+			},
+
+			WEvent::CursorLeft { .. } => {
+				s.event(&mut ctx, &Event::CursorLeave)?;
+			},
 			_ => (),
+		},
 
-		}
+		glutin::event::Event::DeviceEvent { event, .. } => match event {
+			DEvent::MouseMotion { delta } => {
+				s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1)))?;
+			},
+			_ => (),
+		},
 
-	});
+		glutin::event::Event::RedrawRequested(_) => {
+
+			if let Some(fps_cap) = ctx.conf.fps_cap {
+
+				let real_dt = ctx.last_frame_time.elapsed().as_millis();
+				let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+				if real_dt < expected_dt {
+					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+				}
+
+			}
+
+			ctx.dt.set_inner(ctx.last_frame_time.elapsed());
+			ctx.time += ctx.dt;
+			ctx.fps_counter.tick(ctx.dt);
+
+			ctx.last_frame_time = Instant::now();
+
+			for state in ctx.key_states.values_mut() {
+				if state == &ButtonState::Pressed {
+					*state = ButtonState::Down;
+				} else if state == &ButtonState::Released {
+					*state = ButtonState::Up;
+				}
+			}
+
+			for state in ctx.mouse_states.values_mut() {
+				if state == &ButtonState::Pressed {
+					*state = ButtonState::Down;
+				} else if state == &ButtonState::Released {
+					*state = ButtonState::Up;
+				}
+			}
+
+			for states in ctx.gamepad_button_states.values_mut() {
+				for state in states.values_mut() {
+					if state == &ButtonState::Pressed {
+						*state = ButtonState::Down;
+					} else if state == &ButtonState::Released {
+						*state = ButtonState::Up;
+					}
+				}
+			}
+
+			s.update(&mut ctx)?;
+			ctx.begin_frame();
+			s.draw(&mut ctx)?;
+			ctx.end_frame();
+			ctx.swap_buffers()?;
+
+			if ctx.quit {
+				return Ok(ControlFlow::Exit);
+			}
+
+		},
+
+		glutin::event::Event::MainEventsCleared => {
+			ctx.windowed_ctx.window().request_redraw();
+		},
+
+		_ => (),
+
+	}
+
+	return Ok(ControlFlow::Poll);
 
 }
 

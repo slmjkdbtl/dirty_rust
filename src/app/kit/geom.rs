@@ -204,7 +204,6 @@ fn point_poly(pt: Vec2, poly: &[Vec2]) -> bool {
 }
 
 // TODO: clean
-/// perform sat collision detection on 2 polygons
 pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 	assert!(p1.len() >= 3, "invalid polygon");

@@ -64,7 +64,6 @@ macro_rules! gen_vec {
 
 		impl $name {
 
-			/// initialize with specifying all fields
 			pub const fn new($($member: $type,)+) -> Self {
 				return Self {
 					$($member: $member),+
@@ -189,42 +188,34 @@ mix!(Pt(x, y): i32, Size(w, h): i32);
 
 impl Vec2 {
 
-	/// get a vector from given angle
 	pub fn from_angle(angle: f32) -> Self {
 		return vec2!(f32::cos(angle), f32::sin(angle));
 	}
 
-	/// get vector magnitude
-	pub fn mag(&self) -> f32 {
+	pub fn mag(self) -> f32 {
 		return f32::sqrt(self.x * self.x + self.y * self.y);
 	}
 
-	/// normalize vector
-	pub fn normalize(&self) -> Self {
+	pub fn normalize(self) -> Self {
 		return self.clone() / self.mag();
 	}
 
-	/// get vector normal
-	pub fn normal(&self) -> Self {
+	pub fn normal(self) -> Self {
 		return vec2!(self.y, -self.x);
 	}
 
-	/// dot product of 2 vectors
 	pub fn dot(self, other: Self) -> f32 {
 		return self.x * other.x + self.y * other.y;
 	}
 
-	/// get angle between 2 points
 	pub fn angle(self, other: Self) -> f32 {
 		return f32::atan2(other.y - self.y, other.x - self.x);
 	}
 
-	/// get distance between another vector
 	pub fn dis(self, other: Self) -> f32 {
 		return f32::sqrt((self.x - other.x).powi(2) + (self.y - other.y).powi(2));
 	}
 
-	/// clamp between 2 values
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
 		return vec2!(
 			self.x.clamp(low.x, hi.x),
@@ -236,22 +227,18 @@ impl Vec2 {
 
 impl Vec3 {
 
-	/// get vector magnitude
-	pub fn mag(&self) -> f32 {
+	pub fn mag(self) -> f32 {
 		return f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
 	}
 
-	/// normalize vector
-	pub fn normalize(&self) -> Self {
+	pub fn normalize(self) -> Self {
 		return self.clone() / self.mag();
 	}
 
-	/// dot product
 	pub fn dot(self, other: Self) -> f32 {
 		return self.x * other.x + self.y * other.y + self.z * other.z;
 	}
 
-	/// cross product
 	pub fn cross(self, other: Self) -> Self {
 		return vec3!(
 			(self.y * other.z) - (self.z * other.y),
@@ -260,12 +247,10 @@ impl Vec3 {
         );
 	}
 
-	/// get xy component as a Vec2
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
 	}
 
-	/// clamp between 2 values
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
 		return vec3!(
 			self.x.clamp(low.x, hi.x),
@@ -278,12 +263,10 @@ impl Vec3 {
 
 impl Vec4 {
 
-	/// get xy component as a Vec2
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
 	}
 
-	/// get xyz component as a Vec3
 	pub fn xyz(self) -> Vec3 {
 		return vec3!(self.x, self.y, self.z);
 	}

@@ -7,7 +7,6 @@ use super::gfx::*;
 
 use crate::gl;
 
-/// vertex layout for the 2d pipeline
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vertex2D {
 	pub pos: Vec3,
@@ -43,7 +42,6 @@ impl gl::VertexLayout for Vertex2D {
 
 }
 
-/// vertex layout for the 3d pipeline
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vertex3D {
 	pub pos: Vec3,
@@ -84,7 +82,6 @@ impl gl::VertexLayout for Vertex3D {
 
 }
 
-/// vertex layout for the cubemap pipeline
 #[derive(Clone)]
 pub struct VertexCubemap {
 	pub pos: Vec3,
@@ -139,7 +136,6 @@ impl gl::VertexLayout for VertexCubemap {
 
 // }
 
-/// uniform layout for the 2d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform2D {
 	pub proj: Mat4,
@@ -175,7 +171,6 @@ impl gl::UniformLayout for Uniform2D {
 
 }
 
-/// uniform layout for the 3d pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct Uniform3D {
 	pub proj: Mat4,
@@ -213,7 +208,6 @@ impl gl::UniformLayout for Uniform3D {
 
 }
 
-/// uniform layout for the cubemap pipeline
 #[derive(Clone, PartialEq)]
 pub(super) struct UniformCubemap {
 	pub proj: Mat4,
@@ -238,7 +232,6 @@ impl gl::UniformLayout for UniformCubemap {
 
 }
 
-/// shape for a quad
 pub(super) struct QuadShape {
 	pub transform: Mat4,
 	pub quad: Quad,
@@ -323,7 +316,6 @@ impl gl::Shape for QuadShape {
 
 }
 
-/// shape for a cube
 pub(super) struct CubeShape;
 
 impl gl::Shape for CubeShape {
@@ -451,7 +443,6 @@ impl gl::Shape for CubeShape {
 
 }
 
-/// shape for a cubemap
 pub(super) struct CubemapShape;
 
 impl gl::Shape for CubemapShape {

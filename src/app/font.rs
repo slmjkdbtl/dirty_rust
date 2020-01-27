@@ -9,7 +9,6 @@ const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQ
 
 pub type CharMap = HashMap<char, Quad>;
 
-/// general functionalities of a font
 pub trait Font {
 	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)>;
 	fn height(&self) -> f32;
@@ -34,7 +33,6 @@ impl BitmapFontData {
 	}
 }
 
-/// bitmap font
 #[derive(Clone, PartialEq)]
 pub struct BitmapFont {
 	tex: Texture,
@@ -59,7 +57,6 @@ impl BitmapFont {
 
 	}
 
-	/// creat a bitmap font from a texture, and grid of characters
 	pub fn from_tex(tex: Texture, gw: u8, gh: u8, chars: &'static str) -> Result<Self> {
 
 		let mut map = HashMap::new();
@@ -93,7 +90,6 @@ impl BitmapFont {
 
 	}
 
-	/// get width of a char
 	pub fn width(&self) -> i32 {
 		return self.grid_width as i32;
 	}
@@ -109,7 +105,6 @@ impl Font for BitmapFont {
 	}
 }
 
-/// truetype font
 pub struct TruetypeFont {
 	font: fontdue::Font,
 	size: i32,
@@ -120,7 +115,6 @@ pub struct TruetypeFont {
 
 impl TruetypeFont {
 
-	/// parse a truetype file from bytes
 	pub fn from_bytes(ctx: &impl GfxCtx, b: &[u8], size: i32) -> Result<Self> {
 
 		let font = fontdue::Font::from_bytes(b)?;
@@ -141,7 +135,6 @@ impl TruetypeFont {
 
 	}
 
-	/// manually cache characters
 	pub fn cache(&mut self, s: &str) -> Result<()> {
 
 		let (tw, th) = (self.tex.width(), self.tex.height());
@@ -194,12 +187,10 @@ impl TruetypeFont {
 
 	}
 
-	/// cache all ascii chars
 	pub fn cache_asciis(&mut self) -> Result<()> {
 		return self.cache(ASCII_CHARS);
 	}
 
-	/// get width of a string
 	pub fn width(&self, s: &str) -> i32 {
 		return s
 			.chars()
@@ -209,7 +200,6 @@ impl TruetypeFont {
 			.sum();
 	}
 
-	/// get height of a char
 	pub fn height(&self) -> i32 {
 		return self.size;
 	}
