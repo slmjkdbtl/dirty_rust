@@ -34,7 +34,7 @@ impl Drawable for Gradient {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		if self.steps.len() < 2 {
-			return Err(Error::Gfx("need at least 2 points to draw a gradient".into()));
+			return Err(format!("need at least 2 points to draw a gradient"));
 		}
 
 		use gfx::Vertex2D;
@@ -56,7 +56,7 @@ impl Drawable for Gradient {
 
 			if (last_pos.is_none()) {
 				if (s.1 != 0.0) {
-					return Err(Error::Gfx("gradient step should start at 0.0".into()));
+					return Err(format!("gradient step should start at 0.0"));
 				}
 			}
 
@@ -77,7 +77,7 @@ impl Drawable for Gradient {
 		}
 
 		if (last_pos != Some(1.0)) {
-			return Err(Error::Gfx("gradient step should end at 1.0".into()));
+			return Err(format!("gradient step should end at 1.0"));
 		}
 
 		let indices = [

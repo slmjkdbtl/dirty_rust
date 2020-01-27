@@ -63,7 +63,7 @@ impl Framebuffer {
 			);
 
 			if fbuf.ctx.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-				return Err(Error::OpenGL("failed to create framebuffer".to_owned()));
+				return Err(format!("failed to create framebuffer"));
 			}
 
 			device.clear(Surface::Depth);

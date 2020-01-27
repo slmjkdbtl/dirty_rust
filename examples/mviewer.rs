@@ -18,7 +18,6 @@ type LoadResult = Result<gfx::ModelData>;
 struct Viewer {
 	shader: gfx::Shader3D<()>,
 	model: Option<gfx::Model>,
-	cam: gfx::OrthoCam,
 	rot: Vec2,
 	pos: Vec2,
 	scale: f32,
@@ -86,7 +85,7 @@ fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
 			},
 
 			_ => {
-				return Err(Error::Misc(format!("unrecognized model")));
+				return Err(format!("unrecognized model"));
 			},
 
 		}
@@ -121,7 +120,6 @@ impl app::State for Viewer {
 		return Ok(Self {
 			model: None,
 			pos: vec2!(0),
-			cam: gfx::OrthoCam::new(ctx.width() as f32, ctx.height() as f32, -2048.0, 2048.0),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
@@ -132,7 +130,7 @@ impl app::State for Viewer {
 			helping: false,
 			scale: 0.0,
 			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
-			canvas: gfx::Canvas::new(ctx, ctx.width() as i32, ctx.height() as i32)?,
+			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 		});
 
 	}
@@ -142,6 +140,10 @@ impl app::State for Viewer {
 		use input::Event::*;
 
 		match e {
+
+			Resize(w, h) => {
+				self.canvas = gfx::Canvas::new(ctx, *w, *h)?;
+			},
 
 			KeyPress(k) => {
 
@@ -286,41 +288,35 @@ impl app::State for Viewer {
 
 				let center = model.center();
 
-				ctx.use_cam(&self.cam, |ctx| {
+				ctx.push(mat4!()
+					.t2(self.pos)
+					.s3(vec3!(self.scale))
+					.ry(self.rot.x.to_radians())
+					.rx(self.rot.y.to_radians())
+					.t3(-center)
+				, |ctx| {
 
-					ctx.push(mat4!()
-						.t2(self.pos)
-						.s3(vec3!(self.scale))
-						.ry(self.rot.x.to_radians())
-						.rx(self.rot.y.to_radians())
-						.t3(-center)
-					, |ctx| {
+					let t = if self.run_anim {
+						let anim_len = model.anim_len();
+						let t = ctx.time();
+						t - f32::floor(t / anim_len) * anim_len
+					} else {
+						0.0
+					};
 
-						let t = if self.run_anim {
-							let anim_len = model.anim_len();
-							let t = ctx.time();
-							t - f32::floor(t / anim_len) * anim_len
-						} else {
-							0.0
-						};
-
-						ctx.draw_3d_with(&self.shader, &(), |ctx| {
-							ctx.draw(
-								&shapes::model(&model)
-									.draw_wireframe(self.draw_wireframe)
-									.time(t)
-							)?;
-							return Ok(());
-						})?;
-
-						if self.draw_bound {
-							let (min, max) = model.bound();
-							ctx.draw(&shapes::rect3d(min, max))?;
-						}
-
+					ctx.draw_3d_with(&self.shader, &(), |ctx| {
+						ctx.draw(
+							&shapes::model(&model)
+								.draw_wireframe(self.draw_wireframe)
+								.time(t)
+						)?;
 						return Ok(());
-
 					})?;
+
+					if self.draw_bound {
+						let (min, max) = model.bound();
+						ctx.draw(&shapes::rect3d(min, max))?;
+					}
 
 					return Ok(());
 

@@ -6,7 +6,6 @@ use std::path::Path;
 
 use crate::math::Color;
 use crate::Result;
-use crate::Error;
 
 pub use image::ImageFormat as Format;
 
@@ -25,7 +24,7 @@ impl Image {
 
 	pub fn from_pixels(w: i32, h: i32, data: Vec<u8>) -> Result<Self>{
 		let buf = image::ImageBuffer::from_raw(w as u32, h as u32, data)
-			.ok_or_else(|| Error::Image(format!("incorrect image dimensions")))?;
+			.ok_or_else(|| format!("incorrect image dimensions"))?;
 		return Ok(Self {
 			handle: buf,
 		});
@@ -33,7 +32,8 @@ impl Image {
 
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
-		let img = image::load_from_memory(data)?
+		let img = image::load_from_memory(data)
+			.map_err(|_| format!("failed to parse img"))?
 			.to_rgba();
 
 		return Ok(Image {
@@ -51,7 +51,14 @@ impl Image {
 	}
 
 	pub fn write(&self, path: impl AsRef<Path>) -> Result<()> {
-		return Ok(self.handle.save(path)?);
+
+		let path = path.as_ref();
+
+		self.handle
+			.save(path)
+			.map_err(|_| format!("failed to write img to {}", path.display()))?;
+
+		return Ok(());
 	}
 
 	pub fn get(&self, x: i32, y: i32) -> Option<Color> {
@@ -67,7 +74,7 @@ impl Image {
 	pub fn set(&mut self, x: i32, y: i32, c: Color) -> Result<()> {
 
 		if x < 0 || x > self.width() - 1 || y < 0 || y > self.height() - 1 {
-			return Err(Error::Image(format!("pixel out of bound: ({}, {})", x, y)));
+			return Err(format!("pixel out of bound: ({}, {})", x, y));
 		}
 
 		return Ok(self.handle.put_pixel(x as u32, y as u32, c.into()));

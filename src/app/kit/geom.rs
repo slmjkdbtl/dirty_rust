@@ -5,7 +5,6 @@
 // some code borrowed from [p5.collide2dD](https://github.com/bmoren/p5.collide2D)
 
 use crate::*;
-use app::*;
 use math::*;
 
 fn fix_pt_pair(rect: (Vec2, Vec2)) -> (Vec2, Vec2) {

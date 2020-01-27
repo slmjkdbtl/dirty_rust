@@ -60,7 +60,6 @@ pub mod texpack;
 
 pub mod codec;
 
-mod err;
-pub use err::Error;
+pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;
 

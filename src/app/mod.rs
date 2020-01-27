@@ -36,14 +36,9 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
-#[cfg(not(web))]
 use glutin::dpi::*;
-#[cfg(not(web))]
 use glutin::Api;
-#[cfg(not(web))]
 use glutin::GlRequest;
-#[cfg(web)]
-use glow::HasRenderLoop;
 
 use derive_more::*;
 
@@ -89,9 +84,7 @@ pub struct Ctx {
 
 	pub(self) clipboard_ctx: clipboard::ClipboardContext,
 
-	#[cfg(not(web))]
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	#[cfg(all(not(target_os = "ios"), not(target_os = "android"), not(web)))]
 	pub(self) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
@@ -130,7 +123,6 @@ pub struct Ctx {
 
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
-	#[cfg(not(web))]
 	let (windowed_ctx, mut events_loop, gl) =  {
 
 		let events_loop = glutin::event_loop::EventLoop::new();
@@ -177,7 +169,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		}
 
 		let windowed_ctx = unsafe {
-			ctx_builder.build_windowed(window_builder, &events_loop)?.make_current()?
+			ctx_builder
+				.build_windowed(window_builder, &events_loop)
+				.map_err(|_| format!("failed to build window"))?
+				.make_current()
+				.map_err(|_| format!("failed to make opengl context"))?
 		};
 
 		let gl = gl::Device::from_loader(|s| {
@@ -185,47 +181,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		});
 
 		(windowed_ctx, events_loop, gl)
-
-	};
-
-	#[cfg(web)]
-	let (gl, render_loop) = {
-
-		use stdweb::{
-			traits::*,
-			unstable::TryInto,
-			web::{document, html_element::*},
-		};
-
-		use webgl_stdweb::WebGL2RenderingContext;
-
-		let canvas: CanvasElement = document()
-			.create_element("canvas")?
-			.try_into()
-			.map_err(|_| Error::Web(format!("failed to create canvas")))?;
-
-		let doc = document();
-
-		let body = doc
-			.body()
-			.ok_or(Error::Web(format!("failed to get document body")))?;
-
-		doc.set_title(&conf.title);
-
-		body
-			.append_child(&canvas);
-
-		canvas.set_width(conf.width as u32);
-		canvas.set_height(conf.height as u32);
-
-		let webgl2_ctx: WebGL2RenderingContext = canvas
-			.get_context()
-			.map_err(|_| Error::Web(format!("failed to create canvas")))?;
-
-		(
-			gl::Device::from_webgl2_ctx(webgl2_ctx),
-			glow::RenderLoop::from_request_animation_frame(),
-		)
 
 	};
 
@@ -286,12 +241,13 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		cursor_hidden: conf.cursor_hidden,
 		cursor_locked: conf.cursor_locked,
 
-		clipboard_ctx: clipboard::ClipboardProvider::new()?,
+		clipboard_ctx: clipboard::ClipboardProvider::new()
+			.map_err(|_| format!("failed to create clipboard context"))?,
 
-		#[cfg(not(web))]
+		gamepad_ctx: gilrs::Gilrs::new()
+			.map_err(|_| format!("failed to create gamepad context"))?,
+
 		windowed_ctx: windowed_ctx,
-		#[cfg(desktop)]
-		gamepad_ctx: gilrs::Gilrs::new()?,
 
 		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
@@ -326,8 +282,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	let backbuffer = gfx::Canvas::new(&ctx, ctx.width, ctx.height)?;
-
 	if ctx.conf.cursor_hidden {
 		ctx.set_cursor_hidden(true);
 	}
@@ -341,17 +295,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let mut s = S::init(&mut ctx)?;
 
-	#[cfg(web)]
-	render_loop.run(move |running: &mut bool| {
-
-		s.update(&mut ctx);
-		gfx::begin(&mut ctx);
-		s.draw(&mut ctx);
-		gfx::end(&mut ctx);
-
-	});
-
-	#[cfg(not(web))]
 	events_loop.run(move |event, _, flow| {
 
 		use glutin::event_loop::ControlFlow;
@@ -585,59 +528,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	});
 
-// 	#[cfg(not(web))] {
-
-// 		'run: loop {
-
-// 			let start_time = Instant::now();
-
-// 			input::poll(&mut ctx, &mut events_loop, &mut s)?;
-// 			s.update(&mut ctx)?;
-// 			gfx::begin(&mut ctx);
-
-// 			ctx.draw_on(&backbuffer, |ctx| {
-
-// 				ctx.clear();
-
-// 				ctx.push(&gfx::t().s2(vec2!(ctx.conf.scale)), |mut cc| {
-// 					return s.draw(&mut cc);
-// 				})?;
-
-// 				return Ok(());
-
-// 			})?;
-
-// 			ctx.draw(&shapes::canvas(&backbuffer))?;
-// 			gfx::end(&mut ctx);
-// 			window::swap(&ctx)?;
-
-// 			if ctx.quit {
-// 				break 'run;
-// 			}
-
-// 			if let Some(fps_cap) = ctx.conf.fps_cap {
-
-// 				let real_dt = start_time.elapsed().as_millis();
-// 				let expected_dt = (1000.0 / fps_cap as f32) as u128;
-
-// 				if real_dt < expected_dt {
-// 					thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
-// 				}
-
-// 			}
-
-// 			ctx.dt.set_inner(start_time.elapsed());
-// 			ctx.time += ctx.dt;
-// 			ctx.fps_counter.tick(ctx.dt);
-
-// 		}
-
-// 		s.quit(&mut ctx)?;
-
-// 	}
-
-	return Ok(());
-
 }
 
 #[derive(Copy, Clone, PartialEq, Add, AddAssign, Sub, SubAssign)]
@@ -852,27 +742,5 @@ impl GfxCtx for gl::Device {
 	fn gl_ctx(&self) -> &gl::Device {
 		return self;
 	}
-}
-
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum Platform {
-	Mobile,
-	Desktop,
-	Web,
-	Unknown,
-}
-
-#[allow(unreachable_code)]
-pub fn platform() -> Platform {
-
-	#[cfg(desktop)]
-	return Platform::Desktop;
-	#[cfg(mobile)]
-	return Platform::Mobile;
-	#[cfg(web)]
-	return Platform::Web;
-
-	return Platform::Unknown;
-
 }
 
