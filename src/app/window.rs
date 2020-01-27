@@ -52,7 +52,7 @@ impl Ctx {
 		self.windowed_ctx
 			.window()
 			.set_cursor_grab(b)
-			.map_err(|_| format!("failed to set mouse cursor"))?;
+			.map_err(|_| format!("failed to lock mouse cursor"))?;
 
 		self.cursor_locked = b;
 
