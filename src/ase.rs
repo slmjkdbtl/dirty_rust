@@ -5,28 +5,17 @@ use std::collections::HashMap;
 use crate::math::*;
 use crate::Result;
 
-///! Load Aseprite Spritesheets
 
-/// anim
 #[derive(Copy, Clone, Debug)]
 pub struct Anim {
-
-	/// from frame
 	pub from: usize,
-	/// to frame
 	pub to: usize,
-
 }
 
-/// sprite data
 #[derive(Clone, Debug)]
 pub struct SpriteData {
-
-	/// frames
 	pub frames: Vec<Quad>,
-	/// anims
 	pub anims: HashMap<String, Anim>,
-
 }
 
 #[cfg(feature = "json")]

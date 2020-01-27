@@ -7,7 +7,6 @@ use crate::*;
 use super::*;
 use super::gfx::*;
 
-/// framebuffer for off-screen rendering
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
 	gl_fbuf: Rc<gl::Framebuffer>,
@@ -36,22 +35,18 @@ impl Canvas {
 	}
 
 	// TODO: give original size
-	/// get canvas width
 	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
-	/// get canvas height
 	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
-	/// get underlying texture for the canvas
 	pub fn tex(&self) -> &Texture {
 		return &self.tex;
 	}
 
-	/// capture and save to an image
 	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 

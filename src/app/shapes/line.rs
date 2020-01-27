@@ -95,29 +95,28 @@ impl Drawable for Line {
 
 		} else {
 
-			let len = (self.p2 - self.p1).mag();
-			let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
+			let dpos1 = Vec2::normal(self.p2 - self.p1).normalize() * self.width / 2.0;
+			let dpos2 = Vec2::normal(self.p1 - self.p2).normalize() * self.width / 2.0;
+			let p1 = self.p1 - dpos1;
+			let p2 = self.p1 + dpos1;
+			let p3 = self.p2 - dpos2;
+			let p4 = self.p2 + dpos2;
 
-			ctx.push(mat4!()
+			ctx.draw(
+				&polygon(&[p1, p2, p3, p4])
+					.fill(self.color)
+			)?;
 
-				.t2((self.p1 + self.p2) * 0.5)
-				.r(rot)
-
-			, |ctx| {
-
-				let w = len;
-				let h = self.width;
-
-				ctx.draw(&Rect::from_size(w, h).fill(self.color))?;
-
-				if let LineCap::Round = self.cap {
-					ctx.draw(&circle(vec2!(-w / 2.0, 0), h / 2.0).fill(self.color))?;
-					ctx.draw(&circle(vec2!(w / 2.0, 0), h / 2.0).fill(self.color))?;
-				}
-
-				return Ok(());
-
-			})?;
+			if let LineCap::Round = self.cap {
+				ctx.draw(
+					&circle(self.p1, self.width / 2.0)
+						.fill(self.color)
+				)?;
+				ctx.draw(
+					&circle(self.p2, self.width / 2.0)
+						.fill(self.color)
+				)?;
+			}
 
 		}
 

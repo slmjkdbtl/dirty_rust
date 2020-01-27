@@ -34,7 +34,7 @@ fn link(lib: Lib) {
 			name = p;
 		},
 		Dylib(p) => {
-			kind = "Dylib";
+			kind = "dylib";
 			name = p;
 		},
 		Framework(p) => {

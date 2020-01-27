@@ -6,7 +6,6 @@ use std::env;
 
 pub use console::style;
 
-/// standard term colors
 #[derive(Clone, Copy, Debug)]
 pub enum Color {
 	Black,
@@ -19,7 +18,6 @@ pub enum Color {
 	White,
 }
 
-/// standard term styles
 #[derive(Clone, Copy, Debug)]
 pub enum Style {
 	Bold,

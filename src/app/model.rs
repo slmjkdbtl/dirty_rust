@@ -21,7 +21,6 @@ pub struct NodeData {
 	pub meshes: Vec<MeshData>,
 }
 
-/// model data
 #[derive(Clone)]
 pub struct ModelData {
 	nodes: HashMap<usize, NodeData>,
@@ -135,7 +134,6 @@ impl Anim {
 
 }
 
-/// 3d model
 #[derive(Clone)]
 pub struct Model {
 	nodes: HashMap<usize, Node>,
@@ -257,6 +255,30 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 }
 
 impl Model {
+
+	pub fn load_verts(verts: Vec<Vertex3D>, indices: Vec<u32>) -> ModelData {
+
+		let node = NodeData {
+			id: 0,
+			children: vec![],
+			transform: Transform::new(),
+			meshes: vec![MeshData {
+				vertices: verts,
+				indices: indices,
+			}],
+		};
+
+		return ModelData {
+			nodes: hmap![
+				0 => node,
+			],
+			root_nodes: vec![0],
+			img: None,
+			anims: hmap![],
+			anim_len: 0.0,
+		};
+
+	}
 
 	pub fn load_glb(bytes: &[u8]) -> Result<ModelData> {
 
@@ -401,7 +423,6 @@ impl Model {
 
 	}
 
-	/// load mesh data with materials that's safe to send between threads
 	pub fn load_obj(obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<ModelData> {
 
 		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
@@ -489,7 +510,6 @@ impl Model {
 
 	}
 
-	/// create model with mesh data
 	pub fn from_data(ctx: &Ctx, data: ModelData) -> Result<Self> {
 
 		let tex = if let Some(img) = data.img {
@@ -529,12 +549,14 @@ impl Model {
 
 	}
 
-	/// create model from obj
+	pub fn from_verts(ctx: &Ctx, verts: Vec<Vertex3D>, indices: Vec<u32>) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_verts(verts, indices));
+	}
+
 	pub fn from_obj(ctx: &Ctx, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_obj(obj, mtl, img)?);
 	}
 
-	/// create model from glb
 	pub fn from_glb(ctx: &Ctx, bytes: &[u8]) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}

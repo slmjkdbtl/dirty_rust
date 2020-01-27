@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Gamedev Kit
+
 pub mod timer;
 pub mod sprite;
 pub mod area;

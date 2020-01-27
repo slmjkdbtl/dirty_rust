@@ -11,7 +11,7 @@ use directories::BaseDirs;
 use crate::Result;
 
 #[cfg(target_os = "macos")]
-fn get_res_dir() -> Option<PathBuf> {
+pub fn get_res_dir() -> Option<PathBuf> {
 
 	use core_foundation::bundle;
 
@@ -29,7 +29,7 @@ fn get_res_dir() -> Option<PathBuf> {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn get_res_dir() -> Option<PathBuf> {
+pub fn get_res_dir() -> Option<PathBuf> {
 
 	use std::env;
 
@@ -42,7 +42,7 @@ fn get_res_dir() -> Option<PathBuf> {
 
 }
 
-fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
+pub fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 	let path = path.as_ref();
 
@@ -66,12 +66,10 @@ fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 }
 
-/// check if given file exists
 pub fn exists(path: impl AsRef<Path>) -> bool {
 	return validate_path(path).is_ok();
 }
 
-/// get a list of all filenames under given directory
 pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 	let listings = glob::glob(&format!("{}", pat))
@@ -85,7 +83,6 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 }
 
-/// get bytes read from given file
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
@@ -96,7 +93,6 @@ pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 }
 
-/// get string read from given file
 pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
@@ -107,7 +103,6 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 }
 
-/// get the basename of given file
 pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
@@ -124,7 +119,6 @@ pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 }
 
-/// get the extension of given file
 pub fn extname(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();

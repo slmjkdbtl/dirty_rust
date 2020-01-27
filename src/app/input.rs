@@ -46,14 +46,6 @@ pub type TouchID = u64;
 use super::*;
 use crate::*;
 
-// TODO: wait for winit's official impl
-pub(super) fn is_private_use_char(c: char) -> bool {
-	match c {
-		'\u{E000}'..='\u{F8FF}' | '\u{F0000}'..='\u{FFFFD}' | '\u{100000}'..='\u{10FFFD}' => true,
-		_ => false,
-	}
-}
-
 #[derive(Clone, Copy, Debug)]
 pub struct KeyMod {
 	pub shift: bool,
@@ -90,6 +82,15 @@ impl Ctx {
 		} else {
 			return false;
 		}
+	}
+
+	pub fn key_mods(&self) -> KeyMod {
+		return KeyMod {
+			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
+			ctrl: self.key_down(Key::LCtrl) || self.key_down(Key::RCtrl),
+			alt: self.key_down(Key::LAlt) || self.key_down(Key::RAlt),
+			meta: self.key_down(Key::LMeta) || self.key_down(Key::RMeta),
+		};
 	}
 
 	pub fn mouse_pos(&self) -> Vec2 {
@@ -142,15 +143,6 @@ impl Ctx {
 		} else {
 			return false;
 		}
-	}
-
-	pub fn key_mods(&self) -> KeyMod {
-		return KeyMod {
-			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
-			ctrl: self.key_down(Key::LCtrl) || self.key_down(Key::RCtrl),
-			alt: self.key_down(Key::LAlt) || self.key_down(Key::RAlt),
-			meta: self.key_down(Key::LMeta) || self.key_down(Key::RMeta),
-		};
 	}
 
 }

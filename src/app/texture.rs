@@ -8,7 +8,6 @@ use super::*;
 #[cfg(feature = "img")]
 use crate::img::Image;
 
-/// texture
 #[derive(Clone, PartialEq)]
 pub struct Texture {
 	gl_tex: Rc<gl::Texture2D>,

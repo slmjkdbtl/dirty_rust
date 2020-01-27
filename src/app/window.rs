@@ -128,7 +128,7 @@ impl Ctx {
 
 	}
 
-	pub(super) fn swap(&self) -> Result<()> {
+	pub(super) fn swap_buffers(&self) -> Result<()> {
 		self.windowed_ctx
 			.swap_buffers()
 			.map_err(|_| format!("failed to swap buffer"))?;

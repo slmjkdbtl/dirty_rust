@@ -3,13 +3,11 @@
 use crate::*;
 use super::*;
 
-/// general functionalities of a camera
 pub trait Camera {
 	fn projection(&self) -> Mat4;
 	fn lookat(&self) -> Mat4;
 }
 
-/// 3d perspective camera
 #[derive(Clone)]
 pub struct PerspectiveCam {
 	front: Vec3,
@@ -24,7 +22,6 @@ pub struct PerspectiveCam {
 
 impl PerspectiveCam {
 
-	/// create new perspective camera
 	pub fn new(fov: f32, aspect: f32, near: f32, far: f32, pos: Vec3, yaw: f32, pitch: f32) -> Self {
 
 		let mut c = Self {
@@ -45,18 +42,15 @@ impl PerspectiveCam {
 
 	}
 
-	/// set cam pos
 	pub fn set_pos(&mut self, pos: Vec3) {
 		self.pos = pos;
 	}
 
-	/// set cam facing direction
 	pub fn set_front(&mut self, front: Vec3) {
 		// TODO: calculate yaw & pitch from front
 		self.front = front;
 	}
 
-	/// set cam angle
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
 		self.yaw = yaw;
@@ -70,17 +64,14 @@ impl PerspectiveCam {
 
 	}
 
-	/// get cam facing direction
 	pub fn front(&self) -> Vec3 {
 		return self.front;
 	}
 
-	/// get cam yaw
 	pub fn yaw(&self) -> f32 {
 		return self.yaw;
 	}
 
-	/// get cam pitch
 	pub fn pitch(&self) -> f32 {
 		return self.pitch;
 	}
@@ -112,7 +103,6 @@ impl Camera for PerspectiveCam {
 
 }
 
-/// orthographics camera
 #[derive(Clone)]
 pub struct OrthoCam {
 	pub width: f32,
@@ -123,7 +113,6 @@ pub struct OrthoCam {
 
 impl OrthoCam {
 
-	/// create new orthographic camera
 	pub fn new(width: f32, height: f32, near: f32, far: f32) -> Self {
 
 		return Self {

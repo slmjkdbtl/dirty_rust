@@ -12,7 +12,6 @@ use rodio::source::Buffered;
 
 use crate::Result;
 
-/// base struct containing sound data and effects data
 #[derive(Clone)]
 pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
@@ -27,7 +26,6 @@ struct Effect {
 	fadein: f32,
 }
 
-/// a track has more control
 pub struct Track {
 	sink: Sink,
 }
@@ -54,7 +52,6 @@ impl Default for Effect {
 
 impl Sound {
 
-	/// create a sound from bytes
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let cursor = Cursor::new(data.to_owned());
@@ -76,7 +73,6 @@ impl Sound {
 		return Track::from_sound(self);
 	}
 
-	/// return a new sound with given speed
 	pub fn speed(&self, s: f32) -> Self {
 		assert!(s > 0.0 && s <= 2.0, "invalid speed");
 		return Self {
@@ -88,7 +84,6 @@ impl Sound {
 		}
 	}
 
-	/// return a new sound with given volume
 	pub fn volume(&self, v: f32) -> Self {
 		assert!(v >= 0.0 && v <= 2.0, "invalid volume");
 		return Self {
@@ -100,7 +95,6 @@ impl Sound {
 		}
 	}
 
-	/// return a new sound that would repeat infinitely
 	pub fn repeat(&self) -> Self {
 		return Self {
 			effect: Effect {
@@ -111,7 +105,6 @@ impl Sound {
 		}
 	}
 
-	/// return a new sound with given fadein time
 	pub fn fadein(&self, time: f32) -> Self {
 		return Self {
 			effect: Effect {
@@ -183,12 +176,10 @@ impl Track {
 		return !self.sink.is_paused();
 	}
 
-	/// pause a track
 	pub fn pause(&self) {
 		self.sink.pause();
 	}
 
-	/// resume a track
 	pub fn play(&self) {
 		self.sink.play();
 	}
