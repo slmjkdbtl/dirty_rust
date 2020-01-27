@@ -51,8 +51,8 @@ use input::GamepadID;
 use input::GamepadButton;
 
 const DRAW_COUNT: usize = 65536;
-const NEAR: f32 = -1024.0;
-const FAR: f32 = 1024.0;
+const NEAR: f32 = -4096.0;
+const FAR: f32 = 4096.0;
 
 // TODO: make this lighter
 /// Manages Ctx
@@ -123,35 +123,30 @@ pub struct Ctx {
 
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
-	let (windowed_ctx, mut events_loop, gl) =  {
+	let (windowed_ctx, mut event_loop, gl) =  {
 
-		let events_loop = glutin::event_loop::EventLoop::new();
+		let event_loop = glutin::event_loop::EventLoop::new();
 
 		let mut window_builder = glutin::window::WindowBuilder::new()
 			.with_title(conf.title.to_owned())
 			.with_resizable(conf.resizable)
-// 			.with_transparency(conf.transparent)
+			.with_transparent(conf.transparent)
 			.with_decorations(!conf.borderless)
 			.with_always_on_top(conf.always_on_top)
 			.with_inner_size(LogicalSize::new(conf.width as f64, conf.height as f64))
-// 			.with_multitouch()
 			;
 
-// 		if conf.fullscreen {
-// 			window_builder = window_builder
-// 				.with_fullscreen(Some(events_loop.get_primary_monitor()));
-// 		}
+		if conf.fullscreen {
+			window_builder = window_builder
+				.with_fullscreen(Some(glutin::window::Fullscreen::Borderless(event_loop.primary_monitor())));
+		}
 
 		#[cfg(target_os = "macos")] {
 
 			use glutin::platform::macos::WindowBuilderExtMacOS;
 
 			window_builder = window_builder
-				.with_titlebar_buttons_hidden(conf.hide_titlebar_buttons)
-				.with_title_hidden(conf.hide_title)
-				.with_titlebar_transparent(conf.titlebar_transparent)
-				.with_fullsize_content_view(conf.titlebar_transparent)
-//				.with_disallow_hidpi(!conf.hidpi)
+				.with_disallow_hidpi(!conf.hidpi)
 				;
 
 		}
@@ -170,7 +165,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		let windowed_ctx = unsafe {
 			ctx_builder
-				.build_windowed(window_builder, &events_loop)
+				.build_windowed(window_builder, &event_loop)
 				.map_err(|_| format!("failed to build window"))?
 				.make_current()
 				.map_err(|_| format!("failed to make opengl context"))?
@@ -180,7 +175,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			windowed_ctx.get_proc_address(s) as *const _
 		});
 
-		(windowed_ctx, events_loop, gl)
+		(windowed_ctx, event_loop, gl)
 
 	};
 
@@ -295,7 +290,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let mut s = S::init(&mut ctx)?;
 
-	events_loop.run(move |event, _, flow| {
+	event_loop.run(move |event, _, flow| {
 
 		use glutin::event_loop::ControlFlow;
 		use glutin::event::WindowEvent as WEvent;
@@ -643,21 +638,6 @@ impl Launcher {
 
 	pub fn cursor_locked(mut self, b: bool) -> Self {
 		self.conf.cursor_locked = b;
-		return self;
-	}
-
-	pub fn hide_title(mut self, b: bool) -> Self {
-		self.conf.hide_title = b;
-		return self;
-	}
-
-	pub fn hide_titlebar_buttons(mut self, b: bool) -> Self {
-		self.conf.hide_titlebar_buttons = b;
-		return self;
-	}
-
-	pub fn titlebar_transparent(mut self, b: bool) -> Self {
-		self.conf.titlebar_transparent = b;
 		return self;
 	}
 
