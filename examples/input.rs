@@ -44,9 +44,9 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		for (i, e) in self.events.iter().enumerate() {
-			ctx.push(&gfx::t()
+			ctx.push(mat4!()
+				.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(0, (i as i32) * -24))
 				.s2(vec2!(i) / 6.0)
-				.t2(vec2!(0, i * 6))
 			, |ctx| {
 				ctx.draw(
 					&shapes::text(&format!("{:?}", e))
@@ -65,7 +65,6 @@ impl app::State for Game {
 
 fn main() {
 	if let Err(err) = app::launcher()
-		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}
