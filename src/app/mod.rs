@@ -524,7 +524,110 @@ fn deal_with_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::
 		},
 
 		glutin::event::Event::MainEventsCleared => {
-			ctx.windowed_ctx.window().request_redraw();
+
+			ctx.windowed_ctx
+				.window()
+				.request_redraw();
+
+			while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+
+				use gilrs::ev::EventType::*;
+
+				match event {
+
+					ButtonPressed(button, ..) => {
+
+						if let Some(button) = GamepadButton::from_extern(button) {
+
+							if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
+
+								ctx
+									.gamepad_button_states
+									.entry(id)
+									.or_insert(hmap![])
+									.insert(button, ButtonState::Pressed);
+
+								s.event(&mut ctx, &Event::GamepadPress(id, button))?;
+
+							}
+
+						}
+
+					},
+
+					ButtonRepeated(button, ..) => {
+						if let Some(button) = GamepadButton::from_extern(button) {
+							s.event(&mut ctx, &Event::GamepadPressRepeat(id, button))?;
+						}
+					},
+
+					ButtonReleased(button, ..) => {
+
+						if let Some(button) = GamepadButton::from_extern(button) {
+
+							if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
+
+								ctx
+									.gamepad_button_states
+									.entry(id)
+									.or_insert(hmap![])
+									.insert(button, ButtonState::Released);
+
+								s.event(&mut ctx, &Event::GamepadRelease(id, button))?;
+
+							}
+
+						}
+
+					},
+
+					AxisChanged(axis, val, ..) => {
+
+						let mut pos = ctx.gamepad_axis_pos
+							.entry(id)
+							.or_insert((vec2!(), vec2!()))
+							.clone()
+							;
+
+						match axis {
+							gilrs::ev::Axis::LeftStickX => {
+								pos.0.x = val;
+								s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+							},
+							gilrs::ev::Axis::LeftStickY => {
+								pos.0.y = val;
+								s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+							},
+							gilrs::ev::Axis::RightStickX => {
+								pos.1.x = val;
+								s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+							},
+							gilrs::ev::Axis::RightStickY => {
+								pos.1.y = val;
+								s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+							},
+							_ => {},
+
+						}
+
+						ctx.gamepad_axis_pos.insert(id, pos);
+
+					},
+
+					Connected => {
+						s.event(&mut ctx, &Event::GamepadConnect(id))?;
+					},
+
+					Disconnected => {
+						s.event(&mut ctx, &Event::GamepadDisconnect(id))?;
+					},
+
+					_ => {},
+
+				}
+
+			}
+
 		},
 
 		_ => (),
