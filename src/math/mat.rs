@@ -5,16 +5,20 @@ use std::ops;
 use super::*;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Mat4([f32; 16]);
+pub struct Mat4 {
+	m: [f32; 16],
+}
 
 impl Mat4 {
 
 	pub fn new(m: [f32; 16]) -> Self {
-		return Self(m);
+		return Self {
+			m: m,
+		};
 	}
 
 	pub fn identity() -> Self {
-		return Self([
+		return Self::new([
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
@@ -23,15 +27,15 @@ impl Mat4 {
 	}
 
 	pub fn get(&self, x: usize, y: usize) -> Option<&f32> {
-		return self.0.get(x * 4 + y);
+		return self.m.get(x * 4 + y);
 	}
 
 	pub fn get_mut(&mut self, x: usize, y: usize) -> Option<&mut f32> {
-		return self.0.get_mut(x * 4 + y);
+		return self.m.get_mut(x * 4 + y);
 	}
 
 	pub fn translate(pos: Vec3) -> Self {
-		return Self([
+		return Self::new([
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
@@ -40,7 +44,7 @@ impl Mat4 {
 	}
 
 	pub fn scale(scale: Vec3) -> Self {
-		return Self([
+		return Self::new([
 			scale.x, 0.0, 0.0, 0.0,
 			0.0, scale.y, 0.0, 0.0,
 			0.0, 0.0, scale.z, 0.0,
@@ -50,7 +54,7 @@ impl Mat4 {
 
 	// TODO: 3d
 	pub fn skew(sk: Vec3) -> Self {
-		return Self([
+		return Self::new([
 			1.0, sk.y, 0.0, 0.0,
 			sk.x, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
@@ -65,17 +69,17 @@ impl Mat4 {
 		let s = rot.sin();
 		let cv = 1.0 - c;
 
-		m.0[0] = (axis.x * axis.x * cv) + c;
-		m.0[1] = (axis.x * axis.y * cv) + (axis.z * s);
-		m.0[2] = (axis.x * axis.z * cv) - (axis.y * s);
+		m.m[0] = (axis.x * axis.x * cv) + c;
+		m.m[1] = (axis.x * axis.y * cv) + (axis.z * s);
+		m.m[2] = (axis.x * axis.z * cv) - (axis.y * s);
 
-		m.0[4] = (axis.y * axis.x * cv) - (axis.z * s);
-		m.0[5] = (axis.y * axis.y * cv) + c;
-		m.0[6] = (axis.y * axis.z * cv) + (axis.x * s);
+		m.m[4] = (axis.y * axis.x * cv) - (axis.z * s);
+		m.m[5] = (axis.y * axis.y * cv) + c;
+		m.m[6] = (axis.y * axis.z * cv) + (axis.x * s);
 
-		m.0[8] = (axis.z * axis.x * cv) + (axis.y * s);
-		m.0[9] = (axis.z * axis.y * cv) - (axis.x * s);
-		m.0[10] = (axis.z * axis.z * cv) + c;
+		m.m[8] = (axis.z * axis.x * cv) + (axis.y * s);
+		m.m[9] = (axis.z * axis.y * cv) - (axis.x * s);
+		m.m[10] = (axis.z * axis.z * cv) + c;
 
 		return m;
 
@@ -100,7 +104,7 @@ impl Mat4 {
 	pub fn inverse(&self) -> Self {
 
 		let mut nm = [0.0; 16];
-		let m = self.0;
+		let m = self.m;
 
 		let f00 = m[10] * m[15] - m[14] * m[11];
 		let f01 = m[9] * m[15] - m[13] * m[11];
@@ -154,12 +158,12 @@ impl Mat4 {
 			}
 		}
 
-		return Self(nm);
+		return Self::new(nm);
 
 	}
 
 	pub fn as_arr(&self) -> [f32; 16] {
-		return self.0;
+		return self.m;
 	}
 
 	pub fn remove_translation(&self) -> Self {
@@ -202,11 +206,11 @@ impl ops::Mul for Mat4 {
 
 		for i in 0..4 {
 			for j in 0..4 {
-				nm.0[i * 4 + j] =
-					self.0[0 * 4 + j] * other.0[i * 4 + 0] +
-					self.0[1 * 4 + j] * other.0[i * 4 + 1] +
-					self.0[2 * 4 + j] * other.0[i * 4 + 2] +
-					self.0[3 * 4 + j] * other.0[i * 4 + 3];
+				nm.m[i * 4 + j] =
+					self.m[0 * 4 + j] * other.m[i * 4 + 0] +
+					self.m[1 * 4 + j] * other.m[i * 4 + 1] +
+					self.m[2 * 4 + j] * other.m[i * 4 + 2] +
+					self.m[3 * 4 + j] * other.m[i * 4 + 3];
 			}
 		};
 
@@ -228,7 +232,7 @@ impl ops::Mul<Vec4> for Mat4 {
 
 	fn mul(self, pt: Self::Output) -> Self::Output {
 
-		let m = self.0;
+		let m = self.m;
 
 		return vec4!(
 			pt.x * m[0] + pt.y * m[4] + pt.z * m[8] + pt.w * m[12],

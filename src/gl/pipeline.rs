@@ -33,7 +33,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			ctx.attach_shader(program_id, vert_id);
 
 			if !ctx.get_shader_compile_status(vert_id) {
-				return Err(format!("vert shader error: {}", ctx.get_shader_info_log(vert_id)));
+				return Err(format!("vert shader error: {}", ctx.get_shader_info_log(vert_id).trim()));
 			}
 
 			let frag_id = ctx.create_shader(ShaderType::Fragment.into())?;
@@ -43,13 +43,13 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			ctx.attach_shader(program_id, frag_id);
 
 			if !ctx.get_shader_compile_status(frag_id) {
-				return Err(format!("frag shader error: {}", ctx.get_shader_info_log(frag_id)));
+				return Err(format!("frag shader error: {}", ctx.get_shader_info_log(frag_id).trim()));
 			}
 
 			ctx.link_program(program_id);
 
 			if !ctx.get_program_link_status(program_id) {
-				return Err(format!("glsl error: {}", ctx.get_shader_info_log(program_id)));
+				return Err(format!("glsl error: {}", ctx.get_shader_info_log(program_id).trim()));
 			}
 
 			ctx.delete_shader(vert_id);

@@ -26,7 +26,8 @@ default = [
 	"audio",
 	"synth",
 # 	"physics",
-# 	"term",
+	"term",
+	"imgui",
 # 	"video",
 # 	"serial",
 # 	"ase",
@@ -38,7 +39,7 @@ default = [
 # 	"bin",
 
 	# options
-# 	"gl3",
+	"gl3",
 
 ]
 
@@ -75,6 +76,10 @@ http = [
 	"url",
 	"httparse",
 	"native-tls",
+]
+
+imgui = [
+	"imgui_lib",
 ]
 
 term = [
@@ -144,6 +149,10 @@ rodio = { version = "0.10", optional = true, default-features = false, features 
 
 # synth
 cpal = { version = "0.11", optional = true }
+
+# imgui
+imgui_lib = { version = "0.2", optional = true, package = "imgui" }
+imgui-winit-support = { version = "0.2", optional = true }
 
 # http
 url = { version = "2.1", optional = true }

@@ -256,6 +256,9 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 impl Model {
 
+	// TODO: load_file
+	// TODO: from_file
+
 	pub fn load_verts(verts: Vec<Vertex3D>, indices: Vec<u32>) -> ModelData {
 
 		let node = NodeData {
