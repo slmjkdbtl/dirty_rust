@@ -2,12 +2,14 @@
 
 == DOING
 - [gfx] inline text style
+- [misc] remove fs
 - [gfx] multiple textures
 - [misc] profile render / update time seperately
 - [misc] profile graph
 - [misc] gltf morph
 - [misc] integrate lighting into gkit
 - [gfx] oblique projection
+- [gfx] imgui
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -33,9 +35,7 @@
 - [app] upgrade to glutin 0.22
 - [gfx] try draw cubes with batched renderer
 - [gfx] fallback font
-- [gfx] obj load all objects
 - [gfx] quad renderer's matrix calculation is slow
-- [gfx] 2d camera (?)
 - [gfx] imgui dpi problem
 - [gfx] make gl3 default (?)
 - [gfx] custom imgui renderer
@@ -53,7 +53,6 @@
 - [gfx] obj model flipped
 - [window] get mouse pos at first frame
 - [gfx] npatch
-- [gfx] 3d ortho cam
 - [gfx] draw default to a framebuffer
 - [gfx] store ttfs in ctx to prevent mut requirement (?)
 - [gfx] truetype font paddings
@@ -81,7 +80,6 @@
 - [gfx] compile glsl 4.x to other versions in runtime (?)
 - [gfx] investigate the extreme slowness of the 2d renderer
 - [gfx] draw curve
-- [gfx] z when drawing 3d on top of 2d
 - [gfx] wasm blank screen
 - [audio] use cpal directly instead of rodio
 - [synth] recording
@@ -134,6 +132,7 @@
 - [window] custom input button types
 - [gfx] stateless gfx transform api
 - [gfx] nested canvas flip again
+- [gfx] obj load all objects
 - [window] remove redundant window conf
 - [gfx] Gfx::clear_ex
 - [gfx] more testing on masked, shader, canvas, and batched renderers
@@ -195,4 +194,6 @@
 - [gfx] gltf animation
 - [gfx] 3d model node structure
 - [misc] figure out blender/gltf srgb/linear color conversion
+- [gfx] change text rendering to fit y+up
+- [gfx] 3d ortho cam
 

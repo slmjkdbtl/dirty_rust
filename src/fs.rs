@@ -42,11 +42,11 @@ pub fn get_res_dir() -> Option<PathBuf> {
 
 }
 
-pub fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
+pub fn bundled_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 	let path = path.as_ref();
 
-	if Path::new(path).exists() {
+	if path.exists() {
 
 		return Ok(path.to_path_buf());
 
@@ -56,7 +56,7 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 			.ok_or(format!("file not found: {}", path.display()))?
 			.join(path);
 
-		if Path::new(&with_res).exists() {
+		if with_res.exists() {
 			return Ok(with_res);
 		} else {
 			return Err(format!("file not found: {}", path.display()));
@@ -67,7 +67,7 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 }
 
 pub fn exists(path: impl AsRef<Path>) -> bool {
-	return validate_path(path).is_ok();
+	return bundled_path(path).is_ok();
 }
 
 pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
@@ -86,7 +86,7 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
-	let path = validate_path(path)?;
+	let path = bundled_path(path)?;
 
 	return fs::read(&path)
 		.map_err(|_| format!("failed to read file {}", path.display()));
@@ -96,7 +96,7 @@ pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = validate_path(path)?;
+	let path = bundled_path(path)?;
 
 	return fs::read_to_string(&path)
 		.map_err(|_| format!("failed to read file {}", path.display()));
@@ -106,7 +106,7 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = validate_path(path)?;
+	let path = bundled_path(path)?;
 
 	return Ok(
 		Path::new(&path)

@@ -1,14 +1,14 @@
 // wengwengweng
 // from http://glslsandbox.com/e#56572.0
 
-uniform float time;
-uniform vec2 mouse;
-uniform vec2 resolution;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
 
 float PI = acos(-1.);
 
 float fold(float x) {
-	float span = -abs(sin(time));
+	float span = -abs(sin(u_time));
 	return x / span < 5.0 ? mod(x, span) - span * .5 : x;
 }
 
@@ -24,10 +24,10 @@ float make_sphere(vec3 p) {
 
 vec4 frag() {
 
-	vec2 p = (gl_FragCoord.xy * 2. - resolution) / min(resolution.x, resolution.y);
+	vec2 p = (gl_FragCoord.xy * 2. - u_resolution) / min(u_resolution.x, u_resolution.y);
 
-	vec3 cam_pos = vec3(sin(mouse.y * PI) * 2., cos(mouse.x * PI) * 2. , sin(time) * 2.);
-	vec3 cam_up = vec3(sin(time), cos(time),0.);
+	vec3 cam_pos = vec3(sin(u_mouse.y * PI) * 2., cos(u_mouse.x * PI) * 2. , sin(u_time) * 2.);
+	vec3 cam_up = vec3(sin(u_time), cos(u_time),0.);
 	vec3 cam_dir = normalize(-cam_pos);
 	vec3 cam_side = cross(cam_dir, cam_up);
 
@@ -56,6 +56,7 @@ vec4 frag() {
 		color = d;
 	}
 
+// 	return vec4(0.0, 0.0, 1.0, 1.0);
 	return vec4(color, 1.0);
 
 }

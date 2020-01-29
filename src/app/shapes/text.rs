@@ -1,5 +1,7 @@
 // wengwengweng
 
+// TODO: change to y+up
+
 use super::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -341,14 +343,16 @@ impl<'a> Drawable for RenderedText<'a> {
 		let scale = self.size.map(|s| s / font.height()).unwrap_or(1.0);
 		let gh = font.height() * scale + self.line_spacing;
 
-		let offset = (self.align.as_pt() + vec2!(1)) * 0.5;
+		let offset = (self.align.as_pt() + vec2!(1, -1)) * 0.5;
 		let offset_pos = -offset * vec2!(self.width, self.height);
 
 		ctx.push(mat4!()
 			.t2(offset_pos)
 		, |ctx| {
 
-			for (y, line) in self.lines.iter().enumerate() {
+			for (y, line) in self.lines
+				.iter()
+				.enumerate() {
 
 				let mut x = 0.0;
 				let ox = (self.width - line.width) * offset.x;
@@ -362,13 +366,13 @@ impl<'a> Drawable for RenderedText<'a> {
 						let bold = self.bold.unwrap_or(0.0) + 1.0;
 
 						ctx.draw_t(mat4!()
-							.t2(vec2!(x + ox, y as f32 * gh))
+							.t2(vec2!(x + ox, -(y as f32 * gh)))
 							.s2(vec2!(scale))
 							.skx(italic)
 							.tx(gw * -italic * (1.0 - offset.x) * 0.5)
 							.sx(bold)
 						, &sprite(&tex)
-							.offset(vec2!(-1))
+							.offset(vec2!(-1, 1))
 							.quad(quad)
 							.color(self.color)
 						)?;

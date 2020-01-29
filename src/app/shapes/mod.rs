@@ -12,7 +12,10 @@ use super::app::Ctx;
 use super::gl;
 use gfx::Drawable;
 use gl::VertexLayout;
+use gfx::Vertex2D;
+use gfx::Vertex3D;
 
+export!(raw_2d);
 export!(sprite);
 export!(texfill);
 export!(polygon);
