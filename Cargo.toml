@@ -39,7 +39,7 @@ default = [
 # 	"bin",
 
 	# options
-	"gl3",
+# 	"gl3",
 
 ]
 
@@ -80,6 +80,7 @@ http = [
 
 imgui = [
 	"imgui_lib",
+	"imgui_winit",
 ]
 
 term = [
@@ -151,8 +152,8 @@ rodio = { version = "0.10", optional = true, default-features = false, features 
 cpal = { version = "0.11", optional = true }
 
 # imgui
-imgui_lib = { version = "0.2", optional = true, package = "imgui" }
-imgui-winit-support = { version = "0.2", optional = true }
+imgui_lib = { git = "https://github.com/Gekkio/imgui-rs/", optional = true, package = "imgui" }
+imgui_winit = { git = "https://github.com/Gekkio/imgui-rs/", optional = true, default-features = false, features = [ "winit-20" ], package = "imgui-winit-support" }
 
 # http
 url = { version = "2.1", optional = true }
