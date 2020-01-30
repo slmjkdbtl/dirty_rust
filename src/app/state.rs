@@ -15,6 +15,11 @@ pub trait State: 'static + Sized {
 		return Ok(());
 	}
 
+	#[cfg(feature = "imgui")]
+	fn imgui(&mut self, _: &mut imgui::Ui) -> Result<()> {
+		return Ok(());
+	}
+
 	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
