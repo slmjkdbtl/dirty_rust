@@ -25,7 +25,7 @@ mod conf;
 pub mod kit;
 
 #[cfg(feature = "imgui")]
-mod imgui;
+pub mod imgui;
 
 pub use state::*;
 pub use conf::*;
@@ -87,7 +87,8 @@ pub struct Ctx {
 
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(self) gamepad_ctx: gilrs::Gilrs,
-// 	pub(self) imgui: imgui::Imgui,
+	#[cfg(feature = "imgui")]
+	pub(self) imgui: imgui::Imgui,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -255,7 +256,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
-// 		imgui: imgui,
+		#[cfg(feature = "imgui")]
+		imgui: imgui,
 		gl: Rc::new(gl),
 
 		proj: cam.projection(),
@@ -299,7 +301,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let mut s = S::init(&mut ctx)?;
 
 	event_loop.run(move |event, _, flow| {
-		match handle_event(&mut ctx, &mut s, &mut imgui, event) {
+		match handle_event(&mut ctx, &mut s, event) {
 			Ok(f) => {
 				*flow = f;
 			},
@@ -312,7 +314,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 }
 
-fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, imgui: &mut imgui::Imgui, event: glutin::event::Event<()>) -> Result<ControlFlow> {
+fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::Event<()>) -> Result<ControlFlow> {
 
 	use glutin::event::WindowEvent as WEvent;
 	use glutin::event::DeviceEvent as DEvent;
@@ -320,7 +322,7 @@ fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, imgui: &mut imgui::Imgui,
 	use glutin::event::ElementState;
 	use input::*;
 
-	imgui.handle_event(&ctx, &event);
+	ctx.imgui.handle_event(ctx.windowed_ctx.window(), &event);
 
 	match event {
 
@@ -523,10 +525,10 @@ fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, imgui: &mut imgui::Imgui,
 			s.update(&mut ctx)?;
 			ctx.begin_frame();
 			s.draw(&mut ctx)?;
-			imgui.render(ctx, |_| {
-				// ..
-			})?;
 			ctx.end_frame();
+			ctx.imgui.render(ctx.windowed_ctx.window(), ctx.width(), ctx.height(), |ui| {
+				s.imgui(ui);
+			})?;
 			ctx.swap_buffers()?;
 
 			if ctx.quit {

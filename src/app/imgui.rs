@@ -6,8 +6,12 @@ use gl::VertexLayout;
 
 use std::time::Instant;
 
-use glutin::window::Window;
-use imgui_lib::im_str;
+pub use imgui_lib::Window;
+pub use imgui_lib::Ui;
+pub use imgui_lib::Condition;
+pub use imgui_lib::im_str;
+
+use glutin::window::Window as WinitWindow;
 use imgui_lib::DrawCmd;
 use imgui_lib::DrawCmdParams;
 use imgui_lib::Context;
@@ -28,22 +32,25 @@ impl gfx::Vertex2D {
 	}
 }
 
-pub struct Imgui {
+pub(super) struct Imgui {
 	ctx: Context,
 	platform: WinitPlatform,
 	tex: gfx::Texture,
 	last_frame: Instant,
+	pipeline: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
+	renderer: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
 }
 
 impl Imgui {
 
-	pub fn new(gl: &gl::Device, window: &Window) -> Result<Self> {
+	pub fn new(gl: &gl::Device, window: &WinitWindow) -> Result<Self> {
 
 		let mut ctx = Context::create();
 		let mut platform = WinitPlatform::init(&mut ctx);
 
 		ctx.set_ini_filename(None);
-		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Locked(1.0),);
+// 		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Default,);
+		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Locked(1.0));
 
 		let tex = {
 
@@ -51,32 +58,42 @@ impl Imgui {
 			let tex_data = atlas.build_rgba32_texture();
 			let width = tex_data.width as i32;
 			let height = tex_data.height as i32;
+			// TODO: no unwrap
 			let tex = gl::Texture2D::from(&gl, width, height, tex_data.data).unwrap();
 
 			gfx::Texture::from_gl_tex(tex)
 
 		};
 
+		use res::shader::*;
+
+		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
+		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
+
+		let pipeline = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
+
 		return Ok(Self {
 			ctx: ctx,
 			platform: platform,
 			last_frame: Instant::now(),
 			tex: tex,
+			pipeline: pipeline,
+			renderer: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		});
 
 	}
 
-	pub fn handle_event(&mut self, ctx: &Ctx, e: &glutin::event::Event<()>) {
-		self.platform.handle_event(self.ctx.io_mut(), ctx.windowed_ctx.window(), &e);
+	pub fn handle_event(&mut self, window: &WinitWindow, e: &glutin::event::Event<()>) {
+		self.platform.handle_event(self.ctx.io_mut(), window, &e);
 	}
 
 	pub fn render(
 		&mut self,
-		ctx: &mut Ctx,
+		window: &WinitWindow,
+		w: i32,
+		h: i32,
 		f: impl FnOnce(&mut imgui_lib::Ui) -> (),
 	) -> Result<()> {
-
-		let window = ctx.windowed_ctx.window();
 
 		self.platform
 			.prepare_frame(self.ctx.io_mut(), &window)
@@ -90,13 +107,20 @@ impl Imgui {
 
 		f(&mut ui);
 
-		imgui_lib::Window::new(im_str!("window"))
-			.size([300.0, 100.0], imgui_lib::Condition::FirstUseEver)
-			.build(&ui, || {
-				ui.text(im_str!("Hello world!"));
-			});
-
 		self.platform.prepare_render(&ui, &window);
+
+// 		let [w, h] = ui.io().display_size;
+// 		let [sw, sh] = ui.io().display_framebuffer_scale;
+// 		let (fw, fh) = (w * sw, h * sh);
+
+// 		ctx.gl.viewport(0, 0, fw as i32, fh as i32);
+
+		let proj = mat4![
+			2.0 / w as f32, 0.0, 0.0, 0.0,
+			0.0, 2.0 / -h as f32, 0.0, 0.0,
+			0.0, 0.0, -1.0, 0.0,
+			-1.0, 1.0, 0.0, 1.0,
+		];
 
 		let draw_data = ui.render();
 
@@ -115,30 +139,17 @@ impl Imgui {
 				gfx::Vertex2D::from_imgui_vert(*v).push(&mut vqueue);
 			}
 
-			let (w, h) = (ctx.width() as f32, ctx.height() as f32);
-
-			let proj = mat4![
-				2.0 / w, 0.0, 0.0, 0.0,
-				0.0, 2.0 / -h, 0.0, 0.0,
-				0.0, 0.0, -1.0, 0.0,
-				-1.0, 1.0, 0.0, 1.0,
-			];
-
-			ctx.flush();
-
-			ctx.renderer_2d.push(
+			self.renderer.push(
 				gl::Primitive::Triangle,
 				&vqueue,
 				&ibuf,
-				&ctx.cur_pipeline_2d,
+				&self.pipeline,
 				&gfx::Uniform2D {
 					proj: proj,
 					tex: self.tex.clone(),
 					custom: None,
 				},
 			)?;
-
-			ctx.flush();
 
 			for cmd in draw_list.commands() {
 				match cmd {
@@ -157,6 +168,8 @@ impl Imgui {
 			}
 
 		}
+
+		self.renderer.flush();
 
 		return Ok(());
 
