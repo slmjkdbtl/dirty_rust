@@ -68,7 +68,6 @@ fn main() {
 
 	if let Err(err) = app::launcher()
 		.resizable(true)
-		.hidpi(false)
 		.run::<Game>() {
 		println!("{}", err);
 	}

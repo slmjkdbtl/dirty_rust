@@ -181,7 +181,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	let mut imgui = imgui::Imgui::new(windowed_ctx.window());
+	let mut imgui = imgui::Imgui::new(&gl, windowed_ctx.window())?;
 
 	let c = conf.clear_color;
 
