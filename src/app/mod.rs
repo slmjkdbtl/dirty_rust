@@ -24,6 +24,9 @@ mod conf;
 #[cfg(feature = "gkit")]
 pub mod kit;
 
+#[cfg(feature = "imgui")]
+mod imgui;
+
 pub use state::*;
 pub use conf::*;
 
@@ -84,6 +87,7 @@ pub struct Ctx {
 
 	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(self) gamepad_ctx: gilrs::Gilrs,
+// 	pub(self) imgui: imgui::Imgui,
 
 	// gfx
 	pub(self) gl: Rc<gl::Device>,
@@ -177,6 +181,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
+	let mut imgui = imgui::Imgui::new(windowed_ctx.window());
+
 	let c = conf.clear_color;
 
 	gl.enable(gl::Capability::Blend);
@@ -249,6 +255,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
+// 		imgui: imgui,
 		gl: Rc::new(gl),
 
 		proj: cam.projection(),
@@ -292,7 +299,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let mut s = S::init(&mut ctx)?;
 
 	event_loop.run(move |event, _, flow| {
-		match deal_with_event(&mut ctx, &mut s, event) {
+		match handle_event(&mut ctx, &mut s, &mut imgui, event) {
 			Ok(f) => {
 				*flow = f;
 			},
@@ -305,13 +312,15 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 }
 
-fn deal_with_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::Event<()>) -> Result<ControlFlow> {
+fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, imgui: &mut imgui::Imgui, event: glutin::event::Event<()>) -> Result<ControlFlow> {
 
 	use glutin::event::WindowEvent as WEvent;
 	use glutin::event::DeviceEvent as DEvent;
 	use glutin::event::TouchPhase;
 	use glutin::event::ElementState;
 	use input::*;
+
+	imgui.handle_event(&ctx, &event);
 
 	match event {
 
@@ -514,6 +523,9 @@ fn deal_with_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::
 			s.update(&mut ctx)?;
 			ctx.begin_frame();
 			s.draw(&mut ctx)?;
+			imgui.render(ctx, |_| {
+				// ..
+			})?;
 			ctx.end_frame();
 			ctx.swap_buffers()?;
 

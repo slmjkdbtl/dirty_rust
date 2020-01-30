@@ -8,6 +8,7 @@ use super::gfx::*;
 use crate::gl;
 
 #[derive(Clone, Debug, PartialEq)]
+#[repr(C)]
 pub struct Vertex2D {
 	pub pos: Vec3,
 	pub uv: Vec2,
@@ -43,6 +44,7 @@ impl gl::VertexLayout for Vertex2D {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[repr(C)]
 pub struct Vertex3D {
 	pub pos: Vec3,
 	pub uv: Vec2,

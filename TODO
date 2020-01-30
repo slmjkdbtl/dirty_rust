@@ -1,14 +1,7 @@
 # wengwengweng
 
 == DOING
-- [gfx] inline text style
-- [misc] remove fs
 - [gfx] multiple textures
-- [misc] profile render / update time seperately
-- [misc] profile graph
-- [misc] gltf morph
-- [misc] integrate lighting into gkit
-- [gfx] oblique projection
 - [gfx] imgui
 
 == TODO
@@ -96,7 +89,12 @@
 - [gfx] bold text
 - [gfx] text character spacing
 - [math] poisson dist
-- [fs] less plain wrappers
+- [gfx] inline text style
+- [misc] profile render / update time seperately
+- [misc] profile graph
+- [misc] gltf morph
+- [misc] integrate lighting into gkit
+- [gfx] oblique projection
 
 == DONE
 - [http] refactor http
