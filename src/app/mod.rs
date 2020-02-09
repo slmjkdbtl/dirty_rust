@@ -515,7 +515,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 					#[cfg(feature = "imgui")]
 					imgui.render(ctx.windowed_ctx.window(), |ui| {
-						s.imgui(ui);
+						return s.imgui(ui);
 					})?;
 
 					ctx.swap_buffers()?;
