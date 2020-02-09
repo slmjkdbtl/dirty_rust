@@ -38,14 +38,14 @@ impl Drawable for Line3D {
 
 		gfx::Vertex3D {
 			pos: self.p1,
-			normal: vec3!(0),
+			normal: vec3!(1),
 			color: self.color,
 			uv: vec2!(0),
 		}.push(&mut verts);
 
 		gfx::Vertex3D {
 			pos: self.p2,
-			normal: vec3!(0),
+			normal: vec3!(1),
 			color: self.color,
 			uv: vec2!(0),
 		}.push(&mut verts);
@@ -59,7 +59,7 @@ impl Drawable for Line3D {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
-				color: rgba!(),
+				color: self.color,
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),
 			},

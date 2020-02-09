@@ -182,6 +182,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
+	#[cfg(feature = "imgui")]
 	let mut imgui = imgui::Imgui::new(&gl, windowed_ctx.window())?;
 
 	let c = conf.clear_color;
@@ -322,6 +323,7 @@ fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::Eve
 	use glutin::event::ElementState;
 	use input::*;
 
+	#[cfg(feature = "imgui")]
 	ctx.imgui.handle_event(ctx.windowed_ctx.window(), &event);
 
 	match event {
@@ -393,7 +395,7 @@ fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::Eve
 
 			WEvent::CursorMoved { position, .. } => {
 
-				let mpos: Vec2 = (*position).into();
+				let mpos: Vec2 = position.to_logical(ctx.dpi() as f64).into();
 				let (w, h) = (ctx.width as f32, ctx.height as f32);
 				let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
 
@@ -526,9 +528,12 @@ fn handle_event(mut ctx: &mut Ctx, s: &mut impl State, event: glutin::event::Eve
 			ctx.begin_frame();
 			s.draw(&mut ctx)?;
 			ctx.end_frame();
+
+			#[cfg(feature = "imgui")]
 			ctx.imgui.render(ctx.windowed_ctx.window(), ctx.width(), ctx.height(), |ui| {
 				s.imgui(ui);
 			})?;
+
 			ctx.swap_buffers()?;
 
 			if ctx.quit {

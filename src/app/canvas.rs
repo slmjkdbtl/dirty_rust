@@ -47,7 +47,6 @@ impl Canvas {
 		return &self.tex;
 	}
 
-	#[cfg(feature = "img")]
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 
 		let path = path.as_ref();

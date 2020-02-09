@@ -69,8 +69,8 @@ impl Sound {
 		return Ok(rodio::play_raw(&get_device()?, self.apply().convert_samples()));
 	}
 
-	pub fn into_track(self) -> Result<Track> {
-		return Track::from_sound(self);
+	pub fn as_track(&self) -> Result<Track> {
+		return Track::from_sound(&self);
 	}
 
 	pub fn speed(&self, s: f32) -> Self {
@@ -155,10 +155,10 @@ impl Sound {
 impl Track {
 
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
-		return Self::from_sound(Sound::from_bytes(data)?);
+		return Self::from_sound(&Sound::from_bytes(data)?);
 	}
 
-	pub fn from_sound(sound: Sound) -> Result<Self> {
+	pub fn from_sound(sound: &Sound) -> Result<Self> {
 
 		let device = get_device()?;
 		let sink = Sink::new(&device);

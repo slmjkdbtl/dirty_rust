@@ -2,6 +2,7 @@
 
 use std::rc::Rc;
 use std::io::Cursor;
+use std::path::Path;
 
 use crate::*;
 use super::*;
@@ -85,9 +86,11 @@ fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
 		let (k1, pos1) = track[i];
 		let (k2, pos2) = track[i + 1];
 
+		// TODO: lerp bug?
 		if t >= k1 && t <= k2 {
 			let dt = t - k1;
-			return Some(pos1.lerp(pos2, dt));
+			return Some(pos1);
+// 			return Some(pos1.lerp(pos2, dt));
 		}
 
 	}
@@ -256,8 +259,48 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 impl Model {
 
-	// TODO: load_file
-	// TODO: from_file
+	pub fn load_file(path: impl AsRef<Path>) -> Result<ModelData> {
+
+		let mut path = path.as_ref().to_owned();
+
+		match fs::extname(&path)?.as_ref() {
+
+			"obj" => {
+
+				let obj_src = fs::read_str(&path)?;
+
+				path.set_extension("mtl");
+
+				let mtl_src = fs::read_str(&path).ok();
+				let mtl_src = mtl_src.as_ref().map(|s| s.as_str());
+
+				path.set_extension("png");
+
+				let img_src = fs::read(&path).ok();
+				let img_src = img_src.as_ref().map(|i| i.as_slice());
+
+				let data = gfx::Model::load_obj(&obj_src, mtl_src, img_src)?;
+
+				return Ok(data);
+
+			},
+
+			"glb" => {
+
+				let bytes = fs::read(&path)?;
+				let data = gfx::Model::load_glb(&bytes)?;
+
+				return Ok(data);
+
+			},
+
+			_ => {
+				return Err(format!("unrecognized model"));
+			},
+
+		}
+
+	}
 
 	pub fn load_verts(verts: Vec<Vertex3D>, indices: Vec<u32>) -> ModelData {
 
@@ -550,6 +593,10 @@ impl Model {
 			texture: tex,
 		});
 
+	}
+
+	pub fn from_file(ctx: &Ctx, path: impl AsRef<Path>) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
 	pub fn from_verts(ctx: &Ctx, verts: Vec<Vertex3D>, indices: Vec<u32>) -> Result<Self> {

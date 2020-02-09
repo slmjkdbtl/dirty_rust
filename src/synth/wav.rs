@@ -1,7 +1,7 @@
 // wengwengweng
 
 use std::f32::consts::PI;
-use crate::*;
+use super::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Waveform {

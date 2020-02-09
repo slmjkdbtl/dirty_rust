@@ -5,7 +5,6 @@ use std::rc::Rc;
 use crate::*;
 use super::*;
 
-#[cfg(feature = "img")]
 use crate::img::Image;
 
 #[derive(Clone, PartialEq)]
@@ -25,7 +24,6 @@ impl Texture {
 		return Ok(Self::from_gl_tex(gl::Texture2D::new(&ctx.gl_ctx(), w, h)?));
 	}
 
-	#[cfg(feature = "img")]
 	pub fn from_img(ctx: &impl GfxCtx, img: Image) -> Result<Self> {
 
 		let w = img.width();
@@ -35,7 +33,6 @@ impl Texture {
 
 	}
 
-	#[cfg(feature = "img")]
 	pub fn from_bytes(ctx: &impl GfxCtx, data: &[u8]) -> Result<Self> {
 		return Self::from_img(ctx, Image::from_bytes(data)?);
 	}
