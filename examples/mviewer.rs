@@ -13,8 +13,6 @@ use dirty::math::*;
 use input::Key;
 use input::Mouse;
 
-type LoadResult = Result<gfx::ModelData>;
-
 struct Viewer {
 	shader: gfx::Shader3D<()>,
 	model: Option<gfx::Model>,
@@ -22,13 +20,11 @@ struct Viewer {
 	pos: Vec2,
 	scale: f32,
 	resetting: bool,
-	loader: Task<LoadResult>,
+	loader: Task<Result<gfx::ModelData>>,
 	draw_wireframe: bool,
 	run_anim: bool,
 	draw_bound: bool,
 	helping: bool,
-	pix_shader: gfx::Shader2D<PixUniform>,
-	canvas: gfx::Canvas,
 }
 
 #[derive(Clone)]
@@ -46,51 +42,14 @@ impl gfx::Uniform for PixUniform {
 	}
 }
 
-fn load_file(path: impl AsRef<Path>) -> Task<LoadResult> {
+fn load_file(path: impl AsRef<Path>) -> Task<Result<gfx::ModelData>> {
 
-	let mut path = path.as_ref().to_owned();
+	let path = path.as_ref().to_owned();
 
 	return Task::exec(move || {
-
-		// TODO: use Model::from_file
-		match fs::extname(&path)?.as_ref() {
-
-			"obj" => {
-
-				let obj_src = fs::read_str(&path)?;
-
-				path.set_extension("mtl");
-
-				let mtl_src = fs::read_str(&path).ok();
-				let mtl_src = mtl_src.as_ref().map(|s| s.as_str());
-
-				path.set_extension("png");
-
-				let img_src = fs::read(&path).ok();
-				let img_src = img_src.as_ref().map(|i| i.as_slice());
-
-				let data = gfx::Model::load_obj(&obj_src, mtl_src, img_src)?;
-
-				return Ok(data);
-
-			},
-
-			"glb" => {
-
-				let bytes = fs::read(&path)?;
-				let data = gfx::Model::load_glb(&bytes)?;
-
-				return Ok(data);
-
-			},
-
-			_ => {
-				return Err(format!("unrecognized model"));
-			},
-
-		}
-
+		return gfx::Model::load_file(path);
 	});
+
 }
 
 impl Viewer {
@@ -129,8 +88,6 @@ impl app::State for Viewer {
 			run_anim: true,
 			helping: false,
 			scale: 0.0,
-			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 		});
 
 	}
@@ -140,10 +97,6 @@ impl app::State for Viewer {
 		use input::Event::*;
 
 		match e {
-
-			Resize(w, h) => {
-				self.canvas = gfx::Canvas::new(ctx, *w, *h)?;
-			},
 
 			KeyPress(k) => {
 
@@ -280,67 +233,51 @@ impl app::State for Viewer {
 
 		}
 
-		ctx.draw_on(&self.canvas, |ctx| {
-
-			ctx.clear();
-
-			if let Some(model) = &self.model {
-
-				let center = model.center();
-
-				ctx.push(mat4!()
-					.t2(self.pos)
-					.s3(vec3!(self.scale))
-					.ry(self.rot.x.to_radians())
-					.rx(self.rot.y.to_radians())
-					.t3(-center)
-				, |ctx| {
-
-					let t = if self.run_anim {
-						let anim_len = model.anim_len();
-						let t = ctx.time();
-						t - f32::floor(t / anim_len) * anim_len
-					} else {
-						0.0
-					};
-
-					ctx.draw_3d_with(&self.shader, &(), |ctx| {
-						ctx.draw(
-							&shapes::model(&model)
-								.draw_wireframe(self.draw_wireframe)
-								.time(t)
-						)?;
-						return Ok(());
-					})?;
-
-					if self.draw_bound {
-						let (min, max) = model.bound();
-						ctx.draw(&shapes::rect3d(min, max))?;
-					}
-
-					return Ok(());
-
-				})?;
-
-			}
-
-			return Ok(());
-
-		})?;
-
 		return Ok(());
 
 	}
 
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
-		ctx.draw_2d_with(&self.pix_shader, &PixUniform {
-			resolution: vec2!(ctx.width(), ctx.height()),
-			size: 2.0,
-		}, |ctx| {
-			ctx.draw(&shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+		if let Some(model) = &self.model {
+
+			let center = model.center();
+
+			ctx.push(mat4!()
+				.t2(self.pos)
+				.s3(vec3!(self.scale))
+				.ry(self.rot.x.to_radians())
+				.rx(self.rot.y.to_radians())
+				.t3(-center)
+			, |ctx| {
+
+				let t = if self.run_anim {
+					let anim_len = model.anim_len();
+					let t = ctx.time();
+					t - f32::floor(t / anim_len) * anim_len
+				} else {
+					0.0
+				};
+
+				ctx.draw_3d_with(&self.shader, &(), |ctx| {
+					ctx.draw(
+						&shapes::model(&model)
+							.draw_wireframe(self.draw_wireframe)
+							.time(t)
+					)?;
+					return Ok(());
+				})?;
+
+				if self.draw_bound {
+					let (min, max) = model.bound();
+					ctx.draw(&shapes::rect3d(min, max))?;
+				}
+
+				return Ok(());
+
+			})?;
+
+		}
 
 		ctx.push(mat4!()
 			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))

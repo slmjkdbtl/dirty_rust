@@ -17,23 +17,12 @@
 
 #[macro_use]
 pub mod helpers;
-
 pub mod task;
-
-#[cfg(feature = "app")]
-pub mod math;
-#[cfg(feature = "app")]
-pub mod gl;
-#[cfg(feature = "app")]
-pub mod app;
-
-#[cfg(feature = "fs")]
 pub mod fs;
-
-#[cfg(feature = "img")]
+pub mod math;
+pub mod gl;
+pub mod app;
 pub mod img;
-
-#[cfg(feature = "audio")]
 pub mod audio;
 
 #[cfg(feature = "physics")]

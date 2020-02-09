@@ -91,7 +91,7 @@ fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
 					proj: ctx.proj,
 					view: ctx.view,
 					model: ctx.transform * tr,
-					color: rgba!(1),
+					color: dctx.color,
 					tex: tex.clone(),
 					custom: ctx.cur_custom_uniform_3d.clone(),
 				},

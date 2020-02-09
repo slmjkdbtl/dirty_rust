@@ -19,9 +19,9 @@ struct TwistUniform {
 impl gfx::Uniform for TwistUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
-			"resolution" => &self.resolution,
-			"mouse" => &self.mouse,
-			"time" => &self.time,
+			"u_resolution" => &self.resolution,
+			"u_mouse" => &self.mouse,
+			"u_time" => &self.time,
 		];
 	}
 }
@@ -30,7 +30,7 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let shader = gfx::Shader2D::from_frag(ctx, include_str!("res/twist.frag"))?;
+		let shader = gfx::Shader2D::from_frag(ctx, include_str!("res/test.frag"))?;
 
 		return Ok(Self {
 			shader: shader,
@@ -60,22 +60,17 @@ impl app::State for Game {
 	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.draw_2d_with(&self.shader, &TwistUniform {
-
-			resolution: vec2!(ctx.width(), ctx.height()),
+			resolution: vec2!(ctx.width(), ctx.height()) * ctx.dpi(),
+			mouse: ctx.mouse_pos() / vec2!(ctx.width(), ctx.height()),
 			time: ctx.time().into(),
-			mouse: ctx.mouse_pos().normalize(),
-
 		}, |ctx| {
-
 			ctx.draw(
 				&shapes::rect(
-					ctx.coord(gfx::Origin::TopLeft) + vec2!(48),
-					ctx.coord(gfx::Origin::BottomRight) - vec2!(48)
+					ctx.coord(gfx::Origin::TopLeft) + vec2!(48, -48),
+					ctx.coord(gfx::Origin::BottomRight) - vec2!(48, -48)
 				)
 			)?;
-
 			return Ok(());
-
 		})?;
 
 		return Ok(());

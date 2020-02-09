@@ -92,7 +92,7 @@ impl<T: TaskItem> TaskPool<T> {
 		return self.active.len();
 	}
 
-	pub fn completed(&self) -> usize {
+	pub fn completed_count(&self) -> usize {
 		return self.completed;
 	}
 

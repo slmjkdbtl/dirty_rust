@@ -54,7 +54,7 @@ impl Sprite {
 	#[cfg(feature = "ase")]
 	pub fn from_ase(ctx: &app::Ctx, tex: gfx::Texture, json: &str) -> Result<Self> {
 
-		let mut sprite = Self::from_tex(ctx, tex);
+		let mut sprite = Self::from_tex(tex);
 
 		sprite.load_ase(json)?;
 
