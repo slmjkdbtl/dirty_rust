@@ -253,19 +253,9 @@ macro_rules! gen_buttons {
 
 }
 
-#[cfg(not(web))]
 use glutin::event::VirtualKeyCode as ExternKey;
-#[cfg(not(web))]
 use glutin::event::MouseButton as ExternMouse;
-#[cfg(web)]
-struct ExternKey;
-#[cfg(web)]
-struct ExternMouse;
-
-#[cfg(desktop)]
 use gilrs::ev::Button as ExternGamepadButton;
-#[cfg(any(mobile, web))]
-struct ExternGamepadButton;
 
 gen_buttons!(Key(ExternKey), {
 	Q("q") => Q,

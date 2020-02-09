@@ -26,7 +26,6 @@
 - [gfx] integrate projection into camera
 - [geom] integrate collision detection with shape (?)
 - [misc] wasm
-- [app] upgrade to glutin 0.22
 - [gfx] try draw cubes with batched renderer
 - [gfx] fallback font
 - [gfx] quad renderer's matrix calculation is slow
@@ -195,4 +194,5 @@
 - [misc] figure out blender/gltf srgb/linear color conversion
 - [gfx] change text rendering to fit y+up
 - [gfx] 3d ortho cam
+- [app] upgrade to glutin 0.22
 

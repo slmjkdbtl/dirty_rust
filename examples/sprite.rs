@@ -45,6 +45,17 @@ impl app::State for Game {
 
 	}
 
+	fn imgui(&mut self, ui: &mut imgui::Ui) -> Result<()> {
+
+		imgui::Window::new(imgui::im_str!("test"))
+			.size([320.0, 240.0], imgui::Condition::FirstUseEver)
+			.build(&ui, || {
+				ui.text(imgui::im_str!("yo"));
+			});
+
+		return Ok(());
+	}
+
 	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
