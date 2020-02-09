@@ -43,9 +43,6 @@ pub mod serial;
 #[cfg(feature = "ase")]
 pub mod ase;
 
-#[cfg(feature = "texpack")]
-pub mod texpack;
-
 pub mod codec;
 
 pub type Error = String;

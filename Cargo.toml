@@ -27,7 +27,6 @@ default = [
 # 	"video",
 # 	"serial",
 # 	"ase",
-# 	"texpack",
 # 	"xr",
 # 	"osc",
 # 	"http",
@@ -60,10 +59,6 @@ term = [
 
 ase = [
 	"aseprite",
-]
-
-texpack = [
-	"sheep",
 ]
 
 xr = [
@@ -106,7 +101,7 @@ directories = "2.0"
 glob = "0.3"
 
 # app
-glutin = "0.22"
+glutin = "0.23"
 glow = { version = "0.4.0", default-features = false }
 clipboard = "0.5"
 fontdue = "0.0"
@@ -136,9 +131,6 @@ aseprite = { version = "0.1", optional = true }
 # physics
 nphysics3d = { version = "0.13", optional = true }
 nphysics2d = { version = "0.13", optional = true }
-
-# texpack
-sheep = { version = "0.3", optional = true }
 
 # osc
 rosc = { version = "0.3", optional = true }

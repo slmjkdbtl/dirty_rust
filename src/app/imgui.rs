@@ -49,8 +49,8 @@ impl Imgui {
 		let mut platform = WinitPlatform::init(&mut ctx);
 
 		ctx.set_ini_filename(None);
-// 		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Default,);
-		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Locked(1.0));
+		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Default,);
+// 		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Locked(1.0));
 
 		let tex = {
 
@@ -90,7 +90,7 @@ impl Imgui {
 	pub fn render(
 		&mut self,
 		window: &WinitWindow,
-		f: impl FnOnce(&mut imgui_lib::Ui) -> (),
+		f: impl FnOnce(&mut imgui_lib::Ui) -> Result<()>,
 	) -> Result<()> {
 
 		self.platform
@@ -103,16 +103,17 @@ impl Imgui {
 
 		let mut ui = self.ctx.frame();
 
-		f(&mut ui);
+		f(&mut ui)?;
 
 		self.platform.prepare_render(&ui, &window);
 
-		let dpi = window.scale_factor();
-		let size = window.inner_size().to_logical::<f32>(dpi);
+		let [w, h] = ui.io().display_size;
+		let [sw, sh] = ui.io().display_framebuffer_scale;
+		let (fw, fh) = (w * sw, h * sh);
 
 		let proj = mat4![
-			2.0 / size.width, 0.0, 0.0, 0.0,
-			0.0, 2.0 / -size.height, 0.0, 0.0,
+			2.0 / w, 0.0, 0.0, 0.0,
+			0.0, 2.0 / -h, 0.0, 0.0,
 			0.0, 0.0, -1.0, 0.0,
 			-1.0, 1.0, 0.0, 1.0,
 		];
