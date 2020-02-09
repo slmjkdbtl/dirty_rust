@@ -3,21 +3,6 @@
 ## DIRTY
 personal toolkit for games and stuff
 
-### modules
-- **app** Windowing, Input, and Graphics
-- **img** Image Loading & Writing
-- **audio** Sound Loading & Playback
-- **gkit** Gamedev Kit
-- **physics** Simple Physics Simulation
-- **synth** Software Synthesizer
-- **term** CLI Utilities
-
-All the modules can be configured with cargo feature:
-
-```toml
-default = [ "fs", "app", "img", "audio", ]
-```
-
 ### example
 here's a minimal window setup:
 

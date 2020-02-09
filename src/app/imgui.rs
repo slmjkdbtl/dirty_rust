@@ -90,8 +90,6 @@ impl Imgui {
 	pub fn render(
 		&mut self,
 		window: &WinitWindow,
-		w: i32,
-		h: i32,
 		f: impl FnOnce(&mut imgui_lib::Ui) -> (),
 	) -> Result<()> {
 
@@ -109,15 +107,12 @@ impl Imgui {
 
 		self.platform.prepare_render(&ui, &window);
 
-// 		let [w, h] = ui.io().display_size;
-// 		let [sw, sh] = ui.io().display_framebuffer_scale;
-// 		let (fw, fh) = (w * sw, h * sh);
-
-// 		ctx.gl.viewport(0, 0, fw as i32, fh as i32);
+		let dpi = window.scale_factor();
+		let size = window.inner_size().to_logical::<f32>(dpi);
 
 		let proj = mat4![
-			2.0 / w as f32, 0.0, 0.0, 0.0,
-			0.0, 2.0 / -h as f32, 0.0, 0.0,
+			2.0 / size.width, 0.0, 0.0, 0.0,
+			0.0, 2.0 / -size.height, 0.0, 0.0,
 			0.0, 0.0, -1.0, 0.0,
 			-1.0, 1.0, 0.0, 1.0,
 		];
