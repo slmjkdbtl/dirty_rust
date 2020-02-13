@@ -58,8 +58,8 @@ impl Game {
 			NoiseType::Turbulence => box Turbulence::new(Fbm::new()).set_seed(seed),
 		};
 
-		let w = ctx.gwidth() as i32;
-		let h = ctx.gheight() as i32;
+		let w = ctx.width() as i32;
+		let h = ctx.height() as i32;
 		let scale = 0.3;
 
 		let mut buf = Vec::with_capacity((w * h * 4) as usize);
@@ -187,13 +187,13 @@ impl State for Game {
 		ctx.draw(&shapes::sprite(&self.tex))?;
 
 		ctx.draw_t(
-			&gfx::t()
+			mat4!()
 				.t2(vec2!(24)),
 			&shapes::text(&format!("type: {}", self.noise_type.as_str()))
 		)?;
 
 		ctx.draw_t(
-			&gfx::t()
+			mat4!()
 				.t2(vec2!(24, 44)),
 			&shapes::text(&format!("seed: {}", self.seed))
 		)?;
@@ -206,7 +206,6 @@ impl State for Game {
 
 fn main() -> Result<()> {
 	return launcher()
-		.origin(gfx::Origin::TopLeft)
 		.run::<Game>();
 }
 

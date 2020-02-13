@@ -81,10 +81,6 @@ impl Image {
 
 	}
 
-	pub fn resize(&mut self) -> Result<()> {
-		todo!();
-	}
-
 	pub fn into_raw(self) -> Vec<u8> {
 		return self.handle.into_raw();
 	}

@@ -3,7 +3,8 @@
 == DOING
 - [gfx] multiple textures
 - [gfx] spline
-- [gfx] imgui
+- [misc] generate font mesh
+- [gfx] shader nodes
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -195,4 +196,5 @@
 - [gfx] change text rendering to fit y+up
 - [gfx] 3d ortho cam
 - [app] upgrade to glutin 0.22
+- [gfx] imgui
 

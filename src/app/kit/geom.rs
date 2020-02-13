@@ -219,7 +219,7 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 			let p1 = poly[i];
 			let p2 = poly[(i + 1) % len];
 
-			normals.push((p1 - p2).normal().normalize());
+			normals.push((p1 - p2).normal().normalized());
 
 		}
 
