@@ -196,7 +196,7 @@ impl Vec2 {
 		return f32::sqrt(self.x * self.x + self.y * self.y);
 	}
 
-	pub fn normalize(self) -> Self {
+	pub fn normalized(self) -> Self {
 		return self.clone() / self.mag();
 	}
 

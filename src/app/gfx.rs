@@ -211,6 +211,47 @@ impl Ctx {
 
 	}
 
+	pub fn draw_masked_2(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		let gl = self.gl.clone();
+
+		self.flush();
+		gl.enable(gl::Capability::StencilTest);
+		gl.clear(Surface::Stencil);
+
+		gl.stencil(gl::StencilFunc {
+			cmp: Cmp::Always,
+			rf: 1,
+			mask: 0xff,
+		}, gl::StencilOps {
+			sfail: gl::StencilOp::Keep,
+			dpfail: gl::StencilOp::Keep,
+			dppass: gl::StencilOp::Replace,
+		}, || {
+			return mask(self);
+		})?;
+
+		self.flush();
+
+		gl.stencil(gl::StencilFunc {
+			cmp: Cmp::NotEqual,
+			rf: 1,
+			mask: 0xff,
+		}, gl::StencilOps {
+			sfail: gl::StencilOp::Keep,
+			dpfail: gl::StencilOp::Keep,
+			dppass: gl::StencilOp::Replace,
+		}, || {
+			return draw(self);
+		})?;
+
+		self.flush();
+		gl.disable(gl::Capability::StencilTest);
+
+		return Ok(());
+
+	}
+
 	pub fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let default = Blend::Alpha.to_gl();

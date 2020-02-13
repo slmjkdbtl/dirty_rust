@@ -45,15 +45,19 @@ impl app::State for Game {
 
 		use shapes::*;
 
-		ctx.push(&gfx::t()
-			.s2(vec2!(12))
-		, |ctx| {
-			ctx.draw(
-				&text("营养过剩")
-					.font(&self.font)
-			)?;
-			return Ok(());
-		})?;
+		ctx.push(
+			mat4!()
+				.s2(vec2!(12))
+				,
+			|ctx| {
+				ctx.draw(
+					&text("营养过剩")
+						.font(&self.font)
+						,
+				)?;
+				return Ok(());
+			}
+		)?;
 
 		return Ok(());
 
@@ -64,7 +68,6 @@ impl app::State for Game {
 fn main() {
 
 	if let Err(err) = app::launcher()
-		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);
 	}

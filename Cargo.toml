@@ -19,11 +19,11 @@ exclude = ["TODO"]
 default = [
 
 	# modules
-	"gkit",
+# 	"gkit",
 # 	"synth",
 # 	"physics",
 # 	"term",
-	"imgui",
+# 	"imgui",
 # 	"video",
 # 	"serial",
 # 	"ase",

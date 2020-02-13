@@ -81,12 +81,14 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 				let loc = self.ctx.get_uniform_location(self.program_id, name);
 
-				match value.into_uniform() {
-					F1(f) => self.ctx.uniform_1_f32(loc, f),
-					F2(f) => self.ctx.uniform_2_f32(loc, f[0], f[1]),
-					F3(f) => self.ctx.uniform_3_f32(loc, f[0], f[1], f[2]),
-					F4(f) => self.ctx.uniform_4_f32(loc, f[0], f[1], f[2], f[3]),
-					Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
+				if loc.is_some() {
+					match value.into_uniform() {
+						F1(f) => self.ctx.uniform_1_f32(loc, f),
+						F2(f) => self.ctx.uniform_2_f32(loc, f[0], f[1]),
+						F3(f) => self.ctx.uniform_3_f32(loc, f[0], f[1], f[2]),
+						F4(f) => self.ctx.uniform_4_f32(loc, f[0], f[1], f[2], f[3]),
+						Mat4(a) => self.ctx.uniform_matrix_4_f32_slice(loc, false, &a),
+					}
 				}
 
 			}

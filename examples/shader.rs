@@ -30,7 +30,7 @@ impl app::State for Game {
 
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
-		let shader = gfx::Shader2D::from_frag(ctx, include_str!("res/test.frag"))?;
+		let shader = gfx::Shader2D::from_frag(ctx, include_str!("res/twist.frag"))?;
 
 		return Ok(Self {
 			shader: shader,

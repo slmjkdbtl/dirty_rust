@@ -185,8 +185,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
-//	gl.enable(gl::Capability::CullFace);
-//	gl.cull_face(gl::Face::Back);
+// 	gl.enable(gl::Capability::CullFace);
+// 	gl.cull_face(gl::Face::Back);
+// 	gl.front_face(gl::CullMode::CounterClockwise);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(c.r, c.g, c.b, c.a);
@@ -380,6 +381,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					WEvent::CursorMoved { position, .. } => {
 
 						let mpos: Vec2 = position.to_logical(ctx.dpi() as f64).into();
+// 						let mpos: Vec2 = (*position).into();
 						let (w, h) = (ctx.width as f32, ctx.height as f32);
 						let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
 
