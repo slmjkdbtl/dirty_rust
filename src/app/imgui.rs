@@ -15,7 +15,6 @@ use glutin::window::Window as WinitWindow;
 use imgui_lib::DrawCmd;
 use imgui_lib::DrawCmdParams;
 use imgui_lib::Context;
-use imgui_winit::WinitPlatform;
 
 impl gfx::Vertex2D {
 	fn from_imgui_vert(v: imgui_lib::DrawVert) -> Self {
@@ -34,7 +33,6 @@ impl gfx::Vertex2D {
 
 pub(super) struct Imgui {
 	ctx: Context,
-	platform: WinitPlatform,
 	tex: gfx::Texture,
 	last_frame: Instant,
 	pipeline: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
@@ -43,58 +41,116 @@ pub(super) struct Imgui {
 
 impl Imgui {
 
-	pub fn new(gl: &gl::Device, window: &WinitWindow) -> Result<Self> {
+	pub fn new(ctx: &Ctx) -> Result<Self> {
 
-		let mut ctx = Context::create();
-		let mut platform = WinitPlatform::init(&mut ctx);
+		use imgui_lib::BackendFlags;
 
-		ctx.set_ini_filename(None);
-		platform.attach_window(ctx.io_mut(), &window, imgui_winit::HiDpiMode::Default,);
+		let mut imgui = Context::create();
+		let io = imgui.io_mut();
+		let dpi = ctx.dpi();
+		let (w, h) = (ctx.width(), ctx.height());
+
+		io.display_framebuffer_scale = [dpi as f32, dpi as f32];
+		io.display_size = [w as f32 * dpi, h as f32 * dpi];
+		io.backend_flags.insert(BackendFlags::HAS_MOUSE_CURSORS);
+		io.backend_flags.insert(BackendFlags::HAS_SET_MOUSE_POS);
+
+		imgui.set_ini_filename(None);
 
 		let tex = {
 
-			let mut atlas = ctx.fonts();
+			let mut atlas = imgui.fonts();
 			let tex_data = atlas.build_rgba32_texture();
 			let width = tex_data.width as i32;
 			let height = tex_data.height as i32;
-			// TODO: no unwrap
-			let tex = gl::Texture2D::from(&gl, width, height, tex_data.data).unwrap();
 
-			gfx::Texture::from_gl_tex(tex)
+			gfx::Texture::from_pixels(ctx, width, height, tex_data.data)
 
-		};
+		}?;
 
 		use res::shader::*;
 
 		let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
 		let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
 
-		let pipeline = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
+		let pipeline = gl::Pipeline::new(&ctx.gl, &vert_2d_src, &frag_2d_src)?;
 
 		return Ok(Self {
-			ctx: ctx,
-			platform: platform,
+			ctx: imgui,
 			last_frame: Instant::now(),
 			tex: tex,
 			pipeline: pipeline,
-			renderer: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
+			renderer: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&ctx.gl, DRAW_COUNT, DRAW_COUNT)?,
 		});
 
 	}
 
-	pub fn handle_event(&mut self, window: &WinitWindow, e: &glutin::event::Event<()>) {
-		self.platform.handle_event(self.ctx.io_mut(), window, &e);
+	pub fn event(&mut self, ctx: &app::Ctx, e: &input::Event) {
+
+		use input::*;
+		use input::Event::*;
+
+		let io = self.ctx.io_mut();
+
+		match *e {
+			Resize(w, h) => {
+				io.display_size = [w as f32 * ctx.dpi(), h as f32 * ctx.dpi()];
+			},
+			CharInput(ch) => {
+				io.add_input_character(ch);
+            },
+			KeyPress(k) => {
+				match k {
+					Key::LShift | Key::RShift => io.key_shift = true,
+					Key::LCtrl | Key::RCtrl => io.key_ctrl = true,
+					Key::LAlt | Key::RAlt => io.key_alt = true,
+					Key::LMeta | Key::RMeta => io.key_super = true,
+					_ => {},
+				}
+			},
+			KeyRelease(k) => {
+				match k {
+					Key::LShift | Key::RShift => io.key_shift = false,
+					Key::LCtrl | Key::RCtrl => io.key_ctrl = false,
+					Key::LAlt | Key::RAlt => io.key_alt = false,
+					Key::LMeta | Key::RMeta => io.key_super = false,
+					_ => {},
+				}
+			},
+			MouseMove(_) => {
+				let mpos = ctx.mouse_pos();
+				let (w, h) = (ctx.width() as f32, ctx.height() as f32);
+				let mpos = vec2!(w / 2.0 + mpos.x, h / 2.0 - mpos.y);
+				io.mouse_pos = [mpos.x, mpos.y];
+			},
+			MousePress(m) => {
+				match m {
+					Mouse::Left => io.mouse_down[0] = true,
+					Mouse::Right => io.mouse_down[1] = true,
+					Mouse::Middle => io.mouse_down[2] = true,
+				}
+			},
+			MouseRelease(m) => {
+				match m {
+					Mouse::Left => io.mouse_down[0] = false,
+					Mouse::Right => io.mouse_down[1] = false,
+					Mouse::Middle => io.mouse_down[2] = false,
+				}
+			},
+			Scroll(delta, _) => {
+				io.mouse_wheel_h += delta.x;
+				io.mouse_wheel += delta.y;
+			},
+			_ => {},
+		}
+
 	}
 
 	pub fn render(
 		&mut self,
-		window: &WinitWindow,
+		ctx: &mut app::Ctx,
 		f: impl FnOnce(&mut imgui_lib::Ui) -> Result<()>,
 	) -> Result<()> {
-
-		self.platform
-			.prepare_frame(self.ctx.io_mut(), &window)
-            .map_err(|_| format!("failed to prepare imgui frame"))?;
 
 		self.last_frame = self.ctx
 			.io_mut()
@@ -104,15 +160,13 @@ impl Imgui {
 
 		f(&mut ui)?;
 
-		self.platform.prepare_render(&ui, &window);
-
 		let [w, h] = ui.io().display_size;
 		let [sw, sh] = ui.io().display_framebuffer_scale;
-		let (fw, fh) = (w * sw, h * sh);
+		let (fw, fh) = (w / sw, h / sh);
 
 		let proj = mat4![
-			2.0 / w, 0.0, 0.0, 0.0,
-			0.0, 2.0 / -h, 0.0, 0.0,
+			2.0 / fw, 0.0, 0.0, 0.0,
+			0.0, 2.0 / -fh, 0.0, 0.0,
 			0.0, 0.0, -1.0, 0.0,
 			-1.0, 1.0, 0.0, 1.0,
 		];

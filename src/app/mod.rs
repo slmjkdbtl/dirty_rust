@@ -178,9 +178,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	#[cfg(feature = "imgui")]
-	let mut imgui = imgui::Imgui::new(&gl, windowed_ctx.window())?;
-
 	let c = conf.clear_color;
 
 	gl.enable(gl::Capability::Blend);
@@ -290,13 +287,16 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		ctx.set_cursor_locked(true)?;
 	}
 
+	#[cfg(feature = "imgui")]
+	let mut imgui = imgui::Imgui::new(&ctx)?;
+
 	ctx.clear();
 	ctx.swap_buffers()?;
 
 	let mut s = S::init(&mut ctx)?;
 	let mut last_frame_time = Instant::now();
 
-	event_loop.run(move |event, _, flow| {
+	event_loop.run(move |e, _, flow| {
 
 		*flow = ControlFlow::Poll;
 
@@ -308,10 +308,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			use glutin::event::ElementState;
 			use input::*;
 
-			#[cfg(feature = "imgui")]
-			imgui.handle_event(ctx.windowed_ctx.window(), &event);
+			let mut eeevent: Option<Event> = None;
 
-			match event {
+			match e {
 
 				glutin::event::Event::LoopDestroyed => *flow = ControlFlow::Exit,
 
@@ -329,11 +328,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 									ElementState::Pressed => {
 
-										s.event(&mut ctx, &Event::KeyPressRepeat(key))?;
+										eeevent = Some(Event::KeyPressRepeat(key));
 
 										if ctx.key_up(key) || ctx.key_released(key) {
 											ctx.key_states.insert(key, ButtonState::Pressed);
-											s.event(&mut ctx, &Event::KeyPress(key))?;
+											eeevent = Some(Event::KeyPress(key));
 										}
 
 									},
@@ -341,7 +340,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 									ElementState::Released => {
 										if ctx.key_down(key) || ctx.key_pressed(key) {
 											ctx.key_states.insert(key, ButtonState::Released);
-											s.event(&mut ctx, &Event::KeyRelease(key))?;
+											eeevent = Some(Event::KeyRelease(key));
 										}
 									},
 
@@ -362,13 +361,13 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 								ElementState::Pressed => {
 									if ctx.mouse_up(button) || ctx.mouse_released(button) {
 										ctx.mouse_states.insert(button, ButtonState::Pressed);
-										s.event(&mut ctx, &Event::MousePress(button))?;
+										eeevent = Some(Event::MousePress(button));
 									}
 								},
 								ElementState::Released => {
 									if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
 										ctx.mouse_states.insert(button, ButtonState::Released);
-										s.event(&mut ctx, &Event::MouseRelease(button))?;
+										eeevent = Some(Event::MouseRelease(button));
 									}
 								},
 
@@ -402,13 +401,13 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 						}
 
 						let p = ctx.scroll_phase;
-						s.event(&mut ctx, &Event::Scroll((*delta).into(), p))?;
+						eeevent = Some(Event::Scroll((*delta).into(), p));
 
 					},
 
 					WEvent::ReceivedCharacter(ch) => {
 						if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
-							s.event(&mut ctx, &Event::CharInput(*ch))?;
+							eeevent = Some(Event::CharInput(*ch));
 						}
 					},
 
@@ -424,43 +423,43 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 						ctx.reset_default_cam();
 						ctx.windowed_ctx.resize(*size);
 
-						s.event(&mut ctx, &Event::Resize(w, h))?;
+						eeevent = Some(Event::Resize(w, h));
 
 					},
 
 					WEvent::Touch(touch) => {
-						s.event(&mut ctx, &Event::Touch(touch.id, touch.location.into()))?;
+						eeevent = Some(Event::Touch(touch.id, touch.location.into()));
 					},
 
 					WEvent::HoveredFile(path) => {
-						s.event(&mut ctx, &Event::FileHover(path.to_path_buf()))?;
+						eeevent = Some(Event::FileHover(path.to_path_buf()));
 					},
 
 					WEvent::HoveredFileCancelled => {
-						s.event(&mut ctx, &Event::FileHoverCancel)?;
+						eeevent = Some(Event::FileHoverCancel);
 					},
 
 					WEvent::DroppedFile(path) => {
-						s.event(&mut ctx, &Event::FileDrop(path.to_path_buf()))?;
+						eeevent = Some(Event::FileDrop(path.to_path_buf()));
 					},
 
 					WEvent::Focused(b) => {
-						s.event(&mut ctx, &Event::Focus(*b))?;
+						eeevent = Some(Event::Focus(*b));
 					},
 
 					WEvent::CursorEntered { .. } => {
-						s.event(&mut ctx, &Event::CursorEnter)?;
+						eeevent = Some(Event::CursorEnter);
 					},
 
 					WEvent::CursorLeft { .. } => {
-						s.event(&mut ctx, &Event::CursorLeave)?;
+						eeevent = Some(Event::CursorLeave);
 					},
 					_ => (),
 				},
 
 				glutin::event::Event::DeviceEvent { event, .. } => match event {
 					DEvent::MouseMotion { delta } => {
-						s.event(&mut ctx, &Event::MouseMove(vec2!(delta.0, delta.1)))?;
+						eeevent = Some(Event::MouseMove(vec2!(delta.0, delta.1)));
 					},
 					_ => (),
 				},
@@ -516,7 +515,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					ctx.end_frame();
 
 					#[cfg(feature = "imgui")]
-					imgui.render(ctx.windowed_ctx.window(), |ui| {
+					imgui.render(&mut ctx, |ui| {
 						return s.imgui(ui);
 					})?;
 
@@ -552,7 +551,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 											.or_insert(hmap![])
 											.insert(button, ButtonState::Pressed);
 
-										s.event(&mut ctx, &Event::GamepadPress(id, button))?;
+										eeevent = Some(Event::GamepadPress(id, button));
 
 									}
 
@@ -562,7 +561,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 							ButtonRepeated(button, ..) => {
 								if let Some(button) = GamepadButton::from_extern(button) {
-									s.event(&mut ctx, &Event::GamepadPressRepeat(id, button))?;
+									eeevent = Some(Event::GamepadPressRepeat(id, button));
 								}
 							},
 
@@ -578,7 +577,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 											.or_insert(hmap![])
 											.insert(button, ButtonState::Released);
 
-										s.event(&mut ctx, &Event::GamepadRelease(id, button))?;
+										eeevent = Some(Event::GamepadRelease(id, button));
 
 									}
 
@@ -597,19 +596,19 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 								match axis {
 									gilrs::ev::Axis::LeftStickX => {
 										pos.0.x = val;
-										s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+										eeevent = Some(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
 									},
 									gilrs::ev::Axis::LeftStickY => {
 										pos.0.y = val;
-										s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::LStick, pos.0))?;
+										eeevent = Some(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
 									},
 									gilrs::ev::Axis::RightStickX => {
 										pos.1.x = val;
-										s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+										eeevent = Some(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
 									},
 									gilrs::ev::Axis::RightStickY => {
 										pos.1.y = val;
-										s.event(&mut ctx, &Event::GamepadAxis(id, GamepadAxis::RStick, pos.1))?;
+										eeevent = Some(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
 									},
 									_ => {},
 
@@ -620,11 +619,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 							},
 
 							Connected => {
-								s.event(&mut ctx, &Event::GamepadConnect(id))?;
+								eeevent = Some(Event::GamepadConnect(id));
 							},
 
 							Disconnected => {
-								s.event(&mut ctx, &Event::GamepadDisconnect(id))?;
+								eeevent = Some(Event::GamepadDisconnect(id));
 							},
 
 							_ => {},
@@ -635,7 +634,16 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 				},
 
-				_ => (),
+				_ => {},
+
+			};
+
+			if let Some(event) = &eeevent {
+
+				#[cfg(feature = "imgui")]
+				imgui.event(&mut ctx, &event);
+
+				s.event(&mut ctx, event)?;
 
 			}
 
