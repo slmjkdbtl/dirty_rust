@@ -45,6 +45,7 @@ ansi!({
 });
 
 ansi!({
+	reset => "0",
 	bold => "1",
 	dim => "2",
 	italic => "3",
@@ -82,4 +83,40 @@ pub fn style(s: &str) -> StyledOutput {
 		text: String::from(s),
 	};
 }
+
+pub fn clear_line() -> String {
+	return format!("\r\x1b[2K");
+}
+
+pub fn clear_screen() -> String {
+	return format!("\r\x1b[2J\r\x1b[H");
+}
+
+pub fn move_cursor_down() -> String {
+	return format!("\x1b[1B");
+}
+
+pub fn move_cursor_up() -> String {
+	return format!("\x1b[1A");
+}
+
+pub fn move_cursor_to(x: usize, y: usize) -> String {
+	return format!("\x1B[{};{}H", y + 1, x + 1);
+}
+
+pub fn upper_block() -> StyledOutput {
+	return style("\u{2580}");
+}
+
+pub fn lower_block() -> StyledOutput {
+	return style("\u{2584}");
+}
+
+// pub fn show_cursor() -> String {
+// 	return format!("\u{001B}[?25h");
+// }
+
+// pub fn hide_cursor() -> String {
+// 	return format!("\u{001B}[?25l");
+// }
 
