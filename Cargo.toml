@@ -25,7 +25,6 @@ default = [
 # 	"term",
 # 	"imgui",
 # 	"video",
-# 	"serial",
 # 	"ase",
 # 	"xr",
 # 	"osc",
@@ -51,10 +50,6 @@ http = [
 imgui = [
 	"imgui_lib",
 	"imgui_winit",
-]
-
-term = [
-	"console",
 ]
 
 ase = [
@@ -145,13 +140,9 @@ bincode = { version = "1.2", optional = true }
 openxr = { version = "0.10", optional = true }
 
 # rayon = "1.2"
-# laminar = "0.3"
-# sokol = "0.3"
 
 [target.'cfg(all(not(target_os="ios"), not(target_os="android"), not(target_arch="wasm32")))'.dependencies]
-console = { version = "0.9", optional = true }
 native-tls = { version = "0.2", optional = true }
-serial = { version = "0.4", optional = true }
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "0.7"
