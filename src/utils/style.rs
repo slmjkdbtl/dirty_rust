@@ -52,6 +52,19 @@ ansi!({
 	blink => "5",
 });
 
+impl StyledOutput {
+	pub fn truec(mut self, c: crate::math::Color) -> Self {
+		let c = c.as_u8();
+		self.text = ansi_wrap(&self.text, &format!("38;2;{};{};{}", c[0], c[1], c[2]));
+		return self;
+	}
+	pub fn bg_truec(mut self, c: crate::math::Color) -> Self {
+		let c = c.as_u8();
+		self.text = ansi_wrap(&self.text, &format!("48;2;{};{};{}", c[0], c[1], c[2]));
+		return self;
+	}
+}
+
 impl std::fmt::Display for StyledOutput {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
 		return write!(f, "{}", self.text);

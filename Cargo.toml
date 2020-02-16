@@ -22,9 +22,7 @@ default = [
 # 	"gkit",
 # 	"synth",
 # 	"physics",
-# 	"term",
 # 	"imgui",
-# 	"video",
 # 	"ase",
 # 	"xr",
 # 	"osc",
@@ -78,7 +76,6 @@ physics = [
 ]
 
 gkit = []
-video = []
 
 gl3 = []
 
