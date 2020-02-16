@@ -21,7 +21,7 @@ macro_rules! mexport {
 	}
 }
 
-export!(style);
+pub mod term;
 mexport!(colmac);
 
 use std::panic;
