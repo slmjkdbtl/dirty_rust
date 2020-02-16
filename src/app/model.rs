@@ -20,6 +20,7 @@ pub struct NodeData {
 	pub children: Vec<usize>,
 	pub transform: Transform,
 	pub meshes: Vec<MeshData>,
+	pub name: Option<String>,
 }
 
 #[derive(Clone)]
@@ -41,6 +42,7 @@ pub struct Mesh {
 pub struct Node {
 	pub meshes: Vec<Mesh>,
 	pub id: usize,
+	pub name: Option<String>,
 	pub children: Vec<usize>,
 	pub transform: Transform,
 }
@@ -150,6 +152,7 @@ pub struct Model {
 fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::Node) {
 
 	let id = node.index();
+	let name = node.name();
 	let (pos, rot, scale) = node.transform().decomposed();
 
 	let transform = Transform {
@@ -246,6 +249,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 	nodes.insert(id, NodeData {
 		id: id,
+		name: name.map(String::from),
 		children: node.children().map(|c| c.index()).collect(),
 		transform: transform,
 		meshes: meshes,
@@ -306,6 +310,7 @@ impl Model {
 
 		let node = NodeData {
 			id: 0,
+			name: None,
 			children: vec![],
 			transform: Transform::new(),
 			meshes: vec![MeshData {
@@ -530,6 +535,7 @@ impl Model {
 
 			nodes.insert(i, NodeData {
 				id: i,
+				name: None,
 				children: vec![],
 				transform: gfx::Transform::new(),
 				meshes: vec![MeshData {
@@ -578,6 +584,7 @@ impl Model {
 			}).collect::<Vec<Mesh>>();
 			return (id, Node {
 				id: node.id,
+				name: node.name,
 				children: node.children,
 				transform: node.transform,
 				meshes: meshes,
