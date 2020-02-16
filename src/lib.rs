@@ -34,12 +34,6 @@ pub mod synth;
 #[cfg(feature = "http")]
 pub mod http;
 
-#[cfg(all(feature = "term", desktop))]
-pub mod term;
-
-#[cfg(all(feature = "serial", desktop))]
-pub mod serial;
-
 #[cfg(feature = "ase")]
 pub mod ase;
 
