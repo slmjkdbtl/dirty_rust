@@ -1,10 +1,61 @@
 // wengwengweng
 
+use serde::Serialize;
+use serde::Deserialize;
 use std::collections::HashMap;
 
-use crate::math::*;
 use crate::Result;
+use crate::math::*;
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+struct SpritesheetData {
+	frames: Vec<Frame>,
+	meta: Metadata,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+struct Frame {
+	frame: Rect,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+struct Rect {
+	x: u32,
+	y: u32,
+	w: u32,
+	h: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+struct Dimensions {
+	w: u32,
+	h: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+struct Metadata {
+	size: Dimensions,
+	#[serde(rename = "frameTags")]
+	frame_tags: Option<Vec<FrameTag>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+struct FrameTag {
+	name: String,
+	from: u32,
+	to: u32,
+	direction: Direction,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+enum Direction {
+	#[serde(rename="forward")]
+	Forward,
+	#[serde(rename="reverse")]
+	Reverse,
+	#[serde(rename="pingpong")]
+	Pingpong,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Anim {
@@ -23,23 +74,23 @@ pub fn parse(json: &str) -> Result<SpriteData> {
 
 	use crate::codec::json;
 
-	let mut frames = vec![];
 	let mut anims = HashMap::new();
-	let data: aseprite::SpritesheetData = json::decode(json)?;
+	let data: SpritesheetData = json::decode(json)?;
 
 	let width = data.meta.size.w;
 	let height = data.meta.size.h;
 
-	for f in data.frames {
-
-		frames.push(Quad::new(
-			f.frame.x as f32 / width as f32,
-			f.frame.y as f32 / height as f32,
-			f.frame.w as f32 / width as f32,
-			f.frame.h as f32 / height as f32
-		));
-
-	}
+	let frames = data.frames
+		.iter()
+		.map(|f| {
+			return Quad::new(
+				f.frame.x as f32 / width as f32,
+				f.frame.y as f32 / height as f32,
+				f.frame.w as f32 / width as f32,
+				f.frame.h as f32 / height as f32
+			);
+		})
+		.collect::<Vec<Quad>>();
 
 	if let Some(frame_tags) = data.meta.frame_tags {
 
@@ -48,7 +99,7 @@ pub fn parse(json: &str) -> Result<SpriteData> {
 			let mut from = anim.from;
 			let mut to = anim.to;
 
-			if let aseprite::Direction::Reverse = anim.direction {
+			if let Direction::Reverse = anim.direction {
 				std::mem::swap(&mut from, &mut to);
 			}
 
@@ -66,10 +117,5 @@ pub fn parse(json: &str) -> Result<SpriteData> {
 		anims: anims,
 	});
 
-}
-
-#[cfg(not(feature = "json"))]
-pub fn parse(json: &str) -> Result<SpriteData> {
-	return compile_error!("requires the 'json' feature");
 }
 
