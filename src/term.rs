@@ -1,5 +1,7 @@
 // wengwengweng
 
+use crate::math::Color;
+
 #[derive(Clone)]
 pub struct StyledOutput {
 	text: String,
@@ -54,12 +56,12 @@ ansi!({
 });
 
 impl StyledOutput {
-	pub fn truec(mut self, c: crate::math::Color) -> Self {
+	pub fn truec(mut self, c: Color) -> Self {
 		let c = c.as_u8();
 		self.text = ansi_wrap(&self.text, &format!("38;2;{};{};{}", c[0], c[1], c[2]));
 		return self;
 	}
-	pub fn bg_truec(mut self, c: crate::math::Color) -> Self {
+	pub fn bg_truec(mut self, c: Color) -> Self {
 		let c = c.as_u8();
 		self.text = ansi_wrap(&self.text, &format!("48;2;{};{};{}", c[0], c[1], c[2]));
 		return self;
@@ -110,6 +112,11 @@ pub fn upper_block() -> StyledOutput {
 
 pub fn lower_block() -> StyledOutput {
 	return style("\u{2584}");
+}
+
+// TODO
+pub fn display(pixels: &[Color], width: i32, height: i32) {
+	// ...
 }
 
 // pub fn show_cursor() -> String {
