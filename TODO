@@ -197,4 +197,5 @@
 - [gfx] 3d ortho cam
 - [app] upgrade to glutin 0.22
 - [gfx] imgui
+- [gfx] fix shader uniform mix up
 
