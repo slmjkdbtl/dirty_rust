@@ -9,57 +9,9 @@ const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQ
 
 pub type CharMap = HashMap<char, Quad>;
 
-#[derive(Clone, Debug)]
-pub struct FormattedLine {
-	text: String,
-	width: f32,
-	ox: f32,
-}
-
-#[derive(Clone)]
-pub struct FormattedText<'a> {
-	width: f32,
-	height: f32,
-	lines: Vec<FormattedLine>,
-	font: Option<&'a dyn gfx::Font>,
-	line_spacing: f32,
-	color: Color,
-}
-
-#[derive(Clone)]
-pub struct Wrap {
-	width: f32,
-	break_word: bool,
-	hyphonate: bool,
-}
-
-#[derive(Clone)]
-pub struct RenderConf {
-	align: gfx::Origin,
-	wrap: Option<Wrap>,
-	size: Option<f32>,
-	line_spacing: f32,
-	char_spacing: f32,
-	color: Color,
-}
-
-impl Default for RenderConf {
-	fn default() -> Self {
-		return Self {
-			align: gfx::Origin::TopLeft,
-			wrap: None,
-			size: None,
-			line_spacing: 0.0,
-			char_spacing: 0.0,
-			color: rgba!(1),
-		};
-	}
-}
-
 pub trait Font {
 	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)>;
 	fn height(&self) -> f32;
-	fn format(&mut self, text: &str);
 }
 
 #[derive(Clone, Debug)]
@@ -154,7 +106,6 @@ impl Font for BitmapFont {
 	fn height(&self) -> f32 {
 		return self.grid_height as f32;
 	}
-	fn format(&mut self, text: &str) {}
 }
 
 pub struct TruetypeFont {
@@ -239,7 +190,7 @@ impl TruetypeFont {
 
 	}
 
-	pub fn cache_asciis(&mut self) -> Result<()> {
+	pub fn cache_ascii(&mut self) -> Result<()> {
 		return self.cache(ASCII_CHARS);
 	}
 
@@ -265,7 +216,6 @@ impl Font for TruetypeFont {
 	fn height(&self) -> f32 {
 		return self.size as f32;
 	}
-	fn format(&mut self, text: &str) {}
 }
 
 // TODO: 3d extruded text
