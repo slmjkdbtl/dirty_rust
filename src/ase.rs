@@ -7,18 +7,18 @@ use std::collections::HashMap;
 use crate::Result;
 use crate::math::*;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize)]
 struct SpritesheetData {
 	frames: Vec<Frame>,
 	meta: Metadata,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize)]
 struct Frame {
 	frame: Rect,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize)]
 struct Rect {
 	x: u32,
 	y: u32,
@@ -26,20 +26,20 @@ struct Rect {
 	h: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize)]
 struct Dimensions {
 	w: u32,
 	h: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize)]
 struct Metadata {
 	size: Dimensions,
 	#[serde(rename = "frameTags")]
 	frame_tags: Option<Vec<FrameTag>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize)]
 struct FrameTag {
 	name: String,
 	from: u32,
@@ -47,7 +47,7 @@ struct FrameTag {
 	direction: Direction,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Copy)]
 enum Direction {
 	#[serde(rename="forward")]
 	Forward,

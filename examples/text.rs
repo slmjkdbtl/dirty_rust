@@ -32,35 +32,53 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		let size = 14.0;
-		let t = (ctx.time() * 2.0) as i32;
-		let s = format!("{}", t).repeat(12);
+		let map = vec![
+			(gfx::Origin::TopLeft, "top left"),
+			(gfx::Origin::Top, "top"),
+			(gfx::Origin::TopRight, "top right"),
+			(gfx::Origin::Left, "left"),
+			(gfx::Origin::Center, "center"),
+			(gfx::Origin::Right, "right"),
+			(gfx::Origin::BottomLeft, "bottom left"),
+			(gfx::Origin::Bottom, "bottom"),
+			(gfx::Origin::BottomRight, "bottom right"),
+		];
 
-		let text = shapes::text(&s)
-			.wrap(64.0, true)
-			.size(size)
-			.line_spacing(12.0)
-// 			.align(gfx::Origin::TopLeft)
-			.render(ctx)
-			;
-
-		let cpos = text.cursor_pos(ctx, t);
-
-		ctx.draw(
-			&shapes::Rect::from_size(text.width(), text.height())
-				.no_fill()
-				.stroke(rgba!(1))
-		)?;
-
-		ctx.draw(
-			&text
-		)?;
-
-		if let Some(cpos) = cpos {
-			ctx.draw(
-				&shapes::line(cpos, cpos + vec2!(0, size))
+		for (o, t) in map {
+			ctx.draw_t(
+				mat4!()
+					.t2(ctx.coord(o))
+					,
+				&shapes::text(t)
+					.align(o)
+					,
 			)?;
 		}
+
+// 		let tt = ctx.default_font().format("Hi my name is luig\ni", gfx::FormatConf {
+// 			align: gfx::Origin::TopLeft,
+// 			wrap: Some(gfx::Wrap {
+// 				width: 64.0,
+// 				break_word: true,
+// 				hyphonate: false,
+// 			}),
+// 			..Default::default()
+// 		});
+// 		ctx.draw_t(
+// 			mat4!()
+// 				.t2(ctx.coord(gfx::Origin::Center))
+// 				,
+// 			&tt,
+// 		)?;
+// 		ctx.draw_t(
+// 			mat4!()
+// 				.t2(ctx.coord(gfx::Origin::Center))
+// 				,
+// 			&shapes::rect(vec2!(), vec2!(tt.width(), -tt.height()))
+// 				.no_fill()
+// 				.stroke(rgba!(1))
+// 				,
+// 		)?;
 
 		return Ok(());
 
