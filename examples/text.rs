@@ -6,6 +6,7 @@ use input::Key;
 
 struct Game {
 	text: String,
+	size: f32,
 }
 
 impl State for Game {
@@ -13,6 +14,7 @@ impl State for Game {
 	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
 			text: String::new(),
+			size: 12.0,
 		});
 	}
 
@@ -24,9 +26,16 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => ctx.quit(),
+					_ => {},
+				}
+			},
+			KeyPressRepeat(k) => {
+				match *k {
 					Key::Back => {
 						self.text.pop();
 					},
+					Key::Minus => self.size -= 1.0,
+					Key::Equals => self.size += 1.0,
 					_ => {},
 				}
 			},
@@ -72,6 +81,8 @@ impl State for Game {
 				break_word: false,
 				hyphonate: false,
 			})
+			.size(self.size)
+			.italic(true)
 			.format(ctx);
 
 		ctx.draw_t(
