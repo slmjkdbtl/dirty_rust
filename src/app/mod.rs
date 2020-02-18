@@ -37,7 +37,6 @@ use glutin::dpi::*;
 use glutin::GlRequest;
 use glutin::event_loop::ControlFlow;
 pub use glutin::window::CursorIcon as CursorStyle;
-use derive_more::*;
 
 use crate::*;
 use crate::math::*;
@@ -62,8 +61,8 @@ pub struct Ctx {
 
 	// lifecycle
 	pub(self) quit: bool,
-	pub(self) dt: Time,
-	pub(self) time: Time,
+	pub(self) dt: Duration,
+	pub(self) time: Duration,
 	pub(self) fps_counter: FPSCounter,
 
 	// input
@@ -219,8 +218,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		// app
 		quit: false,
-		dt: Time::new(0.0),
-		time: Time::new(0.0),
+		dt: Duration::from_secs(0),
+		time: Duration::from_secs(0),
 		fps_counter: FPSCounter::new(),
 
 		// input
@@ -308,7 +307,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			use glutin::event::ElementState;
 			use input::*;
 
-			let mut eeevent: Option<Event> = None;
 			let mut events = vec![];
 
 			match e {
@@ -478,7 +476,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 					}
 
-					ctx.dt.set_inner(last_frame_time.elapsed());
+					ctx.dt = last_frame_time.elapsed();
 					ctx.time += ctx.dt;
 					ctx.fps_counter.tick(ctx.dt);
 
@@ -656,33 +654,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	});
 
-}
-
-#[derive(Copy, Clone, PartialEq, Add, AddAssign, Sub, SubAssign)]
-pub struct Time {
-	time: Duration,
-}
-
-impl Time {
-	pub fn new(s: f32) -> Self {
-		return Self {
-			time: Duration::from_millis((s * 1000.0) as u64),
-		};
-	}
-	pub fn from_millis(m: u64) -> Self {
-		return Self {
-			time: Duration::from_millis(m),
-		};
-	}
-	fn set(&mut self, s: f32) {
-		self.set_inner(Duration::from_millis((s * 1000.0) as u64));
-	}
-	fn set_inner(&mut self, d: Duration) {
-		self.time = d;
-	}
-	fn as_secs(&self) -> f32 {
-		return self.time.as_secs_f32();
-	}
 }
 
 impl Ctx {
@@ -868,11 +839,11 @@ impl Ctx {
 	}
 
 	pub fn dt(&self) -> f32 {
-		return self.dt.as_secs();
+		return self.dt.as_secs_f32();
 	}
 
 	pub fn time(&self) -> f32 {
-		return self.time.as_secs();
+		return self.time.as_secs_f32();
 	}
 
 	pub fn fps(&self) -> u16 {
@@ -901,7 +872,7 @@ impl Launcher {
 
 pub(super) struct FPSCounter {
 	frames: usize,
-	timer: Time,
+	timer: Duration,
 	fps: u16,
 }
 
@@ -910,19 +881,19 @@ impl FPSCounter {
 	fn new() -> Self {
 		return Self {
 			frames: 0,
-			timer: Time::new(0.0),
+			timer: Duration::from_secs(0),
 			fps: 0,
 		}
 	}
 
-	fn tick(&mut self, dt: Time) {
+	fn tick(&mut self, dt: Duration) {
 
 		self.frames += 1;
 		self.timer += dt;
 
-		if self.timer.as_secs() >= 1.0 {
+		if self.timer.as_secs_f32() >= 1.0 {
 			self.fps = self.frames as u16;
-			self.timer.set(0.0);
+			self.timer = Duration::from_secs(0);
 			self.frames = 0;
 		}
 

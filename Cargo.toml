@@ -11,9 +11,8 @@ edition = "2018"
 readme = "README.md"
 exclude = ["TODO"]
 
-# [profile.release]
-# lto = true
-# panic = "abort"
+[profile.dev.package."*"]
+opt-level = 2
 
 [features]
 default = [

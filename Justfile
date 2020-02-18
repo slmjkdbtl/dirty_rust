@@ -1,16 +1,16 @@
 # wengwengweng
 
 run example="sprite":
-	cargo run --example {{example}} --release
+	cargo run --example {{example}}
 
 install:
 	cargo install --force --path .
 
 test:
-	cargo test --release --tests
+	cargo test --tests
 
 build:
-	cargo build --release
+	cargo build
 
 build-web:
 	cargo build --target wasm32-unknown-unknown
@@ -19,19 +19,16 @@ build-ios:
 	cargo build --target x86_64-apple-ios
 
 build-windows:
-	cargo build --release --target x86_64-pc-windows-gnu
+	cargo build --target x86_64-pc-windows-gnu
 
 build-linux:
-	cargo build --release --target x86_64-unknown-linux-gnu
+	cargo build --target x86_64-unknown-linux-gnu
 
 doc crate="dirty":
 	cargo doc --no-deps --open -p {{crate}}
 
 update:
 	cargo update
-
-bloat:
-	cargo bloat --release --crates
 
 loc:
 	loc

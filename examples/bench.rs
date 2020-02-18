@@ -15,7 +15,7 @@ impl app::State for Game {
 	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/bunny.png"))?,
-			count: 10000,
+			count: 1000,
 		});
 	}
 
@@ -69,7 +69,10 @@ impl app::State for Game {
 			} else {
 				rgba!(1, 0, 0, 1)
 			};
-			ctx.draw(&shapes::text(&format!("{}", fps)).color(c))?;
+			ctx.draw(
+				&shapes::text(&format!("{}", fps))
+					.color(c)
+			)?;
 			return Ok(());
 		})?;
 

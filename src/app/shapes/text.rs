@@ -47,14 +47,38 @@ impl FormattedText {
 	}
 
 	pub fn cursor_pos(&self, i: usize) -> Option<Vec2> {
-		return self.chars.get(i).map(|ch| {
-			return ch.pos;
-		});
+		if self.chars.is_empty() {
+			return Some(vec2!(0));
+		} else {
+			return self.chars.get(i).map(|ch| {
+				return ch.pos + vec2!(ch.width, 0);
+			});
+		}
 	}
 
-	// TODO
 	pub fn pos_cursor(&self, pos: Vec2) -> Option<usize> {
-		return None;
+
+		let mut closest_ch = None;
+		let mut closest_dis = None;
+
+		for (i, ch) in self.chars.iter().enumerate() {
+
+			let p = ch.pos + vec2!(ch.width, 0);
+			let dis = Vec2::dis(pos, p);
+
+			if let Some(cdis) = closest_dis {
+				if dis < cdis {
+					closest_dis = Some(dis);
+					closest_ch = Some(i);
+				}
+			} else {
+				closest_dis = Some(dis);
+			}
+
+		}
+
+		return closest_ch;
+
 	}
 
 }
@@ -90,8 +114,14 @@ impl gfx::Drawable for FormattedText {
 #[derive(Clone)]
 pub struct TextWrap {
 	pub width: f32,
-	pub break_word: bool,
-	pub hyphonate: bool,
+	pub break_type: TextWrapBreak,
+}
+
+#[derive(Clone, Copy)]
+pub enum TextWrapBreak {
+	None,
+	Word,
+	Hyphonate,
 }
 
 #[derive(Clone)]
@@ -109,7 +139,7 @@ pub struct FormatConf {
 impl Default for FormatConf {
 	fn default() -> Self {
 		return Self {
-			align: gfx::Origin::TopLeft,
+			align: gfx::Origin::Center,
 			wrap: None,
 			size: None,
 			line_spacing: 0.0,
@@ -167,7 +197,7 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 
 			if ch == ' ' {
 				if let Some(wrap) = &conf.wrap {
-					if !wrap.break_word {
+					if let TextWrapBreak::Word = wrap.break_type {
 						break_pt = Some(cur_line.clone());
 					}
 				}
