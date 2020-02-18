@@ -7,6 +7,8 @@ use input::Key;
 struct Game {
 	text: String,
 	size: f32,
+	italic: bool,
+	wrap: f32,
 }
 
 impl State for Game {
@@ -14,7 +16,9 @@ impl State for Game {
 	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
 			text: String::new(),
-			size: 12.0,
+			size: 16.0,
+			italic: false,
+			wrap: 160.0,
 		});
 	}
 
@@ -24,18 +28,24 @@ impl State for Game {
 
 		match e {
 			KeyPress(k) => {
+				let mods = ctx.key_mods();
 				match *k {
 					Key::Esc => ctx.quit(),
+					Key::I if mods.meta => self.italic = !self.italic,
+					Key::C if mods.meta => self.text.clear(),
+					Key::Left if mods.meta => self.wrap -= 10.0,
+					Key::Right if mods.meta => self.wrap += 10.0,
 					_ => {},
 				}
 			},
 			KeyPressRepeat(k) => {
+				let mods = ctx.key_mods();
 				match *k {
 					Key::Back => {
 						self.text.pop();
 					},
-					Key::Minus => self.size -= 1.0,
-					Key::Equals => self.size += 1.0,
+					Key::Minus if mods.meta => self.size -= 1.0,
+					Key::Equals if mods.meta => self.size += 1.0,
 					_ => {},
 				}
 			},
@@ -49,57 +59,64 @@ impl State for Game {
 
 	}
 
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+		return Ok(());
+	}
+
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-// 		let map = vec![
-// 			(gfx::Origin::TopLeft, "top left"),
-// 			(gfx::Origin::Top, "top"),
-// 			(gfx::Origin::TopRight, "top right"),
-// 			(gfx::Origin::Left, "left"),
-// 			(gfx::Origin::Center, "center"),
-// 			(gfx::Origin::Right, "right"),
-// 			(gfx::Origin::BottomLeft, "bottom left"),
-// 			(gfx::Origin::Bottom, "bottom"),
-// 			(gfx::Origin::BottomRight, "bottom right"),
-// 		];
+		let aligns = [
+			gfx::Origin::TopLeft,
+			gfx::Origin::Top,
+			gfx::Origin::TopRight,
+			gfx::Origin::Left,
+			gfx::Origin::Center,
+			gfx::Origin::Right,
+			gfx::Origin::BottomLeft,
+			gfx::Origin::Bottom,
+			gfx::Origin::BottomRight,
+		];
 
-// 		for (o, t) in map {
-// 			ctx.draw_t(
-// 				mat4!()
-// 					.t2(ctx.coord(o))
-// 					,
-// 				&shapes::text(t)
-// 					.align(o)
-// 					,
-// 			)?;
-// 		}
+		for a in &aligns {
 
-		let text = &shapes::text(&self.text)
-			.align(gfx::Origin::TopLeft)
-			.wrap(shapes::TextWrap {
-				width: 120.0,
-				break_word: false,
-				hyphonate: false,
-			})
-			.size(self.size)
-			.italic(true)
-			.format(ctx);
+			let pos = ctx.coord(*a);
 
-		ctx.draw_t(
-			mat4!()
-				.t2(ctx.coord(gfx::Origin::TopLeft))
-				,
-			text,
-		)?;
-		ctx.draw_t(
-			mat4!()
-				.t2(ctx.coord(gfx::Origin::TopLeft))
-				,
-			&shapes::rect(vec2!(), vec2!(text.width(), -text.height()))
-				.no_fill()
-				.stroke(rgba!(1))
-				,
-		)?;
+			let text = shapes::text(&self.text)
+				.align(*a)
+				.wrap(shapes::TextWrap {
+					width: self.wrap,
+					break_type: shapes::TextWrapBreak::Word,
+				})
+				.size(self.size)
+				.italic(self.italic)
+				.format(ctx);
+
+			ctx.draw_t(
+				mat4!()
+					.t2(pos)
+					,
+				&text,
+			)?;
+
+			let tw = text.width();
+			let th = text.height();
+
+			ctx.draw_t(
+				mat4!()
+					.t2(pos)
+					,
+				&shapes::rect2(*a, tw, th)
+					.no_fill()
+					.stroke(rgba!(1))
+					,
+			)?;
+
+// 			if let Some(cpos) = text.cursor_pos(self.text.len()) {
+
+// 			}
+
+		}
 
 		return Ok(());
 
@@ -108,9 +125,7 @@ impl State for Game {
 }
 
 fn main() -> Result<()> {
-
 	return launcher()
-// 		.origin(gfx::Origin::TopLeft)
 		.run::<Game>();
 }
 

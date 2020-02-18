@@ -22,8 +22,11 @@ impl Rect {
 		};
 	}
 	// TODO: respect origin
-	pub fn from_size(w: f32, h: f32) -> Self {
-		return Self::from_pts(vec2!(w, h) * -0.5, vec2!(w, h) * 0.5);
+	pub fn from_size(o: gfx::Origin, w: f32, h: f32) -> Self {
+		let pt = o.as_pt();
+		let p1 = (-pt * 0.5 + vec2!(-0.5, -0.5)) * vec2!(w, h);
+		let p2 = (-pt * 0.5 + vec2!(0.5, 0.5)) * vec2!(w, h);
+		return Self::from_pts(p1, p2);
 	}
 	pub fn radius(mut self, r: f32) -> Self {
 		self.radius = Some(r);
@@ -71,6 +74,10 @@ impl Rect {
 
 pub fn rect(p1: Vec2, p2: Vec2) -> Rect {
 	return Rect::from_pts(p1, p2);
+}
+
+pub fn rect2(o: gfx::Origin, w: f32, h: f32) -> Rect {
+	return Rect::from_size(o, w, h);
 }
 
 impl Drawable for Rect {
