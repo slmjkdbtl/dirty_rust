@@ -8,6 +8,7 @@ pub struct FormattedChar {
 	pos: Vec2,
 	tex: gfx::Texture,
 	quad: Quad,
+	width: f32,
 }
 
 #[derive(Clone)]
@@ -28,6 +29,7 @@ impl FormattedLine {
 #[derive(Clone)]
 pub struct FormattedText {
 	chars: Vec<FormattedChar>,
+	scale: f32,
 	width: f32,
 	height: f32,
 	color: Color,
@@ -61,12 +63,18 @@ impl gfx::Drawable for FormattedText {
 
 	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
 
+		let italic = if self.italic {
+			0.3
+		} else {
+			0.0
+		};
+
 		for fch in &self.chars {
 			ctx.draw_t(mat4!()
 				.t2(fch.pos)
-// 				.skx(italic)
-// 				.tx(gw * -italic * (1.0 - offset.x) * 0.5)
-// 				.sx(bold)
+				.skx(italic)
+				.tx(italic * fch.width)
+				.s2(vec2!(self.scale))
 			, &sprite(&fch.tex)
 				.offset(vec2!(-1, 1))
 				.quad(fch.quad)
@@ -117,7 +125,8 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 
 	let mut lines = vec![];
 	let mut cur_line = FormattedLine::new();
-	let gh = font.height() + conf.line_spacing;
+	let scale = conf.size.map(|s| s / font.height()).unwrap_or(1.0);
+	let gh = font.height() * scale + conf.line_spacing;
 	let mut w = 0.0;
 	let mut break_pt: Option<FormattedLine> = None;
 
@@ -129,8 +138,7 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 
 			if let Some((tex, quad)) = font.get(ch) {
 
-				let tw = tex.width() as f32;
-				let gw = tw * quad.w + conf.char_spacing;
+				let gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
 
 				if let Some(wrap) = &conf.wrap {
 					if cur_line.width + gw > wrap.width {
@@ -149,6 +157,7 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 					pos: vec2!(),
 					tex: tex.clone(),
 					quad: quad,
+					width: gw - conf.char_spacing,
 				});
 
 				cur_line.width += gw;
@@ -177,20 +186,33 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 	let mut fchars = vec![];
 	let mut x = 0.0;
 
-	for (i, line) in lines.into_iter().enumerate() {
+	for (i, line) in lines
+		.into_iter()
+		.enumerate() {
+
+		let ox = (w - line.width) * offset_pt.x;
+		let y = i as f32 * -gh;
+
 		for ch in line.chars {
-			let gw = ch.tex.width() as f32 * ch.quad.w + conf.char_spacing;
+
+			let gw = ch.tex.width() as f32 * ch.quad.w * scale + conf.char_spacing;
+
 			fchars.push(FormattedChar {
-				pos: vec2!(x + (w - line.width) * offset_pt.x, i as f32 * -gh) + offset,
+				pos: vec2!(x + ox, y) + offset,
 				..ch
 			});
+
 			x += gw;
+
 		}
+
 		x = 0.0;
+
 	}
 
 	return FormattedText {
 		chars: fchars,
+		scale: scale,
 		width: w,
 		height: h,
 		color: conf.color,
