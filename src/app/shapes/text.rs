@@ -36,12 +36,25 @@ pub struct FormattedText {
 }
 
 impl FormattedText {
+
 	pub fn width(&self) -> f32 {
 		return self.width;
 	}
 	pub fn height(&self) -> f32 {
 		return self.height;
 	}
+
+	pub fn cursor_pos(&self, i: usize) -> Option<Vec2> {
+		return self.chars.get(i).map(|ch| {
+			return ch.pos;
+		});
+	}
+
+	// TODO
+	pub fn pos_cursor(&self, pos: Vec2) -> Option<usize> {
+		return None;
+	}
+
 }
 
 impl gfx::Drawable for FormattedText {
@@ -106,6 +119,7 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 	let mut cur_line = FormattedLine::new();
 	let gh = font.height() + conf.line_spacing;
 	let mut w = 0.0;
+	let mut break_pt: Option<FormattedLine> = None;
 
 	for ch in text.chars() {
 
@@ -120,13 +134,19 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 
 				if let Some(wrap) = &conf.wrap {
 					if cur_line.width + gw > wrap.width {
-						lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
+						if let Some(line) = break_pt.take() {
+							cur_line.width -= line.width;
+							cur_line.chars.drain(0..line.chars.len());
+							lines.push(line);
+						} else {
+							lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
+						}
 					}
 				}
 
 				cur_line.chars.push(FormattedChar {
 					ch: ch,
-					pos: vec2!(cur_line.width, 0),
+					pos: vec2!(),
 					tex: tex.clone(),
 					quad: quad,
 				});
@@ -134,6 +154,14 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 				cur_line.width += gw;
 				w = f32::max(cur_line.width, w);
 
+			}
+
+			if ch == ' ' {
+				if let Some(wrap) = &conf.wrap {
+					if !wrap.break_word {
+						break_pt = Some(cur_line.clone());
+					}
+				}
 			}
 
 		}
@@ -147,14 +175,18 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 	let offset = -offset_pt * vec2!(w, h);
 
 	let mut fchars = vec![];
+	let mut x = 0.0;
 
 	for (i, line) in lines.into_iter().enumerate() {
 		for ch in line.chars {
+			let gw = ch.tex.width() as f32 * ch.quad.w + conf.char_spacing;
 			fchars.push(FormattedChar {
-				pos: ch.pos + vec2!((w - line.width) * offset_pt.x, i as f32 * -gh) + offset,
+				pos: vec2!(x + (w - line.width) * offset_pt.x, i as f32 * -gh) + offset,
 				..ch
 			});
+			x += gw;
 		}
+		x = 0.0;
 	}
 
 	return FormattedText {
