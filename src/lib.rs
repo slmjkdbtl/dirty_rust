@@ -23,7 +23,6 @@ pub mod math;
 pub mod gl;
 pub mod app;
 pub mod img;
-pub mod audio;
 pub mod term;
 
 #[cfg(feature = "physics")]

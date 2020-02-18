@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Sound Loading & playback
-
 use std::io::Cursor;
 use std::time::Duration;
 
@@ -10,7 +8,7 @@ use rodio::Decoder;
 use rodio::Sink;
 use rodio::source::Buffered;
 
-use crate::Result;
+use super::*;
 
 #[derive(Clone)]
 pub struct Sound {
@@ -26,19 +24,6 @@ struct Effect {
 	fadein: f32,
 }
 
-pub struct Track {
-	sink: Sink,
-}
-
-fn get_device() -> Result<rodio::Device> {
-	return rodio::default_output_device()
-		.ok_or(format!("failed to get audio output device"));
-}
-
-pub fn play(s: &Sound) -> Result<()> {
-	return s.play();
-}
-
 impl Default for Effect {
 	fn default() -> Self {
 		return Self {
@@ -48,6 +33,10 @@ impl Default for Effect {
 			fadein: 0.0,
 		};
 	}
+}
+
+pub struct Track {
+	sink: Sink,
 }
 
 impl Sound {
@@ -65,12 +54,8 @@ impl Sound {
 
 	}
 
-	pub fn play(&self) -> Result<()> {
-		return Ok(rodio::play_raw(&get_device()?, self.apply().convert_samples()));
-	}
-
-	pub fn as_track(&self) -> Result<Track> {
-		return Track::from_sound(&self);
+	pub fn as_track(&self, ctx: &Ctx) -> Result<Track> {
+		return Track::from_sound(ctx, &self);
 	}
 
 	pub fn speed(&self, s: f32) -> Self {
@@ -115,6 +100,7 @@ impl Sound {
 		}
 	}
 
+	// TODO: clean this up
 	fn apply(&self) -> Box<dyn Source<Item = i16> + Send> {
 
 		type S = dyn Source<Item = i16> + Send;
@@ -154,13 +140,13 @@ impl Sound {
 
 impl Track {
 
-	pub fn from_bytes(data: &[u8]) -> Result<Self> {
-		return Self::from_sound(&Sound::from_bytes(data)?);
+	pub fn from_bytes(ctx: &Ctx, data: &[u8]) -> Result<Self> {
+		return Self::from_sound(ctx, &Sound::from_bytes(data)?);
 	}
 
-	pub fn from_sound(sound: &Sound) -> Result<Self> {
+	pub fn from_sound(ctx: &Ctx, sound: &Sound) -> Result<Self> {
 
-		let device = get_device()?;
+		let device = ctx.audio_device.as_ref().ok_or(format!("no audio ouput device"))?;
 		let sink = Sink::new(&device);
 
 		sink.append(sound.apply());
@@ -182,6 +168,50 @@ impl Track {
 
 	pub fn play(&self) {
 		self.sink.play();
+	}
+
+}
+
+pub trait Playable {
+	fn play(&self, device: &rodio::Device) -> Result<()>;
+}
+
+pub trait Pausible {
+	fn pausible(&self) -> Result<()>;
+}
+
+impl Playable for Sound {
+	fn play(&self, device: &rodio::Device) -> Result<()> {
+		return Ok(rodio::play_raw(device, self.apply().convert_samples()));
+	}
+}
+
+impl Playable for Track {
+	fn play(&self, _: &rodio::Device) -> Result<()> {
+		return Ok(self.sink.play());
+	}
+}
+
+impl Ctx {
+
+	pub fn play(&self, thing: &impl Playable) -> Result<()> {
+
+		let device = self.audio_device
+			.as_ref()
+			.ok_or(format!("no audio output device"))?;
+
+		return thing.play(device);
+
+	}
+
+	pub fn audio_devices(&self) -> Vec<rodio::Device> {
+		return rodio::output_devices()
+			.map(|c| c.collect())
+			.unwrap_or(vec![]);
+	}
+
+	pub fn set_audio_device(&mut self, d: rodio::Device) {
+		self.audio_device = Some(d);
 	}
 
 }

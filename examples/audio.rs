@@ -1,7 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::audio::*;
+use audio::*;
 use dirty::app::*;
 use input::Key;
 
@@ -11,10 +11,10 @@ struct Game {
 
 impl app::State for Game {
 
-	fn init(_: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut app::Ctx) -> Result<Self> {
 
 		let sound = Sound::from_bytes(include_bytes!("res/yo.ogg"))?;
-		let track = Track::from_sound(sound)?;
+		let track = Track::from_sound(ctx, &sound)?;
 
 		track.play();
 

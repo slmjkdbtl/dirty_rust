@@ -88,7 +88,6 @@
 - [synth] popping sound every second
 - [gfx] tidy text rendering layout code
 - [gfx] bold text
-- [gfx] text character spacing
 - [math] poisson dist
 - [gfx] inline text style
 - [misc] profile render / update time seperately
@@ -198,4 +197,5 @@
 - [app] upgrade to glutin 0.22
 - [gfx] imgui
 - [gfx] fix shader uniform mix up
+- [gfx] text character spacing
 
