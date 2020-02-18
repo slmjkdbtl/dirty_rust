@@ -55,6 +55,12 @@ impl IntoUniformValue for Mat4 {
 	}
 }
 
+impl IntoUniformValue for std::time::Duration {
+	fn into_uniform(&self) -> gl::UniformValue {
+		return gl::UniformValue::F1(self.as_secs_f32());
+	}
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Shader2D<U: Uniform> {
 	gl_pipeline: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,

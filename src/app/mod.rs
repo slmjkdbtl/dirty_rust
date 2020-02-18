@@ -14,6 +14,7 @@ mod model;
 mod desc;
 mod skybox;
 
+pub mod audio;
 pub mod input;
 pub mod shapes;
 
@@ -116,6 +117,9 @@ pub struct Ctx {
 	pub(self) draw_calls: usize,
 
 	pub(self) transform: Mat4,
+
+	// audio
+	pub(self) audio_device: Option<rodio::Device>,
 
 }
 
@@ -273,6 +277,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		draw_calls_last: 0,
 
 		transform: mat4!(),
+
+		audio_device: rodio::default_output_device(),
 
 		conf: conf,
 

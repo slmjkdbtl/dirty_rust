@@ -21,7 +21,6 @@ impl Rect {
 			fill: Some(rgba!(1)),
 		};
 	}
-	// TODO: respect origin
 	pub fn from_size(o: gfx::Origin, w: f32, h: f32) -> Self {
 		let pt = o.as_pt();
 		let p1 = (-pt * 0.5 + vec2!(-0.5, -0.5)) * vec2!(w, h);
