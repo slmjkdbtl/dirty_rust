@@ -1,8 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::app::*;
-use dirty::math::*;
+use math::*;
 use input::Key;
 use input::Mouse;
 
@@ -10,15 +9,15 @@ struct Game {
 	pts: Vec<Vec2>,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(_: &mut app::Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
 			pts: vec![],
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -43,7 +42,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		use shapes::*;
 
@@ -113,7 +112,7 @@ impl app::State for Game {
 }
 
 fn main() {
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.run::<Game>() {
 		println!("{}", err);
 	}

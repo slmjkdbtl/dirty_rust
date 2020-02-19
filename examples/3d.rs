@@ -1,8 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::app::*;
-use dirty::math::*;
+use math::*;
 use input::Key;
 use gfx::Camera;
 
@@ -111,9 +110,9 @@ impl gfx::Uniform for LightUniform {
 	}
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		let model = gfx::Model::from_glb(
 			ctx,
@@ -142,7 +141,7 @@ impl app::State for Game {
 // 		let mut model = gfx::Model::from_glb(ctx, include_bytes!("res/duck.glb"))?;
 
 		let skybox = gfx::Skybox::from_bytes(
-			&ctx,
+			ctx,
 			include_bytes!("res/forest_rt.png"),
 			include_bytes!("res/forest_lf.png"),
 			include_bytes!("res/forest_up.png"),
@@ -169,7 +168,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -228,7 +227,7 @@ impl app::State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		if ctx.key_down(Key::W) {
 			self.cam.set_pos(self.cam.pos() + self.cam.front() * ctx.dt() * self.move_speed);
@@ -299,7 +298,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
 			intensity: 16.0,
@@ -316,7 +315,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 // 		.cursor_relative(true)
 		.cursor_hidden(true)
 		.cursor_locked(true)

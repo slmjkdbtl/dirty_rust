@@ -97,7 +97,7 @@ pub(super) fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u
 
 	for i in 0..len {
 
-		// TODO: fix weirdness
+		// TODO: subtraction overflow
 		let prev = verts.get(i - 1).map(|p| *p).unwrap_or(verts[len - 1]);
 		let p = verts[i];
 		let next = verts.get(i + 1).map(|p| *p).unwrap_or(verts[0]);

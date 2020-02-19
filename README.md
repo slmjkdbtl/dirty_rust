@@ -8,7 +8,6 @@ here's a minimal window setup:
 
 ```rust
 use dirty::*;
-use app::*;
 use input::Key;
 
 struct Game;
@@ -57,7 +56,6 @@ impl State for Game {
 fn main() -> Result<()> {
 	return run::<Game>();
 }
-
 ```
 
 ### facts

@@ -1,9 +1,8 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::math::*;
-use dirty::app::*;
-use dirty::task::TaskPool;
+use math::*;
+use task::TaskPool;
 use input::Key;
 
 mod pix;
@@ -34,9 +33,9 @@ impl Game {
 	}
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		let mut tasks = TaskPool::new(THREAD_COUNT);
 
@@ -55,7 +54,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -75,7 +74,7 @@ impl app::State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		for m in self.tasks.poll() {
 			let modeldata = m?;
@@ -120,7 +119,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		self.pix_effect.draw(ctx, &PixUniform {
 			resolution: vec2!(ctx.width(), ctx.height()),
@@ -145,7 +144,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.origin(gfx::Origin::TopLeft)
 		.run::<Game>() {
 		println!("{}", err);

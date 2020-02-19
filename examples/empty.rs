@@ -1,6 +1,6 @@
 // wengwengweng
 
 fn main() {
-	dirty::app::run::<()>();
+	dirty::run::<()>();
 }
 

@@ -2,7 +2,6 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::app::*;
 use input::Key;
 
 struct Game {
@@ -26,9 +25,9 @@ impl gfx::Uniform for TwistUniform {
 	}
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		let shader = gfx::Shader2D::from_frag(ctx, include_str!("res/twist.frag"))?;
 
@@ -38,7 +37,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -57,7 +56,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw_2d_with(&self.shader, &TwistUniform {
 			resolution: vec2!(ctx.width(), ctx.height()) * ctx.dpi(),
@@ -81,7 +80,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.run::<Game>() {
 		println!("{}", err);
 	}
