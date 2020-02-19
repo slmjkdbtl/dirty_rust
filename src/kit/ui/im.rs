@@ -21,11 +21,11 @@ impl UI {
 		};
 	}
 
-	pub fn event(&mut self, e: &app::input::Event) {
+	pub fn event(&mut self, e: &input::Event) {
 		// ...
 	}
 
-	pub fn frame(&mut self, ctx: &mut app::Ctx, f: impl FnOnce(&mut PanelManager)) {
+	pub fn frame(&mut self, ctx: &mut Ctx, f: impl FnOnce(&mut PanelManager)) {
 		let mut pman = PanelManager {
 			panels: &mut self.panels,
 			ctx: ctx,
@@ -38,7 +38,7 @@ impl UI {
 
 pub struct PanelManager<'a> {
 	panels: &'a mut HashMap<ID, Panel>,
-	ctx: &'a mut app::Ctx,
+	ctx: &'a mut Ctx,
 	theme: &'a Theme,
 }
 
@@ -120,7 +120,7 @@ pub struct Panel {
 
 pub struct WidgetManager<'a> {
 	widgets: &'a mut HashMap<ID, Box<dyn Widget>>,
-	ctx: &'a mut app::Ctx,
+	ctx: &'a mut Ctx,
 	theme: &'a Theme,
 }
 
@@ -216,7 +216,7 @@ impl<T: Any> AsAny for T {
 }
 
 pub trait Widget: AsAny + 'static {
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 }

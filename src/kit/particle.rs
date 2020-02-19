@@ -1,8 +1,9 @@
 // wengwengweng
 
+use crate::*;
 use super::*;
 use timer::*;
-use crate::app::*;
+use math::*;
 
 pub enum Primitive<'a> {
 	Texture(&'a gfx::Texture),
