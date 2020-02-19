@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Common Math Functions & Structs
+//! Common Math Functions & Types
 
 mexport!(mat);
 mexport!(rand);

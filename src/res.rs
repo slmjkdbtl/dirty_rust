@@ -71,7 +71,7 @@ pub mod shader {
 
 pub mod font {
 
-	use super::super::app::gfx::BitmapFontData;
+	use crate::gfx::BitmapFontData;
 
 	// http://www.dsg4.com/04/extra/bitmap/index.html
 	pub const F04B03: BitmapFontData = BitmapFontData::new(

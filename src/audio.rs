@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Audio
+
 use std::io::Cursor;
 use std::time::Duration;
 
@@ -9,6 +11,62 @@ use rodio::Sink;
 use rodio::source::Buffered;
 
 use super::*;
+
+pub struct Device {
+	name: String,
+	cpal_device: rodio::Device,
+}
+
+impl Device {
+
+	fn from_cpal(d: rodio::Device) -> Option<Self> {
+
+		pub use rodio::DeviceTrait;
+
+		return Some(Self {
+			name: d.name().ok()?,
+			cpal_device: d,
+		});
+
+	}
+
+	fn cpal_device(&self) -> &rodio::Device {
+		return &self.cpal_device;
+	}
+
+	pub fn name(&self) -> &str {
+		return &self.name;
+	}
+
+}
+
+impl std::fmt::Display for Device {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		return write!(f, "{}", self.name());
+	}
+}
+
+impl std::fmt::Debug for Device {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		return write!(f, "{}", self.name());
+	}
+}
+
+pub trait AudioCtx {
+	fn device(&self) -> Option<&Device>;
+}
+
+impl AudioCtx for Device {
+	fn device(&self) -> Option<&Device> {
+		return Some(self);
+	}
+}
+
+impl AudioCtx for Ctx {
+	fn device(&self) -> Option<&Device> {
+		return self.audio_device.as_ref();
+	}
+}
 
 #[derive(Clone)]
 pub struct Sound {
@@ -35,10 +93,6 @@ impl Default for Effect {
 	}
 }
 
-pub struct Track {
-	sink: Sink,
-}
-
 impl Sound {
 
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
@@ -54,7 +108,7 @@ impl Sound {
 
 	}
 
-	pub fn as_track(&self, ctx: &Ctx) -> Result<Track> {
+	pub fn as_track(&self, ctx: &impl AudioCtx) -> Result<Track> {
 		return Track::from_sound(ctx, &self);
 	}
 
@@ -138,16 +192,20 @@ impl Sound {
 
 }
 
+pub struct Track {
+	sink: Sink,
+}
+
 impl Track {
 
-	pub fn from_bytes(ctx: &Ctx, data: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &impl AudioCtx, data: &[u8]) -> Result<Self> {
 		return Self::from_sound(ctx, &Sound::from_bytes(data)?);
 	}
 
-	pub fn from_sound(ctx: &Ctx, sound: &Sound) -> Result<Self> {
+	pub fn from_sound(ctx: &impl AudioCtx, sound: &Sound) -> Result<Self> {
 
-		let device = ctx.audio_device.as_ref().ok_or(format!("no audio ouput device"))?;
-		let sink = Sink::new(&device);
+		let device = ctx.device().ok_or(format!("no audio ouput device"))?;
+		let sink = Sink::new(device.cpal_device());
 
 		sink.append(sound.apply());
 		sink.pause();
@@ -173,23 +231,36 @@ impl Track {
 }
 
 pub trait Playable {
-	fn play(&self, device: &rodio::Device) -> Result<()>;
-}
-
-pub trait Pausible {
-	fn pausible(&self) -> Result<()>;
+	fn play(&self, device: &Device) -> Result<()>;
 }
 
 impl Playable for Sound {
-	fn play(&self, device: &rodio::Device) -> Result<()> {
-		return Ok(rodio::play_raw(device, self.apply().convert_samples()));
+	fn play(&self, device: &Device) -> Result<()> {
+		return Ok(rodio::play_raw(device.cpal_device(), self.apply().convert_samples()));
 	}
 }
 
 impl Playable for Track {
-	fn play(&self, _: &rodio::Device) -> Result<()> {
+	fn play(&self, _: &Device) -> Result<()> {
 		return Ok(self.sink.play());
 	}
+}
+
+pub fn default_device() -> Option<Device> {
+	return rodio::default_output_device()
+		.map(Device::from_cpal)
+		.flatten();
+}
+
+pub fn devices() -> Vec<Device> {
+	return rodio::output_devices()
+		.map(|c| {
+			return c
+				.map(Device::from_cpal)
+				.flatten()
+				.collect();
+		})
+		.unwrap_or(vec![]);
 }
 
 impl Ctx {
@@ -204,13 +275,7 @@ impl Ctx {
 
 	}
 
-	pub fn audio_devices(&self) -> Vec<rodio::Device> {
-		return rodio::output_devices()
-			.map(|c| c.collect())
-			.unwrap_or(vec![]);
-	}
-
-	pub fn set_audio_device(&mut self, d: rodio::Device) {
+	pub fn set_audio_device(&mut self, d: Device) {
 		self.audio_device = Some(d);
 	}
 

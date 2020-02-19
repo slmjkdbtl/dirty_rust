@@ -7,6 +7,8 @@ use std::collections::HashSet;
 
 use once_cell::sync::Lazy;
 
+use crate::math::*;
+
 pub(super) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hset![
 		// backspace

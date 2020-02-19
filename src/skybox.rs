@@ -15,7 +15,7 @@ pub struct Skybox {
 impl Skybox {
 
 	pub fn from_bytes(
-		ctx: &Ctx,
+		ctx: &impl gfx::GfxCtx,
 		right: &[u8],
 		left: &[u8],
 		top: &[u8],
@@ -24,7 +24,7 @@ impl Skybox {
 		back: &[u8],
 	) -> Result<Self> {
 
-		let mesh = gl::Mesh::from_shape(&ctx.gl, CubemapShape)?;
+		let mesh = gl::Mesh::from_shape(ctx.device(), CubemapShape)?;
 
 		let right = img::Image::from_bytes(right)?;
 		let left = img::Image::from_bytes(left)?;
@@ -34,7 +34,7 @@ impl Skybox {
 		let back = img::Image::from_bytes(back)?;
 
 		let tex = gl::CubemapTexture::from(
-			&ctx.gl,
+			ctx.device(),
 			right.width(),
 			right.height(),
 			&right.into_raw(),

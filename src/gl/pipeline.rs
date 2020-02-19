@@ -33,7 +33,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			ctx.attach_shader(program_id, vert_id);
 
 			if !ctx.get_shader_compile_status(vert_id) {
-				return Err(format!("vert shader error: {}", ctx.get_shader_info_log(vert_id).trim()));
+				return Err(format!("vert error: {}", ctx.get_shader_info_log(vert_id).trim()));
 			}
 
 			let frag_id = ctx.create_shader(ShaderType::Fragment.into())?;
@@ -43,7 +43,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			ctx.attach_shader(program_id, frag_id);
 
 			if !ctx.get_shader_compile_status(frag_id) {
-				return Err(format!("frag shader error: {}", ctx.get_shader_info_log(frag_id).trim()));
+				return Err(format!("frag error: {}", ctx.get_shader_info_log(frag_id).trim()));
 			}
 
 			ctx.link_program(program_id);

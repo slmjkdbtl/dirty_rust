@@ -1,7 +1,7 @@
 // wengwengweng
 
 use crate::*;
-use super::*;
+use math::*;
 
 pub trait Camera {
 	fn projection(&self) -> Mat4;

@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! Common File System Functions
+//! File System Utilities
 
 use std::fs;
 use std::path::Path;
@@ -11,7 +11,7 @@ use directories::BaseDirs;
 use crate::Result;
 
 #[cfg(target_os = "macos")]
-pub fn get_res_dir() -> Option<PathBuf> {
+pub fn res_dir() -> Option<PathBuf> {
 
 	use core_foundation::bundle;
 
@@ -29,7 +29,7 @@ pub fn get_res_dir() -> Option<PathBuf> {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn get_res_dir() -> Option<PathBuf> {
+pub fn res_dir() -> Option<PathBuf> {
 
 	use std::env;
 
@@ -52,7 +52,7 @@ pub fn bundled_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 	} else {
 
-		let with_res = get_res_dir()
+		let with_res = res_dir()
 			.ok_or(format!("file not found: {}", path.display()))?
 			.join(path);
 
@@ -74,7 +74,7 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 	let listings = glob::glob(&format!("{}", pat))
 		.ok()
-		.or_else(|| glob::glob(&format!("{}/{}", get_res_dir()?.display(), pat)).ok())
+		.or_else(|| glob::glob(&format!("{}/{}", res_dir()?.display(), pat)).ok())
 		.ok_or(format!("failed to execute glob pattern {}", pat))?
 		.flatten()
 		.collect();

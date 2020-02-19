@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::marker::PhantomData;
 
 use crate::*;
-use super::*;
+use math::*;
 use gfx::*;
 use res::shader::*;
 
@@ -76,7 +76,7 @@ impl<U: Uniform> Shader2D<U> {
 		};
 	}
 
-	pub fn from_frag(ctx: &Ctx, frag: &str) -> Result<Self> {
+	pub fn from_frag(ctx: &impl gfx::GfxCtx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			DEFAULT_2D_VERT,
@@ -84,7 +84,7 @@ impl<U: Uniform> Shader2D<U> {
 		);
 	}
 
-	pub fn from_vert(ctx: &Ctx, vert: &str) -> Result<Self> {
+	pub fn from_vert(ctx: &impl gfx::GfxCtx, vert: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
@@ -92,12 +92,12 @@ impl<U: Uniform> Shader2D<U> {
 		);
 	}
 
-	pub fn from_vert_frag(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
+	pub fn from_vert_frag(ctx: &impl gfx::GfxCtx, vert: &str, frag: &str) -> Result<Self> {
 
 		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
 		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
 
-		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(&ctx.gl, &vert_src, &frag_src)?));
+		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(ctx.device(), &vert_src, &frag_src)?));
 
 	}
 
@@ -122,7 +122,7 @@ impl<U: Uniform> Shader3D<U> {
 		};
 	}
 
-	pub fn from_frag(ctx: &Ctx, frag: &str) -> Result<Self> {
+	pub fn from_frag(ctx: &impl gfx::GfxCtx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			DEFAULT_3D_VERT,
@@ -130,7 +130,7 @@ impl<U: Uniform> Shader3D<U> {
 		);
 	}
 
-	pub fn from_vert(ctx: &Ctx, vert: &str) -> Result<Self> {
+	pub fn from_vert(ctx: &impl gfx::GfxCtx, vert: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
@@ -138,12 +138,12 @@ impl<U: Uniform> Shader3D<U> {
 		);
 	}
 
-	pub fn from_vert_frag(ctx: &Ctx, vert: &str, frag: &str) -> Result<Self> {
+	pub fn from_vert_frag(ctx: &impl gfx::GfxCtx, vert: &str, frag: &str) -> Result<Self> {
 
 		let vert_src = TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
 		let frag_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
 
-		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(&ctx.gl, &vert_src, &frag_src)?));
+		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(ctx.device(), &vert_src, &frag_src)?));
 
 	}
 

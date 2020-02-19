@@ -277,3 +277,5 @@ macro_rules! mat4 {
 	};
 }
 
+pub use mat4;
+

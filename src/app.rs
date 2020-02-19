@@ -2,42 +2,15 @@
 
 //! Windowing, Input, and Graphics
 
-pub mod gfx;
-pub mod res;
-mod texture;
-mod shader;
-mod canvas;
-mod transform;
-mod font;
-mod camera;
-mod model;
-mod desc;
-mod skybox;
-
-pub mod audio;
-pub mod input;
-pub mod shapes;
-
-mod state;
-mod conf;
-
-#[cfg(feature = "gkit")]
-pub mod kit;
-
-#[cfg(feature = "imgui")]
-pub mod imgui;
-
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
-use clipboard::ClipboardProvider;
 use glutin::dpi::*;
 use glutin::GlRequest;
 use glutin::event_loop::ControlFlow;
-pub use glutin::window::CursorIcon as CursorStyle;
 
 use crate::*;
 use crate::math::*;
@@ -52,74 +25,74 @@ use input::Mouse;
 use input::GamepadID;
 use input::GamepadButton;
 
-const DRAW_COUNT: usize = 65536;
-const NEAR: f32 = -4096.0;
-const FAR: f32 = 4096.0;
+pub(crate) const DRAW_COUNT: usize = 65536;
+pub(crate) const NEAR: f32 = -4096.0;
+pub(crate) const FAR: f32 = 4096.0;
 
 pub struct Ctx {
 
-	pub(self) conf: Conf,
+	pub(crate) conf: Conf,
 
 	// lifecycle
-	pub(self) quit: bool,
-	pub(self) dt: Duration,
-	pub(self) time: Duration,
-	pub(self) fps_counter: FPSCounter,
+	pub(crate) quit: bool,
+	pub(crate) dt: Duration,
+	pub(crate) time: Duration,
+	pub(crate) fps_counter: FPSCounter,
 
 	// input
-	pub(self) key_states: HashMap<Key, ButtonState>,
-	pub(self) mouse_states: HashMap<Mouse, ButtonState>,
-	pub(self) mouse_pos: Vec2,
-	pub(self) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
-	pub(self) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
-	pub(self) scroll_phase: input::ScrollPhase,
+	pub(crate) key_states: HashMap<Key, ButtonState>,
+	pub(crate) mouse_states: HashMap<Mouse, ButtonState>,
+	pub(crate) mouse_pos: Vec2,
+	pub(crate) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+	pub(crate) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	pub(crate) scroll_phase: input::ScrollPhase,
 
 	// window
-	pub(self) title: String,
-	pub(self) cursor_hidden: bool,
-	pub(self) cursor_locked: bool,
-	pub(self) width: i32,
-	pub(self) height: i32,
+	pub(crate) title: String,
+	pub(crate) cursor_hidden: bool,
+	pub(crate) cursor_locked: bool,
+	pub(crate) width: i32,
+	pub(crate) height: i32,
 
-	pub(self) clipboard_ctx: clipboard::ClipboardContext,
+	pub(crate) clipboard_ctx: clipboard::ClipboardContext,
 
-	pub(self) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
-	pub(self) gamepad_ctx: gilrs::Gilrs,
+	pub(crate) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
+	pub(crate) gamepad_ctx: gilrs::Gilrs,
 
 	// gfx
-	pub(self) gl: Rc<gl::Device>,
+	pub(crate) gl: Rc<gl::Device>,
 
-	pub(self) proj: Mat4,
-	pub(self) view: Mat4,
+	pub(crate) proj: Mat4,
+	pub(crate) view: Mat4,
 
-	pub(self) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) renderer_3d: gl::BatchedMesh<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) cubemap_renderer: gl::Mesh<gfx::VertexCubemap, gfx::UniformCubemap>,
+	pub(crate) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
+	pub(crate) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(crate) renderer_3d: gl::BatchedMesh<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(crate) cubemap_renderer: gl::Mesh<gfx::VertexCubemap, gfx::UniformCubemap>,
 
-	pub(self) empty_tex: gfx::Texture,
+	pub(crate) empty_tex: gfx::Texture,
 
-	pub(self) default_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cur_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(self) cur_custom_uniform_2d: Option<Vec<(&'static str, gl::UniformValue)>>,
+	pub(crate) default_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
+	pub(crate) cur_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
+	pub(crate) cur_custom_uniform_2d: Option<Vec<(&'static str, gl::UniformValue)>>,
 
-	pub(self) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(self) cur_custom_uniform_3d: Option<Vec<(&'static str, gl::UniformValue)>>,
+	pub(crate) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(crate) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(crate) cur_custom_uniform_3d: Option<Vec<(&'static str, gl::UniformValue)>>,
 
-	pub(self) pipeline_cubemap: gl::Pipeline<gfx::VertexCubemap, gfx::UniformCubemap>,
+	pub(crate) pipeline_cubemap: gl::Pipeline<gfx::VertexCubemap, gfx::UniformCubemap>,
 
-	pub(self) cur_canvas: Option<gfx::Canvas>,
+	pub(crate) cur_canvas: Option<gfx::Canvas>,
 
-	pub(self) default_font: gfx::BitmapFont,
+	pub(crate) default_font: gfx::BitmapFont,
 
-	pub(self) draw_calls_last: usize,
-	pub(self) draw_calls: usize,
+	pub(crate) draw_calls_last: usize,
+	pub(crate) draw_calls: usize,
 
-	pub(self) transform: Mat4,
+	pub(crate) transform: Mat4,
 
 	// audio
-	pub(self) audio_device: Option<rodio::Device>,
+	pub(crate) audio_device: Option<audio::Device>,
 
 }
 
@@ -181,8 +154,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	let c = conf.clear_color;
-
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
 // 	gl.enable(gl::Capability::CullFace);
@@ -190,12 +161,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 // 	gl.front_face(gl::CullMode::CounterClockwise);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
-	gl.clear_color(c.r, c.g, c.b, c.a);
+	gl.clear_color(0.0, 0.0, 0.0, 0.0);
 
 	let cam = gfx::OrthoCam::new(conf.width as f32, conf.height as f32, NEAR, FAR);
-
-	let empty_tex = gl::Texture2D::from(&gl, 1, 1, &[255; 4])?;
-	let empty_tex = gfx::Texture::from_gl_tex(empty_tex);
 
 	use res::shader::*;
 	use res::font::*;
@@ -253,12 +221,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
-		gl: Rc::new(gl),
 
 		proj: cam.projection(),
 		view: cam.lookat(),
 
-		empty_tex: empty_tex,
+		empty_tex: gfx::Texture::from_pixels(&gl, 1, 1, &[255; 4])?,
 
 		default_pipeline_2d: pipeline_2d.clone(),
 		cur_pipeline_2d: pipeline_2d,
@@ -275,10 +242,12 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		default_font: font,
 		draw_calls: 0,
 		draw_calls_last: 0,
-
 		transform: mat4!(),
 
-		audio_device: rodio::default_output_device(),
+		gl: Rc::new(gl),
+
+		// audio
+		audio_device: audio::default_device(),
 
 		conf: conf,
 
@@ -664,182 +633,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 impl Ctx {
 
-	pub fn set_fullscreen(&mut self, b: bool) {
-
-		let window = self.windowed_ctx.window();
-
-		if b {
-			window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
-		} else {
-			window.set_fullscreen(None);
-		}
-
-	}
-
-	pub fn is_fullscreen(&self) -> bool {
-		return self.windowed_ctx.window().fullscreen().is_some();
-	}
-
-	pub fn toggle_fullscreen(&mut self) {
-		self.set_fullscreen(!self.is_fullscreen());
-	}
-
-	pub fn set_cursor_hidden(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_visible(!b);
-		self.cursor_hidden = b;
-	}
-
-	pub fn is_cursor_hidden(&self) -> bool {
-		return self.cursor_hidden;
-	}
-
-	pub fn toggle_cursor_hidden(&mut self) {
-		self.set_cursor_hidden(!self.is_cursor_hidden());
-	}
-
-	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
-
-		self.windowed_ctx
-			.window()
-			.set_cursor_grab(b)
-			.map_err(|_| format!("failed to lock mouse cursor"))?;
-
-		self.cursor_locked = b;
-
-		return Ok(());
-
-	}
-
-	pub fn is_cursor_locked(&self) -> bool {
-		return self.cursor_locked;
-	}
-
-	pub fn toggle_cursor_locked(&mut self) -> Result<()> {
-		return self.set_cursor_locked(!self.is_cursor_locked());
-	}
-
-	pub fn set_cursor(&self, c: CursorStyle) {
-		self.windowed_ctx.window().set_cursor_icon(c);
-	}
-
-	pub fn set_title(&mut self, t: &str) {
-
-		self.title = t.to_owned();
-
-		self.windowed_ctx.window().set_title(t);
-
-	}
-
-	pub fn title(&self) -> &str {
-		return &self.title;
-	}
-
-	pub fn dpi(&self) -> f32 {
-		return self.windowed_ctx.window().scale_factor() as f32;
-	}
-
-	pub fn width(&self) -> i32 {
-		return self.width;
-	}
-
-	pub fn height(&self) -> i32 {
-		return self.height;
-	}
-
-	pub fn set_mouse_pos(&mut self, mpos: Vec2) -> Result<()> {
-
-		let (w, h) = (self.width as f32, self.height as f32);
-		let mpos = vec2!(w / 2.0 + mpos.x, h / 2.0 - mpos.y);
-		let g_mpos: LogicalPosition<f64> = mpos.into();
-
-		self.windowed_ctx
-			.window()
-			.set_cursor_position(g_mpos)
-			.map_err(|_| format!("failed to set mouse position"))?
-			;
-
-		self.mouse_pos = mpos;
-
-		return Ok(());
-
-	}
-
-	pub fn get_clipboard(&mut self) -> Option<String> {
-		return self.clipboard_ctx.get_contents().ok();
-	}
-
-	pub fn set_clipboard(&mut self, s: &str) -> Result<()> {
-
-		self.clipboard_ctx
-			.set_contents(s.to_owned())
-			.map_err(|_| format!("failed to set clipboard"))?;
-
-		return Ok(());
-
-	}
-
-	pub(super) fn swap_buffers(&self) -> Result<()> {
-		self.windowed_ctx
-			.swap_buffers()
-			.map_err(|_| format!("failed to swap buffer"))?;
-		return Ok(());
-	}
-
-}
-
-impl From<glutin::event::MouseScrollDelta> for Vec2 {
-	fn from(delta: glutin::event::MouseScrollDelta) -> Self {
-		use glutin::event::MouseScrollDelta;
-		match delta {
-			MouseScrollDelta::PixelDelta(pos) => {
-				return vec2!(pos.x, pos.y);
-			},
-			MouseScrollDelta::LineDelta(x, y) => {
-				return vec2!(x, y);
-			}
-		};
-	}
-}
-
-impl From<Vec2> for LogicalPosition<f64> {
-	fn from(pos: Vec2) -> Self {
-		return Self {
-			x: pos.x as f64,
-			y: pos.y as f64,
-		};
-	}
-}
-
-impl From<LogicalPosition<f64>> for Vec2 {
-	fn from(pos: LogicalPosition<f64>) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
-	}
-}
-
-impl From<PhysicalPosition<f64>> for Vec2 {
-	fn from(pos: PhysicalPosition<f64>) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
-	}
-}
-
-impl From<PhysicalPosition<i32>> for Vec2 {
-	fn from(pos: PhysicalPosition<i32>) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
-	}
-}
-
-
-impl Ctx {
-
 	pub fn quit(&mut self) {
 		self.quit = true;
 	}
@@ -911,19 +704,4 @@ impl FPSCounter {
 
 }
 
-pub trait GfxCtx {
-	fn gl_ctx(&self) -> &gl::Device;
-}
-
-impl GfxCtx for Ctx {
-	fn gl_ctx(&self) -> &gl::Device {
-		return &self.gl;
-	}
-}
-
-impl GfxCtx for gl::Device {
-	fn gl_ctx(&self) -> &gl::Device {
-		return self;
-	}
-}
 

@@ -18,6 +18,10 @@ impl app::State for Game {
 
 		track.play();
 
+		for d in audio::devices() {
+			println!("{:?}", d.name());
+		}
+
 		return Ok(Self {
 			track: track,
 		});

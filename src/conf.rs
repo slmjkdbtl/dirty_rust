@@ -18,7 +18,6 @@ pub struct Conf {
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
 	pub fps_cap: Option<u16>,
-	pub clear_color: Color,
 	pub texture_filter: gfx::FilterMode,
 	pub default_font: Option<gfx::BitmapFontData>,
 }
@@ -53,7 +52,6 @@ impl Default for Conf {
 			cursor_hidden: false,
 			cursor_locked: false,
 			fps_cap: Some(60),
-			clear_color: rgba!(0),
 			texture_filter: gfx::FilterMode::Nearest,
 			default_font: None,
 		};
@@ -126,11 +124,6 @@ impl Launcher {
 
 	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
 		self.conf.fps_cap = f;
-		return self;
-	}
-
-	pub fn clear_color(mut self, c: Color) -> Self {
-		self.conf.clear_color = c;
 		return self;
 	}
 

@@ -1,7 +1,6 @@
 // wengwengweng
 
 use dirty::*;
-use app::*;
 use input::Key;
 
 struct Game {

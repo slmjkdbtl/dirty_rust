@@ -20,11 +20,8 @@ default = [
 	# modules
 # 	"gkit",
 # 	"synth",
-# 	"physics",
 # 	"imgui",
 # 	"ase",
-# 	"xr",
-# 	"osc",
 # 	"http",
 # 	"json",
 # 	"bin",
@@ -32,10 +29,6 @@ default = [
 	# options
 # 	"gl3",
 
-]
-
-synth = [
-	"cpal",
 ]
 
 http = [
@@ -48,14 +41,6 @@ imgui = [
 	"imgui_lib",
 ]
 
-xr = [
-	"openxr",
-]
-
-osc = [
-	"rosc",
-]
-
 json = [
 	"serde_json",
 ]
@@ -64,13 +49,9 @@ bin = [
 	"bincode",
 ]
 
-physics = [
-	"nphysics2d",
-	"nphysics3d",
-]
-
 ase = []
 gkit = []
+synth = []
 
 gl3 = []
 
@@ -100,9 +81,7 @@ gltf = "0.15"
 
 # audio
 rodio = { version = "0.10", default-features = false, features = [ "vorbis", "mp3", "wav", ] }
-
-# synth
-cpal = { version = "0.11", optional = true }
+cpal = "0.11"
 
 # imgui
 imgui_lib = { version = "0.3", optional = true, package = "imgui" }
@@ -111,21 +90,11 @@ imgui_lib = { version = "0.3", optional = true, package = "imgui" }
 url = { version = "2.1", optional = true }
 httparse = { version = "1.3", optional = true }
 
-# physics
-nphysics3d = { version = "0.13", optional = true }
-nphysics2d = { version = "0.13", optional = true }
-
-# osc
-rosc = { version = "0.3", optional = true }
-
 # json
 serde_json = { version = "1.0", optional = true }
 
 # bin
 bincode = { version = "1.2", optional = true }
-
-# xr
-openxr = { version = "0.11", optional = true }
 
 # rayon = "1.2"
 

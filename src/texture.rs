@@ -20,11 +20,11 @@ impl Texture {
 		};
 	}
 
-	pub fn new(ctx: &impl GfxCtx, w: i32, h: i32) -> Result<Self> {
-		return Ok(Self::from_gl_tex(gl::Texture2D::new(&ctx.gl_ctx(), w, h)?));
+	pub fn new(ctx: &impl gfx::GfxCtx, w: i32, h: i32) -> Result<Self> {
+		return Ok(Self::from_gl_tex(gl::Texture2D::new(&ctx.device(), w, h)?));
 	}
 
-	pub fn from_img(ctx: &impl GfxCtx, img: Image) -> Result<Self> {
+	pub fn from_img(ctx: &impl gfx::GfxCtx, img: Image) -> Result<Self> {
 
 		let w = img.width();
 		let h = img.height();
@@ -33,13 +33,13 @@ impl Texture {
 
 	}
 
-	pub fn from_bytes(ctx: &impl GfxCtx, data: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &impl gfx::GfxCtx, data: &[u8]) -> Result<Self> {
 		return Self::from_img(ctx, Image::from_bytes(data)?);
 	}
 
-	pub fn from_pixels(ctx: &impl GfxCtx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
+	pub fn from_pixels(ctx: &impl gfx::GfxCtx, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
 
-		let gl_tex = gl::Texture2D::from(&ctx.gl_ctx(), w, h, &pixels)?;
+		let gl_tex = gl::Texture2D::from(&ctx.device(), w, h, &pixels)?;
 		return Ok(Self::from_gl_tex(gl_tex));
 
 	}

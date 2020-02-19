@@ -2,16 +2,17 @@
 
 //! Common Drawing Primitives
 
-use std::mem;
 use std::f32::consts::PI;
 
-use crate::*;
-use crate::math::*;
-use super::gfx;
-use super::app::Ctx;
-use super::gl;
-use gfx::Drawable;
+use crate::gfx;
+use crate::math;
+use crate::app;
+use crate::gl;
+use crate::Result;
+use math::*;
+use app::Ctx;
 use gl::VertexLayout;
+use gfx::Drawable;
 use gfx::Vertex2D;
 use gfx::Vertex3D;
 
