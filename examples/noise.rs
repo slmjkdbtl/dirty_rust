@@ -3,7 +3,6 @@
 #![feature(box_syntax)]
 
 use dirty::*;
-use app::*;
 use input::Key;
 
 use math::noise::*;
@@ -188,14 +187,20 @@ impl State for Game {
 
 		ctx.draw_t(
 			mat4!()
-				.t2(vec2!(24)),
+				.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
+				,
 			&shapes::text(&format!("type: {}", self.noise_type.as_str()))
+				.align(gfx::Origin::TopLeft)
+				,
 		)?;
 
 		ctx.draw_t(
 			mat4!()
-				.t2(vec2!(24, 44)),
+				.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -44))
+				,
 			&shapes::text(&format!("seed: {}", self.seed))
+				.align(gfx::Origin::TopLeft)
+				,
 		)?;
 
 		return Ok(());

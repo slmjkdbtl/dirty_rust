@@ -2,7 +2,7 @@
 
 use dirty::*;
 use dirty::math::*;
-use dirty::app::*;
+use dirty::*;
 use input::Key;
 
 struct Game {
@@ -10,16 +10,16 @@ struct Game {
 	count: usize,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/bunny.png"))?,
 			count: 1000,
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -38,7 +38,7 @@ impl app::State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
 
@@ -46,7 +46,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		let w = ctx.width();
 		let h = ctx.height();
@@ -92,7 +92,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 // 		.hidpi(false)
 		.fps_cap(None)
 		.vsync(false)

@@ -1,7 +1,6 @@
 // wengwengweng
 
 use dirty::*;
-use app::*;
 use kit::*;
 use sprite::*;
 use input::Key;
@@ -10,9 +9,9 @@ struct Game {
 	sprite: Sprite,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		let mut sprite = Sprite::from_bytes(ctx, include_bytes!("res/car.png"))?;
 
@@ -26,7 +25,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -56,7 +55,7 @@ impl app::State for Game {
 		return Ok(());
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 		self.sprite.update(ctx.dt());
@@ -65,7 +64,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw(&self.sprite)?;
 
@@ -77,7 +76,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.resizable(true)
 		.run::<Game>() {
 		println!("{}", err);

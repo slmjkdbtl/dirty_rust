@@ -1,18 +1,18 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::app::*;
+use dirty::*;
 use input::Key;
 
 struct Game;
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(_: &mut app::Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -29,7 +29,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw(&shapes::text("yo"))?;
 
@@ -41,7 +41,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.size(640, 480)
 		.title("")
 		.hidpi(true)
@@ -50,13 +50,9 @@ fn main() {
 		.vsync(true)
 		.cursor_hidden(false)
 		.cursor_locked(false)
-		.hide_title(false)
-		.hide_titlebar_buttons(false)
 		.transparent(false)
 		.always_on_top(false)
 		.fps_cap(Some(60))
-		.origin(gfx::Origin::Center)
-		.texture_filter(gfx::FilterMode::Nearest)
 		.run::<Game>() {
 		println!("{}", err);
 	}

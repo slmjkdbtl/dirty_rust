@@ -2,16 +2,15 @@
 
 use dirty::*;
 use audio::*;
-use dirty::app::*;
 use input::Key;
 
 struct Game {
 	track: Track,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		let sound = Sound::from_bytes(include_bytes!("res/yo.ogg"))?;
 		let track = Track::from_sound(ctx, &sound)?;
@@ -28,7 +27,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -52,7 +51,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		if self.track.is_playing() {
 			ctx.draw(&shapes::text("playing"))?;
@@ -67,7 +66,7 @@ impl app::State for Game {
 }
 
 fn main() {
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.run::<Game>() {
 		println!("{}", err);
 	}

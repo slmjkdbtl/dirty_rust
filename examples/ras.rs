@@ -1,7 +1,6 @@
 // wengwengweng
 
 use dirty::*;
-use app::*;
 use math::*;
 use input::Key;
 
@@ -93,9 +92,9 @@ struct Game {
 	tex: gfx::Texture,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		return Ok(Self {
 			canvas: Canvas::new(640, 480),
@@ -104,7 +103,7 @@ impl app::State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -125,7 +124,7 @@ impl app::State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		self.canvas.clear();
 		self.canvas.line(vec2!(100), ctx.mouse_pos(), rgba!(1));
@@ -135,7 +134,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.draw(&shapes::sprite(&self.tex))?;
 
@@ -147,7 +146,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.run::<Game>() {
 		println!("{}", err);
 	}
