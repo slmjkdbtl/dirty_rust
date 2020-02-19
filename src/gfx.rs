@@ -22,6 +22,22 @@ pub use model::*;
 pub use desc::*;
 pub use skybox::*;
 
+pub trait GfxCtx {
+	fn device(&self) -> &gl::Device;
+}
+
+impl GfxCtx for Ctx {
+	fn device(&self) -> &gl::Device {
+		return &self.gl;
+	}
+}
+
+impl GfxCtx for gl::Device {
+	fn device(&self) -> &gl::Device {
+		return self;
+	}
+}
+
 pub trait Action = FnOnce(&mut Ctx) -> Result<()>;
 
 impl Ctx {
@@ -97,8 +113,8 @@ impl Ctx {
 		self.apply_cam(&OrthoCam::new(
 			cw as f32,
 			ch as f32,
-			NEAR,
-			FAR,
+			app::NEAR,
+			app::FAR,
 		));
 
 		self.transform = mat4!();
@@ -330,8 +346,8 @@ impl Ctx {
 		self.apply_cam(&OrthoCam::new(
 			self.width() as f32,
 			self.height() as f32,
-			NEAR,
-			FAR,
+			app::NEAR,
+			app::FAR,
 		));
 
 	}

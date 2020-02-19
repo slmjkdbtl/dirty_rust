@@ -17,16 +17,42 @@
 
 #[macro_use]
 pub mod utils;
+
+mod app;
+pub use app::*;
+
+mod state;
+mod conf;
+
+pub mod gfx;
+pub mod res;
+mod texture;
+mod shader;
+mod canvas;
+mod transform;
+mod font;
+mod camera;
+mod model;
+mod desc;
+mod skybox;
+
+pub mod audio;
+pub mod input;
+pub mod window;
+pub mod shapes;
+
 pub mod task;
 pub mod fs;
 pub mod math;
 pub mod gl;
-pub mod app;
 pub mod img;
 pub mod term;
 
-#[cfg(feature = "physics")]
-pub mod physics;
+#[cfg(feature = "gkit")]
+pub mod kit;
+
+#[cfg(feature = "imgui")]
+pub mod imgui;
 
 #[cfg(feature = "synth")]
 pub mod synth;

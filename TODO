@@ -5,6 +5,7 @@
 - [gfx] spline
 - [misc] generate font mesh
 - [gfx] shader nodes
+- [gfx] global threadpool
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -95,6 +96,7 @@
 - [misc] gltf morph
 - [misc] integrate lighting into gkit
 - [gfx] oblique projection
+- [gfx] move cubemap to gkit
 
 == DONE
 - [http] refactor http

@@ -7,9 +7,8 @@
 use std::path::Path;
 
 use dirty::*;
-use dirty::task::*;
-use dirty::app::*;
-use dirty::math::*;
+use task::*;
+use math::*;
 use input::Key;
 use input::Mouse;
 
@@ -72,9 +71,9 @@ impl Viewer {
 
 }
 
-impl app::State for Viewer {
+impl State for Viewer {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		return Ok(Self {
 			model: None,
@@ -92,7 +91,7 @@ impl app::State for Viewer {
 
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -179,7 +178,7 @@ impl app::State for Viewer {
 
 	}
 
-	fn update(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
@@ -237,7 +236,7 @@ impl app::State for Viewer {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		if let Some(model) = &self.model {
 
@@ -364,7 +363,7 @@ impl app::State for Viewer {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.resizable(true)
 		.run::<Viewer>() {
 		println!("{}", err);
