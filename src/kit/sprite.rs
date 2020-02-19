@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use crate::*;
-use app::*;
+use math::*;
 
 #[derive(Clone)]
 pub struct Sprite {
