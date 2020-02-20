@@ -8,7 +8,7 @@ use super::gfx::*;
 
 #[derive(Clone)]
 pub struct Skybox {
-	tex: gl::CubemapTexture,
+	gl_tex: gl::CubemapTexture,
 	mesh: Rc<gl::Mesh<VertexCubemap, UniformCubemap>>,
 }
 
@@ -47,13 +47,13 @@ impl Skybox {
 
 		return Ok(Self {
 			mesh: Rc::new(mesh),
-			tex: tex,
+			gl_tex: tex,
 		});
 
 	}
 
-	pub(super) fn texture(&self) -> &gl::CubemapTexture {
-		return &self.tex;
+	pub(crate) fn gl_tex(&self) -> &gl::CubemapTexture {
+		return &self.gl_tex;
 	}
 
 }

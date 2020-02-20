@@ -36,7 +36,7 @@ impl<'a> Drawable for Skybox<'a> {
 				proj: ctx.proj,
 				view: ctx.view.remove_translation(),
 				color: self.color,
-				tex: self.skybox.texture().clone(),
+				tex: self.skybox.gl_tex().clone(),
 			},
 		);
 

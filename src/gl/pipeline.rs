@@ -69,7 +69,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	pub fn send(&self, uniform: &U) {
+	fn send(&self, uniform: &U) {
 
 		unsafe {
 

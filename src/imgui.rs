@@ -31,7 +31,7 @@ impl gfx::Vertex2D {
 	}
 }
 
-pub(super) struct Imgui {
+pub(crate) struct Imgui {
 	ctx: Context,
 	tex: gfx::Texture,
 	last_frame: Instant,

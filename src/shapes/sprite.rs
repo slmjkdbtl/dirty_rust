@@ -1,6 +1,7 @@
 // wengwengweng
 
-use super::*;
+use crate::*;
+use math::*;
 
 #[derive(Clone)]
 pub struct Sprite<'a> {
@@ -59,7 +60,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 	return Sprite::new(tex);
 }
 
-impl<'a> Drawable for Sprite<'a> {
+impl<'a> gfx::Drawable for Sprite<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 

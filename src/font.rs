@@ -17,10 +17,10 @@ pub trait Font {
 
 #[derive(Clone, Debug)]
 pub struct BitmapFontData {
-	pub(super) img: &'static [u8],
-	pub(super) gw: u8,
-	pub(super) gh: u8,
-	pub(super) chars: &'static str,
+	pub img: &'static [u8],
+	pub gw: u8,
+	pub gh: u8,
+	pub chars: &'static str,
 }
 
 impl BitmapFontData {

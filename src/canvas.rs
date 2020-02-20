@@ -67,7 +67,7 @@ impl Canvas {
 
 	}
 
-	pub(super) fn gl_fbuf(&self) -> &gl::Framebuffer {
+	pub(crate) fn gl_fbuf(&self) -> &gl::Framebuffer {
 		return &self.gl_fbuf;
 	}
 

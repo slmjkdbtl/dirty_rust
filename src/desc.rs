@@ -139,7 +139,7 @@ impl gl::VertexLayout for VertexCubemap {
 // }
 
 #[derive(Clone, PartialEq)]
-pub(super) struct Uniform2D {
+pub(crate) struct Uniform2D {
 	pub proj: Mat4,
 	pub tex: Texture,
 	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
@@ -174,7 +174,7 @@ impl gl::UniformLayout for Uniform2D {
 }
 
 #[derive(Clone, PartialEq)]
-pub(super) struct Uniform3D {
+pub(crate) struct Uniform3D {
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub model: Mat4,
@@ -211,7 +211,7 @@ impl gl::UniformLayout for Uniform3D {
 }
 
 #[derive(Clone, PartialEq)]
-pub(super) struct UniformCubemap {
+pub(crate) struct UniformCubemap {
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub color: Color,
@@ -234,7 +234,7 @@ impl gl::UniformLayout for UniformCubemap {
 
 }
 
-pub(super) struct QuadShape {
+pub(crate) struct QuadShape {
 	pub transform: Mat4,
 	pub quad: Quad,
 	pub color: Color,
@@ -318,7 +318,7 @@ impl gl::Shape for QuadShape {
 
 }
 
-pub(super) struct CubeShape;
+pub(crate) struct CubeShape;
 
 impl gl::Shape for CubeShape {
 
@@ -445,7 +445,7 @@ impl gl::Shape for CubeShape {
 
 }
 
-pub(super) struct CubemapShape;
+pub(crate) struct CubemapShape;
 
 impl gl::Shape for CubemapShape {
 
