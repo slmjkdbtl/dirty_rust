@@ -49,7 +49,7 @@ pub struct Node {
 }
 
 impl Mesh {
-	pub(super) fn gl_mesh(&self) -> &gl::Mesh<Vertex3D, Uniform3D> {
+	pub(crate) fn gl_mesh(&self) -> &gl::Mesh<Vertex3D, Uniform3D> {
 		return &self.gl_mesh;
 	}
 	pub fn data(&self) -> &MeshData {

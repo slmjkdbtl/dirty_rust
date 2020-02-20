@@ -18,6 +18,7 @@ use gfx::Vertex3D;
 
 export!(raw_2d);
 export!(sprite);
+export!(quad);
 export!(texfill);
 export!(polygon);
 export!(rect);

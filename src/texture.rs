@@ -14,7 +14,7 @@ pub struct Texture {
 
 impl Texture {
 
-	pub(super) fn from_gl_tex(gl_tex: gl::Texture2D) -> Self {
+	pub(crate) fn from_gl_tex(gl_tex: gl::Texture2D) -> Self {
 		return Self {
 			gl_tex: Rc::new(gl_tex),
 		};
@@ -64,7 +64,7 @@ impl Texture {
 		self.gl_tex.sub_data(x, y, w, h, data);
 	}
 
-	pub(super) fn gl_tex(&self) -> &gl::Texture2D {
+	pub(crate) fn gl_tex(&self) -> &gl::Texture2D {
 		return &self.gl_tex;
 	}
 

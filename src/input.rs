@@ -9,7 +9,7 @@ use once_cell::sync::Lazy;
 
 use crate::math::*;
 
-pub(super) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
+pub(crate) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hset![
 		// backspace
 		'\u{7f}',
@@ -99,31 +99,31 @@ impl Ctx {
 		return self.mouse_pos;
 	}
 
-	pub(super) fn key_pressed(&self, key: Key) -> bool {
+	pub(crate) fn key_pressed(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
 	}
 
-	pub(super) fn key_released(&self, key: Key) -> bool {
+	pub(crate) fn key_released(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Released);
 	}
 
-	pub(super) fn key_up(&self, key: Key) -> bool {
+	pub(crate) fn key_up(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Up) || self.key_states.get(&key).is_none();
 	}
 
-	pub(super) fn mouse_pressed(&self, mouse: Mouse) -> bool {
+	pub(crate) fn mouse_pressed(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
 	}
 
-	pub(super) fn mouse_released(&self, mouse: Mouse) -> bool {
+	pub(crate) fn mouse_released(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
 	}
 
-	pub(super) fn mouse_up(&self, mouse: Mouse) -> bool {
+	pub(crate) fn mouse_up(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Up) || self.mouse_states.get(&mouse).is_none();
 	}
 
-	pub(super) fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub(crate) fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
 		} else {
@@ -131,7 +131,7 @@ impl Ctx {
 		}
 	}
 
-	pub(super) fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub(crate) fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Pressed);
 		} else {
@@ -139,7 +139,7 @@ impl Ctx {
 		}
 	}
 
-	pub(super) fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub(crate) fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Released);
 		} else {
@@ -176,7 +176,7 @@ pub enum Event {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) enum ButtonState {
+pub(crate) enum ButtonState {
 	Up,
 	Pressed,
 	Down,

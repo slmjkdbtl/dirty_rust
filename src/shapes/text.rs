@@ -1,6 +1,7 @@
 // wengwengweng
 
-use super::*;
+use crate::*;
+use math::*;
 
 #[derive(Clone)]
 pub struct FormattedChar {
@@ -99,7 +100,7 @@ impl gfx::Drawable for FormattedText {
 				.skx(italic)
 				.tx(italic * fch.width)
 				.s2(vec2!(self.scale))
-			, &sprite(&fch.tex)
+			, &shapes::sprite(&fch.tex)
 				.offset(vec2!(-1, 1))
 				.quad(fch.quad)
 				.color(self.color)

@@ -69,7 +69,7 @@ pub struct Shader2D<U: Uniform> {
 
 impl<U: Uniform> Shader2D<U> {
 
-	pub(super) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex2D, Uniform2D>) -> Self {
+	pub(crate) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex2D, Uniform2D>) -> Self {
 		return Self {
 			gl_pipeline: Rc::new(gl_pipeline),
 			uniform: PhantomData,
@@ -101,7 +101,7 @@ impl<U: Uniform> Shader2D<U> {
 
 	}
 
-	pub(super) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex2D, Uniform2D> {
+	pub(crate) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex2D, Uniform2D> {
 		return &self.gl_pipeline;
 	}
 
@@ -115,7 +115,7 @@ pub struct Shader3D<U: Uniform> {
 
 impl<U: Uniform> Shader3D<U> {
 
-	pub(super) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex3D, Uniform3D>) -> Self {
+	pub(crate) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex3D, Uniform3D>) -> Self {
 		return Self {
 			gl_pipeline: Rc::new(gl_pipeline),
 			uniform: PhantomData,
@@ -147,7 +147,7 @@ impl<U: Uniform> Shader3D<U> {
 
 	}
 
-	pub(super) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex3D, Uniform3D> {
+	pub(crate) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex3D, Uniform3D> {
 		return &self.gl_pipeline;
 	}
 

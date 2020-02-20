@@ -61,7 +61,7 @@ impl Default for Conf {
 
 #[derive(Default)]
 pub struct Launcher {
-	pub(super) conf: Conf,
+	pub(crate) conf: Conf,
 }
 
 impl Launcher {

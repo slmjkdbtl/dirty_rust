@@ -669,7 +669,7 @@ impl Launcher {
 	}
 }
 
-pub(super) struct FPSCounter {
+pub(crate) struct FPSCounter {
 	frames: usize,
 	timer: Duration,
 	fps: u16,
@@ -703,5 +703,4 @@ impl FPSCounter {
 	}
 
 }
-
 
