@@ -28,7 +28,7 @@ impl Drawable for Cube {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
-				color: rgba!(),
+				color: rgba!(1),
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),
 			},

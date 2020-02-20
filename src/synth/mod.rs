@@ -173,7 +173,7 @@ pub fn build_voice(note: NoteO) -> VoiceBuilder {
 	return Voice::builder(note);
 }
 
-pub fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
+fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
 
 	let host = cpal::default_host();
 

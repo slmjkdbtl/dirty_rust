@@ -16,7 +16,8 @@ use gfx::Drawable;
 use gfx::Vertex2D;
 use gfx::Vertex3D;
 
-export!(raw_2d);
+export!(raw2d);
+export!(raw3d);
 export!(sprite);
 export!(quad);
 export!(texfill);

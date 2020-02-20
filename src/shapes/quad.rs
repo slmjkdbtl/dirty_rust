@@ -46,7 +46,7 @@ impl<'a> Drawable for Quad<'a> {
 		let p1 = vec2!(f32::min(self.p1.x, self.p2.x), f32::min(self.p1.y, self.p2.y));
 		let p2 = vec2!(f32::max(self.p1.x, self.p2.x), f32::max(self.p1.y, self.p2.y));
 
-		ctx.draw(&raw_2d(&[
+		ctx.draw(&raw2d(&[
 			Vertex2D {
 				pos: vec3!(p1.x, p1.y, 0),
 				color: self.color,

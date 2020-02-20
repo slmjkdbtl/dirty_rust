@@ -25,7 +25,7 @@ impl<'a> Raw2D<'a> {
 	}
 }
 
-pub fn raw_2d<'a>(verts: &[Vertex2D], indices: &[u32]) -> Raw2D<'a> {
+pub fn raw2d<'a>(verts: &[Vertex2D], indices: &[u32]) -> Raw2D<'a> {
 	return Raw2D::new(verts, indices);
 }
 

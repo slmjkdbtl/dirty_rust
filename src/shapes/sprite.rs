@@ -76,7 +76,6 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 
 		let offset = self.offset.unwrap_or(vec2!(0));
 
-		// TODO: extremely slow
 		let t = ctx.transform
 			.s2(scale)
 			.t2(offset * -0.5)

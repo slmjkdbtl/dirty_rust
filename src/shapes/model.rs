@@ -35,7 +35,7 @@ impl<'a> Model<'a> {
 		self.time = t;
 		return self;
 	}
-	pub fn draw_wireframe(mut self, b: bool) -> Self {
+	pub fn wireframe(mut self, b: bool) -> Self {
 		if b {
 			self.prim = gl::Primitive::Line;
 		} else {
