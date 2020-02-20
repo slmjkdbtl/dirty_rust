@@ -47,6 +47,7 @@ pub mod math;
 pub mod gl;
 pub mod img;
 pub mod term;
+pub mod codec;
 
 #[cfg(feature = "gkit")]
 pub mod kit;
@@ -62,8 +63,6 @@ pub mod http;
 
 #[cfg(feature = "ase")]
 pub mod ase;
-
-pub mod codec;
 
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;

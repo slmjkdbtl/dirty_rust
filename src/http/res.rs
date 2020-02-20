@@ -1,6 +1,5 @@
 // wengwengweng
 
-use crate::Error;
 use crate::Result;
 
 use super::*;
@@ -19,16 +18,17 @@ impl Response {
 		let mut headers = [httparse::EMPTY_HEADER; 128];
 		let mut res = httparse::Response::new(&mut headers);
 
-		let body_pos = match res.parse(&buf)? {
+		let body_pos = match res
+			.parse(&buf)
+			.map_err(|_| format!("failed to parse response"))? {
 			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => return Err(Error::Net("incomplete request message".into())),
+			httparse::Status::Partial => return Err(format!("incomplete response message")),
 		};
 
 		let code = res.code
-			.ok_or(Error::Net("failed to parse response status code".into()))?;
+			.ok_or(format!("failed to parse response status code"))?;
 
 		let status = Status::from_code(code)?;
-
 		let body = &buf[body_pos..];
 
 		return Ok(Self {
@@ -108,7 +108,7 @@ impl ResponseExt for Response {
 	fn file(path: impl AsRef<Path>) -> Result<Self> {
 
 		let mut headers = HeaderMap::new();
-		let content = std::fs::read(&path)?;
+		let content = crate::fs::read(&path)?;
 		let body = Body::from_bytes(&content);
 
 		headers.set(Header::ContentLength, &body.len().to_string());
