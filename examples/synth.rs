@@ -5,7 +5,6 @@
 use std::collections::HashMap;
 
 use dirty::*;
-use app::*;
 use synth::*;
 use input::Key;
 
@@ -41,9 +40,9 @@ struct Game {
 	pressed: HashMap<Key, NoteO>,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(_: &mut app::Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 
 		return Ok(Self {
 			octave: -1,
@@ -58,7 +57,7 @@ impl app::State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -118,14 +117,14 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		if let Some(buf) = synth::buf() {
 
 			let mut last = None;
 			let height = 120.0;
 			let len = buf.len() as f32;
-			let dis = ctx.gwidth() as f32 / len;
+			let dis = ctx.width() as f32 / len;
 
 			for (i, buf) in buf.iter().enumerate() {
 
@@ -153,6 +152,6 @@ impl app::State for Game {
 }
 
 fn main() -> Result<()> {
-	return app::run::<Game>();
+	return run::<Game>();
 }
 
