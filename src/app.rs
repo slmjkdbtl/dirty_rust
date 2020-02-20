@@ -25,10 +25,6 @@ use input::Mouse;
 use input::GamepadID;
 use input::GamepadButton;
 
-pub(crate) const DRAW_COUNT: usize = 65536;
-pub(crate) const NEAR: f32 = -4096.0;
-pub(crate) const FAR: f32 = 4096.0;
-
 pub struct Ctx {
 
 	pub(crate) conf: Conf,
@@ -163,7 +159,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(0.0, 0.0, 0.0, 0.0);
 
-	let cam = gfx::OrthoCam::new(conf.width as f32, conf.height as f32, NEAR, FAR);
+	let cam = gfx::OrthoCam::new(conf.width as f32, conf.height as f32, gfx::DEFAULT_NEAR, gfx::DEFAULT_FAR);
 
 	use res::shader::*;
 	use res::font::*;
@@ -217,8 +213,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		windowed_ctx: windowed_ctx,
 
-		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
-		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
+		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
+		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 

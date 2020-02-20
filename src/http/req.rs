@@ -2,7 +2,6 @@
 
 use url::Url;
 
-use crate::Error;
 use crate::Result;
 
 use super::*;
@@ -26,20 +25,22 @@ impl Request {
 		let mut headers = [httparse::EMPTY_HEADER; 128];
 		let mut req = httparse::Request::new(&mut headers);
 
-		let body_pos = match req.parse(&buf)? {
+		let body_pos = match req
+			.parse(&buf)
+			.map_err(|_| format!("failed to parse request"))? {
 			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => return Err(Error::Net("incomplete request message".into())),
+			httparse::Status::Partial => return Err(format!("incomplete request message")),
 		};
 
 		let method = req.method
-			.ok_or(Error::Net("failed to parse request method".into()))?
+			.ok_or(format!("failed to parse request method"))?
 			.parse::<Method>()?;
 
 		let path = req.path
-			.ok_or(Error::Net("failed to parse request path".into()))?;
+			.ok_or(format!("failed to parse request path"))?;
 
 		let version = req.version
-			.ok_or(Error::Net("failed to parse request version".into()))?;
+			.ok_or(format!("failed to parse request version"))?;
 
 		let body = &buf[body_pos..];
 
@@ -58,12 +59,15 @@ impl Request {
 
 	pub fn from_url(method: Method, url: &str) -> Result<Self> {
 
-		let url = Url::parse(url)?;
-		let scheme = url.scheme().parse::<Scheme>()?;
+		let url = Url::parse(url).map_err(|_| format!("failed to parse url"))?;
+		let scheme = url
+			.scheme()
+			.parse::<Scheme>()
+			.map_err(|_| format!("failed to parse url scheme"))?;
 
 		let host = url
 			.host_str()
-			.ok_or(Error::Net("failed to get host addr from url".into()))?;
+			.ok_or(format!("failed to parse url host addr"))?;
 
 		let path = url.path();
 		let mut headers = HeaderMap::new();

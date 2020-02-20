@@ -33,7 +33,7 @@ impl FromStr for Scheme {
 		return match s {
 			"http" => Ok(Scheme::HTTP),
 			"https" => Ok(Scheme::HTTPS),
-			_ => Err(Error::Net(format!("failed to parse scheme from {}", s))),
+			_ => Err(format!("failed to parse scheme from {}", s)),
 		};
 	}
 
@@ -42,7 +42,14 @@ impl FromStr for Scheme {
 #[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum Method {
 	GET,
+	HEAD,
 	POST,
+	PUT,
+	DELETE,
+	CONNECT,
+	OPTIONS,
+	TRACE,
+	PATCH,
 }
 
 impl ToString for Method {
@@ -50,8 +57,15 @@ impl ToString for Method {
 		use Method::*;
 		return match self {
 			GET => "GET",
+			HEAD => "HEAD",
 			POST => "POST",
-		}.to_owned();
+			PUT => "PUT",
+			DELETE => "DELETE",
+			CONNECT => "CONNECT",
+			OPTIONS => "OPTIONS",
+			TRACE => "TRACE",
+			PATCH => "PATCH",
+		}.to_string();
 	}
 }
 
@@ -63,7 +77,7 @@ impl FromStr for Method {
 		return match s {
 			"GET" => Ok(Method::GET),
 			"POST" => Ok(Method::POST),
-			_ => Err(Error::Net(format!("failed to parse http method from {}", s))),
+			_ => Err(format!("failed to parse http method from {}", s)),
 		};
 	}
 
@@ -79,10 +93,10 @@ pub enum Version {
 impl ToString for Version {
 	fn to_string(&self) -> String {
 		return match self {
-			Version::V10 => String::from("HTTP/1.0"),
-			Version::V11 => String::from("HTTP/1.1"),
-			Version::V20 => String::from("HTTP/2.0"),
-		};
+			Version::V10 => "HTTP/1.0",
+			Version::V11 => "HTTP/1.1",
+			Version::V20 => "HTTP/2.0",
+		}.to_string();
 	}
 }
 
@@ -106,7 +120,7 @@ impl FromStr for Version {
 			"HTTP/1.0" => Ok(Version::V10),
 			"HTTP/1.1" => Ok(Version::V11),
 			"HTTP/2.0" => Ok(Version::V20),
-			_ => Err(Error::Net(format!("failed to parse http version from {}", s))),
+			_ => Err(format!("failed to parse http version from {}", s)),
 		};
 	}
 
@@ -124,7 +138,7 @@ impl HeaderMap {
 		};
 	}
 	pub fn set(&mut self, key: Header, val: &str) {
-		self.map.insert(key, val.to_owned());
+		self.map.insert(key, val.to_string());
 	}
 }
 
@@ -271,7 +285,7 @@ macro_rules! gen_status {
 					$(
 						$code => Ok(Status::$name),
 					)*
-					_ => Err(Error::Net(format!("failed to get status from code {}", code))),
+					_ => Err(format!("failed to get status from code {}", code)),
 				};
 			}
 

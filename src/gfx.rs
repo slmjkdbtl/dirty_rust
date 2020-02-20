@@ -3,8 +3,7 @@
 //! Graphics
 
 use crate::*;
-use crate::math::*;
-use super::*;
+use math::*;
 
 pub use gl::UniformValues;
 pub use gl::IntoUniformValue;
@@ -21,6 +20,10 @@ pub use camera::*;
 pub use model::*;
 pub use desc::*;
 pub use skybox::*;
+
+pub(crate) const DRAW_COUNT: usize = 65536;
+pub(crate) const DEFAULT_NEAR: f32 = -4096.0;
+pub(crate) const DEFAULT_FAR: f32 = 4096.0;
 
 pub trait GfxCtx {
 	fn device(&self) -> &gl::Device;
@@ -113,8 +116,8 @@ impl Ctx {
 		self.apply_cam(&OrthoCam::new(
 			cw as f32,
 			ch as f32,
-			app::NEAR,
-			app::FAR,
+			DEFAULT_NEAR,
+			DEFAULT_FAR,
 		));
 
 		self.transform = mat4!();
@@ -346,8 +349,8 @@ impl Ctx {
 		self.apply_cam(&OrthoCam::new(
 			self.width() as f32,
 			self.height() as f32,
-			app::NEAR,
-			app::FAR,
+			DEFAULT_NEAR,
+			DEFAULT_FAR,
 		));
 
 	}
