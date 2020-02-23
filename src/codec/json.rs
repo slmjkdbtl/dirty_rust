@@ -2,6 +2,7 @@
 
 use serde::ser;
 use serde::de;
+pub use serde_json::json;
 
 use crate::Result;
 

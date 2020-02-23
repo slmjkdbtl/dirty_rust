@@ -1,9 +1,8 @@
 // wengwengweng
 
-use rayon::prelude::*;
 use dirty::*;
 use math::*;
-use input::Key;
+use rayon::prelude::*;
 
 struct Canvas {
 	buf: Vec<Color>,
@@ -143,93 +142,47 @@ impl Canvas {
 
 }
 
-struct Game {
-	canvas: Canvas,
-	tex: gfx::Texture,
-}
-
-impl State for Game {
-
-	fn init(ctx: &mut Ctx) -> Result<Self> {
-
-		let w = 64;
-		let h = 48;
-
-		return Ok(Self {
-			canvas: Canvas::new(w, h),
-			tex: gfx::Texture::new(ctx, w as i32, h as i32)?,
-		});
-
-	}
-
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
-
-		use input::Event::*;
-
-		match e {
-
-			KeyPress(k) => {
-				match *k {
-					Key::Esc => ctx.quit(),
-					_ => {},
-				}
-			},
-
-			_ => {},
-
-		}
-
-		return Ok(());
-
-	}
-
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
-
-		ctx.set_title(&format!("{}", ctx.fps()));
-		self.canvas.clear();
-
-		let w = self.canvas.width() as f32;
-		let h = self.canvas.height() as f32;
-		let t = ctx.time();
-
-		self.canvas.shade(|x, y, c| {
-
-			let w = math::wave(t, 0.0, 1.0);
-			let ux = x as f32 / w;
-			let uy = y as f32 / h;
-
-			return rgba!(x as f32 / w, y as f32 / h, w, 1);
-
-		});
-
-		let m = ctx.mouse_pos() * vec2!(0.5, -0.5) + vec2!(160, 120);
-
-// 		self.canvas.rect(vec2!(100), m, rgba!(1));
-// 		self.canvas.line(vec2!(100), m, rgba!(1));
-
-		self.tex.data(&self.canvas.as_u8());
-
-		return Ok(());
-
-	}
-
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
-
-		ctx.draw(&shapes::sprite(&self.tex).width(640.0).height(480.0))?;
-
-		return Ok(());
-
-	}
-
-}
-
 fn main() {
 
-	if let Err(err) = launcher()
-		.fps_cap(None)
-		.vsync(false)
-		.run::<Game>() {
-		println!("{}", err);
+	let mut clock = std::time::Instant::now();
+	let mut canvas = Canvas::new(64, 48);
+
+	loop {
+
+		let w = canvas.width() as f32;
+		let h = canvas.height() as f32;
+		let t = clock.elapsed().as_secs_f32();
+
+		canvas.shade(|x, y, c| {
+
+			let uv = vec2!(x, y) / vec2!(w, h);
+			let angle = f32::atan2(uv.y, uv.x) * 48.0;
+			let dis = Vec2::dis(uv, vec2!(0.5));
+
+			let time = t * 4.0;
+
+			let c1 = f32::sin(dis * 50.0 + time + angle);
+			let c2 = f32::sin(dis * 50.0 + time + angle + (1.0 / 3.0) * 3.14 * 2.0);
+			let c3 = f32::sin(dis * 50.0 + time + angle + (2.0 / 3.0) * 3.14 * 2.0);
+
+			return rgba!(c1, c2, c3, 1);
+
+// 			let ux = x as f32 / w;
+// 			let uy = y as f32 / h;
+// 			let dis = Vec2::dis(vec2!(ux, uy), vec2!(0.5)) + t * 0.1;
+// 			let m = dis % 0.1;
+
+// 			if m >= 0.05 {
+// 				return rgba!(0, 0, 0, 1);
+// 			} else {
+// 				return rgba!(1, 1, 1, 1);
+// 			}
+
+		});
+
+		term::display(canvas.buf(), canvas.width(), canvas.height());
+		std::thread::sleep(std::time::Duration::from_millis(16));
+
 	}
 
 }

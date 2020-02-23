@@ -3,7 +3,6 @@
 use url::Url;
 
 use crate::Result;
-
 use super::*;
 
 #[derive(Clone)]
@@ -14,50 +13,14 @@ pub struct Request {
 	host: String,
 	path: String,
 	port: u16,
-	headers: HeaderMap,
+	auth: Option<Auth>,
+	content_type: Option<ContentType>,
 	body: Body,
 }
 
 impl Request {
 
-	pub fn parse(buf: &[u8]) -> Result<Self> {
-
-		let mut headers = [httparse::EMPTY_HEADER; 128];
-		let mut req = httparse::Request::new(&mut headers);
-
-		let body_pos = match req
-			.parse(&buf)
-			.map_err(|_| format!("failed to parse request"))? {
-			httparse::Status::Complete(len) => len,
-			httparse::Status::Partial => return Err(format!("incomplete request message")),
-		};
-
-		let method = req.method
-			.ok_or(format!("failed to parse request method"))?
-			.parse::<Method>()?;
-
-		let path = req.path
-			.ok_or(format!("failed to parse request path"))?;
-
-		let version = req.version
-			.ok_or(format!("failed to parse request version"))?;
-
-		let body = &buf[body_pos..];
-
-		return Ok(Self {
-			method: method,
-			version: version.into(),
-			scheme: Scheme::HTTP,
-			host: String::new(),
-			path: path.to_owned(),
-			port: 80,
-			headers: HeaderMap::new(),
-			body: Body::from_bytes(body),
-		});
-
-	}
-
-	pub fn from_url(method: Method, url: &str) -> Result<Self> {
+	pub(super) fn new(method: Method, url: &str) -> Result<Self> {
 
 		let url = Url::parse(url).map_err(|_| format!("failed to parse url"))?;
 		let scheme = url
@@ -70,9 +33,6 @@ impl Request {
 			.ok_or(format!("failed to parse url host addr"))?;
 
 		let path = url.path();
-		let mut headers = HeaderMap::new();
-
-		headers.set(Header::Host, host);
 
 		return Ok(Self {
 			method: method,
@@ -81,83 +41,82 @@ impl Request {
 			host: host.to_owned(),
 			path: path.to_owned(),
 			port: scheme.port(),
-			headers: headers,
+			auth: None,
+			content_type: None,
 			body: Body::empty(),
 		});
 
 	}
 
-	pub fn set_scheme(&mut self, s: Scheme) {
-		self.scheme = s;
+	pub fn send_bytes(mut self, data: &[u8]) -> Result<Response> {
+		self.body = Body::from_bytes(data);
+		return client::send(self);
 	}
 
-	pub fn set_method(&mut self, m: Method) {
-		self.method = m;
+	pub fn send_text(mut self, data: &str) -> Result<Response> {
+		self.body = Body::from_string(data);
+		if self.content_type.is_none() {
+			self.content_type = Some(ContentType::Text);
+		}
+		return client::send(self);
 	}
 
-	pub fn set_host(&mut self, h: &str) {
-		self.host = h.to_owned();
+	#[cfg(feature = "json")]
+	pub fn send_json<D: serde::ser::Serialize>(mut self, data: D) -> Result<Response> {
+		self.body = Body::from_json(data)?;
+		if self.content_type.is_none() {
+			self.content_type = Some(ContentType::JSON);
+		}
+		return client::send(self);
 	}
 
-	pub fn set_path(&mut self, p: &str) {
-		self.path = p.to_owned();
+	pub fn content_type(mut self, t: ContentType) -> Self {
+		self.content_type = Some(t);
+		return self;
 	}
 
-	pub fn set_port(&mut self, p: u16) {
-		self.port = p;
+	pub fn auth(mut self, auth: Auth) -> Self {
+		self.auth = Some(auth);
+		return self;
 	}
 
-	pub fn set_header(&mut self, key: Header, value: &str) {
-		self.headers.set(key, value);
+	pub fn send(self) -> Result<Response> {
+		return client::send(self);
 	}
 
-	pub fn set_body(&mut self, data: Body) {
-		self.body = data;
-	}
-
-	pub fn scheme(&self) -> Scheme {
-		return self.scheme;
-	}
-
-	pub fn version(&self) -> Version {
-		return self.version;
-	}
-
-	pub fn method(&self) -> Method {
-		return self.method;
-	}
-
-	pub fn host(&self) -> &str {
+	pub(super) fn host(&self) -> &str {
 		return &self.host;
 	}
 
-	pub fn path(&self) -> &str {
-		return &self.path;
-	}
-
-	pub fn port(&self) -> u16 {
+	pub(super) fn port(&self) -> u16 {
 		return self.port;
 	}
 
-	pub fn headers(&self) -> &HeaderMap {
-		return &self.headers;
+	pub(super) fn scheme(&self) -> Scheme {
+		return self.scheme;
 	}
 
-	pub fn body(&self) -> &Body {
-		return &self.body;
-	}
+	pub(super) fn into_msg(self) -> Vec<u8> {
 
-	pub fn message(&self) -> Vec<u8> {
+		let mut msg = format!("{} {} {}\r\n", self.method.as_str(), self.path, self.version.as_str());
 
-		let mut m = Vec::new();
+		msg.push_str(&format!("Host: {}\r\n", self.host));
 
-		m.extend_from_slice(&format!("{} {} {}", self.method().to_string(), self.path(), self.version().to_string()).as_bytes());
-		m.extend_from_slice("\r\n".as_bytes());
-		m.extend_from_slice(&self.headers.to_string().as_bytes());
-		m.extend_from_slice("\r\n".as_bytes());
-		m.extend_from_slice(&self.body.as_bytes());
+		if let Some(ctype) = self.content_type {
+			msg.push_str(&format!("Content-Type: {}\r\n", ctype.as_str()));
+		}
 
-		return m;
+		if let Some(auth) = self.auth {
+			msg.push_str(&format!("Authorization: {}\r\n", auth.to_string()));
+		}
+
+		msg.push_str("\r\n");
+
+		let mut payload = msg.into_bytes();
+
+		payload.append(&mut self.body.into_bytes());
+
+		return payload;
 
 	}
 

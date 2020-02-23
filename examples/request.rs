@@ -2,14 +2,16 @@
 
 use dirty::http;
 
-fn main() {
+fn main() -> Result<(), String> {
 
 	let url = "http://www.wordsound.com";
-	let url = "https://www.increpare.com";
+// 	let url = "https://www.increpare.com";
 
-	match http::get(url) {
-		Ok(res) => println!("{}", res.body().as_text()),
-		Err(err) => println!("{}", err),
-	};
+	let res = http::get(url)?
+		.send()?;
+
+	println!("{}", res.into_body().into_string());
+
+	return Ok(());
 
 }

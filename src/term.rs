@@ -88,44 +88,42 @@ pub fn style(s: &str) -> StyledOutput {
 	};
 }
 
-pub fn clear_line() -> String {
-	return format!("\r\x1b[2K");
+pub fn display(pixels: &[Color], width: u32, height: u32) {
+
+	let mut x = 0;
+	let mut y = 0;
+	let mut out = String::with_capacity(pixels.len());
+
+	loop {
+
+		let i1 = y * width as usize + x;
+		let i2 = (y + 1) * width as usize + x;
+
+		if let Some(c1) = pixels.get(i1) {
+			if let Some(c2) = pixels.get(i2) {
+				// draw upper block
+				out.push_str(&format!("{}", style("\u{2580}").truec(*c1).bg_truec(*c2)))
+			}
+		}
+
+		x += 1;
+
+		if x >= width as usize {
+			out.push('\n');
+			x = 0;
+			y += 2;
+		}
+
+		if y >= height as usize {
+			break;
+		}
+
+	}
+
+	print!("\x1b[?25l{}\x1b[?25h", out);
+
+	// move cursor up
+	print!("\x1b[{}A", height / 2);
+
 }
-
-pub fn clear_screen() -> String {
-	return format!("\r\x1b[2J\r\x1b[H");
-}
-
-pub fn move_cursor_down() -> String {
-	return format!("\x1b[1B");
-}
-
-pub fn move_cursor_up() -> String {
-	return format!("\x1b[1A");
-}
-
-pub fn move_cursor_to(x: usize, y: usize) -> String {
-	return format!("\x1B[{};{}H", y + 1, x + 1);
-}
-
-pub fn upper_block() -> StyledOutput {
-	return style("\u{2580}");
-}
-
-pub fn lower_block() -> StyledOutput {
-	return style("\u{2584}");
-}
-
-// TODO
-pub fn display(pixels: &[Color], width: i32, height: i32) {
-	// ...
-}
-
-// pub fn show_cursor() -> String {
-// 	return format!("\u{001B}[?25h");
-// }
-
-// pub fn hide_cursor() -> String {
-// 	return format!("\u{001B}[?25l");
-// }
 
