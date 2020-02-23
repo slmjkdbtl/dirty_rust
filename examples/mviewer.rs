@@ -261,7 +261,7 @@ impl State for Viewer {
 				ctx.draw_3d_with(&self.shader, &(), |ctx| {
 					ctx.draw(
 						&shapes::model(&model)
-							.draw_wireframe(self.draw_wireframe)
+							.wireframe(self.draw_wireframe)
 							.time(t)
 					)?;
 					return Ok(());

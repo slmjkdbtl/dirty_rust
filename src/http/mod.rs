@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! HTTP Requests & Servers
+//! Minimal HTTP Request
 
 export!(res);
 export!(req);

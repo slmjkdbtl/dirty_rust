@@ -42,30 +42,20 @@ impl FromStr for Scheme {
 #[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum Method {
 	GET,
-	HEAD,
 	POST,
 	PUT,
 	DELETE,
-	CONNECT,
-	OPTIONS,
-	TRACE,
-	PATCH,
 }
 
-impl ToString for Method {
-	fn to_string(&self) -> String {
+impl Method {
+	pub fn as_str(&self) -> &'static str {
 		use Method::*;
 		return match self {
 			GET => "GET",
-			HEAD => "HEAD",
 			POST => "POST",
 			PUT => "PUT",
 			DELETE => "DELETE",
-			CONNECT => "CONNECT",
-			OPTIONS => "OPTIONS",
-			TRACE => "TRACE",
-			PATCH => "PATCH",
-		}.to_string();
+		};
 	}
 }
 
@@ -90,13 +80,13 @@ pub enum Version {
 	V20,
 }
 
-impl ToString for Version {
-	fn to_string(&self) -> String {
+impl Version {
+	pub fn as_str(&self) -> &'static str {
 		return match self {
 			Version::V10 => "HTTP/1.0",
 			Version::V11 => "HTTP/1.1",
 			Version::V20 => "HTTP/2.0",
-		}.to_string();
+		};
 	}
 }
 
@@ -124,69 +114,6 @@ impl FromStr for Version {
 		};
 	}
 
-}
-
-#[derive(Clone, Debug)]
-pub struct HeaderMap {
-	map: HashMap<Header, String>,
-}
-
-impl HeaderMap {
-	pub fn new() -> Self {
-		return Self {
-			map: HashMap::new(),
-		};
-	}
-	pub fn set(&mut self, key: Header, val: &str) {
-		self.map.insert(key, val.to_string());
-	}
-}
-
-impl ToString for HeaderMap {
-	fn to_string(&self) -> String {
-		let mut m = String::new();
-		for (key, val) in &self.map {
-			m.push_str(&format!("{}: {}", key.as_str(), val));
-			m.push_str("\r\n");
-		}
-		return m;
-	}
-}
-
-macro_rules! gen_headers {
-
-	($($name:ident => $msg:expr),*$(,)?) => {
-
-		#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
-		pub enum Header {
-			$(
-				$name,
-			)*
-		}
-
-		impl Header {
-
-			pub fn as_str(&self) -> &'static str {
-				return match self {
-					$(
-						Header::$name => $msg,
-					)*
-				};
-			}
-
-		}
-
-	}
-
-}
-
-gen_headers! {
-	Accept => "Accept",
-	ContentType => "Content-Type",
-	ContentLength => "Content-Length",
-	Connection => "Connection",
-	Host => "Host",
-	Location => "Location",
 }
 
 macro_rules! gen_content_type {
@@ -267,6 +194,32 @@ gen_content_type! {
 	MOV("mov") => "video/quicktime",
 }
 
+#[derive(Clone, Debug)]
+pub enum Auth {
+	Basic(String),
+	Bearer(String),
+	Digest(String),
+}
+
+impl ToString for Auth {
+	fn to_string(&self) -> String {
+		return match self {
+			Auth::Basic(s) => format!("Basic {}", s),
+			Auth::Bearer(s) => format!("Bearer {}", s),
+			Auth::Digest(s) => format!("Digest {}", s),
+		};
+	}
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum StatusRange {
+	Info,
+	Success,
+	Redirect,
+	ClientErr,
+	ServerErr,
+}
+
 macro_rules! gen_status {
 
 	($($code:expr, $name:ident => $reason:expr),*$(,)?) => {
@@ -303,6 +256,26 @@ macro_rules! gen_status {
 						Status::$name => $code,
 					)*
 				};
+			}
+
+			pub fn success(&self) -> bool {
+				let c = self.code();
+				return c >= 200 && c <= 299;
+			}
+
+			pub fn redirect(&self) -> bool {
+				let c = self.code();
+				return c >= 300 && c <= 399;
+			}
+
+			pub fn client_err(&self) -> bool {
+				let c = self.code();
+				return c >= 400 && c <= 499;
+			}
+
+			pub fn server_err(&self) -> bool {
+				let c = self.code();
+				return c >= 500 && c <= 599;
 			}
 
 		}

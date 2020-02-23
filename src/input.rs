@@ -6,8 +6,12 @@ use std::path::PathBuf;
 use std::collections::HashSet;
 
 use once_cell::sync::Lazy;
+pub use gilrs::GamepadId as GamepadID;
 
-use crate::math::*;
+use crate::*;
+use math::*;
+
+pub type TouchID = u64;
 
 pub(crate) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hset![
@@ -40,13 +44,6 @@ pub(crate) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 		'\u{f70f}',
 	];
 });
-
-pub use gilrs::GamepadId as GamepadID;
-
-pub type TouchID = u64;
-
-use super::*;
-use crate::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct KeyMod {

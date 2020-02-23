@@ -1,9 +1,8 @@
 // wengwengweng
 
-use crate::Result;
-
 #[cfg(feature = "json")]
 use crate::codec::json;
+use crate::Result;
 
 #[derive(Clone, Debug)]
 pub struct Body {
@@ -24,26 +23,31 @@ impl Body {
 		};
 	}
 
-	pub fn from_text(text: &str) -> Self {
-		return Self::from_bytes(text.as_bytes());
+	pub fn from_string(data: &str) -> Self {
+		return Self {
+			data: data.to_owned().into_bytes(),
+		};
 	}
 
 	#[cfg(feature = "json")]
-	pub fn from_json(json: &str) -> Result<Self> {
-		return Ok(Self::from_text(&json::encode(json)?));
+	pub fn from_json<D: serde::ser::Serialize>(data: D) -> Result<Self> {
+		return Ok(Self {
+			data: json::encode(data)?.into_bytes(),
+		});
 	}
 
-	pub fn as_bytes(&self) -> &[u8] {
-		return &self.data;
+	pub fn into_bytes(self) -> Vec<u8> {
+		return self.data;
 	}
 
-	pub fn as_text(&self) -> String {
-		return String::from_utf8_lossy(&self.data).to_owned().to_string();
+	pub fn into_string(self) -> String {
+		return String::from_utf8_lossy(&self.data)
+			.to_string();
 	}
 
 	#[cfg(feature = "json")]
-	pub fn as_json<D: for<'a> serde::de::Deserialize<'a>>(&self) -> Result<D> {
-		return Ok(json::decode(&self.as_text())?);
+	pub fn into_json<D: for<'a> serde::de::Deserialize<'a>>(self) -> Result<D> {
+		return Ok(json::decode(&self.into_string())?);
 	}
 
 	pub fn len(&self) -> usize {
