@@ -142,21 +142,73 @@ impl Canvas {
 
 }
 
+use std::time::Duration;
+use std::time::Instant;
+
+struct TimeManager {
+	expected_dt: Duration,
+	dt: Duration,
+	start_time: Instant,
+	last_frame_time: Instant,
+}
+
+impl TimeManager {
+
+	pub fn new(fps: usize) -> Self {
+
+		let expected_dt = 1.0 / fps as f32;
+
+		return Self {
+			expected_dt: Duration::from_millis((expected_dt * 1000.0) as u64),
+			dt: Duration::from_millis(0),
+			start_time: Instant::now(),
+			last_frame_time: Instant::now(),
+		};
+
+	}
+
+	pub fn tick(&mut self) {
+
+		let actual_dt = self.last_frame_time.elapsed();
+
+		if actual_dt < self.expected_dt {
+			std::thread::sleep(self.expected_dt - actual_dt);
+		}
+
+		self.dt = self.last_frame_time.elapsed();
+		self.last_frame_time = Instant::now();
+
+	}
+
+	pub fn fps(&self) -> usize {
+		return (1.0 / self.dt.as_secs_f32()) as usize;
+	}
+
+	pub fn dt(&self) -> Duration {
+		return self.dt;
+	}
+
+	pub fn time(&self) -> Duration {
+		return self.start_time.elapsed();
+	}
+
+}
+
 fn main() {
 
-	let mut clock = std::time::Instant::now();
 	let mut canvas = Canvas::new(64, 48);
+	let mut tm = TimeManager::new(60);
 
 	loop {
 
 		let w = canvas.width() as f32;
 		let h = canvas.height() as f32;
-		let t = clock.elapsed().as_secs_f32();
+		let t = tm.time().as_secs_f32();
 
 		canvas.shade(|x, y, c| {
 
 			let uv = vec2!(x, y) / vec2!(w, h);
-			let angle = f32::atan2(uv.y, uv.x) * 48.0;
+			let angle = f32::atan2(uv.y, uv.x);
 			let dis = Vec2::dis(uv, vec2!(0.5));
 
 			let time = t * 4.0;
@@ -167,21 +219,10 @@ fn main() {
 
 			return rgba!(c1, c2, c3, 1);
 
-// 			let ux = x as f32 / w;
-// 			let uy = y as f32 / h;
-// 			let dis = Vec2::dis(vec2!(ux, uy), vec2!(0.5)) + t * 0.1;
-// 			let m = dis % 0.1;
-
-// 			if m >= 0.05 {
-// 				return rgba!(0, 0, 0, 1);
-// 			} else {
-// 				return rgba!(1, 1, 1, 1);
-// 			}
-
 		});
 
 		term::display(canvas.buf(), canvas.width(), canvas.height());
-		std::thread::sleep(std::time::Duration::from_millis(16));
+		tm.tick();
 
 	}
 

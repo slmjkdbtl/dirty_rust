@@ -120,10 +120,7 @@ pub fn display(pixels: &[Color], width: u32, height: u32) {
 
 	}
 
-	print!("\x1b[?25l{}\x1b[?25h", out);
-
-	// move cursor up
-	print!("\x1b[{}A", height / 2);
+	print!("{}\x1b[{}A", out, height / 2);
 
 }
 

@@ -6,6 +6,13 @@ use crate::Result;
 pub trait BatchedVertex = VertexLayout + Clone;
 pub trait BatchedUniform = UniformLayout + Clone + PartialEq;
 
+#[derive(Clone, PartialEq)]
+struct RenderState<V: BatchedVertex, U: BatchedUniform> {
+	pipeline: Pipeline<V, U>,
+	prim: Primitive,
+	uniform: U,
+}
+
 // TODO: trait alias plz
 pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 
@@ -15,9 +22,7 @@ pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 	vao: VertexArray,
 	vqueue: Vec<f32>,
 	iqueue: Vec<u32>,
-	cur_prim: Option<Primitive>,
-	cur_uniform: Option<U>,
-	cur_pipeline: Option<Pipeline<V, U>>,
+	cur_state: Option<RenderState<V, U>>,
 	draw_count: usize,
 
 }
@@ -40,9 +45,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			vao: vao,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
-			cur_prim: None,
-			cur_uniform: None,
-			cur_pipeline: None,
+			cur_state: None,
 			draw_count: 0,
 		});
 
@@ -57,42 +60,35 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 		uniform: &U,
 	) -> Result<()> {
 
-		// TODO: don't use recursion
-		if let Some(cur_prim) = self.cur_prim {
-			if cur_prim != prim {
-				self.flush();
-				return self.push(prim, verts, indices, pipeline, uniform);
+		let mut reset = false;
+
+		if let Some(state) = &self.cur_state {
+			if
+				&state.pipeline != pipeline
+				|| &state.uniform != uniform
+				|| state.prim != prim
+			{
+				reset = true;
 			}
 		} else {
-			self.cur_prim = Some(prim);
+			reset = true;
 		}
 
-		if let Some(cur_pipeline) = &self.cur_pipeline {
-			if cur_pipeline != pipeline {
-				self.flush();
-				return self.push(prim, verts, indices, pipeline, uniform);
-			}
-		} else {
-			self.cur_pipeline = Some(pipeline.clone());
-		}
-
-		if let Some(cur_uniform) = &self.cur_uniform {
-			if cur_uniform != uniform {
-				self.flush();
-				return self.push(prim, verts, indices, pipeline, uniform);
-			}
-		} else {
-			self.cur_uniform = Some(uniform.clone());
+		if reset {
+			self.flush();
+			self.cur_state = Some(RenderState {
+				pipeline: pipeline.clone(),
+				uniform: uniform.clone(),
+				prim: prim,
+			});
 		}
 
 		if self.vqueue.len() + verts.len() >= self.vqueue.capacity() {
 			self.flush();
-			return self.push(prim, verts, indices, pipeline, uniform);
 		}
 
 		if self.iqueue.len() + indices.len() >= self.iqueue.capacity() {
 			self.flush();
-			return self.push(prim, verts, indices, pipeline, uniform);
 		}
 
 		let offset = (self.vqueue.len() / V::STRIDE) as u32;
@@ -130,39 +126,27 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			return;
 		}
 
-		let pipeline = match &self.cur_pipeline {
-			Some(p) => p,
-			None => return,
-		};
-
-		let uniform = match &self.cur_uniform {
-			Some(p) => p,
-			None => return,
-		};
-
-		let prim = match self.cur_prim {
-			Some(p) => p,
+		let state = match &self.cur_state {
+			Some(s) => s,
 			None => return,
 		};
 
 		self.vbuf.data(0, &self.vqueue);
 		self.ibuf.data(0, &self.iqueue);
 
-		pipeline.draw(
+		state.pipeline.draw(
 			#[cfg(feature="gl3")]
 			Some(&self.vao),
 			#[cfg(not(feature="gl3"))]
 			Some(&self.vbuf),
 			#[cfg(not(feature="gl3"))]
 			Some(&self.ibuf),
-			uniform,
+			&state.uniform,
 			self.iqueue.len() as u32,
-			prim,
+			state.prim,
 		);
 
-		self.cur_pipeline = None;
-		self.cur_uniform = None;
-		self.cur_prim = None;
+		self.cur_state = None;
 		self.vqueue.clear();
 		self.iqueue.clear();
 		self.draw_count += 1;
@@ -175,9 +159,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	pub fn clear(&mut self) {
 
-		self.cur_pipeline = None;
-		self.cur_uniform = None;
-		self.cur_prim = None;
+		self.cur_state = None;
 		self.vqueue.clear();
 		self.iqueue.clear();
 		self.draw_count = 0;

@@ -143,7 +143,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 		ibuf: Option<&IndexBuffer>,
 		uniform: &U,
 		count: u32,
-		mode: Primitive,
+		prim: Primitive,
 	) {
 
 		unsafe {
@@ -185,7 +185,12 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				self.ctx.bind_texture(tex.r#type().into(), Some(tex.id()));
 			}
 
-			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
+			match prim {
+				Primitive::Line(w) => self.ctx.line_width(w),
+				_ => {},
+			}
+
+			self.ctx.draw_elements(prim.into(), count as i32, glow::UNSIGNED_INT, 0);
 
 			self.ctx.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
 			self.ctx.bind_buffer(glow::ARRAY_BUFFER, None);

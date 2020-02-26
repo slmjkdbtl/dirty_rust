@@ -152,8 +152,8 @@ impl State for Game {
 
 	fn init(ctx: &mut Ctx) -> Result<Self> {
 
-		let w = 64;
-		let h = 48;
+		let w = 320;
+		let h = 240;
 
 		return Ok(Self {
 			canvas: Canvas::new(w, h),
@@ -194,11 +194,17 @@ impl State for Game {
 
 		self.canvas.shade(|x, y, c| {
 
-			let w = math::wave(t, 0.0, 1.0);
-			let ux = x as f32 / w;
-			let uy = y as f32 / h;
+			let uv = vec2!(x, y) / vec2!(w, h);
+			let angle = f32::atan2(uv.y, uv.x);
+			let dis = Vec2::dis(uv, vec2!(0.5));
 
-			return rgba!(x as f32 / w, y as f32 / h, w, 1);
+			let time = t * 4.0;
+
+			let c1 = f32::sin(dis * 50.0 + time + angle);
+			let c2 = f32::sin(dis * 50.0 + time + angle + (1.0 / 3.0) * 3.14 * 2.0);
+			let c3 = f32::sin(dis * 50.0 + time + angle + (2.0 / 3.0) * 3.14 * 2.0);
+
+			return rgba!(c1, c2, c3, 1);
 
 		});
 

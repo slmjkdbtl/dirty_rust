@@ -81,7 +81,7 @@ impl State for Game {
 		ctx.draw(
 			&rect(vec2!(-72, -54), vec2!(72, 54))
 				.fill(rgba!(0, 1, 1, 1))
-				.radius(12.0)
+// 				.radius(12.0)
 		)?;
 
 		ctx.draw(
@@ -89,7 +89,7 @@ impl State for Game {
 				.stroke(rgba!(1, 1, 0, 1))
 				.no_fill()
 				.line_width(2.0)
-				.radius(12.0)
+// 				.radius(12.0)
 		)?;
 
 		ctx.draw(
@@ -97,13 +97,13 @@ impl State for Game {
 				.color(rgba!(0, 0, 1, 1))
 		)?;
 
-		ctx.draw(
-			&Spline::from_pts(&[
-				(0.0, vec2!(-48)),
-				(0.4, vec2!(36, -24)),
-				(1.0, vec2!(48))
-			])
-		)?;
+// 		ctx.draw(
+// 			&Spline::from_pts(&[
+// 				(0.0, vec2!(-48)),
+// 				(0.4, vec2!(36, -24)),
+// 				(1.0, vec2!(48))
+// 			])
+// 		)?;
 
 		return Ok(());
 

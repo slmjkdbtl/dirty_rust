@@ -47,7 +47,7 @@ struct FrameTag {
 	direction: Direction,
 }
 
-#[derive(Serialize, Deserialize, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 enum Direction {
 	#[serde(rename="forward")]
 	Forward,

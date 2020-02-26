@@ -80,7 +80,7 @@ impl Imgui {
 			last_frame: Instant::now(),
 			tex: tex,
 			pipeline: pipeline,
-			renderer: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&ctx.gl, DRAW_COUNT, DRAW_COUNT)?,
+			renderer: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&ctx.gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
 		});
 
 	}

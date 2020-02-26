@@ -10,6 +10,7 @@ pub use gl::IntoUniformValue;
 pub use gl::FilterMode;
 pub use gl::Surface;
 pub use gl::Cmp;
+pub use gl::Primitive;
 
 pub use texture::*;
 pub use transform::*;
@@ -112,14 +113,6 @@ impl Ctx {
 		let (cw, ch) = (canvas.width(), canvas.height());
 
 		self.cur_canvas = Some(canvas.clone());
-
-		self.apply_cam(&OrthoCam::new(
-			cw as f32,
-			ch as f32,
-			DEFAULT_NEAR,
-			DEFAULT_FAR,
-		));
-
 		self.transform = mat4!();
 
 		self.gl.viewport(
@@ -137,8 +130,6 @@ impl Ctx {
 
 		self.cur_canvas = None;
 		self.transform = t;
-
-		self.reset_default_cam();
 
 		self.gl.viewport(
 			0,
@@ -315,7 +306,15 @@ impl Ctx {
 		return &self.default_font;
 	}
 
-	pub(crate) fn flush(&mut self) {
+	pub fn to_screen(&self, p: Vec3) -> Vec2 {
+		return (self.proj * p).xy() * vec2!(self.width(), self.height()) * 0.5;
+	}
+
+// 	pub fn to_world(&self, ctx: &Ctx, p: Vec2) -> Vec3 {
+// 		return p * 2.0 / vec2!(ctx.width(), ctx.height()) * self.cam.projection().inverse();
+// 	}
+
+	pub fn flush(&mut self) {
 		self.renderer_2d.flush();
 		self.renderer_3d.flush();
 	}
