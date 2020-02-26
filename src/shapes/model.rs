@@ -35,12 +35,8 @@ impl<'a> Model<'a> {
 		self.time = t;
 		return self;
 	}
-	pub fn wireframe(mut self, b: bool) -> Self {
-		if b {
-			self.prim = gl::Primitive::Line;
-		} else {
-			self.prim = gl::Primitive::Triangle;
-		}
+	pub fn prim(mut self, prim: gfx::Primitive) -> Self {
+		self.prim = prim;
 		return self;
 	}
 }

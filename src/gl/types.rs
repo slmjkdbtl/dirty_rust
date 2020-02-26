@@ -11,15 +11,11 @@ macro_rules! bind_enum {
 		}
 
 		impl From<$name> for $type {
-
-			fn from(usage: $name) -> $type {
-
-				match usage {
+			fn from(t: $name) -> $type {
+				return match t {
 					$($name::$member => $dest,)+
 				}
-
 			}
-
 		}
 
 	};
@@ -109,14 +105,30 @@ bind_enum!(Cmp(u32) {
 	Always => glow::ALWAYS,
 });
 
-bind_enum!(Primitive(u32) {
-	Point => glow::POINTS,
-	Line => glow::LINES,
-	Triangle => glow::TRIANGLES,
-	LineStrip => glow::LINE_STRIP,
-	TriangleFan => glow::TRIANGLE_FAN,
-	TriangleStrip => glow::TRIANGLE_STRIP,
-});
+#[derive(Clone, Copy, PartialEq)]
+pub enum Primitive {
+	Point(f32),
+	Line(f32),
+	Triangle,
+	LineStrip,
+	TriangleFan,
+	TriangleStrip,
+}
+
+impl From<Primitive> for u32 {
+
+	fn from(p: Primitive) -> u32 {
+		return match p {
+			Primitive::Point(_) => glow::POINTS,
+			Primitive::Line(_) => glow::LINES,
+			Primitive::Triangle => glow::TRIANGLES,
+			Primitive::LineStrip => glow::LINE_STRIP,
+			Primitive::TriangleFan => glow::TRIANGLE_FAN,
+			Primitive::TriangleStrip => glow::TRIANGLE_STRIP,
+		};
+	}
+
+}
 
 bind_enum!(TextureType(u32) {
 	Tex2D => glow::TEXTURE_2D,

@@ -27,11 +27,14 @@ impl Line3D {
 		self.color = c;
 		return self;
 	}
+	pub fn width(mut self, w: f32) -> Self {
+		self.width = w;
+		return self;
+	}
 }
 
 impl Drawable for Line3D {
 
-	// TODO: deal with out of bound
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let mut verts = Vec::with_capacity(2 * gfx::Vertex3D::STRIDE);
@@ -51,7 +54,7 @@ impl Drawable for Line3D {
 		}.push(&mut verts);
 
 		ctx.renderer_3d.push(
-			gl::Primitive::Line,
+			gl::Primitive::Line(self.width),
 			&verts,
 			&[0, 1],
 			&ctx.cur_pipeline_3d,

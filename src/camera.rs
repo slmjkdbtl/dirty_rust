@@ -98,7 +98,21 @@ impl Camera for PerspectiveCam {
 	}
 
 	fn lookat(&self) -> Mat4 {
-		return lookat(self.pos, self.pos + self.front, vec3!(0, 1, 0));
+
+		let eye = self.pos;
+		let center = self.pos + self.front;
+		let up = vec3!(0, 1, 0);
+		let z = (center - eye).normalize();
+		let x = up.cross(z).normalize();
+		let y = z.cross(x);
+
+		return mat4!(
+			x.x, y.x, z.x, 0.0,
+			x.y, y.y, z.y, 0.0,
+			x.z, y.z, z.z, 0.0,
+			-x.dot(eye), -y.dot(eye), -z.dot(eye), 1.0,
+		);
+
 	}
 
 }
@@ -155,18 +169,71 @@ impl Camera for OrthoCam {
 
 }
 
-fn lookat(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
+#[derive(Clone)]
+pub struct ObliqueCam {
+	pub width: f32,
+	pub height: f32,
+	pub near: f32,
+	pub far: f32,
+	pub angle: f32,
+	pub z_scale: f32,
+}
 
-	let z = (center - eye).normalize();
-	let x = up.cross(z).normalize();
-	let y = z.cross(x);
+impl ObliqueCam {
 
-	return mat4!(
-		x.x, y.x, z.x, 0.0,
-		x.y, y.y, z.y, 0.0,
-		x.z, y.z, z.z, 0.0,
-		-x.dot(eye), -y.dot(eye), -z.dot(eye), 1.0,
-	);
+	pub fn new(angle: f32, z_scale: f32, width: f32, height: f32, near: f32, far: f32) -> Self {
+
+		return Self {
+			width: width,
+			height: height,
+			near: near,
+			far: far,
+			angle: angle,
+			z_scale: z_scale,
+		};
+
+	}
+
+}
+
+impl Camera for ObliqueCam {
+
+	fn projection(&self) -> Mat4 {
+
+		let w = self.width;
+		let h = self.height;
+		let near = self.near;
+		let far = self.far;
+
+		let (left, right, bottom, top) = (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0);
+		let tx = -(right + left) / (right - left);
+		let ty = -(top + bottom) / (top - bottom);
+		let tz = -(far + near) / (far - near);
+
+		let m1 = mat4![
+			2.0 / (right - left), 0.0, 0.0, 0.0,
+			0.0, 2.0 / (top - bottom), 0.0, 0.0,
+			0.0, 0.0, -2.0 / (far - near), 0.0,
+			tx, ty, tz, 1.0,
+		];
+
+		let a = -self.z_scale * f32::cos(self.angle);
+		let b = -self.z_scale * f32::sin(self.angle);
+
+		let m2 = mat4![
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			a, b, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		];
+
+		return m1 * m2;
+
+	}
+
+	fn lookat(&self) -> Mat4 {
+		return mat4!();
+	}
 
 }
 

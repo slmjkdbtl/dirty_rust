@@ -151,5 +151,11 @@ impl Device {
 		}
 	}
 
+	pub fn line_width(&self, w: f32) {
+		unsafe {
+			self.ctx.line_width(w);
+		}
+	}
+
 }
 
