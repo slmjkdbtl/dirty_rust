@@ -5,7 +5,7 @@
 use clipboard::ClipboardProvider;
 use glutin::dpi::*;
 
-pub use glutin::window::CursorIcon;
+pub use glutin::MouseCursor as CursorIcon;
 
 use crate::*;
 use math::*;
@@ -17,7 +17,7 @@ impl Ctx {
 		let window = self.windowed_ctx.window();
 
 		if b {
-			window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
+			window.set_fullscreen(Some(window.get_current_monitor()));
 		} else {
 			window.set_fullscreen(None);
 		}
@@ -25,7 +25,7 @@ impl Ctx {
 	}
 
 	pub fn is_fullscreen(&self) -> bool {
-		return self.windowed_ctx.window().fullscreen().is_some();
+		return self.windowed_ctx.window().get_fullscreen().is_some();
 	}
 
 	pub fn toggle_fullscreen(&mut self) {
@@ -33,7 +33,7 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_visible(!b);
+		self.windowed_ctx.window().hide_cursor(b);
 		self.cursor_hidden = b;
 	}
 
@@ -49,7 +49,7 @@ impl Ctx {
 
 		self.windowed_ctx
 			.window()
-			.set_cursor_grab(b)
+			.grab_cursor(b)
 			.map_err(|_| format!("failed to lock mouse cursor"))?;
 
 		self.cursor_locked = b;
@@ -67,7 +67,7 @@ impl Ctx {
 	}
 
 	pub fn set_cursor(&self, c: CursorIcon) {
-		self.windowed_ctx.window().set_cursor_icon(c);
+		self.windowed_ctx.window().set_cursor(c);
 	}
 
 	pub fn set_title(&mut self, t: &str) {
@@ -83,7 +83,7 @@ impl Ctx {
 	}
 
 	pub fn dpi(&self) -> f32 {
-		return self.windowed_ctx.window().scale_factor() as f32;
+		return self.windowed_ctx.window().get_hidpi_factor() as f32;
 	}
 
 	pub fn width(&self) -> i32 {
@@ -98,7 +98,7 @@ impl Ctx {
 
 		let (w, h) = (self.width as f32, self.height as f32);
 		let mpos = vec2!(w / 2.0 + mpos.x, h / 2.0 - mpos.y);
-		let g_mpos: LogicalPosition<f64> = mpos.into();
+		let g_mpos: LogicalPosition = mpos.into();
 
 		self.windowed_ctx
 			.window()
@@ -135,9 +135,9 @@ impl Ctx {
 
 }
 
-impl From<glutin::event::MouseScrollDelta> for Vec2 {
-	fn from(delta: glutin::event::MouseScrollDelta) -> Self {
-		use glutin::event::MouseScrollDelta;
+impl From<glutin::MouseScrollDelta> for Vec2 {
+	fn from(delta: glutin::MouseScrollDelta) -> Self {
+		use glutin::MouseScrollDelta;
 		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
 				return vec2!(pos.x, pos.y);
@@ -149,7 +149,7 @@ impl From<glutin::event::MouseScrollDelta> for Vec2 {
 	}
 }
 
-impl From<Vec2> for LogicalPosition<f64> {
+impl From<Vec2> for LogicalPosition {
 	fn from(pos: Vec2) -> Self {
 		return Self {
 			x: pos.x as f64,
@@ -158,8 +158,8 @@ impl From<Vec2> for LogicalPosition<f64> {
 	}
 }
 
-impl From<LogicalPosition<f64>> for Vec2 {
-	fn from(pos: LogicalPosition<f64>) -> Self {
+impl From<LogicalPosition> for Vec2 {
+	fn from(pos: LogicalPosition) -> Self {
 		return Self {
 			x: pos.x as f32,
 			y: pos.y as f32,
@@ -167,22 +167,12 @@ impl From<LogicalPosition<f64>> for Vec2 {
 	}
 }
 
-impl From<PhysicalPosition<f64>> for Vec2 {
-	fn from(pos: PhysicalPosition<f64>) -> Self {
+impl From<PhysicalPosition> for Vec2 {
+	fn from(pos: PhysicalPosition) -> Self {
 		return Self {
 			x: pos.x as f32,
 			y: pos.y as f32,
 		};
 	}
 }
-
-impl From<PhysicalPosition<i32>> for Vec2 {
-	fn from(pos: PhysicalPosition<i32>) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
-	}
-}
-
 
