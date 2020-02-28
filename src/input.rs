@@ -45,6 +45,32 @@ pub(crate) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	];
 });
 
+#[derive(Clone, Debug)]
+pub enum Event {
+	KeyPress(Key),
+	KeyPressRepeat(Key),
+	KeyRelease(Key),
+	MousePress(Mouse),
+	MouseRelease(Mouse),
+	MouseMove(Vec2),
+	Scroll(Vec2, ScrollPhase),
+	CharInput(char),
+	GamepadPress(GamepadID, GamepadButton),
+	GamepadPressRepeat(GamepadID, GamepadButton),
+	GamepadRelease(GamepadID, GamepadButton),
+	GamepadAxis(GamepadID, GamepadAxis, Vec2),
+	GamepadConnect(GamepadID),
+	GamepadDisconnect(GamepadID),
+	Touch(TouchID, Vec2),
+	Resize(i32, i32),
+	FileHover(PathBuf),
+	FileHoverCancel,
+	FileDrop(PathBuf),
+	Focus(bool),
+	CursorEnter,
+	CursorLeave,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct KeyMod {
 	pub shift: bool,
@@ -146,30 +172,312 @@ impl Ctx {
 
 }
 
-#[derive(Clone, Debug)]
-pub enum Event {
-	KeyPress(Key),
-	KeyPressRepeat(Key),
-	KeyRelease(Key),
-	MousePress(Mouse),
-	MouseRelease(Mouse),
-	MouseMove(Vec2),
-	Scroll(Vec2, ScrollPhase),
-	CharInput(char),
-	GamepadPress(GamepadID, GamepadButton),
-	GamepadPressRepeat(GamepadID, GamepadButton),
-	GamepadRelease(GamepadID, GamepadButton),
-	GamepadAxis(GamepadID, GamepadAxis, Vec2),
-	GamepadConnect(GamepadID),
-	GamepadDisconnect(GamepadID),
-	Touch(TouchID, Vec2),
-	Resize(i32, i32),
-	FileHover(PathBuf),
-	FileHoverCancel,
-	FileDrop(PathBuf),
-	Focus(bool),
-	CursorEnter,
-	CursorLeave,
+pub(super) fn poll(
+	mut ctx: &mut app::Ctx,
+	events_loop: &mut glutin::EventsLoop,
+) -> Result<Vec<Event>> {
+
+	for state in ctx.key_states.values_mut() {
+		if state == &ButtonState::Pressed {
+			*state = ButtonState::Down;
+		} else if state == &ButtonState::Released {
+			*state = ButtonState::Up;
+		}
+	}
+
+	for state in ctx.mouse_states.values_mut() {
+		if state == &ButtonState::Pressed {
+			*state = ButtonState::Down;
+		} else if state == &ButtonState::Released {
+			*state = ButtonState::Up;
+		}
+	}
+
+	for states in ctx.gamepad_button_states.values_mut() {
+		for state in states.values_mut() {
+			if state == &ButtonState::Pressed {
+				*state = ButtonState::Down;
+			} else if state == &ButtonState::Released {
+				*state = ButtonState::Up;
+			}
+		}
+	}
+
+	let mut res: Result<()> = Ok(());
+	let mut events = vec![];
+
+	events_loop.poll_events(|e| {
+
+		res = try {
+
+			use glutin::WindowEvent as WEvent;
+			use glutin::DeviceEvent as DEvent;
+			use glutin::TouchPhase;
+
+			match e {
+
+				glutin::Event::WindowEvent { event, .. } => match event {
+
+					WEvent::CloseRequested => {
+						ctx.quit = true;
+					},
+					WEvent::KeyboardInput { input, .. } => {
+
+						if let Some(kc) = input.virtual_keycode {
+
+							if let Some(key) = Key::from_extern(kc) {
+
+								match input.state {
+
+									glutin::ElementState::Pressed => {
+
+										events.push(Event::KeyPressRepeat(key));
+
+										if ctx.key_up(key) || ctx.key_released(key) {
+											ctx.key_states.insert(key, ButtonState::Pressed);
+											events.push(Event::KeyPress(key));
+										}
+
+									},
+
+									glutin::ElementState::Released => {
+										if ctx.key_down(key) || ctx.key_pressed(key) {
+											ctx.key_states.insert(key, ButtonState::Released);
+											events.push(Event::KeyRelease(key));
+										}
+									},
+
+								}
+
+							}
+
+						}
+
+					},
+
+					WEvent::MouseInput { button, state, .. } => {
+
+						if let Some(button) = Mouse::from_extern(button) {
+
+							match state {
+
+								glutin::ElementState::Pressed => {
+									if ctx.mouse_up(button) || ctx.mouse_released(button) {
+										ctx.mouse_states.insert(button, ButtonState::Pressed);
+										events.push(Event::MousePress(button));
+									}
+								},
+								glutin::ElementState::Released => {
+									if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+										ctx.mouse_states.insert(button, ButtonState::Released);
+										events.push(Event::MouseRelease(button));
+									}
+								},
+
+							}
+
+						}
+
+					},
+
+					WEvent::CursorMoved { position, .. } => {
+
+						let mpos: Vec2 = position.into();
+						let (w, h) = (ctx.width as f32, ctx.height as f32);
+						let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
+
+						ctx.mouse_pos = mpos;
+
+					},
+
+					WEvent::MouseWheel { delta, phase, .. } => {
+
+						match phase {
+							TouchPhase::Started => {
+								ctx.scroll_phase = ScrollPhase::Solid;
+							},
+							TouchPhase::Ended => {
+								ctx.scroll_phase = ScrollPhase::Trailing;
+							},
+							_ => {},
+						}
+
+						let p = ctx.scroll_phase;
+						events.push(Event::Scroll(delta.into(), p));
+
+					},
+
+					WEvent::ReceivedCharacter(ch) => {
+						if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
+							events.push(Event::CharInput(ch));
+						}
+					},
+
+					WEvent::Resized(size) => {
+
+						let psize = size.to_physical(ctx.dpi() as f64);
+						let w = size.width as i32;
+						let h = size.height as i32;
+
+						ctx.width = w;
+						ctx.height = h;
+						ctx.reset_default_cam();
+						ctx.windowed_ctx.resize(psize);
+
+						events.push(Event::Resize(w, h));
+
+					},
+
+					WEvent::Touch(touch) => {
+						events.push(Event::Touch(touch.id, touch.location.into()));
+					},
+
+					WEvent::HoveredFile(path) => {
+						events.push(Event::FileHover(path.to_path_buf()));
+					},
+
+					WEvent::HoveredFileCancelled => {
+						events.push(Event::FileHoverCancel);
+					},
+
+					WEvent::DroppedFile(path) => {
+						events.push(Event::FileDrop(path.to_path_buf()));
+					},
+
+					WEvent::Focused(b) => {
+						events.push(Event::Focus(b));
+					},
+
+					WEvent::CursorEntered { .. } => {
+						events.push(Event::CursorEnter);
+					},
+
+					WEvent::CursorLeft { .. } => {
+						events.push(Event::CursorLeave);
+					},
+
+					_ => {},
+
+				},
+
+				glutin::Event::DeviceEvent { event, .. } => match event {
+					DEvent::MouseMotion { delta } => {
+						events.push(Event::MouseMove(vec2!(delta.0, delta.1)));
+					},
+					_ => (),
+				},
+
+				_ => {},
+
+			};
+
+		};
+
+	});
+
+	res?;
+
+	while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+
+		use gilrs::ev::EventType::*;
+
+		match event {
+
+			ButtonPressed(button, ..) => {
+
+				if let Some(button) = GamepadButton::from_extern(button) {
+
+					if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
+
+						ctx
+							.gamepad_button_states
+							.entry(id)
+							.or_insert(hmap![])
+							.insert(button, ButtonState::Pressed);
+
+						events.push(Event::GamepadPress(id, button));
+
+					}
+
+				}
+
+			},
+
+			ButtonRepeated(button, ..) => {
+				if let Some(button) = GamepadButton::from_extern(button) {
+					events.push(Event::GamepadPressRepeat(id, button));
+				}
+			},
+
+			ButtonReleased(button, ..) => {
+
+				if let Some(button) = GamepadButton::from_extern(button) {
+
+					if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
+
+						ctx
+							.gamepad_button_states
+							.entry(id)
+							.or_insert(hmap![])
+							.insert(button, ButtonState::Released);
+
+						events.push(Event::GamepadRelease(id, button));
+
+					}
+
+				}
+
+			},
+
+			AxisChanged(axis, val, ..) => {
+
+				let mut pos = ctx.gamepad_axis_pos
+					.entry(id)
+					.or_insert((vec2!(), vec2!()))
+					.clone()
+					;
+
+				match axis {
+					gilrs::ev::Axis::LeftStickX => {
+						pos.0.x = val;
+						events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+					},
+					gilrs::ev::Axis::LeftStickY => {
+						pos.0.y = val;
+						events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+					},
+					gilrs::ev::Axis::RightStickX => {
+						pos.1.x = val;
+						events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+					},
+					gilrs::ev::Axis::RightStickY => {
+						pos.1.y = val;
+						events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+					},
+					_ => {},
+
+				}
+
+				ctx.gamepad_axis_pos.insert(id, pos);
+
+			},
+
+			Connected => {
+				events.push(Event::GamepadConnect(id));
+			},
+
+			Disconnected => {
+				events.push(Event::GamepadDisconnect(id));
+			},
+
+			_ => {},
+
+		}
+
+	}
+
+	return Ok(events);
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -252,8 +560,8 @@ macro_rules! gen_buttons {
 
 }
 
-use glutin::event::VirtualKeyCode as ExternKey;
-use glutin::event::MouseButton as ExternMouse;
+use glutin::VirtualKeyCode as ExternKey;
+use glutin::MouseButton as ExternMouse;
 use gilrs::ev::Button as ExternGamepadButton;
 
 gen_buttons!(Key(ExternKey), {
