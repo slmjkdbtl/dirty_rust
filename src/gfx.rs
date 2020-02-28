@@ -281,12 +281,12 @@ impl Ctx {
 		return coord.as_pt() / 2.0 * vec2!(self.width, self.height);
 	}
 
-	pub fn use_cam(&mut self, cam: &impl Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn use_cam(&mut self, cam: &dyn Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let oview = self.view;
 		let oproj = self.proj;
 
-		self.view = cam.lookat();
+		self.view = cam.view();
 		self.proj = cam.projection();
 
 		f(self)?;
@@ -307,14 +307,44 @@ impl Ctx {
 	}
 
 	pub fn to_screen(&self, p: Vec3) -> Vec2 {
-		return (self.proj * p).xy() * vec2!(self.width(), self.height()) * 0.5;
+
+		let normalized = self.proj * self.view * p;
+		let screen_coord = normalized.xy() * vec2!(self.width(), self.height()) * 0.5;
+
+		return screen_coord;
+
 	}
 
-// 	pub fn to_world(&self, ctx: &Ctx, p: Vec2) -> Vec3 {
-// 		return p * 2.0 / vec2!(ctx.width(), ctx.height()) * self.cam.projection().inverse();
-// 	}
+	pub fn cam_to_screen(&self, cam: &impl Camera, p: Vec3) -> Vec2 {
 
-	pub fn flush(&mut self) {
+		let normalized = cam.projection() * cam.view() * p;
+		let screen_coord = normalized.xy() * vec2!(self.width(), self.height()) * 0.5;
+
+		return screen_coord;
+
+	}
+
+	pub fn to_world_ray(&self, p: Vec2) -> Vec3 {
+
+		let normalized = p / 0.5 / vec2!(self.width(), self.height());
+		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
+		let world_coord = self.proj.inverse() * (self.view.inverse() * clip_coord);
+
+		return world_coord.xyz().normalize();
+
+	}
+
+	pub fn cam_to_world_ray(&self, cam: &impl Camera, p: Vec2) -> Vec3 {
+
+		let normalized = p / 0.5 / vec2!(self.width(), self.height());
+		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
+		let world_coord = cam.projection().inverse() * (cam.view().inverse() * clip_coord);
+
+		return world_coord.xyz().normalize();
+
+	}
+
+	pub(crate) fn flush(&mut self) {
 		self.renderer_2d.flush();
 		self.renderer_3d.flush();
 	}
@@ -340,7 +370,7 @@ impl Ctx {
 
 	pub(crate) fn apply_cam(&mut self, cam: &dyn Camera) {
 		self.proj = cam.projection();
-		self.view = cam.lookat();
+		self.view = cam.view();
 	}
 
 	pub(crate) fn reset_default_cam(&mut self) {

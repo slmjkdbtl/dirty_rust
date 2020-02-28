@@ -5,7 +5,7 @@ use math::*;
 
 pub trait Camera {
 	fn projection(&self) -> Mat4;
-	fn lookat(&self) -> Mat4;
+	fn view(&self) -> Mat4;
 }
 
 #[derive(Clone)]
@@ -97,7 +97,7 @@ impl Camera for PerspectiveCam {
 
 	}
 
-	fn lookat(&self) -> Mat4 {
+	fn view(&self) -> Mat4 {
 
 		let eye = self.pos;
 		let center = self.pos + self.front;
@@ -163,7 +163,7 @@ impl Camera for OrthoCam {
 
 	}
 
-	fn lookat(&self) -> Mat4 {
+	fn view(&self) -> Mat4 {
 		return mat4!();
 	}
 
@@ -231,7 +231,7 @@ impl Camera for ObliqueCam {
 
 	}
 
-	fn lookat(&self) -> Mat4 {
+	fn view(&self) -> Mat4 {
 		return mat4!();
 	}
 
