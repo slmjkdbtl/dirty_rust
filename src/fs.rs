@@ -231,3 +231,12 @@ pub fn data_dir(name: &str) -> Result<PathBuf> {
 
 }
 
+pub fn home_dir() -> Result<PathBuf> {
+
+	let dirs = BaseDirs::new().ok_or(format!("failed to get home dir"))?;
+	let home_dir = dirs.home_dir();
+
+	return Ok(home_dir.to_path_buf());
+
+}
+

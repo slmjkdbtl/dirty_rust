@@ -5,8 +5,9 @@
 - [gfx] spline
 - [misc] generate font mesh
 - [gfx] shader nodes
-- [gfx] global threadpool
 - [gfx] custom pipeline
+- [gfx] refactor stencil
+- [gfx] make batched renderer stateless
 
 == TODO
 - [http] use rustls instead of native-tls
@@ -93,9 +94,9 @@
 - [misc] profile render / update time seperately
 - [misc] profile graph
 - [misc] gltf morph
-- [misc] integrate lighting into gkit
+- [misc] integrate lighting into kit
 - [gfx] oblique projection
-- [gfx] move cubemap to gkit
+- [gfx] move cubemap to kit
 
 == DONE
 - [http] refactor http

@@ -146,7 +146,7 @@ pub struct Model {
 	anims: HashMap<usize, Anim>,
 	anim_len: f32,
 	root_nodes: Vec<usize>,
-	bound: (Vec3, Vec3),
+	bbox: (Vec3, Vec3),
 	texture: Option<Texture>,
 }
 
@@ -396,7 +396,7 @@ impl Model {
 					Interpolation::CubicSpline => {},
 				};
 
-				let times: Vec<f32> = reader
+				let frames: Vec<f32> = reader
 					.read_inputs()
 					.ok_or(format!("failed to read anim"))?
 					.collect();
@@ -408,9 +408,9 @@ impl Model {
 					.ok_or(format!("failed to read anim"))? {
 
 					ReadOutputs::Translations(translations) => {
-						let mut values = Vec::with_capacity(times.len());
+						let mut values = Vec::with_capacity(frames.len());
 						for (i, v) in translations.enumerate() {
-							let t = times
+							let t = frames
 								.get(i)
 								.ok_or(format!("failed to read anim from glb"))?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
@@ -419,9 +419,9 @@ impl Model {
 					}
 
 					ReadOutputs::Rotations(rotations) => {
-						let mut values = Vec::with_capacity(times.len());
+						let mut values = Vec::with_capacity(frames.len());
 						for (i, v) in rotations.into_f32().enumerate() {
-							let t = times
+							let t = frames
 								.get(i)
 								.ok_or(format!("failed to read anim from glb"))?;
 							values.push((*t, vec4!(v[0], v[1], v[2], v[3])));
@@ -430,9 +430,9 @@ impl Model {
 					}
 
 					ReadOutputs::Scales(scales) => {
-						let mut values = Vec::with_capacity(times.len());
+						let mut values = Vec::with_capacity(frames.len());
 						for (i, v) in scales.enumerate() {
-							let t = times
+							let t = frames
 								.get(i)
 								.ok_or(format!("failed to read anim from glb"))?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
@@ -593,7 +593,7 @@ impl Model {
 		}).collect::<HashMap<usize, Node>>();
 
 		return Ok(Self {
-			bound: get_bound(&nodes, &root_nodes),
+			bbox: get_bbox(&nodes, &root_nodes),
 			nodes: nodes,
 			anim_len: anim_len,
 			anims: anims,
@@ -640,17 +640,17 @@ impl Model {
 	}
 
 	pub fn center(&self) -> Vec3 {
-		let (min, max) = self.bound();
-		return (min + max) / 2.0
+		let (min, max) = self.bbox();
+		return (min + max) / 2.0;
 	}
 
-	pub fn bound(&self) -> (Vec3, Vec3) {
-		return self.bound;
+	pub fn bbox(&self) -> (Vec3, Vec3) {
+		return self.bbox;
 	}
 
 }
 
-fn get_bound_inner(
+fn get_bbox_inner(
 	min: &mut Vec3,
 	max: &mut Vec3,
 	transform: Mat4,
@@ -681,7 +681,7 @@ fn get_bound_inner(
 
 			}
 
-			get_bound_inner(min, max, tr, nodes, &node.children);
+			get_bbox_inner(min, max, tr, nodes, &node.children);
 
 		}
 
@@ -689,12 +689,12 @@ fn get_bound_inner(
 
 }
 
-fn get_bound(nodes: &HashMap<usize, Node>, list: &[usize]) -> (Vec3, Vec3) {
+fn get_bbox(nodes: &HashMap<usize, Node>, list: &[usize]) -> (Vec3, Vec3) {
 
 	let mut min = vec3!();
 	let mut max = vec3!();
 
-	get_bound_inner(&mut min, &mut max, mat4!(), nodes, list);
+	get_bbox_inner(&mut min, &mut max, mat4!(), nodes, list);
 
 	return (min, max);
 

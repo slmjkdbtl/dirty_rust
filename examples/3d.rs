@@ -126,7 +126,7 @@ impl State for Game {
 			None,
 		)?;
 
-		let (min, max) = model.bound();
+		let (min, max) = model.bbox();
 		let size = (max - min).mag();
 
 // 		model.update(|data| {

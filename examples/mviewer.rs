@@ -125,7 +125,7 @@ impl State for Viewer {
 
 					if !self.resetting {
 
-						let (min, max) = model.bound();
+						let (min, max) = model.bbox();
 						let size = (max - min).mag();
 						let orig_scale = 480.0 / size;
 
@@ -216,7 +216,7 @@ impl State for Viewer {
 
 			if self.resetting {
 
-				let (min, max) = model.bound();
+				let (min, max) = model.bbox();
 				let size = (max - min).mag();
 
 				let dest_rot = vec2!(0);
@@ -261,14 +261,14 @@ impl State for Viewer {
 				ctx.draw_3d_with(&self.shader, &(), |ctx| {
 					ctx.draw(
 						&shapes::model(&model)
-							.wireframe(self.draw_wireframe)
+// 							.wireframe(self.draw_wireframe)
 							.time(t)
 					)?;
 					return Ok(());
 				})?;
 
 				if self.draw_bound {
-					let (min, max) = model.bound();
+					let (min, max) = model.bbox();
 					ctx.draw(&shapes::rect3d(min, max))?;
 				}
 

@@ -204,7 +204,7 @@ fn point_poly(pt: Vec2, poly: &[Vec2]) -> bool {
 }
 
 // TODO: clean
-pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
+pub fn sat2d(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 	assert!(p1.len() >= 3, "invalid polygon");
 	assert!(p2.len() >= 3, "invalid polygon");
@@ -280,10 +280,6 @@ pub fn sat(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 }
 
-pub fn gjk(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
-	todo!();
-}
-
 #[derive(Clone, Copy, Debug)]
 pub enum Shape2D<'a> {
 	Point(Vec2),
@@ -299,7 +295,7 @@ impl<'a> From<&'a [Vec2]> for Shape2D<'a> {
 	}
 }
 
-pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
+pub fn overlap2d(s1: Shape2D, s2: Shape2D) -> bool {
 
 	use Shape2D::*;
 
@@ -326,7 +322,7 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 		Rect(p1, p2) => {
 			match s2 {
 				Circle(..) => {
-					return overlaps(s2, s1);
+					return overlap2d(s2, s1);
 				},
 				Rect(p12, p22) => {
 					return rect_rect((p1, p2), (p12, p22));
@@ -346,7 +342,7 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 			match s2 {
 				Circle(..)
 				| Rect(..) => {
-					return overlaps(s2, s1);
+					return overlap2d(s2, s1);
 				},
 				Point(pt2) => {
 					return point_point(pt, pt2);
@@ -364,7 +360,7 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 				Circle(..)
 				| Rect(..)
 				| Point(..) => {
-					return overlaps(s2, s1);
+					return overlap2d(s2, s1);
 				},
 				Line(p12, p22) => {
 					return line_line((p1, p2), (p12, p22));
@@ -380,7 +376,7 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 				| Rect(..)
 				| Point(..)
 				| Line(..) => {
-					return overlaps(s2, s1);
+					return overlap2d(s2, s1);
 				},
 				Polygon(verts2) => {
 					return poly_poly(&verts, &verts2);
@@ -389,5 +385,20 @@ pub fn overlaps(s1: Shape2D, s2: Shape2D) -> bool {
 		},
 	}
 
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Shape3D {
+	Point(Vec3),
+	Sphere(Vec3, f32),
+	Box(Vec3, Vec3),
+	Line(Vec3, Vec3),
+	Ray(Vec3, Vec3),
+}
+
+// TODO
+pub fn overlap3d(s1: Shape3D, s2: Shape3D) -> bool {
+	todo!();
+	return false;
 }
 
