@@ -18,7 +18,7 @@ opt-level = 2
 default = [
 
 	# modules
-# 	"gkit",
+# 	"kit",
 # 	"synth",
 # 	"imgui",
 # 	"ase",
@@ -52,7 +52,7 @@ bin = [
 ]
 
 ase = []
-gkit = []
+kit = []
 synth = []
 
 gl3 = []
@@ -72,7 +72,7 @@ directories = "2.0"
 glob = "0.3"
 
 # app
-glutin = "0.21"
+glutin = "0.23"
 glow = { version = "0.4.0", default-features = false }
 clipboard = "0.5"
 fontdue = "0.0"

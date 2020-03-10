@@ -286,8 +286,23 @@ impl Ctx {
 		let oview = self.view;
 		let oproj = self.proj;
 
-		self.view = cam.view();
-		self.proj = cam.projection();
+		self.apply_cam(cam);
+
+		f(self)?;
+
+		self.view = oview;
+		self.proj = oproj;
+
+		return Ok(());
+
+	}
+
+	pub fn use_default_cam(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		let oview = self.view;
+		let oproj = self.proj;
+
+		self.reset_default_cam();
 
 		f(self)?;
 
@@ -315,7 +330,7 @@ impl Ctx {
 
 	}
 
-	pub fn cam_to_screen(&self, cam: &impl Camera, p: Vec3) -> Vec2 {
+	pub fn cam_to_screen(&self, cam: &dyn Camera, p: Vec3) -> Vec2 {
 
 		let normalized = cam.projection() * cam.view() * p;
 		let screen_coord = normalized.xy() * vec2!(self.width(), self.height()) * 0.5;
@@ -334,7 +349,7 @@ impl Ctx {
 
 	}
 
-	pub fn cam_to_world_ray(&self, cam: &impl Camera, p: Vec2) -> Vec3 {
+	pub fn cam_to_world_ray(&self, cam: &dyn Camera, p: Vec2) -> Vec3 {
 
 		let normalized = p / 0.5 / vec2!(self.width(), self.height());
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);

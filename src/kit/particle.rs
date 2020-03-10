@@ -5,14 +5,12 @@ use super::*;
 use timer::*;
 use math::*;
 
-pub enum Primitive<'a> {
-	Texture(&'a gfx::Texture),
-}
-
 #[derive(Clone)]
 pub struct Particle {
 	timer: Timer,
 	pos: Vec2,
+	color: Color,
+	size: Vec2,
 	acc: Vec2,
 	vel: Vec2,
 	speed: f32,
@@ -32,28 +30,25 @@ impl Particle {
 			return;
 		}
 
+		let t = self.timer.progress();
+
 		self.vel += self.acc * dt;
 		self.pos += self.vel * self.speed * dt;
+		self.size = self.size_start.lerp(self.size_end, t);
+		self.color = self.color_start.lerp(self.color_end, t);
 
 	}
 
-}
+	pub fn pos(&self) -> Vec2 {
+		return self.pos;
+	}
 
-impl gfx::Drawable for Particle {
+	pub fn size(&self) -> Vec2 {
+		return self.size;
+	}
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-
-		let t = self.timer.progress();
-		let size = self.size_start.lerp(self.size_end, t);
-		let color = self.color_start.lerp(self.color_end, t);
-
-		ctx.draw(
-			&shapes::rect(self.pos - size / 2.0, self.pos + size / 2.0)
-				.fill(color)
-		)?;
-
-		return Ok(());
-
+	pub fn color(&self) -> Vec2 {
+		return self.pos;
 	}
 
 }
@@ -133,6 +128,10 @@ impl ParticleSystem {
 
 	}
 
+	pub fn particles(&self) -> &[Particle] {
+		return &self.particles;
+	}
+
 	pub fn count(&self) -> usize {
 		return self.particles.len();
 	}
@@ -171,15 +170,20 @@ impl ParticleSystem {
 
 			if self.count() <= self.conf.max {
 
+				let color_start = rand_t(self.conf.color_start);
+				let size_start = rand_t(self.conf.size_start);
+
 				let p = Particle {
 					timer: Timer::new(rand_t(self.conf.life)),
 					pos: self.pos + rand_t(self.conf.offset),
+					color: color_start,
+					size: size_start,
 					acc: rand_t(self.conf.acc),
 					vel: rand_t(self.conf.vel),
 					speed: rand_t(self.conf.speed),
-					color_start: rand_t(self.conf.color_start),
+					color_start: color_start,
 					color_end: self.conf.color_end,
-					size_start: rand_t(self.conf.size_start),
+					size_start: size_start,
 					size_end: rand_t(self.conf.size_end),
 					dead: false,
 				};
@@ -192,14 +196,5 @@ impl ParticleSystem {
 
 	}
 
-}
-
-impl gfx::Drawable for ParticleSystem {
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
-		for p in &self.particles {
-			ctx.draw(p)?;
-		}
-		return Ok(());
-	}
 }
 

@@ -10,6 +10,7 @@ use std::time::Duration;
 
 use glutin::dpi::*;
 use glutin::GlRequest;
+use glutin::event_loop::ControlFlow;
 
 use crate::*;
 use crate::math::*;
@@ -93,41 +94,61 @@ pub struct Ctx {
 
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
-	let mut event_loop = glutin::EventsLoop::new();
+	let (windowed_ctx, event_loop, gl) =  {
 
-	let mut window_builder = glutin::WindowBuilder::new()
-		.with_title(conf.title.to_owned())
-		.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
-		.with_resizable(conf.resizable)
-		.with_transparency(conf.transparent)
-		.with_decorations(!conf.borderless)
-		.with_always_on_top(conf.always_on_top)
-		.with_fullscreen(conf.fullscreen.then_some(event_loop.get_primary_monitor()))
-		;
+		let event_loop = glutin::event_loop::EventLoop::new();
 
-	let mut ctx_builder = glutin::ContextBuilder::new()
-		.with_vsync(conf.vsync)
-		.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
-		;
-
-	#[cfg(feature = "gl3")] {
-		ctx_builder = ctx_builder
-			.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (3, 3)))
-			.with_gl_profile(glutin::GlProfile::Core)
+		let mut window_builder = glutin::window::WindowBuilder::new()
+			.with_title(conf.title.to_owned())
+			.with_resizable(conf.resizable)
+			.with_transparent(conf.transparent)
+			.with_decorations(!conf.borderless)
+			.with_always_on_top(conf.always_on_top)
+			.with_inner_size(LogicalSize::new(conf.width as f64, conf.height as f64))
 			;
-	}
 
-	let windowed_ctx = unsafe {
-		ctx_builder
-			.build_windowed(window_builder, &event_loop)
-			.map_err(|_| format!("failed to build window"))?
-			.make_current()
-			.map_err(|_| format!("failed to make opengl context"))?
+		if conf.fullscreen {
+			window_builder = window_builder
+				.with_fullscreen(Some(glutin::window::Fullscreen::Borderless(event_loop.primary_monitor())));
+		}
+
+		#[cfg(target_os = "macos")] {
+
+			use glutin::platform::macos::WindowBuilderExtMacOS;
+
+			window_builder = window_builder
+				.with_disallow_hidpi(!conf.hidpi)
+				;
+
+		}
+
+		let mut ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
+			;
+
+		#[cfg(feature = "gl3")] {
+			ctx_builder = ctx_builder
+				.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (3, 3)))
+				.with_gl_profile(glutin::GlProfile::Core)
+				;
+		}
+
+		let windowed_ctx = unsafe {
+			ctx_builder
+				.build_windowed(window_builder, &event_loop)
+				.map_err(|_| format!("failed to build window"))?
+				.make_current()
+				.map_err(|_| format!("failed to make opengl context"))?
+		};
+
+		let gl = gl::Device::from_loader(|s| {
+			windowed_ctx.get_proc_address(s) as *const _
+		});
+
+		(windowed_ctx, event_loop, gl)
+
 	};
-
-	let gl = gl::Device::from_loader(|s| {
-		windowed_ctx.get_proc_address(s) as *const _
-	});
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
@@ -245,50 +266,371 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let mut s = S::init(&mut ctx)?;
 	let mut last_frame_time = Instant::now();
 
-	'run: loop {
+	let mut update = false;
 
-		let start_time = Instant::now();
+	event_loop.run(move |e, _, flow| {
 
-		for e in input::poll(&mut ctx, &mut event_loop)? {
-			s.event(&mut ctx, &e)?;
-		}
+		*flow = ControlFlow::Poll;
 
-		s.update(&mut ctx)?;
-		ctx.begin_frame();
-		s.draw(&mut ctx)?;
-		ctx.end_frame();
+		let event_result: Result<()> = try {
 
-		#[cfg(feature = "imgui")]
-		imgui.render(&mut ctx, |ui| {
-			return s.imgui(ui);
-		})?;
+			use glutin::event::WindowEvent as WEvent;
+			use glutin::event::DeviceEvent as DEvent;
+			use glutin::event::TouchPhase;
+			use glutin::event::ElementState;
+			use input::*;
 
-		ctx.swap_buffers()?;
+			let mut events = vec![];
 
-		if ctx.quit {
-			break 'run;
-		}
+			match e {
 
-		if let Some(fps_cap) = ctx.conf.fps_cap {
+				glutin::event::Event::LoopDestroyed => *flow = ControlFlow::Exit,
 
-			let real_dt = start_time.elapsed().as_millis();
-			let expected_dt = (1000.0 / fps_cap as f32) as u128;
+				glutin::event::Event::WindowEvent { ref event, .. } => match event {
+					WEvent::CloseRequested => {
+						*flow = ControlFlow::Exit;
+					},
+					WEvent::KeyboardInput { input, .. } => {
 
-			if real_dt < expected_dt {
-				thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+						if let Some(kc) = input.virtual_keycode {
+
+							if let Some(key) = Key::from_extern(kc) {
+
+								match input.state {
+
+									ElementState::Pressed => {
+
+										events.push(Event::KeyPressRepeat(key));
+
+										if ctx.key_up(key) || ctx.key_released(key) {
+											ctx.key_states.insert(key, ButtonState::Pressed);
+											events.push(Event::KeyPress(key));
+										}
+
+									},
+
+									ElementState::Released => {
+										if ctx.key_down(key) || ctx.key_pressed(key) {
+											ctx.key_states.insert(key, ButtonState::Released);
+											events.push(Event::KeyRelease(key));
+										}
+									},
+
+								}
+
+							}
+
+						}
+
+					},
+
+					WEvent::MouseInput { button, state, .. } => {
+
+						if let Some(button) = Mouse::from_extern(*button) {
+
+							match state {
+
+								ElementState::Pressed => {
+									if ctx.mouse_up(button) || ctx.mouse_released(button) {
+										ctx.mouse_states.insert(button, ButtonState::Pressed);
+										events.push(Event::MousePress(button));
+									}
+								},
+								ElementState::Released => {
+									if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
+										ctx.mouse_states.insert(button, ButtonState::Released);
+										events.push(Event::MouseRelease(button));
+									}
+								},
+
+							}
+
+						}
+
+					},
+
+					WEvent::CursorMoved { position, .. } => {
+
+						let mpos: Vec2 = position.to_logical(ctx.dpi() as f64).into();
+// 						let mpos: Vec2 = (*position).into();
+						let (w, h) = (ctx.width as f32, ctx.height as f32);
+						let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
+
+						ctx.mouse_pos = mpos;
+
+					},
+
+					WEvent::MouseWheel { delta, phase, .. } => {
+
+						match phase {
+							TouchPhase::Started => {
+								ctx.scroll_phase = ScrollPhase::Solid;
+							},
+							TouchPhase::Ended => {
+								ctx.scroll_phase = ScrollPhase::Trailing;
+							},
+							_ => {},
+						}
+
+						let p = ctx.scroll_phase;
+						events.push(Event::Scroll((*delta).into(), p));
+
+					},
+
+					WEvent::ReceivedCharacter(ch) => {
+						if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
+							events.push(Event::CharInput(*ch));
+						}
+					},
+
+					WEvent::Resized(size) => {
+
+						let dpi = ctx.dpi() as f64;
+						let lsize: LogicalSize<f64> = size.to_logical(dpi);
+						let w = lsize.width as i32;
+						let h = lsize.height as i32;
+
+						ctx.width = w;
+						ctx.height = h;
+						ctx.reset_default_cam();
+						ctx.windowed_ctx.resize(*size);
+
+						events.push(Event::Resize(w, h));
+
+					},
+
+					WEvent::Touch(touch) => {
+						events.push(Event::Touch(touch.id, touch.location.into()));
+					},
+
+					WEvent::HoveredFile(path) => {
+						events.push(Event::FileHover(path.to_path_buf()));
+					},
+
+					WEvent::HoveredFileCancelled => {
+						events.push(Event::FileHoverCancel);
+					},
+
+					WEvent::DroppedFile(path) => {
+						events.push(Event::FileDrop(path.to_path_buf()));
+					},
+
+					WEvent::Focused(b) => {
+						events.push(Event::Focus(*b));
+					},
+
+					WEvent::CursorEntered { .. } => {
+						events.push(Event::CursorEnter);
+					},
+
+					WEvent::CursorLeft { .. } => {
+						events.push(Event::CursorLeave);
+					},
+					_ => (),
+				},
+
+				glutin::event::Event::DeviceEvent { event, .. } => match event {
+					DEvent::MouseMotion { delta } => {
+						events.push(Event::MouseMove(vec2!(delta.0, delta.1)));
+					},
+					_ => (),
+				},
+
+				glutin::event::Event::RedrawRequested(_) => {
+
+					if let Some(fps_cap) = ctx.conf.fps_cap {
+
+						let real_dt = last_frame_time.elapsed().as_millis();
+						let expected_dt = (1000.0 / fps_cap as f32) as u128;
+
+						if real_dt < expected_dt {
+							thread::sleep(Duration::from_millis((expected_dt - real_dt) as u64));
+						}
+
+					}
+
+					ctx.dt = last_frame_time.elapsed();
+					ctx.time += ctx.dt;
+					ctx.fps_counter.tick(ctx.dt);
+
+					last_frame_time = Instant::now();
+
+					for state in ctx.key_states.values_mut() {
+						if state == &ButtonState::Pressed {
+							*state = ButtonState::Down;
+						} else if state == &ButtonState::Released {
+							*state = ButtonState::Up;
+						}
+					}
+
+					for state in ctx.mouse_states.values_mut() {
+						if state == &ButtonState::Pressed {
+							*state = ButtonState::Down;
+						} else if state == &ButtonState::Released {
+							*state = ButtonState::Up;
+						}
+					}
+
+					for states in ctx.gamepad_button_states.values_mut() {
+						for state in states.values_mut() {
+							if state == &ButtonState::Pressed {
+								*state = ButtonState::Down;
+							} else if state == &ButtonState::Released {
+								*state = ButtonState::Up;
+							}
+						}
+					}
+
+					s.update(&mut ctx)?;
+					ctx.begin_frame();
+					s.draw(&mut ctx)?;
+					ctx.end_frame();
+
+					#[cfg(feature = "imgui")]
+					imgui.render(&mut ctx, |ui| {
+						return s.imgui(ui);
+					})?;
+
+					ctx.swap_buffers()?;
+
+					if ctx.quit {
+						*flow = ControlFlow::Exit;
+					}
+
+				},
+
+				glutin::event::Event::MainEventsCleared => {
+
+					// ugly workaround
+					update = !update;
+
+					if update {
+						ctx.windowed_ctx
+							.window()
+							.request_redraw();
+					}
+
+					while let Some(gilrs::Event { id, event, .. }) = ctx.gamepad_ctx.next_event() {
+
+						use gilrs::ev::EventType::*;
+
+						match event {
+
+							ButtonPressed(button, ..) => {
+
+								if let Some(button) = GamepadButton::from_extern(button) {
+
+									if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
+
+										ctx
+											.gamepad_button_states
+											.entry(id)
+											.or_insert(hmap![])
+											.insert(button, ButtonState::Pressed);
+
+										events.push(Event::GamepadPress(id, button));
+
+									}
+
+								}
+
+							},
+
+							ButtonRepeated(button, ..) => {
+								if let Some(button) = GamepadButton::from_extern(button) {
+									events.push(Event::GamepadPressRepeat(id, button));
+								}
+							},
+
+							ButtonReleased(button, ..) => {
+
+								if let Some(button) = GamepadButton::from_extern(button) {
+
+									if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
+
+										ctx
+											.gamepad_button_states
+											.entry(id)
+											.or_insert(hmap![])
+											.insert(button, ButtonState::Released);
+
+										events.push(Event::GamepadRelease(id, button));
+
+									}
+
+								}
+
+							},
+
+							AxisChanged(axis, val, ..) => {
+
+								let mut pos = ctx.gamepad_axis_pos
+									.entry(id)
+									.or_insert((vec2!(), vec2!()))
+									.clone()
+									;
+
+								match axis {
+									gilrs::ev::Axis::LeftStickX => {
+										pos.0.x = val;
+										events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+									},
+									gilrs::ev::Axis::LeftStickY => {
+										pos.0.y = val;
+										events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+									},
+									gilrs::ev::Axis::RightStickX => {
+										pos.1.x = val;
+										events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+									},
+									gilrs::ev::Axis::RightStickY => {
+										pos.1.y = val;
+										events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+									},
+									_ => {},
+
+								}
+
+								ctx.gamepad_axis_pos.insert(id, pos);
+
+							},
+
+							Connected => {
+								events.push(Event::GamepadConnect(id));
+							},
+
+							Disconnected => {
+								events.push(Event::GamepadDisconnect(id));
+							},
+
+							_ => {},
+
+						}
+
+					}
+
+				},
+
+				_ => {},
+
+			};
+
+			for e in events {
+
+				#[cfg(feature = "imgui")]
+				imgui.event(&mut ctx, &e);
+
+				s.event(&mut ctx, &e)?;
+
 			}
 
+		};
+
+		if let Err(err) = event_result {
+			eprintln!("{}", err);
 		}
 
-		ctx.dt = start_time.elapsed();
-		ctx.time += ctx.dt;
-		ctx.fps_counter.tick(ctx.dt);
-
-	}
-
-	s.quit(&mut ctx)?;
-
-	return Ok(());
+	});
 
 }
 

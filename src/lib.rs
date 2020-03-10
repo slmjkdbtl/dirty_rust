@@ -34,6 +34,7 @@ mod font;
 mod camera;
 mod model;
 mod desc;
+mod batch;
 mod skybox;
 
 pub mod audio;
@@ -49,7 +50,7 @@ pub mod img;
 pub mod term;
 pub mod codec;
 
-#[cfg(feature = "gkit")]
+#[cfg(feature = "kit")]
 pub mod kit;
 
 #[cfg(feature = "imgui")]

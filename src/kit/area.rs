@@ -59,7 +59,7 @@ impl Area {
 
 		use geom::Shape2D::*;
 
-		return geom::overlaps(
+		return geom::overlap2d(
 			Point(p),
 			Polygon(&self.gverts),
 		);
@@ -68,18 +68,18 @@ impl Area {
 
 	pub fn collides(&self, other: &Self) -> (bool, Vec2) {
 
-		return geom::sat(
+		return geom::sat2d(
 			&self.gverts,
 			&other.gverts,
 		);
 
 	}
 
-	pub fn overlaps(&self, other: &Self) -> bool {
+	pub fn overlap2d(&self, other: &Self) -> bool {
 
 		use geom::Shape2D::*;
 
-		return geom::overlaps(
+		return geom::overlap2d(
 			Polygon(&self.gverts),
 			Polygon(&other.gverts),
 		);

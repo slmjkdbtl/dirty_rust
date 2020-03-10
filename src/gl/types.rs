@@ -66,6 +66,14 @@ bind_enum!(BlendFac(u32) {
 	OneMinusConstantAlpha => glow::ONE_MINUS_CONSTANT_ALPHA,
 });
 
+bind_enum!(BlendOp(u32) {
+	Add => glow::FUNC_ADD,
+	Sub => glow::FUNC_SUBTRACT,
+	ReverseSub => glow::FUNC_REVERSE_SUBTRACT,
+	Max => glow::MAX,
+	Min => glow::MIN,
+});
+
 bind_enum!(StencilOp(u32) {
 	Keep => glow::KEEP,
 	Zero => glow::ZERO,
