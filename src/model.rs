@@ -146,7 +146,7 @@ pub struct Model {
 	anims: HashMap<usize, Anim>,
 	anim_len: f32,
 	root_nodes: Vec<usize>,
-	bbox: (Vec3, Vec3),
+	bbox: BBox,
 	texture: Option<Texture>,
 }
 
@@ -640,16 +640,16 @@ impl Model {
 	}
 
 	pub fn center(&self) -> Vec3 {
-		let (min, max) = self.bbox();
-		return (min + max) / 2.0;
+		return (self.bbox.min + self.bbox.max) / 2.0;
 	}
 
-	pub fn bbox(&self) -> (Vec3, Vec3) {
+	pub fn bbox(&self) -> BBox {
 		return self.bbox;
 	}
 
 }
 
+// TODO: apply transform at node end
 fn get_bbox_inner(
 	min: &mut Vec3,
 	max: &mut Vec3,
@@ -689,14 +689,14 @@ fn get_bbox_inner(
 
 }
 
-fn get_bbox(nodes: &HashMap<usize, Node>, list: &[usize]) -> (Vec3, Vec3) {
+fn get_bbox(nodes: &HashMap<usize, Node>, list: &[usize]) -> BBox {
 
 	let mut min = vec3!();
 	let mut max = vec3!();
 
 	get_bbox_inner(&mut min, &mut max, mat4!(), nodes, list);
 
-	return (min, max);
+	return BBox::new(min, max);
 
 }
 
