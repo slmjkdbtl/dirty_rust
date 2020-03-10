@@ -387,18 +387,53 @@ pub fn overlap2d(s1: Shape2D, s2: Shape2D) -> bool {
 
 }
 
+fn box_box(b1: BBox, b2: BBox) -> bool {
+	return
+		(b1.min.x <= b2.max.x && b1.max.x >= b2.min.x) &&
+		(b1.min.y <= b2.max.y && b1.max.y >= b2.min.y) &&
+		(b1.min.z <= b2.max.z && b1.max.z >= b2.min.z);
+}
+
+fn pt_box(pt: Vec3, b: BBox) -> bool {
+	return
+		(pt.x >= b.min.x && pt.x <= b.max.x) &&
+		(pt.y >= b.min.y && pt.y <= b.max.y) &&
+		(pt.z >= b.min.z && pt.z <= b.max.z);
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Shape3D {
 	Point(Vec3),
-	Sphere(Vec3, f32),
-	Box(Vec3, Vec3),
-	Line(Vec3, Vec3),
-	Ray(Vec3, Vec3),
+	Box(BBox),
 }
 
 // TODO
 pub fn overlap3d(s1: Shape3D, s2: Shape3D) -> bool {
-	todo!();
-	return false;
+
+	use Shape3D::*;
+
+	match s1 {
+		Box(bbox) => {
+			match s2 {
+				Box(b2) => {
+					return box_box(bbox, b2);
+				},
+				Point(pt) => {
+					return pt_box(pt, bbox);
+				},
+			}
+		},
+		Point(pt) => {
+			match s2 {
+				Box(..) => {
+					return overlap3d(s2, s1);
+				},
+				Point(p2) => {
+					return pt == p2;
+				},
+			}
+		},
+	}
+
 }
 
