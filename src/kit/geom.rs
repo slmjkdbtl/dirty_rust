@@ -2,7 +2,7 @@
 
 //! General Collision Detection
 
-// some code borrowed from [p5.collide2dD](https://github.com/bmoren/p5.collide2D)
+// some code borrowed from [p5.collide2dD](https://github.com/bmoren/p5.collide2D) and [three.js](https://threejs.org)
 
 use crate::*;
 use math::*;
@@ -381,13 +381,83 @@ fn sphere_box(s: Sphere, b: BBox) -> bool {
 
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Sphere {
-	pub center: Vec3,
-	pub radius: f32,
+fn box_plane(b: BBox, p: Plane) -> bool {
+
+	let mut min;
+	let mut max;
+
+	if ( p.normal.x > 0.0 ) {
+
+		min = p.normal.x * b.min.x;
+		max = p.normal.x * b.max.x;
+
+	} else {
+
+		min = p.normal.x * b.max.x;
+		max = p.normal.x * b.min.x;
+
+	}
+
+	if ( p.normal.y > 0.0 ) {
+
+		min += p.normal.y * b.min.y;
+		max += p.normal.y * b.max.y;
+
+	} else {
+
+		min += p.normal.y * b.max.y;
+		max += p.normal.y * b.min.y;
+
+	}
+
+	if ( p.normal.z > 0.0 ) {
+
+		min += p.normal.z * b.min.z;
+		max += p.normal.z * b.max.z;
+
+	} else {
+
+		min += p.normal.z * b.max.z;
+		max += p.normal.z * b.min.z;
+
+	}
+
+	return ( min <= - p.constant && max >= - p.constant );
+
 }
 
-pub fn ray_sphere(r: Ray, s: Sphere) -> bool {
+pub fn sphere_plane(s: Sphere, p: Plane) -> bool {
+	return f32::abs( p.normal.dot( s.center ) + p.constant ) <= s.radius;
+}
+
+fn ray_plane(r: Ray3, p: Plane) -> bool {
+
+	let denominator = p.normal.dot( r.dir );
+
+	if ( denominator == 0.0 ) {
+
+		// line is coplanar, return origin
+		if ( p.normal.dot( r.origin ) + p.constant == 0.0 ) {
+// 			return 0;
+			return true;
+		}
+
+		// Null is preferable to undefined since undefined means.... it is undefined
+
+		return false;
+
+	}
+
+	let t = - ( r.origin.dot( p.normal ) + p.constant ) / denominator;
+
+	// Return if the ray never intersects the plane
+
+	return t >= 0.0;
+// 	return t >= 0 ? t : null;
+
+}
+
+pub fn ray_sphere(r: Ray3, s: Sphere) -> bool {
 
 	let d = s.center - r.origin;
 	let tca = d.dot(r.dir);
@@ -409,15 +479,15 @@ pub fn ray_sphere(r: Ray, s: Sphere) -> bool {
 
 	if (t0 < 0.0) {
 		return true;
-// 		return this.at( t1, target );
+// 		return r.at( t1, target );
 	}
 
 	return true;
-// 	return this.at( t0, target );
+// 	return r.at( t0, target );
 
 }
 
-pub fn ray_box(r: Ray, b: BBox) -> bool {
+pub fn ray_box(r: Ray3, b: BBox) -> bool {
 
 	let mut tmin;
 	let mut tmax;
@@ -495,15 +565,15 @@ pub fn ray_box(r: Ray, b: BBox) -> bool {
 	}
 
 	return true;
-// 	return this.at( tmin >= 0 ? tmin : tmax, target );
+// 	return r.at( tmin >= 0 ? tmin : tmax, target );
 
 }
 
-fn ray_pt(r: Ray, pt: Vec3) -> bool {
+fn ray_pt(r: Ray3, pt: Vec3) -> bool {
 	return false;
 }
 
-fn ray_ray(r1: Ray, r2: Ray) -> bool {
+fn ray_ray(r1: Ray3, r2: Ray3) -> bool {
 	return false;
 }
 
@@ -512,7 +582,7 @@ pub enum Shape3D {
 	Point(Vec3),
 	Box(BBox),
 	Sphere(Sphere),
-	Ray(Ray),
+	Ray(Ray3),
 }
 
 // TODO
