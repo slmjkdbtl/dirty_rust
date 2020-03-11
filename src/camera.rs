@@ -60,7 +60,7 @@ impl PerspectiveCam {
 			self.pitch.cos() * (self.yaw - 90f32.to_radians()).cos(),
 			self.pitch.sin(),
 			self.pitch.cos() * (self.yaw - 90f32.to_radians()).sin(),
-		).normalize();
+		).normalized();
 
 	}
 
@@ -102,8 +102,8 @@ impl Camera for PerspectiveCam {
 		let eye = self.pos;
 		let center = self.pos + self.front;
 		let up = vec3!(0, 1, 0);
-		let z = (center - eye).normalize();
-		let x = up.cross(z).normalize();
+		let z = (center - eye).normalized();
+		let x = up.cross(z).normalized();
 		let y = z.cross(x);
 
 		return mat4!(

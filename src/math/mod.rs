@@ -16,6 +16,12 @@ pub fn wave(t: f32, low: f32, hi: f32) -> f32 {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub struct Ray {
+	pub origin: Vec3,
+	pub dir: Vec3,
+}
+
+#[derive(Clone, Copy, Debug)]
 pub struct BBox {
 	pub min: Vec3,
 	pub max: Vec3,

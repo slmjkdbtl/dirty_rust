@@ -48,7 +48,7 @@ impl Drawable for Gradient {
 			;
 
 		let w = self.width;
-		let h = Vec2::dis(self.p1, self.p2);
+		let h = Vec2::dist(self.p1, self.p2);
 
 		let mut last_pos = None;
 
