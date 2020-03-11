@@ -8,10 +8,28 @@ pub struct Ray3 {
 	pub dir: Vec3,
 }
 
+impl Ray3 {
+	pub fn new(origin: Vec3, dir: Vec3) -> Self {
+		return Self {
+			origin: origin,
+			dir: dir,
+		};
+	}
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Ray2 {
 	pub origin: Vec2,
 	pub dir: Vec2,
+}
+
+impl Ray2 {
+	pub fn new(origin: Vec2, dir: Vec2) -> Self {
+		return Self {
+			origin: origin,
+			dir: dir,
+		};
+	}
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -20,16 +38,43 @@ pub struct Line2 {
 	pub p2: Vec2,
 }
 
+impl Line2 {
+	pub fn new(p1: Vec2, p2: Vec2) -> Self {
+		return Self {
+			p1: p1,
+			p2: p2,
+		};
+	}
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Line3 {
 	pub p1: Vec3,
 	pub p2: Vec3,
 }
 
+impl Line3 {
+	pub fn new(p1: Vec3, p2: Vec3) -> Self {
+		return Self {
+			p1: p1,
+			p2: p2,
+		};
+	}
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Rect {
 	pub min: Vec2,
 	pub max: Vec2,
+}
+
+impl Rect {
+	pub fn new(min: Vec2, max: Vec2) -> Self {
+		return Self {
+			min: min,
+			max: max,
+		};
+	}
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -91,16 +136,43 @@ pub struct Plane {
 	pub constant: f32,
 }
 
+impl Plane {
+	pub fn new(normal: Vec3, constant: f32) -> Self {
+		return Self {
+			normal: normal,
+			constant: constant,
+		};
+	}
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Circle {
 	pub center: Vec2,
 	pub radius: f32,
 }
 
+impl Circle {
+	pub fn new(center: Vec2, radius: f32) -> Self {
+		return Self {
+			center: center,
+			radius: radius,
+		};
+	}
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Sphere {
 	pub center: Vec3,
 	pub radius: f32,
+}
+
+impl Sphere {
+	pub fn new(center: Vec3, radius: f32) -> Self {
+		return Self {
+			center: center,
+			radius: radius,
+		};
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
