@@ -65,7 +65,7 @@ impl FormattedText {
 		for (i, ch) in self.chars.iter().enumerate() {
 
 			let p = ch.pos + vec2!(ch.width, 0);
-			let dis = Vec2::dis(pos, p);
+			let dis = Vec2::dist(pos, p);
 
 			if let Some(cdis) = closest_dis {
 				if dis < cdis {

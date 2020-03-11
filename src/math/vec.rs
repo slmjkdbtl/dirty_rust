@@ -212,7 +212,7 @@ impl Vec2 {
 		return f32::atan2(other.y - self.y, other.x - self.x);
 	}
 
-	pub fn dis(self, other: Self) -> f32 {
+	pub fn dist(self, other: Self) -> f32 {
 		return f32::sqrt((self.x - other.x).powi(2) + (self.y - other.y).powi(2));
 	}
 
@@ -231,7 +231,15 @@ impl Vec3 {
 		return f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
 	}
 
-	pub fn normalize(self) -> Self {
+	pub fn dist(self, other: Self) -> f32 {
+		return f32::sqrt(
+			(self.x - other.x) * (self.x - other.x) +
+			(self.y - other.y) * (self.y - other.y) +
+			(self.z - other.z) * (self.z - other.z)
+		);
+	}
+
+	pub fn normalized(self) -> Self {
 		return self.clone() / self.mag();
 	}
 

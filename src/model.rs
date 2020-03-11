@@ -725,7 +725,7 @@ fn gen_normals(pos: &[Vec3], indices: &[u32]) -> Vec<Vec3> {
 
 	return normals
 		.into_iter()
-		.map(|p| p.normalize())
+		.map(|p| p.normalized())
 		.collect();
 
 }
