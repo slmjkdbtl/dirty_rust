@@ -334,7 +334,7 @@ impl Ctx {
 	}
 
 	pub fn cam_to_clip(&self, cam: &dyn Camera, p: Vec3) -> Vec3 {
-		return cam.projection() * cam.view() * p;
+		return cam.proj() * cam.view() * p;
 	}
 
 	pub fn to_screen(&self, p: Vec3) -> Vec2 {
@@ -343,54 +343,6 @@ impl Ctx {
 
 	pub fn cam_to_screen(&self, cam: &dyn Camera, p: Vec3) -> Vec2 {
 		return self.clip_to_screen(self.cam_to_clip(cam, p).xy());
-	}
-
-	pub fn to_world(&self, p: Vec2, nz: f32) -> Vec3 {
-
-		let normalized = self.screen_to_clip(p);
-		let clip_coord = vec4!(normalized.x, normalized.y, nz, 1);
-		let world_coord = self.view.inverse() * (self.proj.inverse() * clip_coord);
-
-		return world_coord.xyz();
-
-	}
-
-	pub fn cam_to_world(&self, cam: &dyn Camera, p: Vec2, nz: f32) -> Vec3 {
-
-		let normalized = self.screen_to_clip(p);
-		let clip_coord = vec4!(normalized.x, normalized.y, nz, 1);
-		let world_coord = cam.view().inverse() * (cam.projection().inverse() * clip_coord);
-
-		return world_coord.xyz();
-
-	}
-
-	pub fn proj(&self) -> Mat4 {
-		return self.proj;
-	}
-
-	pub fn to_world_ray(&self, p: Vec2) -> Vec3 {
-
-		let normalized = self.screen_to_clip(p);
-		let clip_coord = vec4!(normalized.x, normalized.y, -1.0, 1);
-		let cam_ray = self.proj.inverse() * clip_coord;
-		let cam_ray = vec4!(cam_ray.x, cam_ray.y, -1, 0);
-		let world_coord = self.view.inverse() * cam_ray;
-
-		return world_coord.xyz().normalized();
-
-	}
-
-	pub fn cam_to_world_ray(&self, cam: &dyn Camera, p: Vec2) -> Vec3 {
-
-		let normalized = self.screen_to_clip(p);
-		let clip_coord = vec4!(normalized.x, normalized.y, -1.0, 1);
-		let cam_ray = cam.projection().inverse() * clip_coord;
-		let cam_ray = vec4!(cam_ray.x, cam_ray.y, -1, 0);
-		let world_coord = cam.view().inverse() * cam_ray;
-
-		return world_coord.xyz().normalized();
-
 	}
 
 	pub(crate) fn flush(&mut self) {
@@ -418,7 +370,7 @@ impl Ctx {
 	}
 
 	pub(crate) fn apply_cam(&mut self, cam: &dyn Camera) {
-		self.proj = cam.projection();
+		self.proj = cam.proj();
 		self.view = cam.view();
 	}
 

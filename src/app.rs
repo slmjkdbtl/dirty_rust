@@ -218,7 +218,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 
-		proj: cam.projection(),
+		proj: cam.proj(),
 		view: cam.view(),
 
 		empty_tex: gfx::Texture::from_pixels(&gl, 1, 1, &[255; 4])?,
