@@ -304,9 +304,12 @@ from_s2d!(Circle => Circle);
 from_s2d!(Line2 => Line);
 from_s2d!(&'a [Vec2] => Polygon);
 
-pub fn intersect2d(s1: Shape2D, s2: Shape2D) -> bool {
+pub fn intersect2d<'a>(s1: impl Into<Shape2D<'a>>, s2: impl Into<Shape2D<'a>>) -> bool {
 
 	use Shape2D::*;
+
+	let s1 = s1.into();
+	let s2 = s2.into();
 
 	return match s1 {
 		Circle(c) => {
@@ -615,9 +618,12 @@ from_s3d!(Ray3 => Ray);
 from_s3d!(Plane => Plane);
 from_s3d!(Line3 => Line);
 
-pub fn intersect3d(s1: Shape3D, s2: Shape3D) -> bool {
+pub fn intersect3d(s1: impl Into<Shape3D>, s2: impl Into<Shape3D>) -> bool {
 
 	use Shape3D::*;
+
+	let s1 = s1.into();
+	let s2 = s2.into();
 
 	return match s1 {
 		Box(b) => {

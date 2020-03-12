@@ -173,7 +173,6 @@ impl Camera for OrthoCam {
 		return mat4!();
 	}
 
-	// TODO
 	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
 
 		let dir = vec3!(0, 0, -1);
