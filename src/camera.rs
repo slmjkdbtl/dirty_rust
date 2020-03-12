@@ -4,8 +4,9 @@ use crate::*;
 use math::*;
 
 pub trait Camera {
-	fn projection(&self) -> Mat4;
+	fn proj(&self) -> Mat4;
 	fn view(&self) -> Mat4;
+	fn mouse_ray(&self, ctx: &Ctx) -> Ray3;
 }
 
 #[derive(Clone)]
@@ -84,7 +85,7 @@ impl PerspectiveCam {
 
 impl Camera for PerspectiveCam {
 
-	fn projection(&self) -> Mat4 {
+	fn proj(&self) -> Mat4 {
 
 		let f = 1.0 / (self.fov / 2.0).tan();
 
@@ -115,6 +116,11 @@ impl Camera for PerspectiveCam {
 
 	}
 
+	// TODO
+	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+		todo!();
+	}
+
 }
 
 #[derive(Clone)]
@@ -142,7 +148,7 @@ impl OrthoCam {
 
 impl Camera for OrthoCam {
 
-	fn projection(&self) -> Mat4 {
+	fn proj(&self) -> Mat4 {
 
 		let w = self.width;
 		let h = self.height;
@@ -165,6 +171,19 @@ impl Camera for OrthoCam {
 
 	fn view(&self) -> Mat4 {
 		return mat4!();
+	}
+
+	// TODO
+	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+
+		let dir = vec3!(0, 0, -1);
+
+		let normalized = ctx.screen_to_clip(ctx.mouse_pos());
+		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
+		let orig = self.proj().inverse() * clip_coord;
+
+		return Ray3::new(orig.xyz(), vec3!(dir.x, -dir.y, dir.z));
+
 	}
 
 }
@@ -194,11 +213,7 @@ impl ObliqueCam {
 
 	}
 
-}
-
-impl Camera for ObliqueCam {
-
-	fn projection(&self) -> Mat4 {
+	fn ortho(&self) -> Mat4 {
 
 		let w = self.width;
 		let h = self.height;
@@ -210,29 +225,59 @@ impl Camera for ObliqueCam {
 		let ty = -(top + bottom) / (top - bottom);
 		let tz = -(far + near) / (far - near);
 
-		let m1 = mat4![
+		return mat4![
 			2.0 / (right - left), 0.0, 0.0, 0.0,
 			0.0, 2.0 / (top - bottom), 0.0, 0.0,
 			0.0, 0.0, -2.0 / (far - near), 0.0,
 			tx, ty, tz, 1.0,
 		];
 
+	}
+
+	fn skew(&self) -> Mat4 {
+
 		let a = -self.z_scale * f32::cos(self.angle);
 		let b = -self.z_scale * f32::sin(self.angle);
 
-		let m2 = mat4![
+		return mat4![
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			a, b, 1.0, 0.0,
 			0.0, 0.0, 0.0, 1.0,
 		];
 
-		return m1 * m2;
+	}
 
+}
+
+impl Camera for ObliqueCam {
+
+	fn proj(&self) -> Mat4 {
+
+		let ortho = OrthoCam {
+			width: self.width,
+			height: self.height,
+			near: self.near,
+			far: self.far,
+		};
+
+		return ortho.proj() * self.skew();
 	}
 
 	fn view(&self) -> Mat4 {
 		return mat4!();
+	}
+
+	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+
+		let dir = (self.skew() * vec3!(0, 0, -1)).normalized();
+
+		let normalized = ctx.screen_to_clip(ctx.mouse_pos());
+		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
+		let orig = self.proj().inverse() * clip_coord;
+
+		return Ray3::new(orig.xyz(), vec3!(dir.x, -dir.y, dir.z));
+
 	}
 
 }
