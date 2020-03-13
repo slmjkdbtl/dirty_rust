@@ -11,14 +11,22 @@ pub struct Line3D {
 }
 
 pub fn line3d(p1: Vec3, p2: Vec3) -> Line3D {
-	return Line3D::from(p1, p2);
+	return Line3D::new(p1, p2);
 }
 
 impl Line3D {
-	pub fn from(p1: Vec3, p2: Vec3) -> Self {
+	pub fn new(p1: Vec3, p2: Vec3) -> Self {
 		return Self {
 			p1: p1,
 			p2: p2,
+			color: rgba!(),
+			width: 1.0,
+		};
+	}
+	pub fn from_ray(r: Ray3, d: f32) -> Self {
+		return Self {
+			p1: r.origin,
+			p2: r.at(d),
 			color: rgba!(),
 			width: 1.0,
 		};

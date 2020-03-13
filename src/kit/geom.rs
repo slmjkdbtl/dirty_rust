@@ -434,72 +434,42 @@ fn box_plane(b: BBox, p: Plane) -> bool {
 
 	}
 
-	return ( min <= - p.constant && max >= - p.constant );
+	return ( min <= - p.dist && max >= - p.dist );
 
 }
 
 pub fn sphere_plane(s: Sphere, p: Plane) -> bool {
-	return f32::abs( p.normal.dot( s.center ) + p.constant ) <= s.radius;
+	return f32::abs( p.normal.dot( s.center ) + p.dist ) <= s.radius;
 }
 
-fn ray_plane(r: Ray3, p: Plane) -> bool {
+pub fn ray_plane(r: Ray3, p: Plane) -> Option<Vec3> {
 
-	let denominator = p.normal.dot( r.dir );
+	let t = -(p.dist + r.origin.dot(p.normal)) / r.dir.dot(p.normal);
 
-	if ( denominator == 0.0 ) {
-
-		// line is coplanar, return origin
-		if ( p.normal.dot( r.origin ) + p.constant == 0.0 ) {
-// 			return 0;
-			return true;
-		}
-
-		// Null is preferable to undefined since undefined means.... it is undefined
-
-		return false;
-
+	if t >= 0.0 {
+		return Some(r.at(t));
+	} else {
+		return None;
 	}
-
-	let t = - ( r.origin.dot( p.normal ) + p.constant ) / denominator;
-
-	// Return if the ray never intersects the plane
-
-	return t >= 0.0;
-// 	return t >= 0 ? t : null;
 
 }
 
-pub fn ray_sphere(r: Ray3, s: Sphere) -> bool {
+pub fn ray_sphere(r: Ray3, s: Sphere) -> Option<Vec3> {
 
-	let d = s.center - r.origin;
-	let tca = d.dot(r.dir);
-	let d2 = d.dot(d) - tca * tca;
-	let radius2 = s.radius * s.radius;
+	let a = Vec3::dot(r.dir, r.dir);
+	let b = 2.0 * (Vec3::dot(r.origin, r.dir) - Vec3::dot(r.dir, s.center));
+	let c = Vec3::dot(s.center - r.origin, s.center - r.origin) - s.radius * s.radius;
+	let d = b * b - 4.0 * a * c;
 
-	if (d2 > radius2) {
-		return false;
+	if d >= 0.0 {
+		return Some(r.at(d));
+	} else {
+		return None;
 	}
-
-	let thc = f32::sqrt(radius2 - d2);
-
-	let t0 = tca - thc;
-	let t1 = tca + thc;
-
-	if (t0 < 0.0 && t1 < 0.0)  {
-		return false;
-	}
-
-	if (t0 < 0.0) {
-		return true;
-// 		return r.at( t1, target );
-	}
-
-	return true;
-// 	return r.at( t0, target );
 
 }
 
-pub fn ray_box(r: Ray3, b: BBox) -> bool {
+pub fn ray_box(r: Ray3, b: BBox) -> Option<Vec3> {
 
 	let mut tmin;
 	let mut tmax;
@@ -537,7 +507,7 @@ pub fn ray_box(r: Ray3, b: BBox) -> bool {
 	}
 
 	if ( ( tmin > tymax ) || ( tymin > tmax ) ) {
-		return false;
+		return None;
 	}
 
 	if ( tymin > tmin || tmin != tmin ) {
@@ -561,7 +531,7 @@ pub fn ray_box(r: Ray3, b: BBox) -> bool {
 	}
 
 	if ( ( tmin > tzmax ) || ( tzmin > tmax ) ) {
-		return false;
+		return None;
 	}
 
 	if ( tzmin > tmin || tmin != tmin ) {
@@ -573,22 +543,24 @@ pub fn ray_box(r: Ray3, b: BBox) -> bool {
 	}
 
 	if ( tmax < 0.0 ) {
-		return false;
+		return None;
 	}
 
-	return true;
-// 	return r.at( tmin >= 0 ? tmin : tmax, target );
+	if tmin >= 0.0 {
+		return Some(r.at(tmin));
+	} else {
+		return Some(r.at(tmax));
+	}
 
 }
 
 // TODO
 fn ray_pt(r: Ray3, pt: Vec3) -> bool {
-	return false;
+	return r.dir == (pt - r.origin).normalized();
 }
 
-// TODO
 fn ray_ray(r1: Ray3, r2: Ray3) -> bool {
-	return false;
+	return r1 == r2;
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -631,7 +603,7 @@ pub fn intersect3d(s1: impl Into<Shape3D>, s2: impl Into<Shape3D>) -> bool {
 				Box(b2) => box_box(b, b2),
 				Point(pt) => pt_box(pt, b),
 				Sphere(s) => sphere_box(s, b),
-				Ray(r) => ray_box(r, b),
+				Ray(r) => ray_box(r, b).is_some(),
 				Plane(p) => box_plane(b, p),
 				Line(l) => todo!(),
 			}
@@ -651,7 +623,7 @@ pub fn intersect3d(s1: impl Into<Shape3D>, s2: impl Into<Shape3D>) -> bool {
 				Box(..)
 				| Point(..) => intersect3d(s2, s1),
 				Sphere(s2) => sphere_sphere(s, s2),
-				Ray(r) => ray_sphere(r, s),
+				Ray(r) => ray_sphere(r, s).is_some(),
 				Plane(p) => sphere_plane(s, p),
 				Line(l) => todo!(),
 			}
@@ -662,7 +634,7 @@ pub fn intersect3d(s1: impl Into<Shape3D>, s2: impl Into<Shape3D>) -> bool {
 				| Point(..)
 				| Sphere(..) => intersect3d(s2, s1),
 				Ray(r2) => ray_ray(r, r2),
-				Plane(p) => ray_plane(r, p),
+				Plane(p) => ray_plane(r, p).is_some(),
 				Line(l) => todo!(),
 			}
 		},

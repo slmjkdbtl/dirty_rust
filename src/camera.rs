@@ -275,7 +275,7 @@ impl Camera for ObliqueCam {
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
 		let orig = self.proj().inverse() * clip_coord;
 
-		return Ray3::new(orig.xyz(), vec3!(dir.x, -dir.y, dir.z));
+		return Ray3::new(orig.xyz(), vec3!(-dir.x, -dir.y, dir.z));
 
 	}
 

@@ -13,7 +13,7 @@ pub struct Line {
 }
 
 impl Line {
-	pub fn from(p1: Vec2, p2: Vec2) -> Self {
+	pub fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
 			p1: p1,
 			p2: p2,
@@ -49,7 +49,7 @@ impl Line {
 }
 
 pub fn line(p1: Vec2, p2: Vec2) -> Line {
-	return Line::from(p1, p2);
+	return Line::new(p1, p2);
 }
 
 impl Drawable for Line {

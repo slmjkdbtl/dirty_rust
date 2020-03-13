@@ -102,9 +102,7 @@ impl Ctx {
 
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		if self.cur_canvas.is_some() {
-			return Err(format!("cannot use canvas inside a canvas"));
-		}
+		let prev_canvas = self.cur_canvas.take();
 
 		self.flush();
 
@@ -128,7 +126,7 @@ impl Ctx {
 			return Ok(());
 		})?;
 
-		self.cur_canvas = None;
+		self.cur_canvas = prev_canvas;
 		self.transform = t;
 
 		self.gl.viewport(
