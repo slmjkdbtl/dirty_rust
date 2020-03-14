@@ -61,7 +61,7 @@ impl PerspectiveCam {
 			self.pitch.cos() * (self.yaw - 90f32.to_radians()).cos(),
 			self.pitch.sin(),
 			self.pitch.cos() * (self.yaw - 90f32.to_radians()).sin(),
-		).normalized();
+		).unit();
 
 	}
 
@@ -103,8 +103,8 @@ impl Camera for PerspectiveCam {
 		let eye = self.pos;
 		let center = self.pos + self.front;
 		let up = vec3!(0, 1, 0);
-		let z = (center - eye).normalized();
-		let x = up.cross(z).normalized();
+		let z = (center - eye).unit();
+		let x = up.cross(z).unit();
 		let y = z.cross(x);
 
 		return mat4!(
@@ -269,7 +269,7 @@ impl Camera for ObliqueCam {
 
 	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
 
-		let dir = (self.skew() * vec3!(0, 0, -1)).normalized();
+		let dir = (self.skew() * vec3!(0, 0, -1)).unit();
 
 		let normalized = ctx.screen_to_clip(ctx.mouse_pos());
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);

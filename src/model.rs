@@ -649,7 +649,6 @@ impl Model {
 
 }
 
-// TODO: apply transform at node end
 fn get_bbox_inner(
 	min: &mut Vec3,
 	max: &mut Vec3,
@@ -725,7 +724,7 @@ fn gen_normals(pos: &[Vec3], indices: &[u32]) -> Vec<Vec3> {
 
 	return normals
 		.into_iter()
-		.map(|p| p.normalized())
+		.map(|p| p.unit())
 		.collect();
 
 }

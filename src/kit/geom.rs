@@ -2,8 +2,6 @@
 
 //! General Collision Detection
 
-// some code borrowed from [p5.collide2dD](https://github.com/bmoren/p5.collide2D) and [three.js](https://threejs.org)
-
 use crate::*;
 use math::*;
 
@@ -218,7 +216,7 @@ pub fn sat2d(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 			let p1 = poly[i];
 			let p2 = poly[(i + 1) % len];
 
-			normals.push((p1 - p2).normal().normalized());
+			normals.push((p1 - p2).normal().unit());
 
 		}
 
@@ -554,13 +552,8 @@ pub fn ray_box(r: Ray3, b: BBox) -> Option<Vec3> {
 
 }
 
-// TODO
 fn ray_pt(r: Ray3, pt: Vec3) -> bool {
-	return r.dir == (pt - r.origin).normalized();
-}
-
-fn ray_ray(r1: Ray3, r2: Ray3) -> bool {
-	return r1 == r2;
+	return r.dir == (pt - r.origin).unit();
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -633,7 +626,7 @@ pub fn intersect3d(s1: impl Into<Shape3D>, s2: impl Into<Shape3D>) -> bool {
 				Box(..)
 				| Point(..)
 				| Sphere(..) => intersect3d(s2, s1),
-				Ray(r2) => ray_ray(r, r2),
+				Ray(r2) => r == r2,
 				Plane(p) => ray_plane(r, p).is_some(),
 				Line(l) => todo!(),
 			}

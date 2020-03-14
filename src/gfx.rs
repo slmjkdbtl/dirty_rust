@@ -343,7 +343,7 @@ impl Ctx {
 		return self.clip_to_screen(self.cam_to_clip(cam, p).xy());
 	}
 
-	pub(crate) fn flush(&mut self) {
+	pub fn flush(&mut self) {
 		self.renderer_2d.flush();
 		self.renderer_3d.flush();
 	}
