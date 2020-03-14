@@ -196,7 +196,7 @@ impl Vec2 {
 		return f32::sqrt(self.x * self.x + self.y * self.y);
 	}
 
-	pub fn normalized(self) -> Self {
+	pub fn unit(self) -> Self {
 		return self.clone() / self.mag();
 	}
 
@@ -213,7 +213,10 @@ impl Vec2 {
 	}
 
 	pub fn dist(self, other: Self) -> f32 {
-		return f32::sqrt((self.x - other.x).powi(2) + (self.y - other.y).powi(2));
+		return f32::sqrt(
+			(self.x - other.x) * (self.x - other.x) +
+			(self.y - other.y) * (self.y - other.y)
+		);
 	}
 
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
@@ -239,7 +242,7 @@ impl Vec3 {
 		);
 	}
 
-	pub fn normalized(self) -> Self {
+	pub fn unit(self) -> Self {
 		return self.clone() / self.mag();
 	}
 

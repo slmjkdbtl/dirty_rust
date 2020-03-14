@@ -9,15 +9,18 @@ pub struct Ray3 {
 }
 
 impl Ray3 {
+
 	pub fn new(origin: Vec3, dir: Vec3) -> Self {
 		return Self {
 			origin: origin,
 			dir: dir,
 		};
 	}
+
 	pub fn at(&self, d: f32) -> Vec3 {
 		return self.origin + self.dir * d;
 	}
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -27,15 +30,18 @@ pub struct Ray2 {
 }
 
 impl Ray2 {
+
 	pub fn new(origin: Vec2, dir: Vec2) -> Self {
 		return Self {
 			origin: origin,
 			dir: dir,
 		};
 	}
+
 	pub fn at(&self, d: f32) -> Vec2 {
 		return self.origin + self.dir * d;
 	}
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -75,12 +81,26 @@ pub struct Rect {
 }
 
 impl Rect {
+
 	pub fn new(min: Vec2, max: Vec2) -> Self {
 		return Self {
 			min: min,
 			max: max,
 		};
 	}
+
+	pub fn center(&self) -> Vec2 {
+		return (self.min + self.max) * 0.5;
+	}
+
+	pub fn width(&self) -> f32 {
+		return self.max.x - self.min.x;
+	}
+
+	pub fn height(&self) -> f32 {
+		return self.max.y - self.min.y;
+	}
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -98,7 +118,43 @@ impl BBox {
 		};
 	}
 
-	pub fn transform(self, t: Mat4) -> Self {
+	pub fn max(self, other: Self) -> Self {
+
+		let minx = f32::min(self.min.x, other.min.x);
+		let miny = f32::min(self.min.y, other.min.y);
+		let minz = f32::min(self.min.z, other.min.z);
+		let maxx = f32::max(self.max.x, other.max.x);
+		let maxy = f32::max(self.max.y, other.max.y);
+		let maxz = f32::max(self.max.z, other.max.z);
+
+		return Self {
+			min: vec3!(minx, miny, minz),
+			max: vec3!(maxx, maxy, maxz),
+		};
+
+	}
+
+	pub fn min(self, other: Self) -> Self {
+
+		let minx = f32::max(self.min.x, other.min.x);
+		let miny = f32::max(self.min.y, other.min.y);
+		let minz = f32::max(self.min.z, other.min.z);
+		let maxx = f32::min(self.max.x, other.max.x);
+		let maxy = f32::min(self.max.y, other.max.y);
+		let maxz = f32::min(self.max.z, other.max.z);
+
+		return Self {
+			min: vec3!(minx, miny, minz),
+			max: vec3!(maxx, maxy, maxz),
+		};
+
+	}
+
+	pub fn center(self) -> Vec3 {
+		return (self.min + self.max) * 0.5;
+	}
+
+	pub fn transform(&self, t: Mat4) -> Self {
 
 		let ax = self.min.x;
 		let ay = self.min.y;
@@ -143,12 +199,22 @@ pub struct Plane {
 }
 
 impl Plane {
+
 	pub fn new(normal: Vec3, dist: f32) -> Self {
 		return Self {
 			normal: normal,
 			dist: dist,
 		};
 	}
+	pub fn from_pts(p0: Vec3, p1: Vec3, p2: Vec3) -> Self {
+
+		let normal = Vec3::cross(p1 - p0, p1 - p2).unit();
+		let d = -p1.dot(normal);
+
+		return Self::new(normal, d);
+
+	}
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -158,12 +224,23 @@ pub struct Circle {
 }
 
 impl Circle {
+
 	pub fn new(center: Vec2, radius: f32) -> Self {
 		return Self {
 			center: center,
 			radius: radius,
 		};
 	}
+
+	pub fn rect(&self) -> Rect {
+
+		let min = self.center - vec2!(self.radius);
+		let max = self.center + vec2!(self.radius);
+
+		return Rect::new(min, max);
+
+	}
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -173,12 +250,23 @@ pub struct Sphere {
 }
 
 impl Sphere {
+
 	pub fn new(center: Vec3, radius: f32) -> Self {
 		return Self {
 			center: center,
 			radius: radius,
 		};
 	}
+
+	pub fn bbox(&self) -> BBox {
+
+		let min = self.center - vec3!(self.radius);
+		let max = self.center + vec3!(self.radius);
+
+		return BBox::new(min, max);
+
+	}
+
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

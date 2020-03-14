@@ -59,7 +59,7 @@ impl Drawable for Line {
 		if let Some(dash) = self.dash {
 
 			let diff = self.p2 - self.p1;
-			let nd = diff.normalized();
+			let nd = diff.unit();
 			let len = diff.mag();
 			let mut l = 0.0;
 			let mut nxt_p1 = self.p1;
@@ -95,8 +95,8 @@ impl Drawable for Line {
 
 		} else {
 
-			let dpos1 = Vec2::normal(self.p2 - self.p1).normalized() * self.width / 2.0;
-			let dpos2 = Vec2::normal(self.p1 - self.p2).normalized() * self.width / 2.0;
+			let dpos1 = Vec2::normal(self.p2 - self.p1).unit() * self.width / 2.0;
+			let dpos2 = Vec2::normal(self.p1 - self.p2).unit() * self.width / 2.0;
 			let p1 = self.p1 - dpos1;
 			let p2 = self.p1 + dpos1;
 			let p3 = self.p2 - dpos2;
