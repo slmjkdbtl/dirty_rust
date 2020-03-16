@@ -6,7 +6,10 @@ use math::*;
 pub trait Camera {
 	fn proj(&self) -> Mat4;
 	fn view(&self) -> Mat4;
-	fn mouse_ray(&self, ctx: &Ctx) -> Ray3;
+	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3;
+	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+		return self.pt_to_ray(ctx, ctx.mouse_pos());
+	}
 }
 
 #[derive(Clone)]
@@ -117,7 +120,7 @@ impl Camera for PerspectiveCam {
 	}
 
 	// TODO
-	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3 {
 		todo!();
 	}
 
@@ -173,11 +176,11 @@ impl Camera for OrthoCam {
 		return mat4!();
 	}
 
-	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3 {
 
 		let dir = vec3!(0, 0, -1);
 
-		let normalized = ctx.screen_to_clip(ctx.mouse_pos());
+		let normalized = ctx.screen_to_clip(pt);
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
 		let orig = self.proj().inverse() * clip_coord;
 
@@ -267,11 +270,11 @@ impl Camera for ObliqueCam {
 		return mat4!();
 	}
 
-	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
+	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3 {
 
 		let dir = (self.skew() * vec3!(0, 0, -1)).unit();
 
-		let normalized = ctx.screen_to_clip(ctx.mouse_pos());
+		let normalized = ctx.screen_to_clip(pt);
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
 		let orig = self.proj().inverse() * clip_coord;
 

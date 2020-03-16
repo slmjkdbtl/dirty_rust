@@ -60,7 +60,7 @@ impl Drawable for Line {
 
 			let diff = self.p2 - self.p1;
 			let nd = diff.unit();
-			let len = diff.mag();
+			let len = diff.len();
 			let mut l = 0.0;
 			let mut nxt_p1 = self.p1;
 

@@ -373,7 +373,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 						}
 
 						let p = ctx.scroll_phase;
-						events.push(Event::Scroll((*delta).into(), p));
+						let d: Vec2 = (*delta).into();
+
+						events.push(Event::Scroll(vec2!(d.x, -d.y), p));
 
 					},
 
