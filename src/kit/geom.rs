@@ -442,7 +442,7 @@ pub fn sphere_plane(s: Sphere, p: Plane) -> bool {
 
 pub fn ray_plane(r: Ray3, p: Plane) -> Option<Vec3> {
 
-	let t = -(p.dist + r.origin.dot(p.normal)) / r.dir.dot(p.normal);
+	let t = -(r.origin.dot(p.normal) - p.dist) / r.dir.dot(p.normal);
 
 	if t >= 0.0 {
 		return Some(r.at(t));

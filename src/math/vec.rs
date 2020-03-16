@@ -192,12 +192,12 @@ impl Vec2 {
 		return vec2!(f32::cos(angle), f32::sin(angle));
 	}
 
-	pub fn mag(self) -> f32 {
+	pub fn len(self) -> f32 {
 		return f32::sqrt(self.x * self.x + self.y * self.y);
 	}
 
 	pub fn unit(self) -> Self {
-		return self.clone() / self.mag();
+		return self / self.len();
 	}
 
 	pub fn normal(self) -> Self {
@@ -230,7 +230,7 @@ impl Vec2 {
 
 impl Vec3 {
 
-	pub fn mag(self) -> f32 {
+	pub fn len(self) -> f32 {
 		return f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
 	}
 
@@ -243,7 +243,7 @@ impl Vec3 {
 	}
 
 	pub fn unit(self) -> Self {
-		return self.clone() / self.mag();
+		return self / self.len();
 	}
 
 	pub fn dot(self, other: Self) -> f32 {
@@ -260,6 +260,10 @@ impl Vec3 {
 
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
+	}
+
+	pub fn xz(self) -> Vec2 {
+		return vec2!(self.x, self.z);
 	}
 
 	pub fn clamp(self, low: Self, hi: Self) -> Self {

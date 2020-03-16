@@ -23,6 +23,9 @@ impl Rect3D {
 			line_width: 1.0,
 		};
 	}
+	pub fn from_bbox(b: BBox) -> Self {
+		return Self::from_pts(b.min, b.max)
+	}
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
 		return self;

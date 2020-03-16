@@ -51,9 +51,13 @@ impl FormattedText {
 		if self.chars.is_empty() {
 			return Some(vec2!(0));
 		} else {
-			return self.chars.get(i).map(|ch| {
-				return ch.pos + vec2!(ch.width, 0);
-			});
+			if i == 0 {
+				return Some(vec2!(0))
+			} else {
+				return self.chars.get(i - 1).map(|ch| {
+					return ch.pos + vec2!(ch.width, 0);
+				});
+			}
 		}
 	}
 
@@ -164,10 +168,12 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 	for ch in text.chars() {
 
 		if ch == '\n' {
+
 			lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
+
 		} else {
 
-			if let Some((tex, quad)) = font.get(ch) {
+			if let Some((tex, quad)) = font.get(ch).or(font.get(' ')) {
 
 				let gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
 
