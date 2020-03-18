@@ -1,6 +1,5 @@
 // wengwengweng
 
-use std::rc::Rc;
 use std::path::Path;
 
 use crate::*;
@@ -9,7 +8,7 @@ use super::gfx::*;
 
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
-	gl_fbuf: Rc<gl::Framebuffer>,
+	gl_fbuf: gl::Framebuffer,
 	tex: Texture,
 	width: i32,
 	height: i32,
@@ -26,7 +25,7 @@ impl Canvas {
 		let tex = Texture::from_gl_tex(fbuf.tex().clone());
 
 		return Ok(Self {
-			gl_fbuf: Rc::new(fbuf),
+			gl_fbuf: fbuf,
 			tex: tex,
 			width: w,
 			height: h,
@@ -65,6 +64,22 @@ impl Canvas {
 
 		return Ok(());
 
+	}
+
+	pub fn resize(&mut self, ctx: &Ctx, w: i32, h: i32) -> Result<()> {
+
+		let new = Self::new(ctx, w, h)?;
+		let old = std::mem::replace(self, new);
+
+		old.free();
+
+		return Ok(());
+
+	}
+
+	pub fn free(self) {
+		self.tex.free();
+		self.gl_fbuf.free();
 	}
 
 	pub(crate) fn gl_fbuf(&self) -> &gl::Framebuffer {
