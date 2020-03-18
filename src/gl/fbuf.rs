@@ -12,6 +12,7 @@ pub struct Framebuffer {
 	ctx: Rc<GLCtx>,
 	id: FramebufferID,
 	tex: Texture2D,
+	rbo: RenderbufferID,
 }
 
 impl Framebuffer {
@@ -43,6 +44,7 @@ impl Framebuffer {
 				ctx: ctx,
 				id: id,
 				tex: tex,
+				rbo: rbo,
 			};
 
 			fbuf.bind();
@@ -109,6 +111,7 @@ impl Framebuffer {
 	pub fn free(self) {
 		unsafe {
 			self.ctx.delete_framebuffer(self.id);
+			self.ctx.delete_renderbuffer(self.rbo);
 		}
 	}
 
