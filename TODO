@@ -1,6 +1,7 @@
 # wengwengweng
 
 == DOING
+- [gfx] free model gl resources
 - [gfx] multiple textures
 - [gfx] spline
 - [misc] generate font mesh

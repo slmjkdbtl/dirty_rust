@@ -9,14 +9,14 @@ use crate::img::Image;
 
 #[derive(Clone, PartialEq)]
 pub struct Texture {
-	gl_tex: Rc<gl::Texture2D>,
+	gl_tex: gl::Texture2D,
 }
 
 impl Texture {
 
 	pub(crate) fn from_gl_tex(gl_tex: gl::Texture2D) -> Self {
 		return Self {
-			gl_tex: Rc::new(gl_tex),
+			gl_tex: gl_tex,
 		};
 	}
 
@@ -62,6 +62,10 @@ impl Texture {
 
 	pub fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
 		self.gl_tex.sub_data(x, y, w, h, data);
+	}
+
+	pub fn free(self) {
+		self.gl_tex.free();
 	}
 
 	pub(crate) fn gl_tex(&self) -> &gl::Texture2D {

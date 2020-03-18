@@ -106,20 +106,12 @@ impl Framebuffer {
 		}
 	}
 
-	pub fn drop(&self) {
+	pub fn free(self) {
 		unsafe {
 			self.ctx.delete_framebuffer(self.id);
 		}
 	}
 
-}
-
-impl Drop for Framebuffer {
-	fn drop(&mut self) {
-		unsafe {
-			self.ctx.delete_framebuffer(self.id);
-		}
-	}
 }
 
 impl PartialEq for Framebuffer {

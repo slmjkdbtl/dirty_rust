@@ -125,11 +125,11 @@ impl State for Viewer {
 
 					if !self.resetting {
 
-						let (min, max) = model.bbox();
-						let size = (max - min).mag();
+						let bbox = model.bbox();
+						let size = (bbox.max - bbox.min).len();
 						let orig_scale = 480.0 / size;
 
-						self.scale += s.y * (1.0 / size);
+						self.scale -= s.y * (1.0 / size);
 						self.scale = self.scale.clamp(orig_scale * 0.1, orig_scale * 3.2);
 
 					}
@@ -142,7 +142,6 @@ impl State for Viewer {
 
 				if ctx.mouse_down(Mouse::Left) {
 
-					// TODO: correctly handle rotation
 					self.resetting = false;
 					self.rot += *delta;
 
@@ -216,8 +215,8 @@ impl State for Viewer {
 
 			if self.resetting {
 
-				let (min, max) = model.bbox();
-				let size = (max - min).mag();
+				let bbox = model.bbox();
+				let size = (bbox.max - bbox.min).len();
 
 				let dest_rot = vec2!(0);
 				let dest_pos = vec2!(0);
@@ -268,8 +267,8 @@ impl State for Viewer {
 				})?;
 
 				if self.draw_bound {
-					let (min, max) = model.bbox();
-					ctx.draw(&shapes::rect3d(min, max))?;
+					let bbox = model.bbox();
+					ctx.draw(&shapes::Rect3D::from_bbox(bbox))?;
 				}
 
 				return Ok(());

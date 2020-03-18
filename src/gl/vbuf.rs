@@ -100,7 +100,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	pub fn drop(&self) {
+	pub fn free(self) {
 		unsafe {
 			self.ctx.delete_buffer(self.id);
 		}

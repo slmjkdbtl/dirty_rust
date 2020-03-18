@@ -167,12 +167,11 @@ impl<T: TaskItem> Task<T> {
 
 	pub fn poll(&mut self) -> Option<T> {
 
-		let rx = self.rx.as_ref()?;
-
 		if self.phase != TaskPhase::Working {
 			return None;
 		}
 
+		let rx = self.rx.as_ref()?;
 		let data = rx.try_recv().ok()?;
 
 		self.phase = TaskPhase::Done;
