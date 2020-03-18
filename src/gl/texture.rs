@@ -203,7 +203,7 @@ impl Texture2D {
 
 	}
 
-	pub fn drop(&self) {
+	pub fn free(self) {
 		unsafe {
 			self.ctx.delete_texture(self.id);
 		}
@@ -429,7 +429,7 @@ impl CubemapTexture {
 
 	}
 
-	pub fn drop(&self) {
+	pub fn free(self) {
 		unsafe {
 			self.ctx.delete_texture(self.id);
 		}

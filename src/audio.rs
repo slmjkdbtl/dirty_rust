@@ -108,8 +108,12 @@ impl Sound {
 
 	}
 
-	pub fn as_track(&self, ctx: &impl AudioCtx) -> Result<Track> {
-		return Track::from_sound(ctx, &self);
+	pub fn as_track(self, ctx: &impl AudioCtx) -> Result<Track> {
+		return Track::from_sound(ctx, self);
+	}
+
+	pub fn duration(&self) -> Option<Duration> {
+		return self.buffer.total_duration();
 	}
 
 	pub fn speed(&self, s: f32) -> Self {
@@ -194,26 +198,33 @@ impl Sound {
 
 pub struct Track {
 	sink: Sink,
+	duration: Option<Duration>,
 }
 
 impl Track {
 
 	pub fn from_bytes(ctx: &impl AudioCtx, data: &[u8]) -> Result<Self> {
-		return Self::from_sound(ctx, &Sound::from_bytes(data)?);
+		return Self::from_sound(ctx, Sound::from_bytes(data)?);
 	}
 
-	pub fn from_sound(ctx: &impl AudioCtx, sound: &Sound) -> Result<Self> {
+	pub fn from_sound(ctx: &impl AudioCtx, sound: Sound) -> Result<Self> {
 
 		let device = ctx.device().ok_or(format!("no audio ouput device"))?;
 		let sink = Sink::new(device.cpal_device());
+		let duration = sound.duration();
 
-		sink.append(sound.apply());
+		sink.append(sound.buffer);
 		sink.pause();
 
 		return Ok(Self {
 			sink,
+			duration: duration,
 		});
 
+	}
+
+	pub fn duration(&self) -> Option<Duration> {
+		return self.duration;
 	}
 
 	pub fn is_playing(&self) -> bool {
@@ -226,6 +237,11 @@ impl Track {
 
 	pub fn play(&self) {
 		self.sink.play();
+	}
+
+	pub fn free(self) {
+		self.sink.stop();
+		self.sink.detach();
 	}
 
 }

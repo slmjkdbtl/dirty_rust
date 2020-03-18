@@ -82,12 +82,12 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
-	pub fn drop(&self) {
+	pub fn free(self) {
 
-		self.vbuf.drop();
-		self.ibuf.drop();
+		self.vbuf.free();
+		self.ibuf.free();
 		#[cfg(feature="gl3")]
-		self.vao.drop();
+		self.vao.free();
 
 	}
 

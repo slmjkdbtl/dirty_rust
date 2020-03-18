@@ -18,7 +18,7 @@ opt-level = 2
 default = [
 
 	# modules
-# 	"kit",
+	"kit",
 # 	"synth",
 # 	"imgui",
 # 	"ase",
@@ -83,7 +83,7 @@ tobj = "0.1"
 gltf = "0.15"
 
 # audio
-rodio = { version = "0.10", default-features = false, features = [ "vorbis", "mp3", "wav", ] }
+rodio = { version = "0.11", default-features = false, features = [ "vorbis", "mp3", "wav", ] }
 cpal = "0.11"
 
 # imgui
