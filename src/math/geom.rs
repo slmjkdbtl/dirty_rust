@@ -1,8 +1,11 @@
 // wengwengweng
 
+use serde::Serialize;
+use serde::Deserialize;
+
 use super::*;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Ray3 {
 	pub origin: Vec3,
 	pub dir: Vec3,
@@ -23,7 +26,7 @@ impl Ray3 {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Ray2 {
 	pub origin: Vec2,
 	pub dir: Vec2,
@@ -44,7 +47,7 @@ impl Ray2 {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Line2 {
 	pub p1: Vec2,
 	pub p2: Vec2,
@@ -59,7 +62,7 @@ impl Line2 {
 	}
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Line3 {
 	pub p1: Vec3,
 	pub p2: Vec3,
@@ -74,7 +77,7 @@ impl Line3 {
 	}
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Rect {
 	pub min: Vec2,
 	pub max: Vec2,
@@ -103,7 +106,7 @@ impl Rect {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BBox {
 	pub min: Vec3,
 	pub max: Vec3,
@@ -192,7 +195,7 @@ impl BBox {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Plane {
 	pub normal: Vec3,
 	pub dist: f32,
@@ -217,7 +220,7 @@ impl Plane {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Circle {
 	pub center: Vec2,
 	pub radius: f32,
@@ -243,7 +246,7 @@ impl Circle {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Sphere {
 	pub center: Vec3,
 	pub radius: f32,
@@ -269,7 +272,7 @@ impl Sphere {
 
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Axis {
 	X,
 	Y,
@@ -286,7 +289,7 @@ impl Axis {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum Dir {
 	Right,
 	Down,

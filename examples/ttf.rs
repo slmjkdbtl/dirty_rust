@@ -1,28 +1,28 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::app::*;
 use input::Key;
 
 struct Game {
 	font: gfx::TruetypeFont,
 }
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
+	fn init(ctx: &mut Ctx) -> Result<Self> {
 
 		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 12)?;
 
 		// TODO: temperarily have to cache manually
-		font.cache("营养过剩")?;
+		font.cache_str("营养过剩")?;
+		font.cache_str("1agyo+-好")?;
 
 		return Ok(Self {
 			font: font,
 		});
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -41,7 +41,7 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		use shapes::*;
 
@@ -51,7 +51,7 @@ impl app::State for Game {
 				,
 			|ctx| {
 				ctx.draw(
-					&text("营养过剩")
+					&text("1agyo+-好")
 						.font(&self.font)
 						,
 				)?;
@@ -67,7 +67,7 @@ impl app::State for Game {
 
 fn main() {
 
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.run::<Game>() {
 		println!("{}", err);
 	}
