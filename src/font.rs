@@ -121,7 +121,7 @@ impl TruetypeFont {
 
 	pub fn from_bytes(ctx: &impl gfx::GfxCtx, b: &[u8], size: i32) -> Result<Self> {
 
-		let font = fontdue::Font::from_bytes(b)?;
+		let font = fontdue::Font::from_bytes(b, fontdue::FontSettings::default())?;
 		let (max_w, max_h) = (size * 32, size * 32);
 		let tex = Texture::new(ctx, max_w, max_h)?;
 
@@ -139,51 +139,45 @@ impl TruetypeFont {
 
 	}
 
-	pub fn cache(&mut self, s: &str) -> Result<()> {
+	pub fn cache(&mut self, ch: char) -> Result<()> {
 
-		let (tw, th) = (self.tex.width(), self.tex.height());
+		if self.map.get(&ch).is_none() {
 
-		for ch in s.chars() {
+			let (tw, th) = (self.tex.width(), self.tex.height());
 
-			if self.map.get(&ch).is_none() {
+			let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
+			let (w, h) = (metrics.width as i32, metrics.height as i32);
 
-				let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
-				let (w, h) = (metrics.width as i32, metrics.height as i32);
+// 			println!("{}: {:#?}", ch, metrics);
 
-				// TODO: wait for fontdue::Metrics to get fully implemented
-				let (bx, by) = (metrics.bearing_x as i32, metrics.bearing_y as i32);
-				let (ax, ay) = (metrics.advance_x as i32, metrics.advance_y as i32);
+			let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
 
-				let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
-
-				for b in bitmap {
-					nbitmap.extend_from_slice(&[255, 255, 255, b]);
-				}
-
-				let (mut x, mut y) = self.cur_pt.into();
-
-				if x + w >= tw {
-					x = 0;
-					y += h;
-				}
-
-				if y >= th {
-					return Err(format!("reached font texture size limit"));
-				}
-
-				self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);
-
-				self.map.insert(ch, quad!(
-					x as f32 / tw as f32,
-					y as f32 / th as f32,
-					w as f32 / tw as f32,
-					h as f32 / th as f32,
-				));
-
-				x += w;
-				self.cur_pt = pt!(x, y);
-
+			for b in bitmap {
+				nbitmap.extend_from_slice(&[255, 255, 255, b]);
 			}
+
+			let (mut x, mut y) = self.cur_pt.into();
+
+			if x + w >= tw {
+				x = 0;
+				y += h;
+			}
+
+			if y >= th {
+				return Err(format!("reached font texture size limit"));
+			}
+
+			self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);
+
+			self.map.insert(ch, quad!(
+				x as f32 / tw as f32,
+				y as f32 / th as f32,
+				w as f32 / tw as f32,
+				h as f32 / th as f32,
+			));
+
+			x += w;
+			self.cur_pt = pt!(x, y);
 
 		}
 
@@ -191,21 +185,31 @@ impl TruetypeFont {
 
 	}
 
-	pub fn cache_ascii(&mut self) -> Result<()> {
-		return self.cache(ASCII_CHARS);
+	pub fn cache_str(&mut self, s: &str) -> Result<()> {
+
+		for ch in s.chars() {
+			self.cache(ch)?;
+		}
+
+		return Ok(());
+
 	}
 
-	pub fn width(&self, s: &str) -> i32 {
+	pub fn cache_ascii(&mut self) -> Result<()> {
+		return self.cache_str(ASCII_CHARS);
+	}
+
+	pub fn width(&self, s: &str) -> f32 {
 		return s
 			.chars()
 			.map(|c| self.map.get(&c))
 			.flatten()
-			.map(|q| (q.w * self.tex.width() as f32) as i32)
+			.map(|q| q.w * self.tex.width() as f32)
 			.sum();
 	}
 
-	pub fn height(&self) -> i32 {
-		return self.size;
+	pub fn height(&self) -> f32 {
+		return self.size as f32;
 	}
 
 }

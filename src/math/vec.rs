@@ -3,6 +3,8 @@
 use std::fmt;
 use std::ops;
 
+use serde::Serialize;
+use serde::Deserialize;
 use derive_more::*;
 
 use super::*;
@@ -55,7 +57,7 @@ macro_rules! gen_vec {
 		pub use $sname;
 
 		#[allow(missing_docs)]
-		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into)]
+		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into, Serialize, Deserialize)]
 		pub struct $name {
 			$(
 			pub $member: $type

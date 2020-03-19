@@ -36,6 +36,10 @@ impl Timer {
 		return self.time / self.limit;
 	}
 
+	pub fn done(&self) -> bool {
+		return self.done;
+	}
+
 	pub fn tick(&mut self, dt: f32) -> bool {
 
 		self.time += dt;
@@ -48,6 +52,7 @@ impl Timer {
 		return false;
 
 	}
+
 }
 
 #[derive(Clone, Copy)]

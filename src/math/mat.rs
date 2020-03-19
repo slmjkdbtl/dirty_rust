@@ -1,10 +1,12 @@
 // wengwengweng
 
 use std::ops;
+use serde::Serialize;
+use serde::Deserialize;
 
 use super::*;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Mat4 {
 	m: [f32; 16],
 }

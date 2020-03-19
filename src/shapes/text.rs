@@ -10,6 +10,7 @@ pub struct FormattedChar {
 	tex: gfx::Texture,
 	quad: Quad,
 	width: f32,
+	color: Option<Color>,
 }
 
 #[derive(Clone)]
@@ -25,6 +26,19 @@ impl FormattedLine {
 			width: 0.0,
 		};
 	}
+}
+
+#[derive(Clone)]
+pub struct TextChunk<'a> {
+	text: &'a str,
+	color: Option<Color>,
+}
+
+pub fn textc<'a>(s: &'a str, c: Color,) -> TextChunk<'a> {
+	return TextChunk {
+		text: s,
+		color: Some(c),
+	};
 }
 
 #[derive(Clone)]
@@ -107,7 +121,7 @@ impl gfx::Drawable for FormattedText {
 			, &shapes::sprite(&fch.tex)
 				.offset(vec2!(-1, 1))
 				.quad(fch.quad)
-				.color(self.color)
+				.color(fch.color.unwrap_or(self.color))
 			)?;
 		}
 
@@ -156,7 +170,7 @@ impl Default for FormatConf {
 	}
 }
 
-fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText {
+fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText {
 
 	let mut lines = vec![];
 	let mut cur_line = FormattedLine::new();
@@ -165,49 +179,54 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 	let mut w = 0.0;
 	let mut break_pt: Option<FormattedLine> = None;
 
-	for ch in text.chars() {
+	for chunk in chunks {
 
-		if ch == '\n' {
+		for ch in chunk.text.chars() {
 
-			lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
+			if ch == '\n' {
 
-		} else {
+				lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
 
-			if let Some((tex, quad)) = font.get(ch).or(font.get(' ')) {
+			} else {
 
-				let gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
+				if let Some((tex, quad)) = font.get(ch).or(font.get(' ')) {
 
-				if let Some(wrap) = &conf.wrap {
-					if cur_line.width + gw > wrap.width {
-						if let Some(line) = break_pt.take() {
-							cur_line.width -= line.width;
-							cur_line.chars.drain(0..line.chars.len());
-							lines.push(line);
-						} else {
-							lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
+					let gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
+
+					if let Some(wrap) = &conf.wrap {
+						if cur_line.width + gw > wrap.width {
+							if let Some(line) = break_pt.take() {
+								cur_line.width -= line.width;
+								cur_line.chars.drain(0..line.chars.len());
+								lines.push(line);
+							} else {
+								lines.push(std::mem::replace(&mut cur_line, FormattedLine::new()));
+							}
+						}
+					}
+
+					cur_line.chars.push(FormattedChar {
+						ch: ch,
+						pos: vec2!(),
+						tex: tex.clone(),
+						quad: quad,
+						color: chunk.color,
+						width: gw - conf.char_spacing,
+					});
+
+					cur_line.width += gw;
+					w = f32::max(cur_line.width, w);
+
+				}
+
+				if ch == ' ' {
+					if let Some(wrap) = &conf.wrap {
+						if let TextWrapBreak::Word = wrap.break_type {
+							break_pt = Some(cur_line.clone());
 						}
 					}
 				}
 
-				cur_line.chars.push(FormattedChar {
-					ch: ch,
-					pos: vec2!(),
-					tex: tex.clone(),
-					quad: quad,
-					width: gw - conf.char_spacing,
-				});
-
-				cur_line.width += gw;
-				w = f32::max(cur_line.width, w);
-
-			}
-
-			if ch == ' ' {
-				if let Some(wrap) = &conf.wrap {
-					if let TextWrapBreak::Word = wrap.break_type {
-						break_pt = Some(cur_line.clone());
-					}
-				}
 			}
 
 		}
@@ -261,7 +280,7 @@ fn format(text: &str, font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText 
 
 #[derive(Clone)]
 pub struct Text<'a> {
-	content: &'a str,
+	content: Vec<TextChunk<'a>>,
 	font: Option<&'a dyn gfx::Font>,
 	conf: FormatConf,
 }
@@ -269,10 +288,20 @@ pub struct Text<'a> {
 impl<'a> Text<'a> {
 	pub fn new(s: &'a str) -> Self {
 		return Self {
-			content: s,
+			content: vec![TextChunk {
+				text: s,
+				color: None,
+			}],
 			font: None,
 			conf: FormatConf::default(),
-		};
+		}
+	}
+	pub fn from_chunks(c: &'a [TextChunk]) -> Self {
+		return Self {
+			content: c.to_vec(),
+			font: None,
+			conf: FormatConf::default(),
+		}
 	}
 	pub fn font(mut self, f: &'a dyn gfx::Font) -> Self {
 		self.font = Some(f);
@@ -318,7 +347,7 @@ pub fn text<'a>(s: &'a str) -> Text<'a> {
 
 impl<'a> Text<'a> {
 	pub fn format(&self, ctx: &app::Ctx) -> FormattedText {
-		return format(self.content, self.font.unwrap_or(ctx.default_font()), &self.conf);
+		return format(&self.content, self.font.unwrap_or(ctx.default_font()), &self.conf);
 	}
 }
 
