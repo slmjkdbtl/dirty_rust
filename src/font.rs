@@ -1,6 +1,8 @@
 // wengwengweng
 
 use std::collections::HashMap;
+use serde::Serialize;
+use serde::Deserialize;
 
 use crate::*;
 use math::*;
@@ -22,7 +24,7 @@ pub trait Font {
 	fn width(&self) -> Option<f32>;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BitmapFontData {
 	pub img: &'static [u8],
 	pub gw: u8,

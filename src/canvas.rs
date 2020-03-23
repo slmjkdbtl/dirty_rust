@@ -48,7 +48,11 @@ impl Canvas {
 
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 
-		return img::Image::from_raw(self.tex.width(), self.tex.height(), self.tex.get_pixels())?
+		return img::Image::from_raw(
+			self.tex.width(),
+			self.tex.height(),
+			self.tex.get_pixels()
+		)?
 			.flip_v()
 			.save(path);
 
