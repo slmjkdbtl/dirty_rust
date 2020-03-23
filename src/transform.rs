@@ -1,9 +1,11 @@
 // wengwengweng
 
+use serde::Serialize;
+use serde::Deserialize;
 use crate::*;
 use math::*;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Transform {
 	pub pos: Vec3,
 	pub rot: Vec4,

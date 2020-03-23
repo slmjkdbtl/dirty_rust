@@ -3,8 +3,7 @@
 use std::rc::Rc;
 
 use crate::*;
-use super::*;
-use super::gfx::*;
+use gfx::*;
 
 #[derive(Clone)]
 pub struct Skybox {

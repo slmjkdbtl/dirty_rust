@@ -48,21 +48,9 @@ impl Canvas {
 
 	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
 
-		let path = path.as_ref();
-
-		let image = image::ImageBuffer::from_raw(
-			self.tex.width() as u32,
-			self.tex.height() as u32,
-			self.tex.get_pixels()
-		).ok_or(format!("failed to write image to {}", path.display()))?;
-
-		let image = image::DynamicImage::ImageRgba8(image).flipv();
-
-		image
-			.save(path)
-			.map_err(|_| format!("failed to write image to {}", path.display()))?;
-
-		return Ok(());
+		return img::Image::from_raw(self.tex.width(), self.tex.height(), self.tex.get_pixels())?
+			.flip_v()
+			.save(path);
 
 	}
 
