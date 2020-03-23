@@ -178,7 +178,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let font_data = conf.default_font
 		.take()
-		.unwrap_or(CP437);
+		.unwrap_or(UNSCII);
 
 	let font = gfx::BitmapFont::from_data(&gl, font_data)?;
 

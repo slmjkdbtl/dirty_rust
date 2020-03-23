@@ -31,14 +31,20 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_t(mat4!()
-			.tz(-120.0)
-			.s3(vec3!(64))
-			.ry(ctx.time())
-			.rz(ctx.time())
-		, &shapes::cube())?;
+		ctx.draw_t(
+			mat4!()
+				.tz(-120.0)
+				.s3(vec3!(64))
+				.ry(ctx.time())
+				.rz(ctx.time())
+				,
+			&shapes::cube()
+		)?;
 
-		ctx.draw(&shapes::text("yo"))?;
+		ctx.draw(
+			&shapes::text("yo")
+				.size(16.0)
+		)?;
 
 		return Ok(());
 
