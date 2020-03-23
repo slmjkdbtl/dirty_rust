@@ -153,6 +153,7 @@ pub struct FormatConf {
 	pub color: Color,
 	pub italic: bool,
 	pub bold: bool,
+	pub tab_width: usize,
 }
 
 impl Default for FormatConf {
@@ -166,12 +167,14 @@ impl Default for FormatConf {
 			color: rgba!(1),
 			italic: false,
 			bold: false,
+			tab_width: 1,
 		};
 	}
 }
 
 fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText {
 
+	// TODO: deal with tabs
 	let mut lines = vec![];
 	let mut cur_line = FormattedLine::new();
 	let scale = conf.size.map(|s| s / font.height()).unwrap_or(1.0);
@@ -191,7 +194,11 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 
 				if let Some((tex, quad)) = font.get(ch).or(font.get(' ')) {
 
-					let gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
+					let mut gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
+
+					if ch == '\t' {
+						gw *= conf.tab_width as f32;
+					}
 
 					if let Some(wrap) = &conf.wrap {
 						if cur_line.width + gw > wrap.width {
@@ -251,7 +258,11 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 
 		for ch in line.chars {
 
-			let gw = ch.tex.width() as f32 * ch.quad.w * scale + conf.char_spacing;
+			let mut gw = ch.tex.width() as f32 * ch.quad.w * scale + conf.char_spacing;
+
+			if ch.ch == '\t' {
+				gw *= conf.tab_width as f32;
+			}
 
 			fchars.push(FormattedChar {
 				pos: vec2!(x + ox, y) + offset,
@@ -337,6 +348,10 @@ impl<'a> Text<'a> {
 	}
 	pub fn bold(mut self, b: bool) -> Self {
 		self.conf.bold = b;
+		return self;
+	}
+	pub fn tab_width(mut self, w: usize) -> Self {
+		self.conf.tab_width = w;
 		return self;
 	}
 }

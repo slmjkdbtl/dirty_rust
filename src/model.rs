@@ -5,17 +5,20 @@ use std::rc::Rc;
 use std::io::Cursor;
 use std::path::Path;
 
+use serde::Serialize;
+use serde::Deserialize;
+
 use crate::*;
 use math::*;
 use gfx::*;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct MeshData {
 	pub vertices: Vec<Vertex3D>,
 	pub indices: Vec<u32>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct NodeData {
 	pub id: usize,
 	pub children: Vec<usize>,
@@ -24,7 +27,7 @@ pub struct NodeData {
 	pub name: Option<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ModelData {
 	nodes: HashMap<usize, NodeData>,
 	root_nodes: Vec<usize>,
@@ -59,7 +62,7 @@ impl Mesh {
 
 type Track<T> = Vec<(f32, T)>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Anim {
 	pos: Track<Vec3>,
 	rot: Track<Vec4>,

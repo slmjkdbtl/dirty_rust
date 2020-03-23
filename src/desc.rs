@@ -4,10 +4,12 @@ use std::mem;
 
 use crate::math::*;
 use super::gfx::*;
+use serde::Serialize;
+use serde::Deserialize;
 
 use crate::gl;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Vertex2D {
 	pub pos: Vec3,
@@ -43,7 +45,7 @@ impl gl::VertexLayout for Vertex2D {
 
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Vertex3D {
 	pub pos: Vec3,

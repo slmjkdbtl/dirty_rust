@@ -10,9 +10,16 @@ const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQ
 
 pub type CharMap = HashMap<char, Quad>;
 
+pub struct FontChar<'a> {
+	tex: &'a gfx::Texture,
+	quad: Quad,
+	offset: Vec2,
+}
+
 pub trait Font {
 	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)>;
 	fn height(&self) -> f32;
+	fn width(&self) -> Option<f32>;
 }
 
 #[derive(Clone, Debug)]
@@ -106,6 +113,9 @@ impl Font for BitmapFont {
 	}
 	fn height(&self) -> f32 {
 		return self.grid_height as f32;
+	}
+	fn width(&self) -> Option<f32> {
+		return Some(self.grid_width as f32);
 	}
 }
 
@@ -220,6 +230,9 @@ impl Font for TruetypeFont {
 	}
 	fn height(&self) -> f32 {
 		return self.size as f32;
+	}
+	fn width(&self) -> Option<f32> {
+		return None;
 	}
 }
 
