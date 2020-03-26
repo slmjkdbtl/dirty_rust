@@ -165,6 +165,7 @@ pub fn rand_by_cell(p1: Vec2, p2: Vec2, c: usize, r: usize, p: f32, count: (usiz
 
 }
 
+#[derive(Clone)]
 pub struct Rng {
 	rng: random::rngs::StdRng,
 }

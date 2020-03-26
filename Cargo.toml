@@ -76,7 +76,6 @@ glutin = "0.24"
 glow = { version = "0.4.0", default-features = false }
 clipboard = "0.5"
 fontdue = "0.0"
-splines = "3.0"
 gilrs = "0.7"
 image = { version = "0.23", default-features = false, features = [ "png", "jpeg", "tga", "bmp", ] }
 tobj = "0.1"
