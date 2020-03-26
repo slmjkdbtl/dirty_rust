@@ -12,7 +12,7 @@ use math::*;
 
 impl Ctx {
 
-	pub fn set_fullscreen(&mut self, b: bool) {
+	pub fn set_fullscreen(&self, b: bool) {
 
 		let window = self.windowed_ctx.window();
 
@@ -64,6 +64,10 @@ impl Ctx {
 
 	pub fn toggle_cursor_locked(&mut self) -> Result<()> {
 		return self.set_cursor_locked(!self.is_cursor_locked());
+	}
+
+	pub fn minimize(&self) {
+		self.windowed_ctx.window().set_minimized(true);
 	}
 
 	pub fn set_cursor(&self, c: CursorIcon) {

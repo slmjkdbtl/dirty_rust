@@ -135,6 +135,7 @@ impl TruetypeFont {
 
 		let font = fontdue::Font::from_bytes(b, fontdue::FontSettings::default())?;
 		let (max_w, max_h) = (size * 32, size * 32);
+		// TODO: make sure this doesn't exceed 2048x2048
 		let tex = Texture::new(ctx, max_w, max_h)?;
 
 		if size > 72 {
@@ -160,7 +161,7 @@ impl TruetypeFont {
 			let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
 			let (w, h) = (metrics.width as i32, metrics.height as i32);
 
-// 			println!("{}: {:#?}", ch, metrics);
+			println!("{}: {:#?}", ch, metrics);
 
 			let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
 
