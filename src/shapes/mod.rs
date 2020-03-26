@@ -29,7 +29,6 @@ export!(points);
 export!(canvas);
 export!(gradient);
 export!(text);
-export!(curve);
 export!(checkerboard);
 export!(model);
 export!(skybox);
