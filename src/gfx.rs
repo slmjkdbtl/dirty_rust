@@ -180,6 +180,16 @@ impl Ctx {
 
 	}
 
+	pub fn no_depth(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		self.gl.depth_mask(false);
+		f(self)?;
+		self.gl.depth_mask(true);
+
+		return Ok(());
+
+	}
+
 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let gl = self.gl.clone();

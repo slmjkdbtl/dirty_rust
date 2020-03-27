@@ -78,7 +78,7 @@ clipboard = "0.5"
 fontdue = "0.0"
 gilrs = "0.7"
 image = { version = "0.23", default-features = false, features = [ "png", "jpeg", "tga", "bmp", ] }
-tobj = "0.1"
+tobj = "1.0"
 gltf = "0.15"
 
 # audio

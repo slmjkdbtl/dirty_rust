@@ -3,12 +3,28 @@
 use super::*;
 
 #[derive(Clone)]
-pub struct Cube;
+pub struct Cube {
+	color: Color,
+}
 
 impl Cube {
+
 	pub fn new() -> Self {
-		return Self;
+		return Self {
+			color: rgba!(1),
+		};
 	}
+
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
+
+	pub fn opacity(mut self, o: f32) -> Self {
+		self.color.a = o;
+		return self;
+	}
+
 }
 
 pub fn cube() -> Cube {
@@ -28,7 +44,7 @@ impl Drawable for Cube {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
-				color: rgba!(1),
+				color: self.color,
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_3d.clone(),
 			},
