@@ -73,6 +73,12 @@ impl Device {
 		}
 	}
 
+	pub fn depth_mask(&self, b: bool) {
+		unsafe {
+			self.ctx.depth_mask(b);
+		}
+	}
+
 	pub fn blend_func(&self, src: BlendFac, dest: BlendFac) {
 		unsafe {
 			self.ctx.blend_func(src.into(), dest.into());
