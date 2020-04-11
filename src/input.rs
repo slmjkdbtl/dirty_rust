@@ -170,6 +170,8 @@ pub enum Event {
 	Focus(bool),
 	CursorEnter,
 	CursorLeave,
+	#[cfg(feature = "midi")]
+	MIDI(Vec<u8>),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

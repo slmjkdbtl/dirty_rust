@@ -5,6 +5,7 @@
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
+use std::sync::mpsc;
 use std::time::Instant;
 use std::time::Duration;
 
@@ -257,6 +258,33 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		ctx.set_cursor_locked(true)?;
 	}
 
+	#[cfg(feature = "midi")]
+	let midi_rx = {
+
+		let (tx, rx) = mpsc::channel();
+
+		thread::spawn(move || {
+
+			if let Ok(mut midi_in) = midir::MidiInput::new("DIRTY MIDI Reader") {
+
+				midi_in.ignore(midir::Ignore::None);
+
+				let _con = midi_in.connect(1, "dirty-midi-read", move |stamp, message, _| {
+					tx.send(message.to_vec());
+				}, ()).map_err(|_| format!("failed to read midi input"));
+
+				loop {}
+
+			} else {
+				eprintln!("failed to init midi reader")
+			}
+
+		});
+
+		rx
+
+	};
+
 	#[cfg(feature = "imgui")]
 	let mut imgui = imgui::Imgui::new(&ctx)?;
 
@@ -265,7 +293,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	let mut s = S::init(&mut ctx)?;
 	let mut last_frame_time = Instant::now();
-
 	let mut update = false;
 
 	event_loop.run(move |e, _, flow| {
@@ -281,6 +308,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			use input::*;
 
 			let mut events = vec![];
+
+			#[cfg(feature = "midi")]
+			if let Ok(msg) = midi_rx.try_recv() {
+				events.push(Event::MIDI(msg));
+			}
 
 			match e {
 
