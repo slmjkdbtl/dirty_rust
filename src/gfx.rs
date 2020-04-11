@@ -180,10 +180,24 @@ impl Ctx {
 
 	}
 
-	pub fn no_depth(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn no_depth_test(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
+		self.flush();
+		self.gl.disable(gl::Capability::DepthTest);
+		f(self)?;
+		self.flush();
+		self.gl.enable(gl::Capability::DepthTest);
+
+		return Ok(());
+
+	}
+
+	pub fn no_depth_write(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		self.flush();
 		self.gl.depth_mask(false);
 		f(self)?;
+		self.flush();
 		self.gl.depth_mask(true);
 
 		return Ok(());
@@ -416,8 +430,8 @@ impl Blend {
 	fn to_gl(&self) -> (gl::BlendFac, gl::BlendFac) {
 		return match self {
 			Blend::Alpha => (gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha),
-			Blend::Add => (gl::BlendFac::SrcAlpha, gl::BlendFac::One),
-			Blend::Replace => (gl::BlendFac::One, gl::BlendFac::Zero),
+			Blend::Add => (gl::BlendFac::SrcAlpha, gl::BlendFac::DestAlpha),
+			Blend::Replace => (gl::BlendFac::SrcAlpha, gl::BlendFac::Zero),
 		};
 	}
 }

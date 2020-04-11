@@ -127,7 +127,7 @@ impl State for Game {
 		)?;
 
 		let bbox = model.bbox();
-		let size = (bbox.max - bbox.min).mag();
+		let size = (bbox.max - bbox.min).len();
 
 // 		model.update(|data| {
 // 			for m in data {
@@ -158,7 +158,7 @@ impl State for Game {
 			filter_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/filter.frag"))?,
 			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
-			cam: gfx::PerspectiveCam::new(60f32.to_radians(), ctx.width() as f32 / ctx.height() as f32, 0.01, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
+			cam: gfx::PerspectiveCam::new(60f32.to_radians(), ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
 			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
 			move_speed: size * 2.0,
@@ -176,8 +176,8 @@ impl State for Game {
 
 			Resize(w, h) => {
 
-				self.canvas = gfx::Canvas::new(ctx, *w, *h)?;
-				self.canvas2 = gfx::Canvas::new(ctx, *w, *h)?;
+				self.canvas.resize(ctx, *w, *h)?;
+				self.canvas2.resize(ctx, *w, *h)?;
 
 			},
 
@@ -238,11 +238,11 @@ impl State for Game {
 		}
 
 		if ctx.key_down(Key::A) {
-			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).normalized() * ctx.dt() * self.move_speed);
+			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).unit() * ctx.dt() * self.move_speed);
 		}
 
 		if ctx.key_down(Key::D) {
-			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).normalized() * ctx.dt() * self.move_speed);
+			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).unit() * ctx.dt() * self.move_speed);
 		}
 
 		ctx.draw_on(&self.canvas, |ctx| {
@@ -260,20 +260,20 @@ impl State for Game {
 // 				ctx.draw(&shapes::skybox(&self.skybox))?;
 // 				ctx.draw_t(&gfx::t().t3(light_pos).s3(vec3!(self.size / 24.0)), &shapes::cube())?;
 
-// 				ctx.draw_3d_with(&self.shader, &LightUniform {
-// 					pos: light_pos,
-// 					color: vec3!(1, 1, 1),
-// 					diffuse: 0.4,
-// 					specular: 0.4,
-// 					shininess: 16.0,
-// 					view_pos: self.cam.pos(),
-// 				}, |ctx| {
-// 					ctx.draw(&shapes::model(&self.model))?;
-// 					return Ok(());
-// 				})?;
+				ctx.draw_3d_with(&self.shader, &LightUniform {
+					pos: light_pos,
+					color: vec3!(1, 1, 1),
+					diffuse: 0.4,
+					specular: 0.4,
+					shininess: 16.0,
+					view_pos: self.cam.pos(),
+				}, |ctx| {
+					ctx.draw(&shapes::model(&self.model))?;
+					return Ok(());
+				})?;
 
 // 				ctx.draw(&shapes::rect(vec2!(-100), vec2!(100)))?;
-				ctx.draw(&shapes::cube())?;
+// 				ctx.draw(&shapes::cube())?;
 
 				return Ok(());
 
@@ -303,12 +303,12 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
-			intensity: 16.0,
-		}, |ctx| {
+// 		ctx.draw_2d_with(&self.vhs_shader, &VHSUniform {
+// 			intensity: 16.0,
+// 		}, |ctx| {
 			ctx.draw(&shapes::canvas(&self.canvas2))?;
-			return Ok(());
-		})?;
+// 			return Ok(());
+// 		})?;
 
 		return Ok(());
 
