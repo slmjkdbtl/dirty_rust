@@ -56,6 +56,9 @@ pub mod kit;
 #[cfg(feature = "imgui")]
 pub mod imgui;
 
+#[cfg(feature = "midi")]
+pub mod midi;
+
 #[cfg(feature = "synth")]
 pub mod synth;
 

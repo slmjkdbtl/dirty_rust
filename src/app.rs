@@ -269,6 +269,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 				midi_in.ignore(midir::Ignore::None);
 
+				// TODO: not always 1, how to ignore IAC 1?
 				let _con = midi_in.connect(1, "dirty-midi-read", move |stamp, message, _| {
 					tx.send(message.to_vec());
 				}, ()).map_err(|_| format!("failed to read midi input"));
@@ -311,7 +312,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 			#[cfg(feature = "midi")]
 			if let Ok(msg) = midi_rx.try_recv() {
-				events.push(Event::MIDI(msg));
+				events.push(Event::MIDI(midi::Msg::from(&msg)));
 			}
 
 			match e {
