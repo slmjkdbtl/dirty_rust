@@ -7,6 +7,7 @@
 #![feature(const_fn)]
 #![feature(try_blocks)]
 #![feature(box_syntax)]
+#![feature(option_zip)]
 #![feature(trait_alias)]
 #![feature(bool_to_option)]
 #![feature(fixed_size_array)]
