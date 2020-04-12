@@ -6,6 +6,8 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
 use std::sync::mpsc;
+use std::sync::Mutex;
+use std::sync::Arc;
 use std::time::Instant;
 use std::time::Duration;
 
@@ -259,22 +261,31 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	}
 
 	#[cfg(feature = "midi")]
-	let midi_rx = {
+	let midi_buf = {
 
-		let (tx, rx) = mpsc::channel();
+		let buf = Arc::new(Mutex::new(vec![]));
+		let buf2 = buf.clone();
 
 		thread::spawn(move || {
+
+			let (tx, rx) = mpsc::channel();
 
 			if let Ok(mut midi_in) = midir::MidiInput::new("DIRTY MIDI Reader") {
 
 				midi_in.ignore(midir::Ignore::None);
 
 				// TODO: not always 1, how to ignore IAC 1?
-				let _con = midi_in.connect(1, "dirty-midi-read", move |stamp, message, _| {
-					tx.send(message.to_vec());
+				let _con = midi_in.connect(1, "dirty-midi-read", move |_, msg, _| {
+					tx.send(msg.to_vec());
 				}, ()).map_err(|_| format!("failed to read midi input"));
 
-				loop {}
+				loop {
+					if let Ok(msg) = rx.try_recv() {
+						if let Ok(mut buf) = buf2.lock() {
+							buf.push(midi::Msg::from(&msg));
+						}
+					}
+				}
 
 			} else {
 				eprintln!("failed to init midi reader")
@@ -282,7 +293,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		});
 
-		rx
+		buf
 
 	};
 
@@ -311,8 +322,10 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			let mut events = vec![];
 
 			#[cfg(feature = "midi")]
-			if let Ok(msg) = midi_rx.try_recv() {
-				events.push(Event::MIDI(midi::Msg::from(&msg)));
+			if let Ok(mut buf) = midi_buf.lock() {
+				for msg in std::mem::replace(&mut *buf, vec![]) {
+					events.push(Event::MIDI(msg.clone()));
+				}
 			}
 
 			match e {
