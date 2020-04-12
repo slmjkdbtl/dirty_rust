@@ -1,5 +1,7 @@
 // wengwengweng
 
+// REFERENCE: https://ccrma.stanford.edu/~craig/articles/linuxmidi/misc/essenmidi.html
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Msg {
 	NoteOn(i32, f32),

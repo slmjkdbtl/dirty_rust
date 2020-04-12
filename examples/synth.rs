@@ -2,32 +2,34 @@
 
 #![feature(clamp)]
 
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use dirty::*;
 use synth::*;
 use input::Key;
 
-fn key_to_note(k: Key, o: i32) -> Option<NoteO> {
+fn key_to_note(k: Key, o: i32) -> Option<i32> {
+
+	let o = o + 1;
 
 	return match k {
-		Key::A => Some((Note::C, o).into()),
-		Key::W => Some((Note::Csh, o).into()),
-		Key::S => Some((Note::D, o).into()),
-		Key::E => Some((Note::Dsh, o).into()),
-		Key::D => Some((Note::E, o).into()),
-		Key::F => Some((Note::F, o).into()),
-		Key::T => Some((Note::Fsh, o).into()),
-		Key::G => Some((Note::G, o).into()),
-		Key::Y => Some((Note::Gsh, o).into()),
-		Key::H => Some((Note::A, o).into()),
-		Key::U => Some((Note::Ash, o).into()),
-		Key::J => Some((Note::B, o).into()),
-		Key::K => Some((Note::C, o + 1).into()),
-		Key::O => Some((Note::Csh, o + 1).into()),
-		Key::L => Some((Note::D, o + 1).into()),
-		Key::P => Some((Note::Dsh, o + 1).into()),
-		Key::Semicolon => Some((Note::E, o + 1).into()),
+		Key::A => Some(0 + o * 12),
+		Key::W => Some(1 + o * 12),
+		Key::S => Some(2 + o * 12),
+		Key::E => Some(3 + o * 12),
+		Key::D => Some(4 + o * 12),
+		Key::F => Some(5 + o * 12),
+		Key::T => Some(6 + o * 12),
+		Key::G => Some(7 + o * 12),
+		Key::Y => Some(8 + o * 12),
+		Key::H => Some(9 + o * 12),
+		Key::U => Some(10 + o * 12),
+		Key::J => Some(11 + o * 12),
+		Key::K => Some(12 + o * 12),
+		Key::O => Some(13 + o * 12),
+		Key::L => Some(14 + o * 12),
+		Key::P => Some(15 + o * 12),
+		Key::Semicolon => Some(16 + o * 12),
 		_ => None,
 	};
 
@@ -37,7 +39,7 @@ struct Game {
 	octave: i32,
 	waveform: Waveform,
 	envelope: Envelope,
-	pressed: HashMap<Key, NoteO>,
+	pressed: HashSet<i32>,
 }
 
 impl State for Game {
@@ -45,9 +47,9 @@ impl State for Game {
 	fn init(_: &mut Ctx) -> Result<Self> {
 
 		return Ok(Self {
-			octave: -1,
+			octave: 4,
 			waveform: Waveform::Saw,
-			pressed: hmap![],
+			pressed: hset![],
 			envelope: Envelope {
 				attack: 0.01,
 				decay: 0.01,
@@ -88,9 +90,9 @@ impl State for Game {
 
 				if let Some(note) = key_to_note(*k, self.octave) {
 
-					self.pressed.insert(*k, note);
+					self.pressed.insert(note);
 
-					let v = build_voice(note)
+					let v = Voice::builder(note)
 						.waveform(self.waveform)
 						.envelope(self.envelope)
 						.build();
@@ -103,8 +105,39 @@ impl State for Game {
 
 			KeyRelease(k) => {
 
-				if let Some(n) = self.pressed.get(k) {
-					synth::release(*n);
+				if let Some(note) = key_to_note(*k, self.octave) {
+					if self.pressed.contains(&note) {
+						synth::release(note);
+					}
+				}
+
+			},
+
+			MIDI(msg) => {
+
+				match msg {
+
+					midi::Msg::NoteOn(note, _) => {
+
+						self.pressed.insert(*note);
+
+						let v = Voice::builder(*note)
+							.waveform(self.waveform)
+							.envelope(self.envelope)
+							.build();
+
+						play(v);
+
+					},
+
+					midi::Msg::NoteOff(note, _) => {
+						if self.pressed.contains(&note) {
+							synth::release(*note);
+						}
+					},
+
+					_ => {},
+
 				}
 
 			},
