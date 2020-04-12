@@ -2,12 +2,13 @@
 
 //! Software Synthesizer
 
+// TODO: don't use a single global synth
+// TODO: remove note playing feature
+
 export!(envelope);
 export!(life);
 export!(wav);
-export!(note);
 export!(voice);
-export!(scale);
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -26,7 +27,7 @@ pub trait Stream: Send + Sync {
 }
 
 pub struct Synth {
-	notes: HashMap<NoteO, Voice>,
+	notes: HashMap<i32, Voice>,
 	volume: f32,
 	last_time: f32,
 	buf: VecDeque<f32>,
@@ -64,7 +65,7 @@ impl Synth {
 
 	}
 
-	pub fn release(&mut self, n: NoteO) {
+	pub fn release(&mut self, n: i32) {
 
 		if let Some(n) = self.notes.get_mut(&n) {
 			n.release();
@@ -145,7 +146,7 @@ pub fn play_oneshot(n: Voice) {
 
 }
 
-pub fn release(note: NoteO) {
+pub fn release(note: i32) {
 
 	let mut synth = match SYNTH.lock() {
 		Ok(s) => s,
@@ -167,10 +168,6 @@ pub fn buf() -> Option<OwningRef<MutexGuard<'static, Synth>, VecDeque<f32>>> {
 
 	return Some(synth.map(|s| &s.buf));
 
-}
-
-pub fn build_voice(note: NoteO) -> VoiceBuilder {
-	return Voice::builder(note);
 }
 
 fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {

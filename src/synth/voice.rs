@@ -2,17 +2,20 @@
 
 use super::*;
 
+const A4_FREQ: f32 = 440.0;
+const MIDI_A4_NOTE: i32 = 69;
+
 #[derive(Clone, Debug)]
 pub struct Voice {
 	pub(super) life: Life,
 	pub(super) waveform: Waveform,
-	pub(super) note: NoteO,
+	pub(super) note: i32,
 	pub(super) volume: f32,
 }
 
 impl Voice {
 
-	pub(super) fn builder(note: NoteO) -> VoiceBuilder {
+	pub fn builder(note: i32) -> VoiceBuilder {
 		return VoiceBuilder {
 			volume: 1.0,
 			note: note,
@@ -31,7 +34,7 @@ impl Voice {
 	}
 
 	pub(super) fn voice(&self, time: f32) -> f32 {
-		return self.life.amp() * self.waveform.osc(self.note.to_freq() as f32, time) * self.volume;
+		return self.life.amp() * self.waveform.osc(note_to_freq(self.note) as f32, time) * self.volume;
 	}
 
 	pub(super) fn dead(&self) -> bool {
@@ -44,9 +47,13 @@ impl Voice {
 
 }
 
+fn note_to_freq(note: i32) -> i32 {
+	return (A4_FREQ * f32::powi(f32::powf(2.0, 1.0 / 12.0), note - MIDI_A4_NOTE)) as i32;
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct VoiceBuilder {
-	note: NoteO,
+	note: i32,
 	envelope: Envelope,
 	waveform: Waveform,
 	volume: f32,
