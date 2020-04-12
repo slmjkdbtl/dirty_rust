@@ -3,9 +3,14 @@
 #![feature(clamp)]
 
 use std::collections::HashSet;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use dirty::*;
-use synth::*;
+use synth::BasicSynth;
+use synth::Waveform;
+use synth::Voice;
+use synth::Envelope;
 use input::Key;
 
 fn key_to_note(k: Key, o: i32) -> Option<i32> {
@@ -40,16 +45,53 @@ struct Game {
 	waveform: Waveform,
 	envelope: Envelope,
 	pressed: HashSet<i32>,
+	synth: Arc<Mutex<BasicSynth>>,
+}
+
+impl Game {
+
+	fn press_note(&mut self, note: i32) {
+
+		self.pressed.insert(note);
+
+		let v = Voice::builder(note)
+			.waveform(self.waveform)
+			.envelope(self.envelope)
+			.build();
+
+		if let Ok(mut synth) = self.synth.lock() {
+			synth.play(v);
+		}
+
+	}
+
+	fn release_note(&mut self, note: i32) {
+
+		if self.pressed.contains(&note) {
+			self.pressed.remove(&note);
+			if let Ok(mut synth) = self.synth.lock() {
+				synth.release(note);
+			}
+		}
+
+
+	}
+
 }
 
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
 
+		let synth = Arc::new(Mutex::new(BasicSynth::new()));
+
+		synth::run(synth.clone());
+
 		return Ok(Self {
 			octave: 4,
 			waveform: Waveform::Saw,
 			pressed: hset![],
+			synth: synth,
 			envelope: Envelope {
 				attack: 0.01,
 				decay: 0.01,
@@ -89,16 +131,7 @@ impl State for Game {
 				}
 
 				if let Some(note) = key_to_note(*k, self.octave) {
-
-					self.pressed.insert(note);
-
-					let v = Voice::builder(note)
-						.waveform(self.waveform)
-						.envelope(self.envelope)
-						.build();
-
-					play(v);
-
+					self.press_note(note);
 				}
 
 			},
@@ -106,9 +139,7 @@ impl State for Game {
 			KeyRelease(k) => {
 
 				if let Some(note) = key_to_note(*k, self.octave) {
-					if self.pressed.contains(&note) {
-						synth::release(note);
-					}
+					self.release_note(note);
 				}
 
 			},
@@ -116,28 +147,9 @@ impl State for Game {
 			MIDI(msg) => {
 
 				match msg {
-
-					midi::Msg::NoteOn(note, _) => {
-
-						self.pressed.insert(*note);
-
-						let v = Voice::builder(*note)
-							.waveform(self.waveform)
-							.envelope(self.envelope)
-							.build();
-
-						play(v);
-
-					},
-
-					midi::Msg::NoteOff(note, _) => {
-						if self.pressed.contains(&note) {
-							synth::release(*note);
-						}
-					},
-
+					midi::Msg::NoteOn(note, _) => self.press_note(*note),
+					midi::Msg::NoteOff(note, _) => self.release_note(*note),
 					_ => {},
-
 				}
 
 			},
@@ -152,8 +164,9 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		if let Some(buf) = synth::buf() {
+		if let Ok(synth) = self.synth.lock() {
 
+			let buf = synth.buf();
 			let mut last = None;
 			let height = 120.0;
 			let len = buf.len() as f32;

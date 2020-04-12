@@ -2,23 +2,16 @@
 
 //! Software Synthesizer
 
-// TODO: don't use a single global synth
-// TODO: remove note playing feature
-
 export!(envelope);
 export!(life);
 export!(wav);
 export!(voice);
+export!(basic);
 
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::MutexGuard;
-use std::collections::VecDeque;
-use std::collections::HashMap;
 
 use cpal::traits::*;
-use once_cell::sync::Lazy;
-use owning_ref::OwningRef;
 
 use crate::*;
 
@@ -26,151 +19,7 @@ pub trait Stream: Send + Sync {
 	fn data(&mut self, time: f32) -> f32;
 }
 
-pub struct Synth {
-	notes: HashMap<i32, Voice>,
-	volume: f32,
-	last_time: f32,
-	buf: VecDeque<f32>,
-}
-
-impl Synth {
-
-	pub fn new() -> Self {
-		return Synth {
-			volume: 1.0,
-			notes: hmap![],
-			last_time: 0.0,
-			buf: VecDeque::with_capacity(100),
-		};
-	}
-
-	pub fn volume(&self) -> f32 {
-		return self.volume;
-	}
-
-	pub fn set_volume(&mut self, v: f32) {
-		self.volume = v.clamp(0.0, 1.0);
-	}
-
-	pub fn play(&mut self, v: Voice) {
-		self.notes.insert(v.note, v);
-	}
-
-	pub fn play_oneshot(&mut self, v: Voice) {
-
-		let n = v.note;
-
-		self.notes.insert(n, v);
-		self.release(n);
-
-	}
-
-	pub fn release(&mut self, n: i32) {
-
-		if let Some(n) = self.notes.get_mut(&n) {
-			n.release();
-		}
-
-	}
-
-}
-
-impl Stream for Synth {
-
-	fn data(&mut self, time: f32) -> f32 {
-
-		let dt = if time >= self.last_time {
-			time - self.last_time
-		} else {
-			(1.0 + time) - self.last_time
-		};
-
-		self.last_time = time;
-
-		let mut sound = 0.0;
-
-		for (_, n) in &mut self.notes {
-			sound += n.voice(time);
-		}
-
-		sound *= self.volume;
-
-		for (_, n) in &mut self.notes {
-			n.tick(dt);
-		}
-
-		self.notes.retain(|_, n| !n.dead());
-
-		if self.buf.len() >= self.buf.capacity() {
-			self.buf.pop_front();
-		}
-
-		self.buf.push_back(sound);
-
-		return sound;
-
-	}
-
-}
-
-static SYNTH: Lazy<Arc<Mutex<Synth>>> = Lazy::new(|| {
-
-	let synth = Synth::new();
-	let synth = Arc::new(Mutex::new(synth));
-
-	run(synth.clone());
-
-	return synth;
-
-});
-
-pub fn play(n: Voice) {
-
-	let mut synth = match SYNTH.lock() {
-		Ok(s) => s,
-		Err(_) => return,
-	};
-
-	synth.play(n);
-
-}
-
-pub fn play_oneshot(n: Voice) {
-
-	let mut synth = match SYNTH.lock() {
-		Ok(s) => s,
-		Err(_) => return,
-	};
-
-	synth.play_oneshot(n);
-
-}
-
-pub fn release(note: i32) {
-
-	let mut synth = match SYNTH.lock() {
-		Ok(s) => s,
-		Err(_) => return,
-	};
-
-	synth.release(note);
-
-}
-
-pub fn buf() -> Option<OwningRef<MutexGuard<'static, Synth>, VecDeque<f32>>> {
-
-	let synth = match SYNTH.lock() {
-		Ok(s) => s,
-		Err(_) => return None,
-	};
-
-	let synth = OwningRef::new(synth);
-
-	return Some(synth.map(|s| &s.buf));
-
-}
-
-fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
+pub fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
 
 	let host = cpal::default_host();
 

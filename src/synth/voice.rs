@@ -34,7 +34,12 @@ impl Voice {
 	}
 
 	pub(super) fn voice(&self, time: f32) -> f32 {
-		return self.life.amp() * self.waveform.osc(note_to_freq(self.note) as f32, time) * self.volume;
+
+		let volume = self.life.volume() * self.volume;
+		let wav = self.waveform.osc(note_to_freq(self.note) as f32, time);
+
+		return volume * wav;
+
 	}
 
 	pub(super) fn dead(&self) -> bool {
