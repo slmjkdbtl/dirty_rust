@@ -11,30 +11,29 @@ use synth::BasicSynth;
 use synth::Waveform;
 use synth::Voice;
 use synth::Envelope;
+use synth::Note;
 use input::Key;
 
-fn key_to_note(k: Key, o: i32) -> Option<i32> {
-
-	let o = o + 1;
+fn key_to_note(k: Key, o: i32) -> Option<Note> {
 
 	return match k {
-		Key::A => Some(0 + o * 12),
-		Key::W => Some(1 + o * 12),
-		Key::S => Some(2 + o * 12),
-		Key::E => Some(3 + o * 12),
-		Key::D => Some(4 + o * 12),
-		Key::F => Some(5 + o * 12),
-		Key::T => Some(6 + o * 12),
-		Key::G => Some(7 + o * 12),
-		Key::Y => Some(8 + o * 12),
-		Key::H => Some(9 + o * 12),
-		Key::U => Some(10 + o * 12),
-		Key::J => Some(11 + o * 12),
-		Key::K => Some(12 + o * 12),
-		Key::O => Some(13 + o * 12),
-		Key::L => Some(14 + o * 12),
-		Key::P => Some(15 + o * 12),
-		Key::Semicolon => Some(16 + o * 12),
+		Key::A => Some(Note::from_octave(0, o)),
+		Key::W => Some(Note::from_octave(1, o)),
+		Key::S => Some(Note::from_octave(2, o)),
+		Key::E => Some(Note::from_octave(3, o)),
+		Key::D => Some(Note::from_octave(4, o)),
+		Key::F => Some(Note::from_octave(5, o)),
+		Key::T => Some(Note::from_octave(6, o)),
+		Key::G => Some(Note::from_octave(7, o)),
+		Key::Y => Some(Note::from_octave(8, o)),
+		Key::H => Some(Note::from_octave(9, o)),
+		Key::U => Some(Note::from_octave(10, o)),
+		Key::J => Some(Note::from_octave(11, o)),
+		Key::K => Some(Note::from_octave(12, o)),
+		Key::O => Some(Note::from_octave(13, o)),
+		Key::L => Some(Note::from_octave(14, o)),
+		Key::P => Some(Note::from_octave(15, o)),
+		Key::Semicolon => Some(Note::from_octave(16, o)),
 		_ => None,
 	};
 
@@ -44,13 +43,13 @@ struct Game {
 	octave: i32,
 	waveform: Waveform,
 	envelope: Envelope,
-	pressed: HashSet<i32>,
+	pressed: HashSet<Note>,
 	synth: Arc<Mutex<BasicSynth>>,
 }
 
 impl Game {
 
-	fn press_note(&mut self, note: i32) {
+	fn press_note(&mut self, note: Note) {
 
 		self.pressed.insert(note);
 
@@ -65,7 +64,7 @@ impl Game {
 
 	}
 
-	fn release_note(&mut self, note: i32) {
+	fn release_note(&mut self, note: Note) {
 
 		if self.pressed.contains(&note) {
 			self.pressed.remove(&note);
@@ -89,7 +88,7 @@ impl State for Game {
 
 		return Ok(Self {
 			octave: 4,
-			waveform: Waveform::Saw,
+			waveform: Waveform::Triangle,
 			pressed: hset![],
 			synth: synth,
 			envelope: Envelope {
@@ -147,8 +146,8 @@ impl State for Game {
 			MIDI(msg) => {
 
 				match msg {
-					midi::Msg::NoteOn(note, _) => self.press_note(*note),
-					midi::Msg::NoteOff(note, _) => self.release_note(*note),
+					midi::Msg::NoteOn(n, _) => self.press_note(Note(*n)),
+					midi::Msg::NoteOff(n, _) => self.release_note(Note(*n)),
 					_ => {},
 				}
 

@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use std::collections::HashMap;
 
 pub struct BasicSynth {
-	notes: HashMap<i32, Voice>,
+	notes: HashMap<Note, Voice>,
 	volume: f32,
 	last_time: f32,
 	buf: VecDeque<f32>,
@@ -48,7 +48,7 @@ impl BasicSynth {
 
 	}
 
-	pub fn release(&mut self, n: i32) {
+	pub fn release(&mut self, n: Note) {
 
 		if let Some(n) = self.notes.get_mut(&n) {
 			n.release();
@@ -72,13 +72,13 @@ impl Stream for BasicSynth {
 
 		let mut sound = 0.0;
 
-		for (_, n) in &mut self.notes {
+		for n in self.notes.values_mut() {
 			sound += n.voice(time);
 		}
 
 		sound *= self.volume;
 
-		for (_, n) in &mut self.notes {
+		for n in self.notes.values_mut() {
 			n.tick(dt);
 		}
 

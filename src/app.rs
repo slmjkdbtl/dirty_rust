@@ -265,9 +265,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		let buf = Arc::new(Mutex::new(vec![]));
 		let buf_in = buf.clone();
 
+		// TODO: why does this still block the main thread sometime??
 		thread::spawn(move || {
 
-			if let Ok(mut midi_in) = midir::MidiInput::new("DIRTY") {
+			// TODO: extremely slow
+			if let Ok(midi_in) = midir::MidiInput::new("DIRTY") {
 
 				let port_id = midi_in.port_count() - 1;
 				let port_name = midi_in.port_name(port_id).unwrap_or(format!("unknown"));
