@@ -2,6 +2,8 @@
 
 //! Software Synthesizer
 
+export!(note);
+export!(scale);
 export!(envelope);
 export!(life);
 export!(wav);
@@ -14,6 +16,8 @@ use std::sync::Mutex;
 use cpal::traits::*;
 
 use crate::*;
+
+// TODO: a way to stop
 
 pub trait Stream: Send + Sync {
 	fn data(&mut self, time: f32) -> f32;

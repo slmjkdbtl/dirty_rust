@@ -19,13 +19,13 @@ default = [
 
 	# modules
 # 	"kit",
-# 	"synth",
 # 	"imgui",
 # 	"ase",
 # 	"http",
+# 	"synth",
+# 	"midi",
 # 	"json",
 # 	"bin",
-# 	"midi",
 
 	# options
 # 	"gl3",
