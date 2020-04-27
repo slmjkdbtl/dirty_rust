@@ -19,11 +19,11 @@ struct Game {
 	model: gfx::Model,
 	canvas: gfx::Canvas,
 	canvas2: gfx::Canvas,
-	blur_shader: gfx::Shader2D<BlurUniform>,
-	vhs_shader: gfx::Shader2D<VHSUniform>,
-	pix_shader: gfx::Shader2D<PixUniform>,
-	filter_shader: gfx::Shader2D<FilterUniform>,
-	shader: gfx::Shader3D<LightUniform>,
+	blur_shader: gfx::Shader<BlurUniform>,
+	vhs_shader: gfx::Shader<VHSUniform>,
+	pix_shader: gfx::Shader<PixUniform>,
+	filter_shader: gfx::Shader<FilterUniform>,
+	shader: gfx::Shader<LightUniform>,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
@@ -37,7 +37,7 @@ pub struct PixUniform {
 	pub size: f32,
 }
 
-impl gfx::Uniform for PixUniform {
+impl gfx::CustomUniform for PixUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_resolution" => &self.resolution,
@@ -52,7 +52,7 @@ pub struct BlurUniform {
 	pub resolution: Vec2,
 }
 
-impl gfx::Uniform for BlurUniform {
+impl gfx::CustomUniform for BlurUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_dir" => &self.dir,
@@ -66,7 +66,7 @@ pub struct VHSUniform {
 	pub intensity: f32,
 }
 
-impl gfx::Uniform for VHSUniform {
+impl gfx::CustomUniform for VHSUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_intensity" => &self.intensity,
@@ -79,7 +79,7 @@ pub struct FilterUniform {
 	pub threshold: f32,
 }
 
-impl gfx::Uniform for FilterUniform {
+impl gfx::CustomUniform for FilterUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_threshold" => &self.threshold,
@@ -97,7 +97,7 @@ struct LightUniform {
 	view_pos: Vec3,
 }
 
-impl gfx::Uniform for LightUniform {
+impl gfx::CustomUniform for LightUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_light.pos" => &self.pos,
@@ -152,14 +152,14 @@ impl State for Game {
 
 		return Ok(Self {
 			model: model,
-			vhs_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/vhs.frag"))?,
-			pix_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/pix.frag"))?,
-			blur_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/blur.frag"))?,
-			filter_shader: gfx::Shader2D::from_frag(ctx, include_str!("res/filter.frag"))?,
+			vhs_shader: gfx::Shader::from_frag(ctx, include_str!("res/vhs.frag"))?,
+			pix_shader: gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?,
+			blur_shader: gfx::Shader::from_frag(ctx, include_str!("res/blur.frag"))?,
+			filter_shader: gfx::Shader::from_frag(ctx, include_str!("res/filter.frag"))?,
 			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
 			cam: gfx::PerspectiveCam::new(60f32.to_radians(), ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
-			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/light.frag"))?,
+			shader: gfx::Shader::from_frag(ctx, include_str!("res/light.frag"))?,
 			size: size,
 			move_speed: size * 2.0,
 			eye_speed: 0.16,
@@ -260,7 +260,7 @@ impl State for Game {
 // 				ctx.draw(&shapes::skybox(&self.skybox))?;
 // 				ctx.draw_t(&gfx::t().t3(light_pos).s3(vec3!(self.size / 24.0)), &shapes::cube())?;
 
-				ctx.draw_3d_with(&self.shader, &LightUniform {
+				ctx.draw_with(&self.shader, &LightUniform {
 					pos: light_pos,
 					color: vec3!(1, 1, 1),
 					diffuse: 0.4,
@@ -285,7 +285,7 @@ impl State for Game {
 
 		ctx.draw_on(&self.canvas2, |ctx| {
 			ctx.clear();
-			ctx.draw_2d_with(&self.pix_shader, &PixUniform {
+			ctx.draw_with(&self.pix_shader, &PixUniform {
 				resolution: vec2!(ctx.width(), ctx.height()),
 				size: 3.0,
 			}, |ctx| {

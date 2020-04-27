@@ -50,25 +50,25 @@ impl<'a> Drawable for Quad<'a> {
 			Vertex {
 				pos: vec3!(p1.x, p1.y, 0),
 				color: self.color,
-				normal: vec3!(0, 0, -1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(0, 0),
 			},
 			Vertex {
 				pos: vec3!(p2.x, p1.y, 0),
 				color: self.color,
-				normal: vec3!(0, 0, -1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(1, 0),
 			},
 			Vertex {
 				pos: vec3!(p2.x, p2.x, 0),
 				color: self.color,
-				normal: vec3!(0, 0, -1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(1, 1),
 			},
 			Vertex {
 				pos: vec3!(p1.x, p2.y, 0),
 				color: self.color,
-				normal: vec3!(0, 0, -1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(0, 1),
 			},
 		], &[0, 1, 3, 1, 2, 3]).texture(&tex))?;

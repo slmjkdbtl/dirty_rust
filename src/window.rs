@@ -47,12 +47,12 @@ impl Ctx {
 
 	pub fn set_cursor_locked(&mut self, b: bool) -> Result<()> {
 
+		self.cursor_locked = b;
+
 		self.windowed_ctx
 			.window()
 			.set_cursor_grab(b)
 			.map_err(|_| format!("failed to lock mouse cursor"))?;
-
-		self.cursor_locked = b;
 
 		return Ok(());
 
