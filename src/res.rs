@@ -5,63 +5,39 @@
 pub mod shader {
 
 	#[cfg(web)]
-	pub const TEMPLATE_2D_VERT: &str = include_str!("shaders/es/2d_template.vert");
+	pub const TEMPLATE_VERT: &str = include_str!("shaders/es/3d_template.vert");
 	#[cfg(web)]
-	pub const DEFAULT_2D_VERT: &str = include_str!("shaders/es/2d_default.vert");
+	pub const DEFAULT_VERT: &str = include_str!("shaders/es/3d_default.vert");
 	#[cfg(web)]
-	pub const TEMPLATE_2D_FRAG: &str = include_str!("shaders/es/2d_template.frag");
+	pub const TEMPLATE_FRAG: &str = include_str!("shaders/es/3d_template.frag");
 	#[cfg(web)]
-	pub const DEFAULT_2D_FRAG: &str = include_str!("shaders/es/2d_default.frag");
-	#[cfg(web)]
-	pub const TEMPLATE_3D_VERT: &str = include_str!("shaders/es/3d_template.vert");
-	#[cfg(web)]
-	pub const DEFAULT_3D_VERT: &str = include_str!("shaders/es/3d_default.vert");
-	#[cfg(web)]
-	pub const TEMPLATE_3D_FRAG: &str = include_str!("shaders/es/3d_template.frag");
-	#[cfg(web)]
-	pub const DEFAULT_3D_FRAG: &str = include_str!("shaders/es/3d_default.frag");
+	pub const DEFAULT_FRAG: &str = include_str!("shaders/es/3d_default.frag");
 	#[cfg(web)]
 	pub const CUBEMAP_VERT: &str = include_str!("shaders/es/cubemap.vert");
 	#[cfg(web)]
 	pub const CUBEMAP_FRAG: &str = include_str!("shaders/es/cubemap.frag");
 
 	#[cfg(all(not(web), feature="gl3"))]
-	pub const TEMPLATE_2D_VERT: &str = include_str!("shaders/330/2d_template.vert");
+	pub const TEMPLATE_VERT: &str = include_str!("shaders/330/3d_template.vert");
 	#[cfg(all(not(web), feature="gl3"))]
-	pub const DEFAULT_2D_VERT: &str = include_str!("shaders/330/2d_default.vert");
+	pub const DEFAULT_VERT: &str = include_str!("shaders/330/3d_default.vert");
 	#[cfg(all(not(web), feature="gl3"))]
-	pub const TEMPLATE_2D_FRAG: &str = include_str!("shaders/330/2d_template.frag");
+	pub const TEMPLATE_FRAG: &str = include_str!("shaders/330/3d_template.frag");
 	#[cfg(all(not(web), feature="gl3"))]
-	pub const DEFAULT_2D_FRAG: &str = include_str!("shaders/330/2d_default.frag");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const TEMPLATE_3D_VERT: &str = include_str!("shaders/330/3d_template.vert");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const DEFAULT_3D_VERT: &str = include_str!("shaders/330/3d_default.vert");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const TEMPLATE_3D_FRAG: &str = include_str!("shaders/330/3d_template.frag");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const DEFAULT_3D_FRAG: &str = include_str!("shaders/330/3d_default.frag");
+	pub const DEFAULT_FRAG: &str = include_str!("shaders/330/3d_default.frag");
 	#[cfg(all(not(web), feature="gl3"))]
 	pub const CUBEMAP_VERT: &str = include_str!("shaders/330/cubemap.vert");
 	#[cfg(all(not(web), feature="gl3"))]
 	pub const CUBEMAP_FRAG: &str = include_str!("shaders/330/cubemap.frag");
 
 	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const TEMPLATE_2D_VERT: &str = include_str!("shaders/120/2d_template.vert");
+	pub const TEMPLATE_VERT: &str = include_str!("shaders/120/3d_template.vert");
 	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const DEFAULT_2D_VERT: &str = include_str!("shaders/120/2d_default.vert");
+	pub const DEFAULT_VERT: &str = include_str!("shaders/120/3d_default.vert");
 	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const TEMPLATE_2D_FRAG: &str = include_str!("shaders/120/2d_template.frag");
+	pub const TEMPLATE_FRAG: &str = include_str!("shaders/120/3d_template.frag");
 	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const DEFAULT_2D_FRAG: &str = include_str!("shaders/120/2d_default.frag");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const TEMPLATE_3D_VERT: &str = include_str!("shaders/120/3d_template.vert");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const DEFAULT_3D_VERT: &str = include_str!("shaders/120/3d_default.vert");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const TEMPLATE_3D_FRAG: &str = include_str!("shaders/120/3d_template.frag");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const DEFAULT_3D_FRAG: &str = include_str!("shaders/120/3d_default.frag");
+	pub const DEFAULT_FRAG: &str = include_str!("shaders/120/3d_default.frag");
 	#[cfg(all(not(web), not(feature="gl3")))]
 	pub const CUBEMAP_VERT: &str = include_str!("shaders/120/cubemap.vert");
 	#[cfg(all(not(web), not(feature="gl3")))]

@@ -14,7 +14,7 @@ use gfx::*;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MeshData {
-	pub vertices: Vec<Vertex3D>,
+	pub vertices: Vec<Vertex>,
 	pub indices: Vec<u32>,
 }
 
@@ -38,7 +38,7 @@ pub struct ModelData {
 
 #[derive(Clone)]
 pub struct Mesh {
-	gl_mesh: Rc<gl::Mesh<Vertex3D, Uniform3D>>,
+	gl_mesh: Rc<gl::Mesh<Vertex, Uniform>>,
 	data: MeshData,
 }
 
@@ -52,7 +52,7 @@ pub struct Node {
 }
 
 impl Mesh {
-	pub(crate) fn gl_mesh(&self) -> &gl::Mesh<Vertex3D, Uniform3D> {
+	pub(crate) fn gl_mesh(&self) -> &gl::Mesh<Vertex, Uniform> {
 		return &self.gl_mesh;
 	}
 	pub fn data(&self) -> &MeshData {
@@ -231,7 +231,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 			for i in 0..positions.len() {
 
-				let v = Vertex3D {
+				let v = Vertex {
 					pos: positions[i],
 					normal: normals[i],
 					color: colors.get(i).cloned().unwrap_or(rgba!(1)),
@@ -310,7 +310,7 @@ impl Model {
 
 	}
 
-	pub fn load_verts(verts: Vec<Vertex3D>, indices: Vec<u32>) -> ModelData {
+	pub fn load_verts(verts: Vec<Vertex>, indices: Vec<u32>) -> ModelData {
 
 		let node = NodeData {
 			id: 0,
@@ -528,7 +528,7 @@ impl Model {
 				let tx = m.texcoords.get(i * 2 + 0).cloned().unwrap_or(0.0);
 				let ty = m.texcoords.get(i * 2 + 1).cloned().unwrap_or(0.0);
 
-				verts.push(Vertex3D {
+				verts.push(Vertex {
 					pos: vec3!(vx, vy, vz),
 					normal: normals[i],
 					uv: vec2!(tx, 1.0 - ty),
@@ -610,7 +610,7 @@ impl Model {
 		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
-	pub fn from_verts(ctx: &impl gfx::GfxCtx, verts: Vec<Vertex3D>, indices: Vec<u32>) -> Result<Self> {
+	pub fn from_verts(ctx: &impl gfx::GfxCtx, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_verts(verts, indices));
 	}
 

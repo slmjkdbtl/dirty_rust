@@ -13,11 +13,9 @@ use math::*;
 use app::Ctx;
 use gl::VertexLayout;
 use gfx::Drawable;
-use gfx::Vertex2D;
-use gfx::Vertex3D;
+use gfx::Vertex;
 
-export!(raw2d);
-export!(raw3d);
+export!(raw);
 export!(sprite);
 export!(quad);
 export!(texfill);

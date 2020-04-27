@@ -82,14 +82,14 @@ fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
 
 			mesh.gl_mesh().draw(
 				dctx.prim,
-				&ctx.cur_pipeline_3d,
-				&gfx::Uniform3D {
+				&ctx.cur_pipeline,
+				&gfx::Uniform {
 					proj: ctx.proj,
 					view: ctx.view,
 					model: ctx.transform * tr,
 					color: dctx.color,
 					tex: tex.clone(),
-					custom: ctx.cur_custom_uniform_3d.clone(),
+					custom: ctx.cur_custom_uniform.clone(),
 				},
 			);
 

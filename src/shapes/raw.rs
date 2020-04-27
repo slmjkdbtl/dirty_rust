@@ -3,15 +3,15 @@
 use super::*;
 
 #[derive(Clone)]
-pub struct Raw3D<'a> {
-	verts: Vec<Vertex3D>,
+pub struct Raw<'a> {
+	verts: Vec<Vertex>,
 	indices: Vec<u32>,
 	prim: gl::Primitive,
 	tex: Option<&'a gfx::Texture>,
 }
 
-impl<'a> Raw3D<'a> {
-	pub fn new(verts: &[Vertex3D], indices: &[u32]) -> Self {
+impl<'a> Raw<'a> {
+	pub fn new(verts: &[Vertex], indices: &[u32]) -> Self {
 		return Self {
 			verts: verts.to_vec(),
 			indices: indices.to_vec(),
@@ -29,33 +29,33 @@ impl<'a> Raw3D<'a> {
 	}
 }
 
-pub fn raw3d<'a>(verts: &[Vertex3D], indices: &[u32]) -> Raw3D<'a> {
-	return Raw3D::new(verts, indices);
+pub fn raw<'a>(verts: &[Vertex], indices: &[u32]) -> Raw<'a> {
+	return Raw::new(verts, indices);
 }
 
-impl<'a> Drawable for Raw3D<'a> {
+impl<'a> Drawable for Raw<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let tex = self.tex.unwrap_or(&ctx.empty_tex);
-		let mut verts = Vec::with_capacity(self.verts.len() * gfx::Vertex3D::STRIDE);
+		let mut verts = Vec::with_capacity(self.verts.len() * gfx::Vertex::STRIDE);
 
 		for p in &self.verts {
 			p.push(&mut verts);
 		}
 
-		ctx.renderer_3d.push(
+		ctx.renderer.push(
 			self.prim,
 			&verts,
 			&self.indices,
-			&ctx.cur_pipeline_3d,
-			&gfx::Uniform3D {
+			&ctx.cur_pipeline,
+			&gfx::Uniform {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
 				color: rgba!(1),
 				tex: tex.clone(),
-				custom: ctx.cur_custom_uniform_3d.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			},
 		)?;
 
@@ -64,5 +64,4 @@ impl<'a> Drawable for Raw3D<'a> {
 	}
 
 }
-
 

@@ -63,20 +63,15 @@ pub struct Ctx {
 	pub(crate) proj: Mat4,
 	pub(crate) view: Mat4,
 
-	pub(crate) renderer_2d: gl::BatchedMesh<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(crate) cube_renderer: gl::Mesh<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(crate) renderer_3d: gl::BatchedMesh<gfx::Vertex3D, gfx::Uniform3D>,
+	pub(crate) renderer: gl::BatchedMesh<gfx::Vertex, gfx::Uniform>,
+	pub(crate) cube_renderer: gl::Mesh<gfx::Vertex, gfx::Uniform>,
 	pub(crate) cubemap_renderer: gl::Mesh<gfx::VertexCubemap, gfx::UniformCubemap>,
 
 	pub(crate) empty_tex: gfx::Texture,
 
-	pub(crate) default_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(crate) cur_pipeline_2d: gl::Pipeline<gfx::Vertex2D, gfx::Uniform2D>,
-	pub(crate) cur_custom_uniform_2d: Option<Vec<(&'static str, gl::UniformValue)>>,
-
-	pub(crate) default_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(crate) cur_pipeline_3d: gl::Pipeline<gfx::Vertex3D, gfx::Uniform3D>,
-	pub(crate) cur_custom_uniform_3d: Option<Vec<(&'static str, gl::UniformValue)>>,
+	pub(crate) default_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
+	pub(crate) cur_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
+	pub(crate) cur_custom_uniform: Option<Vec<(&'static str, gl::UniformValue)>>,
 
 	pub(crate) pipeline_cubemap: gl::Pipeline<gfx::VertexCubemap, gfx::UniformCubemap>,
 
@@ -166,15 +161,10 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	use res::shader::*;
 	use res::font::*;
 
-	let vert_2d_src = TEMPLATE_2D_VERT.replace("###REPLACE###", DEFAULT_2D_VERT);
-	let frag_2d_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", DEFAULT_2D_FRAG);
+	let vert_src = TEMPLATE_VERT.replace("###REPLACE###", DEFAULT_VERT);
+	let frag_src = TEMPLATE_FRAG.replace("###REPLACE###", DEFAULT_FRAG);
 
-	let pipeline_2d = gl::Pipeline::new(&gl, &vert_2d_src, &frag_2d_src)?;
-
-	let vert_3d_src = TEMPLATE_3D_VERT.replace("###REPLACE###", DEFAULT_3D_VERT);
-	let frag_3d_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", DEFAULT_3D_FRAG);
-
-	let pipeline_3d = gl::Pipeline::new(&gl, &vert_3d_src, &frag_3d_src)?;
+	let pipeline = gl::Pipeline::new(&gl, &vert_src, &frag_src)?;
 
 	let pipeline_cmap = gl::Pipeline::new(&gl, CUBEMAP_VERT, CUBEMAP_FRAG)?;
 
@@ -215,8 +205,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		windowed_ctx: windowed_ctx,
 
-		renderer_2d: gl::BatchedMesh::<gfx::Vertex2D, gfx::Uniform2D>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
-		renderer_3d: gl::BatchedMesh::<gfx::Vertex3D, gfx::Uniform3D>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
+		renderer: gl::BatchedMesh::<gfx::Vertex, gfx::Uniform>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 
@@ -225,13 +214,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		empty_tex: gfx::Texture::from_pixels(&gl, 1, 1, &[255; 4])?,
 
-		default_pipeline_2d: pipeline_2d.clone(),
-		cur_pipeline_2d: pipeline_2d,
-		cur_custom_uniform_2d: None,
-
-		default_pipeline_3d: pipeline_3d.clone(),
-		cur_pipeline_3d: pipeline_3d,
-		cur_custom_uniform_3d: None,
+		default_pipeline: pipeline.clone(),
+		cur_pipeline: pipeline,
+		cur_custom_uniform: None,
 
 		pipeline_cubemap: pipeline_cmap,
 
