@@ -75,35 +75,6 @@ impl gl::VertexLayout for VertexCubemap {
 
 }
 
-// #[derive(Clone, PartialEq)]
-// pub struct CustomUniform {
-// 	pub values: Vec<(&'static str, gl::UniformValue)>,
-// 	pub textures: Vec<&dyn gl::Texture>,
-// }
-
-// impl CustomUniform {
-
-// 	fn from_uniform(u: impl Uniform) -> Self {
-
-// 		let values = u.values()
-// 			.into_iter()
-// 			.map(|(n, v)| (n, v.into_uniform()))
-// 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
-
-// 		let textures = u.textures()
-// 			.into_iter()
-// 			.map(|t| t.gl_tex())
-// 			.collect::<Vec<&dyn gl::Texture>>();
-
-// 		return Self {
-// 			values: values,
-// 			textures: textures,
-// 		};
-
-// 	}
-
-// }
-
 #[derive(Clone, PartialEq)]
 pub(crate) struct Uniform {
 	pub proj: Mat4,
@@ -185,10 +156,10 @@ impl gl::Shape for QuadShape {
 		let q = self.quad;
 		let c = self.color;
 
-		let p1 = (t * vec3!(-0.5, 0.5, 0.0)).xyz();
-		let p2 = (t * vec3!(0.5, 0.5, 0.0)).xyz();
-		let p3 = (t * vec3!(0.5, -0.5, 0.0)).xyz();
-		let p4 = (t * vec3!(-0.5, -0.5, 0.0)).xyz();
+		let p1 = t * vec3!(-0.5, 0.5, 0.0);
+		let p2 = t * vec3!(0.5, 0.5, 0.0);
+		let p3 = t * vec3!(0.5, -0.5, 0.0);
+		let p4 = t * vec3!(-0.5, -0.5, 0.0);
 
 		// TODO: flip img instead of tex coord
 		let mut u1 = vec2!(q.x, q.y);
@@ -220,28 +191,28 @@ impl gl::Shape for QuadShape {
 		Vertex {
 			pos: p1,
 			uv: u1,
-			normal: vec3!(0, 0, -1),
+			normal: vec3!(0, 0, 1),
 			color: c
 		}.push(queue);
 
 		Vertex {
 			pos: p2,
 			uv: u2,
-			normal: vec3!(0, 0, -1),
+			normal: vec3!(0, 0, 1),
 			color: c
 		}.push(queue);
 
 		Vertex {
 			pos: p3,
 			uv: u3,
-			normal: vec3!(0, 0, -1),
+			normal: vec3!(0, 0, 1),
 			color: c
 		}.push(queue);
 
 		Vertex {
 			pos: p4,
 			uv: u4,
-			normal: vec3!(0, 0, -1),
+			normal: vec3!(0, 0, 1),
 			color: c
 		}.push(queue);
 

@@ -335,11 +335,11 @@ impl Ctx {
 	}
 
 	pub fn to_clip(&self, p: Vec3) -> Vec3 {
-		return (self.proj * self.view * p).xyz();
+		return self.proj * self.view * p;
 	}
 
 	pub fn cam_to_clip(&self, cam: &dyn Camera, p: Vec3) -> Vec3 {
-		return (cam.proj() * cam.view() * p).xyz();
+		return cam.proj() * cam.view() * p;
 	}
 
 	pub fn to_screen(&self, p: Vec3) -> Vec2 {
