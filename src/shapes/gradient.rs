@@ -37,10 +37,10 @@ impl Drawable for Gradient {
 			return Err(format!("need at least 2 points to draw a gradient"));
 		}
 
-		use gfx::Vertex2D;
+		use gfx::Vertex;
 
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
-		let mut verts = Vec::with_capacity(4 + 2 * (self.steps.len() - 2) * gfx::Vertex2D::STRIDE);
+		let mut verts = Vec::with_capacity(4 + 2 * (self.steps.len() - 2) * gfx::Vertex::STRIDE);
 
 		let matrix = ctx.transform
 			.t2((self.p1 + self.p2) * 0.5)
@@ -62,15 +62,17 @@ impl Drawable for Gradient {
 
 			last_pos = Some(s.1);
 
-			Vertex2D {
+			Vertex {
 				pos: (matrix * vec3!(-w / 2.0, -h / 2.0 + h * s.1, 0.0)).xyz(),
 				uv: vec2!(0),
+				normal: vec3!(0, 0, -1),
 				color: s.0,
 			}.push(&mut verts);
 
-			Vertex2D {
+			Vertex {
 				pos: (matrix * vec3!(w / 2.0, -h / 2.0 + h * s.1, 0.0)).xyz(),
 				uv: vec2!(0),
+				normal: vec3!(0, 0, -1),
 				color: s.0,
 			}.push(&mut verts);
 
@@ -93,16 +95,18 @@ impl Drawable for Gradient {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 2 )
 			.collect();
 
-		ctx.renderer_2d.push(
+		ctx.renderer.push(
 			gl::Primitive::Triangle,
 			&verts,
 			&indices,
-			&ctx.cur_pipeline_2d,
-			&gfx::Uniform2D {
+			&ctx.cur_pipeline,
+			&gfx::Uniform {
+				model: mat4!(),
 				proj: ctx.proj,
 				view: ctx.view,
+				color: rgba!(1),
 				tex: ctx.empty_tex.clone(),
-				custom: ctx.cur_custom_uniform_2d.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			}
 		)?;
 

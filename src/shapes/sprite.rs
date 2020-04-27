@@ -88,15 +88,17 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 			flip: self.flip,
 		};
 
-		ctx.renderer_2d.push_shape(
+		ctx.renderer.push_shape(
 			gl::Primitive::Triangle,
 			shape,
-			&ctx.cur_pipeline_2d,
-			&gfx::Uniform2D {
+			&ctx.cur_pipeline,
+			&gfx::Uniform {
+				model: mat4!(),
 				proj: ctx.proj,
 				view: ctx.view,
+				color: rgba!(1),
 				tex: self.tex.clone(),
-				custom: ctx.cur_custom_uniform_2d.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			}
 		)?;
 

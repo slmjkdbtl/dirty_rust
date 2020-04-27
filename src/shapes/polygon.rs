@@ -85,14 +85,15 @@ impl Drawable for Polygon {
 
 		if let Some(color) = self.fill {
 
-			let mut verts = Vec::with_capacity(pts.len() * gfx::Vertex2D::STRIDE);
+			let mut verts = Vec::with_capacity(pts.len() * gfx::Vertex::STRIDE);
 			let mut indices = Vec::with_capacity((pts.len() - 2) * 3);
 
 			for (i, p) in pts.iter().enumerate() {
 
-				gfx::Vertex2D {
+				gfx::Vertex {
 					pos: (ctx.transform * vec3!(p.x, p.y, 0.0)).xyz(),
 					uv: vec2!(0),
+					normal: vec3!(0, 0, -1),
 					color: color,
 				}.push(&mut verts);
 
@@ -102,16 +103,18 @@ impl Drawable for Polygon {
 
 			}
 
-			ctx.renderer_2d.push(
+			ctx.renderer.push(
 				gl::Primitive::Triangle,
 				&verts,
 				&indices,
-				&ctx.cur_pipeline_2d,
-				&gfx::Uniform2D {
+				&ctx.cur_pipeline,
+				&gfx::Uniform {
+					model: mat4!(),
 					proj: ctx.proj,
 					view: ctx.view,
+					color: rgba!(1),
 					tex: ctx.empty_tex.clone(),
-					custom: ctx.cur_custom_uniform_2d.clone(),
+					custom: ctx.cur_custom_uniform.clone(),
 				},
 			)?;
 

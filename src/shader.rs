@@ -8,7 +8,7 @@ use math::*;
 use gfx::*;
 use res::shader::*;
 
-pub trait Uniform: Clone {
+pub trait CustomUniform: Clone {
 	fn values(&self) -> UniformValues {
 		return hmap![];
 	}
@@ -17,7 +17,7 @@ pub trait Uniform: Clone {
 	}
 }
 
-impl Uniform for () {}
+impl CustomUniform for () {}
 
 impl IntoUniformValue for Vec2 {
 	fn into_uniform(&self) -> gl::UniformValue {
@@ -62,14 +62,14 @@ impl IntoUniformValue for std::time::Duration {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Shader2D<U: Uniform> {
-	gl_pipeline: Rc<gl::Pipeline<Vertex2D, Uniform2D>>,
+pub struct Shader<U: CustomUniform> {
+	gl_pipeline: Rc<gl::Pipeline<Vertex, Uniform>>,
 	uniform: PhantomData<U>,
 }
 
-impl<U: Uniform> Shader2D<U> {
+impl<U: CustomUniform> Shader<U> {
 
-	pub(crate) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex2D, Uniform2D>) -> Self {
+	pub(crate) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex, Uniform>) -> Self {
 		return Self {
 			gl_pipeline: Rc::new(gl_pipeline),
 			uniform: PhantomData,
@@ -79,7 +79,7 @@ impl<U: Uniform> Shader2D<U> {
 	pub fn from_frag(ctx: &impl gfx::GfxCtx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
-			DEFAULT_2D_VERT,
+			DEFAULT_VERT,
 			&frag,
 		);
 	}
@@ -88,66 +88,20 @@ impl<U: Uniform> Shader2D<U> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
-			DEFAULT_2D_FRAG,
+			DEFAULT_FRAG,
 		);
 	}
 
 	pub fn from_vert_frag(ctx: &impl gfx::GfxCtx, vert: &str, frag: &str) -> Result<Self> {
 
-		let vert_src = TEMPLATE_2D_VERT.replace("###REPLACE###", vert);
-		let frag_src = TEMPLATE_2D_FRAG.replace("###REPLACE###", frag);
+		let vert_src = TEMPLATE_VERT.replace("###REPLACE###", vert);
+		let frag_src = TEMPLATE_FRAG.replace("###REPLACE###", frag);
 
 		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(ctx.device(), &vert_src, &frag_src)?));
 
 	}
 
-	pub(crate) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex2D, Uniform2D> {
-		return &self.gl_pipeline;
-	}
-
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Shader3D<U: Uniform> {
-	gl_pipeline: Rc<gl::Pipeline<Vertex3D, Uniform3D>>,
-	uniform: PhantomData<U>,
-}
-
-impl<U: Uniform> Shader3D<U> {
-
-	pub(crate) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex3D, Uniform3D>) -> Self {
-		return Self {
-			gl_pipeline: Rc::new(gl_pipeline),
-			uniform: PhantomData,
-		};
-	}
-
-	pub fn from_frag(ctx: &impl gfx::GfxCtx, frag: &str) -> Result<Self> {
-		return Self::from_vert_frag(
-			ctx,
-			DEFAULT_3D_VERT,
-			&frag,
-		);
-	}
-
-	pub fn from_vert(ctx: &impl gfx::GfxCtx, vert: &str) -> Result<Self> {
-		return Self::from_vert_frag(
-			ctx,
-			&vert,
-			DEFAULT_3D_FRAG,
-		);
-	}
-
-	pub fn from_vert_frag(ctx: &impl gfx::GfxCtx, vert: &str, frag: &str) -> Result<Self> {
-
-		let vert_src = TEMPLATE_3D_VERT.replace("###REPLACE###", vert);
-		let frag_src = TEMPLATE_3D_FRAG.replace("###REPLACE###", frag);
-
-		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(ctx.device(), &vert_src, &frag_src)?));
-
-	}
-
-	pub(crate) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex3D, Uniform3D> {
+	pub(crate) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex, Uniform> {
 		return &self.gl_pipeline;
 	}
 

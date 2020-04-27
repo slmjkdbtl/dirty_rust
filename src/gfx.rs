@@ -142,7 +142,7 @@ impl Ctx {
 
 	}
 
-	pub fn draw_2d_with<U: Uniform>(&mut self, shader: &Shader2D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_with<U: CustomUniform>(&mut self, shader: &Shader<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let uniforms = uniform.values()
 			.into_iter()
@@ -150,31 +150,12 @@ impl Ctx {
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
 		self.flush();
-		self.cur_pipeline_2d = gl::Pipeline::clone(&shader.gl_pipeline());
-		self.cur_custom_uniform_2d = Some(uniforms);
+		self.cur_pipeline = gl::Pipeline::clone(&shader.gl_pipeline());
+		self.cur_custom_uniform = Some(uniforms);
 		f(self)?;
 		self.flush();
-		self.cur_pipeline_2d = self.default_pipeline_2d.clone();
-		self.cur_custom_uniform_2d = None;
-
-		return Ok(());
-
-	}
-
-	pub fn draw_3d_with<U: Uniform>(&mut self, shader: &Shader3D<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		let uniforms = uniform.values()
-			.into_iter()
-			.map(|(n, v)| (n, v.into_uniform()))
-			.collect::<Vec<(&'static str, gl::UniformValue)>>();
-
-		self.flush();
-		self.cur_pipeline_3d = gl::Pipeline::clone(&shader.gl_pipeline());
-		self.cur_custom_uniform_3d = Some(uniforms);
-		f(self)?;
-		self.flush();
-		self.cur_pipeline_3d = self.default_pipeline_3d.clone();
-		self.cur_custom_uniform_3d = None;
+		self.cur_pipeline = self.default_pipeline.clone();
+		self.cur_custom_uniform = None;
 
 		return Ok(());
 
@@ -366,8 +347,7 @@ impl Ctx {
 	}
 
 	pub fn flush(&mut self) {
-		self.renderer_2d.flush();
-		self.renderer_3d.flush();
+		self.renderer.flush();
 	}
 
 	pub(crate) fn begin_frame(&mut self) {
@@ -382,10 +362,8 @@ impl Ctx {
 
 		self.flush();
 		self.transform = mat4!();
-		self.draw_calls += self.renderer_2d.draw_count();
-		self.draw_calls += self.renderer_3d.draw_count();
-		self.renderer_2d.clear();
-		self.renderer_3d.clear();
+		self.draw_calls += self.renderer.draw_count();
+		self.renderer.clear();
 
 	}
 

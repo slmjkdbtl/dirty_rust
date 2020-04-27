@@ -45,34 +45,34 @@ impl Drawable for Line3D {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let mut verts = Vec::with_capacity(2 * gfx::Vertex3D::STRIDE);
+		let mut verts = Vec::with_capacity(2 * gfx::Vertex::STRIDE);
 
-		gfx::Vertex3D {
+		gfx::Vertex {
 			pos: self.p1,
 			normal: vec3!(1),
 			color: self.color,
 			uv: vec2!(0),
 		}.push(&mut verts);
 
-		gfx::Vertex3D {
+		gfx::Vertex {
 			pos: self.p2,
 			normal: vec3!(1),
 			color: self.color,
 			uv: vec2!(0),
 		}.push(&mut verts);
 
-		ctx.renderer_3d.push(
+		ctx.renderer.push(
 			gl::Primitive::Line(self.width),
 			&verts,
 			&[0, 1],
-			&ctx.cur_pipeline_3d,
-			&gfx::Uniform3D {
+			&ctx.cur_pipeline,
+			&gfx::Uniform {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
 				color: rgba!(1),
 				tex: ctx.empty_tex.clone(),
-				custom: ctx.cur_custom_uniform_3d.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			},
 		)?;
 

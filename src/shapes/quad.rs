@@ -46,25 +46,29 @@ impl<'a> Drawable for Quad<'a> {
 		let p1 = vec2!(f32::min(self.p1.x, self.p2.x), f32::min(self.p1.y, self.p2.y));
 		let p2 = vec2!(f32::max(self.p1.x, self.p2.x), f32::max(self.p1.y, self.p2.y));
 
-		ctx.draw(&raw2d(&[
-			Vertex2D {
+		ctx.draw(&raw(&[
+			Vertex {
 				pos: vec3!(p1.x, p1.y, 0),
 				color: self.color,
+				normal: vec3!(0, 0, -1),
 				uv: vec2!(0, 0),
 			},
-			Vertex2D {
+			Vertex {
 				pos: vec3!(p2.x, p1.y, 0),
 				color: self.color,
+				normal: vec3!(0, 0, -1),
 				uv: vec2!(1, 0),
 			},
-			Vertex2D {
+			Vertex {
 				pos: vec3!(p2.x, p2.x, 0),
 				color: self.color,
+				normal: vec3!(0, 0, -1),
 				uv: vec2!(1, 1),
 			},
-			Vertex2D {
+			Vertex {
 				pos: vec3!(p1.x, p2.y, 0),
 				color: self.color,
+				normal: vec3!(0, 0, -1),
 				uv: vec2!(0, 1),
 			},
 		], &[0, 1, 3, 1, 2, 3]).texture(&tex))?;

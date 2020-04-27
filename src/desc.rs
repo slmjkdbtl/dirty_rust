@@ -11,50 +11,14 @@ use crate::gl;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
-pub struct Vertex2D {
-	pub pos: Vec3,
-	pub uv: Vec2,
-	pub color: Color,
-}
-
-impl gl::VertexLayout for Vertex2D {
-
-	const STRIDE: usize = 9;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-		queue.extend_from_slice(&[
-			self.pos.x,
-			self.pos.y,
-			self.pos.z,
-			self.uv.x,
-			self.uv.y,
-			self.color.r,
-			self.color.g,
-			self.color.b,
-			self.color.a,
-		]);
-	}
-
-	fn attrs() -> gl::VertexAttrGroup {
-		return &[
-			("a_pos", 3),
-			("a_uv", 2),
-			("a_color", 4),
-		];
-	}
-
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[repr(C)]
-pub struct Vertex3D {
+pub struct Vertex {
 	pub pos: Vec3,
 	pub uv: Vec2,
 	pub normal: Vec3,
 	pub color: Color,
 }
 
-impl gl::VertexLayout for Vertex3D {
+impl gl::VertexLayout for Vertex {
 
 	const STRIDE: usize = 12;
 
@@ -141,44 +105,7 @@ impl gl::VertexLayout for VertexCubemap {
 // }
 
 #[derive(Clone, PartialEq)]
-pub(crate) struct Uniform2D {
-	pub proj: Mat4,
-	pub view: Mat4,
-	pub tex: Texture,
-	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
-}
-
-impl gl::UniformLayout for Uniform2D {
-
-	fn values(&self) -> UniformValues {
-
-		let mut values: UniformValues = hmap![
-			"u_proj" => &self.proj,
-			"u_view" => &self.view,
-		];
-
-		if let Some(custom) = &self.custom {
-			for (name, v) in custom {
-				values.insert(name, v);
-			}
-		}
-
-		return values;
-
-	}
-
-	fn textures(&self) -> Vec<&dyn gl::Texture> {
-
-		let textures: Vec<&dyn gl::Texture> = vec![self.tex.gl_tex()];
-
-		return textures;
-
-	}
-
-}
-
-#[derive(Clone, PartialEq)]
-pub(crate) struct Uniform3D {
+pub(crate) struct Uniform {
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub model: Mat4,
@@ -187,7 +114,7 @@ pub(crate) struct Uniform3D {
 	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
 }
 
-impl gl::UniformLayout for Uniform3D {
+impl gl::UniformLayout for Uniform {
 
 	fn values(&self) -> UniformValues {
 
@@ -247,7 +174,7 @@ pub(crate) struct QuadShape {
 
 impl gl::Shape for QuadShape {
 
-	type Vertex = Vertex2D;
+	type Vertex = Vertex;
 	const COUNT: usize = 4;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
@@ -290,27 +217,31 @@ impl gl::Shape for QuadShape {
 			_ => {},
 		}
 
-		Vertex2D {
+		Vertex {
 			pos: p1,
 			uv: u1,
+			normal: vec3!(0, 0, -1),
 			color: c
 		}.push(queue);
 
-		Vertex2D {
+		Vertex {
 			pos: p2,
 			uv: u2,
+			normal: vec3!(0, 0, -1),
 			color: c
 		}.push(queue);
 
-		Vertex2D {
+		Vertex {
 			pos: p3,
 			uv: u3,
+			normal: vec3!(0, 0, -1),
 			color: c
 		}.push(queue);
 
-		Vertex2D {
+		Vertex {
 			pos: p4,
 			uv: u4,
+			normal: vec3!(0, 0, -1),
 			color: c
 		}.push(queue);
 
@@ -326,7 +257,7 @@ pub(crate) struct CubeShape;
 
 impl gl::Shape for CubeShape {
 
-	type Vertex = Vertex3D;
+	type Vertex = Vertex;
 	const COUNT: usize = 24;
 
 	fn vertices(&self, queue: &mut Vec<f32>) {
@@ -420,7 +351,7 @@ impl gl::Shape for CubeShape {
 			.zip(&colors)
 			// zoop
 			.for_each(|((p, n), c)| {
-				Vertex3D {
+				Vertex {
 					pos: *p,
 					normal: *n,
 					color: *c,

@@ -39,14 +39,14 @@ impl Drawable for Cube {
 
 		ctx.cube_renderer.draw(
 			gl::Primitive::Triangle,
-			&ctx.cur_pipeline_3d,
-			&gfx::Uniform3D {
+			&ctx.cur_pipeline,
+			&gfx::Uniform {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
 				color: self.color,
 				tex: ctx.empty_tex.clone(),
-				custom: ctx.cur_custom_uniform_3d.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			},
 		);
 
