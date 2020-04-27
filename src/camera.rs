@@ -10,6 +10,11 @@ pub trait Camera {
 	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
 		return self.pt_to_ray(ctx, ctx.mouse_pos());
 	}
+	fn to_screen(&self, ctx: &Ctx, pt: Vec3) -> Vec2 {
+		let pp = self.proj() * self.view() * pt;
+		let pp = pp / pp.w;
+		return ctx.clip_to_screen(pp.xy());
+	}
 }
 
 #[derive(Clone)]
@@ -272,7 +277,7 @@ impl Camera for ObliqueCam {
 
 	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3 {
 
-		let dir = (self.skew() * vec3!(0, 0, -1)).unit();
+		let dir = (self.skew() * vec3!(0, 0, -1)).xyz().unit();
 
 		let normalized = ctx.screen_to_clip(pt);
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);

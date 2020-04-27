@@ -143,6 +143,7 @@ impl gl::VertexLayout for VertexCubemap {
 #[derive(Clone, PartialEq)]
 pub(crate) struct Uniform2D {
 	pub proj: Mat4,
+	pub view: Mat4,
 	pub tex: Texture,
 	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
 }
@@ -153,6 +154,7 @@ impl gl::UniformLayout for Uniform2D {
 
 		let mut values: UniformValues = hmap![
 			"u_proj" => &self.proj,
+			"u_view" => &self.view,
 		];
 
 		if let Some(custom) = &self.custom {
@@ -256,10 +258,10 @@ impl gl::Shape for QuadShape {
 		let q = self.quad;
 		let c = self.color;
 
-		let p1 = t * (vec3!(-0.5, 0.5, 0.0));
-		let p2 = t * (vec3!(0.5, 0.5, 0.0));
-		let p3 = t * (vec3!(0.5, -0.5, 0.0));
-		let p4 = t * (vec3!(-0.5, -0.5, 0.0));
+		let p1 = (t * vec3!(-0.5, 0.5, 0.0)).xyz();
+		let p2 = (t * vec3!(0.5, 0.5, 0.0)).xyz();
+		let p3 = (t * vec3!(0.5, -0.5, 0.0)).xyz();
+		let p4 = (t * vec3!(-0.5, -0.5, 0.0)).xyz();
 
 		// TODO: flip img instead of tex coord
 		let mut u1 = vec2!(q.x, q.y);

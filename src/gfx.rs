@@ -354,19 +354,15 @@ impl Ctx {
 	}
 
 	pub fn to_clip(&self, p: Vec3) -> Vec3 {
-		return self.proj * self.view * p;
+		return (self.proj * self.view * p).xyz();
 	}
 
 	pub fn cam_to_clip(&self, cam: &dyn Camera, p: Vec3) -> Vec3 {
-		return cam.proj() * cam.view() * p;
+		return (cam.proj() * cam.view() * p).xyz();
 	}
 
 	pub fn to_screen(&self, p: Vec3) -> Vec2 {
 		return self.clip_to_screen(self.to_clip(p).xy());
-	}
-
-	pub fn cam_to_screen(&self, cam: &dyn Camera, p: Vec3) -> Vec2 {
-		return self.clip_to_screen(self.cam_to_clip(cam, p).xy());
 	}
 
 	pub fn flush(&mut self) {

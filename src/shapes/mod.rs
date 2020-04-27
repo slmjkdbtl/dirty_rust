@@ -35,6 +35,7 @@ export!(skybox);
 export!(cube);
 export!(line3d);
 export!(rect3d);
+export!(plane);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct LineDash {

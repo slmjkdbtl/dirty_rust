@@ -90,7 +90,7 @@ pub(super) fn send(req: Request) -> Result<Response> {
 	stream.read_to_end(&mut buf)
 		.map_err(|_| format!("failed to read from stream"))?;
 
-	return Response::parse(&buf);
+	return Response::from(&buf);
 
 }
 

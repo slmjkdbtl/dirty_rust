@@ -16,26 +16,28 @@ use input::Key;
 
 fn key_to_note(k: Key, o: i32) -> Option<Note> {
 
-	return match k {
-		Key::A => Some(Note::from_octave(0, o)),
-		Key::W => Some(Note::from_octave(1, o)),
-		Key::S => Some(Note::from_octave(2, o)),
-		Key::E => Some(Note::from_octave(3, o)),
-		Key::D => Some(Note::from_octave(4, o)),
-		Key::F => Some(Note::from_octave(5, o)),
-		Key::T => Some(Note::from_octave(6, o)),
-		Key::G => Some(Note::from_octave(7, o)),
-		Key::Y => Some(Note::from_octave(8, o)),
-		Key::H => Some(Note::from_octave(9, o)),
-		Key::U => Some(Note::from_octave(10, o)),
-		Key::J => Some(Note::from_octave(11, o)),
-		Key::K => Some(Note::from_octave(12, o)),
-		Key::O => Some(Note::from_octave(13, o)),
-		Key::L => Some(Note::from_octave(14, o)),
-		Key::P => Some(Note::from_octave(15, o)),
-		Key::Semicolon => Some(Note::from_octave(16, o)),
+	let n = match k {
+		Key::A => Some(0),
+		Key::W => Some(1),
+		Key::S => Some(2),
+		Key::E => Some(3),
+		Key::D => Some(4),
+		Key::F => Some(5),
+		Key::T => Some(6),
+		Key::G => Some(7),
+		Key::Y => Some(8),
+		Key::H => Some(9),
+		Key::U => Some(10),
+		Key::J => Some(11),
+		Key::K => Some(12),
+		Key::O => Some(13),
+		Key::L => Some(14),
+		Key::P => Some(15),
+		Key::Semicolon => Some(16),
 		_ => None,
 	};
+
+	return n.map(|n| Note::from_octave(n, o));
 
 }
 
@@ -146,8 +148,8 @@ impl State for Game {
 			MIDI(msg) => {
 
 				match msg {
-					midi::Msg::NoteOn(n, _) => self.press_note(Note(*n)),
-					midi::Msg::NoteOff(n, _) => self.release_note(Note(*n)),
+					midi::Msg::NoteOn(n, _) => self.press_note(Note::new(*n)),
+					midi::Msg::NoteOff(n, _) => self.release_note(Note::new(*n)),
 					_ => {},
 				}
 
