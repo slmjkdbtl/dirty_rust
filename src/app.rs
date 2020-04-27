@@ -277,9 +277,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	};
 
-	#[cfg(feature = "imgui")]
-	let mut imgui = imgui::Imgui::new(&ctx)?;
-
 	ctx.clear();
 	ctx.swap_buffers()?;
 
@@ -514,11 +511,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					s.draw(&mut ctx)?;
 					ctx.end_frame();
 
-					#[cfg(feature = "imgui")]
-					imgui.render(&mut ctx, |ui| {
-						return s.imgui(ui);
-					})?;
-
 					ctx.swap_buffers()?;
 
 					if ctx.quit {
@@ -644,12 +636,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			};
 
 			for e in events {
-
-				#[cfg(feature = "imgui")]
-				imgui.event(&mut ctx, &e);
-
 				s.event(&mut ctx, &e)?;
-
 			}
 
 		};
