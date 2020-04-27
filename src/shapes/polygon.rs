@@ -91,7 +91,7 @@ impl Drawable for Polygon {
 			for (i, p) in pts.iter().enumerate() {
 
 				gfx::Vertex2D {
-					pos: ctx.transform * vec3!(p.x, p.y, 0.0),
+					pos: (ctx.transform * vec3!(p.x, p.y, 0.0)).xyz(),
 					uv: vec2!(0),
 					color: color,
 				}.push(&mut verts);
@@ -109,6 +109,7 @@ impl Drawable for Polygon {
 				&ctx.cur_pipeline_2d,
 				&gfx::Uniform2D {
 					proj: ctx.proj,
+					view: ctx.view,
 					tex: ctx.empty_tex.clone(),
 					custom: ctx.cur_custom_uniform_2d.clone(),
 				},

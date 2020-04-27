@@ -64,24 +64,24 @@ impl Mat4 {
 		]);
 	}
 
-	pub fn rotate(rot: f32, axis: Vec3) -> Self {
+	pub fn rotate(rot: f32, a: Vec3) -> Self {
 
 		let mut m = Self::identity();
 		let c = rot.cos();
 		let s = rot.sin();
 		let cv = 1.0 - c;
 
-		m.m[0] = (axis.x * axis.x * cv) + c;
-		m.m[1] = (axis.x * axis.y * cv) + (axis.z * s);
-		m.m[2] = (axis.x * axis.z * cv) - (axis.y * s);
+		m.m[0] = (a.x * a.x * cv) + c;
+		m.m[1] = (a.x * a.y * cv) + (a.z * s);
+		m.m[2] = (a.x * a.z * cv) - (a.y * s);
 
-		m.m[4] = (axis.y * axis.x * cv) - (axis.z * s);
-		m.m[5] = (axis.y * axis.y * cv) + c;
-		m.m[6] = (axis.y * axis.z * cv) + (axis.x * s);
+		m.m[4] = (a.y * a.x * cv) - (a.z * s);
+		m.m[5] = (a.y * a.y * cv) + c;
+		m.m[6] = (a.y * a.z * cv) + (a.x * s);
 
-		m.m[8] = (axis.z * axis.x * cv) + (axis.y * s);
-		m.m[9] = (axis.z * axis.y * cv) - (axis.x * s);
-		m.m[10] = (axis.z * axis.z * cv) + c;
+		m.m[8] = (a.z * a.x * cv) + (a.y * s);
+		m.m[9] = (a.z * a.y * cv) - (a.x * s);
+		m.m[10] = (a.z * a.z * cv) + c;
 
 		return m;
 
@@ -282,22 +282,20 @@ impl ops::Mul<Vec4> for Mat4 {
 
 impl ops::Mul<Vec3> for Mat4 {
 
-	type Output = Vec3;
+	type Output = Vec4;
 
-	fn mul(self, pt: Self::Output) -> Self::Output {
-		let p = self * vec4!(pt.x, pt.y, pt.z, 1);
-		return vec3!(p.x, p.y, p.z);
+	fn mul(self, pt: Vec3) -> Self::Output {
+		return self * vec4!(pt.x, pt.y, pt.z, 1);
 	}
 
 }
 
 impl ops::Mul<Vec2> for Mat4 {
 
-	type Output = Vec2;
+	type Output = Vec4;
 
-	fn mul(self, pt: Self::Output) -> Self::Output {
-		let p = self * vec4!(pt.x, pt.y, 0, 1);
-		return vec2!(p.x, p.y);
+	fn mul(self, pt: Vec2) -> Self::Output {
+		return self * vec4!(pt.x, pt.y, 0, 1);
 	}
 
 }

@@ -24,12 +24,6 @@ pub struct TaskPool<T: TaskItem> {
 	total: usize,
 }
 
-impl<T: TaskItem> Default for TaskPool<T> {
-	fn default() -> Self {
-		return Self::new(num_cpus::get());
-	}
-}
-
 impl<T: TaskItem> TaskPool<T> {
 
 	pub fn new(max: usize) -> Self {

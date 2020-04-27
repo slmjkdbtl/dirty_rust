@@ -166,14 +166,14 @@ impl BBox {
 		let by = self.max.y;
 		let bz = self.max.z;
 
-		let p1 = t * vec3!(ax, by, az);
-		let p2 = t * vec3!(bx, by, az);
-		let p3 = t * vec3!(bx, ay, az);
-		let p4 = t * vec3!(ax, ay, az);
-		let p5 = t * vec3!(ax, by, bz);
-		let p6 = t * vec3!(bx, by, bz);
-		let p7 = t * vec3!(bx, ay, bz);
-		let p8 = t * vec3!(ax, ay, bz);
+		let p1 = (t * vec3!(ax, by, az)).xyz();
+		let p2 = (t * vec3!(bx, by, az)).xyz();
+		let p3 = (t * vec3!(bx, ay, az)).xyz();
+		let p4 = (t * vec3!(ax, ay, az)).xyz();
+		let p5 = (t * vec3!(ax, by, bz)).xyz();
+		let p6 = (t * vec3!(bx, by, bz)).xyz();
+		let p7 = (t * vec3!(bx, ay, bz)).xyz();
+		let p8 = (t * vec3!(ax, ay, bz)).xyz();
 
 		return [p2, p3, p4, p5, p6, p7, p8].iter().fold(BBox::new(p1, p1), |bbox, p| {
 

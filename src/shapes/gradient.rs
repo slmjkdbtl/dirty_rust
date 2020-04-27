@@ -63,13 +63,13 @@ impl Drawable for Gradient {
 			last_pos = Some(s.1);
 
 			Vertex2D {
-				pos: matrix * vec3!(-w / 2.0, -h / 2.0 + h * s.1, 0.0),
+				pos: (matrix * vec3!(-w / 2.0, -h / 2.0 + h * s.1, 0.0)).xyz(),
 				uv: vec2!(0),
 				color: s.0,
 			}.push(&mut verts);
 
 			Vertex2D {
-				pos: matrix * vec3!(w / 2.0, -h / 2.0 + h * s.1, 0.0),
+				pos: (matrix * vec3!(w / 2.0, -h / 2.0 + h * s.1, 0.0)).xyz(),
 				uv: vec2!(0),
 				color: s.0,
 			}.push(&mut verts);
@@ -100,6 +100,7 @@ impl Drawable for Gradient {
 			&ctx.cur_pipeline_2d,
 			&gfx::Uniform2D {
 				proj: ctx.proj,
+				view: ctx.view,
 				tex: ctx.empty_tex.clone(),
 				custom: ctx.cur_custom_uniform_2d.clone(),
 			}

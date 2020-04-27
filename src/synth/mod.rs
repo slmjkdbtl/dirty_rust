@@ -3,12 +3,14 @@
 //! Software Synthesizer
 
 export!(note);
-export!(scale);
 export!(envelope);
 export!(life);
 export!(wav);
 export!(voice);
 export!(basic);
+
+pub mod scale;
+pub mod chord;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -74,7 +76,7 @@ pub fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
 
 						if let Ok(mut stream) = stream.lock() {
 
-							let value = ((stream.data(dt) * 0.5 + 0.5) * std::u16::MAX as f32) as u16;
+							let value = ((stream.data(dt) * 0.5 + 0.5) * u16::MAX as f32) as u16;
 
 							for out in sample.iter_mut() {
 								*out = value;
@@ -94,7 +96,7 @@ pub fn run(stream: Arc<Mutex<dyn Stream>>) -> Result<()> {
 
 						if let Ok(mut stream) = stream.lock() {
 
-							let value = (stream.data(dt) * std::i16::MAX as f32) as i16;
+							let value = (stream.data(dt) * i16::MAX as f32) as i16;
 
 							for out in sample.iter_mut() {
 								*out = value;

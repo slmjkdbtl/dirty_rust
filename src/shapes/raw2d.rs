@@ -47,6 +47,7 @@ impl<'a> Drawable for Raw2D<'a> {
 			&ctx.cur_pipeline_2d,
 			&gfx::Uniform2D {
 				proj: ctx.proj,
+				view: ctx.view,
 				tex: tex.clone(),
 				custom: ctx.cur_custom_uniform_2d.clone(),
 			},
