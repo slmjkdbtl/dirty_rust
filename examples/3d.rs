@@ -72,7 +72,7 @@ impl State for Game {
 					},
 					Key::F => ctx.toggle_fullscreen(),
 					Key::Q if mods.meta => ctx.quit(),
-					Key::Space => self.cam.lookat(vec3!()),
+					Key::Space => self.cam.set_dest(vec3!()),
 					_ => {},
 				}
 			},
@@ -160,6 +160,11 @@ impl State for Game {
 				&shapes::Rect3D::from_bbox(bbox)
 					.line_width(3.0)
 					.color(c)
+			)?;
+
+			ctx.draw_t(
+				mat4!().s3(vec3!(100)),
+				&shapes::cube()
 			)?;
 
 // 			let ground = Plane::new(vec3!(0, 1, 0), 0.0);

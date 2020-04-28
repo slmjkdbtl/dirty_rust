@@ -18,7 +18,7 @@ opt-level = 2
 default = [
 
 	# modules
-# 	"kit",
+	"kit",
 # 	"ase",
 # 	"http",
 # 	"synth",
