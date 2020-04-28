@@ -54,36 +54,45 @@ impl Mat4 {
 		]);
 	}
 
-	// TODO: 3d
-	pub fn skew(sk: Vec3) -> Self {
+	pub fn rotate_x(a: f32) -> Self {
 		return Self::new([
-			1.0, sk.y, 0.0, 0.0,
-			sk.x, 1.0, 0.0, 0.0,
+			1.0, 0.0, 0.0, 0.0,
+			0.0, a.cos(), -a.sin(), 0.0,
+			0.0, a.sin(), a.cos(), 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		]);
+	}
+
+	pub fn rotate_y(a: f32) -> Self {
+		return Self::new([
+			a.cos(), 0.0, -a.sin(), 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			a.sin(), 0.0, a.cos(), 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		]);
+	}
+
+	pub fn rotate_z(a: f32) -> Self {
+		return Self::new([
+			a.cos(), -a.sin(), 0.0, 0.0,
+			a.sin(), a.cos(), 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
 			0.0, 0.0, 0.0, 1.0,
 		]);
 	}
 
-	pub fn rotate(rot: f32, a: Vec3) -> Self {
+	pub fn rotate_dir(dir: Vec3) -> Self {
 
-		let mut m = Self::identity();
-		let c = rot.cos();
-		let s = rot.sin();
-		let cv = 1.0 - c;
+		let up = vec3!(0, 1, 0);
+		let x = Vec3::cross(up, dir).unit();
+		let y = Vec3::cross(dir, x).unit();
 
-		m.m[0] = (a.x * a.x * cv) + c;
-		m.m[1] = (a.x * a.y * cv) + (a.z * s);
-		m.m[2] = (a.x * a.z * cv) - (a.y * s);
-
-		m.m[4] = (a.y * a.x * cv) - (a.z * s);
-		m.m[5] = (a.y * a.y * cv) + c;
-		m.m[6] = (a.y * a.z * cv) + (a.x * s);
-
-		m.m[8] = (a.z * a.x * cv) + (a.y * s);
-		m.m[9] = (a.z * a.y * cv) - (a.x * s);
-		m.m[10] = (a.z * a.z * cv) + c;
-
-		return m;
+		return Self::new([
+			x.x, x.y, x.z, 0.0,
+			y.x, y.y, y.z, 0.0,
+			dir.x, dir.y, dir.z, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		]);
 
 	}
 
@@ -101,6 +110,16 @@ impl Mat4 {
 			q.x, q.y, q.z, q.w,
 		]);
 
+	}
+
+	// TODO: 3d
+	pub fn skew(sk: Vec3) -> Self {
+		return Self::new([
+			1.0, sk.y, 0.0, 0.0,
+			sk.x, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+		]);
 	}
 
 	pub fn inverse(&self) -> Self {

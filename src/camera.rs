@@ -19,7 +19,7 @@ pub trait Camera {
 
 #[derive(Clone)]
 pub struct PerspectiveCam {
-	front: Vec3,
+	dir: Vec3,
 	pos: Vec3,
 	yaw: f32,
 	pitch: f32,
@@ -35,7 +35,7 @@ impl PerspectiveCam {
 
 		let mut c = Self {
 			pos: vec3!(),
-			front: vec3!(),
+			dir: vec3!(),
 			yaw: 0.0,
 			pitch: 0.0,
 			fov: fov,
@@ -55,9 +55,8 @@ impl PerspectiveCam {
 		self.pos = pos;
 	}
 
-	pub fn set_front(&mut self, front: Vec3) {
-		// TODO: calculate yaw & pitch from front
-		self.front = front;
+	pub fn set_dir(&mut self, dir: Vec3) {
+		self.dir = dir;
 	}
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
@@ -65,7 +64,7 @@ impl PerspectiveCam {
 		self.yaw = yaw;
 		self.pitch = pitch;
 
-		self.front = vec3!(
+		self.dir = vec3!(
 			self.pitch.cos() * (self.yaw - 90f32.to_radians()).cos(),
 			self.pitch.sin(),
 			self.pitch.cos() * (self.yaw - 90f32.to_radians()).sin(),
@@ -73,15 +72,32 @@ impl PerspectiveCam {
 
 	}
 
-	pub fn front(&self) -> Vec3 {
-		return self.front;
+	pub fn lookat(&mut self, l: Vec3) {
+		self.dir = l - self.pos;
 	}
 
+	pub fn dir(&self) -> Vec3 {
+		return self.dir;
+	}
+
+	// TODO: derive these from dir
 	pub fn yaw(&self) -> f32 {
+// 		let a = self.yaw;
+// 		let b = f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
+// 		if f32::abs(a - b) > 0.01 {
+// 			println!("yaw: {}, {}", a.to_degrees(), b.to_degrees());
+// 		}
+// 		return f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
 		return self.yaw;
 	}
 
 	pub fn pitch(&self) -> f32 {
+// 		let a = self.pitch;
+// 		let b = self.dir.y.asin();
+// 		if f32::abs(a - b) > 0.01 {
+// 			println!("pitch: {}, {}", a.to_degrees(), b.to_degrees());
+// 		}
+// 		return self.dir.y.asin();
 		return self.pitch;
 	}
 
@@ -119,7 +135,7 @@ impl Camera for PerspectiveCam {
 
 		let eye = self.pos;
 		let up = vec3!(0, 1, 0);
-		let z = self.front.unit();
+		let z = self.dir.unit();
 		let x = up.cross(z).unit();
 		let y = z.cross(x);
 

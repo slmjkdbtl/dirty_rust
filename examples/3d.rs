@@ -72,6 +72,7 @@ impl State for Game {
 					},
 					Key::F => ctx.toggle_fullscreen(),
 					Key::Q if mods.meta => ctx.quit(),
+					Key::Space => self.cam.lookat(vec3!()),
 					_ => {},
 				}
 			},
@@ -114,19 +115,19 @@ impl State for Game {
 		let dt = ctx.dt();
 
 		if ctx.key_down(Key::W) {
-			self.cam.set_pos(self.cam.pos() + self.cam.front() * dt * self.move_speed);
+			self.cam.set_pos(self.cam.pos() + self.cam.dir() * dt * self.move_speed);
 		}
 
 		if ctx.key_down(Key::S) {
-			self.cam.set_pos(self.cam.pos() - self.cam.front() * dt * self.move_speed);
+			self.cam.set_pos(self.cam.pos() - self.cam.dir() * dt * self.move_speed);
 		}
 
 		if ctx.key_down(Key::A) {
-			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed);
+			self.cam.set_pos(self.cam.pos() - self.cam.dir().cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed);
 		}
 
 		if ctx.key_down(Key::D) {
-			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed);
+			self.cam.set_pos(self.cam.pos() + self.cam.dir().cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed);
 		}
 
 		ctx.set_title(&format!("{}", ctx.fps()));
@@ -145,7 +146,7 @@ impl State for Game {
 
 			let bbox = self.model.bbox().transform(mat4!());
 
-			let cray = Ray3::new(self.cam.pos(), self.cam.front());
+			let cray = Ray3::new(self.cam.pos(), self.cam.dir());
 
 			let c = if kit::geom::intersect3d(mray, bbox) {
 				rgba!(0, 0, 1, 1)

@@ -55,23 +55,27 @@ impl Mat4 {
 	}
 
 	pub fn r(self, angle: f32) -> Self {
-		return self *  Self::rotate(angle, vec3!(0, 0, 1));
+		return self *  Self::rotate_z(angle);
 	}
 
 	pub fn rx(self, angle: f32) -> Self {
-		return self *  Self::rotate(angle, vec3!(1, 0, 0));
+		return self *  Self::rotate_x(angle);
 	}
 
 	pub fn ry(self, angle: f32) -> Self {
-		return self * Self::rotate(angle, vec3!(0, 1, 0));
+		return self * Self::rotate_y(angle);
 	}
 
 	pub fn rz(self, angle: f32) -> Self {
-		return self *  Self::rotate(angle, vec3!(0, 0, 1));
+		return self *  Self::rotate_z(angle);
 	}
 
 	pub fn rq(self, q: Vec4) -> Self {
 		return self *  Self::rotate_quat(q);
+	}
+
+	pub fn rd(self, d: Vec3) -> Self {
+		return self *  Self::rotate_dir(d);
 	}
 
 	pub fn s3(self, s: Vec3) -> Self {
