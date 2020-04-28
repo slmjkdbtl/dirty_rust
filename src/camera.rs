@@ -21,8 +21,6 @@ pub trait Camera {
 pub struct PerspectiveCam {
 	dir: Vec3,
 	pos: Vec3,
-	yaw: f32,
-	pitch: f32,
 	fov: f32,
 	aspect: f32,
 	near: f32,
@@ -36,8 +34,6 @@ impl PerspectiveCam {
 		let mut c = Self {
 			pos: vec3!(),
 			dir: vec3!(),
-			yaw: 0.0,
-			pitch: 0.0,
 			fov: fov,
 			aspect: aspect,
 			near: near,
@@ -61,44 +57,28 @@ impl PerspectiveCam {
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
-		self.yaw = yaw;
-		self.pitch = pitch;
-
 		self.dir = vec3!(
-			self.pitch.cos() * (self.yaw - 90f32.to_radians()).cos(),
-			self.pitch.sin(),
-			self.pitch.cos() * (self.yaw - 90f32.to_radians()).sin(),
+			pitch.cos() * (yaw - 90f32.to_radians()).cos(),
+			pitch.sin(),
+			pitch.cos() * (yaw - 90f32.to_radians()).sin(),
 		).unit();
 
 	}
 
-	pub fn lookat(&mut self, l: Vec3) {
-		self.dir = l - self.pos;
+	pub fn set_dest(&mut self, l: Vec3) {
+		self.dir = (l - self.pos).unit();
 	}
 
 	pub fn dir(&self) -> Vec3 {
 		return self.dir;
 	}
 
-	// TODO: derive these from dir
 	pub fn yaw(&self) -> f32 {
-// 		let a = self.yaw;
-// 		let b = f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
-// 		if f32::abs(a - b) > 0.01 {
-// 			println!("yaw: {}, {}", a.to_degrees(), b.to_degrees());
-// 		}
-// 		return f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
-		return self.yaw;
+		return f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
 	}
 
 	pub fn pitch(&self) -> f32 {
-// 		let a = self.pitch;
-// 		let b = self.dir.y.asin();
-// 		if f32::abs(a - b) > 0.01 {
-// 			println!("pitch: {}, {}", a.to_degrees(), b.to_degrees());
-// 		}
-// 		return self.dir.y.asin();
-		return self.pitch;
+		return self.dir.y.asin();
 	}
 
 	pub fn pos(&self) -> Vec3 {
@@ -120,15 +100,6 @@ impl Camera for PerspectiveCam {
 			0.0, 0.0, -(2.0 * self.far * self.near) / (self.far - self.near), 0.0,
 		);
 
-// 		let t = f32::tan(self.fov / 2.0);
-
-// 		return mat4!(
-// 			1.0 / (t * self.aspect), 0.0, 0.0, 0.0,
-// 			0.0, 1.0 / t, 0.0, 0.0,
-// 			0.0, 0.0, -(self.far + self.near) / (self.far - self.near), -1.0,
-// 			0.0, 0.0, -(2.0 * self.far * self.near) / (self.far - self.near), 0.0,
-// 		);
-
 	}
 
 	fn view(&self) -> Mat4 {
@@ -148,7 +119,6 @@ impl Camera for PerspectiveCam {
 
 	}
 
-	// TODO: not working
 	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3 {
 
 		let ndc = ctx.screen_to_clip(pt);
