@@ -19,12 +19,12 @@ pub trait Camera {
 
 #[derive(Clone)]
 pub struct PerspectiveCam {
-	dir: Vec3,
-	pos: Vec3,
-	fov: f32,
-	aspect: f32,
-	near: f32,
-	far: f32,
+	pub dir: Vec3,
+	pub pos: Vec3,
+	pub fov: f32,
+	pub aspect: f32,
+	pub near: f32,
+	pub far: f32,
 }
 
 impl PerspectiveCam {
@@ -32,7 +32,7 @@ impl PerspectiveCam {
 	pub fn new(fov: f32, aspect: f32, near: f32, far: f32, pos: Vec3, yaw: f32, pitch: f32) -> Self {
 
 		let mut c = Self {
-			pos: vec3!(),
+			pos: pos,
 			dir: vec3!(),
 			fov: fov,
 			aspect: aspect,
@@ -40,27 +40,18 @@ impl PerspectiveCam {
 			far: far,
 		};
 
-		c.set_pos(pos);
 		c.set_angle(yaw, pitch);
 
 		return c;
 
 	}
 
-	pub fn set_pos(&mut self, pos: Vec3) {
-		self.pos = pos;
-	}
-
-	pub fn set_dir(&mut self, dir: Vec3) {
-		self.dir = dir;
-	}
-
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
 		self.dir = vec3!(
-			pitch.cos() * (yaw - 90f32.to_radians()).cos(),
+			pitch.cos() * (yaw - f32::to_radians(90.0)).cos(),
 			pitch.sin(),
-			pitch.cos() * (yaw - 90f32.to_radians()).sin(),
+			pitch.cos() * (yaw - f32::to_radians(90.0)).sin(),
 		).unit();
 
 	}
@@ -69,20 +60,12 @@ impl PerspectiveCam {
 		self.dir = (l - self.pos).unit();
 	}
 
-	pub fn dir(&self) -> Vec3 {
-		return self.dir;
-	}
-
 	pub fn yaw(&self) -> f32 {
 		return f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
 	}
 
 	pub fn pitch(&self) -> f32 {
 		return self.dir.y.asin();
-	}
-
-	pub fn pos(&self) -> Vec3 {
-		return self.pos;
 	}
 
 }
@@ -227,22 +210,12 @@ impl ObliqueCam {
 
 	fn ortho(&self) -> Mat4 {
 
-		let w = self.width;
-		let h = self.height;
-		let near = self.near;
-		let far = self.far;
-
-		let (left, right, bottom, top) = (-w / 2.0, w / 2.0, -h / 2.0, h / 2.0);
-		let tx = -(right + left) / (right - left);
-		let ty = -(top + bottom) / (top - bottom);
-		let tz = -(far + near) / (far - near);
-
-		return mat4![
-			2.0 / (right - left), 0.0, 0.0, 0.0,
-			0.0, 2.0 / (top - bottom), 0.0, 0.0,
-			0.0, 0.0, -2.0 / (far - near), 0.0,
-			tx, ty, tz, 1.0,
-		];
+		return OrthoCam {
+			width: self.width,
+			height: self.height,
+			near: self.near,
+			far: self.far,
+		}.proj();
 
 	}
 
@@ -265,15 +238,7 @@ impl ObliqueCam {
 impl Camera for ObliqueCam {
 
 	fn proj(&self) -> Mat4 {
-
-		let ortho = OrthoCam {
-			width: self.width,
-			height: self.height,
-			near: self.near,
-			far: self.far,
-		};
-
-		return ortho.proj() * self.skew();
+		return self.ortho() * self.skew();
 	}
 
 	fn view(&self) -> Mat4 {
