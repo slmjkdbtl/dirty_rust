@@ -2,6 +2,8 @@
 
 use super::*;
 
+// TODO: extremely slow??
+
 #[derive(Clone)]
 pub struct Checkerboard {
 	size: f32,

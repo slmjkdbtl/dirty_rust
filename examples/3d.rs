@@ -30,17 +30,16 @@ impl State for Game {
 
 		return Ok(Self {
 			model: model,
-			cam: gfx::PerspectiveCam::new(
-				60f32.to_radians(),
-				ctx.width() as f32 / ctx.height() as f32,
-				0.1,
-				1024.0,
-				vec3!(0, 2, 6),
-				0.0,
-				0.0,
-			),
+			cam: gfx::PerspectiveCam {
+				fov: f32::to_radians(60.0),
+				aspect: ctx.width() as f32 / ctx.height() as f32,
+				near: 0.1,
+				far: 1024.0,
+				pos: vec3!(0, 2, 6),
+				dir: vec3!(0, 0, -1),
+			},
 			move_speed: 12.0,
-			eye_speed: 0.16,
+			eye_speed: 32.0,
 		});
 
 	}
@@ -57,7 +56,7 @@ impl State for Game {
 // 					ctx.width() as f32 / ctx.height() as f32,
 // 					0.1,
 // 					1024.0,
-// 					self.cam.pos(),
+// 					self.cam.pos,
 // 					-0.92,
 // 					-0.56
 // 				);
@@ -85,8 +84,8 @@ impl State for Game {
 					let mut ry = self.cam.pitch();
 					let dead = f32::to_radians(60.0);
 
-					rx += delta.x * self.eye_speed * ctx.dt();
-					ry -= delta.y * self.eye_speed * ctx.dt();
+					rx += delta.x * self.eye_speed * 0.0001;
+					ry -= delta.y * self.eye_speed * 0.0001;
 
 					if ry > dead {
 						ry = dead;
@@ -115,22 +114,22 @@ impl State for Game {
 		let dt = ctx.dt();
 
 		if ctx.key_down(Key::W) {
-			self.cam.set_pos(self.cam.pos() + self.cam.dir() * dt * self.move_speed);
+			self.cam.pos += self.cam.dir * dt * self.move_speed;
 		}
 
 		if ctx.key_down(Key::S) {
-			self.cam.set_pos(self.cam.pos() - self.cam.dir() * dt * self.move_speed);
+			self.cam.pos -= self.cam.dir * dt * self.move_speed;
 		}
 
 		if ctx.key_down(Key::A) {
-			self.cam.set_pos(self.cam.pos() - self.cam.dir().cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed);
+			self.cam.pos -= self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
 		}
 
 		if ctx.key_down(Key::D) {
-			self.cam.set_pos(self.cam.pos() + self.cam.dir().cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed);
+			self.cam.pos += self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
 		}
 
-		ctx.set_title(&format!("{}", ctx.fps()));
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		return Ok(());
 
@@ -146,7 +145,7 @@ impl State for Game {
 
 			let bbox = self.model.bbox().transform(mat4!());
 
-			let cray = Ray3::new(self.cam.pos(), self.cam.dir());
+			let cray = Ray3::new(self.cam.pos, self.cam.dir);
 
 			let c = if kit::geom::intersect3d(mray, bbox) {
 				rgba!(0, 0, 1, 1)
@@ -162,16 +161,13 @@ impl State for Game {
 					.color(c)
 			)?;
 
-			ctx.draw_t(
-				mat4!().s3(vec3!(100)),
-				&shapes::cube()
-			)?;
-
-// 			let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+			let ground = Plane::new(vec3!(0, 1, 0), 0.0);
 
 // 			if let Some(pt) = kit::geom::ray_plane(mray, ground) {
 // 				ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
 // 			}
+
+			ctx.draw_t(mat4!().rd(vec3!(0, 1, 0.001)), &shapes::checkerboard(vec2!(-20), vec2!(20), 1.0))?;
 
 			return Ok(());
 
@@ -200,6 +196,8 @@ fn main() {
 		.cursor_hidden(true)
 		.cursor_locked(true)
 		.resizable(true)
+		.fps_cap(None)
+		.vsync(false)
 		.run::<Game>() {
 		println!("{}", err);
 	}
