@@ -5,11 +5,30 @@ use math::*;
 use input::Key;
 use gfx::Camera;
 
+#[derive(Clone)]
+struct Uniform {
+	cam_pos: Vec3,
+	fog_color: Color,
+	fog_level: f32,
+}
+
+impl gfx::CustomUniform for Uniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hmap![
+			"u_cam_pos" => &self.cam_pos,
+			"u_fog_color" => &self.fog_color,
+			"u_fog_level" => &self.fog_level,
+		];
+	}
+}
+
 struct Game {
 	model: gfx::Model,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
+	shader: gfx::Shader<Uniform>,
+	show_ui: bool,
 }
 
 impl State for Game {
@@ -35,11 +54,13 @@ impl State for Game {
 				aspect: ctx.width() as f32 / ctx.height() as f32,
 				near: 0.1,
 				far: 1024.0,
-				pos: vec3!(0, 2, 6),
+				pos: vec3!(0, 1, 6),
 				dir: vec3!(0, 0, -1),
 			},
 			move_speed: 12.0,
 			eye_speed: 32.0,
+			shader: gfx::Shader::from_frag(ctx, include_str!("res/fog.frag"))?,
+			show_ui: false,
 		});
 
 	}
@@ -51,15 +72,7 @@ impl State for Game {
 		match e {
 
 			Resize(w, h) => {
-// 				self.cam = gfx::PerspectiveCam::new(
-// 					60f32.to_radians(),
-// 					ctx.width() as f32 / ctx.height() as f32,
-// 					0.1,
-// 					1024.0,
-// 					self.cam.pos,
-// 					-0.92,
-// 					-0.56
-// 				);
+				self.cam.aspect = *w as f32 / *h as f32;
 			},
 
 			KeyPress(k) => {
@@ -71,7 +84,11 @@ impl State for Game {
 					},
 					Key::F => ctx.toggle_fullscreen(),
 					Key::Q if mods.meta => ctx.quit(),
-					Key::Space => self.cam.set_dest(vec3!()),
+					Key::Tab => {
+						ctx.set_cursor_hidden(self.show_ui);
+						ctx.set_cursor_locked(self.show_ui)?;
+						self.show_ui = !self.show_ui;
+					}
 					_ => {},
 				}
 			},
@@ -135,6 +152,37 @@ impl State for Game {
 
 	}
 
+	fn imgui(&mut self, ui: &mut imgui::Ui) -> Result<()> {
+
+		use imgui::im_str;
+
+		if self.show_ui {
+
+			imgui::Window::new(im_str!("test"))
+				.size([320.0, 240.0], imgui::Condition::FirstUseEver)
+				.build(&ui, || {
+
+					if ui.button(im_str!("Look Center"), [0.0, 0.0]) {
+						self.cam.set_dest(vec3!(0));
+					}
+
+					let mut fov = self.cam.fov.to_degrees();
+
+					if ui.drag_float(im_str!("FOV"), &mut fov)
+						.min(30.0)
+						.max(120.0)
+						.build()
+					{
+						self.cam.fov = fov.to_radians();
+					}
+
+				});
+
+		}
+
+		return Ok(());
+	}
+
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		let p = vec3!(0);
@@ -143,31 +191,41 @@ impl State for Game {
 
 		ctx.use_cam(&self.cam, |ctx| {
 
-			let bbox = self.model.bbox().transform(mat4!());
+			ctx.draw_with(&self.shader, &Uniform {
+				cam_pos: self.cam.pos,
+				fog_color: rgba!(0, 0, 0, 1),
+				fog_level: 3.0,
+			}, |ctx| {
 
-			let cray = Ray3::new(self.cam.pos, self.cam.dir);
+				let bbox = self.model.bbox().transform(mat4!());
 
-			let c = if kit::geom::intersect3d(mray, bbox) {
-				rgba!(0, 0, 1, 1)
-			} else {
-				rgba!(1)
-			};
+				let cray = Ray3::new(self.cam.pos, self.cam.dir);
 
-			ctx.draw(&shapes::model(&self.model))?;
+				let c = if kit::geom::intersect3d(mray, bbox) {
+					rgba!(0, 0, 1, 1)
+				} else {
+					rgba!(1)
+				};
 
-			ctx.draw(
-				&shapes::Rect3D::from_bbox(bbox)
-					.line_width(3.0)
-					.color(c)
-			)?;
+				ctx.draw(&shapes::model(&self.model))?;
 
-			let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+				ctx.draw(
+					&shapes::Rect3D::from_bbox(bbox)
+						.line_width(3.0)
+						.color(c)
+				)?;
 
-// 			if let Some(pt) = kit::geom::ray_plane(mray, ground) {
-// 				ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
-// 			}
+				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
 
-			ctx.draw_t(mat4!().rd(vec3!(0, 1, 0.001)), &shapes::checkerboard(vec2!(-20), vec2!(20), 1.0))?;
+// 				if let Some(pt) = kit::geom::ray_plane(mray, ground) {
+// 					ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
+// 				}
+
+				ctx.draw_t(mat4!().rd(vec3!(0, 1, 0.001)), &shapes::checkerboard(vec2!(-9), vec2!(9), 1.0))?;
+
+				return Ok(());
+
+			})?;
 
 			return Ok(());
 

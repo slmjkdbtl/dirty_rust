@@ -9,7 +9,10 @@ repository = "https://github.com/slmjkdbtl/DIRTY"
 license = "Zlib"
 edition = "2018"
 readme = "README.md"
-exclude = ["TODO"]
+exclude = [
+	"TODO",
+	"misc/",
+]
 
 [profile.dev.package."*"]
 opt-level = 2
@@ -18,7 +21,8 @@ opt-level = 2
 default = [
 
 	# modules
-	"kit",
+# 	"kit",
+# 	"imgui",
 # 	"ase",
 # 	"http",
 # 	"synth",
@@ -37,6 +41,10 @@ http = [
 	"rustls",
 	"webpki",
 	"webpki-roots",
+]
+
+imgui = [
+	"imgui_lib",
 ]
 
 json = [
@@ -81,6 +89,9 @@ gltf = "0.15"
 # audio
 rodio = { version = "0.11", default-features = false, features = [ "vorbis", "mp3", "wav", ] }
 cpal = "0.11"
+
+# imgui
+imgui_lib = { version = "0.3", optional = true, package = "imgui" }
 
 # http
 url = { version = "2.1", optional = true }
