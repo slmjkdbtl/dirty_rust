@@ -54,11 +54,11 @@ pub mod codec;
 #[cfg(feature = "kit")]
 pub mod kit;
 
-#[cfg(feature = "imgui")]
-pub mod imgui;
-
 #[cfg(feature = "midi")]
 pub mod midi;
+
+#[cfg(feature = "imgui")]
+pub mod imgui;
 
 #[cfg(feature = "synth")]
 pub mod synth;

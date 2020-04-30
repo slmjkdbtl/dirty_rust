@@ -14,6 +14,10 @@ uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
 
+vec4 default_pos() {
+	return u_proj * u_view * vec4(v_pos, 1.0);
+}
+
 ###REPLACE###
 
 void main() {
