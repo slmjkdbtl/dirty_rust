@@ -19,17 +19,14 @@ opt-level = 2
 
 [features]
 default = [
-
-	# modules
-	"kit",
-	"imgui",
+# 	"kit",
+# 	"imgui",
 # 	"ase",
 # 	"http",
 # 	"synth",
 # 	"midi",
 # 	"json",
 # 	"bin",
-
 ]
 
 http = [

@@ -22,14 +22,30 @@ impl gfx::CustomUniform for Uniform {
 	}
 }
 
+#[derive(Clone)]
+pub struct PixUniform {
+	pub resolution: Vec2,
+	pub size: f32,
+}
+
+impl gfx::CustomUniform for PixUniform {
+	fn values(&self) -> gfx::UniformValues {
+		return hmap![
+			"u_resolution" => &self.resolution,
+			"u_size" => &self.size,
+		];
+	}
+}
+
 struct Game {
 	model: gfx::Model,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
+	pix_shader: gfx::Shader<PixUniform>,
 	show_ui: bool,
-	skybox: gfx::Skybox,
+	canvas: gfx::Canvas,
 }
 
 impl State for Game {
@@ -48,16 +64,6 @@ impl State for Game {
 			None,
 		)?;
 
-		let skybox = gfx::Skybox::from_bytes(
-			ctx,
-			include_bytes!("res/forest_rt.png"),
-			include_bytes!("res/forest_lf.png"),
-			include_bytes!("res/forest_up.png"),
-			include_bytes!("res/forest_dn.png"),
-			include_bytes!("res/forest_bk.png"),
-			include_bytes!("res/forest_ft.png"),
-		)?;
-
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
@@ -71,8 +77,9 @@ impl State for Game {
 			move_speed: 12.0,
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(ctx, include_str!("res/fog.frag"))?,
+			pix_shader: gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?,
 			show_ui: false,
-			skybox: skybox,
+			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
 		});
 
 	}
@@ -85,6 +92,7 @@ impl State for Game {
 
 			Resize(w, h) => {
 				self.cam.aspect = *w as f32 / *h as f32;
+				self.canvas.resize(ctx, *w, *h);
 			},
 
 			KeyPress(k) => {
@@ -138,32 +146,6 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
-
-		let dt = ctx.dt();
-
-		if ctx.key_down(Key::W) {
-			self.cam.pos += self.cam.dir * dt * self.move_speed;
-		}
-
-		if ctx.key_down(Key::S) {
-			self.cam.pos -= self.cam.dir * dt * self.move_speed;
-		}
-
-		if ctx.key_down(Key::A) {
-			self.cam.pos -= self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
-		}
-
-		if ctx.key_down(Key::D) {
-			self.cam.pos += self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
-		}
-
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-
-		return Ok(());
-
-	}
-
 	fn imgui(&mut self, ui: &mut imgui::Ui) -> Result<()> {
 
 		use imgui::im_str;
@@ -193,68 +175,109 @@ impl State for Game {
 		}
 
 		return Ok(());
+
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		let p = vec3!(0);
-		let origin = self.cam.to_screen(ctx, p);
-		let mray = self.cam.mouse_ray(ctx);
+		let dt = ctx.dt();
 
-		ctx.use_cam(&self.cam, |ctx| {
+		if ctx.key_down(Key::W) {
+			self.cam.pos += self.cam.dir * dt * self.move_speed;
+		}
 
-			ctx.draw_with(&self.shader, &Uniform {
-				cam_pos: self.cam.pos,
-				fog_color: rgba!(0, 0, 0, 1),
-				fog_level: 3.0,
-			}, |ctx| {
+		if ctx.key_down(Key::S) {
+			self.cam.pos -= self.cam.dir * dt * self.move_speed;
+		}
 
-				ctx.draw(&shapes::skybox(&self.skybox))?;
+		if ctx.key_down(Key::A) {
+			self.cam.pos -= self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
+		}
 
-				let bbox = self.model.bbox().transform(mat4!());
+		if ctx.key_down(Key::D) {
+			self.cam.pos += self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
+		}
 
-				let cray = Ray3::new(self.cam.pos, self.cam.dir);
+		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
-				let c = if kit::geom::intersect3d(mray, bbox) {
-					rgba!(0, 0, 1, 1)
-				} else {
-					rgba!(1)
-				};
+		ctx.draw_on(&self.canvas, |ctx| {
 
-				ctx.draw(&shapes::model(&self.model))?;
+			ctx.clear();
 
-				ctx.draw(
-					&shapes::Rect3D::from_bbox(bbox)
-						.line_width(3.0)
-						.color(c)
-				)?;
+			let p = vec3!(0);
+			let origin = self.cam.to_screen(ctx, p);
+			let mray = self.cam.mouse_ray(ctx);
 
-				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+			ctx.use_cam(&self.cam, |ctx| {
 
-// 				if let Some(pt) = kit::geom::ray_plane(mray, ground) {
-// 					ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
-// 				}
+				ctx.draw_with(&self.shader, &Uniform {
+					cam_pos: self.cam.pos,
+					fog_color: rgba!(0, 0, 0, 1),
+					fog_level: 3.0,
+				}, |ctx| {
 
-				ctx.draw_t(mat4!().rd(vec3!(0, 1, 0.001)), &shapes::checkerboard(vec2!(-9), vec2!(9), 1.0))?;
+					let bbox = self.model.bbox().transform(mat4!());
+
+					let cray = Ray3::new(self.cam.pos, self.cam.dir);
+
+					let c = if kit::geom::intersect3d(mray, bbox) {
+						rgba!(0, 0, 1, 1)
+					} else {
+						rgba!(1)
+					};
+
+					ctx.draw(&shapes::model(&self.model))?;
+
+					ctx.draw(
+						&shapes::Rect3D::from_bbox(bbox)
+							.line_width(3.0)
+							.color(c)
+					)?;
+
+					let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+
+	// 				if let Some(pt) = kit::geom::ray_plane(mray, ground) {
+	// 					ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
+	// 				}
+
+					ctx.draw_t(mat4!().rd(vec3!(0, 1, 0.001)), &shapes::checkerboard(vec2!(-9), vec2!(9), 1.0))?;
+
+					return Ok(());
+
+				})?;
 
 				return Ok(());
 
 			})?;
 
+			ctx.draw(&shapes::circle(vec2!(0), 2.0))?;
+
+			ctx.draw_t(
+				mat4!()
+					.t2(origin)
+					,
+				&shapes::text("car")
+					.size(16.0)
+					,
+			)?;
+
 			return Ok(());
 
 		})?;
 
-		ctx.draw(&shapes::circle(vec2!(0), 2.0))?;
+		return Ok(());
 
-		ctx.draw_t(
-			mat4!()
-				.t2(origin)
-				,
-			&shapes::text("car")
-				.size(16.0)
-				,
-		)?;
+	}
+
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+
+		ctx.draw_with(&self.pix_shader, &PixUniform {
+			resolution: vec2!(ctx.width(), ctx.height()),
+			size: 0.0,
+		}, |ctx| {
+			ctx.draw(&shapes::canvas(&self.canvas))?;
+			return Ok(());
+		})?;
 
 		return Ok(());
 

@@ -7,7 +7,6 @@ varying vec4 v_color;
 
 uniform sampler2D u_tex;
 uniform vec4 u_color;
-uniform mat4 u_model;
 
 vec4 default_color() {
 	return v_color * u_color * texture2D(u_tex, v_uv);

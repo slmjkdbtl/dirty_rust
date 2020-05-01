@@ -80,7 +80,7 @@ impl Game {
 
 		}
 
-		let img = img::Image::from_pixels(w, h, buf)?;
+		let img = img::Image::from_raw(w, h, buf)?;
 
 		self.tex = gfx::Texture::from_img(ctx, img)?;
 
@@ -183,23 +183,27 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
+		let top_left = ctx.coord(gfx::Origin::TopLeft);
+
 		ctx.draw(&shapes::sprite(&self.tex))?;
 
 		ctx.draw_t(
 			mat4!()
-				.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
+				.t2(top_left + vec2!(24, -24))
 				,
 			&shapes::text(&format!("type: {}", self.noise_type.as_str()))
 				.align(gfx::Origin::TopLeft)
+				.size(12.0)
 				,
 		)?;
 
 		ctx.draw_t(
 			mat4!()
-				.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -44))
+				.t2(top_left + vec2!(24, -44))
 				,
 			&shapes::text(&format!("seed: {}", self.seed))
 				.align(gfx::Origin::TopLeft)
+				.size(12.0)
 				,
 		)?;
 

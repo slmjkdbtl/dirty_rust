@@ -7,7 +7,7 @@ uniform vec2 u_resolution;
 vec4 frag() {
 
 	if (u_size <= 0.0) {
-		return texture2D(u_tex, v_uv);
+		return default_color();
 	}
 
 	vec2 n_size = vec2(u_size / u_resolution.x, u_size / u_resolution.y);

@@ -15,14 +15,14 @@ uniform mat4 u_view;
 uniform mat4 u_proj;
 
 vec4 default_pos() {
-	return u_proj * u_view * vec4(v_pos, 1.0);
+	return u_proj * u_view * u_model * vec4(v_pos, 1.0);
 }
 
 ###REPLACE###
 
 void main() {
 
-	v_pos = (u_model * vec4(a_pos, 1.0)).xyz;
+	v_pos = a_pos;
 	v_uv = a_uv;
 	v_color = a_color;
 	v_normal = normalize(a_normal);
