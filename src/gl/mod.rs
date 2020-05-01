@@ -9,8 +9,6 @@ export!(vbuf);
 export!(ibuf);
 export!(fbuf);
 export!(attr);
-#[cfg(feature = "gl3")]
-export!(vao);
 export!(uniform);
 export!(stencil);
 export!(mesh);
@@ -35,9 +33,6 @@ pub(self) type ProgramID = <GLCtx as HasContext>::Program;
 pub(self) type TextureID = <GLCtx as HasContext>::Texture;
 pub(self) type FramebufferID = <GLCtx as HasContext>::Framebuffer;
 pub(self) type RenderbufferID = <GLCtx as HasContext>::Renderbuffer;
-
-#[cfg(feature = "gl3")]
-pub(self) type VertexArrayID = <GLCtx as HasContext>::VertexArray;
 
 pub struct Device {
 	ctx: Rc<GLCtx>,

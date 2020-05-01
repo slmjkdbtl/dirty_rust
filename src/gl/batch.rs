@@ -18,8 +18,6 @@ pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
-	#[cfg(feature="gl3")]
-	vao: VertexArray,
 	vqueue: Vec<f32>,
 	iqueue: Vec<u32>,
 	cur_state: Option<RenderState<V, U>>,
@@ -35,14 +33,9 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 		let vbuf = VertexBuffer::new(&device, max_vertices, BufferUsage::Dynamic)?;
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
-		#[cfg(feature="gl3")]
-		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
-
 		return Ok(Self {
 			vbuf: vbuf,
 			ibuf: ibuf,
-			#[cfg(feature="gl3")]
-			vao: vao,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
 			cur_state: None,
@@ -135,11 +128,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 		self.ibuf.data(0, &self.iqueue);
 
 		state.pipeline.draw(
-			#[cfg(feature="gl3")]
-			Some(&self.vao),
-			#[cfg(not(feature="gl3"))]
 			Some(&self.vbuf),
-			#[cfg(not(feature="gl3"))]
 			Some(&self.ibuf),
 			&state.uniform,
 			self.iqueue.len() as u32,
@@ -174,8 +163,6 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 		self.vbuf.free();
 		self.ibuf.free();
-		#[cfg(feature="gl3")]
-		self.vao.free();
 
 	}
 

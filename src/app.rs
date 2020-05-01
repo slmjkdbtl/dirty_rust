@@ -124,13 +124,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
 			;
 
-		#[cfg(feature = "gl3")] {
-			ctx_builder = ctx_builder
-				.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (3, 3)))
-				.with_gl_profile(glutin::GlProfile::Core)
-				;
-		}
-
 		let windowed_ctx = unsafe {
 			ctx_builder
 				.build_windowed(window_builder, &event_loop)
