@@ -3,46 +3,12 @@
 //! Global Resources
 
 pub mod shader {
-
-	#[cfg(web)]
-	pub const TEMPLATE_VERT: &str = include_str!("shaders/es/template.vert");
-	#[cfg(web)]
-	pub const DEFAULT_VERT: &str = include_str!("shaders/es/default.vert");
-	#[cfg(web)]
-	pub const TEMPLATE_FRAG: &str = include_str!("shaders/es/template.frag");
-	#[cfg(web)]
-	pub const DEFAULT_FRAG: &str = include_str!("shaders/es/default.frag");
-	#[cfg(web)]
-	pub const CUBEMAP_VERT: &str = include_str!("shaders/es/cubemap.vert");
-	#[cfg(web)]
-	pub const CUBEMAP_FRAG: &str = include_str!("shaders/es/cubemap.frag");
-
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const TEMPLATE_VERT: &str = include_str!("shaders/330/template.vert");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const DEFAULT_VERT: &str = include_str!("shaders/330/default.vert");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const TEMPLATE_FRAG: &str = include_str!("shaders/330/template.frag");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const DEFAULT_FRAG: &str = include_str!("shaders/330/default.frag");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const CUBEMAP_VERT: &str = include_str!("shaders/330/cubemap.vert");
-	#[cfg(all(not(web), feature="gl3"))]
-	pub const CUBEMAP_FRAG: &str = include_str!("shaders/330/cubemap.frag");
-
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const TEMPLATE_VERT: &str = include_str!("shaders/120/template.vert");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const DEFAULT_VERT: &str = include_str!("shaders/120/default.vert");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const TEMPLATE_FRAG: &str = include_str!("shaders/120/template.frag");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const DEFAULT_FRAG: &str = include_str!("shaders/120/default.frag");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const CUBEMAP_VERT: &str = include_str!("shaders/120/cubemap.vert");
-	#[cfg(all(not(web), not(feature="gl3")))]
-	pub const CUBEMAP_FRAG: &str = include_str!("shaders/120/cubemap.frag");
-
+	pub const TEMPLATE_VERT: &str = include_str!("shaders/template.vert");
+	pub const DEFAULT_VERT: &str = include_str!("shaders/default.vert");
+	pub const TEMPLATE_FRAG: &str = include_str!("shaders/template.frag");
+	pub const DEFAULT_FRAG: &str = include_str!("shaders/default.frag");
+	pub const CUBEMAP_VERT: &str = include_str!("shaders/cubemap.vert");
+	pub const CUBEMAP_FRAG: &str = include_str!("shaders/cubemap.frag");
 }
 
 pub mod font {

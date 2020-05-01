@@ -9,8 +9,6 @@ use crate::Result;
 pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
-	#[cfg(feature="gl3")]
-	vao: VertexArray,
 	count: usize,
 	uniform_layout: PhantomData<U>,
 }
@@ -22,14 +20,9 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 		let vbuf = VertexBuffer::<V>::from(&device, &verts)?;
 		let ibuf = IndexBuffer::from(&device, &indices)?;
 
-		#[cfg(feature="gl3")]
-		let vao = VertexArray::from(&device, &vbuf, Some(&ibuf))?;
-
 		return Ok(Self {
 			vbuf: vbuf,
 			ibuf: ibuf,
-			#[cfg(feature="gl3")]
-			vao: vao,
 			count: indices.len(),
 			uniform_layout: PhantomData,
 		});
@@ -69,11 +62,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 	pub fn draw(&self, prim: Primitive, pipeline: &Pipeline<V, U>, uniforms: &U) {
 
 		pipeline.draw(
-			#[cfg(feature="gl3")]
-			Some(&self.vao),
-			#[cfg(not(feature="gl3"))]
 			Some(&self.vbuf),
-			#[cfg(not(feature="gl3"))]
 			Some(&self.ibuf),
 			uniforms,
 			self.count as u32,
@@ -86,8 +75,6 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 		self.vbuf.free();
 		self.ibuf.free();
-		#[cfg(feature="gl3")]
-		self.vao.free();
 
 	}
 

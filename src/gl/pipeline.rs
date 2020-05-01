@@ -129,44 +129,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	#[cfg(feature="gl3")]
-	pub fn draw(
-		&self,
-		vao: Option<&VertexArray>,
-		uniform: &U,
-		count: u32,
-		mode: Primitive,
-	) {
-
-		unsafe {
-
-			self.send(&uniform);
-
-			let textures = uniform.textures();
-
-			self.ctx.use_program(Some(self.program_id));
-			self.ctx.bind_vertex_array(vao.map(|v| v.id()));
-
-			for (i, tex) in textures.iter().enumerate() {
-				self.ctx.active_texture(glow::TEXTURE0 + i as u32);
-				self.ctx.bind_texture(tex.r#type().into(), Some(tex.id()));
-			}
-
-			self.ctx.draw_elements(mode.into(), count as i32, glow::UNSIGNED_INT, 0);
-
-			self.ctx.bind_vertex_array(None);
-			self.ctx.use_program(None);
-
-			for (i, tex) in textures.iter().enumerate() {
-				self.ctx.active_texture(glow::TEXTURE0 + i as u32);
-				self.ctx.bind_texture(tex.r#type().into(), None);
-			}
-
-		}
-
-	}
-
-	#[cfg(not(feature="gl3"))]
 	pub fn draw(
 		&self,
 		vbuf: Option<&VertexBuffer<V>>,

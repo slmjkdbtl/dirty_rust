@@ -21,17 +21,14 @@ opt-level = 2
 default = [
 
 	# modules
-# 	"kit",
-# 	"imgui",
+	"kit",
+	"imgui",
 # 	"ase",
 # 	"http",
 # 	"synth",
 # 	"midi",
 # 	"json",
 # 	"bin",
-
-	# options
-# 	"gl3",
 
 ]
 
@@ -62,8 +59,6 @@ midi = [
 ase = []
 kit = []
 synth = []
-
-gl3 = []
 
 [dependencies]
 random = { version = "0.7", package = "rand" }

@@ -29,6 +29,7 @@ struct Game {
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
+	skybox: gfx::Skybox,
 }
 
 impl State for Game {
@@ -47,6 +48,16 @@ impl State for Game {
 			None,
 		)?;
 
+		let skybox = gfx::Skybox::from_bytes(
+			ctx,
+			include_bytes!("res/forest_rt.png"),
+			include_bytes!("res/forest_lf.png"),
+			include_bytes!("res/forest_up.png"),
+			include_bytes!("res/forest_dn.png"),
+			include_bytes!("res/forest_bk.png"),
+			include_bytes!("res/forest_ft.png"),
+		)?;
+
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
@@ -61,6 +72,7 @@ impl State for Game {
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(ctx, include_str!("res/fog.frag"))?,
 			show_ui: false,
+			skybox: skybox,
 		});
 
 	}
@@ -169,8 +181,8 @@ impl State for Game {
 					let mut fov = self.cam.fov.to_degrees();
 
 					if ui.drag_float(im_str!("FOV"), &mut fov)
-						.min(30.0)
-						.max(120.0)
+						.min(45.0)
+						.max(90.0)
 						.build()
 					{
 						self.cam.fov = fov.to_radians();
@@ -196,6 +208,8 @@ impl State for Game {
 				fog_color: rgba!(0, 0, 0, 1),
 				fog_level: 3.0,
 			}, |ctx| {
+
+				ctx.draw(&shapes::skybox(&self.skybox))?;
 
 				let bbox = self.model.bbox().transform(mat4!());
 
