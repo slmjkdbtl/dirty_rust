@@ -1,24 +1,17 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::app::*;
 use input::Key;
 
-struct Game {
-	mask: gfx::Texture,
-}
+struct Game;
 
-impl app::State for Game {
+impl State for Game {
 
-	fn init(ctx: &mut app::Ctx) -> Result<Self> {
-
-		return Ok(Self {
-			mask: gfx::Texture::from_bytes(ctx, include_bytes!("res/blob.png"))?,
-		});
-
+	fn init(_: &mut Ctx) -> Result<Self> {
+		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut app::Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -35,32 +28,20 @@ impl app::State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.push(&gfx::t()
-			.s2(vec2!(2))
-		, |ctx| {
-
-			ctx.draw_masked(|ctx| {
-				return ctx.draw(&shapes::sprite(&self.mask));
-			}, |ctx| {
-				return ctx.push(&gfx::t()
-					.t2(vec2!(0, (ctx.time() * 6.0).sin() * 24.0))
-				, |ctx| {
-					return ctx.draw(&shapes::gradient(
-						vec2!(0, -80),
-						vec2!(0, 80),
-						&[
-							(rgba!(0.4, 1, 1, 1), 0.0),
-							(rgba!(1, 1, 0.6, 1), 0.5),
-							(rgba!(1, 0.4, 0.8, 1), 1.0),
-						],
-					).width(160.0));
-				});
-			})?;
-
-			return Ok(());
-
+		ctx.draw_masked(|ctx| {
+			return ctx.draw(&shapes::circle(vec2!(0), 120.0));
+		}, |ctx| {
+			return ctx.draw(&shapes::gradient(
+				vec2!(0, -120),
+				vec2!(0, 120),
+				&[
+					(rgba!(0.4, 1, 1, 1), 0.0),
+					(rgba!(1, 1, 0.6, 1), 0.5),
+					(rgba!(1, 0.4, 0.8, 1), 1.0),
+				],
+			).width(240.0));
 		})?;
 
 		return Ok(());
@@ -70,12 +51,9 @@ impl app::State for Game {
 }
 
 fn main() {
-
-	if let Err(err) = app::launcher()
+	if let Err(err) = launcher()
 		.run::<Game>() {
 		println!("{}", err);
 	}
-
 }
-
 

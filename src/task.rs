@@ -16,7 +16,7 @@ pub enum TaskPhase {
 	Done,
 }
 
-pub struct TaskPool<T: TaskItem> {
+pub struct TaskQueue<T: TaskItem> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
 	max: usize,
@@ -24,7 +24,7 @@ pub struct TaskPool<T: TaskItem> {
 	total: usize,
 }
 
-impl<T: TaskItem> TaskPool<T> {
+impl<T: TaskItem> TaskQueue<T> {
 
 	pub fn new(max: usize) -> Self {
 		return Self {

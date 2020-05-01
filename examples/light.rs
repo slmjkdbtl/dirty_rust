@@ -94,7 +94,7 @@ struct LightUniform {
 	diffuse: f32,
 	specular: f32,
 	shininess: f32,
-	view_pos: Vec3,
+	cam_pos: Vec3,
 }
 
 impl gfx::CustomUniform for LightUniform {
@@ -105,7 +105,7 @@ impl gfx::CustomUniform for LightUniform {
 			"u_material.diffuse" => &self.diffuse,
 			"u_material.specular" => &self.specular,
 			"u_material.shininess" => &self.shininess,
-			"u_view_pos" => &self.view_pos,
+			"u_cam_pos" => &self.cam_pos,
 		];
 	}
 }
@@ -230,19 +230,19 @@ impl State for Game {
 	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 		if ctx.key_down(Key::W) {
-			self.cam.set_pos(self.cam.pos() + self.cam.front() * ctx.dt() * self.move_speed);
+			self.cam.pos += self.cam.dir * ctx.dt() * self.move_speed;
 		}
 
 		if ctx.key_down(Key::S) {
-			self.cam.set_pos(self.cam.pos() - self.cam.front() * ctx.dt() * self.move_speed);
+			self.cam.pos -= self.cam.dir * ctx.dt() * self.move_speed;
 		}
 
 		if ctx.key_down(Key::A) {
-			self.cam.set_pos(self.cam.pos() - self.cam.front().cross(vec3!(0, 1, 0)).unit() * ctx.dt() * self.move_speed);
+			self.cam.pos -= self.cam.dir.cross(vec3!(0, 1, 0)).unit() * ctx.dt() * self.move_speed;
 		}
 
 		if ctx.key_down(Key::D) {
-			self.cam.set_pos(self.cam.pos() + self.cam.front().cross(vec3!(0, 1, 0)).unit() * ctx.dt() * self.move_speed);
+			self.cam.pos += self.cam.dir.cross(vec3!(0, 1, 0)).unit() * ctx.dt() * self.move_speed;
 		}
 
 		ctx.draw_on(&self.canvas, |ctx| {
@@ -266,7 +266,7 @@ impl State for Game {
 					diffuse: 0.4,
 					specular: 0.4,
 					shininess: 16.0,
-					view_pos: self.cam.pos(),
+					cam_pos: self.cam.pos,
 				}, |ctx| {
 					ctx.draw(&shapes::model(&self.model))?;
 					return Ok(());

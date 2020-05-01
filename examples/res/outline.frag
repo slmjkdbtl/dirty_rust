@@ -6,7 +6,7 @@ uniform vec4 u_color;
 
 vec4 frag() {
 
-	vec4 oc = texture2D(u_tex, v_uv) * v_color;
+	vec4 oc = default_color();
 
 	if (oc.a != 0.0 || u_size == 0.0 || u_color.a == 0.0) {
 		return oc;

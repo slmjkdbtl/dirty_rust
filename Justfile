@@ -1,6 +1,6 @@
 # wengwengweng
 
-run example="sprite":
+run example="basic":
 	cargo run --example {{example}}
 
 install:

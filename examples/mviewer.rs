@@ -13,7 +13,7 @@ use input::Key;
 use input::Mouse;
 
 struct Viewer {
-	shader: gfx::Shader3D<()>,
+	shader: gfx::Shader<()>,
 	model: Option<gfx::Model>,
 	rot: Vec2,
 	pos: Vec2,
@@ -32,7 +32,7 @@ struct PixUniform {
 	size: f32,
 }
 
-impl gfx::Uniform for PixUniform {
+impl gfx::CustomUniform for PixUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_resolution" => &self.resolution,
@@ -78,7 +78,7 @@ impl State for Viewer {
 		return Ok(Self {
 			model: None,
 			pos: vec2!(0),
-			shader: gfx::Shader3D::from_frag(ctx, include_str!("res/normal.frag"))?,
+			shader: gfx::Shader::from_frag(ctx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
 			loader: load_file("examples/res/truck.obj"),
@@ -245,7 +245,7 @@ impl State for Viewer {
 				.t2(self.pos)
 				.s3(vec3!(self.scale))
 				.ry(self.rot.x.to_radians())
-				.rx(self.rot.y.to_radians())
+				.rx(-self.rot.y.to_radians())
 				.t3(-center)
 			, |ctx| {
 
@@ -257,7 +257,7 @@ impl State for Viewer {
 					0.0
 				};
 
-				ctx.draw_3d_with(&self.shader, &(), |ctx| {
+				ctx.draw_with(&self.shader, &(), |ctx| {
 					ctx.draw(
 						&shapes::model(&model)
 // 							.wireframe(self.draw_wireframe)
@@ -293,16 +293,17 @@ impl State for Viewer {
 
 				ctx.draw(
 					&shapes::text("drag 3d model files into this window")
+						.size(12.0)
 						.align(gfx::Origin::TopLeft)
 				)?;
 
 				ctx.push(mat4!()
 					.ty(-22.0)
-					.s2(vec2!(0.8))
 				, |ctx| {
 
 					ctx.draw(
 						&shapes::text("H: help")
+							.size(9.0)
 							.align(gfx::Origin::TopLeft)
 					)?;
 
@@ -344,6 +345,7 @@ impl State for Viewer {
 					ctx.draw_t(mat4!()
 						.t2(vec2!(0, i as i32 * 18))
 					, &shapes::text(m)
+						.size(12.0)
 						.align(gfx::Origin::BottomLeft)
 					)?;
 				}

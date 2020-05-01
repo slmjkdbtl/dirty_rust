@@ -31,22 +31,25 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		use gfx::Vertex2D;
+		use gfx::Vertex;
 
-		ctx.draw(&shapes::raw_2d(&[
-			Vertex2D {
+		ctx.draw(&shapes::raw(&[
+			Vertex {
 				pos: vec3!(0, 72, 0),
 				color: rgba!(1, 0, 0, 1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(0),
 			},
-			Vertex2D {
+			Vertex {
 				pos: vec3!(-96, -72, 0),
 				color: rgba!(0, 1, 0, 1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(0),
 			},
-			Vertex2D {
+			Vertex {
 				pos: vec3!(96, -72, 0),
 				color: rgba!(0, 0, 1, 1),
+				normal: vec3!(0, 0, 1),
 				uv: vec2!(0),
 			},
 		], &[0, 1, 2]))?;
