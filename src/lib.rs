@@ -27,13 +27,13 @@ mod conf;
 
 pub mod gfx;
 pub mod res;
+pub mod mesh;
 mod texture;
 mod shader;
 mod canvas;
 mod transform;
 mod font;
 mod camera;
-pub mod mesh;
 mod model;
 mod desc;
 mod skybox;
