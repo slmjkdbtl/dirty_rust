@@ -46,6 +46,80 @@ struct Game {
 	pix_shader: gfx::Shader<PixUniform>,
 	show_ui: bool,
 	canvas: gfx::Canvas,
+	floor: gfx::MeshData,
+}
+
+fn gen_checkerboard(s: f32, c: usize, r: usize) -> gfx::MeshData {
+
+	let mut verts = vec![];
+	let mut indices = vec![];
+
+	let w = s * c as f32;
+	let h = s * r as f32;
+
+	let p0 = vec3!(-w / 2.0, 0, -h / 2.0);
+	let mut b = false;
+
+	for i in 0..r {
+
+		for j in 0..c {
+
+			b = !b;
+
+			let pt = p0 + vec3!(s * i as f32, 0, s * j as f32);
+
+			let color = if b {
+				rgba!(0.5, 0.5, 0.5, 1)
+			} else {
+				rgba!(0.75, 0.75, 0.75, 1)
+			};
+
+			verts.push(gfx::Vertex {
+				pos: pt + vec3!(0),
+				normal: vec3!(0, 1, 0),
+				color: color,
+				uv: vec2!(0, 0),
+			});
+
+			verts.push(gfx::Vertex {
+				pos: pt + vec3!(s, 0, 0),
+				normal: vec3!(0, 1, 0),
+				color: color,
+				uv: vec2!(0, 0),
+			});
+
+			verts.push(gfx::Vertex {
+				pos: pt + vec3!(s, 0, s),
+				normal: vec3!(0, 1, 0),
+				color: color,
+				uv: vec2!(0, 0),
+			});
+
+			verts.push(gfx::Vertex {
+				pos: pt + vec3!(0, 0, s),
+				normal: vec3!(0, 1, 0),
+				color: color,
+				uv: vec2!(0, 0),
+			});
+
+			indices.extend_from_slice(&[
+				0 + (i * c + j) as u32 * 4,
+				1 + (i * c + j) as u32 * 4,
+				2 + (i * c + j) as u32 * 4,
+				0 + (i * c + j) as u32 * 4,
+				2 + (i * c + j) as u32 * 4,
+				3 + (i * c + j) as u32 * 4,
+			]);
+
+		}
+
+	}
+
+	return gfx::MeshData {
+		vertices: verts,
+		indices: indices,
+	};
+
 }
 
 impl State for Game {
@@ -64,6 +138,8 @@ impl State for Game {
 			None,
 		)?;
 
+		let floor = gen_checkerboard(2.0, 9, 9);
+
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
@@ -80,6 +156,7 @@ impl State for Game {
 			pix_shader: gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?,
 			show_ui: false,
 			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			floor: floor,
 		});
 
 	}
@@ -217,8 +294,7 @@ impl State for Game {
 				}, |ctx| {
 
 					let bbox = self.model.bbox().transform(mat4!());
-
-					let cray = Ray3::new(self.cam.pos, self.cam.dir);
+					let mray = Ray3::new(self.cam.pos, self.cam.dir);
 
 					let c = if kit::geom::intersect3d(mray, bbox) {
 						rgba!(0, 0, 1, 1)
@@ -240,7 +316,7 @@ impl State for Game {
 	// 					ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
 	// 				}
 
-					ctx.draw_t(mat4!().rd(vec3!(0, 1, 0.001)), &shapes::checkerboard(vec2!(-9), vec2!(9), 1.0))?;
+					ctx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
 
 					return Ok(());
 
@@ -291,8 +367,8 @@ fn main() {
 		.cursor_hidden(true)
 		.cursor_locked(true)
 		.resizable(true)
-		.fps_cap(None)
-		.vsync(false)
+// 		.fps_cap(None)
+// 		.vsync(false)
 		.run::<Game>() {
 		println!("{}", err);
 	}

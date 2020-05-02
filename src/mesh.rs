@@ -2,12 +2,12 @@
 
 use crate::gfx::*;
 
-pub fn extrude(verts: &[Vertex], indices: &[u32], dis: f32) -> MeshData {
+pub fn extrude(data: &MeshData, dis: f32) -> MeshData {
 
-	let mut nverts = verts.to_vec();
+	let mut verts = data.vertices.to_vec();
 
-	for v in verts {
-		nverts.push(Vertex {
+	for v in &data.vertices {
+		verts.push(Vertex {
 			pos: v.pos + v.normal * dis,
 			normal: -v.normal,
 			color: v.color,
@@ -15,31 +15,33 @@ pub fn extrude(verts: &[Vertex], indices: &[u32], dis: f32) -> MeshData {
 		});
 	}
 
-	let mut nindices = indices.to_vec();
+	let mut indices = data.indices.to_vec();
 
-	nindices.append(&mut indices
+	indices.append(&mut data.indices
 		.iter()
-		.map(|i| *i + verts.len() as u32)
+		.map(|i| *i + data.vertices.len() as u32)
 		.collect::<Vec<u32>>()
 	);
 
-	for i in 0..indices.len() {
+	// TODO: overlapping vertices
+	// TODO: don't connect verts that's inside? too complicated
+	for i in 0..data.indices.len() {
 
-		let i1 = indices[i];
-		let i2 = indices[(i + 1) % indices.len()];
+		let i1 = data.indices[i];
+		let i2 = data.indices[(i + 1) % data.indices.len()];
 
-		nindices.push(i1);
-		nindices.push(i2);
-		nindices.push(i1 + verts.len() as u32);
-		nindices.push(i1 + verts.len() as u32);
-		nindices.push(i2 + verts.len() as u32);
-		nindices.push(i2);
+		indices.push(i1);
+		indices.push(i2);
+		indices.push(i1 + data.vertices.len() as u32);
+		indices.push(i1 + data.vertices.len() as u32);
+		indices.push(i2 + data.vertices.len() as u32);
+		indices.push(i2);
 
 	}
 
 	return MeshData {
-		vertices: nverts,
-		indices: nindices,
+		vertices: verts,
+		indices: indices,
 	};
 
 }
