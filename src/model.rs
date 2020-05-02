@@ -13,12 +13,6 @@ use math::*;
 use gfx::*;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct MeshData {
-	pub vertices: Vec<Vertex>,
-	pub indices: Vec<u32>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
 pub struct NodeData {
 	pub id: usize,
 	pub children: Vec<usize>,

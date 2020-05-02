@@ -5,8 +5,6 @@
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
-use std::sync::Mutex;
-use std::sync::Arc;
 use std::time::Instant;
 use std::time::Duration;
 
@@ -240,6 +238,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	#[cfg(feature = "midi")]
 	let midi_buf = {
 
+		use std::sync::Mutex;
+		use std::sync::Arc;
+
 		let buf = Arc::new(Mutex::new(vec![]));
 		let buf_in = buf.clone();
 
@@ -306,9 +307,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 				glutin::event::Event::LoopDestroyed => *flow = ControlFlow::Exit,
 
 				glutin::event::Event::WindowEvent { ref event, .. } => match event {
+
 					WEvent::CloseRequested => {
 						*flow = ControlFlow::Exit;
 					},
+
 					WEvent::KeyboardInput { input, .. } => {
 
 						if let Some(kc) = input.virtual_keycode {
@@ -447,7 +450,9 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					WEvent::CursorLeft { .. } => {
 						events.push(Event::CursorLeave);
 					},
+
 					_ => (),
+
 				},
 
 				glutin::event::Event::DeviceEvent { event, .. } => match event {

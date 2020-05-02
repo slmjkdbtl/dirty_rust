@@ -1,6 +1,7 @@
 // wengwengweng
 
 use super::*;
+use gfx::MeshData;
 
 #[derive(Clone)]
 pub struct Raw<'a> {
@@ -18,6 +19,9 @@ impl<'a> Raw<'a> {
 			prim: gl::Primitive::Triangle,
 			tex: None,
 		};
+	}
+	pub fn from_meshdata(m: &'a MeshData) -> Self {
+		return Self::new(&m.vertices, &m.indices);
 	}
 	pub fn texture(mut self, tex: &'a gfx::Texture) -> Self {
 		self.tex = Some(tex);

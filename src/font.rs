@@ -12,12 +12,6 @@ const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQ
 
 pub type CharMap = HashMap<char, Quad>;
 
-pub struct FontChar<'a> {
-	tex: &'a gfx::Texture,
-	quad: Quad,
-	offset: Vec2,
-}
-
 pub trait Font {
 	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)>;
 	fn height(&self) -> f32;

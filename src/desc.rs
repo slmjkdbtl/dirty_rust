@@ -3,11 +3,17 @@
 use std::mem;
 
 use crate::math::*;
-use super::gfx::*;
+use crate::gfx::*;
 use serde::Serialize;
 use serde::Deserialize;
 
 use crate::gl;
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct MeshData {
+	pub vertices: Vec<Vertex>,
+	pub indices: Vec<u32>,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
