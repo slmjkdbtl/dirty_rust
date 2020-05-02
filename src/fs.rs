@@ -83,16 +83,6 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 }
 
-pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir> {
-
-	let path = path.as_ref();
-	let path = bundled_path(path)?;
-
-	return fs::read_dir(&path)
-		.map_err(|_| format!("failed to read file {}", path.display()));
-
-}
-
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
@@ -110,6 +100,16 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	return fs::read_to_string(&path)
 		.map_err(|_| format!("failed to read file {}", path.display()));
+
+}
+
+pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir> {
+
+	let path = path.as_ref();
+	let path = bundled_path(path)?;
+
+	return fs::read_dir(&path)
+		.map_err(|_| format!("failed to read dir {}", path.display()));
 
 }
 

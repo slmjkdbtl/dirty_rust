@@ -33,9 +33,9 @@ mod canvas;
 mod transform;
 mod font;
 mod camera;
+pub mod mesh;
 mod model;
 mod desc;
-mod batch;
 mod skybox;
 
 pub mod audio;
