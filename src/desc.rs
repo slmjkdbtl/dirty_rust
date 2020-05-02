@@ -225,7 +225,7 @@ impl gl::Shape for QuadShape {
 	}
 
 	fn indices() -> &'static [u32] {
-		return &[0, 1, 3, 1, 2, 3];
+		return &[0, 3, 1, 1, 3, 2];
 	}
 
 }
