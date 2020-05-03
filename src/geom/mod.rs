@@ -10,4 +10,5 @@ export!(types);
 pub mod col;
 pub mod ops;
 pub mod meshgen;
+mod delaunay;
 

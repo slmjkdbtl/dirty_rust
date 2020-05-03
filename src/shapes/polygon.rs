@@ -90,12 +90,12 @@ impl Drawable for Polygon {
 
 			for (i, p) in pts.iter().enumerate() {
 
-				gfx::Vertex {
+				verts.push(Vertex {
 					pos: ctx.transform * vec3!(p.x, p.y, 0.0),
 					uv: vec2!(0),
 					normal: vec3!(0, 0, 1),
 					color: color,
-				}.push(&mut verts);
+				});
 
 				if i >= 2 {
 					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
@@ -103,20 +103,7 @@ impl Drawable for Polygon {
 
 			}
 
-			ctx.renderer.push(
-				gl::Primitive::Triangle,
-				&verts,
-				&indices,
-				&ctx.cur_pipeline,
-				&gfx::Uniform {
-					model: mat4!(),
-					proj: ctx.proj,
-					view: ctx.view,
-					color: rgba!(1),
-					tex: ctx.empty_tex.clone(),
-					custom: ctx.cur_custom_uniform.clone(),
-				},
-			)?;
+			ctx.draw(&raw(&verts, &indices))?;
 
 		}
 

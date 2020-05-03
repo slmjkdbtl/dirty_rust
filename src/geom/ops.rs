@@ -2,6 +2,8 @@
 
 use super::*;
 
+pub use delaunay::triangulate;
+
 pub fn extrude(data: &MeshData, edges: &[(u32, u32)], dis: f32) -> MeshData {
 
 	let mut verts = data.vertices.to_vec();

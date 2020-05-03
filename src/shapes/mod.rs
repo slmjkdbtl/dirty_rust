@@ -14,6 +14,7 @@ use app::Ctx;
 use gl::VertexLayout;
 use gfx::Drawable;
 use gfx::Vertex;
+use gfx::Primitive;
 
 export!(raw);
 export!(sprite);
