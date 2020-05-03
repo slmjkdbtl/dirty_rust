@@ -1,46 +1,10 @@
 // wengwengweng
 
 use crate::math::*;
-use crate::gfx::*;
+use crate::gfx::MeshData;
+use crate::gfx::Vertex;
 
-pub fn extrude(data: &MeshData, edges: &[(u32, u32)], dis: f32) -> MeshData {
-
-	let mut verts = data.vertices.to_vec();
-
-	for v in &data.vertices {
-		verts.push(Vertex {
-			pos: v.pos + v.normal * dis,
-			normal: -v.normal,
-			color: v.color,
-			uv: v.uv,
-		});
-	}
-
-	let mut indices = data.indices.to_vec();
-
-	indices.append(&mut data.indices
-		.iter()
-		.map(|i| *i + data.vertices.len() as u32)
-		.collect::<Vec<u32>>()
-	);
-
-	for (i1, i2) in edges {
-		indices.push(*i1);
-		indices.push(*i2);
-		indices.push(*i1 + data.vertices.len() as u32);
-		indices.push(*i1 + data.vertices.len() as u32);
-		indices.push(*i2 + data.vertices.len() as u32);
-		indices.push(*i2);
-	}
-
-	return MeshData {
-		vertices: verts,
-		indices: indices,
-	};
-
-}
-
-pub fn gen_checkerboard(s: f32, c: usize, r: usize) -> (MeshData, Vec<(u32, u32)>) {
+pub fn checkerboard(s: f32, c: usize, r: usize) -> (MeshData, Vec<(u32, u32)>) {
 
 	let mut verts = vec![];
 	let mut indices = vec![];

@@ -3,7 +3,7 @@
 use serde::Serialize;
 use serde::Deserialize;
 
-use super::*;
+use crate::math::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Ray3 {
