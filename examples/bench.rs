@@ -1,8 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-use dirty::math::*;
-use dirty::*;
+use math::*;
 use input::Key;
 
 struct Game {
@@ -15,7 +14,7 @@ impl State for Game {
 	fn init(ctx: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/bunny.png"))?,
-			count: 10000,
+			count: 1000,
 		});
 	}
 

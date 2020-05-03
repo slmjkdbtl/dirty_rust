@@ -5,19 +5,21 @@ use gfx::MeshData;
 
 #[derive(Clone)]
 pub struct Raw<'a> {
-	verts: Vec<Vertex>,
-	indices: Vec<u32>,
+	verts: &'a [Vertex],
+	indices: &'a [u32],
 	prim: gl::Primitive,
 	tex: Option<&'a gfx::Texture>,
+	color: Color,
 }
 
 impl<'a> Raw<'a> {
-	pub fn new(verts: &[Vertex], indices: &[u32]) -> Self {
+	pub fn new(verts: &'a [Vertex], indices: &'a [u32]) -> Self {
 		return Self {
-			verts: verts.to_vec(),
-			indices: indices.to_vec(),
+			verts: verts,
+			indices: indices,
 			prim: gl::Primitive::Triangle,
 			tex: None,
+			color: rgba!(1),
 		};
 	}
 	pub fn from_meshdata(m: &'a MeshData) -> Self {
@@ -31,9 +33,13 @@ impl<'a> Raw<'a> {
 		self.prim = prim;
 		return self;
 	}
+	pub fn color(mut self, c: Color) -> Self {
+		self.color = c;
+		return self;
+	}
 }
 
-pub fn raw<'a>(verts: &[Vertex], indices: &[u32]) -> Raw<'a> {
+pub fn raw<'a>(verts: &'a [Vertex], indices: &'a [u32]) -> Raw<'a> {
 	return Raw::new(verts, indices);
 }
 
@@ -44,7 +50,7 @@ impl<'a> Drawable for Raw<'a> {
 		let tex = self.tex.unwrap_or(&ctx.empty_tex);
 		let mut verts = Vec::with_capacity(self.verts.len() * gfx::Vertex::STRIDE);
 
-		for p in &self.verts {
+		for p in self.verts {
 			p.push(&mut verts);
 		}
 
@@ -57,7 +63,7 @@ impl<'a> Drawable for Raw<'a> {
 				proj: ctx.proj,
 				view: ctx.view,
 				model: ctx.transform,
-				color: rgba!(1),
+				color: self.color,
 				tex: tex.clone(),
 				custom: ctx.cur_custom_uniform.clone(),
 			},

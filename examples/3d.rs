@@ -66,7 +66,7 @@ impl State for Game {
 			None,
 		)?;
 
-		let (floor, _) = meshgen::checkerboard(2.0, 9, 9);
+		let floor = meshgen::checkerboard(2.0, 9, 9);
 
 		return Ok(Self {
 			model: model,
@@ -234,7 +234,7 @@ impl State for Game {
 
 					ctx.draw(
 						&shapes::Rect3D::from_bbox(bbox)
-							.line_width(3.0)
+							.line_width(5.0)
 							.color(c)
 					)?;
 
@@ -295,6 +295,7 @@ fn main() {
 		.cursor_hidden(true)
 		.cursor_locked(true)
 		.resizable(true)
+// 		.hidpi(false)
 // 		.fps_cap(None)
 // 		.vsync(false)
 		.run::<Game>() {

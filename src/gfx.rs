@@ -100,6 +100,7 @@ impl Ctx {
 		});
 	}
 
+	// TODO: viewport 2x scaled with hidpi(false)
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
