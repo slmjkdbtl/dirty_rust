@@ -11,6 +11,7 @@ use serde::Deserialize;
 use crate::*;
 use math::*;
 use gfx::*;
+use geom::*;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NodeData {

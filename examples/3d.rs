@@ -2,6 +2,7 @@
 
 use dirty::*;
 use math::*;
+use geom::*;
 use input::Key;
 use gfx::Camera;
 
@@ -65,7 +66,7 @@ impl State for Game {
 			None,
 		)?;
 
-		let (floor, _) = mesh::gen_checkerboard(2.0, 9, 9);
+		let (floor, _) = meshgen::checkerboard(2.0, 9, 9);
 
 		return Ok(Self {
 			model: model,
@@ -223,7 +224,7 @@ impl State for Game {
 					let bbox = self.model.bbox().transform(mat4!());
 					let mray = Ray3::new(self.cam.pos, self.cam.dir);
 
-					let c = if kit::geom::intersect3d(mray, bbox) {
+					let c = if col::intersect3d(mray, bbox) {
 						rgba!(0, 0, 1, 1)
 					} else {
 						rgba!(1)

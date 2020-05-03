@@ -27,7 +27,6 @@ mod conf;
 
 pub mod gfx;
 pub mod res;
-pub mod mesh;
 mod texture;
 mod shader;
 mod canvas;
@@ -41,7 +40,9 @@ mod skybox;
 pub mod audio;
 pub mod input;
 pub mod window;
+pub mod geom;
 pub mod shapes;
+pub mod kit;
 
 pub mod task;
 pub mod fs;
@@ -50,9 +51,6 @@ pub mod gl;
 pub mod img;
 pub mod term;
 pub mod codec;
-
-#[cfg(feature = "kit")]
-pub mod kit;
 
 #[cfg(feature = "midi")]
 pub mod midi;

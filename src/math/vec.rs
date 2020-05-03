@@ -210,6 +210,10 @@ impl Vec2 {
 		return self.x * other.x + self.y * other.y;
 	}
 
+	pub fn cross(self, other: Self) -> Vec3 {
+		return Vec3::cross(vec3!(self.x, self.y, 0), vec3!(other.x, other.y, 0));
+	}
+
 	pub fn angle(self, other: Self) -> f32 {
 		return f32::atan2(other.y - self.y, other.x - self.x);
 	}

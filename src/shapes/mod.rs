@@ -5,11 +5,11 @@
 use std::f32::consts::PI;
 
 use crate::gfx;
-use crate::math;
 use crate::app;
 use crate::gl;
 use crate::Result;
-use math::*;
+use crate::math::*;
+use crate::geom::*;
 use app::Ctx;
 use gl::VertexLayout;
 use gfx::Drawable;

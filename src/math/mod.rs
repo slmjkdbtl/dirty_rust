@@ -7,7 +7,6 @@ mexport!(rand);
 export!(vec);
 export!(lerp);
 export!(map);
-export!(geom);
 
 pub use noise;
 

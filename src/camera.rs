@@ -2,6 +2,7 @@
 
 use crate::*;
 use math::*;
+use geom::*;
 
 pub trait Camera {
 	fn proj(&self) -> Mat4;
