@@ -10,6 +10,7 @@ pub struct Raw<'a> {
 	prim: gl::Primitive,
 	tex: Option<&'a gfx::Texture>,
 	color: Color,
+	ignore_transform: bool,
 }
 
 impl<'a> Raw<'a> {
@@ -20,6 +21,7 @@ impl<'a> Raw<'a> {
 			prim: gl::Primitive::Triangle,
 			tex: None,
 			color: rgba!(1),
+			ignore_transform: false,
 		};
 	}
 	pub fn from_meshdata(m: &'a MeshData) -> Self {
@@ -35,6 +37,10 @@ impl<'a> Raw<'a> {
 	}
 	pub fn color(mut self, c: Color) -> Self {
 		self.color = c;
+		return self;
+	}
+	pub fn ignore_transform(mut self) -> Self {
+		self.ignore_transform = true;
 		return self;
 	}
 }
@@ -57,7 +63,11 @@ impl<'a> Drawable for Raw<'a> {
 			&gfx::Uniform {
 				proj: ctx.proj,
 				view: ctx.view,
-				model: ctx.transform,
+				model: if self.ignore_transform {
+					mat4!()
+				} else {
+					ctx.transform
+				},
 				color: self.color,
 				tex: tex.clone(),
 				custom: ctx.cur_custom_uniform.clone(),

@@ -103,7 +103,7 @@ impl Drawable for Polygon {
 
 			}
 
-			ctx.draw(&raw(&verts, &indices))?;
+			ctx.draw(&raw(&verts, &indices).ignore_transform())?;
 
 		}
 

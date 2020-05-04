@@ -95,20 +95,7 @@ impl Drawable for Gradient {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 2 )
 			.collect();
 
-		ctx.renderer.push(
-			gl::Primitive::Triangle,
-			&verts,
-			&indices,
-			&ctx.cur_pipeline,
-			&gfx::Uniform {
-				model: mat4!(),
-				proj: ctx.proj,
-				view: ctx.view,
-				color: rgba!(1),
-				tex: ctx.empty_tex.clone(),
-				custom: ctx.cur_custom_uniform.clone(),
-			}
-		)?;
+		ctx.draw(&raw(&verts, &indices).ignore_transform())?;
 
 		return Ok(());
 
