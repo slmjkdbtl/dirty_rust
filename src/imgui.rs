@@ -186,7 +186,7 @@ impl Imgui {
 			let mut vqueue = Vec::with_capacity(vbuf.len() * gfx::Vertex::STRIDE);
 
 			for v in vbuf {
-				gfx::Vertex::from_imgui_vert(*v).push(&mut vqueue);
+				vqueue.push(gfx::Vertex::from_imgui_vert(*v));
 			}
 
 			self.renderer.push(

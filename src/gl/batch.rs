@@ -15,21 +15,19 @@ struct RenderState<V: BatchedVertex, U: BatchedUniform> {
 
 // TODO: trait alias plz
 pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
-
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
-	vqueue: Vec<f32>,
+	vqueue: Vec<V>,
 	iqueue: Vec<u32>,
 	cur_state: Option<RenderState<V, U>>,
 	draw_count: usize,
-
 }
 
 impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
-		let max_vertices = max_vertices * V::STRIDE;
+		let max_vertices = max_vertices;
 		let vbuf = VertexBuffer::new(&device, max_vertices, BufferUsage::Dynamic)?;
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
@@ -47,7 +45,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 	pub fn push(
 		&mut self,
 		prim: Primitive,
-		verts: &[f32],
+		verts: &[V],
 		indices: &[u32],
 		pipeline: &Pipeline<V, U>,
 		uniform: &U,
@@ -84,7 +82,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			self.flush();
 		}
 
-		let offset = (self.vqueue.len() / V::STRIDE) as u32;
+		let offset = (self.vqueue.len()) as u32;
 
 		let indices = indices
 			.iter()
@@ -107,7 +105,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 	) -> Result<()> {
 
 		self.push(prim, &[], S::indices(), pipeline, uniform)?;
-		shape.vertices(&mut self.vqueue);
+		self.vqueue.extend_from_slice(&shape.vertices());
 
 		return Ok(());
 

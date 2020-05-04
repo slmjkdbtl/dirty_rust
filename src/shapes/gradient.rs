@@ -62,19 +62,19 @@ impl Drawable for Gradient {
 
 			last_pos = Some(s.1);
 
-			Vertex {
+			verts.push(Vertex {
 				pos: matrix * vec3!(-w / 2.0, -h / 2.0 + h * s.1, 0.0),
 				uv: vec2!(0),
 				normal: vec3!(0, 0, 1),
 				color: s.0,
-			}.push(&mut verts);
+			});
 
-			Vertex {
+			verts.push(Vertex {
 				pos: matrix * vec3!(w / 2.0, -h / 2.0 + h * s.1, 0.0),
 				uv: vec2!(0),
 				normal: vec3!(0, 0, 1),
 				color: s.0,
-			}.push(&mut verts);
+			});
 
 		}
 

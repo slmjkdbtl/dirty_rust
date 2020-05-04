@@ -22,7 +22,6 @@ struct Game {
 	blur_shader: gfx::Shader<BlurUniform>,
 	vhs_shader: gfx::Shader<VHSUniform>,
 	pix_shader: gfx::Shader<PixUniform>,
-	filter_shader: gfx::Shader<FilterUniform>,
 	shader: gfx::Shader<LightUniform>,
 	cam: gfx::PerspectiveCam,
 	move_speed: f32,
@@ -70,19 +69,6 @@ impl gfx::CustomUniform for VHSUniform {
 	fn values(&self) -> gfx::UniformValues {
 		return hmap![
 			"u_intensity" => &self.intensity,
-		];
-	}
-}
-
-#[derive(Clone)]
-pub struct FilterUniform {
-	pub threshold: f32,
-}
-
-impl gfx::CustomUniform for FilterUniform {
-	fn values(&self) -> gfx::UniformValues {
-		return hmap![
-			"u_threshold" => &self.threshold,
 		];
 	}
 }
@@ -155,7 +141,6 @@ impl State for Game {
 			vhs_shader: gfx::Shader::from_frag(ctx, include_str!("res/vhs.frag"))?,
 			pix_shader: gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?,
 			blur_shader: gfx::Shader::from_frag(ctx, include_str!("res/blur.frag"))?,
-			filter_shader: gfx::Shader::from_frag(ctx, include_str!("res/filter.frag"))?,
 			canvas: gfx::Canvas::new(ctx, 640, 480)?,
 			canvas2: gfx::Canvas::new(ctx, 640, 480)?,
 			cam: gfx::PerspectiveCam::new(60f32.to_radians(), ctx.width() as f32 / ctx.height() as f32, 0.1, 1024.0, vec3!(3, 3, 2), -0.92, -0.56),
@@ -257,7 +242,7 @@ impl State for Game {
 
 			ctx.use_cam(&self.cam, |ctx| {
 
-// 				ctx.draw(&shapes::skybox(&self.skybox))?;
+				ctx.draw(&shapes::skybox(&self.skybox))?;
 // 				ctx.draw_t(&gfx::t().t3(light_pos).s3(vec3!(self.size / 24.0)), &shapes::cube())?;
 
 				ctx.draw_with(&self.shader, &LightUniform {
