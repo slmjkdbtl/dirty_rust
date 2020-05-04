@@ -196,7 +196,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 				.unwrap_or(vec![]);
 
 			let normals = if normals.len() != positions.len() {
-				gen_normals(&positions, &indices)
+				ops::gen_normals(&positions, &indices)
 			} else {
 				normals
 			};
@@ -498,7 +498,7 @@ impl Model {
 			let mut verts = Vec::with_capacity(vert_count);
 
 			let normals = if m.normals.len() != vert_count * 3 {
-				gen_normals(&positions, &m.indices)
+				ops::gen_normals(&positions, &m.indices)
 			} else {
 				m.normals
 					.chunks(3)
@@ -577,7 +577,7 @@ impl Model {
 			let meshes = node.meshes.into_iter().map(|m| {
 				return Mesh {
 					// TODO: no unwrap
-					gl_mesh: Rc::new(gl::Mesh::from2(ctx.device(), &m.vertices, &m.indices).unwrap()),
+					gl_mesh: Rc::new(gl::Mesh::from(ctx.device(), &m.vertices, &m.indices).unwrap()),
 					data: m,
 				};
 			}).collect::<Vec<Mesh>>();
@@ -694,36 +694,6 @@ fn get_bbox(nodes: &HashMap<usize, Node>, list: &[usize]) -> BBox {
 	get_bbox_inner(&mut min, &mut max, mat4!(), nodes, list);
 
 	return BBox::new(min, max);
-
-}
-
-fn gen_normals(pos: &[Vec3], indices: &[u32]) -> Vec<Vec3> {
-
-	let vert_count = pos.len();
-	let mut normals = vec![vec3!(0); vert_count];
-
-	indices
-		.chunks(3)
-		.for_each(|tri| {
-
-			let i1 = tri[0] as usize;
-			let i2 = tri[1] as usize;
-			let i3 = tri[2] as usize;
-			let v1 = pos[i1];
-			let v2 = pos[i2];
-			let v3 = pos[i3];
-			let normal = Vec3::cross((v2 - v1), (v3 - v1));
-
-			normals[i1] += normal;
-			normals[i2] += normal;
-			normals[i3] += normal;
-
-		});
-
-	return normals
-		.into_iter()
-		.map(|p| p.unit())
-		.collect();
 
 }
 

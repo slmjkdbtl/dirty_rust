@@ -15,7 +15,7 @@ pub struct MeshData {
 	pub indices: Vec<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Vertex {
 	pub pos: Vec3,
@@ -24,26 +24,12 @@ pub struct Vertex {
 	pub color: Color,
 }
 
+unsafe impl bytemuck::Pod for Vertex {}
+unsafe impl bytemuck::Zeroable for Vertex {}
+
 impl gl::VertexLayout for Vertex {
 
 	const STRIDE: usize = 12;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-		queue.extend_from_slice(&[
-			self.pos.x,
-			self.pos.y,
-			self.pos.z,
-			self.uv.x,
-			self.uv.y,
-			self.normal.x,
-			self.normal.y,
-			self.normal.z,
-			self.color.r,
-			self.color.g,
-			self.color.b,
-			self.color.a,
-		]);
-	}
 
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[
@@ -56,22 +42,17 @@ impl gl::VertexLayout for Vertex {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct VertexCubemap {
 	pub pos: Vec3,
 }
 
+unsafe impl bytemuck::Pod for VertexCubemap {}
+unsafe impl bytemuck::Zeroable for VertexCubemap {}
+
 impl gl::VertexLayout for VertexCubemap {
 
 	const STRIDE: usize = 3;
-
-	fn push(&self, queue: &mut Vec<f32>) {
-		queue.extend_from_slice(&[
-			self.pos.x,
-			self.pos.y,
-			self.pos.z,
-		]);
-	}
 
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[
@@ -154,9 +135,7 @@ impl gl::Shape for QuadShape {
 	type Vertex = Vertex;
 	const COUNT: usize = 4;
 
-	fn vertices(&self, queue: &mut Vec<f32>) {
-
-		use gl::VertexLayout;
+	fn vertices(&self) -> Vec<Self::Vertex> {
 
 		let t = self.transform;
 		let q = self.quad;
@@ -194,33 +173,32 @@ impl gl::Shape for QuadShape {
 			_ => {},
 		}
 
-		Vertex {
-			pos: p1,
-			uv: u1,
-			normal: vec3!(0, 0, 1),
-			color: c
-		}.push(queue);
-
-		Vertex {
-			pos: p2,
-			uv: u2,
-			normal: vec3!(0, 0, 1),
-			color: c
-		}.push(queue);
-
-		Vertex {
-			pos: p3,
-			uv: u3,
-			normal: vec3!(0, 0, 1),
-			color: c
-		}.push(queue);
-
-		Vertex {
-			pos: p4,
-			uv: u4,
-			normal: vec3!(0, 0, 1),
-			color: c
-		}.push(queue);
+		return vec![
+			Vertex {
+				pos: p1,
+				uv: u1,
+				normal: vec3!(0, 0, 1),
+				color: c
+			},
+			Vertex {
+				pos: p2,
+				uv: u2,
+				normal: vec3!(0, 0, 1),
+				color: c
+			},
+			Vertex {
+				pos: p3,
+				uv: u3,
+				normal: vec3!(0, 0, 1),
+				color: c
+			},
+			Vertex {
+				pos: p4,
+				uv: u4,
+				normal: vec3!(0, 0, 1),
+				color: c
+			},
+		];
 
 	}
 
@@ -237,9 +215,7 @@ impl gl::Shape for CubeShape {
 	type Vertex = Vertex;
 	const COUNT: usize = 24;
 
-	fn vertices(&self, queue: &mut Vec<f32>) {
-
-		use gl::VertexLayout;
+	fn vertices(&self) -> Vec<Self::Vertex> {
 
 		let pos = [
 			vec3!(-1, -1, 1),
@@ -322,19 +298,20 @@ impl gl::Shape for CubeShape {
 			rgba!(1, 1, 1, 1),
 		];
 
-		pos
+		return pos
 			.iter()
 			.zip(&normals)
 			.zip(&colors)
 			// zoop
-			.for_each(|((p, n), c)| {
-				Vertex {
+			.map(|((p, n), c)| {
+				return Vertex {
 					pos: *p,
 					normal: *n,
 					color: *c,
 					uv: vec2!(),
-				}.push(queue);
-			});
+				};
+			})
+			.collect();
 
 	}
 
@@ -364,9 +341,7 @@ impl gl::Shape for CubemapShape {
 	type Vertex = VertexCubemap;
 	const COUNT: usize = 8;
 
-	fn vertices(&self, queue: &mut Vec<f32>) {
-
-		use gl::VertexLayout;
+	fn vertices(&self) -> Vec<Self::Vertex> {
 
 		let pos = [
 			vec3!(-1, -1, 1),
@@ -379,13 +354,14 @@ impl gl::Shape for CubemapShape {
 			vec3!(1, -1, -1),
 		];
 
-		pos
+		return pos
 			.iter()
-			.for_each(|p| {
-				VertexCubemap {
+			.map(|p| {
+				return VertexCubemap {
 					pos: *p,
-				}.push(queue);
-			});
+				};
+			})
+			.collect();
 
 	}
 

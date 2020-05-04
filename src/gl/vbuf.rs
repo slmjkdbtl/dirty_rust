@@ -7,13 +7,9 @@ use glow::HasContext;
 use super::*;
 use crate::Result;
 
-pub trait VertexLayout {
-
+pub trait VertexLayout: bytemuck::Pod {
 	const STRIDE: usize;
-
-	fn push(&self, queue: &mut Vec<f32>);
 	fn attrs() -> VertexAttrGroup;
-
 }
 
 #[derive(Clone, Debug)]
@@ -54,9 +50,9 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	pub fn from(device: &Device, data: &[f32]) -> Result<Self> {
+	pub fn from(device: &Device, data: &[V]) -> Result<Self> {
 
-		let buf = Self::new(device, data.len(), BufferUsage::Static)?;
+		let buf = Self::new(device, data.len() * V::STRIDE, BufferUsage::Static)?;
 		buf.data(0, data);
 		return Ok(buf);
 
@@ -78,20 +74,16 @@ impl<V: VertexLayout> VertexBuffer<V> {
 		}
 	}
 
-	// TODO: change this to take V?
-	pub fn data(&self, offset: usize, data: &[f32]) {
+	pub fn data(&self, offset: usize, data: &[V]) {
 
 		unsafe {
-
-			let byte_len = mem::size_of_val(data) / mem::size_of::<u8>();
-			let byte_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, byte_len);
 
 			self.bind();
 
 			self.ctx.buffer_sub_data_u8_slice(
 				glow::ARRAY_BUFFER,
 				(offset * mem::size_of::<f32>()) as i32,
-				byte_slice,
+				bytemuck::cast_slice(data),
 			);
 
 			self.unbind();

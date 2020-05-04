@@ -15,7 +15,7 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 
 impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
-	pub fn from(device: &Device, verts: &[f32], indices: &[u32]) -> Result<Self> {
+	pub fn from(device: &Device, verts: &[V], indices: &[u32]) -> Result<Self> {
 
 		let vbuf = VertexBuffer::<V>::from(&device, &verts)?;
 		let ibuf = IndexBuffer::from(&device, &indices)?;
@@ -29,26 +29,8 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
-	// TODO: name
-	pub fn from2(device: &Device, verts: &[V], indices: &[u32]) -> Result<Self> {
-
-		let mut queue = Vec::with_capacity(verts.len() * V::STRIDE);
-
-		for v in verts {
-			v.push(&mut queue);
-		}
-
-		return Self::from(device, &queue, &indices);
-
-	}
-
 	pub fn from_shape<S: Shape<Vertex = V>>(device: &Device, shape: S) -> Result<Self> {
-
-		let mut verts = Vec::with_capacity(S::COUNT * S::Vertex::STRIDE);
-		shape.vertices(&mut verts);
-
-		return Self::from(device, &verts, &S::indices());
-
+		return Self::from(device, &shape.vertices(), &S::indices());
 	}
 
 	pub fn vbuf(&self) -> &VertexBuffer<V> {
@@ -60,7 +42,6 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 	}
 
 	pub fn draw(&self, prim: Primitive, pipeline: &Pipeline<V, U>, uniforms: &U) {
-
 		pipeline.draw(
 			Some(&self.vbuf),
 			Some(&self.ibuf),
@@ -68,14 +49,11 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 			self.count as u32,
 			prim,
 		);
-
 	}
 
 	pub fn free(self) {
-
 		self.vbuf.free();
 		self.ibuf.free();
-
 	}
 
 }

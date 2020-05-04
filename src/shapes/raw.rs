@@ -48,15 +48,10 @@ impl<'a> Drawable for Raw<'a> {
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
 		let tex = self.tex.unwrap_or(&ctx.empty_tex);
-		let mut verts = Vec::with_capacity(self.verts.len() * gfx::Vertex::STRIDE);
-
-		for p in self.verts {
-			p.push(&mut verts);
-		}
 
 		ctx.renderer.push(
 			self.prim,
-			&verts,
+			&self.verts,
 			&self.indices,
 			&ctx.cur_pipeline,
 			&gfx::Uniform {
