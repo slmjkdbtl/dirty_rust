@@ -305,7 +305,11 @@ impl Model {
 
 	}
 
-	pub fn load_verts(verts: Vec<Vertex>, indices: Vec<u32>) -> ModelData {
+	pub fn load_mesh_data(data: MeshData) -> ModelData {
+		return Self::load_raw(data.vertices, data.indices);
+	}
+
+	pub fn load_raw(verts: Vec<Vertex>, indices: Vec<u32>) -> ModelData {
 
 		let node = NodeData {
 			id: 0,
@@ -605,8 +609,12 @@ impl Model {
 		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
-	pub fn from_verts(ctx: &impl gfx::GfxCtx, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
-		return Self::from_data(ctx, Self::load_verts(verts, indices));
+	pub fn from_mesh_data(ctx: &impl gfx::GfxCtx, data: MeshData) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_mesh_data(data));
+	}
+
+	pub fn from_raw(ctx: &impl gfx::GfxCtx, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_raw(verts, indices));
 	}
 
 	pub fn from_obj(ctx: &impl gfx::GfxCtx, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
