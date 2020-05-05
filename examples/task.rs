@@ -7,32 +7,18 @@ use input::Key;
 
 const THREAD_COUNT: usize = 1;
 const LOAD_COUNT: usize = 120;
+const SCALE: f32 = 9.0;
 
 struct Teapot {
 	transform: Mat4,
 	model: gfx::Model,
 }
 
-#[derive(Clone)]
-pub struct PixUniform {
-	pub resolution: Vec2,
-	pub size: f32,
-}
-
-impl gfx::CustomUniform for PixUniform {
-	fn values(&self) -> gfx::UniformValues {
-		return hmap![
-			"u_resolution" => &self.resolution,
-			"u_size" => &self.size,
-		];
-	}
-}
-
 struct Game {
 	tasks: TaskQueue<Result<gfx::ModelData>>,
 	teapots: Vec<Teapot>,
-	normal_shader: gfx::Shader<()>,
-	pix_shader: gfx::Shader<PixUniform>,
+	shader: gfx::Shader<()>,
+
 	canvas: gfx::Canvas,
 }
 
@@ -58,12 +44,14 @@ impl State for Game {
 			});
 		}
 
+		let cw = (ctx.width() as f32 / SCALE) as i32;
+		let ch = (ctx.height() as f32 / SCALE) as i32;
+
 		return Ok(Self {
 			tasks: tasks,
 			teapots: vec![],
-			normal_shader: gfx::Shader::from_frag(ctx, include_str!("res/blue.frag"))?,
-			pix_shader: gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			shader: gfx::Shader::from_frag(ctx, include_str!("res/blue.frag"))?,
+			canvas: gfx::Canvas::new(ctx, cw, ch)?,
 		});
 
 	}
@@ -73,9 +61,16 @@ impl State for Game {
 		use input::Event::*;
 
 		match e {
+
 			Resize(w, h) => {
-				self.canvas.resize(ctx, *w, *h);
+
+				let cw = (*w as f32 / SCALE) as i32;
+				let ch = (*h as f32 / SCALE) as i32;
+
+				self.canvas.resize(ctx, cw, ch)?;
+
 			},
+
 			KeyPress(k) => {
 				match *k {
 					Key::F => ctx.toggle_fullscreen(),
@@ -84,7 +79,9 @@ impl State for Game {
 					_ => {},
 				}
 			},
+
 			_ => {},
+
 		}
 
 		return Ok(());
@@ -118,7 +115,7 @@ impl State for Game {
 
 			ctx.clear_ex(gfx::Surface::Depth);
 
-			ctx.draw_with(&self.normal_shader, &(), |ctx| {
+			ctx.draw_with(&self.shader, &(), |ctx| {
 				for t in &self.teapots {
 					ctx.draw_t(t.transform, &shapes::model(&t.model))?;
 				}
@@ -135,13 +132,12 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_with(&self.pix_shader, &PixUniform {
-			resolution: vec2!(ctx.width(), ctx.height()),
-			size: 4.0,
-		}, |ctx| {
-			ctx.draw(&shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+		ctx.draw_t(
+			mat4!()
+				.s2(vec2!(SCALE))
+				,
+			&shapes::canvas(&self.canvas)
+		)?;
 
 		ctx.draw_t(
 			mat4!()

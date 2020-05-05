@@ -423,7 +423,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 						ctx.width = w;
 						ctx.height = h;
-						ctx.reset_default_cam();
+						let cam = ctx.default_cam();
+						ctx.apply_cam(&cam);
 						ctx.windowed_ctx.resize(*size);
 
 						events.push(Event::Resize(w, h));
