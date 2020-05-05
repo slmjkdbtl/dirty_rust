@@ -8,6 +8,8 @@ use geom::*;
 use input::Key;
 use gfx::Camera;
 
+const SCALE: f32 = 4.0;
+
 #[derive(Clone)]
 struct Uniform {
 	cam_pos: Vec3,
@@ -46,7 +48,6 @@ struct Game {
 	move_speed: f32,
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
-	pix_shader: gfx::Shader<PixUniform>,
 	show_ui: bool,
 	canvas: gfx::Canvas,
 	floor: gfx::MeshData,
@@ -70,6 +71,9 @@ impl State for Game {
 
 		let floor = meshgen::checkerboard(2.0, 9, 9);
 
+		let cw = (ctx.width() as f32 / SCALE) as i32;
+		let ch = (ctx.height() as f32 / SCALE) as i32;
+
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
@@ -83,9 +87,8 @@ impl State for Game {
 			move_speed: 12.0,
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(ctx, include_str!("res/fog.frag"))?,
-			pix_shader: gfx::Shader::from_frag(ctx, include_str!("res/pix.frag"))?,
 			show_ui: false,
-			canvas: gfx::Canvas::new(ctx, ctx.width(), ctx.height())?,
+			canvas: gfx::Canvas::new(ctx, cw, ch)?,
 			floor: floor,
 		});
 
@@ -98,8 +101,13 @@ impl State for Game {
 		match e {
 
 			Resize(w, h) => {
+
+				let cw = (*w as f32 / SCALE) as i32;
+				let ch = (*h as f32 / SCALE) as i32;
+
+				self.canvas.resize(ctx, cw, ch)?;
 				self.cam.aspect = *w as f32 / *h as f32;
-				self.canvas.resize(ctx, *w, *h)?;
+
 			},
 
 			KeyPress(k) => {
@@ -230,7 +238,7 @@ impl State for Game {
 
 					ctx.draw(
 						&shapes::Rect3D::from_bbox(bbox)
-							.line_width(5.0)
+							.line_width(1.0)
 							.color(c)
 					)?;
 
@@ -271,13 +279,7 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_with(&self.pix_shader, &PixUniform {
-			resolution: vec2!(ctx.width(), ctx.height()),
-			size: 0.0,
-		}, |ctx| {
-			ctx.draw(&shapes::canvas(&self.canvas))?;
-			return Ok(());
-		})?;
+		ctx.draw_t(mat4!().s2(vec2!(SCALE)), &shapes::canvas(&self.canvas))?;
 
 		return Ok(());
 

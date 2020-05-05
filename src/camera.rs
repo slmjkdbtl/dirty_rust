@@ -18,7 +18,7 @@ pub trait Camera {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PerspectiveCam {
 	pub dir: Vec3,
 	pub pos: Vec3,
@@ -119,7 +119,7 @@ impl Camera for PerspectiveCam {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct OrthoCam {
 	pub width: f32,
 	pub height: f32,
@@ -168,7 +168,7 @@ impl Camera for OrthoCam {
 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ObliqueCam {
 	pub width: f32,
 	pub height: f32,

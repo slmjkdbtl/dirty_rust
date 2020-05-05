@@ -263,19 +263,8 @@ impl Ctx {
 	}
 
 	pub fn use_default_cam(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		let oview = self.view;
-		let oproj = self.proj;
-
-		self.reset_default_cam();
-
-		f(self)?;
-
-		self.view = oview;
-		self.proj = oproj;
-
-		return Ok(());
-
+		let cam = self.default_cam();
+		return self.use_cam(&cam, f);
 	}
 
 	pub fn transform(&self) -> Mat4 {
@@ -330,14 +319,14 @@ impl Ctx {
 		self.view = cam.view();
 	}
 
-	pub(crate) fn reset_default_cam(&mut self) {
+	pub(crate) fn default_cam(&mut self) -> impl Camera {
 
-		self.apply_cam(&OrthoCam {
+		return OrthoCam {
 			width: self.width() as f32,
 			height: self.height() as f32,
 			near: DEFAULT_NEAR,
 			far: DEFAULT_FAR,
-		});
+		};
 
 	}
 
