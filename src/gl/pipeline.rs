@@ -43,8 +43,8 @@ pub struct Pipeline<V: VertexLayout, U: UniformLayout> {
 	ctx: Rc<GLCtx>,
 	program_id: ProgramID,
 	attrs: VertexAttrGroup,
-	vertex_layout: PhantomData<V>,
-	uniform_layout: PhantomData<U>,
+	_vertex_layout: PhantomData<V>,
+	_uniform_layout: PhantomData<U>,
 }
 
 impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
@@ -89,8 +89,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				ctx: ctx,
 				attrs: V::attrs(),
 				program_id: program_id,
-				vertex_layout: PhantomData,
-				uniform_layout: PhantomData,
+				_vertex_layout: PhantomData,
+				_uniform_layout: PhantomData,
 			};
 
 			return Ok(program);

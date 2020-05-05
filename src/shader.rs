@@ -80,7 +80,7 @@ impl IntoUniformValue for std::time::Duration {
 #[derive(Clone, PartialEq)]
 pub struct Shader<U: CustomUniform> {
 	gl_pipeline: Rc<gl::Pipeline<Vertex, Uniform>>,
-	uniform: PhantomData<U>,
+	_custom_uniform: PhantomData<U>,
 }
 
 impl<U: CustomUniform> Shader<U> {
@@ -88,7 +88,7 @@ impl<U: CustomUniform> Shader<U> {
 	pub(crate) fn from_gl_pipeline(gl_pipeline: gl::Pipeline<Vertex, Uniform>) -> Self {
 		return Self {
 			gl_pipeline: Rc::new(gl_pipeline),
-			uniform: PhantomData,
+			_custom_uniform: PhantomData,
 		};
 	}
 

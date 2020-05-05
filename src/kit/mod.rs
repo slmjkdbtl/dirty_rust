@@ -7,5 +7,6 @@ pub mod prof;
 pub mod sprite;
 pub mod particle;
 pub mod textedit;
+pub mod pathfind;
 pub mod ui;
 
