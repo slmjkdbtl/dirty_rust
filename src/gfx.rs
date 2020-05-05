@@ -150,13 +150,16 @@ impl Ctx {
 			.map(|(n, v)| (n, v.into_uniform()))
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
+		let prev_pipeline = self.cur_pipeline.clone();
+		let prev_uniform = self.cur_custom_uniform.clone();
+
 		self.flush();
 		self.cur_pipeline = gl::Pipeline::clone(&shader.gl_pipeline());
 		self.cur_custom_uniform = Some(uniforms);
 		f(self)?;
 		self.flush();
-		self.cur_pipeline = self.default_pipeline.clone();
-		self.cur_custom_uniform = None;
+		self.cur_pipeline = prev_pipeline;
+		self.cur_custom_uniform = prev_uniform;
 
 		return Ok(());
 
