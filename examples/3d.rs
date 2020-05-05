@@ -1,5 +1,7 @@
 // wengwengweng
 
+#![feature(clamp)]
+
 use dirty::*;
 use math::*;
 use geom::*;
@@ -129,13 +131,7 @@ impl State for Game {
 					rx += delta.x * self.eye_speed * 0.0001;
 					ry -= delta.y * self.eye_speed * 0.0001;
 
-					if ry > dead {
-						ry = dead;
-					}
-
-					if ry < -dead {
-						ry = -dead;
-					}
+					ry = ry.clamp(-dead, dead);
 
 					self.cam.set_angle(rx, ry);
 
@@ -188,19 +184,19 @@ impl State for Game {
 		let dt = ctx.dt();
 
 		if ctx.key_down(Key::W) {
-			self.cam.pos += self.cam.dir * dt * self.move_speed;
+			self.cam.pos += self.cam.front() * dt * self.move_speed;
 		}
 
 		if ctx.key_down(Key::S) {
-			self.cam.pos -= self.cam.dir * dt * self.move_speed;
+			self.cam.pos += self.cam.back() * dt * self.move_speed;
 		}
 
 		if ctx.key_down(Key::A) {
-			self.cam.pos -= self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
+			self.cam.pos += self.cam.left() * dt * self.move_speed;
 		}
 
 		if ctx.key_down(Key::D) {
-			self.cam.pos += self.cam.dir.cross(vec3!(0, 1, 0)).unit() * dt * self.move_speed;
+			self.cam.pos += self.cam.right() * dt * self.move_speed;
 		}
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
@@ -240,9 +236,9 @@ impl State for Game {
 
 					let ground = Plane::new(vec3!(0, 1, 0), 0.0);
 
-	// 				if let Some(pt) = kit::geom::ray_plane(mray, ground) {
-	// 					ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
-	// 				}
+// 					if let Some(pt) = kit::geom::ray_plane(mray, ground) {
+// 						ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
+// 					}
 
 					ctx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
 

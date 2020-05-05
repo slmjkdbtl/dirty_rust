@@ -117,7 +117,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		}
 
-		let mut ctx_builder = glutin::ContextBuilder::new()
+		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
 			.with_gl(GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
 			;
@@ -131,7 +131,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		};
 
 		let gl = gl::Device::from_loader(|s| {
-			windowed_ctx.get_proc_address(s) as *const _
+			return windowed_ctx.get_proc_address(s) as *const _;
 		});
 
 		(windowed_ctx, event_loop, gl)
@@ -140,14 +140,22 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	gl.enable(gl::Capability::Blend);
 	gl.enable(gl::Capability::DepthTest);
-// 	gl.enable(gl::Capability::CullFace);
-// 	gl.cull_face(gl::Face::Back);
-// 	gl.front_face(gl::CullMode::CounterClockwise);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
 	gl.clear_color(0.0, 0.0, 0.0, 0.0);
 
-	let cam = gfx::OrthoCam::new(conf.width as f32, conf.height as f32, gfx::DEFAULT_NEAR, gfx::DEFAULT_FAR);
+	if conf.cull_face {
+		gl.enable(gl::Capability::CullFace);
+		gl.cull_face(gl::Face::Back);
+		gl.front_face(gl::CullMode::CounterClockwise);
+	}
+
+	let cam = gfx::OrthoCam {
+		width: conf.width as f32,
+		height: conf.height as f32,
+		near: gfx::DEFAULT_NEAR,
+		far: gfx::DEFAULT_FAR,
+	};
 
 	use res::shader::*;
 	use res::font::*;
@@ -156,7 +164,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let frag_src = TEMPLATE_FRAG.replace("###REPLACE###", DEFAULT_FRAG);
 
 	let pipeline = gl::Pipeline::new(&gl, &vert_src, &frag_src)?;
-
 	let pipeline_cmap = gl::Pipeline::new(&gl, CUBEMAP_VERT, CUBEMAP_FRAG)?;
 
 	let font_data = conf.default_font

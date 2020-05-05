@@ -12,9 +12,9 @@ pub trait Camera {
 		return self.pt_to_ray(ctx, ctx.mouse_pos());
 	}
 	fn to_screen(&self, ctx: &Ctx, pt: Vec3) -> Vec2 {
-		let pp = self.proj() * self.view() * vec4!(pt.x, pt.y, pt.z, 1.0);
-		let pp = pp / pp.w;
-		return ctx.clip_to_screen(pp.xy());
+		let cp = self.proj() * self.view() * vec4!(pt.x, pt.y, pt.z, 1.0);
+		let cp = cp.xy() / cp.w;
+		return ctx.clip_to_screen(cp);
 	}
 }
 
@@ -29,23 +29,6 @@ pub struct PerspectiveCam {
 }
 
 impl PerspectiveCam {
-
-	pub fn new(fov: f32, aspect: f32, near: f32, far: f32, pos: Vec3, yaw: f32, pitch: f32) -> Self {
-
-		let mut c = Self {
-			pos: pos,
-			dir: vec3!(),
-			fov: fov,
-			aspect: aspect,
-			near: near,
-			far: far,
-		};
-
-		c.set_angle(yaw, pitch);
-
-		return c;
-
-	}
 
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
@@ -67,6 +50,22 @@ impl PerspectiveCam {
 
 	pub fn pitch(&self) -> f32 {
 		return self.dir.y.asin();
+	}
+
+	pub fn front(&self) -> Vec3 {
+		return self.dir;
+	}
+
+	pub fn back(&self) -> Vec3 {
+		return -self.dir;
+	}
+
+	pub fn left(&self) -> Vec3 {
+		return -self.dir.cross(vec3!(0, 1, 0)).unit();
+	}
+
+	pub fn right(&self) -> Vec3 {
+		return self.dir.cross(vec3!(0, 1, 0)).unit();
 	}
 
 }
@@ -128,21 +127,6 @@ pub struct OrthoCam {
 	pub far: f32,
 }
 
-impl OrthoCam {
-
-	pub fn new(width: f32, height: f32, near: f32, far: f32) -> Self {
-
-		return Self {
-			width: width,
-			height: height,
-			near: near,
-			far: far,
-		};
-
-	}
-
-}
-
 impl Camera for OrthoCam {
 
 	fn proj(&self) -> Mat4 {
@@ -195,19 +179,6 @@ pub struct ObliqueCam {
 }
 
 impl ObliqueCam {
-
-	pub fn new(angle: f32, z_scale: f32, width: f32, height: f32, near: f32, far: f32) -> Self {
-
-		return Self {
-			width: width,
-			height: height,
-			near: near,
-			far: far,
-			angle: angle,
-			z_scale: z_scale,
-		};
-
-	}
 
 	fn ortho(&self) -> Mat4 {
 

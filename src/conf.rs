@@ -1,7 +1,6 @@
 // wengwengweng
 
 use crate::*;
-use super::*;
 
 #[derive(Clone, Debug)]
 pub struct Conf {
@@ -17,6 +16,7 @@ pub struct Conf {
 	pub vsync: bool,
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
+	pub cull_face: bool,
 	pub fps_cap: Option<u16>,
 	pub texture_filter: gfx::FilterMode,
 	pub default_font: Option<gfx::BitmapFontData>,
@@ -49,6 +49,7 @@ impl Default for Conf {
 			borderless: false,
 			transparent: false,
 			vsync: true,
+			cull_face: false,
 			cursor_hidden: false,
 			cursor_locked: false,
 			fps_cap: Some(60),
@@ -124,6 +125,11 @@ impl Launcher {
 
 	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
 		self.conf.fps_cap = f;
+		return self;
+	}
+
+	pub fn cull_face(mut self, b: bool) -> Self {
+		self.conf.cull_face = b;
 		return self;
 	}
 

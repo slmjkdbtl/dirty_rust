@@ -16,7 +16,7 @@ pub trait VertexLayout: bytemuck::Pod {
 pub struct VertexBuffer<V: VertexLayout> {
 	ctx: Rc<GLCtx>,
 	id: BufferID,
-	layout: PhantomData<V>,
+	_layout: PhantomData<V>,
 }
 
 impl<V: VertexLayout> VertexBuffer<V> {
@@ -31,7 +31,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 			let buf = Self {
 				ctx: ctx,
 				id: id,
-				layout: PhantomData,
+				_layout: PhantomData,
 			};
 
 			buf.bind();

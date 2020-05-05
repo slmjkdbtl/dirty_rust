@@ -1,7 +1,5 @@
 // wengwengweng
 
-use std::marker::PhantomData;
-
 use super::*;
 use crate::Result;
 
@@ -10,7 +8,7 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	count: usize,
-	uniform_layout: PhantomData<U>,
+	_uniform_layout: PhantomData<U>,
 }
 
 impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
@@ -24,7 +22,7 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 			vbuf: vbuf,
 			ibuf: ibuf,
 			count: indices.len(),
-			uniform_layout: PhantomData,
+			_uniform_layout: PhantomData,
 		});
 
 	}

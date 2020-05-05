@@ -227,47 +227,6 @@ impl Ctx {
 
 	}
 
-	pub fn draw_masked_2(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		let gl = self.gl.clone();
-
-		self.flush();
-		gl.enable(gl::Capability::StencilTest);
-		gl.clear(Surface::Stencil);
-
-		gl.stencil(gl::StencilFunc {
-			cmp: Cmp::Always,
-			rf: 1,
-			mask: 0xff,
-		}, gl::StencilOps {
-			sfail: gl::StencilOp::Keep,
-			dpfail: gl::StencilOp::Keep,
-			dppass: gl::StencilOp::Replace,
-		}, || {
-			return mask(self);
-		})?;
-
-		self.flush();
-
-		gl.stencil(gl::StencilFunc {
-			cmp: Cmp::NotEqual,
-			rf: 1,
-			mask: 0xff,
-		}, gl::StencilOps {
-			sfail: gl::StencilOp::Keep,
-			dpfail: gl::StencilOp::Keep,
-			dppass: gl::StencilOp::Replace,
-		}, || {
-			return draw(self);
-		})?;
-
-		self.flush();
-		gl.disable(gl::Capability::StencilTest);
-
-		return Ok(());
-
-	}
-
 	pub fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let default = Blend::Alpha.to_gl();
@@ -335,12 +294,10 @@ impl Ctx {
 		return p / 0.5 / vec2!(self.width(), self.height());
 	}
 
-	pub fn to_clip(&self, p: Vec3) -> Vec3 {
-		return self.proj * self.view * p;
-	}
-
-	pub fn cam_to_clip(&self, cam: &dyn Camera, p: Vec3) -> Vec3 {
-		return cam.proj() * cam.view() * p;
+	pub fn to_clip(&self, pt: Vec3) -> Vec3 {
+		let cp = self.proj * self.view * vec4!(pt.x, pt.y, pt.z, 1.0);
+		let cp = cp.xyz() / cp.w;
+		return cp;
 	}
 
 	pub fn to_screen(&self, p: Vec3) -> Vec2 {
@@ -375,12 +332,12 @@ impl Ctx {
 
 	pub(crate) fn reset_default_cam(&mut self) {
 
-		self.apply_cam(&OrthoCam::new(
-			self.width() as f32,
-			self.height() as f32,
-			DEFAULT_NEAR,
-			DEFAULT_FAR,
-		));
+		self.apply_cam(&OrthoCam {
+			width: self.width() as f32,
+			height: self.height() as f32,
+			near: DEFAULT_NEAR,
+			far: DEFAULT_FAR,
+		});
 
 	}
 
