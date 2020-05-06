@@ -24,9 +24,6 @@ pub struct Vertex {
 	pub color: Color,
 }
 
-unsafe impl bytemuck::Pod for Vertex {}
-unsafe impl bytemuck::Zeroable for Vertex {}
-
 impl gl::VertexLayout for Vertex {
 
 	const STRIDE: usize = 12;
@@ -46,9 +43,6 @@ impl gl::VertexLayout for Vertex {
 pub struct VertexCubemap {
 	pub pos: Vec3,
 }
-
-unsafe impl bytemuck::Pod for VertexCubemap {}
-unsafe impl bytemuck::Zeroable for VertexCubemap {}
 
 impl gl::VertexLayout for VertexCubemap {
 
