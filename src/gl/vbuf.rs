@@ -7,7 +7,7 @@ use glow::HasContext;
 use super::*;
 use crate::Result;
 
-pub trait VertexLayout: bytemuck::Pod {
+pub trait VertexLayout {
 	const STRIDE: usize;
 	fn attrs() -> VertexAttrGroup;
 }
@@ -78,12 +78,15 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 		unsafe {
 
+			let byte_len = mem::size_of_val(data) / mem::size_of::<u8>();
+			let byte_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, byte_len);
+
 			self.bind();
 
 			self.ctx.buffer_sub_data_u8_slice(
 				glow::ARRAY_BUFFER,
 				(offset * mem::size_of::<f32>()) as i32,
-				bytemuck::cast_slice(data),
+				byte_slice,
 			);
 
 			self.unbind();
