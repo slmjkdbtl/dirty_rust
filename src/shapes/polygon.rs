@@ -85,7 +85,7 @@ impl Drawable for Polygon {
 
 		if let Some(color) = self.fill {
 
-			let mut verts = Vec::with_capacity(pts.len() * gfx::Vertex::STRIDE);
+			let mut verts = Vec::with_capacity(pts.len());
 			let mut indices = Vec::with_capacity((pts.len() - 2) * 3);
 
 			for (i, p) in pts.iter().enumerate() {

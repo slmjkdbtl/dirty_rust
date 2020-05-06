@@ -158,7 +158,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 							attr.size,
 							glow::FLOAT,
 							false,
-							(V::STRIDE * mem::size_of::<f32>()) as i32,
+							mem::size_of::<V>() as i32,
 							(attr.offset * mem::size_of::<f32>()) as i32,
 						);
 

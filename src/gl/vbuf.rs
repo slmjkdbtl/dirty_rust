@@ -8,7 +8,6 @@ use super::*;
 use crate::Result;
 
 pub trait VertexLayout {
-	const STRIDE: usize;
 	fn attrs() -> VertexAttrGroup;
 }
 
@@ -85,7 +84,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 			self.ctx.buffer_sub_data_u8_slice(
 				glow::ARRAY_BUFFER,
-				(offset * mem::size_of::<f32>()) as i32,
+				(offset * mem::size_of::<V>()) as i32,
 				byte_slice,
 			);
 
