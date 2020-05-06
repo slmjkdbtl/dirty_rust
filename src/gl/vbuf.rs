@@ -38,7 +38,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 			buf.ctx.buffer_data_size(
 				glow::ARRAY_BUFFER,
-				(count * mem::size_of::<f32>()) as i32,
+				(count * mem::size_of::<V>()) as i32,
 				usage.into(),
 			);
 
@@ -52,7 +52,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	pub fn from(device: &Device, data: &[V]) -> Result<Self> {
 
-		let buf = Self::new(device, data.len() * V::STRIDE, BufferUsage::Static)?;
+		let buf = Self::new(device, data.len(), BufferUsage::Static)?;
 		buf.data(0, data);
 		return Ok(buf);
 

@@ -2,6 +2,72 @@
 
 use super::*;
 
+pub fn uv_quad(cols: usize, rows: usize) -> MeshData {
+
+	let mut verts = vec![];
+	let mut indices = vec![];
+
+	let gw = 1.0 / cols as f32;
+	let gh = 1.0 / rows as f32;
+	let color = rgba!(1);
+	let normal = vec3!(0, 0, 1);
+
+	for i in 0..cols {
+
+		for j in 0..rows {
+
+			let x = gw * i as f32;
+			let y = gh * j as f32;
+
+			let index = i * cols + j;
+
+			let ii = [0, 3, 1, 1, 3, 2]
+				.iter()
+				.map(|i| {
+					return (i + index * 4) as u32;
+				});
+
+			indices.extend(ii);
+
+			verts.push(Vertex {
+				pos: vec3!(x, y + gh, 0) - vec3!(0.5, 0.5, 0),
+				color: color,
+				normal: normal,
+				uv: vec2!(x, y),
+			});
+
+			verts.push(Vertex {
+				pos: vec3!(x + gw, y + gh, 0) - vec3!(0.5, 0.5, 0),
+				color: color,
+				normal: normal,
+				uv: vec2!(x + gw, y),
+			});
+
+			verts.push(Vertex {
+				pos: vec3!(x + gw, y, 0) - vec3!(0.5, 0.5, 0),
+				color: color,
+				normal: normal,
+				uv: vec2!(x + gw, y + gh),
+			});
+
+			verts.push(Vertex {
+				pos: vec3!(x, y, 0) - vec3!(0.5, 0.5, 0),
+				color: color,
+				normal: normal,
+				uv: vec2!(x, y + gh),
+			});
+
+		}
+
+	}
+
+	return MeshData {
+		vertices: verts,
+		indices: indices,
+	};
+
+}
+
 pub fn cube(s: f32) -> MeshData {
 
 	let r = s * 0.5;
