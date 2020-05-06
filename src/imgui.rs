@@ -183,7 +183,7 @@ impl Imgui {
 				.map(|i| *i as u32)
 				.collect::<Vec<u32>>();
 
-			let mut vqueue = Vec::with_capacity(vbuf.len() * gfx::Vertex::STRIDE);
+			let mut vqueue = Vec::with_capacity(vbuf.len());
 
 			for v in vbuf {
 				vqueue.push(gfx::Vertex::from_imgui_vert(*v));

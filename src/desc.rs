@@ -25,9 +25,6 @@ pub struct Vertex {
 }
 
 impl gl::VertexLayout for Vertex {
-
-	const STRIDE: usize = 12;
-
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[
 			("a_pos", 3),
@@ -36,7 +33,6 @@ impl gl::VertexLayout for Vertex {
 			("a_color", 4),
 		];
 	}
-
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -45,8 +41,6 @@ pub struct VertexCubemap {
 }
 
 impl gl::VertexLayout for VertexCubemap {
-
-	const STRIDE: usize = 3;
 
 	fn attrs() -> gl::VertexAttrGroup {
 		return &[

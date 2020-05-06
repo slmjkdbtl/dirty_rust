@@ -5,14 +5,14 @@ pub type VertexAttrGroup = &'static[(&'static str, u8)];
 pub(super) struct VertexAttrIter<'a> {
 	attrs: &'a VertexAttrGroup,
 	cur_offset: usize,
-	cur_index: usize,
+	cur_idx: usize,
 }
 
 pub(super) fn iter_attrs<'a>(attrs: &'a VertexAttrGroup) -> VertexAttrIter<'a> {
 	return VertexAttrIter {
 		attrs: attrs,
 		cur_offset: 0,
-		cur_index: 0,
+		cur_idx: 0,
 	};
 }
 
@@ -22,7 +22,7 @@ impl<'a> Iterator for VertexAttrIter<'a> {
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		if let Some(data) = self.attrs.get(self.cur_index) {
+		if let Some(data) = self.attrs.get(self.cur_idx) {
 
 			let attr = VertexAttr {
 				name: data.0,
@@ -31,7 +31,7 @@ impl<'a> Iterator for VertexAttrIter<'a> {
 			};
 
 			self.cur_offset += data.1 as usize;
-			self.cur_index += 1;
+			self.cur_idx += 1;
 
 			return Some(attr);
 
