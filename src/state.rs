@@ -1,7 +1,6 @@
 // wengwengweng
 
 use crate::*;
-use super::*;
 
 pub trait State: 'static + Sized {
 
