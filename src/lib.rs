@@ -67,6 +67,9 @@ pub mod http;
 #[cfg(feature = "ase")]
 pub mod ase;
 
+#[cfg(feature = "lua")]
+mod lua;
+
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;
 

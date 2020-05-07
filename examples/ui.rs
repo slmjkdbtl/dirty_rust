@@ -39,16 +39,21 @@ impl State for Game {
 
 		let top_left = ctx.coord(gfx::Origin::TopLeft);
 
-		self.ui.frame(ctx, |ui| {
+		self.ui.frame(|ui| {
 
-			ui.panel("yo", top_left + vec2!(24, -24), 240.0, 160.0, |p| {
+			ui.panel(ctx, "yo", top_left + vec2!(64, -64), 240.0, 160.0, |ctx, p| {
 
-				p.text("yo");
-				p.text("sup");
+				p.text(ctx, "text1")?;
+				p.text(ctx, "text2")?;
+				p.input(ctx, "name")?;
 
-			});
+				return Ok(());
 
-		});
+			})?;
+
+			return Ok(());
+
+		})?;
 
 		return Ok(());
 
