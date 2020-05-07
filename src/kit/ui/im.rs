@@ -1,11 +1,10 @@
 // wengwengweng
 
 use std::collections::HashMap;
-use std::any::Any;
 
 use super::*;
 
-pub type ID = usize;
+pub type ID = &'static str;
 
 pub struct UI {
 	panels: HashMap<ID, Panel>,
@@ -37,7 +36,7 @@ impl UI {
 }
 
 pub struct PanelManager<'a> {
-	panels: &'a mut HashMap<ID, Panel>,
+	panels: &'a mut HashMap<&'static str, Panel>,
 	ctx: &'a mut Ctx,
 	theme: &'a Theme,
 }
@@ -46,26 +45,25 @@ impl<'a> PanelManager<'a> {
 
 	pub fn panel(
 		&mut self,
-		id: ID,
-		title: &str,
+		title: &'static str,
 		pos: Vec2,
 		w: f32,
 		h: f32,
 		f: impl FnOnce(&mut WidgetManager),
 	) -> Result<()> {
 
-		let panel = self.panels.entry(id).or_insert(Panel {
+		let panel = self.panels.entry(title).or_insert(Panel {
 			title: String::from(title),
 			pos: pos,
 			width: w,
 			height: h,
-			widgets: hmap![],
 		});
 
 		let ctx = &mut self.ctx;
 		let theme = &self.theme;
 		let bar_height = theme.font_size + theme.padding.y;
 
+		// drawing panel frame
 		ctx.push_t(mat4!().t2(panel.pos), |ctx| {
 
 			ctx.draw(
@@ -94,15 +92,17 @@ impl<'a> PanelManager<'a> {
 
 		})?;
 
-// 		ctx.push_t(mat4!().t2(panel.pos).ty(-bar_height), |ctx| {
-// 			let mut wman = WidgetManager {
-// 				widgets: &mut panel.widgets,
-// 				ctx: ctx,
-// 				theme: &self.theme,
-// 			};
-// 			f(&mut wman);
-// 			return Ok(());
-// 		});
+		let theme = self.theme.clone();
+
+		ctx.push_t(mat4!().t2(panel.pos).ty(-bar_height).t2(theme.padding * vec2!(1, -1)), |ctx| {
+			let mut wman = WidgetManager {
+				ctx: ctx,
+				theme: &theme,
+				cur_y: 0.0,
+			};
+			f(&mut wman);
+			return Ok(());
+		})?;
 
 		return Ok(());
 
@@ -115,109 +115,42 @@ pub struct Panel {
 	title: String,
 	width: f32,
 	height: f32,
-	widgets: HashMap<ID, Box<dyn Widget>>,
 }
 
 pub struct WidgetManager<'a> {
-	widgets: &'a mut HashMap<ID, Box<dyn Widget>>,
 	ctx: &'a mut Ctx,
 	theme: &'a Theme,
-}
-
-pub struct Input {
-	buf: String,
-}
-
-impl Widget for Input {
-}
-
-pub struct Slider<T> {
-	val: T,
-	min: T,
-	max: T,
-}
-
-impl<T: 'static> Widget for Slider<T> {
-}
-
-pub struct Menu {
-	items: HashMap<ID, String>,
-	cur: ID,
-}
-
-impl Widget for Menu {
-	// ...
+	cur_y: f32,
 }
 
 impl<'a> WidgetManager<'a> {
 
-	pub fn add<W: Widget>(&mut self, id: ID, w: W) -> Option<&mut W> {
+	pub fn text(&mut self, s: &str) -> Result<()> {
 
-		let b = self.widgets
-			.entry(id)
-			.or_insert_with(|| box w);
+		let t = Text::new(s);
+		let theme = self.theme.clone();
+		let mut height = 0.0;
 
-		return b.as_mut().as_any_mut().downcast_mut::<W>();
+		self.ctx.push_t(mat4!().ty(-self.cur_y), |ctx| {
+			height = t.draw(ctx, &theme)?;
+			return Ok(());
+		})?;
 
-	}
+		self.cur_y += height + theme.margin;
 
-	pub fn input(&mut self, id: ID) -> &str {
-
-		if let Some(input) = self.add(id, Input {
-			buf: String::new(),
-		}) {
-			return &input.buf;
-		}
-
-		return "";
-
-	}
-
-	pub fn slider<T: PartialEq + Copy + 'static>(&mut self, id: ID, val: T, min: T, max: T) -> T {
-
-		if let Some(slider) = self.add(id, Slider {
-			val: val,
-			min: min,
-			max: max,
-		}) {
-			return slider.val;
-		}
-
-		return val;
-
-	}
-
-	pub fn menu(&mut self, id: ID, f: impl FnOnce(&mut MenuManager)) {
-	}
-
-}
-
-pub struct MenuManager {}
-
-impl MenuManager {
-	pub fn item(&mut self, id: ID, text: &str) -> bool {
-		return false;
-	}
-}
-
-pub trait AsAny {
-	fn as_any(&self) -> &dyn Any;
-	fn as_any_mut(&mut self) -> &mut dyn Any;
-}
-
-impl<T: Any> AsAny for T {
-	fn as_any(&self) -> &dyn Any {
-		self
-	}
-
-	fn as_any_mut(&mut self) -> &mut dyn Any {
-		self
-	}
-}
-
-pub trait Widget: AsAny + 'static {
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 		return Ok(());
+
+	}
+
+	pub fn input(&mut self, prompt: &'static str) -> Result<()> {
+		return Ok(());
+	}
+
+}
+
+pub trait Widget {
+	fn draw(&self, _: &mut Ctx, _: &Theme) -> Result<f32> {
+		return Ok(0.0);
 	}
 }
 
