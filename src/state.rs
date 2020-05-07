@@ -16,7 +16,7 @@ pub trait State: 'static + Sized {
 	}
 
 	#[cfg(feature = "imgui")]
-	fn imgui(&mut self, _: &mut imgui::Ui) -> Result<()> {
+	fn imgui(&mut self, _: &mut Ctx, _: &mut imgui::Ui) -> Result<()> {
 		return Ok(());
 	}
 

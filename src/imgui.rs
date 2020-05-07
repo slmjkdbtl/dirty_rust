@@ -149,7 +149,6 @@ impl Imgui {
 
 	pub fn render(
 		&mut self,
-		ctx: &mut app::Ctx,
 		f: impl FnOnce(&mut imgui_lib::Ui) -> Result<()>,
 	) -> Result<()> {
 
@@ -203,22 +202,6 @@ impl Imgui {
 					custom: None,
 				},
 			)?;
-
-			for cmd in draw_list.commands() {
-				match cmd {
-					DrawCmd::Elements {
-						count,
-						cmd_params: DrawCmdParams {
-							clip_rect: [x, y, z, w],
-							texture_id,
-							idx_offset,
-							..
-						}
-					} => {
-					},
-					_ => {},
-				}
-			}
 
 		}
 

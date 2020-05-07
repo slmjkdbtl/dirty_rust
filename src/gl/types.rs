@@ -113,7 +113,7 @@ bind_enum!(Cmp(u32) {
 	Always => glow::ALWAYS,
 });
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Primitive {
 	Point(f32),
 	Line(f32),

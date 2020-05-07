@@ -51,37 +51,36 @@ impl State for Game {
 		let h = ctx.height();
 
 		for _ in 0..self.count {
-			ctx.push(mat4!()
-				.t2(vec2!(rand(-w, w) as f32 * 0.5, rand(-h, h) as f32 * 0.5))
-			, |ctx| {
-				ctx.draw(&shapes::sprite(&self.tex))?;
-				return Ok(());
-			})?;
+			ctx.draw_t(
+				mat4!()
+					.t2(vec2!(rand(-w, w) as f32 * 0.5, rand(-h, h) as f32 * 0.5))
+					,
+				&shapes::sprite(&self.tex)
+					,
+			)?;
 		}
 
-		ctx.push(mat4!()
-			.s2(vec2!(6))
-		, |ctx| {
-			let fps = ctx.fps();
-			let c = if fps >= 60 {
-				rgba!(0, 1, 0, 1)
-			} else {
-				rgba!(1, 0, 0, 1)
-			};
-			ctx.draw(
-				&shapes::text(&format!("{}", fps))
-					.color(c)
-			)?;
-			return Ok(());
-		})?;
+		let c = if ctx.fps() >= 60 {
+			rgba!(0, 1, 0, 1)
+		} else {
+			rgba!(1, 0, 0, 1)
+		};
 
-		ctx.push(mat4!()
-			.ty(-64.0)
-			.s2(vec2!(1.5))
-		, |ctx| {
-			ctx.draw(&shapes::text(&format!("{} bunnies", self.count)))?;
-			return Ok(());
-		})?;
+		ctx.draw_t(
+			mat4!()
+				.s2(vec2!(6))
+				,
+			&shapes::text(&format!("{}", ctx.fps()))
+				.color(c)
+		)?;
+
+		ctx.draw_t(
+			mat4!()
+				.ty(-64.0)
+				.s2(vec2!(1.5))
+				,
+			&shapes::text(&format!("{} bunnies", self.count)),
+		)?;
 
 		return Ok(());
 

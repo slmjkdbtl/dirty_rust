@@ -19,7 +19,6 @@ use gfx::Primitive;
 export!(raw);
 export!(sprite);
 export!(quad);
-export!(texfill);
 export!(polygon);
 export!(rect);
 export!(line);

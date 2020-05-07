@@ -241,7 +241,7 @@ impl State for Viewer {
 
 			let center = model.center();
 
-			ctx.push(mat4!()
+			ctx.push_t(mat4!()
 				.t2(self.pos)
 				.s3(vec3!(self.scale))
 				.ry(self.rot.x.to_radians())
@@ -277,7 +277,7 @@ impl State for Viewer {
 
 		}
 
-		ctx.push(mat4!()
+		ctx.push_t(mat4!()
 			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
 			.tz(320.0)
 		, |ctx| {
@@ -297,7 +297,7 @@ impl State for Viewer {
 						.align(gfx::Origin::TopLeft)
 				)?;
 
-				ctx.push(mat4!()
+				ctx.push_t(mat4!()
 					.ty(-22.0)
 				, |ctx| {
 
@@ -317,7 +317,7 @@ impl State for Viewer {
 
 		})?;
 
-		ctx.push(mat4!()
+		ctx.push_t(mat4!()
 			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
 			.s2(vec2!(0.8))
 			.tz(320.0)

@@ -167,22 +167,19 @@ impl Drawable for Circle {
 			pts.push(self.center);
 		}
 
-		ctx.push(mat4!()
-			.t2(self.center)
-		, |ctx| {
+		let poly = Polygon {
+			pts: pts,
+			fill: self.fill,
+			stroke: self.stroke.clone(),
+			radius: None,
+		};
 
-			let poly = Polygon {
-				pts: pts,
-				fill: self.fill,
-				stroke: self.stroke.clone(),
-				radius: None,
-			};
-
-			ctx.draw(&poly)?;
-
-			return Ok(());
-
-		})?;
+		ctx.draw_t(
+			mat4!()
+				.t2(self.center)
+				,
+			&poly
+		)?;
 
 		return Ok(());
 
