@@ -66,7 +66,7 @@ impl Ctx {
 		return self.draw_calls_last;
 	}
 
-	pub fn push(&mut self, t: Mat4, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn push_t(&mut self, t: Mat4, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let ot = self.transform;
 
@@ -95,12 +95,12 @@ impl Ctx {
 	}
 
 	pub fn draw_t(&mut self, t: Mat4, shape: &impl Drawable) -> Result<()> {
-		return self.push(t, |ctx| {
+		return self.push_t(t, |ctx| {
 			return ctx.draw(shape);
 		});
 	}
 
-	// TODO: viewport 2x scaled with hidpi(false)
+	// TODO: viewport 2x scaled with no hidpi
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {

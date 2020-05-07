@@ -45,20 +45,24 @@ impl<'a> Drawable for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.push(mat4!()
-			.s2(vec2!(1.0 / ctx.dpi() as f32))
-		, |ctx| {
-			let mut sprite = sprite(&self.canvas.tex())
-				.color(self.color)
-				.flip(gfx::Flip::Y);
-			if let Some(w) = self.width {
-				sprite = sprite.width(w);
-			}
-			if let Some(h) = self.height {
-				sprite = sprite.height(h);
-			}
-			return ctx.draw(&sprite);
-		})?;
+		let mut sprite = sprite(&self.canvas.tex())
+			.color(self.color)
+			.flip(gfx::Flip::Y);
+
+		if let Some(w) = self.width {
+			sprite = sprite.width(w);
+		}
+
+		if let Some(h) = self.height {
+			sprite = sprite.height(h);
+		}
+
+		ctx.draw_t(
+			mat4!()
+				.s2(vec2!(1.0 / ctx.dpi() as f32))
+				,
+			&sprite
+		)?;
 
 		return Ok(());
 

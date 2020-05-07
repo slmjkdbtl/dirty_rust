@@ -521,8 +521,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					ctx.end_frame();
 
 					#[cfg(feature = "imgui")]
-					imgui.render(&mut ctx, |ui| {
-						return s.imgui(ui);
+					imgui.render(|ui| {
+						return s.imgui(&mut ctx, ui);
 					})?;
 
 					ctx.swap_buffers()?;

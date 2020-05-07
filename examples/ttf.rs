@@ -45,7 +45,7 @@ impl State for Game {
 
 		use shapes::*;
 
-		ctx.push(
+		ctx.push_t(
 			mat4!()
 				.s2(vec2!(12))
 				,

@@ -66,7 +66,7 @@ impl<'a> PanelManager<'a> {
 		let theme = &self.theme;
 		let bar_height = theme.font_size + theme.padding.y;
 
-		ctx.push(mat4!().t2(panel.pos), |ctx| {
+		ctx.push_t(mat4!().t2(panel.pos), |ctx| {
 
 			ctx.draw(
 				&shapes::rect(vec2!(0), vec2!(panel.width, -panel.height))
@@ -94,7 +94,7 @@ impl<'a> PanelManager<'a> {
 
 		})?;
 
-// 		ctx.push(mat4!().t2(panel.pos).ty(-bar_height), |ctx| {
+// 		ctx.push_t(mat4!().t2(panel.pos).ty(-bar_height), |ctx| {
 // 			let mut wman = WidgetManager {
 // 				widgets: &mut panel.widgets,
 // 				ctx: ctx,

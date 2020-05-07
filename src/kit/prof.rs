@@ -17,6 +17,19 @@ pub struct Profiler {
 
 impl Profiler {
 
+	pub fn new() -> Self {
+		return Self {
+			events: hmap![],
+		};
+	}
+
+	pub fn event<R, F: FnOnce() -> R>(&mut self, name: &str, f: F) -> R {
+		self.begin(name);
+		let r = f();
+		self.end(name);
+		return r;
+	}
+
 	pub fn begin(&mut self, name: &str) {
 		self.events
 			.insert(String::from(name), EventState::InProgress(Instant::now()));
@@ -39,6 +52,24 @@ impl Profiler {
 		}
 
 		return None;
+
+	}
+
+	pub fn list(&self) -> Vec<(&str, Duration)> {
+
+		let mut list = vec![];
+
+		for (name, state) in &self.events {
+			if let EventState::Completed(time) = state {
+				list.push((name.as_str(), *time));
+			}
+		}
+
+		list.sort_by(|(_, t1), (_, t2)| {
+			return std::cmp::Ord::cmp(t2, t1);
+		});
+
+		return list;
 
 	}
 
