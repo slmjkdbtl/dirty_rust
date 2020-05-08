@@ -155,31 +155,21 @@ impl State for Game {
 
 	}
 
-	fn imgui(&mut self, ui: &mut imgui::Ui) -> Result<()> {
-
-		use imgui::im_str;
+	fn ui(&mut self, ctx: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
 
 		if self.show_ui {
 
-			imgui::Window::new(im_str!("test"))
-				.size([320.0, 240.0], imgui::Condition::FirstUseEver)
-				.build(&ui, || {
+			let top_left = ctx.coord(gfx::Origin::TopLeft);
 
-					if ui.button(im_str!("Look Center"), [0.0, 0.0]) {
-						self.cam.set_dest(vec3!(0));
-					}
+			ui.panel(ctx, "debug", top_left + vec2!(120, -120), 240.0, 320.0, |ctx, p| {
 
-					let mut fov = self.cam.fov.to_degrees();
+				let mut fov = self.cam.fov.to_degrees();
 
-					if ui.drag_float(im_str!("FOV"), &mut fov)
-						.min(45.0)
-						.max(90.0)
-						.build()
-					{
-						self.cam.fov = fov.to_radians();
-					}
+				self.cam.fov = p.slider(ctx, "FOV", fov, 45.0, 90.0)?.to_radians();
 
-				});
+				return Ok(());
+
+			})?;
 
 		}
 

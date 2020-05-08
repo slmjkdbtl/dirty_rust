@@ -98,24 +98,6 @@ impl UI {
 
 	}
 
-	pub fn frame(&mut self, f: impl FnOnce(&mut PanelManager) -> Result<()>) -> Result<()> {
-		let mut pman = PanelManager {
-			panels: &mut self.panels,
-			theme: &self.theme,
-		};
-		f(&mut pman)?;
-		return Ok(());
-	}
-
-}
-
-pub struct PanelManager<'a> {
-	panels: &'a mut HashMap<&'static str, Panel>,
-	theme: &'a Theme,
-}
-
-impl<'a> PanelManager<'a> {
-
 	pub fn panel(
 		&mut self,
 		ctx: &mut Ctx,
