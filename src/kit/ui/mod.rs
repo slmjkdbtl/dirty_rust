@@ -9,4 +9,5 @@ export!(theme);
 export!(tinput);
 export!(text);
 export!(slider);
+export!(button);
 

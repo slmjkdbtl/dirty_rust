@@ -96,31 +96,31 @@ impl Ctx {
 		return self.mouse_pos;
 	}
 
-	pub(crate) fn key_pressed(&self, key: Key) -> bool {
+	pub fn key_pressed(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
 	}
 
-	pub(crate) fn key_released(&self, key: Key) -> bool {
+	pub fn key_released(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Released);
 	}
 
-	pub(crate) fn key_up(&self, key: Key) -> bool {
+	pub fn key_up(&self, key: Key) -> bool {
 		return self.key_states.get(&key) == Some(&ButtonState::Up) || self.key_states.get(&key).is_none();
 	}
 
-	pub(crate) fn mouse_pressed(&self, mouse: Mouse) -> bool {
+	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
 	}
 
-	pub(crate) fn mouse_released(&self, mouse: Mouse) -> bool {
+	pub fn mouse_released(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
 	}
 
-	pub(crate) fn mouse_up(&self, mouse: Mouse) -> bool {
+	pub fn mouse_up(&self, mouse: Mouse) -> bool {
 		return self.mouse_states.get(&mouse) == Some(&ButtonState::Up) || self.mouse_states.get(&mouse).is_none();
 	}
 
-	pub(crate) fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
 		} else {
@@ -128,7 +128,7 @@ impl Ctx {
 		}
 	}
 
-	pub(crate) fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Pressed);
 		} else {
@@ -136,7 +136,7 @@ impl Ctx {
 		}
 	}
 
-	pub(crate) fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
+	pub fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
 		if let Some(states) = self.gamepad_button_states.get(&id) {
 			return states.get(&button) == Some(&ButtonState::Released);
 		} else {

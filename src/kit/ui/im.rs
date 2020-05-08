@@ -166,6 +166,7 @@ impl<'a> PanelManager<'a> {
 		let panel_ctx = PanelCtx {
 			theme: &self.theme,
 			width: width,
+			offset: panel.pos + vec2!(theme.padding.x, -bar_height - theme.padding.y),
 		};
 
 		ctx.push_t(mat4!().t2(panel.pos).ty(-bar_height).t2(theme.padding * vec2!(1, -1)), |ctx| {
@@ -188,6 +189,14 @@ impl<'a> PanelManager<'a> {
 pub struct PanelCtx<'a> {
 	pub theme: &'a Theme,
 	pub width: f32,
+	pub offset: Vec2,
+}
+
+#[derive(Clone)]
+pub struct WidgetCtx<'a> {
+	pub theme: &'a Theme,
+	pub width: f32,
+	pub offset: Vec2,
 }
 
 pub struct Panel {
@@ -206,12 +215,18 @@ pub struct WidgetManager<'a> {
 
 impl<'a> WidgetManager<'a> {
 
-	fn widget_light<W: Widget>(&mut self, ctx: &mut Ctx, w: W) -> Result<()> {
+	fn widget_light<W: Widget>(&mut self, ctx: &mut Ctx, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
 
+		let wctx = WidgetCtx {
+			theme: self.ctx.theme,
+			width: self.ctx.width,
+			offset: self.ctx.offset + vec2!(0, -self.cur_y),
+		};
+
 		ctx.push_t(mat4!().ty(-self.cur_y), |ctx| {
-			height = w.draw(ctx, &self.ctx)?;
+			height = w.draw(ctx, &wctx)?;
 			return Ok(());
 		})?;
 
@@ -223,7 +238,6 @@ impl<'a> WidgetManager<'a> {
 
 	fn widget<O, W: Widget>(&mut self, ctx: &mut Ctx, id: ID, w: W, f: impl FnOnce(&W) -> O) -> Result<O> {
 
-		let pctx = self.ctx.clone();
 		let mut height = 0.0;
 		let val;
 
@@ -235,13 +249,19 @@ impl<'a> WidgetManager<'a> {
 			.downcast_mut::<W>()
 			.ok_or(format!("failed to cast widget types"))?;
 
+		let wctx = WidgetCtx {
+			theme: self.ctx.theme,
+			width: self.ctx.width,
+			offset: self.ctx.offset + vec2!(0, -self.cur_y),
+		};
+
 		ctx.push_t(mat4!().ty(-self.cur_y), |ctx| {
-			height = w.draw(ctx, &pctx)?;
+			height = w.draw(ctx, &wctx)?;
 			return Ok(());
 		})?;
 
 		val = Ok(f(w));
-		self.cur_y += height + pctx.theme.margin;
+		self.cur_y += height + self.ctx.theme.margin;
 
 		return val;
 
@@ -257,9 +277,15 @@ impl<'a> WidgetManager<'a> {
 		});
 	}
 
-	pub fn slider<T: SliderValue>(&mut self, ctx: &mut Ctx, prompt: &'static str, val: T, min: T, max: T) -> Result<T> {
+	pub fn slider(&mut self, ctx: &mut Ctx, prompt: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
 		return self.widget(ctx, prompt, Slider::new(prompt, val, min, max), |i| {
 			return i.value();
+		});
+	}
+
+	pub fn button(&mut self, ctx: &mut Ctx, text: &'static str) -> Result<bool> {
+		return self.widget(ctx, text, Button::new(text), |i| {
+			return i.pressed();
 		});
 	}
 
