@@ -4,26 +4,19 @@
 
 use dirty::*;
 use math::*;
-use kit::ui::*;
 use input::Key;
 
-struct Game {
-	ui: UI,
-}
+struct Game;
 
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
-		return Ok(Self {
-			ui: UI::new(),
-		});
+		return Ok(Self);
 	}
 
 	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-
-		self.ui.event(ctx, &e);
 
 		match e {
 			KeyPress(k) => {
@@ -39,22 +32,18 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn ui(&mut self, ctx: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
 
 		let top_left = ctx.coord(gfx::Origin::TopLeft);
 
-		self.ui.frame(|ui| {
+		ui.panel(ctx, "test", top_left + vec2!(64, -64), 240.0, 320.0, |ctx, p| {
 
-			ui.panel(ctx, "test", top_left + vec2!(64, -64), 240.0, 320.0, |ctx, p| {
-
-				p.text(ctx, "yo")?;
-				p.input(ctx, "name")?;
-				p.slider(ctx, "age", 3.5, 1.0, 10.0)?;
-				p.checkbox(ctx, "dead", false)?;
-
-				return Ok(());
-
-			})?;
+			p.text(ctx, "yo")?;
+			p.input(ctx, "name")?;
+			p.slider(ctx, "age", 3.5, 1.0, 10.0)?;
+			p.sep(ctx)?;
+			p.checkbox(ctx, "dead", false)?;
+			p.button(ctx, "explode")?;
 
 			return Ok(());
 

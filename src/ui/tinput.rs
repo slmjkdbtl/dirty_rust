@@ -67,22 +67,23 @@ impl Widget for Input {
 
 		use geom::*;
 
-		let mut height = 0.0;
+		let mut y = 0.0;
+		let theme = &wctx.theme;
 
 		let ptext = shapes::text(&format!("{}:", self.prompt))
-			.size(wctx.theme.font_size)
-			.color(wctx.theme.title_color)
+			.size(theme.font_size)
+			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(ctx)
 			;
 
-		height += ptext.height() + wctx.theme.margin * 0.8;
+		y += ptext.height() + theme.padding.y;
 
 		ctx.draw(&ptext)?;
 
 		let itext = shapes::text(self.buf.content())
-			.size(wctx.theme.font_size)
-			.color(wctx.theme.border_color)
+			.size(theme.font_size)
+			.color(theme.border_color)
 			.align(gfx::Origin::TopLeft)
 			.format(ctx)
 			;
@@ -92,30 +93,30 @@ impl Widget for Input {
 		let padding = 9.0;
 		let box_height = itext.height() + padding * 2.0;
 
-		let rect = Rect::new(vec2!(0, -height), vec2!(wctx.width, -height - box_height));
+		let rect = Rect::new(vec2!(0, -y), vec2!(wctx.width, -y - box_height));
 		let mpos = ctx.mouse_pos() - wctx.offset;
 
 		self.hovering = col::intersect2d(rect, mpos);
 
 		let c = if self.focused {
-			wctx.theme.bar_color.brighten(0.1)
+			theme.bar_color.brighten(0.1)
 		} else {
-			wctx.theme.bar_color
+			theme.bar_color
 		};
 
 		ctx.draw(
 			&shapes::rect(
-				vec2!(0, -height),
-				vec2!(wctx.width - 4.0, -height - box_height)
+				vec2!(0, -y),
+				vec2!(wctx.width - 4.0, -y - box_height)
 			)
-				.stroke(wctx.theme.border_color)
+				.stroke(theme.border_color)
 				.line_width(2.0)
 				.fill(c)
 		)?;
 
 		ctx.draw_t(
 			mat4!()
-				.t2(vec2!(padding, -height - padding))
+				.t2(vec2!(padding, -y - padding))
 				,
 			&itext
 		)?;
@@ -126,20 +127,20 @@ impl Widget for Input {
 
 				ctx.draw(
 					&shapes::line(
-						cpos + vec2!(padding + 3.0, -height - padding + 3.0),
-						cpos + vec2!(padding + 3.0, -height - padding - itext.height() - 3.0),
+						cpos + vec2!(padding + 2.0, -y - padding + 2.0),
+						cpos + vec2!(padding + 2.0, -y - padding - itext.height() - 2.0),
 					)
 						.width(2.0)
-						.color(wctx.theme.border_color)
+						.color(theme.border_color)
 				)?;
 
 			}
 
 		}
 
-		height += box_height;
+		y += box_height;
 
-		return Ok(height);
+		return Ok(y);
 
 	}
 

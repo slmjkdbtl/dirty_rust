@@ -63,23 +63,23 @@ impl Widget for Slider {
 		use input::Mouse;
 		use geom::*;
 
-		let mut height = 0.0;
+		let mut y = 0.0;
+		let theme = &wctx.theme;
 
 		let ptext = shapes::text(&format!("{}:", self.prompt))
-			.size(wctx.theme.font_size)
-			.color(wctx.theme.title_color)
+			.size(theme.font_size)
+			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(ctx)
 			;
 
-		height += ptext.height() + wctx.theme.margin * 0.8;
+		y += ptext.height() + theme.padding.y;
 
 		ctx.draw(&ptext)?;
 
 		let itext = shapes::text(&format!("{:.2}", self.val))
-			.size(wctx.theme.font_size)
-			.color(wctx.theme.title_color)
-// 			.align(gfx::Origin::TopLeft)
+			.size(theme.font_size)
+			.color(theme.title_color)
 			.format(ctx)
 			;
 
@@ -87,9 +87,12 @@ impl Widget for Slider {
 		let box_height = itext.height() + padding * 2.0;
 		let r = (self.val - self.min) / (self.max - self.min);
 		let handle_width = 24.0;
-		let bpos = vec2!(handle_width * 0.5 + (wctx.width - handle_width - 4.0) * r, -height - box_height * 0.5);
+		let bpos = vec2!(
+			handle_width * 0.5 + (wctx.width - handle_width - 4.0) * r,
+			-y - box_height * 0.5
+		);
 
-		let rect = Rect::new(vec2!(0, -height), vec2!(wctx.width, -height - box_height));
+		let rect = Rect::new(vec2!(0, -y), vec2!(wctx.width, -y - box_height));
 		let mpos = ctx.mouse_pos() - wctx.offset;
 
 		self.hovering = col::intersect2d(rect, mpos);
@@ -106,17 +109,17 @@ impl Widget for Slider {
 		}
 
 		let c = if self.draggin.is_some() {
-			wctx.theme.bar_color.brighten(0.1)
+			theme.bar_color.brighten(0.1)
 		} else {
-			wctx.theme.bar_color
+			theme.bar_color
 		};
 
 		ctx.draw(
 			&shapes::rect(
-				vec2!(0, -height),
-				vec2!(wctx.width - 4.0, -height - box_height)
+				vec2!(0, -y),
+				vec2!(wctx.width - 4.0, -y - box_height)
 			)
-				.stroke(wctx.theme.border_color)
+				.stroke(theme.border_color)
 				.line_width(2.0)
 				.fill(c)
 		)?;
@@ -126,20 +129,19 @@ impl Widget for Slider {
 				bpos - vec2!(handle_width * 0.5, box_height * 0.5),
 				bpos + vec2!(handle_width * 0.5, box_height * 0.5),
 			)
-				.fill(wctx.theme.border_color)
+				.fill(theme.border_color)
 		)?;
 
 		ctx.draw_t(
 			mat4!()
-// 				.t2(vec2!(padding, -height - padding))
-				.t2(vec2!(wctx.width / 2.0, -height - box_height * 0.5))
+				.t2(vec2!(wctx.width / 2.0, -y - box_height * 0.5))
 				,
 			&itext
 		)?;
 
-		height += box_height;
+		y += box_height;
 
-		return Ok(height);
+		return Ok(y);
 
 	}
 
