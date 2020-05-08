@@ -2,19 +2,24 @@
 
 use super::*;
 
-pub struct Text {
-	text: String,
+pub struct Button {
+	text: &'static str,
+	pressed: bool,
 }
 
-impl Text {
-	pub fn new(text: &str) -> Self {
+impl Button {
+	pub fn new(text: &'static str) -> Self {
 		return Self {
-			text: text.to_string(),
+			text: text,
+			pressed: false,
 		};
+	}
+	pub fn pressed(&self) -> bool {
+		return self.pressed;
 	}
 }
 
-impl Widget for Text {
+impl Widget for Button {
 
 	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
 

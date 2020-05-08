@@ -22,24 +22,24 @@ impl Input {
 
 impl Widget for Input {
 
-	fn draw(&self, ctx: &mut Ctx, pctx: &PanelCtx) -> Result<f32> {
+	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
 
 		let mut height = 0.0;
 
 		let ptext = shapes::text(&format!("{}:", self.prompt))
-			.size(pctx.theme.font_size)
-			.color(pctx.theme.title_color)
+			.size(wctx.theme.font_size)
+			.color(wctx.theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(ctx)
 			;
 
-		height += ptext.height() + pctx.theme.margin * 0.8;
+		height += ptext.height() + wctx.theme.margin * 0.8;
 
 		ctx.draw(&ptext)?;
 
 		let itext = shapes::text(self.buf.content())
-			.size(pctx.theme.font_size)
-			.color(pctx.theme.title_color)
+			.size(wctx.theme.font_size)
+			.color(wctx.theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(ctx)
 			;
@@ -50,11 +50,11 @@ impl Widget for Input {
 		ctx.draw(
 			&shapes::rect(
 				vec2!(0, -height),
-				vec2!(pctx.width - 4.0, -height - box_height)
+				vec2!(wctx.width - 4.0, -height - box_height)
 			)
-				.stroke(pctx.theme.border_color)
+				.stroke(wctx.theme.border_color)
 				.line_width(2.0)
-				.fill(pctx.theme.bar_color)
+				.fill(wctx.theme.bar_color)
 		)?;
 
 		height += box_height;

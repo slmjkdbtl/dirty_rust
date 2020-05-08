@@ -19,7 +19,7 @@ impl<T: Any> AsAny for T {
 }
 
 pub trait Widget: AsAny + 'static {
-	fn draw(&self, _: &mut Ctx, _: &PanelCtx) -> Result<f32> {
+	fn draw(&mut self, _: &mut Ctx, _: &WidgetCtx) -> Result<f32> {
 		return Ok(0.0);
 	}
 }
