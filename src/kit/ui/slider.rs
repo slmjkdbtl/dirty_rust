@@ -9,6 +9,7 @@ pub struct Slider {
 	min: f32,
 	max: f32,
 	draggin: Option<f32>,
+	hovering: bool,
 }
 
 impl Slider {
@@ -19,6 +20,7 @@ impl Slider {
 			min: min,
 			max: max,
 			draggin: None,
+			hovering: false,
 		};
 	}
 	pub fn value(&self) -> f32 {
@@ -27,6 +29,34 @@ impl Slider {
 }
 
 impl Widget for Slider {
+
+	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+
+		use input::Event::*;
+		use input::Key;
+		use input::Mouse;
+
+		match e {
+
+			MousePress(m) => {
+				match *m {
+					Mouse::Left if self.hovering => self.draggin = Some(ctx.mouse_pos().x),
+					_ => {},
+				}
+			},
+
+			MouseRelease(m) => {
+				match *m {
+					Mouse::Left => self.draggin = None,
+					_ => {},
+				}
+			},
+
+			_ => {},
+
+		}
+
+	}
 
 	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
 
@@ -61,27 +91,18 @@ impl Widget for Slider {
 
 		let rect = Rect::new(vec2!(0, -height), vec2!(wctx.width, -height - box_height));
 		let mpos = ctx.mouse_pos() - wctx.offset;
-		let intersects = col::intersect2d(rect, mpos);
 
-		if !ctx.mouse_down(Mouse::Left) {
-			self.draggin = None;
-		}
+		self.hovering = col::intersect2d(rect, mpos);
 
 		if let Some(prev_x) = self.draggin {
 
-			let delta = mpos.x - prev_x;
-			let delta_v = delta / wctx.width * (self.max - self.min);
+			let delta_x = ctx.mouse_pos().x - prev_x;
 
-			self.val += delta_v;
+			self.val += (delta_x / wctx.width) * (self.max - self.min);
 			self.val = self.val.clamp(self.min, self.max);
 
-		}
+			self.draggin = Some(ctx.mouse_pos().x)
 
-
-		if ctx.mouse_down(Mouse::Left) {
-			if self.draggin.is_some() || intersects {
-				self.draggin = Some(mpos.x);
-			}
 		}
 
 		let c = if self.draggin.is_some() {
