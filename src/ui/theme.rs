@@ -24,9 +24,9 @@ impl Default for Theme {
 			background_color: rgba!(0, 0.35, 0.35, 1),
 			title_color: rgba!(0.6, 0.78, 0.78, 1),
 			title_color_selected: rgba!(1),
-			padding: vec2!(12),
-			margin: 12.0,
-			font_size: 13.0,
+			padding: vec2!(9),
+			margin: 9.0,
+			font_size: 12.0,
 		};
 	}
 }

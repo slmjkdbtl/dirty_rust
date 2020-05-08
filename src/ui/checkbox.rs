@@ -45,30 +45,28 @@ impl Widget for CheckBox {
 
 		use geom::*;
 
-		let mut height = 0.0;
-		let size = wctx.theme.font_size + 6.0;
-		let padding = 12.0;
+		let theme = &wctx.theme;
+		let size = theme.font_size + 6.0;
+		let sep = 12.0;
 
 		let ptext = shapes::text(&format!("{}", self.prompt))
-			.size(wctx.theme.font_size)
-			.color(wctx.theme.title_color)
+			.size(theme.font_size)
+			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(ctx)
 			;
 
-		height += ptext.height() + wctx.theme.margin * 0.8;
-
-		ctx.draw_t(mat4!().t2(vec2!(size + padding, -3.0)), &ptext)?;
+		ctx.draw_t(mat4!().t2(vec2!(size + sep, -3.0)), &ptext)?;
 
 		let fill = if self.checked {
-			wctx.theme.bar_color
+			theme.bar_color
 		} else {
 			rgba!(0, 0, 0, 0)
 		};
 
 		ctx.draw(
 			&shapes::rect(vec2!(0), vec2!(size, -size))
-				.stroke(wctx.theme.border_color)
+				.stroke(theme.border_color)
 				.fill(fill)
 				.line_width(2.0)
 		)?;
@@ -77,19 +75,19 @@ impl Widget for CheckBox {
 
 			ctx.draw(
 				&shapes::rect(vec2!(4, -4), vec2!(size, -size) + vec2!(-4, 4))
-					.fill(wctx.theme.border_color)
-					.stroke(wctx.theme.border_color)
+					.fill(theme.border_color)
+					.stroke(theme.border_color)
 					.line_width(1.0)
 			)?;
 
 		}
 
-		let rect = Rect::new(vec2!(0), vec2!(size + padding + ptext.width(), -height - 6.0));
+		let rect = Rect::new(vec2!(0), vec2!(size + sep + ptext.width(), -size));
 		let mpos = ctx.mouse_pos() - wctx.offset;
 
 		self.hovering = col::intersect2d(rect, mpos);
 
-		return Ok(height + 6.0);
+		return Ok(size);
 
 	}
 
