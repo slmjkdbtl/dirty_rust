@@ -26,6 +26,7 @@ mod state;
 mod conf;
 
 pub mod gfx;
+pub mod ui;
 pub mod res;
 mod texture;
 mod shader;
@@ -54,9 +55,6 @@ pub mod codec;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-
-#[cfg(feature = "imgui")]
-pub mod imgui;
 
 #[cfg(feature = "synth")]
 pub mod synth;
