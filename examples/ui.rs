@@ -1,5 +1,7 @@
 // wengwengweng
 
+#![feature(box_syntax)]
+
 use dirty::*;
 use math::*;
 use kit::ui::*;
@@ -21,6 +23,8 @@ impl State for Game {
 
 		use input::Event::*;
 
+		self.ui.event(ctx, &e);
+
 		match e {
 			KeyPress(k) => {
 				match *k {
@@ -41,11 +45,11 @@ impl State for Game {
 
 		self.ui.frame(|ui| {
 
-			ui.panel(ctx, "yo", top_left + vec2!(64, -64), 240.0, 160.0, |ctx, p| {
+			ui.panel(ctx, "test", top_left + vec2!(64, -64), 240.0, 320.0, |ctx, p| {
 
-				p.text(ctx, "text1")?;
-				p.text(ctx, "text2")?;
+				p.text(ctx, "yo")?;
 				p.input(ctx, "name")?;
+				p.slider(ctx, "age", 3.5, 1.0, 10.0)?;
 
 				return Ok(());
 

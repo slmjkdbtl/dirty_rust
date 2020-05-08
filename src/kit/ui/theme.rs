@@ -25,7 +25,7 @@ impl Default for Theme {
 			title_color: rgba!(0.6, 0.78, 0.78, 1),
 			title_color_selected: rgba!(1),
 			padding: vec2!(12),
-			margin: 12.0,
+			margin: 16.0,
 			font_size: 13.0,
 		};
 	}

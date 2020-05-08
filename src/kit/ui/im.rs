@@ -9,6 +9,7 @@ pub type ID = &'static str;
 pub struct UI {
 	panels: HashMap<ID, Panel>,
 	theme: Theme,
+	draggin: Option<(ID, Vec2)>,
 }
 
 impl UI {
@@ -17,11 +18,79 @@ impl UI {
 		return Self {
 			panels: hmap![],
 			theme: Theme::default(),
+			draggin: None,
 		};
 	}
 
-	pub fn event(&mut self, e: &input::Event) {
-		// ...
+	pub fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+
+		use input::Event::*;
+		use input::Mouse;
+		use input::Key;
+		use geom::*;
+
+		let mpos = ctx.mouse_pos();
+		let t = &self.theme;
+
+		match e {
+
+
+			MouseMove(_) => {
+				if let Some((id, offset)) = self.draggin {
+					if let Some(panel) = self.panels.get_mut(id) {
+						panel.pos = mpos + offset;
+					}
+				}
+			},
+
+			MousePress(m) => {
+
+				match m {
+
+					Mouse::Left => {
+
+						if self.draggin.is_none() {
+
+							for (id, panel) in &self.panels {
+
+								let bar_height = t.font_size + t.padding.y;
+
+								let bar = Rect::new(
+									panel.pos,
+									panel.pos + vec2!(panel.width, -bar_height),
+								);
+
+								if col::intersect2d(mpos, bar) {
+									self.draggin = Some((id, panel.pos - mpos));
+								}
+
+							}
+
+						}
+
+					},
+
+					_ => {},
+
+				}
+
+			},
+
+			MouseRelease(m) => {
+
+				match m {
+
+					Mouse::Left => self.draggin = None,
+					_ => {},
+
+				}
+
+			},
+
+			_ => {},
+
+		}
+
 	}
 
 	pub fn frame(&mut self, f: impl FnOnce(&mut PanelManager) -> Result<()>) -> Result<()> {
@@ -185,6 +254,12 @@ impl<'a> WidgetManager<'a> {
 	pub fn input(&mut self, ctx: &mut Ctx, prompt: &'static str) -> Result<String> {
 		return self.widget(ctx, prompt, Input::new(prompt), |i| {
 			return i.text();
+		});
+	}
+
+	pub fn slider<T: SliderValue>(&mut self, ctx: &mut Ctx, prompt: &'static str, val: T, min: T, max: T) -> Result<T> {
+		return self.widget(ctx, prompt, Slider::new(prompt, val, min, max), |i| {
+			return i.value();
 		});
 	}
 

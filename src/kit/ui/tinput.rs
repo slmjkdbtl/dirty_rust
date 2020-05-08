@@ -44,14 +44,20 @@ impl Widget for Input {
 			.format(ctx)
 			;
 
+		let padding = 9.0;
+		let box_height = itext.height() + padding * 2.0;
+
 		ctx.draw(
-			&shapes::rect(vec2!(0, -height), vec2!(pctx.width - 4.0, -height - itext.height() - 12.0) + vec2!(6, -6))
+			&shapes::rect(
+				vec2!(0, -height),
+				vec2!(pctx.width - 4.0, -height - box_height)
+			)
 				.stroke(pctx.theme.border_color)
 				.line_width(2.0)
 				.fill(pctx.theme.bar_color)
 		)?;
 
-		height += itext.height() + 12.0 + pctx.theme.margin;
+		height += box_height;
 
 		return Ok(height);
 
