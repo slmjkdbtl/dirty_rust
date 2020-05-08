@@ -32,8 +32,13 @@ impl UI {
 		let mpos = ctx.mouse_pos();
 		let t = &self.theme;
 
-		match e {
+		for p in self.panels.values_mut() {
+			for w in p.widgets.values_mut() {
+				w.event(ctx, e);
+			}
+		}
 
+		match e {
 
 			MouseMove(_) => {
 				if let Some((id, offset)) = self.draggin {
@@ -286,6 +291,12 @@ impl<'a> WidgetManager<'a> {
 	pub fn button(&mut self, ctx: &mut Ctx, text: &'static str) -> Result<bool> {
 		return self.widget(ctx, text, Button::new(text), |i| {
 			return i.pressed();
+		});
+	}
+
+	pub fn checkbox(&mut self, ctx: &mut Ctx, prompt: &'static str, b: bool) -> Result<bool> {
+		return self.widget(ctx, prompt, CheckBox::new(prompt, b), |i| {
+			return i.checked();
 		});
 	}
 

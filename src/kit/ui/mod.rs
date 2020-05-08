@@ -10,4 +10,5 @@ export!(tinput);
 export!(text);
 export!(slider);
 export!(button);
+export!(checkbox);
 
