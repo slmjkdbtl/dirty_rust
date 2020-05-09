@@ -11,6 +11,7 @@ export!(slider);
 export!(button);
 export!(checkbox);
 export!(sep);
+export!(select);
 
 use std::collections::HashMap;
 
@@ -166,7 +167,7 @@ impl UI {
 
 		})?;
 
-		let width = window.width - theme.padding.x * 2.0 - theme.border_thickness * 2.0;
+		let width = window.width - theme.padding.x * 2.0;
 
 		let window_ctx = WindowCtx {
 			theme: &self.theme,
@@ -177,25 +178,13 @@ impl UI {
 		// TODO: overflow: hidden
 		ctx.push_t(mat4!().t2(window_ctx.offset), |ctx| {
 
-			ctx.draw_masked(|ctx| {
+			let mut wman = WidgetManager {
+				widgets: &mut window.widgets,
+				cur_y: 0.0,
+				ctx: window_ctx,
+			};
 
-				ctx.draw(&shapes::rect(vec2!(-theme.border_thickness), vec2!(view_width - theme.padding.x, -view_height)))?;
-
-				return Ok(());
-
-			}, |ctx| {
-
-				let mut wman = WidgetManager {
-					widgets: &mut window.widgets,
-					cur_y: 0.0,
-					ctx: window_ctx,
-				};
-
-				f(ctx, &mut wman)?;
-
-				return Ok(());
-
-			})?;
+			f(ctx, &mut wman)?;
 
 			return Ok(());
 
@@ -237,7 +226,7 @@ pub struct WidgetManager<'a> {
 
 impl<'a> WidgetManager<'a> {
 
-	fn widget_light<W: LightWidget>(&mut self, ctx: &mut Ctx, mut w: W) -> Result<()> {
+	fn widget_light<W: Widget>(&mut self, ctx: &mut Ctx, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
 
@@ -258,6 +247,7 @@ impl<'a> WidgetManager<'a> {
 
 	}
 
+	// TODO: only create widget instance when it's not stored
 	fn widget<O, W: Widget>(&mut self, ctx: &mut Ctx, id: ID, w: W, f: impl FnOnce(&W) -> O) -> Result<O> {
 
 		let mut height = 0.0;
@@ -320,6 +310,12 @@ impl<'a> WidgetManager<'a> {
 
 	pub fn sep(&mut self, ctx: &mut Ctx) -> Result<()> {
 		return self.widget_light(ctx, Sep);
+	}
+
+	pub fn select(&mut self, ctx: &mut Ctx, prompt: &'static str, options: &[&str], i: usize) -> Result<usize> {
+		return self.widget(ctx, prompt, Select::new(prompt, options, i), |i| {
+			return i.selected();
+		});
 	}
 
 	// TODO

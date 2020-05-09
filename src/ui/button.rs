@@ -69,7 +69,7 @@ impl Widget for Button {
 		let bh = ptext.height() + padding * 2.0;
 
 		let bg_color = if self.pressed {
-			theme.bar_color.brighten(0.1)
+			theme.border_color
 		} else {
 			theme.bar_color
 		};

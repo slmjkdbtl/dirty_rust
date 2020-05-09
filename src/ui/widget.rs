@@ -29,9 +29,3 @@ pub trait Widget: AsAny + 'static {
 
 }
 
-pub trait LightWidget {
-	fn draw(&mut self, _: &mut Ctx, _: &WidgetCtx) -> Result<f32> {
-		return Ok(0.0);
-	}
-}
-

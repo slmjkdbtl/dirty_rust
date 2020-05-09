@@ -83,8 +83,7 @@ impl Widget for Slider {
 			.format(ctx)
 			;
 
-		let padding = 9.0;
-		let box_height = itext.height() + padding * 2.0;
+		let box_height = itext.height() + theme.padding.y * 2.0;
 		let r = (self.val - self.min) / (self.max - self.min);
 		let handle_width = 24.0;
 		let bpos = vec2!(

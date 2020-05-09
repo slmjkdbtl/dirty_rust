@@ -14,7 +14,7 @@ impl Text {
 	}
 }
 
-impl LightWidget for Text {
+impl Widget for Text {
 
 	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
 
