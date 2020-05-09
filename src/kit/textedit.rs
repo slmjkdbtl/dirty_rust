@@ -239,7 +239,7 @@ impl Input {
 
 fn get_prev_char(s: &str, c: Col, f: impl Fn(char) -> bool) -> Col {
 
-	if let Some(chunk) = s.get(0..c as usize - 1) {
+	if let Some(chunk) = s.get(0..(c - 1) as usize) {
 		for (i, ch) in chunk
 			.char_indices()
 			.rev()

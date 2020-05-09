@@ -32,6 +32,8 @@ impl Widget for Input {
 		use input::Key;
 		use input::Mouse;
 
+		let kmods = ctx.key_mods();
+
 		match e {
 			MousePress(m) => {
 				match *m {
@@ -51,6 +53,7 @@ impl Widget for Input {
 				match *k {
 					Key::Left => self.buf.move_left(),
 					Key::Right => self.buf.move_right(),
+					Key::Back if kmods.alt => self.buf.del_word(),
 					Key::Back => self.buf.del(),
 					_ => {},
 				}
@@ -114,29 +117,46 @@ impl Widget for Input {
 				.fill(c)
 		)?;
 
-		ctx.draw_t(
-			mat4!()
-				.t2(vec2!(padding, -y - padding))
-				,
-			&itext
-		)?;
+		ctx.draw_masked(|ctx| {
 
-		if self.focused {
+			ctx.draw(
+				&shapes::rect(
+					vec2!(0, -y),
+					vec2!(wctx.width - 4.0, -y - box_height)
+				)
+			)?;
 
-			if let Some(cpos) = cpos {
+			return Ok(());
 
-				ctx.draw(
-					&shapes::line(
-						cpos + vec2!(padding + 2.0, -y - padding + 2.0),
-						cpos + vec2!(padding + 2.0, -y - padding - itext.height() - 2.0),
-					)
-						.width(2.0)
-						.color(theme.border_color)
-				)?;
+		}, |ctx| {
+
+			ctx.draw_t(
+				mat4!()
+					.t2(vec2!(padding, -y - padding))
+					,
+				&itext
+			)?;
+
+			if self.focused {
+
+				if let Some(cpos) = cpos {
+
+					ctx.draw(
+						&shapes::line(
+							cpos + vec2!(padding + 2.0, -y - padding + 2.0),
+							cpos + vec2!(padding + 2.0, -y - padding - itext.height() - 2.0),
+						)
+							.width(2.0)
+							.color(theme.border_color)
+					)?;
+
+				}
 
 			}
 
-		}
+			return Ok(());
+
+		})?;
 
 		y += box_height;
 

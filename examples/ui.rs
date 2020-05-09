@@ -36,7 +36,7 @@ impl State for Game {
 
 		let top_left = ctx.coord(gfx::Origin::TopLeft);
 
-		ui.panel(ctx, "test", top_left + vec2!(64, -64), 240.0, 320.0, |ctx, p| {
+		ui.window(ctx, "test", top_left + vec2!(64, -64), 240.0, 320.0, |ctx, p| {
 
 			p.text(ctx, "yo")?;
 			p.input(ctx, "name")?;
