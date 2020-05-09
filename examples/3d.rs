@@ -161,7 +161,7 @@ impl State for Game {
 
 			let top_left = ctx.coord(gfx::Origin::TopLeft);
 
-			ui.panel(ctx, "debug", top_left + vec2!(120, -120), 240.0, 240.0, |ctx, p| {
+			ui.window(ctx, "debug", top_left + vec2!(120, -120), 240.0, 240.0, |ctx, p| {
 
 				let fov = self.cam.fov.to_degrees();
 
