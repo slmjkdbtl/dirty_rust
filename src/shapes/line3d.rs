@@ -23,7 +23,7 @@ impl Line3D {
 			width: 1.0,
 		};
 	}
-	pub fn from_ray(r: Ray3, d: f32) -> Self {
+	pub fn from_ray(r: geom::Ray3, d: f32) -> Self {
 		return Self {
 			p1: r.origin,
 			p2: r.at(d),

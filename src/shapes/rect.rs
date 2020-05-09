@@ -27,6 +27,9 @@ impl Rect {
 		let p2 = (-pt * 0.5 + vec2!(0.5, 0.5)) * vec2!(w, h);
 		return Self::from_pts(p1, p2);
 	}
+	pub fn from_rect(r: geom::Rect) -> Self {
+		return Self::from_pts(r.min, r.max);
+	}
 	pub fn radius(mut self, r: f32) -> Self {
 		self.radius = Some(r);
 		return self

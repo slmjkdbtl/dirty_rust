@@ -4,7 +4,7 @@ use super::*;
 
 pub struct Sep;
 
-impl LightWidget for Sep {
+impl Widget for Sep {
 
 	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
 
