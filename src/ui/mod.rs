@@ -70,7 +70,7 @@ impl UI {
 							// TODO: windows should be sorted
 							for (id, window) in &self.windows {
 
-								let bar_height = t.font_size + t.padding.y;
+								let bar_height = t.font_size + t.padding;
 
 								let bar = Rect::new(
 									window.pos,
@@ -130,7 +130,7 @@ impl UI {
 		});
 
 		let theme = &self.theme;
-		let bar_height = theme.font_size + theme.padding.y * 2.0;
+		let bar_height = theme.font_size + theme.padding * 2.0;
 		let out_height = window.height + bar_height;
 		let view_width = window.width;
 		let view_height = window.height;
@@ -156,7 +156,7 @@ impl UI {
 
 			// title
 			ctx.draw_t(
-				mat4!().t2(vec2!(theme.padding.x, -theme.padding.y)),
+				mat4!().t2(vec2!(theme.padding, -theme.padding)),
 				&shapes::text(&window.title)
 					.size(theme.font_size)
 					.color(theme.title_color)
@@ -167,12 +167,12 @@ impl UI {
 
 		})?;
 
-		let width = window.width - theme.padding.x * 2.0;
+		let width = window.width - theme.padding * 2.0;
 
 		let window_ctx = WindowCtx {
 			theme: &self.theme,
 			width: width,
-			offset: window.pos + vec2!(theme.padding.x, -bar_height - theme.padding.y),
+			offset: window.pos + vec2!(theme.padding, -bar_height - theme.padding),
 		};
 
 		// TODO: overflow: hidden
@@ -241,7 +241,7 @@ impl<'a> WidgetManager<'a> {
 			return Ok(());
 		})?;
 
-		self.cur_y += height + self.ctx.theme.margin;
+		self.cur_y += height + self.ctx.theme.padding;
 
 		return Ok(());
 
@@ -274,7 +274,7 @@ impl<'a> WidgetManager<'a> {
 			return Ok(());
 		})?;
 
-		self.cur_y += height + self.ctx.theme.margin;
+		self.cur_y += height + self.ctx.theme.padding;
 
 		return val;
 

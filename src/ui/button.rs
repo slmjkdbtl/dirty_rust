@@ -56,7 +56,6 @@ impl Widget for Button {
 		use geom::*;
 
 		let theme = &wctx.theme;
-		let padding = 9.0;
 
 		let ptext = shapes::text(&format!("{}", self.text))
 			.size(theme.font_size)
@@ -65,8 +64,8 @@ impl Widget for Button {
 			.format(ctx)
 			;
 
-		let bw = ptext.width() + padding * 2.0;
-		let bh = ptext.height() + padding * 2.0;
+		let bw = ptext.width() + theme.padding * 2.0;
+		let bh = ptext.height() + theme.padding * 2.0;
 
 		let bg_color = if self.pressed {
 			theme.border_color
@@ -83,7 +82,7 @@ impl Widget for Button {
 
 		ctx.draw_t(
 			mat4!()
-				.t2(vec2!(padding, -padding))
+				.t2(vec2!(theme.padding, -theme.padding))
 				,
 			&ptext
 		)?;

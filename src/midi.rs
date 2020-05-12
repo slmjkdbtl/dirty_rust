@@ -27,25 +27,25 @@ impl Msg {
 			// note off
 			0x80..=0x8f => {
 				if let Some((note, vel)) = Option::zip(second, third) {
-					return Msg::NoteOff(*note as i32, *vel as f32 / 128.0);
+					return Msg::NoteOff(*note as i32, *vel as f32 / 127.0);
 				}
 			},
 			// note on
 			0x90..=0x9f => {
 				if let Some((note, vel)) = Option::zip(second, third) {
-					return Msg::NoteOn(*note as i32, *vel as f32 / 128.0);
+					return Msg::NoteOn(*note as i32, *vel as f32 / 127.0);
 				}
 			},
 			// continuous
 			0xb0..=0xbf => {
 				if let Some((id, val)) = Option::zip(second, third) {
-					return Msg::Control(*id as i32, *val as f32 / 128.0);
+					return Msg::Control(*id as i32, *val as f32 / 127.0);
 				}
 			},
 			// pitch
 			0xe0..=0xef => {
 				if let Some((lsb, msb)) = Option::zip(second, third) {
-					return Msg::Pitch(*lsb as f32 / 128.0, *msb as f32 / 128.0);
+					return Msg::Pitch(*lsb as f32 / 127.0, *msb as f32 / 127.0);
 				}
 			},
 			_ => {},

@@ -56,6 +56,20 @@ impl State for Game {
 
 }
 
+// #[derive(UI)]
+struct Person {
+	name: String,
+	age: f32,
+	dead: bool,
+	gender: Gender,
+}
+
+enum Gender {
+	Male,
+	Femail,
+	Unknown,
+}
+
 fn main() -> Result<()> {
 	return run::<Game>();
 }

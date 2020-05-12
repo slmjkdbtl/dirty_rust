@@ -80,7 +80,7 @@ impl Widget for Input {
 			.format(ctx)
 			;
 
-		y += ptext.height() + theme.padding.y;
+		y += ptext.height() + theme.padding;
 
 		ctx.draw(&ptext)?;
 
@@ -93,7 +93,7 @@ impl Widget for Input {
 
 		let cpos = itext.cursor_pos(self.buf.cursor() as usize);
 
-		let box_height = itext.height() + theme.padding.y * 2.0;
+		let box_height = itext.height() + theme.padding * 2.0;
 
 		let rect = Rect::new(vec2!(0, -y), vec2!(wctx.width, -y - box_height));
 		let mpos = ctx.mouse_pos() - wctx.offset;
@@ -123,7 +123,7 @@ impl Widget for Input {
 
 			ctx.draw_t(
 				mat4!()
-					.t2(vec2!(theme.padding.x, -y - theme.padding.y))
+					.t2(vec2!(theme.padding, -y - theme.padding))
 					,
 				&itext
 			)?;
@@ -134,8 +134,8 @@ impl Widget for Input {
 
 					ctx.draw(
 						&shapes::line(
-							cpos + vec2!(theme.padding.x + 2.0, -y - theme.padding.y + 2.0),
-							cpos + vec2!(theme.padding.x + 2.0, -y - theme.padding.y - itext.height() - 2.0),
+							cpos + vec2!(theme.padding + 2.0, -y - theme.padding + 2.0),
+							cpos + vec2!(theme.padding + 2.0, -y - theme.padding - itext.height() - 2.0),
 						)
 							.width(2.0)
 							.color(theme.border_color)

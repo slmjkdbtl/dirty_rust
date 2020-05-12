@@ -70,7 +70,6 @@ impl Widget for Select {
 
 		use geom::*;
 
-		let mut y = 0.0;
 		let theme = &wctx.theme;
 
 		let ptext = shapes::text(&format!("{}:", self.prompt))
@@ -80,7 +79,7 @@ impl Widget for Select {
 			.format(ctx)
 			;
 
-		ctx.draw_t(mat4!().ty(-theme.padding.y), &ptext)?;
+		ctx.draw_t(mat4!().ty(-theme.padding), &ptext)?;
 
 		let text = self.options.iter().map(|s| {
 			return shapes::text(s)
@@ -99,9 +98,9 @@ impl Widget for Select {
 			}
 		});
 
-		let ox = ptext.width() + theme.padding.x;
-		let bh = ptext.height() + theme.padding.y * 2.0;
-		let bw = max_width + theme.padding.x * 2.0 + bh;
+		let ox = ptext.width() + theme.padding;
+		let bh = ptext.height() + theme.padding * 2.0;
+		let bw = max_width + theme.padding * 2.0 + bh;
 
 		let area = Rect::new(vec2!(ox, 0.0), vec2!(ox + bw, -bh));
 		let mpos = ctx.mouse_pos() - wctx.offset;
@@ -149,14 +148,14 @@ impl Widget for Select {
 					)?;
 				}
 
-				ctx.draw_t(mat4!().t2(vec2!(ox + theme.padding.x, -oy - theme.padding.y)), t)?;
+				ctx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -oy - theme.padding)), t)?;
 
 			}
 
 		}
 
 		if let Some(t) = text.get(self.selected) {
-			ctx.draw_t(mat4!().t2(vec2!(ox + theme.padding.x, -theme.padding.y)), t)?;
+			ctx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -theme.padding)), t)?;
 		}
 
 		ctx.draw(
@@ -165,6 +164,24 @@ impl Widget for Select {
 				vec2!(ox + bw, -bh),
 			)
 				.fill(theme.border_color)
+		)?;
+
+		ctx.draw(
+			&shapes::line(
+				vec2!(ox + bw - bh * 0.7, -bh * 0.4),
+				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
+			)
+				.color(theme.border_color)
+				.width(2.0)
+		)?;
+
+		ctx.draw(
+			&shapes::line(
+				vec2!(ox + bw - bh * 0.3, -bh * 0.4),
+				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
+			)
+				.color(theme.border_color)
+				.width(2.0)
 		)?;
 
 		return Ok(bh);

@@ -110,6 +110,7 @@ impl Framebuffer {
 
 	pub fn free(self) {
 		unsafe {
+			self.tex.free();
 			self.ctx.delete_framebuffer(self.id);
 			self.ctx.delete_renderbuffer(self.rbo);
 		}
