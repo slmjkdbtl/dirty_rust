@@ -479,7 +479,7 @@ impl Model {
 
 	pub fn load_obj(obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<ModelData> {
 
-		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), |_| {
+		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), true, |_| {
 			return mtl
 				.map(|m| tobj::load_mtl_buf(&mut Cursor::new(m)))
 				.unwrap_or(Ok((vec![], hmap![])));

@@ -257,19 +257,21 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			// TODO: extremely slow
 			if let Ok(midi_in) = midir::MidiInput::new("DIRTY") {
 
-				let port_id = midi_in.port_count() - 1;
-				let port_name = midi_in.port_name(port_id).unwrap_or(format!("unknown"));
+				if let Some(port) = midi_in.ports().last() {
 
-				let _conn = midi_in.connect(port_id, &format!("DIRTY ({})", port_name), move |_, msg, buf| {
-					if let Ok(mut buf) = buf.lock() {
-						buf.push(midi::Msg::from(&msg));
-					}
-				}, buf_in).map_err(|_| format!("failed to read midi input"));
+					let port_name = midi_in.port_name(port).unwrap_or(format!("unknown"));
 
-				loop {}
+					let _conn = midi_in.connect(port, &format!("DIRTY ({})", port_name), move |_, msg, buf| {
+						if let Ok(mut buf) = buf.lock() {
+							buf.push(midi::Msg::from(&msg));
+						}
+					}, buf_in).map_err(|_| format!("failed to read midi input"));
+
+					loop {}
+				}
 
 			} else {
-				eprintln!("failed to init midi reader")
+				eprintln!("failed to init midi input")
 			}
 
 		});

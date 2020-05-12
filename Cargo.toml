@@ -22,8 +22,8 @@ default = [
 # 	"lua",
 # 	"ase",
 # 	"http",
-# 	"synth",
-# 	"midi",
+	"synth",
+	"midi",
 # 	"json",
 # 	"bin",
 ]
@@ -73,7 +73,7 @@ clipboard = "0.5"
 fontdue = "0.0"
 gilrs = "0.7"
 image = { version = "0.23", default-features = false, features = [ "png", "jpeg", "tga", "bmp", ] }
-tobj = "1.0"
+tobj = "2.0"
 gltf = "0.15"
 
 # audio
@@ -91,7 +91,7 @@ webpki = { version = "0.21", optional = true }
 webpki-roots = { version = "0.19", optional = true }
 
 # midi
-midir = { version = "0.5", optional = true }
+midir = { version = "0.6", optional = true }
 
 # json
 serde_json = { version = "1.0", optional = true }

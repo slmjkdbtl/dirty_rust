@@ -9,8 +9,7 @@ pub struct Theme {
 	pub border_thickness: f32,
 	pub background_color: Color,
 	pub title_color: Color,
-	pub padding: Vec2,
-	pub margin: f32,
+	pub padding: f32,
 	pub font_size: f32,
 }
 
@@ -22,8 +21,7 @@ impl Default for Theme {
 			border_thickness: 2.0,
 			background_color: rgba!(0, 0.35, 0.35, 0.9),
 			title_color: rgba!(0.6, 0.78, 0.78, 0.9),
-			padding: vec2!(9),
-			margin: 9.0,
+			padding: 9.0,
 			font_size: 12.0,
 		};
 	}

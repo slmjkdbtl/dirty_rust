@@ -73,7 +73,7 @@ impl Widget for Slider {
 			.format(ctx)
 			;
 
-		y += ptext.height() + theme.padding.y;
+		y += ptext.height() + theme.padding;
 
 		ctx.draw(&ptext)?;
 
@@ -83,7 +83,7 @@ impl Widget for Slider {
 			.format(ctx)
 			;
 
-		let box_height = itext.height() + theme.padding.y * 2.0;
+		let box_height = itext.height() + theme.padding * 2.0;
 		let r = (self.val - self.min) / (self.max - self.min);
 		let handle_width = 24.0;
 		let bpos = vec2!(
