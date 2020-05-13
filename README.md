@@ -1,9 +1,9 @@
 ![icon](icon.png)
 
-## DIRTY
-personal toolkit for games and stuff
+# DIRTY
+toolkit for games and stuff
 
-### example
+## example
 here's a minimal window setup:
 
 ```rust
@@ -64,6 +64,6 @@ fn main() -> Result<()> {
 }
 ```
 
-### facts
+## facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
 
