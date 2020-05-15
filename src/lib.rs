@@ -38,6 +38,12 @@ mod model;
 mod desc;
 mod skybox;
 
+#[cfg(web)]
+mod web;
+#[cfg(not(web))]
+mod native;
+
+#[cfg(not(web))]
 pub mod audio;
 pub mod input;
 pub mod window;

@@ -67,7 +67,7 @@ directories = "2.0"
 glob = "0.3"
 
 # app
-glow = { version = "0.4.0", default-features = false, features = [ "stdweb", ] }
+glow = { version = "0.4.0", default-features = false, features = [ "web-sys", ] }
 clipboard = "0.5"
 fontdue = "0.0"
 gilrs = "0.7"
@@ -102,7 +102,8 @@ glutin = "0.24"
 rodio = { version = "0.11", default-features = false, features = [ "vorbis", "mp3", "wav", ] }
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
-stdweb = "0.4"
+wasm-bindgen = "0.2"
+web-sys = "0.3"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "0.7"
