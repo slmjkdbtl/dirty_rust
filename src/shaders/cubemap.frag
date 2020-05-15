@@ -1,5 +1,6 @@
 // wengwengweng
 
+precision mediump float;
 varying vec3 v_uv;
 
 uniform vec4 u_color;

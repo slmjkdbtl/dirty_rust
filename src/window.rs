@@ -3,15 +3,15 @@
 //! Window Operations
 
 use clipboard::ClipboardProvider;
+#[cfg(not(web))]
 use glutin::dpi::*;
-
-pub use glutin::window::CursorIcon;
 
 use crate::*;
 use math::*;
 
 impl Ctx {
 
+	#[cfg(not(web))]
 	pub fn set_fullscreen(&self, b: bool) {
 
 		let window = self.windowed_ctx.window();
@@ -24,15 +24,18 @@ impl Ctx {
 
 	}
 
+	#[cfg(not(web))]
 	pub fn is_fullscreen(&self) -> bool {
 		return self.windowed_ctx.window().fullscreen().is_some();
 	}
 
+	#[cfg(not(web))]
 	pub fn toggle_fullscreen(&mut self) {
 		self.set_fullscreen(!self.is_fullscreen());
 	}
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
+		#[cfg(not(web))]
 		self.windowed_ctx.window().set_cursor_visible(!b);
 		self.cursor_hidden = b;
 	}
@@ -49,6 +52,7 @@ impl Ctx {
 
 		self.cursor_locked = b;
 
+		#[cfg(not(web))]
 		self.windowed_ctx
 			.window()
 			.set_cursor_grab(b)
@@ -67,10 +71,12 @@ impl Ctx {
 	}
 
 	pub fn minimize(&self) {
+		#[cfg(not(web))]
 		self.windowed_ctx.window().set_minimized(true);
 	}
 
-	pub fn set_cursor(&self, c: CursorIcon) {
+	#[cfg(not(web))]
+	pub fn set_cursor(&self, c: glutin::window::CursorIcon) {
 		self.windowed_ctx.window().set_cursor_icon(c);
 	}
 
@@ -78,6 +84,7 @@ impl Ctx {
 
 		self.title = t.to_owned();
 
+		#[cfg(not(web))]
 		self.windowed_ctx.window().set_title(t);
 
 	}
@@ -86,8 +93,14 @@ impl Ctx {
 		return &self.title;
 	}
 
+	#[cfg(not(web))]
 	pub fn dpi(&self) -> f32 {
 		return self.windowed_ctx.window().scale_factor() as f32;
+	}
+
+	#[cfg(web)]
+	pub fn dpi(&self) -> f32 {
+		return 1.0;
 	}
 
 	pub fn width(&self) -> i32 {
@@ -98,6 +111,7 @@ impl Ctx {
 		return self.height;
 	}
 
+	#[cfg(not(web))]
 	pub fn set_mouse_pos(&mut self, mpos: Vec2) -> Result<()> {
 
 		let (w, h) = (self.width as f32, self.height as f32);
@@ -131,6 +145,7 @@ impl Ctx {
 	}
 
 	pub(crate) fn swap_buffers(&self) -> Result<()> {
+		#[cfg(not(web))]
 		self.windowed_ctx
 			.swap_buffers()
 			.map_err(|_| format!("failed to swap buffer"))?;
@@ -139,6 +154,7 @@ impl Ctx {
 
 }
 
+#[cfg(not(web))]
 impl From<glutin::event::MouseScrollDelta> for Vec2 {
 	fn from(delta: glutin::event::MouseScrollDelta) -> Self {
 		use glutin::event::MouseScrollDelta;
@@ -153,6 +169,7 @@ impl From<glutin::event::MouseScrollDelta> for Vec2 {
 	}
 }
 
+#[cfg(not(web))]
 impl From<Vec2> for LogicalPosition<f64> {
 	fn from(pos: Vec2) -> Self {
 		return Self {
@@ -162,6 +179,7 @@ impl From<Vec2> for LogicalPosition<f64> {
 	}
 }
 
+#[cfg(not(web))]
 impl From<LogicalPosition<f64>> for Vec2 {
 	fn from(pos: LogicalPosition<f64>) -> Self {
 		return Self {
@@ -171,6 +189,7 @@ impl From<LogicalPosition<f64>> for Vec2 {
 	}
 }
 
+#[cfg(not(web))]
 impl From<PhysicalPosition<f64>> for Vec2 {
 	fn from(pos: PhysicalPosition<f64>) -> Self {
 		return Self {
@@ -180,6 +199,7 @@ impl From<PhysicalPosition<f64>> for Vec2 {
 	}
 }
 
+#[cfg(not(web))]
 impl From<PhysicalPosition<i32>> for Vec2 {
 	fn from(pos: PhysicalPosition<i32>) -> Self {
 		return Self {

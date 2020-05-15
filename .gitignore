@@ -1,7 +1,6 @@
 # wengwengweng
 
 target/
+test/
 Cargo.lock
-**/*.rs.bk
-*.swp
 

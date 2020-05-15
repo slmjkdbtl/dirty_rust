@@ -8,8 +8,11 @@ use std::thread;
 use std::time::Instant;
 use std::time::Duration;
 
+#[cfg(not(web))]
 use glutin::dpi::*;
+#[cfg(not(web))]
 use glutin::GlRequest;
+#[cfg(not(web))]
 use glutin::event_loop::ControlFlow;
 
 use crate::*;
@@ -33,7 +36,7 @@ pub struct Ctx {
 	pub(crate) quit: bool,
 	pub(crate) dt: Duration,
 	pub(crate) time: Duration,
-	pub(crate) fps_counter: FPSCounter,
+	pub(crate) fps_counter: fps::FPSCounter,
 
 	// input
 	pub(crate) key_states: HashMap<Key, ButtonState>,
@@ -52,6 +55,7 @@ pub struct Ctx {
 
 	pub(crate) clipboard_ctx: clipboard::ClipboardContext,
 
+	#[cfg(not(web))]
 	pub(crate) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(crate) gamepad_ctx: gilrs::Gilrs,
 
@@ -83,12 +87,57 @@ pub struct Ctx {
 	pub(crate) transform: Mat4,
 
 	// audio
+	#[cfg(not(web))]
 	pub(crate) audio_device: Option<audio::Device>,
 
 }
 
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
+	#[cfg(web)]
+	let (render_loop, gl) = {
+
+		use wasm_bindgen::JsCast;
+
+		let window = web_sys::window()
+			.ok_or_else(|| format!("no window found"))?;
+
+		let document = window
+			.document()
+			.ok_or_else(|| format!("should have a document on window"))?;
+
+		let body = document
+			.body()
+			.ok_or_else(|| format!("no body found"))?;
+
+		let canvas = document
+			.create_element("canvas")
+			.map_err(|_| format!("failed to create canvas"))?
+			.dyn_into::<web_sys::HtmlCanvasElement>()
+			.map_err(|_| format!("failed to create canvas"))?;
+
+		canvas.set_width(conf.width as u32);
+		canvas.set_height(conf.height as u32);
+
+		let webgl_context = canvas
+			.get_context("webgl")
+			.map_err(|_| format!("failed to fetch webgl context"))?
+			.ok_or_else(|| format!("failed to fetch webgl context"))?
+			.dyn_into::<web_sys::WebGlRenderingContext>()
+			.map_err(|_| format!("failed to fetch webgl context"))?;
+
+		body
+			.append_child(&canvas)
+			.map_err(|_| format!("failed to append canvas"))?;
+
+		let gl = gl::Device::from_webgl_ctx(webgl_context);
+		let render_loop = glow::RenderLoop::from_request_animation_frame();
+
+		(render_loop, gl)
+
+	};
+
+	#[cfg(not(web))]
 	let (windowed_ctx, event_loop, gl) =  {
 
 		let event_loop = glutin::event_loop::EventLoop::new();
@@ -178,7 +227,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		quit: false,
 		dt: Duration::from_secs(0),
 		time: Duration::from_secs(0),
-		fps_counter: FPSCounter::new(),
+		fps_counter: fps::FPSCounter::new(),
 
 		// input
 		key_states: HashMap::new(),
@@ -201,6 +250,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		gamepad_ctx: gilrs::Gilrs::new()
 			.map_err(|_| format!("failed to create gamepad context"))?,
 
+		#[cfg(not(web))]
 		windowed_ctx: windowed_ctx,
 
 		renderer: gl::BatchedMesh::<gfx::Vertex, gfx::Uniform>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
@@ -228,6 +278,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		gl: Rc::new(gl),
 
 		// audio
+		#[cfg(not(web))]
 		audio_device: audio::default_device(),
 
 		conf: conf,
@@ -242,7 +293,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		ctx.set_cursor_locked(true)?;
 	}
 
-	#[cfg(feature = "midi")]
+	#[cfg(all(feature = "midi", not(web)))]
 	let midi_buf = {
 
 		use std::sync::Mutex;
@@ -286,9 +337,23 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	ctx.swap_buffers()?;
 
 	let mut s = S::init(&mut ctx)?;
+	#[cfg(not(web))]
 	let mut last_frame_time = Instant::now();
 	let mut update = false;
 
+	#[cfg(web)]
+	use glow::HasRenderLoop;
+
+	#[cfg(web)]
+	render_loop.run(move |running: &mut bool| {
+		s.update(&mut ctx);
+		ctx.begin_frame();
+		s.draw(&mut ctx);
+		s.ui(&mut ctx, &mut ui);
+		ctx.end_frame();
+	});
+
+	#[cfg(not(web))]
 	event_loop.run(move |e, _, flow| {
 
 		*flow = ControlFlow::Poll;
@@ -661,6 +726,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	});
 
+	return Ok(());
+
 }
 
 impl Ctx {
@@ -699,40 +766,5 @@ impl Launcher {
 	pub fn run<S: State>(self) -> Result<()> {
 		return run_with_conf::<S>(self.conf);
 	}
-}
-
-pub(crate) struct FPSCounter {
-	frames: usize,
-	timer: Duration,
-	fps: u16,
-}
-
-impl FPSCounter {
-
-	fn new() -> Self {
-		return Self {
-			frames: 0,
-			timer: Duration::from_secs(0),
-			fps: 0,
-		}
-	}
-
-	fn tick(&mut self, dt: Duration) {
-
-		self.frames += 1;
-		self.timer += dt;
-
-		if self.timer.as_secs_f32() >= 1.0 {
-			self.fps = self.frames as u16;
-			self.timer = Duration::from_secs(0);
-			self.frames = 0;
-		}
-
-	}
-
-	fn fps(&self) -> u16 {
-		return self.fps;
-	}
-
 }
 

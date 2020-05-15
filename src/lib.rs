@@ -28,6 +28,7 @@ mod conf;
 pub mod gfx;
 pub mod ui;
 pub mod res;
+mod fps;
 mod texture;
 mod shader;
 mod canvas;
@@ -40,8 +41,8 @@ mod skybox;
 
 #[cfg(web)]
 mod web;
-#[cfg(not(web))]
-mod native;
+// #[cfg(not(web))]
+// mod native;
 
 #[cfg(not(web))]
 pub mod audio;
