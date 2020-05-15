@@ -53,7 +53,9 @@ impl State for Game {
 
 }
 
-fn main() -> Result<()> {
-	return run::<Game>();
+fn main() {
+	if let Err(e) = run::<Game>() {
+// 		console_log!("{}", e);
+	}
 }
 

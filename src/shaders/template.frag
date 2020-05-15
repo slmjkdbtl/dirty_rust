@@ -1,5 +1,6 @@
 // wengwengweng
 
+precision mediump float;
 varying vec3 v_pos;
 varying vec2 v_uv;
 varying vec3 v_normal;

@@ -3,6 +3,10 @@
 run example="basic":
 	cargo run --example {{example}}
 
+build-web example="basic":
+	cargo build --example {{example}} --target wasm32-unknown-unknown
+	wasm-bindgen target/wasm32-unknown-unknown/debug/examples/{{example}}.wasm --out-dir test --target web --no-typescript
+
 install:
 	cargo install --force --path .
 
@@ -11,18 +15,6 @@ test:
 
 build:
 	cargo build
-
-build-web:
-	cargo build --target wasm32-unknown-unknown
-
-build-ios:
-	cargo build --target x86_64-apple-ios
-
-build-windows:
-	cargo build --target x86_64-pc-windows-gnu
-
-build-linux:
-	cargo build --target x86_64-unknown-linux-gnu
 
 doc crate="dirty":
 	cargo doc --no-deps --open -p {{crate}}

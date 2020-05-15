@@ -25,9 +25,6 @@ use crate::Result;
 
 pub(self) type GLCtx = glow::Context;
 
-#[cfg(web)]
-use webgl_stdweb::WebGL2RenderingContext;
-
 pub(self) type BufferID = <GLCtx as HasContext>::Buffer;
 pub(self) type ProgramID = <GLCtx as HasContext>::Program;
 pub(self) type TextureID = <GLCtx as HasContext>::Texture;
@@ -50,9 +47,9 @@ impl Device {
 	}
 
 	#[cfg(web)]
-	pub fn from_webgl2_ctx(c: WebGL2RenderingContext) -> Self {
+	pub fn from_webgl_ctx(c: web_sys::WebGlRenderingContext) -> Self {
 		return Self {
-			ctx: Rc::new(GLCtx::from_webgl2_context(c)),
+			ctx: Rc::new(GLCtx::from_webgl1_context(c)),
 		};
 	}
 

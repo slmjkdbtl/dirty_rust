@@ -79,7 +79,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			ctx.link_program(program_id);
 
 			if !ctx.get_program_link_status(program_id) {
-				return Err(format!("glsl error: {}", ctx.get_shader_info_log(program_id).trim()));
+// 				return Err(format!("glsl error: {}", ctx.get_shader_info_log(program_id).trim()));
 			}
 
 			ctx.delete_shader(vert_id);
