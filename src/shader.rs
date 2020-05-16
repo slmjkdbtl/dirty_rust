@@ -110,8 +110,10 @@ impl<U: CustomUniform> Shader<U> {
 
 	pub fn from_vert_frag(ctx: &impl gfx::GfxCtx, vert: &str, frag: &str) -> Result<Self> {
 
-		let vert_src = TEMPLATE_VERT.replace("###REPLACE###", vert);
-		let frag_src = TEMPLATE_FRAG.replace("###REPLACE###", frag);
+		let vert_src = TEMPLATE_VERT.replace("{{user}}", vert);
+		let frag_src = TEMPLATE_FRAG.replace("{{user}}", frag);
+		#[cfg(web)]
+		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
 		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(ctx.device(), &vert_src, &frag_src)?));
 

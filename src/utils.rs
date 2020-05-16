@@ -42,6 +42,19 @@ pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&panic::Location>) + Send 
 }
 
 #[macro_export]
+macro_rules! log {
+	($t:tt) => {
+		log!("{}", $t)
+	};
+	($($t:tt)*) => {
+		#[cfg(web)]
+		web_sys::console::log_1(&format_args!($($t)*).to_string().into());
+		#[cfg(not(web))]
+		println!($($t)*,);
+	};
+}
+
+#[macro_export]
 macro_rules! hmap {
 	($($key:expr => $val:expr),*$(,)?) => {
 		{

@@ -60,7 +60,11 @@ impl State for Game {
 
 }
 
-fn main() -> Result<()> {
-	return run::<Game>();
+fn main() {
+	if let Err(e) = launcher()
+		.title("raw")
+		.run::<Game>() {
+		log!("{}", e);
+	}
 }
 

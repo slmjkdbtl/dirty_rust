@@ -18,7 +18,7 @@ vec4 default_pos() {
 	return u_proj * u_view * u_model * vec4(v_pos, 1.0);
 }
 
-###REPLACE###
+{{user}}
 
 void main() {
 

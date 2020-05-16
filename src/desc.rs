@@ -35,21 +35,6 @@ impl gl::VertexLayout for Vertex {
 	}
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct VertexCubemap {
-	pub pos: Vec3,
-}
-
-impl gl::VertexLayout for VertexCubemap {
-
-	fn attrs() -> gl::VertexAttrGroup {
-		return &[
-			("a_pos", 3),
-		];
-	}
-
-}
-
 #[derive(Clone, PartialEq)]
 pub(crate) struct Uniform {
 	pub proj: Mat4,
@@ -83,30 +68,6 @@ impl gl::UniformLayout for Uniform {
 
 	fn textures(&self) -> Vec<&dyn gl::Texture> {
 		return vec![self.tex.gl_tex()];
-	}
-
-}
-
-#[derive(Clone, PartialEq)]
-pub(crate) struct UniformCubemap {
-	pub proj: Mat4,
-	pub view: Mat4,
-	pub color: Color,
-	pub tex: gl::CubemapTexture,
-}
-
-impl gl::UniformLayout for UniformCubemap {
-
-	fn values(&self) -> UniformValues {
-		return hmap![
-			"u_proj" => &self.proj,
-			"u_view" => &self.view,
-			"u_color" => &self.color,
-		];
-	}
-
-	fn textures(&self) -> Vec<&dyn gl::Texture> {
-		return vec![&self.tex];
 	}
 
 }
@@ -317,50 +278,6 @@ impl gl::Shape for CubeShape {
 			16, 18, 19,
 			20, 21, 22,
 			20, 22, 23,
-		];
-	}
-
-}
-
-pub(crate) struct CubemapShape;
-
-impl gl::Shape for CubemapShape {
-
-	type Vertex = VertexCubemap;
-	const COUNT: usize = 8;
-
-	fn vertices(&self) -> Vec<Self::Vertex> {
-
-		let pos = [
-			vec3!(-1, -1, 1),
-			vec3!(-1, 1, 1),
-			vec3!(1, 1, 1),
-			vec3!(1, -1, 1),
-			vec3!(-1, -1, -1),
-			vec3!(-1, 1, -1),
-			vec3!(1, 1, -1),
-			vec3!(1, -1, -1),
-		];
-
-		return pos
-			.iter()
-			.map(|p| {
-				return VertexCubemap {
-					pos: *p,
-				};
-			})
-			.collect();
-
-	}
-
-	fn indices() -> &'static [u32] {
-		return &[
-			0, 2, 1, 0, 3, 2,
-			4, 3, 0, 4, 7, 3,
-			4, 1, 5, 4, 0, 1,
-			3, 6, 2, 3, 7, 6,
-			1, 6, 5, 1, 2, 6,
-			7, 5, 6, 7, 4, 5,
 		];
 	}
 

@@ -1,6 +1,5 @@
 // wengwengweng
 
-precision mediump float;
 varying vec3 v_pos;
 varying vec2 v_uv;
 varying vec3 v_normal;
@@ -13,7 +12,7 @@ vec4 default_color() {
 	return v_color * u_color * texture2D(u_tex, v_uv);
 }
 
-###REPLACE###
+{{user}}
 
 void main() {
 

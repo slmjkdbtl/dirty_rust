@@ -58,6 +58,12 @@ pub struct Ctx {
 	#[cfg(not(web))]
 	pub(crate) windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pub(crate) gamepad_ctx: gilrs::Gilrs,
+	#[cfg(web)]
+	pub(crate) canvas: web_sys::HtmlCanvasElement,
+	#[cfg(web)]
+	pub(crate) window: web_sys::Window,
+	#[cfg(web)]
+	pub(crate) document: web_sys::Document,
 
 	// gfx
 	pub(crate) gl: Rc<gl::Device>,
@@ -67,15 +73,12 @@ pub struct Ctx {
 
 	pub(crate) renderer: gl::BatchedMesh<gfx::Vertex, gfx::Uniform>,
 	pub(crate) cube_renderer: gl::Mesh<gfx::Vertex, gfx::Uniform>,
-	pub(crate) cubemap_renderer: gl::Mesh<gfx::VertexCubemap, gfx::UniformCubemap>,
 
 	pub(crate) empty_tex: gfx::Texture,
 
 	pub(crate) default_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
 	pub(crate) cur_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
 	pub(crate) cur_custom_uniform: Option<Vec<(&'static str, gl::UniformValue)>>,
-
-	pub(crate) pipeline_cubemap: gl::Pipeline<gfx::VertexCubemap, gfx::UniformCubemap>,
 
 	pub(crate) cur_canvas: Option<gfx::Canvas>,
 
@@ -95,7 +98,7 @@ pub struct Ctx {
 fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(web)]
-	let (render_loop, gl) = {
+	let (canvas, window, document, render_loop, gl) = {
 
 		use wasm_bindgen::JsCast;
 
@@ -105,6 +108,8 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		let document = window
 			.document()
 			.ok_or_else(|| format!("should have a document on window"))?;
+
+		document.set_title(&conf.title);
 
 		let body = document
 			.body()
@@ -133,7 +138,13 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		let gl = gl::Device::from_webgl_ctx(webgl_context);
 		let render_loop = glow::RenderLoop::from_request_animation_frame();
 
-		(render_loop, gl)
+		(
+			canvas,
+			window,
+			document,
+			render_loop,
+			gl,
+		)
 
 	};
 
@@ -209,11 +220,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	use res::shader::*;
 	use res::font::*;
 
-	let vert_src = TEMPLATE_VERT.replace("###REPLACE###", DEFAULT_VERT);
-	let frag_src = TEMPLATE_FRAG.replace("###REPLACE###", DEFAULT_FRAG);
-
+	let vert_src = TEMPLATE_VERT.replace("{{user}}", DEFAULT_VERT);
+	let frag_src = TEMPLATE_FRAG.replace("{{user}}", DEFAULT_FRAG);
+	#[cfg(web)]
+	let frag_src = format!("{}{}", "precision mediump float;", &frag_src);
 	let pipeline = gl::Pipeline::new(&gl, &vert_src, &frag_src)?;
-	let pipeline_cmap = gl::Pipeline::new(&gl, CUBEMAP_VERT, CUBEMAP_FRAG)?;
 
 	let font_data = conf.default_font
 		.take()
@@ -253,9 +264,15 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		#[cfg(not(web))]
 		windowed_ctx: windowed_ctx,
 
+		#[cfg(web)]
+		canvas: canvas,
+		#[cfg(web)]
+		window: window,
+		#[cfg(web)]
+		document: document,
+
 		renderer: gl::BatchedMesh::<gfx::Vertex, gfx::Uniform>::new(&gl, gfx::DRAW_COUNT, gfx::DRAW_COUNT)?,
 		cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
-		cubemap_renderer: gl::Mesh::from_shape(&gl, gfx::CubemapShape)?,
 
 		proj: cam.proj(),
 		view: cam.view(),
@@ -265,8 +282,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		default_pipeline: pipeline.clone(),
 		cur_pipeline: pipeline,
 		cur_custom_uniform: None,
-
-		pipeline_cubemap: pipeline_cmap,
 
 		cur_canvas: None,
 

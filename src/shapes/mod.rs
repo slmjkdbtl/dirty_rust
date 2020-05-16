@@ -28,7 +28,6 @@ export!(canvas);
 export!(gradient);
 export!(text);
 export!(model);
-export!(skybox);
 export!(cube);
 export!(line3d);
 export!(rect3d);
