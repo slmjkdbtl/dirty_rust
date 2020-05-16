@@ -62,7 +62,7 @@ impl Texture2D {
 			tex.unbind();
 
 			tex.set_filter(FilterMode::Nearest);
-			tex.set_wrap(WrapMode::Repeat);
+			tex.set_wrap(WrapMode::ClampToEdge);
 
 			return Ok(tex);
 
@@ -288,7 +288,7 @@ impl CubemapTexture {
 			tex.unbind();
 
 			tex.set_filter(FilterMode::Nearest);
-			tex.set_wrap(WrapMode::Repeat);
+			tex.set_wrap(WrapMode::ClampToEdge);
 
 			return Ok(tex);
 

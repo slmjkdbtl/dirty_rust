@@ -70,7 +70,11 @@ enum Gender {
 	Unknown,
 }
 
-fn main() -> Result<()> {
-	return run::<Game>();
+fn main() {
+	if let Err(e) = launcher()
+		.title("ui")
+		.run::<Game>() {
+		log!("{}", e);
+	}
 }
 
