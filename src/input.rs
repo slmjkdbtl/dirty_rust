@@ -222,7 +222,6 @@ macro_rules! gen_buttons {
 				};
 			}
 
-			// TODO
 			#[allow(dead_code)]
 			#[cfg(not(desktop))]
 			pub fn from_extern(s: $xtype) -> Option<Self> {
@@ -256,36 +255,34 @@ macro_rules! gen_buttons {
 
 #[cfg(not(web))]
 use glutin::event::VirtualKeyCode as ExternKey;
+#[cfg(web)]
+type ExternKey = ();
+
 #[cfg(not(web))]
 use glutin::event::MouseButton as ExternMouse;
+#[cfg(web)]
+type ExternMouse = ();
+
 use gilrs::ev::Button as ExternGamepadButton;
 
-#[cfg(web)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Key {
-	Esc,
-	F,
-	Left,
-	Right,
-	Back,
-	RAlt,
-	LAlt,
-	RMeta,
-	LMeta,
-	RCtrl,
-	LCtrl,
-	RShift,
-	LShift,
-}
+// #[cfg(web)]
+// #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+// pub enum Key {
+// 	Esc,
+// 	F,
+// 	Left,
+// 	Right,
+// 	Back,
+// 	RAlt,
+// 	LAlt,
+// 	RMeta,
+// 	LMeta,
+// 	RCtrl,
+// 	LCtrl,
+// 	RShift,
+// 	LShift,
+// }
 
-#[cfg(web)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Mouse {
-	Left,
-	Right,
-}
-
-#[cfg(not(web))]
 gen_buttons!(Key(ExternKey), {
 	Q("q") => Q,
 	W("w") => W,
@@ -363,7 +360,6 @@ gen_buttons!(Key(ExternKey), {
 	RCtrl("rctrl") => RControl,
 });
 
-#[cfg(not(web))]
 gen_buttons!(Mouse(ExternMouse), {
 	Left("left") => Left,
 	Right("right") => Right,

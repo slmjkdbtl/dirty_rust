@@ -41,7 +41,3 @@ loc:
 checkdep:
 	cargo outdated --root-deps-only
 
-depgraph:
-	cargo deps --all-deps | dot -Tpng > $TMPDIR/graph.png; \
-		open $TMPDIR/graph.png
-

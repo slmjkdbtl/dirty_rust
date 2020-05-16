@@ -16,7 +16,7 @@ pub struct Response {
 
 impl Response {
 
-	pub(super) fn parse(buf: &[u8]) -> Result<Self> {
+	pub(super) fn from(buf: &[u8]) -> Result<Self> {
 
 		let mut pheaders = [httparse::EMPTY_HEADER; 128];
 		let mut res = httparse::Response::new(&mut pheaders);
