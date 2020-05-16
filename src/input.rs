@@ -264,6 +264,7 @@ use gilrs::ev::Button as ExternGamepadButton;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Key {
 	Esc,
+	F,
 	Left,
 	Right,
 	Back,

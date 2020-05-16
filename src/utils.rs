@@ -55,6 +55,19 @@ macro_rules! log {
 }
 
 #[macro_export]
+macro_rules! loge {
+	($t:tt) => {
+		loge!("{}", $t)
+	};
+	($($t:tt)*) => {
+		#[cfg(web)]
+		web_sys::console::error_1(&format_args!($($t)*).to_string().into());
+		#[cfg(not(web))]
+		eprintln!($($t)*,);
+	};
+}
+
+#[macro_export]
 macro_rules! hmap {
 	($($key:expr => $val:expr),*$(,)?) => {
 		{
