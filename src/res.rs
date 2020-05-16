@@ -7,8 +7,6 @@ pub mod shader {
 	pub const DEFAULT_VERT: &str = include_str!("shaders/default.vert");
 	pub const TEMPLATE_FRAG: &str = include_str!("shaders/template.frag");
 	pub const DEFAULT_FRAG: &str = include_str!("shaders/default.frag");
-	pub const CUBEMAP_VERT: &str = include_str!("shaders/cubemap.vert");
-	pub const CUBEMAP_FRAG: &str = include_str!("shaders/cubemap.frag");
 }
 
 pub mod font {

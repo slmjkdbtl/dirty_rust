@@ -20,7 +20,6 @@ pub use font::*;
 pub use camera::*;
 pub use model::*;
 pub use desc::*;
-pub use skybox::*;
 
 pub(crate) const DRAW_COUNT: usize = 65536;
 pub(crate) const DEFAULT_NEAR: f32 = -4096.0;

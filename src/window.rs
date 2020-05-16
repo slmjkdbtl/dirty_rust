@@ -11,25 +11,32 @@ use math::*;
 
 impl Ctx {
 
-	#[cfg(not(web))]
 	pub fn set_fullscreen(&self, b: bool) {
 
-		let window = self.windowed_ctx.window();
+		#[cfg(not(web))] {
 
-		if b {
-			window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
-		} else {
-			window.set_fullscreen(None);
+			let window = self.windowed_ctx.window();
+
+			if b {
+				window.set_fullscreen(Some(glutin::window::Fullscreen::Borderless(window.current_monitor())));
+			} else {
+				window.set_fullscreen(None);
+			}
+
 		}
 
 	}
 
-	#[cfg(not(web))]
 	pub fn is_fullscreen(&self) -> bool {
+
+		#[cfg(not(web))]
 		return self.windowed_ctx.window().fullscreen().is_some();
+
+		#[cfg(web)]
+		return false;
+
 	}
 
-	#[cfg(not(web))]
 	pub fn toggle_fullscreen(&mut self) {
 		self.set_fullscreen(!self.is_fullscreen());
 	}
@@ -87,20 +94,23 @@ impl Ctx {
 		#[cfg(not(web))]
 		self.windowed_ctx.window().set_title(t);
 
+		#[cfg(web)]
+		self.document.set_title(t);
+
 	}
 
 	pub fn title(&self) -> &str {
 		return &self.title;
 	}
 
-	#[cfg(not(web))]
 	pub fn dpi(&self) -> f32 {
-		return self.windowed_ctx.window().scale_factor() as f32;
-	}
 
-	#[cfg(web)]
-	pub fn dpi(&self) -> f32 {
+		#[cfg(not(web))]
+		return self.windowed_ctx.window().scale_factor() as f32;
+
+		#[cfg(web)]
 		return 1.0;
+
 	}
 
 	pub fn width(&self) -> i32 {
@@ -111,18 +121,22 @@ impl Ctx {
 		return self.height;
 	}
 
-	#[cfg(not(web))]
 	pub fn set_mouse_pos(&mut self, mpos: Vec2) -> Result<()> {
 
 		let (w, h) = (self.width as f32, self.height as f32);
 		let mpos = vec2!(w / 2.0 + mpos.x, h / 2.0 - mpos.y);
-		let g_mpos: LogicalPosition<f64> = mpos.into();
 
-		self.windowed_ctx
-			.window()
-			.set_cursor_position(g_mpos)
-			.map_err(|_| format!("failed to set mouse position"))?
-			;
+		#[cfg(not(web))] {
+
+			let g_mpos: LogicalPosition<f64> = mpos.into();
+
+			self.windowed_ctx
+				.window()
+				.set_cursor_position(g_mpos)
+				.map_err(|_| format!("failed to set mouse position"))?
+				;
+
+		}
 
 		self.mouse_pos = mpos;
 
@@ -145,11 +159,14 @@ impl Ctx {
 	}
 
 	pub(crate) fn swap_buffers(&self) -> Result<()> {
+
 		#[cfg(not(web))]
 		self.windowed_ctx
 			.swap_buffers()
 			.map_err(|_| format!("failed to swap buffer"))?;
+
 		return Ok(());
+
 	}
 
 }
