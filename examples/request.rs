@@ -5,7 +5,6 @@ use dirty::http;
 fn main() -> Result<(), String> {
 
 	let url = "http://www.wordsound.com";
-// 	let url = "https://www.increpare.com";
 
 	let res = http::get(url)?
 		.send()?;
