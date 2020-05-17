@@ -26,21 +26,6 @@ struct Viewer {
 	helping: bool,
 }
 
-#[derive(Clone)]
-struct PixUniform {
-	resolution: Vec2,
-	size: f32,
-}
-
-impl gfx::CustomUniform for PixUniform {
-	fn values(&self) -> gfx::UniformValues {
-		return hmap![
-			"u_resolution" => &self.resolution,
-			"u_size" => &self.size,
-		];
-	}
-}
-
 fn load_file(path: impl AsRef<Path>) -> Task<Result<gfx::ModelData>> {
 
 	let path = path.as_ref().to_owned();

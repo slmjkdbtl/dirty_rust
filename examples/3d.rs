@@ -27,21 +27,6 @@ impl gfx::CustomUniform for Uniform {
 	}
 }
 
-#[derive(Clone)]
-pub struct PixUniform {
-	pub resolution: Vec2,
-	pub size: f32,
-}
-
-impl gfx::CustomUniform for PixUniform {
-	fn values(&self) -> gfx::UniformValues {
-		return hmap![
-			"u_resolution" => &self.resolution,
-			"u_size" => &self.size,
-		];
-	}
-}
-
 struct Game {
 	model: gfx::Model,
 	cam: gfx::PerspectiveCam,
@@ -119,7 +104,7 @@ impl State for Game {
 					},
 					Key::F => ctx.toggle_fullscreen(),
 					Key::Q if mods.meta => ctx.quit(),
-					Key::Tab => {
+					Key::L => {
 						ctx.set_cursor_hidden(self.show_ui);
 						ctx.set_cursor_locked(self.show_ui)?;
 						self.show_ui = !self.show_ui;
@@ -137,7 +122,7 @@ impl State for Game {
 					let dead = f32::to_radians(60.0);
 
 					rx += delta.x * self.eye_speed * 0.0001;
-					ry -= delta.y * self.eye_speed * 0.0001;
+					ry += delta.y * self.eye_speed * 0.0001;
 
 					ry = ry.clamp(-dead, dead);
 
@@ -205,61 +190,57 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-			let p = vec3!(0);
-			let origin = self.cam.to_screen(ctx, p);
-			let mray = self.cam.mouse_ray(ctx);
+		let p = vec3!(0);
+		let origin = self.cam.to_screen(ctx, p);
+		let mray = self.cam.mouse_ray(ctx);
 
-			ctx.use_cam(&self.cam, |ctx| {
+		ctx.use_cam(&self.cam, |ctx| {
 
-				ctx.draw_with(&self.shader, &Uniform {
-					cam_pos: self.cam.pos,
-					fog_color: rgba!(0, 0, 0, 1),
-					fog_level: 3.0,
-				}, |ctx| {
+			ctx.draw_with(&self.shader, &Uniform {
+				cam_pos: self.cam.pos,
+				fog_color: rgba!(0, 0, 0, 1),
+				fog_level: 3.0,
+			}, |ctx| {
 
-					let bbox = self.model.bbox().transform(mat4!());
-					let mray = Ray3::new(self.cam.pos, self.cam.dir);
+				let bbox = self.model.bbox().transform(mat4!());
+				let mray = Ray3::new(self.cam.pos, self.cam.dir);
 
-					let c = if col::intersect3d(mray, bbox) {
-						rgba!(0, 0, 1, 1)
-					} else {
-						rgba!(1)
-					};
+				let c = if col::intersect3d(mray, bbox) {
+					rgba!(0, 0, 1, 1)
+				} else {
+					rgba!(1)
+				};
 
-					ctx.draw(&shapes::model(&self.model))?;
+				ctx.draw(&shapes::model(&self.model))?;
 
-					ctx.draw(
-						&shapes::Rect3D::from_bbox(bbox)
-							.line_width(1.0)
-							.color(c)
-					)?;
+				ctx.draw(
+					&shapes::Rect3D::from_bbox(bbox)
+						.line_width(1.0)
+						.color(c)
+				)?;
 
-					let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
 
-// 					if let Some(pt) = kit::geom::ray_plane(mray, ground) {
-// 						ctx.draw_t(mat4!().t3(pt), &shapes::cube())?;
-// 					}
-
-					ctx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
-
-					return Ok(());
-
-				})?;
+				ctx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
 
 				return Ok(());
 
 			})?;
 
-			ctx.draw(&shapes::circle(vec2!(0), 2.0))?;
+			return Ok(());
 
-			ctx.draw_t(
-				mat4!()
-					.t2(origin)
-					,
-				&shapes::text("car")
-					.size(16.0)
-					,
-			)?;
+		})?;
+
+		ctx.draw(&shapes::circle(vec2!(0), 2.0))?;
+
+		ctx.draw_t(
+			mat4!()
+				.t2(origin)
+				,
+			&shapes::text("car")
+				.size(16.0)
+				,
+		)?;
 
 		return Ok(());
 
