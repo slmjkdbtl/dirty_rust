@@ -41,9 +41,6 @@ pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&std::panic::Location>) + 
 
 #[macro_export]
 macro_rules! log {
-	($t:tt) => {
-		log!("{}", $t)
-	};
 	($($t:tt)*) => {
 		#[cfg(web)]
 		web_sys::console::log_1(&format_args!($($t)*).to_string().into());
@@ -54,9 +51,6 @@ macro_rules! log {
 
 #[macro_export]
 macro_rules! elog {
-	($t:tt) => {
-		elog!("{}", $t)
-	};
 	($($t:tt)*) => {
 		#[cfg(web)]
 		web_sys::console::error_1(&format_args!($($t)*).to_string().into());

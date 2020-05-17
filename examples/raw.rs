@@ -19,7 +19,9 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => ctx.quit(),
-					_ => {},
+					_ => {
+						log!("{:?}", k);
+					},
 				}
 			},
 			_ => {},
@@ -64,7 +66,7 @@ fn main() {
 	if let Err(e) = launcher()
 		.title("raw")
 		.run::<Game>() {
-		log!("{}", e);
+		elog!("{}", e);
 	}
 }
 
