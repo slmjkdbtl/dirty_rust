@@ -55,32 +55,23 @@ pub struct KeyMod {
 
 impl Ctx {
 
-	pub fn down_keys(&self) -> HashSet<Key> {
-
-		use ButtonState::*;
-
-		return self.key_states
-			.iter()
-			.filter(|(_, &state)| state == Down || state == Pressed)
-			.map(|(key, _)| *key)
-			.collect();
-
+	pub fn down_keys(&self) -> &HashSet<Key> {
+		return &self.pressed_keys;
 	}
 
 	pub fn key_down(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Down) || self.key_pressed(key);
+		return self.pressed_keys.contains(&key);
 	}
 
 	pub fn mouse_down(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Down) || self.mouse_pressed(mouse);
+		return self.pressed_mouse.contains(&mouse);
 	}
 
 	pub fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
-		if let Some(states) = self.gamepad_button_states.get(&id) {
-			return states.get(&button) == Some(&ButtonState::Down) || self.gamepad_pressed(id, button);
-		} else {
-			return false;
-		}
+		return self.pressed_gamepad_buttons
+			.get(&id)
+			.map(|s| s.contains(&button))
+			.unwrap_or(false);
 	}
 
 	pub fn key_mods(&self) -> KeyMod {
@@ -94,54 +85,6 @@ impl Ctx {
 
 	pub fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
-	}
-
-	pub fn key_pressed(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Pressed);
-	}
-
-	pub fn key_released(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Released);
-	}
-
-	pub fn key_up(&self, key: Key) -> bool {
-		return self.key_states.get(&key) == Some(&ButtonState::Up) || self.key_states.get(&key).is_none();
-	}
-
-	pub fn mouse_pressed(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Pressed);
-	}
-
-	pub fn mouse_released(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Released);
-	}
-
-	pub fn mouse_up(&self, mouse: Mouse) -> bool {
-		return self.mouse_states.get(&mouse) == Some(&ButtonState::Up) || self.mouse_states.get(&mouse).is_none();
-	}
-
-	pub fn gamepad_up(&self, id: GamepadID, button: GamepadButton) -> bool {
-		if let Some(states) = self.gamepad_button_states.get(&id) {
-			return states.get(&button) == Some(&ButtonState::Up) || states.get(&button).is_none();
-		} else {
-			return true;
-		}
-	}
-
-	pub fn gamepad_pressed(&self, id: GamepadID, button: GamepadButton) -> bool {
-		if let Some(states) = self.gamepad_button_states.get(&id) {
-			return states.get(&button) == Some(&ButtonState::Pressed);
-		} else {
-			return false;
-		}
-	}
-
-	pub fn gamepad_released(&self, id: GamepadID, button: GamepadButton) -> bool {
-		if let Some(states) = self.gamepad_button_states.get(&id) {
-			return states.get(&button) == Some(&ButtonState::Released);
-		} else {
-			return false;
-		}
 	}
 
 }
@@ -172,14 +115,6 @@ pub enum Event {
 	CursorLeave,
 	#[cfg(feature = "midi")]
 	MIDI(midi::Msg),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum ButtonState {
-	Up,
-	Pressed,
-	Down,
-	Released,
 }
 
 macro_rules! gen_buttons {
