@@ -49,7 +49,7 @@ struct Game {
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
-	canvas: gfx::Canvas,
+// 	canvas: gfx::Canvas,
 	floor: gfx::MeshData,
 }
 
@@ -88,7 +88,7 @@ impl State for Game {
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(ctx, include_str!("res/fog.frag"))?,
 			show_ui: false,
-			canvas: gfx::Canvas::new(ctx, cw, ch)?,
+// 			canvas: gfx::Canvas::new(ctx, cw, ch)?,
 			floor: floor,
 		});
 
@@ -105,7 +105,7 @@ impl State for Game {
 				let cw = (*w as f32 / SCALE) as i32;
 				let ch = (*h as f32 / SCALE) as i32;
 
-				self.canvas.resize(ctx, cw, ch)?;
+// 				self.canvas.resize(ctx, cw, ch)?;
 				self.cam.aspect = *w as f32 / *h as f32;
 
 			},
@@ -199,9 +199,11 @@ impl State for Game {
 
 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
-		ctx.draw_on(&self.canvas, |ctx| {
+		return Ok(());
 
-			ctx.clear();
+	}
+
+	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
 			let p = vec3!(0);
 			let origin = self.cam.to_screen(ctx, p);
@@ -258,18 +260,6 @@ impl State for Game {
 					.size(16.0)
 					,
 			)?;
-
-			return Ok(());
-
-		})?;
-
-		return Ok(());
-
-	}
-
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
-
-		ctx.draw_t(mat4!().s2(vec2!(SCALE)), &shapes::canvas(&self.canvas))?;
 
 		return Ok(());
 

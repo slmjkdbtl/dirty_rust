@@ -3,6 +3,7 @@
 //! Windowing, Input, and Graphics
 
 use std::rc::Rc;
+use std::collections::HashSet;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
@@ -23,7 +24,6 @@ pub use conf::*;
 
 use gfx::Camera;
 
-use input::ButtonState;
 use input::Key;
 use input::Mouse;
 use input::GamepadID;
@@ -40,10 +40,10 @@ pub struct Ctx {
 	pub(crate) fps_counter: fps::FPSCounter,
 
 	// input
-	pub(crate) key_states: HashMap<Key, ButtonState>,
-	pub(crate) mouse_states: HashMap<Mouse, ButtonState>,
+	pub(crate) pressed_keys: HashSet<Key>,
+	pub(crate) pressed_mouse: HashSet<Mouse>,
 	pub(crate) mouse_pos: Vec2,
-	pub(crate) gamepad_button_states: HashMap<GamepadID, HashMap<GamepadButton, ButtonState>>,
+	pub(crate) pressed_gamepad_buttons: HashMap<GamepadID, HashSet<GamepadButton>>,
 	pub(crate) gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 	pub(crate) scroll_phase: input::ScrollPhase,
 
@@ -203,7 +203,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	gl.enable(gl::Capability::DepthTest);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
-	gl.clear_color(0.0, 0.0, 0.0, 1.0);
+	gl.clear_color(0.0, 0.0, 0.0, 0.0);
 
 	if conf.cull_face {
 		gl.enable(gl::Capability::CullFace);
@@ -242,11 +242,11 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		fps_counter: fps::FPSCounter::new(),
 
 		// input
-		key_states: HashMap::new(),
-		mouse_states: HashMap::new(),
+		pressed_keys: hset![],
+		pressed_mouse: hset![],
 		mouse_pos: vec2!(),
-		gamepad_button_states: HashMap::new(),
-		gamepad_axis_pos: HashMap::new(),
+		pressed_gamepad_buttons: hmap![],
+		gamepad_axis_pos: hmap![],
 		scroll_phase: input::ScrollPhase::Solid,
 
 		// window
@@ -362,6 +362,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 		use wasm_bindgen::closure::Closure;
 		use std::cell::RefCell;
 		use std::str::FromStr;
+		use input::Event::*;
 
 		let events = Rc::new(RefCell::new(vec![]));
 
@@ -373,7 +374,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 				let code = e.key_code();
 				let ch = code as u8 as char;
 				if let Ok(k) = Key::from_str(&ch.to_string().to_lowercase()) {
-					tevents.borrow_mut().push(input::Event::KeyPressRepeat(k));
+					tevents.borrow_mut().push(KeyPressRepeat(k));
 				}
 			}) as Box<dyn FnMut(_)>);
 
@@ -391,7 +392,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 				let code = e.key_code();
 				let ch = code as u8 as char;
 				if let Ok(k) = Key::from_str(&ch.to_string().to_lowercase()) {
-					tevents.borrow_mut().push(input::Event::KeyRelease(k));
+					tevents.borrow_mut().push(KeyRelease(k));
 				}
 			}) as Box<dyn FnMut(_)>);
 
@@ -412,7 +413,24 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 			last_frame_time = Instant::now();
 
 			for e in events.borrow().iter() {
+
+				match e {
+
+					KeyPressRepeat(k) => {
+						if !ctx.key_down(*k) {
+							s.event(&mut ctx, &input::Event::KeyPress(*k));
+						}
+						ctx.pressed_keys.insert(*k);
+					},
+					KeyRelease(k) => {
+						ctx.pressed_keys.remove(k);
+					},
+					_ => {},
+
+				}
+
 				s.event(&mut ctx, e);
+
 			}
 
 			events.borrow_mut().clear();
@@ -471,18 +489,17 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 										events.push(Event::KeyPressRepeat(key));
 
-										if ctx.key_up(key) || ctx.key_released(key) {
-											ctx.key_states.insert(key, ButtonState::Pressed);
+										if !ctx.key_down(key) {
 											events.push(Event::KeyPress(key));
 										}
+
+										ctx.pressed_keys.insert(key);
 
 									},
 
 									ElementState::Released => {
-										if ctx.key_down(key) || ctx.key_pressed(key) {
-											ctx.key_states.insert(key, ButtonState::Released);
-											events.push(Event::KeyRelease(key));
-										}
+										ctx.pressed_keys.remove(&key);
+										events.push(Event::KeyRelease(key));
 									},
 
 								}
@@ -500,16 +517,12 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 							match state {
 
 								ElementState::Pressed => {
-									if ctx.mouse_up(button) || ctx.mouse_released(button) {
-										ctx.mouse_states.insert(button, ButtonState::Pressed);
-										events.push(Event::MousePress(button));
-									}
+									ctx.pressed_mouse.insert(button);
+									events.push(Event::MousePress(button));
 								},
 								ElementState::Released => {
-									if ctx.mouse_down(button) || ctx.mouse_pressed(button) {
-										ctx.mouse_states.insert(button, ButtonState::Released);
-										events.push(Event::MouseRelease(button));
-									}
+									ctx.pressed_mouse.remove(&button);
+									events.push(Event::MouseRelease(button));
 								},
 
 							}
@@ -629,32 +642,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 					last_frame_time = Instant::now();
 
-					for state in ctx.key_states.values_mut() {
-						if state == &ButtonState::Pressed {
-							*state = ButtonState::Down;
-						} else if state == &ButtonState::Released {
-							*state = ButtonState::Up;
-						}
-					}
-
-					for state in ctx.mouse_states.values_mut() {
-						if state == &ButtonState::Pressed {
-							*state = ButtonState::Down;
-						} else if state == &ButtonState::Released {
-							*state = ButtonState::Up;
-						}
-					}
-
-					for states in ctx.gamepad_button_states.values_mut() {
-						for state in states.values_mut() {
-							if state == &ButtonState::Pressed {
-								*state = ButtonState::Down;
-							} else if state == &ButtonState::Released {
-								*state = ButtonState::Up;
-							}
-						}
-					}
-
 					s.update(&mut ctx)?;
 					ctx.begin_frame();
 					s.draw(&mut ctx)?;
@@ -690,17 +677,13 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 								if let Some(button) = GamepadButton::from_extern(button) {
 
-									if ctx.gamepad_up(id, button) || ctx.gamepad_released(id, button) {
+									ctx
+										.pressed_gamepad_buttons
+										.entry(id)
+										.or_insert(hset![])
+										.insert(button);
 
-										ctx
-											.gamepad_button_states
-											.entry(id)
-											.or_insert(hmap![])
-											.insert(button, ButtonState::Pressed);
-
-										events.push(Event::GamepadPress(id, button));
-
-									}
+									events.push(Event::GamepadPress(id, button));
 
 								}
 
@@ -716,17 +699,13 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 								if let Some(button) = GamepadButton::from_extern(button) {
 
-									if ctx.gamepad_down(id, button) || ctx.gamepad_pressed(id, button) {
+									ctx
+										.pressed_gamepad_buttons
+										.entry(id)
+										.or_insert(hset![])
+										.remove(&button);
 
-										ctx
-											.gamepad_button_states
-											.entry(id)
-											.or_insert(hmap![])
-											.insert(button, ButtonState::Released);
-
-										events.push(Event::GamepadRelease(id, button));
-
-									}
+									events.push(Event::GamepadRelease(id, button));
 
 								}
 
