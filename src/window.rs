@@ -5,11 +5,47 @@
 use clipboard::ClipboardProvider;
 #[cfg(not(web))]
 use glutin::dpi::*;
-#[cfg(not(web))]
-pub use glutin::window::CursorIcon;
 
 use crate::*;
 use math::*;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CursorIcon {
+	Default,
+	Hand,
+	Cross,
+	Move,
+	Progress,
+	Wait,
+	Text,
+}
+
+impl CursorIcon {
+	#[cfg(not(web))]
+	fn to_winit(&self) -> glutin::window::CursorIcon {
+		return match self {
+			CursorIcon::Default => glutin::window::CursorIcon::Default,
+			CursorIcon::Hand => glutin::window::CursorIcon::Hand,
+			CursorIcon::Cross => glutin::window::CursorIcon::Crosshair,
+			CursorIcon::Move => glutin::window::CursorIcon::Move,
+			CursorIcon::Progress => glutin::window::CursorIcon::Progress,
+			CursorIcon::Wait => glutin::window::CursorIcon::Wait,
+			CursorIcon::Text => glutin::window::CursorIcon::Text,
+		};
+	}
+	#[cfg(web)]
+	fn to_web(&self) -> &'static str {
+		return match self {
+			CursorIcon::Default => "default",
+			CursorIcon::Hand => "pointer",
+			CursorIcon::Cross => "crosshair",
+			CursorIcon::Move => "move",
+			CursorIcon::Progress => "progress",
+			CursorIcon::Wait => "wait",
+			CursorIcon::Text => "text",
+		};
+	}
+}
 
 impl Ctx {
 
@@ -25,6 +61,14 @@ impl Ctx {
 				window.set_fullscreen(None);
 			}
 
+		}
+
+		#[cfg(web)] {
+			if b {
+				self.canvas.request_fullscreen();
+			} else {
+				self.document.exit_fullscreen();
+			}
 		}
 
 	}
@@ -44,9 +88,21 @@ impl Ctx {
 	}
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
+
 		#[cfg(not(web))]
 		self.windowed_ctx.window().set_cursor_visible(!b);
+
+		#[cfg(web)] {
+			if b {
+// 				self.canvas.set_attribute("style", "cursor: none");
+			} else {
+				// TODO: set to prev icon
+// 				self.canvas.set_attribute("style", "cursor: default");
+			}
+		}
+
 		self.cursor_hidden = b;
+
 	}
 
 	pub fn is_cursor_hidden(&self) -> bool {
@@ -67,6 +123,14 @@ impl Ctx {
 			.set_cursor_grab(b)
 			.map_err(|_| format!("failed to lock mouse cursor"))?;
 
+		#[cfg(web)] {
+// 			if b {
+// 				self.canvas.request_pointer_lock();
+// 			} else {
+// 				self.document.exit_pointer_lock();
+// 			}
+		}
+
 		return Ok(());
 
 	}
@@ -84,9 +148,15 @@ impl Ctx {
 		self.windowed_ctx.window().set_minimized(true);
 	}
 
-	#[cfg(not(web))]
 	pub fn set_cursor(&self, c: CursorIcon) {
-		self.windowed_ctx.window().set_cursor_icon(c);
+
+		#[cfg(not(web))]
+		self.windowed_ctx.window().set_cursor_icon(c.to_winit());
+
+// 		#[cfg(web)]
+		// TODO: cache cursor icon
+// 		self.canvas.set_attribute("style", &format!("cursor: {}", c.to_web()));
+
 	}
 
 	pub fn set_title(&mut self, t: &str) {
@@ -96,8 +166,10 @@ impl Ctx {
 		#[cfg(not(web))]
 		self.windowed_ctx.window().set_title(t);
 
-		#[cfg(web)]
-		self.document.set_title(t);
+		#[cfg(web)] {
+			self.document.set_title(t);
+			self.canvas.set_attribute("alt", t);
+		}
 
 	}
 

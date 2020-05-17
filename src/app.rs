@@ -366,6 +366,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		let events = Rc::new(RefCell::new(vec![]));
 
+		// TODO: clean up
 		{
 
 			let tevents = events.clone();
@@ -402,6 +403,48 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 		};
 
+		{
+
+			let tevents = events.clone();
+
+			let handler = Closure::wrap(box (move |e: web_sys::MouseEvent| {
+				tevents.borrow_mut().push(MouseMove(vec2!(e.client_x(), e.client_y())));
+			}) as Box<dyn FnMut(_)>);
+
+			ctx.canvas.add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref());
+
+			handler.forget();
+
+		};
+
+		{
+
+			let tevents = events.clone();
+
+			let handler = Closure::wrap(box (move |e: web_sys::MouseEvent| {
+				tevents.borrow_mut().push(MousePress(Mouse::Left));
+			}) as Box<dyn FnMut(_)>);
+
+			ctx.canvas.add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref());
+
+			handler.forget();
+
+		};
+
+		{
+
+			let tevents = events.clone();
+
+			let handler = Closure::wrap(box (move |e: web_sys::MouseEvent| {
+				tevents.borrow_mut().push(MouseRelease(Mouse::Left));
+			}) as Box<dyn FnMut(_)>);
+
+			ctx.canvas.add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref());
+
+			handler.forget();
+
+		};
+
 		use glow::HasRenderLoop;
 
 		render_loop.run(move |running: &mut bool| {
@@ -418,18 +461,46 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 					KeyPressRepeat(k) => {
 						if !ctx.key_down(*k) {
+							ui.event(&mut ctx, e);
 							s.event(&mut ctx, &input::Event::KeyPress(*k));
 						}
 						ctx.pressed_keys.insert(*k);
+						ui.event(&mut ctx, e);
+						s.event(&mut ctx, e);
 					},
 					KeyRelease(k) => {
 						ctx.pressed_keys.remove(k);
+						ui.event(&mut ctx, e);
+						s.event(&mut ctx, e);
+					},
+					MousePress(m) => {
+						ctx.pressed_mouse.insert(*m);
+						ui.event(&mut ctx, e);
+						s.event(&mut ctx, e);
+					},
+					MouseRelease(m) => {
+						ctx.pressed_mouse.remove(m);
+						ui.event(&mut ctx, e);
+						s.event(&mut ctx, e);
+					},
+					MouseMove(pos) => {
+
+						let (w, h) = (ctx.width as f32, ctx.height as f32);
+						let mpos = vec2!(pos.x - w / 2.0, h / 2.0 - pos.y);
+						let cmpos = ctx.mouse_pos();
+
+						if cmpos != vec2!(0) {
+							let delta = mpos - cmpos;
+							ui.event(&mut ctx, &MouseMove(delta));
+							s.event(&mut ctx, &MouseMove(delta));
+						}
+
+						ctx.mouse_pos = mpos;
+
 					},
 					_ => {},
 
 				}
-
-				s.event(&mut ctx, e);
 
 			}
 
@@ -534,7 +605,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 					WEvent::CursorMoved { position, .. } => {
 
 						let mpos: Vec2 = position.to_logical(ctx.dpi() as f64).into();
-// 						let mpos: Vec2 = (*position).into();
 						let (w, h) = (ctx.width as f32, ctx.height as f32);
 						let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
 
@@ -618,7 +688,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 				glutin::event::Event::DeviceEvent { event, .. } => match event {
 					DEvent::MouseMotion { delta } => {
-						events.push(Event::MouseMove(vec2!(delta.0, delta.1)));
+						events.push(Event::MouseMove(vec2!(delta.0, -delta.1)));
 					},
 					_ => (),
 				},
