@@ -203,7 +203,7 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	gl.enable(gl::Capability::DepthTest);
 	gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
 	gl.depth_func(gl::Cmp::LessOrEqual);
-	gl.clear_color(0.0, 0.0, 0.0, 0.0);
+	gl.clear_color(0.0, 0.0, 0.0, 1.0);
 
 	if conf.cull_face {
 		gl.enable(gl::Capability::CullFace);
@@ -356,25 +356,76 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	let mut last_frame_time = Instant::now();
 	let mut update = false;
 
-	#[cfg(web)]
-	use glow::HasRenderLoop;
+	#[cfg(web)] {
 
-	#[cfg(web)]
-	render_loop.run(move |running: &mut bool| {
+		use wasm_bindgen::JsCast;
+		use wasm_bindgen::closure::Closure;
+		use std::cell::RefCell;
+		use std::str::FromStr;
 
-		ctx.dt = last_frame_time.elapsed();
-		ctx.time += ctx.dt;
-		ctx.fps_counter.tick(ctx.dt);
+		let events = Rc::new(RefCell::new(vec![]));
 
-		last_frame_time = Instant::now();
+		{
 
-		s.update(&mut ctx);
-		ctx.begin_frame();
-		s.draw(&mut ctx);
-		s.ui(&mut ctx, &mut ui);
-		ctx.end_frame();
+			let tevents = events.clone();
 
-	});
+			let handler = Closure::wrap(box (move |e: web_sys::KeyboardEvent| {
+				let code = e.key_code();
+				let ch = code as u8 as char;
+				if let Ok(k) = Key::from_str(&ch.to_string().to_lowercase()) {
+					tevents.borrow_mut().push(input::Event::KeyPressRepeat(k));
+				}
+			}) as Box<dyn FnMut(_)>);
+
+			ctx.document.add_event_listener_with_callback("keydown", handler.as_ref().unchecked_ref());
+
+			handler.forget();
+
+		};
+
+		{
+
+			let tevents = events.clone();
+
+			let handler = Closure::wrap(box (move |e: web_sys::KeyboardEvent| {
+				let code = e.key_code();
+				let ch = code as u8 as char;
+				if let Ok(k) = Key::from_str(&ch.to_string().to_lowercase()) {
+					tevents.borrow_mut().push(input::Event::KeyRelease(k));
+				}
+			}) as Box<dyn FnMut(_)>);
+
+			ctx.document.add_event_listener_with_callback("keyup", handler.as_ref().unchecked_ref());
+
+			handler.forget();
+
+		};
+
+		use glow::HasRenderLoop;
+
+		render_loop.run(move |running: &mut bool| {
+
+			ctx.dt = last_frame_time.elapsed();
+			ctx.time += ctx.dt;
+			ctx.fps_counter.tick(ctx.dt);
+
+			last_frame_time = Instant::now();
+
+			for e in events.borrow().iter() {
+				s.event(&mut ctx, e);
+			}
+
+			events.borrow_mut().clear();
+
+			s.update(&mut ctx);
+			ctx.begin_frame();
+			s.draw(&mut ctx);
+			s.ui(&mut ctx, &mut ui);
+			ctx.end_frame();
+
+		});
+
+	}
 
 	#[cfg(not(web))]
 	event_loop.run(move |e, _, flow| {
