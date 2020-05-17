@@ -5,6 +5,8 @@
 use clipboard::ClipboardProvider;
 #[cfg(not(web))]
 use glutin::dpi::*;
+#[cfg(not(web))]
+pub use glutin::window::CursorIcon;
 
 use crate::*;
 use math::*;
@@ -83,7 +85,7 @@ impl Ctx {
 	}
 
 	#[cfg(not(web))]
-	pub fn set_cursor(&self, c: glutin::window::CursorIcon) {
+	pub fn set_cursor(&self, c: CursorIcon) {
 		self.windowed_ctx.window().set_cursor_icon(c);
 	}
 

@@ -131,6 +131,9 @@ impl UI {
 
 		let theme = &self.theme;
 		let bar_height = theme.font_size + theme.padding * 2.0;
+		let out_height = window.height + bar_height;
+		let view_width = window.width;
+		let view_height = window.height;
 
 		// drawing window frame
 		ctx.push_t(mat4!().t2(window.pos), |ctx| {
@@ -244,9 +247,16 @@ impl<'a> WidgetManager<'a> {
 
 	}
 
-	fn widget<W: Widget>(&mut self, ctx: &mut Ctx, id: ID, w: impl FnOnce() -> W) -> Result<&W> {
+	fn widget<O, W: Widget>(
+		&mut self,
+		ctx: &mut Ctx,
+		id: ID,
+		w: impl FnOnce() -> W,
+		f: impl FnOnce(&W) -> O
+	) -> Result<O> {
 
 		let mut height = 0.0;
+		let val;
 
 		let w = self.widgets
 			.entry(id)
@@ -262,6 +272,8 @@ impl<'a> WidgetManager<'a> {
 			offset: self.ctx.offset + vec2!(0, -self.cur_y),
 		};
 
+		val = Ok(f(w));
+
 		ctx.push_t(mat4!().ty(-self.cur_y), |ctx| {
 			height = w.draw(ctx, &wctx)?;
 			return Ok(());
@@ -269,7 +281,7 @@ impl<'a> WidgetManager<'a> {
 
 		self.cur_y += height + self.ctx.theme.padding;
 
-		return Ok(w);
+		return val;
 
 	}
 
@@ -278,23 +290,27 @@ impl<'a> WidgetManager<'a> {
 	}
 
 	pub fn input(&mut self, ctx: &mut Ctx, prompt: &'static str) -> Result<String> {
-		let i = self.widget(ctx, prompt, || Input::new(prompt))?;
-		return Ok(i.text());
+		return self.widget(ctx, prompt, || Input::new(prompt), |i| {
+			return i.text();
+		});
 	}
 
 	pub fn slider(&mut self, ctx: &mut Ctx, prompt: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
-		let s = self.widget(ctx, prompt, || Slider::new(prompt, val, min, max))?;
-		return Ok(s.value());
+		return self.widget(ctx, prompt, || Slider::new(prompt, val, min, max), |i| {
+			return i.value();
+		});
 	}
 
 	pub fn button(&mut self, ctx: &mut Ctx, text: &'static str) -> Result<bool> {
-		let b = self.widget(ctx, text, || Button::new(text))?;
-		return Ok(b.clicked());
+		return self.widget(ctx, text, || Button::new(text), |i| {
+			return i.clicked();
+		});
 	}
 
 	pub fn checkbox(&mut self, ctx: &mut Ctx, prompt: &'static str, b: bool) -> Result<bool> {
-		let c = self.widget(ctx, prompt, || CheckBox::new(prompt, b))?;
-		return Ok(c.checked());
+		return self.widget(ctx, prompt, || CheckBox::new(prompt, b), |i| {
+			return i.checked();
+		});
 	}
 
 	pub fn sep(&mut self, ctx: &mut Ctx) -> Result<()> {
@@ -302,8 +318,9 @@ impl<'a> WidgetManager<'a> {
 	}
 
 	pub fn select(&mut self, ctx: &mut Ctx, prompt: &'static str, options: &[&str], i: usize) -> Result<usize> {
-		let s = self.widget(ctx, prompt, || Select::new(prompt, options, i))?;
-		return Ok(s.selected());
+		return self.widget(ctx, prompt, || Select::new(prompt, options, i), |i| {
+			return i.selected();
+		});
 	}
 
 	// TODO
