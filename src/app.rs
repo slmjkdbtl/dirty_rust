@@ -5,7 +5,6 @@
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::thread;
-use std::time::Instant;
 use std::time::Duration;
 
 #[cfg(not(web))]
@@ -14,6 +13,8 @@ use glutin::dpi::*;
 use glutin::GlRequest;
 #[cfg(not(web))]
 use glutin::event_loop::ControlFlow;
+
+use instant::Instant;
 
 use crate::*;
 use crate::math::*;
@@ -352,7 +353,6 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 	ctx.swap_buffers()?;
 
 	let mut s = S::init(&mut ctx)?;
-	#[cfg(not(web))]
 	let mut last_frame_time = Instant::now();
 	let mut update = false;
 
@@ -361,11 +361,19 @@ fn run_with_conf<S: State>(mut conf: Conf) -> Result<()> {
 
 	#[cfg(web)]
 	render_loop.run(move |running: &mut bool| {
+
+		ctx.dt = last_frame_time.elapsed();
+		ctx.time += ctx.dt;
+		ctx.fps_counter.tick(ctx.dt);
+
+		last_frame_time = Instant::now();
+
 		s.update(&mut ctx);
 		ctx.begin_frame();
 		s.draw(&mut ctx);
 		s.ui(&mut ctx, &mut ui);
 		ctx.end_frame();
+
 	});
 
 	#[cfg(not(web))]

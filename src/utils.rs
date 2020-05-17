@@ -21,11 +21,9 @@ macro_rules! mexport {
 	}
 }
 
-use std::panic;
+pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&std::panic::Location>) + Send + Sync>(f: F) {
 
-pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&panic::Location>) + Send + Sync>(f: F) {
-
-	panic::set_hook(Box::new(move |info: &panic::PanicInfo| {
+	std::panic::set_hook(Box::new(move |info: &std::panic::PanicInfo| {
 
 		let msg: Option<&str> = if let Some(s) = info.payload().downcast_ref::<&str>() {
 			Some(*s)
@@ -55,9 +53,9 @@ macro_rules! log {
 }
 
 #[macro_export]
-macro_rules! loge {
+macro_rules! elog {
 	($t:tt) => {
-		loge!("{}", $t)
+		elog!("{}", $t)
 	};
 	($($t:tt)*) => {
 		#[cfg(web)]
