@@ -3,18 +3,19 @@
 use crate::*;
 use math::*;
 use geom::*;
+use window::WindowCtx;
 
 pub trait Camera {
 	fn proj(&self) -> Mat4;
 	fn view(&self) -> Mat4;
 	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3;
 	fn mouse_ray(&self, ctx: &Ctx) -> Ray3 {
-		return self.pt_to_ray(ctx, ctx.mouse_pos());
+		return self.pt_to_ray(ctx, ctx.window.mouse_pos());
 	}
 	fn to_screen(&self, ctx: &Ctx, pt: Vec3) -> Vec2 {
 		let cp = self.proj() * self.view() * vec4!(pt.x, pt.y, pt.z, 1.0);
 		let cp = cp.xy() / cp.w;
-		return ctx.clip_to_screen(cp);
+		return ctx.window.clip_to_screen(cp);
 	}
 }
 
@@ -104,7 +105,7 @@ impl Camera for PerspectiveCam {
 
 	fn pt_to_ray(&self, ctx: &Ctx, pt: Vec2) -> Ray3 {
 
-		let ndc = ctx.screen_to_clip(pt);
+		let ndc = ctx.window.screen_to_clip(pt);
 		let ray_clip = vec4!(ndc.x, ndc.y, 1.0, 1.0);
 		let ray_eye = self.proj().inverse() * ray_clip;
 		let ray_eye = vec4!(ray_eye.x, ray_eye.y, 1.0, 0.0);
@@ -158,7 +159,7 @@ impl Camera for OrthoCam {
 
 		let dir = vec3!(0, 0, -1);
 
-		let normalized = ctx.screen_to_clip(pt);
+		let normalized = ctx.window.screen_to_clip(pt);
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
 		let orig = self.proj().inverse() * clip_coord;
 
@@ -221,7 +222,7 @@ impl Camera for ObliqueCam {
 
 		let dir = (self.skew() * vec3!(0, 0, -1)).unit();
 
-		let normalized = ctx.screen_to_clip(pt);
+		let normalized = ctx.window.screen_to_clip(pt);
 		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
 		let orig = self.proj().inverse() * clip_coord;
 

@@ -41,7 +41,7 @@ impl<'a> Drawable for Quad<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let tex = self.tex.cloned().unwrap_or(ctx.empty_tex.clone());
+		let tex = self.tex.cloned().unwrap_or(ctx.gfx.empty_tex.clone());
 
 		let p1 = vec2!(f32::min(self.p1.x, self.p2.x), f32::min(self.p1.y, self.p2.y));
 		let p2 = vec2!(f32::max(self.p1.x, self.p2.x), f32::max(self.p1.y, self.p2.y));

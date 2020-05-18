@@ -35,7 +35,6 @@ pub struct Device {
 	ctx: Rc<GLCtx>,
 }
 
-// TODO: web
 // TODO: clean up this mess
 impl Device {
 

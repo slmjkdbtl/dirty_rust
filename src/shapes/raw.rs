@@ -53,24 +53,24 @@ impl<'a> Drawable for Raw<'a> {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		let tex = self.tex.unwrap_or(&ctx.empty_tex);
+		let tex = self.tex.unwrap_or(&ctx.gfx.empty_tex);
 
-		ctx.renderer.push(
+		ctx.gfx.renderer.push(
 			self.prim,
 			&self.verts,
 			&self.indices,
-			&ctx.cur_pipeline,
+			&ctx.gfx.cur_pipeline,
 			&gfx::Uniform {
-				proj: ctx.proj,
-				view: ctx.view,
+				proj: ctx.gfx.proj,
+				view: ctx.gfx.view,
 				model: if self.ignore_transform {
 					mat4!()
 				} else {
-					ctx.transform
+					ctx.gfx.transform
 				},
 				color: self.color,
 				tex: tex.clone(),
-				custom: ctx.cur_custom_uniform.clone(),
+				custom: ctx.gfx.cur_custom_uniform.clone(),
 			},
 		)?;
 

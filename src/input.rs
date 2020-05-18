@@ -104,7 +104,14 @@ macro_rules! gen_buttons {
 				};
 			}
 
-			#[allow(dead_code)]
+			pub fn as_str(&self) -> &'static str {
+				return match self {
+					$(
+						$type::$name => $str,
+					)*
+				};
+			}
+
 			#[cfg(desktop)]
 			pub fn from_extern(s: $xtype) -> Option<Self> {
 				return match s {
@@ -115,22 +122,6 @@ macro_rules! gen_buttons {
 				};
 			}
 
-			#[allow(dead_code)]
-			#[cfg(not(desktop))]
-			pub fn from_extern(s: $xtype) -> Option<Self> {
-				return None;
-			}
-
-			#[allow(dead_code)]
-			pub fn as_str(&self) -> &'static str {
-				return match self {
-					$(
-						$type::$name => $str,
-					)*
-				};
-			}
-
-			#[allow(dead_code)]
 			#[cfg(desktop)]
 			pub fn as_extern(&self) -> $xtype {
 				return match self {
@@ -157,24 +148,6 @@ use glutin::event::MouseButton as ExternMouse;
 type ExternMouse = ();
 
 use gilrs::ev::Button as ExternGamepadButton;
-
-// #[cfg(web)]
-// #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-// pub enum Key {
-// 	Esc,
-// 	F,
-// 	Left,
-// 	Right,
-// 	Back,
-// 	RAlt,
-// 	LAlt,
-// 	RMeta,
-// 	LMeta,
-// 	RCtrl,
-// 	LCtrl,
-// 	RShift,
-// 	LShift,
-// }
 
 gen_buttons!(Key(ExternKey), {
 	Q("q") => Q,
@@ -255,6 +228,7 @@ gen_buttons!(Key(ExternKey), {
 
 impl Key {
 
+	// TODO: support more key codes
 	pub fn from_code(code: u32) -> Option<Self> {
 
 		let ch = code as u8 as char;

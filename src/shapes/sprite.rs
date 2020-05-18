@@ -76,7 +76,7 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 
 		let offset = self.offset.unwrap_or(vec2!(0));
 
-		let t = ctx.transform
+		let t = ctx.gfx.transform
 			.s2(scale)
 			.t2(offset * -0.5)
 			;
@@ -88,17 +88,17 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 			flip: self.flip,
 		};
 
-		ctx.renderer.push_shape(
+		ctx.gfx.renderer.push_shape(
 			gl::Primitive::Triangle,
 			shape,
-			&ctx.cur_pipeline,
+			&ctx.gfx.cur_pipeline,
 			&gfx::Uniform {
 				model: mat4!(),
-				proj: ctx.proj,
-				view: ctx.view,
+				proj: ctx.gfx.proj,
+				view: ctx.gfx.view,
 				color: rgba!(1),
 				tex: self.tex.clone(),
-				custom: ctx.cur_custom_uniform.clone(),
+				custom: ctx.gfx.cur_custom_uniform.clone(),
 			}
 		)?;
 

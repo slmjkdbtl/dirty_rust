@@ -565,7 +565,7 @@ impl Model {
 
 	}
 
-	pub fn from_data(ctx: &impl gfx::GfxCtx, data: ModelData) -> Result<Self> {
+	pub fn from_data(ctx: &impl HasGLDevice, data: ModelData) -> Result<Self> {
 
 		let tex = if let Some(img) = data.img {
 			Some(Texture::from_img(ctx, img)?)
@@ -605,23 +605,23 @@ impl Model {
 
 	}
 
-	pub fn from_file(ctx: &impl gfx::GfxCtx, path: impl AsRef<Path>) -> Result<Self> {
+	pub fn from_file(ctx: &impl HasGLDevice, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
-	pub fn from_mesh_data(ctx: &impl gfx::GfxCtx, data: MeshData) -> Result<Self> {
+	pub fn from_mesh_data(ctx: &impl HasGLDevice, data: MeshData) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_mesh_data(data));
 	}
 
-	pub fn from_raw(ctx: &impl gfx::GfxCtx, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
+	pub fn from_raw(ctx: &impl HasGLDevice, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_raw(verts, indices));
 	}
 
-	pub fn from_obj(ctx: &impl gfx::GfxCtx, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
+	pub fn from_obj(ctx: &impl HasGLDevice, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_obj(obj, mtl, img)?);
 	}
 
-	pub fn from_glb(ctx: &impl gfx::GfxCtx, bytes: &[u8]) -> Result<Self> {
+	pub fn from_glb(ctx: &impl HasGLDevice, bytes: &[u8]) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
