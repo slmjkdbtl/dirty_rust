@@ -14,60 +14,24 @@
 #![feature(type_alias_impl_trait)]
 
 #![allow(unused_parens)]
-#![deny(clippy::implicit_return)]
 
 #[macro_use]
 pub mod utils;
 
+mod gl;
+mod window;
+mod conf;
+
+#[cfg(not(web))]
+mod native;
+#[cfg(web)]
+mod web;
+
 mod app;
 pub use app::*;
 
-mod state;
-mod conf;
-
-pub mod gfx;
-pub mod ui;
-pub mod res;
-mod fps;
-mod texture;
-mod shader;
-mod canvas;
-mod transform;
-mod font;
-mod camera;
-mod model;
-mod desc;
-
-#[cfg(not(web))]
-pub mod audio;
 pub mod input;
-pub mod window;
-pub mod geom;
-pub mod shapes;
-pub mod kit;
-
-pub mod task;
-pub mod fs;
 pub mod math;
-pub mod gl;
-pub mod img;
-pub mod term;
-pub mod codec;
-
-#[cfg(feature = "midi")]
-pub mod midi;
-
-#[cfg(feature = "synth")]
-pub mod synth;
-
-#[cfg(feature = "http")]
-pub mod http;
-
-#[cfg(feature = "ase")]
-pub mod ase;
-
-#[cfg(feature = "lua")]
-mod lua;
 
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;

@@ -119,6 +119,7 @@ features = [
 	"WebGl2RenderingContext",
 	"MouseEvent",
 	"KeyboardEvent",
+	"WheelEvent",
 ]
 
 [target.'cfg(target_os="macos")'.dependencies]

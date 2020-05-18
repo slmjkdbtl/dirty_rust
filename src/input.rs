@@ -53,42 +53,6 @@ pub struct KeyMod {
 	pub meta: bool,
 }
 
-impl Ctx {
-
-	pub fn down_keys(&self) -> &HashSet<Key> {
-		return &self.pressed_keys;
-	}
-
-	pub fn key_down(&self, key: Key) -> bool {
-		return self.pressed_keys.contains(&key);
-	}
-
-	pub fn mouse_down(&self, mouse: Mouse) -> bool {
-		return self.pressed_mouse.contains(&mouse);
-	}
-
-	pub fn gamepad_down(&self, id: GamepadID, button: GamepadButton) -> bool {
-		return self.pressed_gamepad_buttons
-			.get(&id)
-			.map(|s| s.contains(&button))
-			.unwrap_or(false);
-	}
-
-	pub fn key_mods(&self) -> KeyMod {
-		return KeyMod {
-			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
-			ctrl: self.key_down(Key::LCtrl) || self.key_down(Key::RCtrl),
-			alt: self.key_down(Key::LAlt) || self.key_down(Key::RAlt),
-			meta: self.key_down(Key::LMeta) || self.key_down(Key::RMeta),
-		};
-	}
-
-	pub fn mouse_pos(&self) -> Vec2 {
-		return self.mouse_pos;
-	}
-
-}
-
 #[derive(Clone, Debug)]
 pub enum Event {
 	KeyPress(Key),
@@ -97,7 +61,7 @@ pub enum Event {
 	MousePress(Mouse),
 	MouseRelease(Mouse),
 	MouseMove(Vec2),
-	Scroll(Vec2, ScrollPhase),
+	Wheel(Vec2, ScrollPhase),
 	CharInput(char),
 	GamepadPress(GamepadID, GamepadButton),
 	GamepadPressRepeat(GamepadID, GamepadButton),
@@ -129,22 +93,16 @@ macro_rules! gen_buttons {
 			)*
 		}
 
-		impl std::str::FromStr for $type {
+		impl $type {
 
-			type Err = ();
-
-			fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+			pub fn from_str(s: &str) -> Option<Self> {
 				return match s {
 					$(
-						$str => Ok($type::$name),
+						$str => Some($type::$name),
 					)*
-					_ => Err(()),
+					_ => None,
 				};
 			}
-
-		}
-
-		impl $type {
 
 			#[allow(dead_code)]
 			#[cfg(desktop)]
@@ -294,6 +252,18 @@ gen_buttons!(Key(ExternKey), {
 	LCtrl("lctrl") => LControl,
 	RCtrl("rctrl") => RControl,
 });
+
+impl Key {
+
+	pub fn from_code(code: u32) -> Option<Self> {
+
+		let ch = code as u8 as char;
+
+		return Key::from_str(&ch.to_string().to_lowercase());
+
+	}
+
+}
 
 gen_buttons!(Mouse(ExternMouse), {
 	Left("left") => Left,
