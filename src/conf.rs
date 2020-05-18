@@ -17,7 +17,6 @@ pub struct Conf {
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
 	pub cull_face: bool,
-	pub fps_cap: Option<u16>,
 	pub default_font: Option<gfx::BitmapFontData>,
 }
 
@@ -51,7 +50,6 @@ impl Default for Conf {
 			cull_face: false,
 			cursor_hidden: false,
 			cursor_locked: false,
-			fps_cap: Some(60),
 			default_font: None,
 		};
 	}
@@ -118,11 +116,6 @@ impl Launcher {
 
 	pub fn always_on_top(mut self, b: bool) -> Self {
 		self.conf.always_on_top = b;
-		return self;
-	}
-
-	pub fn fps_cap(mut self, f: Option<u16>) -> Self {
-		self.conf.fps_cap = f;
 		return self;
 	}
 

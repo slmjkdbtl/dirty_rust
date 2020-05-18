@@ -37,7 +37,7 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx, dt: std::time::Duration) -> Result<()> {
 
 		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
 
@@ -92,7 +92,6 @@ fn main() {
 
 	if let Err(err) = launcher()
 // 		.hidpi(false)
-		.fps_cap(None)
 		.vsync(false)
 		.run::<Game>() {
 		println!("{}", err);

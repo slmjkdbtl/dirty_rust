@@ -41,6 +41,7 @@ mod transform;
 mod camera;
 mod shader;
 mod font;
+mod fps;
 pub mod shapes;
 pub mod fs;
 pub mod geom;

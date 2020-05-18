@@ -202,7 +202,7 @@ impl window::WindowCtx for Window {
 
 	fn run(
 		mut self,
-		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
+		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<bool> + 'static,
 	) -> Result<()> {
 
 		use glutin::event_loop::ControlFlow;
@@ -225,6 +225,8 @@ impl window::WindowCtx for Window {
 				use glutin::event::TouchPhase;
 				use glutin::event::ElementState;
 				use input::*;
+
+				let mut events = vec![];
 
 // 				#[cfg(feature = "midi")]
 // 				if let Ok(mut buf) = midi_buf.lock() {
@@ -253,10 +255,10 @@ impl window::WindowCtx for Window {
 
 										ElementState::Pressed => {
 
-											handle(&mut self, WindowEvent::Input(Event::KeyPressRepeat(key)))?;
+											events.push(Event::KeyPressRepeat(key));
 
 											if !self.key_down(key) {
-												handle(&mut self, WindowEvent::Input(Event::KeyPress(key)))?;
+												events.push(Event::KeyPress(key));
 											}
 
 											self.pressed_keys.insert(key);
@@ -265,7 +267,7 @@ impl window::WindowCtx for Window {
 
 										ElementState::Released => {
 											self.pressed_keys.remove(&key);
-											handle(&mut self, WindowEvent::Input(Event::KeyRelease(key)))?;
+											events.push(Event::KeyRelease(key));
 										},
 
 									}
@@ -284,11 +286,11 @@ impl window::WindowCtx for Window {
 
 									ElementState::Pressed => {
 										self.pressed_mouse.insert(button);
-										handle(&mut self, WindowEvent::Input(Event::MousePress(button)))?;
+										events.push(Event::MousePress(button));
 									},
 									ElementState::Released => {
 										self.pressed_mouse.remove(&button);
-										handle(&mut self, WindowEvent::Input(Event::MouseRelease(button)))?;
+										events.push(Event::MouseRelease(button));
 									},
 
 								}
@@ -322,13 +324,13 @@ impl window::WindowCtx for Window {
 							let p = self.scroll_phase;
 							let d: Vec2 = (*delta).into();
 
-							handle(&mut self, WindowEvent::Input(Event::Wheel(vec2!(d.x, -d.y), p)))?;
+							events.push(Event::Wheel(vec2!(d.x, -d.y), p));
 
 						},
 
 						WEvent::ReceivedCharacter(ch) => {
 							if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
-								handle(&mut self, WindowEvent::Input(Event::CharInput(*ch)))?;
+								events.push(Event::CharInput(*ch));
 							}
 						},
 
@@ -345,36 +347,36 @@ impl window::WindowCtx for Window {
 // 							self.apply_cam(&cam);
 							self.windowed_ctx.resize(*size);
 
-							handle(&mut self, WindowEvent::Input(Event::Resize(w, h)))?;
+							events.push(Event::Resize(w, h));
 
 						},
 
 						WEvent::Touch(touch) => {
-							handle(&mut self, WindowEvent::Input(Event::Touch(touch.id, touch.location.into())))?;
+							events.push(Event::Touch(touch.id, touch.location.into()));
 						},
 
 						WEvent::HoveredFile(path) => {
-							handle(&mut self, WindowEvent::Input(Event::FileHover(path.to_path_buf())))?;
+							events.push(Event::FileHover(path.to_path_buf()));
 						},
 
 						WEvent::HoveredFileCancelled => {
-							handle(&mut self, WindowEvent::Input(Event::FileHoverCancel))?;
+							events.push(Event::FileHoverCancel);
 						},
 
 						WEvent::DroppedFile(path) => {
-							handle(&mut self, WindowEvent::Input(Event::FileDrop(path.to_path_buf())))?;
+							events.push(Event::FileDrop(path.to_path_buf()));
 						},
 
 						WEvent::Focused(b) => {
-							handle(&mut self, WindowEvent::Input(Event::Focus(*b)))?;
+							events.push(Event::Focus(*b));
 						},
 
 						WEvent::CursorEntered { .. } => {
-							handle(&mut self, WindowEvent::Input(Event::CursorEnter))?;
+							events.push(Event::CursorEnter);
 						},
 
 						WEvent::CursorLeft { .. } => {
-							handle(&mut self, WindowEvent::Input(Event::CursorLeave))?;
+							events.push(Event::CursorLeave);
 						},
 
 						_ => (),
@@ -383,19 +385,18 @@ impl window::WindowCtx for Window {
 
 					glutin::event::Event::DeviceEvent { event, .. } => match event {
 						DEvent::MouseMotion { delta } => {
-							handle(&mut self, WindowEvent::Input(Event::MouseMove(vec2!(delta.0, -delta.1))))?;
+							events.push(Event::MouseMove(vec2!(delta.0, -delta.1)));
 						},
 						_ => (),
 					},
 
 					glutin::event::Event::RedrawRequested(_) => {
 
-						handle(&mut self, WindowEvent::Frame)?;
-						self.swap()?;
+						if !handle(&mut self, WindowEvent::Frame)? {
+							*flow = ControlFlow::Exit;
+						}
 
-// 						if ctx.quit {
-// 							*flow = ControlFlow::Exit;
-// 						}
+						self.swap()?;
 
 					},
 
@@ -415,6 +416,12 @@ impl window::WindowCtx for Window {
 					_ => {},
 
 				};
+
+				for e in events {
+					if !handle(&mut self, WindowEvent::Input(e))? {
+						*flow = ControlFlow::Exit;
+					}
+				}
 
 			};
 
