@@ -18,8 +18,8 @@ pub struct Conf {
 	pub cursor_locked: bool,
 	pub cull_face: bool,
 	pub fps_cap: Option<u16>,
-	pub texture_filter: gfx::FilterMode,
-	pub default_font: Option<gfx::BitmapFontData>,
+// 	pub texture_filter: gfx::FilterMode,
+// 	pub default_font: Option<gfx::BitmapFontData>,
 }
 
 impl Conf {
@@ -53,8 +53,8 @@ impl Default for Conf {
 			cursor_hidden: false,
 			cursor_locked: false,
 			fps_cap: Some(60),
-			texture_filter: gfx::FilterMode::Nearest,
-			default_font: None,
+// 			texture_filter: gfx::FilterMode::Nearest,
+// 			default_font: None,
 		};
 	}
 
@@ -133,15 +133,15 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn texture_filter(mut self, f: gfx::FilterMode) -> Self {
-		self.conf.texture_filter = f;
-		return self;
-	}
+// 	pub fn texture_filter(mut self, f: gfx::FilterMode) -> Self {
+// 		self.conf.texture_filter = f;
+// 		return self;
+// 	}
 
-	pub fn default_font(mut self, f: gfx::BitmapFontData) -> Self {
-		self.conf.default_font = Some(f);
-		return self;
-	}
+// 	pub fn default_font(mut self, f: gfx::BitmapFontData) -> Self {
+// 		self.conf.default_font = Some(f);
+// 		return self;
+// 	}
 
 }
 
