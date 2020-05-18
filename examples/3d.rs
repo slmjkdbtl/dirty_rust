@@ -100,13 +100,13 @@ impl State for Game {
 				match *k {
 					Key::Esc => {
 						ctx.toggle_cursor_hidden();
-						ctx.toggle_cursor_locked()?;
+						ctx.toggle_cursor_locked();
 					},
 					Key::F => ctx.toggle_fullscreen(),
 					Key::Q if mods.meta => ctx.quit(),
 					Key::L => {
 						ctx.set_cursor_hidden(self.show_ui);
-						ctx.set_cursor_locked(self.show_ui)?;
+						ctx.set_cursor_locked(self.show_ui);
 						self.show_ui = !self.show_ui;
 					}
 					_ => {},
@@ -140,31 +140,31 @@ impl State for Game {
 
 	}
 
-	fn ui(&mut self, ctx: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
+// 	fn ui(&mut self, ctx: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
 
-		if self.show_ui {
+// 		if self.show_ui {
 
-			let top_left = ctx.coord(gfx::Origin::TopLeft);
+// 			let top_left = ctx.coord(gfx::Origin::TopLeft);
 
-			ui.window(ctx, "debug", top_left + vec2!(120, -120), 240.0, 240.0, |ctx, p| {
+// 			ui.window(ctx, "debug", top_left + vec2!(120, -120), 240.0, 240.0, |ctx, p| {
 
-				let fov = self.cam.fov.to_degrees();
+// 				let fov = self.cam.fov.to_degrees();
 
-				self.cam.fov = p.slider(ctx, "FOV", fov, 45.0, 90.0)?.to_radians();
+// 				self.cam.fov = p.slider(ctx, "FOV", fov, 45.0, 90.0)?.to_radians();
 
-				return Ok(());
+// 				return Ok(());
 
-			})?;
+// 			})?;
 
-		}
+// 		}
 
-		return Ok(());
+// 		return Ok(());
 
-	}
+// 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx, dt: std::time::Duration) -> Result<()> {
 
-		let dt = ctx.dt();
+		let dt = dt.as_secs_f32();
 
 		if ctx.key_down(Key::W) {
 			self.cam.pos += self.cam.front() * dt * self.move_speed;
@@ -182,7 +182,7 @@ impl State for Game {
 			self.cam.pos += self.cam.right() * dt * self.move_speed;
 		}
 
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+// 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		return Ok(());
 

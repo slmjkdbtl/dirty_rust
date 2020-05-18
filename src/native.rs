@@ -9,7 +9,7 @@ use glutin::event_loop::EventLoop;
 use crate::*;
 use math::*;
 use input::*;
-use window::WindowEvent;
+use window::*;
 
 pub struct Window {
 	gl: Rc<gl::Device>,
@@ -21,6 +21,9 @@ pub struct Window {
 	height: i32,
 	mouse_pos: Vec2,
 	scroll_phase: input::ScrollPhase,
+	cursor_hidden: bool,
+	cursor_locked: bool,
+	title: String,
 }
 
 impl Window {
@@ -66,6 +69,14 @@ impl Window {
 				.map_err(|_| format!("failed to make opengl context"))?
 		};
 
+		if conf.cursor_hidden {
+			windowed_ctx.window().set_cursor_visible(false);
+		}
+
+		if conf.cursor_locked {
+			windowed_ctx.window().set_cursor_grab(true);
+		}
+
 		let gl = gl::Device::from_loader(|s| {
 			return windowed_ctx.get_proc_address(s) as *const _;
 		});
@@ -80,6 +91,9 @@ impl Window {
 			width: conf.width,
 			height: conf.height,
 			scroll_phase: input::ScrollPhase::Solid,
+			cursor_hidden: conf.cursor_hidden,
+			cursor_locked: conf.cursor_locked,
+			title: conf.title.to_string(),
 		});
 
 	}
@@ -139,6 +153,51 @@ impl window::WindowCtx for Window {
 
 		return Ok(());
 
+	}
+
+	fn set_fullscreen(&mut self, b: bool) {
+
+		use glutin::window::Fullscreen;
+
+		let window = self.windowed_ctx.window();
+
+		if b {
+			window.set_fullscreen(Some(Fullscreen::Borderless(window.current_monitor())));
+		} else {
+			window.set_fullscreen(None);
+		}
+
+	}
+
+	fn is_fullscreen(&self) -> bool {
+		return self.windowed_ctx.window().fullscreen().is_some();
+	}
+
+	fn set_cursor_hidden(&mut self, b: bool) {
+		self.windowed_ctx.window().set_cursor_visible(!b);
+		self.cursor_hidden = b;
+	}
+
+	fn is_cursor_hidden(&self) -> bool {
+		return self.cursor_hidden;
+	}
+
+	fn set_cursor_locked(&mut self, b: bool) {
+		self.windowed_ctx.window().set_cursor_grab(b);
+		self.cursor_locked = b;
+	}
+
+	fn is_cursor_locked(&self) -> bool {
+		return self.cursor_locked;
+	}
+
+	fn set_title(&mut self, s: &str) {
+		self.title = s.to_owned();
+		self.windowed_ctx.window().set_title(s);
+	}
+
+	fn title(&self) -> &str {
+		return &self.title;
 	}
 
 	fn run(
