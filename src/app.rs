@@ -7,6 +7,7 @@ use instant::Instant;
 use crate::*;
 use input::*;
 use math::*;
+use fps::*;
 use window::WindowCtx;
 pub use conf::*;
 
@@ -21,6 +22,7 @@ pub struct Ctx<'a> {
 
 	time: Duration,
 	quit: bool,
+	fps_counter: &'a mut FPSCounter,
 
 }
 
@@ -84,12 +86,14 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 	window.swap()?;
 
 	let mut time = Duration::from_secs_f32(0.0);
+	let mut fps_counter = FPSCounter::new();
 
 	let mut ctx = Ctx {
 		window: &mut window,
 		gfx: &mut gfx,
 		time: time,
 		quit: false,
+		fps_counter: &mut fps_counter,
 	};
 
 	let mut s = S::init(&mut ctx)?;
@@ -101,6 +105,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 			window: &mut window,
 			gfx: &mut gfx,
 			time: time,
+			fps_counter: &mut fps_counter,
 			quit: false,
 		};
 
@@ -115,7 +120,9 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 				let dt = last_frame_time.elapsed();
 
 				time += dt;
+				ctx.fps_counter.tick(dt);
 				last_frame_time = Instant::now();
+				ctx.time = time;
 
 				s.update(&mut ctx, dt)?;
 				ctx.begin_frame();
@@ -123,9 +130,10 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 				ctx.end_frame();
 
 			},
+
 		}
 
-		return Ok(());
+		return Ok(!ctx.quit);
 
 	})?;
 
@@ -137,6 +145,10 @@ impl<'a> Ctx<'a> {
 
 	pub fn time(&self) -> Duration {
 		return self.time;
+	}
+
+	pub fn fps(&self) -> u16 {
+		return self.fps_counter.fps();
 	}
 
 	pub fn quit(&mut self) {

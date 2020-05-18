@@ -194,7 +194,7 @@ impl window::WindowCtx for Window {
 
 	fn run(
 		mut self,
-		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
+		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<bool> + 'static,
 	) -> Result<()> {
 
 		use wasm_bindgen::JsCast;

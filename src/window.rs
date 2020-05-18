@@ -24,7 +24,7 @@ pub enum CursorIcon {
 
 pub trait WindowCtx {
 
-	fn run(self, _: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static) -> Result<()>;
+	fn run(self, _: impl FnMut(&mut Self, WindowEvent) -> Result<bool> + 'static) -> Result<()>;
 
 	fn gl(&self) -> &Rc<gl::Device>;
 	fn swap(&self) -> Result<()>;
