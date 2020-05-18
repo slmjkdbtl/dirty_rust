@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use crate::*;
 use math::*;
 use input::*;
-use window::WindowEvent;
+use window::*;
 
 pub struct Window {
 	canvas: web_sys::HtmlCanvasElement,
@@ -20,6 +20,23 @@ pub struct Window {
 	mouse_pos: Vec2,
 	width: i32,
 	height: i32,
+	cursor_hidden: bool,
+	prev_cursor: CursorIcon,
+	title: String,
+}
+
+impl CursorIcon {
+	fn to_web(&self) -> &'static str {
+		return match self {
+			CursorIcon::Normal => "default",
+			CursorIcon::Hand => "pointer",
+			CursorIcon::Cross => "crosshair",
+			CursorIcon::Move => "move",
+			CursorIcon::Progress => "progress",
+			CursorIcon::Wait => "wait",
+			CursorIcon::Text => "text",
+		};
+	}
 }
 
 impl Window {
@@ -49,6 +66,7 @@ impl Window {
 
 		canvas.set_width(conf.width as u32);
 		canvas.set_height(conf.height as u32);
+		canvas.set_attribute("alt", &conf.title);
 
 		let webgl_context = canvas
 			.get_context("webgl")
@@ -75,6 +93,9 @@ impl Window {
 			mouse_pos: vec2!(),
 			width: conf.width,
 			height: conf.height,
+			cursor_hidden: false,
+			prev_cursor: CursorIcon::Normal,
+			title: conf.title.to_string(),
 		});
 
 	}
@@ -117,6 +138,58 @@ impl window::WindowCtx for Window {
 
 	fn set_mouse_pos(&mut self, _: Vec2) -> Result<()> {
 		return Ok(());
+	}
+
+	fn set_fullscreen(&mut self, b: bool) {
+
+		if b {
+			self.canvas.request_fullscreen();
+		} else {
+			self.document.exit_fullscreen();
+		}
+
+	}
+
+	fn is_fullscreen(&self) -> bool {
+		return false;
+	}
+
+	fn set_cursor_hidden(&mut self, b: bool) {
+
+		self.cursor_hidden = b;
+
+		if b {
+			self.canvas.set_attribute("style", "cursor: none");
+		} else {
+			self.canvas.set_attribute("style", &format!("cursor: {}", self.prev_cursor.to_web()));
+		}
+
+	}
+
+	fn is_cursor_hidden(&self) -> bool {
+		return self.cursor_hidden;
+	}
+
+	fn set_cursor_locked(&mut self, b: bool) {
+// 		if b {
+// 			self.canvas.request_pointer_lock();
+// 		} else {
+// 			self.document.exit_pointer_lock();
+// 		}
+	}
+
+	fn is_cursor_locked(&self) -> bool {
+		return false;
+	}
+
+	fn set_title(&mut self, s: &str) {
+		self.title = s.to_owned();
+		self.document.set_title(s);
+		self.canvas.set_attribute("alt", s);
+	}
+
+	fn title(&self) -> &str {
+		return &self.title;
 	}
 
 	fn run(

@@ -5,6 +5,8 @@ use std::time::Duration;
 use instant::Instant;
 
 use crate::*;
+use input::*;
+use math::*;
 use window::WindowCtx;
 pub use conf::*;
 
@@ -17,6 +19,9 @@ pub struct Ctx<'a> {
 
 	pub(crate) gfx: &'a mut gfx::GfxCtx,
 
+	time: Duration,
+	quit: bool,
+
 }
 
 pub trait State: 'static + Sized {
@@ -27,7 +32,7 @@ pub trait State: 'static + Sized {
 		return Ok(());
 	}
 
-	fn update(&mut self, _: &mut Ctx) -> Result<()> {
+	fn update(&mut self, _: &mut Ctx, _: Duration) -> Result<()> {
 		return Ok(());
 	}
 
@@ -78,20 +83,25 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 
 	window.swap()?;
 
+	let mut time = Duration::from_secs_f32(0.0);
+
 	let mut ctx = Ctx {
 		window: &mut window,
 		gfx: &mut gfx,
+		time: time,
+		quit: false,
 	};
 
 	let mut s = S::init(&mut ctx)?;
 	let mut last_frame_time = Instant::now();
-	let mut time = Duration::from_secs_f32(0.0);
 
 	window.run(move |mut window, e| {
 
 		let mut ctx = Ctx {
 			window: &mut window,
 			gfx: &mut gfx,
+			time: time,
+			quit: false,
 		};
 
 		match e {
@@ -107,7 +117,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 				time += dt;
 				last_frame_time = Instant::now();
 
-				s.update(&mut ctx)?;
+				s.update(&mut ctx, dt)?;
 				ctx.begin_frame();
 				s.draw(&mut ctx)?;
 				ctx.end_frame();
@@ -120,6 +130,105 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 	})?;
 
 	return Ok(());
+
+}
+
+impl<'a> Ctx<'a> {
+
+	pub fn time(&self) -> Duration {
+		return self.time;
+	}
+
+	pub fn quit(&mut self) {
+		self.quit = true;
+	}
+
+}
+
+impl<'a> Ctx<'a> {
+
+	pub fn key_down(&self, k: Key) -> bool {
+		return self.window.key_down(k);
+	}
+
+	pub fn key_mods(&self) -> input::KeyMod {
+		return self.window.key_mods();
+	}
+
+	pub fn mouse_down(&self, m: Mouse) -> bool {
+		return self.window.mouse_down(m);
+	}
+
+	pub fn width(&self) -> i32 {
+		return self.window.width();
+	}
+
+	pub fn height(&self) -> i32 {
+		return self.window.height();
+	}
+
+	pub fn dpi(&self) -> f32 {
+		return self.window.dpi();
+	}
+
+	pub fn mouse_pos(&self) -> Vec2 {
+		return self.window.mouse_pos();
+	}
+
+	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
+		return self.window.set_mouse_pos(p);
+	}
+
+	pub fn clip_to_screen(&self, p: Vec2) -> Vec2 {
+		return self.window.clip_to_screen(p);
+	}
+
+	pub fn screen_to_clip(&self, p: Vec2) -> Vec2 {
+		return self.window.screen_to_clip(p);
+	}
+
+	pub fn set_fullscreen(&mut self, b: bool) {
+		self.window.set_fullscreen(b);
+	}
+
+	pub fn is_fullscreen(&self) -> bool {
+		return self.window.is_fullscreen();
+	}
+
+	pub fn toggle_fullscreen(&mut self) {
+		self.window.toggle_fullscreen();
+	}
+
+	pub fn set_cursor_hidden(&mut self, b: bool) {
+		self.window.set_cursor_hidden(b);
+	}
+
+	pub fn is_cursor_hidden(&self) -> bool {
+		return self.window.is_cursor_hidden();
+	}
+
+	pub fn toggle_cursor_hidden(&mut self) {
+		self.window.toggle_cursor_hidden();
+	}
+
+	pub fn set_cursor_locked(&mut self, b: bool) {
+		self.window.set_cursor_locked(b);
+	}
+	pub fn is_cursor_locked(&self) -> bool {
+		return self.window.is_cursor_locked();
+	}
+
+	pub fn toggle_cursor_locked(&mut self) {
+		self.window.toggle_cursor_locked();
+	}
+
+	pub fn set_title(&mut self, s: &str) {
+		self.window.set_title(s);
+	}
+
+	pub fn title(&self) -> &str {
+		return self.window.title();
+	}
 
 }
 
