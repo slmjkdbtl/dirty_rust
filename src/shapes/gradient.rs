@@ -42,7 +42,7 @@ impl Drawable for Gradient {
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
 		let mut verts = Vec::with_capacity(4 + 2 * (self.steps.len() - 2));
 
-		let matrix = ctx.transform
+		let matrix = ctx.gfx.transform
 			.t2((self.p1 + self.p2) * 0.5)
 			.r(rot - 90f32.to_radians())
 			;

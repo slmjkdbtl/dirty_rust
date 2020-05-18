@@ -19,9 +19,6 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => ctx.quit(),
-					_ => {
-						log!("{:?}", k);
-					},
 				}
 			},
 			_ => {},

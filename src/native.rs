@@ -88,7 +88,7 @@ impl Window {
 
 impl window::WindowCtx for Window {
 
-	fn gl(&self) -> &gl::Device {
+	fn gl(&self) -> &Rc<gl::Device> {
 		return &self.gl;
 	}
 
@@ -119,10 +119,32 @@ impl window::WindowCtx for Window {
 		return self.height;
 	}
 
+	fn mouse_pos(&self) -> Vec2 {
+		return self.mouse_pos;
+	}
+
+	fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
+
+		let (w, h) = (self.width as f32, self.height as f32);
+		let mpos = vec2!(w / 2.0 + p.x, h / 2.0 - p.y);
+		let g_mpos: LogicalPosition<f64> = mpos.into();
+
+		self.windowed_ctx
+			.window()
+			.set_cursor_position(g_mpos)
+			.map_err(|_| format!("failed to set mouse position"))?
+			;
+
+		self.mouse_pos = mpos;
+
+		return Ok(());
+
+	}
+
 	fn run(
 		mut self,
 		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
-	) {
+	) -> Result<()> {
 
 		use glutin::event_loop::ControlFlow;
 
@@ -130,14 +152,14 @@ impl window::WindowCtx for Window {
 
 		let event_loop = match self.event_loop.take() {
 			Some(e) => e,
-			None => return,
+			None => return Ok(()),
 		};
 
 		event_loop.run(move |e, _, flow| {
 
 			*flow = ControlFlow::Poll;
 
-			let event_result: Result<()> = try {
+			let res: Result<()> = try {
 
 				use glutin::event::WindowEvent as WEvent;
 				use glutin::event::DeviceEvent as DEvent;
@@ -148,7 +170,7 @@ impl window::WindowCtx for Window {
 // 				#[cfg(feature = "midi")]
 // 				if let Ok(mut buf) = midi_buf.lock() {
 // 					for msg in std::mem::replace(&mut *buf, vec![]) {
-// 						handle(Event::MIDI(msg.clone()));
+// 						handle(Event::MIDI(msg.clone()))?;
 // 					}
 // 				}
 
@@ -172,10 +194,10 @@ impl window::WindowCtx for Window {
 
 										ElementState::Pressed => {
 
-											handle(&mut self, WindowEvent::Input(Event::KeyPressRepeat(key)));
+											handle(&mut self, WindowEvent::Input(Event::KeyPressRepeat(key)))?;
 
 											if !self.key_down(key) {
-												handle(&mut self, WindowEvent::Input(Event::KeyPress(key)));
+												handle(&mut self, WindowEvent::Input(Event::KeyPress(key)))?;
 											}
 
 											self.pressed_keys.insert(key);
@@ -184,7 +206,7 @@ impl window::WindowCtx for Window {
 
 										ElementState::Released => {
 											self.pressed_keys.remove(&key);
-											handle(&mut self, WindowEvent::Input(Event::KeyRelease(key)));
+											handle(&mut self, WindowEvent::Input(Event::KeyRelease(key)))?;
 										},
 
 									}
@@ -203,11 +225,11 @@ impl window::WindowCtx for Window {
 
 									ElementState::Pressed => {
 										self.pressed_mouse.insert(button);
-										handle(&mut self, WindowEvent::Input(Event::MousePress(button)));
+										handle(&mut self, WindowEvent::Input(Event::MousePress(button)))?;
 									},
 									ElementState::Released => {
 										self.pressed_mouse.remove(&button);
-										handle(&mut self, WindowEvent::Input(Event::MouseRelease(button)));
+										handle(&mut self, WindowEvent::Input(Event::MouseRelease(button)))?;
 									},
 
 								}
@@ -241,13 +263,13 @@ impl window::WindowCtx for Window {
 							let p = self.scroll_phase;
 							let d: Vec2 = (*delta).into();
 
-							handle(&mut self, WindowEvent::Input(Event::Wheel(vec2!(d.x, -d.y), p)));
+							handle(&mut self, WindowEvent::Input(Event::Wheel(vec2!(d.x, -d.y), p)))?;
 
 						},
 
 						WEvent::ReceivedCharacter(ch) => {
 							if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
-								handle(&mut self, WindowEvent::Input(Event::CharInput(*ch)));
+								handle(&mut self, WindowEvent::Input(Event::CharInput(*ch)))?;
 							}
 						},
 
@@ -264,36 +286,36 @@ impl window::WindowCtx for Window {
 // 							self.apply_cam(&cam);
 							self.windowed_ctx.resize(*size);
 
-							handle(&mut self, WindowEvent::Input(Event::Resize(w, h)));
+							handle(&mut self, WindowEvent::Input(Event::Resize(w, h)))?;
 
 						},
 
 						WEvent::Touch(touch) => {
-							handle(&mut self, WindowEvent::Input(Event::Touch(touch.id, touch.location.into())));
+							handle(&mut self, WindowEvent::Input(Event::Touch(touch.id, touch.location.into())))?;
 						},
 
 						WEvent::HoveredFile(path) => {
-							handle(&mut self, WindowEvent::Input(Event::FileHover(path.to_path_buf())));
+							handle(&mut self, WindowEvent::Input(Event::FileHover(path.to_path_buf())))?;
 						},
 
 						WEvent::HoveredFileCancelled => {
-							handle(&mut self, WindowEvent::Input(Event::FileHoverCancel));
+							handle(&mut self, WindowEvent::Input(Event::FileHoverCancel))?;
 						},
 
 						WEvent::DroppedFile(path) => {
-							handle(&mut self, WindowEvent::Input(Event::FileDrop(path.to_path_buf())));
+							handle(&mut self, WindowEvent::Input(Event::FileDrop(path.to_path_buf())))?;
 						},
 
 						WEvent::Focused(b) => {
-							handle(&mut self, WindowEvent::Input(Event::Focus(*b)));
+							handle(&mut self, WindowEvent::Input(Event::Focus(*b)))?;
 						},
 
 						WEvent::CursorEntered { .. } => {
-							handle(&mut self, WindowEvent::Input(Event::CursorEnter));
+							handle(&mut self, WindowEvent::Input(Event::CursorEnter))?;
 						},
 
 						WEvent::CursorLeft { .. } => {
-							handle(&mut self, WindowEvent::Input(Event::CursorLeave));
+							handle(&mut self, WindowEvent::Input(Event::CursorLeave))?;
 						},
 
 						_ => (),
@@ -302,14 +324,15 @@ impl window::WindowCtx for Window {
 
 					glutin::event::Event::DeviceEvent { event, .. } => match event {
 						DEvent::MouseMotion { delta } => {
-							handle(&mut self, WindowEvent::Input(Event::MouseMove(vec2!(delta.0, -delta.1))));
+							handle(&mut self, WindowEvent::Input(Event::MouseMove(vec2!(delta.0, -delta.1))))?;
 						},
 						_ => (),
 					},
 
 					glutin::event::Event::RedrawRequested(_) => {
 
-						handle(&mut self, WindowEvent::Frame);
+						handle(&mut self, WindowEvent::Frame)?;
+						self.swap()?;
 
 // 						if ctx.quit {
 // 							*flow = ControlFlow::Exit;
@@ -336,8 +359,8 @@ impl window::WindowCtx for Window {
 
 			};
 
-			if let Err(err) = event_result {
-				eprintln!("{}", err);
+			if let Err(err) = res {
+				elog!("{}", err);
 			}
 
 		});

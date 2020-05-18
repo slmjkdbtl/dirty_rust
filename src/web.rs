@@ -83,7 +83,7 @@ impl Window {
 
 impl window::WindowCtx for Window {
 
-	fn gl(&self) -> &gl::Device {
+	fn gl(&self) -> &Rc<gl::Device> {
 		return &self.gl;
 	}
 
@@ -111,14 +111,21 @@ impl window::WindowCtx for Window {
 		return self.height;
 	}
 
+	fn mouse_pos(&self) -> Vec2 {
+		return self.mouse_pos;
+	}
+
+	fn set_mouse_pos(&mut self, _: Vec2) -> Result<()> {
+		return Ok(());
+	}
+
 	fn run(
 		mut self,
 		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
-	) {
+	) -> Result<()> {
 
 		use wasm_bindgen::JsCast;
 		use wasm_bindgen::closure::Closure;
-		use std::cell::RefCell;
 		use input::Event::*;
 
 		let web_events = Rc::new(RefCell::new(vec![]));
@@ -142,7 +149,9 @@ impl window::WindowCtx for Window {
 					web_events_c.borrow_mut().push(WebEvent::$t(e));
 				}) as Box<dyn FnMut(_)>);
 
-				self.$root.add_event_listener_with_callback($name, handler.as_ref().unchecked_ref());
+				self.$root
+					.add_event_listener_with_callback($name, handler.as_ref().unchecked_ref())
+					.map_err(|_| format!("failed to add event {}", $name))?;
 
 				handler.forget();
 
@@ -161,78 +170,86 @@ impl window::WindowCtx for Window {
 
 		let render_loop = match self.render_loop.take() {
 			Some(l) => l,
-			None => return,
+			None => return Ok(()),
 		};
 
 		render_loop.run(move |running: &mut bool| {
 
-			let mut events = vec![];
+			let res: Result<()> = try {
 
-			for e in web_events.borrow().iter() {
+				let mut events = vec![];
 
-				match e {
+				for e in web_events.borrow().iter() {
 
-					WebEvent::KeyPress(e) => {
-						if let Some(k) = Key::from_code(e.key_code()) {
-							events.push(KeyPressRepeat(k));
-							if !self.key_down(k) {
-								events.push(KeyPress(k));
+					match e {
+
+						WebEvent::KeyPress(e) => {
+							if let Some(k) = Key::from_code(e.key_code()) {
+								events.push(KeyPressRepeat(k));
+								if !self.key_down(k) {
+									events.push(KeyPress(k));
+								}
+								self.pressed_keys.insert(k);
 							}
-							self.pressed_keys.insert(k);
-						}
-					},
+						},
 
-					WebEvent::KeyRelease(e) => {
-						if let Some(k) = Key::from_code(e.key_code()) {
-							self.pressed_keys.remove(&k);
-							events.push(KeyRelease(k));
-						}
-					},
+						WebEvent::KeyRelease(e) => {
+							if let Some(k) = Key::from_code(e.key_code()) {
+								self.pressed_keys.remove(&k);
+								events.push(KeyRelease(k));
+							}
+						},
 
-					WebEvent::MouseMove(e) => {
+						WebEvent::MouseMove(e) => {
 
-						let (w, h) = (self.width as f32, self.height as f32);
-						let mpos = vec2!(e.client_x(), e.client_y());
-						let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y as f32);
-						let prev_mpos = self.mouse_pos;
+							let (w, h) = (self.width as f32, self.height as f32);
+							let mpos = vec2!(e.client_x(), e.client_y());
+							let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y as f32);
+							let prev_mpos = self.mouse_pos;
 
-						self.mouse_pos = mpos;
+							self.mouse_pos = mpos;
 
-						if prev_mpos != vec2!(0) {
-							events.push(MouseMove(mpos - prev_mpos));
-						}
+							if prev_mpos != vec2!(0) {
+								events.push(MouseMove(mpos - prev_mpos));
+							}
 
-					},
+						},
 
-					WebEvent::MousePress(e) => {
-						self.pressed_mouse.insert(Mouse::Left);
-						events.push(MousePress(Mouse::Left));
-					},
+						WebEvent::MousePress(_) => {
+							self.pressed_mouse.insert(Mouse::Left);
+							events.push(MousePress(Mouse::Left));
+						},
 
-					WebEvent::MouseRelease(e) => {
-						self.pressed_mouse.remove(&Mouse::Left);
-						events.push(MouseRelease(Mouse::Left));
-					},
+						WebEvent::MouseRelease(_) => {
+							self.pressed_mouse.remove(&Mouse::Left);
+							events.push(MouseRelease(Mouse::Left));
+						},
 
-					WebEvent::Wheel(e) => {
-						events.push(Wheel(vec2!(e.delta_x(), e.delta_y()), input::ScrollPhase::Solid));
-					},
+						WebEvent::Wheel(e) => {
+							events.push(Wheel(vec2!(e.delta_x(), e.delta_y()), input::ScrollPhase::Solid));
+						},
 
-					_ => {},
+					}
 
 				}
 
+				web_events.borrow_mut().clear();
+
+				for e in events {
+					handle(&mut self, WindowEvent::Input(e))?;
+				}
+
+				handle(&mut self, WindowEvent::Frame)?;
+
+			};
+
+			if let Err(err) = res {
+				elog!("{}", err);
 			}
-
-			web_events.borrow_mut().clear();
-
-			for e in events {
-				handle(&mut self, WindowEvent::Input(e));
-			}
-
-			handle(&mut self, WindowEvent::Frame);
 
 		});
+
+		return Ok(());
 
 	}
 

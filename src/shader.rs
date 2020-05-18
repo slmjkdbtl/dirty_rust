@@ -92,7 +92,7 @@ impl<U: CustomUniform> Shader<U> {
 		};
 	}
 
-	pub fn from_frag(ctx: &impl gfx::GfxCtx, frag: &str) -> Result<Self> {
+	pub fn from_frag(ctx: &impl HasGLDevice, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			DEFAULT_VERT,
@@ -100,7 +100,7 @@ impl<U: CustomUniform> Shader<U> {
 		);
 	}
 
-	pub fn from_vert(ctx: &impl gfx::GfxCtx, vert: &str) -> Result<Self> {
+	pub fn from_vert(ctx: &impl HasGLDevice, vert: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
@@ -108,7 +108,7 @@ impl<U: CustomUniform> Shader<U> {
 		);
 	}
 
-	pub fn from_vert_frag(ctx: &impl gfx::GfxCtx, vert: &str, frag: &str) -> Result<Self> {
+	pub fn from_vert_frag(ctx: &impl HasGLDevice, vert: &str, frag: &str) -> Result<Self> {
 
 		let vert_src = TEMPLATE_VERT.replace("{{user}}", vert);
 		let frag_src = TEMPLATE_FRAG.replace("{{user}}", frag);
@@ -117,6 +117,10 @@ impl<U: CustomUniform> Shader<U> {
 
 		return Ok(Self::from_gl_pipeline(gl::Pipeline::new(ctx.device(), &vert_src, &frag_src)?));
 
+	}
+
+	pub fn default(ctx: &impl HasGLDevice) -> Result<Self> {
+		return Self::from_vert_frag(ctx, DEFAULT_VERT, DEFAULT_FRAG);
 	}
 
 	pub(crate) fn gl_pipeline(&self) -> &gl::Pipeline<Vertex, Uniform> {

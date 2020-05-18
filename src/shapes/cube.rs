@@ -35,18 +35,18 @@ impl Drawable for Cube {
 
 	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_calls += 1;
+		ctx.gfx.draw_calls += 1;
 
-		ctx.cube_renderer.draw(
+		ctx.gfx.cube_renderer.draw(
 			gl::Primitive::Triangle,
-			&ctx.cur_pipeline,
+			&ctx.gfx.cur_pipeline,
 			&gfx::Uniform {
-				proj: ctx.proj,
-				view: ctx.view,
-				model: ctx.transform,
+				proj: ctx.gfx.proj,
+				view: ctx.gfx.view,
+				model: ctx.gfx.transform,
 				color: self.color,
-				tex: ctx.empty_tex.clone(),
-				custom: ctx.cur_custom_uniform.clone(),
+				tex: ctx.gfx.empty_tex.clone(),
+				custom: ctx.gfx.cur_custom_uniform.clone(),
 			},
 		);
 

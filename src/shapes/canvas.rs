@@ -1,6 +1,7 @@
 // wengwengweng
 
 use super::*;
+use crate::window::WindowCtx;
 
 #[derive(Clone)]
 pub struct Canvas<'a> {
@@ -59,7 +60,7 @@ impl<'a> Drawable for Canvas<'a> {
 
 		ctx.draw_t(
 			mat4!()
-				.s2(vec2!(1.0 / ctx.dpi() as f32))
+				.s2(vec2!(1.0 / ctx.window.dpi() as f32))
 				,
 			&sprite
 		)?;

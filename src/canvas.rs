@@ -3,8 +3,8 @@
 use std::path::Path;
 
 use crate::*;
-use super::*;
-use super::gfx::*;
+use gfx::*;
+use window::WindowCtx;
 
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
@@ -18,10 +18,10 @@ impl Canvas {
 
 	pub fn new(ctx: &Ctx, w: i32, h: i32) -> Result<Self> {
 
-		let dpi = ctx.dpi();
+		let dpi = ctx.window.dpi();
 		let tw = (w as f32 * dpi) as i32;
 		let th = (h as f32 * dpi) as i32;
-		let fbuf = gl::Framebuffer::new(&ctx.gl, tw, th)?;
+		let fbuf = gl::Framebuffer::new(&ctx.device(), tw, th)?;
 		let tex = Texture::from_gl_tex(fbuf.tex().clone());
 
 		return Ok(Self {

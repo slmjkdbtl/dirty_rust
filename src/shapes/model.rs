@@ -74,22 +74,22 @@ fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
 		}
 
 		let tr = ptr * tr.as_mat4();
-		let tex = model.texture().unwrap_or(&ctx.empty_tex);
+		let tex = model.texture().unwrap_or(&ctx.gfx.empty_tex);
 
 		for mesh in &node.meshes {
 
-			ctx.draw_calls += 1;
+			ctx.gfx.draw_calls += 1;
 
 			mesh.gl_mesh().draw(
 				dctx.prim,
-				&ctx.cur_pipeline,
+				&ctx.gfx.cur_pipeline,
 				&gfx::Uniform {
-					proj: ctx.proj,
-					view: ctx.view,
-					model: ctx.transform * tr,
+					proj: ctx.gfx.proj,
+					view: ctx.gfx.view,
+					model: ctx.gfx.transform * tr,
 					color: dctx.color,
 					tex: tex.clone(),
-					custom: ctx.cur_custom_uniform.clone(),
+					custom: ctx.gfx.cur_custom_uniform.clone(),
 				},
 			);
 

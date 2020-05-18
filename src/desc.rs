@@ -2,12 +2,12 @@
 
 use std::mem;
 
-use crate::math::*;
-use crate::gfx::*;
 use serde::Serialize;
 use serde::Deserialize;
 
-use crate::gl;
+use crate::*;
+use math::*;
+use gfx::*;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MeshData {
@@ -47,9 +47,9 @@ pub(crate) struct Uniform {
 
 impl gl::UniformLayout for Uniform {
 
-	fn values(&self) -> UniformValues {
+	fn values(&self) -> gl::UniformValues {
 
-		let mut values: UniformValues = hmap![
+		let mut values: gl::UniformValues = hmap![
 			"u_proj" => &self.proj,
 			"u_view" => &self.view,
 			"u_model" => &self.model,

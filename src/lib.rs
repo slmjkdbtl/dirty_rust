@@ -14,9 +14,11 @@
 #![feature(type_alias_impl_trait)]
 
 #![allow(unused_parens)]
+#![allow(dead_code)]
 
 #[macro_use]
 pub mod utils;
+pub mod res;
 
 mod gl;
 mod window;
@@ -30,6 +32,19 @@ mod web;
 mod app;
 pub use app::*;
 
+pub mod gfx;
+mod desc;
+mod texture;
+mod canvas;
+mod model;
+mod transform;
+mod camera;
+mod shader;
+mod font;
+pub mod shapes;
+pub mod fs;
+pub mod geom;
+pub mod img;
 pub mod input;
 pub mod math;
 
