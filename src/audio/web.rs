@@ -22,13 +22,27 @@ impl Audio {
 	}
 }
 
-struct Decoder {
+pub struct Sound {
 	buffer: Rc<RefCell<Option<web_sys::AudioBuffer>>>,
 }
 
-impl Decoder {
+impl Sound {
 
-	fn new(ctx: &Audio, data: &[u8]) -> Result<Self> {
+	pub fn play(&self, ctx: &Audio) -> Result<()> {
+
+		let src = ctx.ctx
+			.create_buffer_source()
+			.map_err(|_| format!("failed to create audio source"))?;
+
+		src.connect_with_audio_node(&ctx.ctx.destination());
+		src.set_buffer(self.buffer.borrow().as_ref());
+		src.start();
+
+		return Ok(());
+
+	}
+
+	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let buf = js_sys::Uint8Array::from(data);
 		let abuf = Rc::new(RefCell::new(None));
@@ -50,58 +64,47 @@ impl Decoder {
 
 	}
 
-	fn buffer(&self) -> std::cell::Ref<Option<web_sys::AudioBuffer>> {
-		return self.buffer.borrow();
-	}
-
-}
-
-pub struct Sound {
-	decoder: Decoder,
-}
-
-impl Sound {
-
-	pub fn play(&self, ctx: &Audio) -> Result<()> {
-
-		let src = ctx.ctx
-			.create_buffer_source()
-			.map_err(|_| format!("failed to create audio source"))?;
-
-		src.connect_with_audio_node(&ctx.ctx.destination());
-		src.set_buffer(self.decoder.buffer().as_ref());
-		src.start();
-
-		return Ok(());
-
-	}
-
-	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
-		return Ok(Self {
-			decoder: Decoder::new(ctx, data)?,
-		});
-	}
-
 }
 
 pub struct Track {
-	decoder: Decoder,
+	audio: web_sys::HtmlAudioElement,
 }
 
 impl Track {
+
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
+
+		let buffer = js_sys::Uint8Array::from(data);
+		let buffer_val: &wasm_bindgen::JsValue = buffer.as_ref();
+		let parts = js_sys::Array::new_with_length(1);
+
+		parts.set(0, buffer_val.clone());
+
+		let blob = web_sys::Blob::new_with_u8_array_sequence(parts.as_ref())
+			.map_err(|_| format!("failed to create track"))?;
+
+		let src = web_sys::Url::create_object_url_with_blob(&blob)
+			.map_err(|_| format!("failed to create track"))?;
+
+		let audio = web_sys::HtmlAudioElement::new_with_src(&src)
+			.map_err(|_| format!("failed to create audio element"))?;
+
 		return Ok(Self {
-			decoder: Decoder::new(ctx, data)?,
+			audio: audio,
 		});
+
 	}
-	pub fn play(&self, ctx: &Audio) {
-		// ..
+
+	pub fn play(&self) {
+		self.audio.play();
 	}
-	pub fn pause(&self, ctx: &Audio) {
-		// ..
+
+	pub fn pause(&self) {
+		self.audio.pause();
 	}
+
 	pub fn is_playing(&self) -> bool {
-		return false;
+		return !self.audio.paused();
 	}
 }
 
