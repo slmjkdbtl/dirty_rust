@@ -3,6 +3,7 @@
 use std::collections::VecDeque;
 
 use dirty::*;
+use gfx::shapes;
 use input::Key;
 
 struct Game {
@@ -21,16 +22,19 @@ impl State for Game {
 
 		use input::Event::*;
 
+		let win = &mut ctx.window;
+
 		self.events.push_back(e.clone());
 
 		if self.events.len() >= self.events.capacity() {
 			self.events.pop_front();
 		}
 
-		match *e {
+		match e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
+				match *k {
+					Key::Esc => win.quit(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -42,14 +46,16 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		let top_left = ctx.coord(gfx::Origin::TopLeft);
+		let gfx = &mut ctx.gfx;
+
+		let top_left = gfx.coord(gfx::Origin::TopLeft);
 		let mut y = 0.0;
 
 		for (i, e) in self.events.iter().enumerate() {
 
 			let size = i as f32 + 1.0;
 
-			ctx.draw_t(
+			gfx.draw_t(
 				mat4!()
 					.t2(top_left + vec2!(0, y))
 					,

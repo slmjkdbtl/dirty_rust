@@ -37,11 +37,13 @@ pub use run::*;
 mod ctx;
 pub use ctx::*;
 
+pub mod audio;
 pub mod fs;
 pub mod geom;
 pub mod img;
 pub mod math;
 pub mod codec;
+// pub mod ui;
 // pub mod kit;
 
 #[cfg(feature = "midi")]
