@@ -9,7 +9,7 @@ use wasm_bindgen::closure::Closure;
 use crate::*;
 
 pub struct Audio {
-	ctx: web_sys::AudioContext,
+	ctx: Rc<web_sys::AudioContext>,
 }
 
 impl Audio {
@@ -17,30 +17,17 @@ impl Audio {
 		let ctx = web_sys::AudioContext::new()
 			.map_err(|_| format!("failed to create audio context"))?;
 		return Ok(Self {
-			ctx: ctx,
+			ctx: Rc::new(ctx),
 		});
 	}
 }
 
 pub struct Sound {
 	buffer: Rc<RefCell<Option<web_sys::AudioBuffer>>>,
+	ctx: Rc<web_sys::AudioContext>,
 }
 
 impl Sound {
-
-	pub fn play(&self, ctx: &Audio) -> Result<()> {
-
-		let src = ctx.ctx
-			.create_buffer_source()
-			.map_err(|_| format!("failed to create audio source"))?;
-
-		src.connect_with_audio_node(&ctx.ctx.destination());
-		src.set_buffer(self.buffer.borrow().as_ref());
-		src.start();
-
-		return Ok(());
-
-	}
 
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
@@ -60,7 +47,22 @@ impl Sound {
 
 		return Ok(Self {
 			buffer: abuf,
+			ctx: ctx.ctx.clone(),
 		});
+
+	}
+
+	pub fn play(&self) -> Result<()> {
+
+		let src = self.ctx
+			.create_buffer_source()
+			.map_err(|_| format!("failed to create audio source"))?;
+
+		src.connect_with_audio_node(&self.ctx.destination());
+		src.set_buffer(self.buffer.borrow().as_ref());
+		src.start();
+
+		return Ok(());
 
 	}
 

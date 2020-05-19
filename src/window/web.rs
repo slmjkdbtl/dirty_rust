@@ -58,11 +58,23 @@ impl Window {
 			.body()
 			.ok_or_else(|| format!("no body found"))?;
 
-		let canvas = document
-			.create_element("canvas")
-			.map_err(|_| format!("failed to create canvas"))?
-			.dyn_into::<web_sys::HtmlCanvasElement>()
-			.map_err(|_| format!("failed to create canvas"))?;
+		let canvas = match conf.canvas_mode {
+			CanvasMode::Create => {
+				document
+					.create_element("canvas")
+					.map_err(|_| format!("failed to create canvas"))?
+					.dyn_into::<web_sys::HtmlCanvasElement>()
+					.map_err(|_| format!("failed to create canvas"))?
+			},
+			CanvasMode::Get(id) => {
+				document
+					.query_selector(&format!("canvas#{}", id))
+					.map_err(|_| format!("failed to create canvas"))?
+					.ok_or_else(|| format!("failed to create canvas"))?
+					.dyn_into::<web_sys::HtmlCanvasElement>()
+					.map_err(|_| format!("failed to create canvas"))?
+			},
+		};
 
 		canvas.set_width(conf.width as u32);
 		canvas.set_height(conf.height as u32);

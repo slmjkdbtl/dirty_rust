@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::rc::Rc;
 use std::io::Cursor;
 use std::time::Duration;
 
@@ -11,14 +12,14 @@ use rodio::source::Buffered;
 use crate::*;
 
 pub struct Audio {
-	device: rodio::Device,
+	device: Rc<rodio::Device>,
 }
 
 impl Audio {
 	pub fn new() -> Result<Self> {
 		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
 		return Ok(Self {
-			device: device,
+			device: Rc::new(device),
 		});
 	}
 }
@@ -27,6 +28,7 @@ impl Audio {
 pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
 	effect: Effect,
+	device: Rc<rodio::Device>,
 }
 
 #[derive(Clone, Copy)]
@@ -59,6 +61,7 @@ impl Sound {
 		return Ok(Self {
 			buffer: source.buffered(),
 			effect: Effect::default(),
+			device: ctx.device.clone(),
 		});
 
 	}
@@ -68,23 +71,23 @@ impl Sound {
 	}
 
 	pub fn speed(&self, s: f32) -> Self {
-		assert!(s > 0.0 && s <= 2.0, "invalid speed");
 		return Self {
 			effect: Effect {
 				speed: s,
 				.. self.effect
 			},
+			device: self.device.clone(),
 			buffer: self.buffer.clone(),
 		}
 	}
 
 	pub fn volume(&self, v: f32) -> Self {
-		assert!(v >= 0.0 && v <= 2.0, "invalid volume");
 		return Self {
 			effect: Effect {
 				volume: v,
 				.. self.effect
 			},
+			device: self.device.clone(),
 			buffer: self.buffer.clone(),
 		}
 	}
@@ -95,6 +98,7 @@ impl Sound {
 				repeat: true,
 				.. self.effect
 			},
+			device: self.device.clone(),
 			buffer: self.buffer.clone(),
 		}
 	}
@@ -105,12 +109,13 @@ impl Sound {
 				fadein: time,
 				.. self.effect
 			},
+			device: self.device.clone(),
 			buffer: self.buffer.clone(),
 		}
 	}
 
-	pub fn play(&self, ctx: &Audio) -> Result<()> {
-		rodio::play_raw(&ctx.device, self.apply().convert_samples());
+	pub fn play(&self) -> Result<()> {
+		rodio::play_raw(&self.device, self.apply().convert_samples());
 		return Ok(());
 	}
 
