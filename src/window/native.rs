@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use glutin::dpi::*;
@@ -15,6 +16,8 @@ pub struct Window {
 	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
+	pressed_gamepad_buttons: HashMap<GamepadID, HashSet<GamepadButton>>,
+	gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
 	width: i32,
 	height: i32,
 	mouse_pos: Vec2,
@@ -23,6 +26,7 @@ pub struct Window {
 	cursor_locked: bool,
 	title: String,
 	quit: bool,
+	gamepad_ctx: gilrs::Gilrs,
 }
 
 impl Window {
@@ -81,6 +85,8 @@ impl Window {
 			windowed_ctx: windowed_ctx,
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
+			pressed_gamepad_buttons: hmap![],
+			gamepad_axis_pos: hmap![],
 			mouse_pos: vec2!(),
 			width: conf.width,
 			height: conf.height,
@@ -89,6 +95,8 @@ impl Window {
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_string(),
 			quit: false,
+			gamepad_ctx: gilrs::Gilrs::new()
+				.map_err(|_| format!("failed to create gamepad context"))?,
 		});
 
 	}
@@ -469,6 +477,97 @@ impl Window {
 							self.windowed_ctx
 								.window()
 								.request_redraw();
+						}
+
+						while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
+
+							use gilrs::ev::EventType::*;
+
+							match event {
+
+								ButtonPressed(button, ..) => {
+
+									if let Some(button) = GamepadButton::from_extern(button) {
+
+										self
+											.pressed_gamepad_buttons
+											.entry(id)
+											.or_insert(hset![])
+											.insert(button);
+
+										events.push(Event::GamepadPress(id, button));
+
+									}
+
+								},
+
+								ButtonRepeated(button, ..) => {
+									if let Some(button) = GamepadButton::from_extern(button) {
+										events.push(Event::GamepadPressRepeat(id, button));
+									}
+								},
+
+								ButtonReleased(button, ..) => {
+
+									if let Some(button) = GamepadButton::from_extern(button) {
+
+										self
+											.pressed_gamepad_buttons
+											.entry(id)
+											.or_insert(hset![])
+											.remove(&button);
+
+										events.push(Event::GamepadRelease(id, button));
+
+									}
+
+								},
+
+								AxisChanged(axis, val, ..) => {
+
+									let mut pos = self.gamepad_axis_pos
+										.entry(id)
+										.or_insert((vec2!(), vec2!()))
+										.clone()
+										;
+
+									match axis {
+										gilrs::ev::Axis::LeftStickX => {
+											pos.0.x = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+										},
+										gilrs::ev::Axis::LeftStickY => {
+											pos.0.y = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+										},
+										gilrs::ev::Axis::RightStickX => {
+											pos.1.x = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+										},
+										gilrs::ev::Axis::RightStickY => {
+											pos.1.y = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+										},
+										_ => {},
+
+									}
+
+									self.gamepad_axis_pos.insert(id, pos);
+
+								},
+
+								Connected => {
+									events.push(Event::GamepadConnect(id));
+								},
+
+								Disconnected => {
+									events.push(Event::GamepadDisconnect(id));
+								},
+
+								_ => {},
+
+							}
+
 						}
 
 					},
