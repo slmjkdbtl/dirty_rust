@@ -93,7 +93,6 @@ impl Window {
 
 }
 
-// impl window::WindowCtx for Window {
 impl Window {
 
 	pub(crate) fn get_gl_ctx(&self) -> Result<gl::Device> {

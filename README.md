@@ -8,6 +8,7 @@ here's a minimal window setup:
 
 ```rust
 use dirty::*;
+use gfx::shapes;
 use input::Key;
 
 struct Game;
@@ -22,10 +23,12 @@ impl State for Game {
 
 		use input::Event::*;
 
+		let win = &mut ctx.window;
+
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => ctx.quit(),
+					Key::Esc => win.quit(),
 					_ => {},
 				}
 			},
@@ -38,17 +41,21 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.draw_t(
+		let app = &mut ctx.app;
+		let gfx = &mut ctx.gfx;
+		let time = app.time().as_secs_f32();
+
+		gfx.draw_t(
 			mat4!()
 				.tz(-120.0)
 				.s3(vec3!(64))
-				.ry(ctx.time())
-				.rz(ctx.time())
+				.ry(time)
+				.rz(time)
 				,
 			&shapes::cube()
 		)?;
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::text("yo")
 				.size(16.0)
 		)?;
@@ -59,8 +66,10 @@ impl State for Game {
 
 }
 
-fn main() -> Result<()> {
-	return run::<Game>();
+fn main() {
+	if let Err(e) = run::<Game>() {
+		log!("{}", e);
+	}
 }
 ```
 
