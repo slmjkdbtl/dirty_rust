@@ -73,6 +73,16 @@ fn main() {
 }
 ```
 
+## platforms
+- MacOS
+- Windows
+- Linux
+- WASM
+- iOS (WIP)
+- Android (WIP)
+
+for build instructions, check out `doc/dist.md`
+
 ## facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
 
