@@ -4,6 +4,9 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
+use wasm_bindgen::JsCast;
+use wasm_bindgen::closure::Closure;
+
 use crate::*;
 use math::*;
 use input::*;
@@ -14,7 +17,6 @@ pub struct Window {
 	window: web_sys::Window,
 	document: web_sys::Document,
 	render_loop: Option<glow::RenderLoop>,
-	gl: Rc<gl::Device>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
 	mouse_pos: Vec2,
@@ -43,8 +45,6 @@ impl Window {
 
 	pub(crate) fn new(conf: &conf::Conf) -> Result<Self> {
 
-		use wasm_bindgen::JsCast;
-
 		let window = web_sys::window()
 			.ok_or_else(|| format!("no window found"))?;
 
@@ -68,25 +68,16 @@ impl Window {
 		canvas.set_height(conf.height as u32);
 		canvas.set_attribute("alt", &conf.title);
 
-		let webgl_context = canvas
-			.get_context("webgl")
-			.map_err(|_| format!("failed to fetch webgl context"))?
-			.ok_or_else(|| format!("failed to fetch webgl context"))?
-			.dyn_into::<web_sys::WebGlRenderingContext>()
-			.map_err(|_| format!("failed to fetch webgl context"))?;
-
 		body
 			.append_child(&canvas)
 			.map_err(|_| format!("failed to append canvas"))?;
 
-		let gl = gl::Device::from_webgl_ctx(webgl_context);
 		let render_loop = glow::RenderLoop::from_request_animation_frame();
 
 		return Ok(Self {
 			window: window,
 			document: document,
 			canvas: canvas,
-			gl: Rc::new(gl),
 			render_loop: Some(render_loop),
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
@@ -105,8 +96,17 @@ impl Window {
 // impl window::WindowCtx for Window {
 impl Window {
 
-	pub(crate) fn gl(&self) -> &Rc<gl::Device> {
-		return &self.gl;
+	pub(crate) fn get_gl_ctx(&self) -> Result<gl::Device> {
+
+		let webgl_context = self.canvas
+			.get_context("webgl")
+			.map_err(|_| format!("failed to fetch webgl context"))?
+			.ok_or_else(|| format!("failed to fetch webgl context"))?
+			.dyn_into::<web_sys::WebGlRenderingContext>()
+			.map_err(|_| format!("failed to fetch webgl context"))?;
+
+		return Ok(gl::Device::from_webgl_ctx(webgl_context));
+
 	}
 
 	pub(crate) fn swap(&self) -> Result<()> {
@@ -216,8 +216,6 @@ impl Window {
 		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
 	) -> Result<()> {
 
-		use wasm_bindgen::JsCast;
-		use wasm_bindgen::closure::Closure;
 		use input::Event::*;
 
 		let web_events = Rc::new(RefCell::new(vec![]));
