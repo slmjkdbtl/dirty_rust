@@ -102,12 +102,15 @@ js-sys = "0.3"
 version = "0.3"
 features = [
 	"console",
+	"Blob",
+	"Url",
 	"Document",
 	"Node",
 	"Window",
 	"Element",
 	"HtmlElement",
 	"HtmlCanvasElement",
+	"HtmlAudioElement",
 	"WebGlRenderingContext",
 	"WebGl2RenderingContext",
 	"MouseEvent",

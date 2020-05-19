@@ -18,7 +18,7 @@ impl State for Game {
 		let sound = Sound::from_bytes(audio, include_bytes!("res/shoot.ogg"))?;
 		let track = Track::from_bytes(audio, include_bytes!("res/yo.ogg"))?;
 
-		track.play(audio);
+// 		track.play(audio);
 
 		return Ok(Self {
 			sound: sound,
@@ -40,9 +40,9 @@ impl State for Game {
 					Key::Esc => win.quit(),
 					Key::Space => {
 						if self.track.is_playing() {
-							self.track.pause(&audio);
+							self.track.pause();
 						} else {
-							self.track.play(&audio);
+							self.track.play();
 						}
 					},
 					_ => self.sound.play(&audio)?,

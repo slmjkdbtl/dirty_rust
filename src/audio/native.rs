@@ -180,11 +180,11 @@ impl Track {
 		return !self.sink.is_paused();
 	}
 
-	pub fn pause(&self, ctx: &Audio) {
+	pub fn pause(&self) {
 		self.sink.pause();
 	}
 
-	pub fn play(&self, ctx: &Audio) {
+	pub fn play(&self) {
 		self.sink.play();
 	}
 
