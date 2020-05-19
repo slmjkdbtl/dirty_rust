@@ -20,25 +20,26 @@
 pub mod utils;
 pub mod res;
 
-mod gl;
-mod window;
 mod conf;
 pub use conf::*;
 
-mod app;
+mod gl;
+
+pub mod app;
+pub mod window;
+pub mod gfx;
+pub mod input;
+
 mod state;
 pub use state::*;
 mod run;
-mod ctx;
 pub use run::*;
+mod ctx;
 pub use ctx::*;
 
-pub mod gfx;
-mod fps;
 pub mod fs;
 pub mod geom;
 pub mod img;
-pub mod input;
 pub mod math;
 pub mod codec;
 // pub mod kit;

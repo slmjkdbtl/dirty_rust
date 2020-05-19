@@ -5,7 +5,6 @@
 use dirty::*;
 use math::*;
 use geom::*;
-use geom::*;
 use input::Key;
 use gfx::Camera;
 use gfx::shapes;
@@ -36,7 +35,7 @@ struct Game {
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
-// 	canvas: gfx::Canvas,
+	canvas: gfx::Canvas,
 	floor: gfx::MeshData,
 }
 
@@ -77,7 +76,7 @@ impl State for Game {
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
-// 			canvas: gfx::Canvas::new(ctx, cw, ch)?,
+			canvas: gfx::Canvas::new(gfx, cw, ch)?,
 			floor: floor,
 		});
 
@@ -88,6 +87,7 @@ impl State for Game {
 		use input::Event::*;
 
 		let win = &mut ctx.window;
+		let gfx = &mut ctx.gfx;
 
 		match e {
 
@@ -96,7 +96,7 @@ impl State for Game {
 				let cw = (*w as f32 / SCALE) as i32;
 				let ch = (*h as f32 / SCALE) as i32;
 
-// 				self.canvas.resize(ctx, cw, ch)?;
+				self.canvas.resize(gfx, cw, ch)?;
 				self.cam.aspect = *w as f32 / *h as f32;
 
 			},
@@ -193,6 +193,65 @@ impl State for Game {
 
 		win.set_title(&format!("FPS: {} DCS: {}", app.fps(), gfx.draw_calls()));
 
+		gfx.draw_on(&self.canvas, |gfx| {
+
+			gfx.clear();
+
+			let p = vec3!(0);
+			let origin = self.cam.to_screen(gfx, p);
+
+			gfx.use_cam(&self.cam, |gfx| {
+
+				gfx.draw_with(&self.shader, &Uniform {
+					cam_pos: self.cam.pos,
+					fog_color: rgba!(0, 0, 0, 1),
+					fog_level: 3.0,
+				}, |gfx| {
+
+					let bbox = self.model.bbox().transform(mat4!());
+					let mray = Ray3::new(self.cam.pos, self.cam.dir);
+
+					let c = if col::intersect3d(mray, bbox) {
+						rgba!(0, 0, 1, 1)
+					} else {
+						rgba!(1)
+					};
+
+					gfx.draw(&shapes::model(&self.model))?;
+
+					gfx.draw(
+						&shapes::Rect3D::from_bbox(bbox)
+							.line_width(1.0)
+							.color(c)
+					)?;
+
+					let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+
+					gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
+
+					return Ok(());
+
+				})?;
+
+				return Ok(());
+
+			})?;
+
+			gfx.draw(&shapes::circle(vec2!(0), 2.0))?;
+
+			gfx.draw_t(
+				mat4!()
+					.t2(origin)
+					,
+				&shapes::text("car")
+					.size(16.0)
+					,
+			)?;
+
+			return Ok(());
+
+		});
+
 		return Ok(());
 
 	}
@@ -201,56 +260,7 @@ impl State for Game {
 
 		let gfx = &mut ctx.gfx;
 
-		let p = vec3!(0);
-		let origin = self.cam.to_screen(gfx, p);
-
-		gfx.use_cam(&self.cam, |gfx| {
-
-			gfx.draw_with(&self.shader, &Uniform {
-				cam_pos: self.cam.pos,
-				fog_color: rgba!(0, 0, 0, 1),
-				fog_level: 3.0,
-			}, |gfx| {
-
-				let bbox = self.model.bbox().transform(mat4!());
-				let mray = Ray3::new(self.cam.pos, self.cam.dir);
-
-				let c = if col::intersect3d(mray, bbox) {
-					rgba!(0, 0, 1, 1)
-				} else {
-					rgba!(1)
-				};
-
-				gfx.draw(&shapes::model(&self.model))?;
-
-				gfx.draw(
-					&shapes::Rect3D::from_bbox(bbox)
-						.line_width(1.0)
-						.color(c)
-				)?;
-
-				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
-
-				gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
-
-				return Ok(());
-
-			})?;
-
-			return Ok(());
-
-		})?;
-
-		gfx.draw(&shapes::circle(vec2!(0), 2.0))?;
-
-		gfx.draw_t(
-			mat4!()
-				.t2(origin)
-				,
-			&shapes::text("car")
-				.size(16.0)
-				,
-		)?;
+		gfx.draw_t(mat4!().s2(vec2!(SCALE)), &shapes::canvas(&self.canvas))?;
 
 		return Ok(());
 
