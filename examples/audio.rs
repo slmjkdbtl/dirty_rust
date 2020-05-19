@@ -7,18 +7,21 @@ use input::Key;
 
 struct Game {
 	track: Track,
+	sound: Sound,
 }
 
 impl State for Game {
 
 	fn init(ctx: &mut Ctx) -> Result<Self> {
 
-		let sound = Sound::from_bytes(include_bytes!("res/yo.ogg"))?;
-		let track = Track::from_sound(sound)?;
+		let audio = &ctx.audio;
+		let sound = Sound::from_bytes(audio, include_bytes!("res/shoot.ogg"))?;
+		let track = Track::from_bytes(audio, include_bytes!("res/yo.ogg"))?;
 
-		track.play();
+		track.play(audio);
 
 		return Ok(Self {
+			sound: sound,
 			track: track,
 		});
 
@@ -29,6 +32,7 @@ impl State for Game {
 		use input::Event::*;
 
 		let win = &mut ctx.window;
+		let audio = &mut ctx.audio;
 
 		match e {
 			KeyPress(k) => {
@@ -36,12 +40,12 @@ impl State for Game {
 					Key::Esc => win.quit(),
 					Key::Space => {
 						if self.track.is_playing() {
-							self.track.pause();
+							self.track.pause(&audio);
 						} else {
-							self.track.play();
+							self.track.play(&audio);
 						}
 					},
-					_ => {},
+					_ => self.sound.play(&audio)?,
 				}
 			},
 			_ => {},

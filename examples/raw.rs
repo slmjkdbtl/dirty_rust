@@ -4,16 +4,12 @@ use dirty::*;
 use gfx::shapes;
 use input::Key;
 
-struct Game {
-	sound: audio::Sound,
-}
+struct Game;
 
 impl State for Game {
 
 	fn init(ctx: &mut Ctx) -> Result<Self> {
-		return Ok(Self {
-			sound: audio::Sound::from_bytes(&ctx.audio, include_bytes!("res/yo.ogg"))?,
-		});
+		return Ok(Self);
 	}
 
 	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
@@ -21,12 +17,12 @@ impl State for Game {
 		use input::Event::*;
 
 		let win = &mut ctx.window;
+		let audio = &mut ctx.audio;
 
 		match e {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => win.quit(),
-					Key::L => self.sound.play(),
 					_ => {},
 				}
 			},

@@ -1,14 +1,9 @@
 // wengwengweng
 
 #[cfg(not(web))]
-mod native;
+export!(native);
 #[cfg(web)]
-mod web;
-
-#[cfg(web)]
-pub use web::Window;
-#[cfg(not(web))]
-pub use native::Window;
+export!(web);
 
 use crate::*;
 
