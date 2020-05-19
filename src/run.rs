@@ -22,6 +22,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 	let mut window = window::Window::new(&conf)?;
 	let mut gfx = gfx::Gfx::new(&window, &conf)?;
 	let mut app = app::App::new();
+	let mut audio = audio::Audio::new()?;
 
 	window.swap()?;
 
@@ -29,6 +30,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 		window: &mut window,
 		gfx: &mut gfx,
 		app: &mut app,
+		audio: &mut audio,
 	};
 
 	let mut s = S::init(&mut ctx)?;
@@ -39,6 +41,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 			window: &mut window,
 			gfx: &mut gfx,
 			app: &mut app,
+			audio: &mut audio,
 		};
 
 		match e {

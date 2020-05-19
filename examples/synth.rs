@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use dirty::*;
+use gfx::shapes;
 use synth::BasicSynth;
 use synth::Waveform;
 use synth::Voice;
@@ -106,17 +107,19 @@ impl State for Game {
 
 		use input::Event::*;
 
+		let win = &mut ctx.window;
+
 		match e {
 
 			KeyPress(k) => {
 
-				let mods = ctx.key_mods();
+				let mods = win.key_mods();
 
 				match *k {
-					Key::Esc => ctx.quit(),
+					Key::Esc => win.quit(),
 					Key::F => {
 						if mods.meta {
-							ctx.toggle_fullscreen()
+							win.toggle_fullscreen()
 						}
 					},
 					Key::Up => {},
@@ -165,13 +168,15 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
+		let gfx = &mut ctx.gfx;
+
 		if let Ok(synth) = self.synth.lock() {
 
 			let buf = synth.buf();
 			let mut last = None;
 			let height = 120.0;
 			let len = buf.len() as f32;
-			let dis = ctx.width() as f32 / len;
+			let dis = gfx.width() as f32 / len;
 
 			for (i, buf) in buf.iter().enumerate() {
 
@@ -182,7 +187,7 @@ impl State for Game {
 					let ax = -len / 2.0 * dis + (i - 1) as f32 * dis;
 					let bx = -len / 2.0 * dis + i as f32 * dis;
 
-					ctx.draw(&shapes::line(vec2!(ax, ay), vec2!(bx, by)))?;
+					gfx.draw(&shapes::line(vec2!(ax, ay), vec2!(bx, by)))?;
 
 				}
 

@@ -2,6 +2,7 @@
 
 use dirty::*;
 use math::*;
+use gfx::shapes;
 use input::Key;
 
 struct Game {
@@ -12,8 +13,9 @@ struct Game {
 impl State for Game {
 
 	fn init(ctx: &mut Ctx) -> Result<Self> {
+		let gfx = &mut ctx.gfx;
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(ctx, include_bytes!("res/bunny.png"))?,
+			tex: gfx::Texture::from_bytes(gfx, include_bytes!("res/bunny.png"))?,
 			count: 1000,
 		});
 	}
@@ -22,10 +24,12 @@ impl State for Game {
 
 		use input::Event::*;
 
+		let win = &mut ctx.window;
+
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => ctx.quit(),
+					Key::Esc => win.quit(),
 					Key::Space => self.count += 500,
 					_ => {},
 				}
@@ -37,9 +41,13 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx, dt: std::time::Duration) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		ctx.set_title(&format!("FPS: {} DCS: {} OBJS: {}", ctx.fps(), ctx.draw_calls(), self.count));
+		let win = &mut ctx.window;
+		let gfx = &ctx.gfx;
+		let app = &ctx.app;
+
+		win.set_title(&format!("FPS: {} DCS: {} OBJS: {}", app.fps(), gfx.draw_calls(), self.count));
 
 		return Ok(());
 
@@ -47,11 +55,13 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		let w = ctx.width();
-		let h = ctx.height();
+		let gfx = &mut ctx.gfx;
+		let app = &mut ctx.app;
+		let w = gfx.width();
+		let h = gfx.height();
 
 		for _ in 0..self.count {
-			ctx.draw_t(
+			gfx.draw_t(
 				mat4!()
 					.t2(vec2!(rand(-w, w) as f32 * 0.5, rand(-h, h) as f32 * 0.5))
 					,
@@ -60,21 +70,21 @@ impl State for Game {
 			)?;
 		}
 
-		let c = if ctx.fps() >= 60 {
+		let c = if app.fps() >= 60 {
 			rgba!(0, 1, 0, 1)
 		} else {
 			rgba!(1, 0, 0, 1)
 		};
 
-		ctx.draw_t(
+		gfx.draw_t(
 			mat4!()
 				.s2(vec2!(6))
 				,
-			&shapes::text(&format!("{}", ctx.fps()))
+			&shapes::text(&format!("{}", app.fps()))
 				.color(c)
 		)?;
 
-		ctx.draw_t(
+		gfx.draw_t(
 			mat4!()
 				.ty(-64.0)
 				.s2(vec2!(1.5))
