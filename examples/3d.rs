@@ -5,8 +5,10 @@
 use dirty::*;
 use math::*;
 use geom::*;
+use geom::*;
 use input::Key;
 use gfx::Camera;
+use gfx::shapes;
 
 const SCALE: f32 = 4.0;
 
@@ -42,13 +44,15 @@ impl State for Game {
 
 	fn init(ctx: &mut Ctx) -> Result<Self> {
 
+		let gfx = &mut ctx.gfx;
+
 		let model = gfx::Model::from_glb(
-			ctx,
+			gfx,
 			include_bytes!("res/btfly.glb"),
 		)?;
 
 		let model = gfx::Model::from_obj(
-			ctx,
+			gfx,
 			include_str!("res/truck.obj"),
 			Some(include_str!("res/truck.mtl")),
 			None,
@@ -56,14 +60,14 @@ impl State for Game {
 
 		let floor = meshgen::checkerboard(2.0, 9, 9);
 
-		let cw = (ctx.width() as f32 / SCALE) as i32;
-		let ch = (ctx.height() as f32 / SCALE) as i32;
+		let cw = (gfx.width() as f32 / SCALE) as i32;
+		let ch = (gfx.height() as f32 / SCALE) as i32;
 
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
 				fov: f32::to_radians(60.0),
-				aspect: ctx.width() as f32 / ctx.height() as f32,
+				aspect: gfx.width() as f32 / gfx.height() as f32,
 				near: 0.1,
 				far: 1024.0,
 				pos: vec3!(0, 1, 6),
@@ -71,7 +75,7 @@ impl State for Game {
 			},
 			move_speed: 12.0,
 			eye_speed: 32.0,
-			shader: gfx::Shader::from_frag(ctx, include_str!("res/fog.frag"))?,
+			shader: gfx::Shader::from_frag(gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
 // 			canvas: gfx::Canvas::new(ctx, cw, ch)?,
 			floor: floor,
@@ -82,6 +86,8 @@ impl State for Game {
 	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
+
+		let win = &mut ctx.window;
 
 		match e {
 
@@ -96,17 +102,17 @@ impl State for Game {
 			},
 
 			KeyPress(k) => {
-				let mods = ctx.key_mods();
+				let mods = win.key_mods();
 				match *k {
 					Key::Esc => {
-						ctx.toggle_cursor_hidden();
-						ctx.toggle_cursor_locked();
+						win.toggle_cursor_hidden();
+						win.toggle_cursor_locked();
 					},
-					Key::F => ctx.toggle_fullscreen(),
-					Key::Q if mods.meta => ctx.quit(),
+					Key::F => win.toggle_fullscreen(),
+					Key::Q if mods.meta => win.quit(),
 					Key::L => {
-						ctx.set_cursor_hidden(self.show_ui);
-						ctx.set_cursor_locked(self.show_ui);
+						win.set_cursor_hidden(self.show_ui);
+						win.set_cursor_locked(self.show_ui);
 						self.show_ui = !self.show_ui;
 					}
 					_ => {},
@@ -115,7 +121,7 @@ impl State for Game {
 
 			MouseMove(delta) => {
 
-				if ctx.is_cursor_hidden() {
+				if win.is_cursor_hidden() {
 
 					let mut rx = self.cam.yaw();
 					let mut ry = self.cam.pitch();
@@ -162,27 +168,29 @@ impl State for Game {
 
 // 	}
 
-	fn update(&mut self, ctx: &mut Ctx, dt: std::time::Duration) -> Result<()> {
+	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
 
-		let dt = dt.as_secs_f32();
+		let win = &mut ctx.window;
+		let app = &mut ctx.app;
+		let dt = app.dt().as_secs_f32();
 
-		if ctx.key_down(Key::W) {
+		if win.key_down(Key::W) {
 			self.cam.pos += self.cam.front() * dt * self.move_speed;
 		}
 
-		if ctx.key_down(Key::S) {
+		if win.key_down(Key::S) {
 			self.cam.pos += self.cam.back() * dt * self.move_speed;
 		}
 
-		if ctx.key_down(Key::A) {
+		if win.key_down(Key::A) {
 			self.cam.pos += self.cam.left() * dt * self.move_speed;
 		}
 
-		if ctx.key_down(Key::D) {
+		if win.key_down(Key::D) {
 			self.cam.pos += self.cam.right() * dt * self.move_speed;
 		}
 
-// 		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+// 		win.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
 
 		return Ok(());
 
@@ -190,17 +198,18 @@ impl State for Game {
 
 	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
 
+		let gfx = &mut ctx.gfx;
+
 		let p = vec3!(0);
-		let origin = self.cam.to_screen(ctx, p);
-		let mray = self.cam.mouse_ray(ctx);
+		let origin = self.cam.to_screen(gfx, p);
 
-		ctx.use_cam(&self.cam, |ctx| {
+		gfx.use_cam(&self.cam, |gfx| {
 
-			ctx.draw_with(&self.shader, &Uniform {
+			gfx.draw_with(&self.shader, &Uniform {
 				cam_pos: self.cam.pos,
 				fog_color: rgba!(0, 0, 0, 1),
 				fog_level: 3.0,
-			}, |ctx| {
+			}, |gfx| {
 
 				let bbox = self.model.bbox().transform(mat4!());
 				let mray = Ray3::new(self.cam.pos, self.cam.dir);
@@ -211,9 +220,9 @@ impl State for Game {
 					rgba!(1)
 				};
 
-				ctx.draw(&shapes::model(&self.model))?;
+				gfx.draw(&shapes::model(&self.model))?;
 
-				ctx.draw(
+				gfx.draw(
 					&shapes::Rect3D::from_bbox(bbox)
 						.line_width(1.0)
 						.color(c)
@@ -221,7 +230,7 @@ impl State for Game {
 
 				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
 
-				ctx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
+				gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
 
 				return Ok(());
 
@@ -231,9 +240,9 @@ impl State for Game {
 
 		})?;
 
-		ctx.draw(&shapes::circle(vec2!(0), 2.0))?;
+		gfx.draw(&shapes::circle(vec2!(0), 2.0))?;
 
-		ctx.draw_t(
+		gfx.draw_t(
 			mat4!()
 				.t2(origin)
 				,

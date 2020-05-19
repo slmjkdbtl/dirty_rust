@@ -24,11 +24,12 @@ pub struct Window {
 	cursor_hidden: bool,
 	cursor_locked: bool,
 	title: String,
+	quit: bool,
 }
 
 impl Window {
 
-	pub fn new(conf: &conf::Conf) -> Result<Self> {
+	pub(crate) fn new(conf: &conf::Conf) -> Result<Self> {
 
 		let event_loop = EventLoop::new();
 
@@ -94,50 +95,61 @@ impl Window {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_string(),
+			quit: false,
 		});
 
 	}
 
 }
 
-impl window::WindowCtx for Window {
+// impl window::WindowCtx for Window {
+impl Window {
 
-	fn gl(&self) -> &Rc<gl::Device> {
+	pub(crate) fn gl(&self) -> &Rc<gl::Device> {
 		return &self.gl;
 	}
 
-	fn swap(&self) -> Result<()> {
+	pub(crate) fn swap(&self) -> Result<()> {
 		self.windowed_ctx
 			.swap_buffers()
 			.map_err(|_| format!("failed to swap buffer"))?;
 		return Ok(());
 	}
 
-	fn key_down(&self, k: Key) -> bool {
+	pub fn key_down(&self, k: Key) -> bool {
 		return self.pressed_keys.contains(&k);
 	}
 
-	fn mouse_down(&self, m: Mouse) -> bool {
+	pub fn key_mods(&self) -> KeyMod {
+		return KeyMod {
+			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
+			ctrl: self.key_down(Key::LCtrl) || self.key_down(Key::RCtrl),
+			alt: self.key_down(Key::LAlt) || self.key_down(Key::RAlt),
+			meta: self.key_down(Key::LMeta) || self.key_down(Key::RMeta),
+		};
+	}
+
+	pub fn mouse_down(&self, m: Mouse) -> bool {
 		return self.pressed_mouse.contains(&m);
 	}
 
-	fn dpi(&self) -> f32 {
+	pub fn dpi(&self) -> f32 {
 		return self.windowed_ctx.window().scale_factor() as f32;
 	}
 
-	fn width(&self) -> i32 {
+	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
-	fn height(&self) -> i32 {
+	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
-	fn mouse_pos(&self) -> Vec2 {
+	pub fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
 	}
 
-	fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
+	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
 
 		let (w, h) = (self.width as f32, self.height as f32);
 		let mpos = vec2!(w / 2.0 + p.x, h / 2.0 - p.y);
@@ -155,7 +167,7 @@ impl window::WindowCtx for Window {
 
 	}
 
-	fn set_fullscreen(&mut self, b: bool) {
+	pub fn set_fullscreen(&mut self, b: bool) {
 
 		use glutin::window::Fullscreen;
 
@@ -169,41 +181,88 @@ impl window::WindowCtx for Window {
 
 	}
 
-	fn is_fullscreen(&self) -> bool {
+	pub fn is_fullscreen(&self) -> bool {
 		return self.windowed_ctx.window().fullscreen().is_some();
 	}
 
-	fn set_cursor_hidden(&mut self, b: bool) {
+	pub fn set_cursor_hidden(&mut self, b: bool) {
 		self.windowed_ctx.window().set_cursor_visible(!b);
 		self.cursor_hidden = b;
 	}
 
-	fn is_cursor_hidden(&self) -> bool {
+	pub fn is_cursor_hidden(&self) -> bool {
 		return self.cursor_hidden;
 	}
 
-	fn set_cursor_locked(&mut self, b: bool) {
+	pub fn set_cursor_locked(&mut self, b: bool) {
 		self.windowed_ctx.window().set_cursor_grab(b);
 		self.cursor_locked = b;
 	}
 
-	fn is_cursor_locked(&self) -> bool {
+	pub fn is_cursor_locked(&self) -> bool {
 		return self.cursor_locked;
 	}
 
-	fn set_title(&mut self, s: &str) {
+	pub fn set_title(&mut self, s: &str) {
 		self.title = s.to_owned();
 		self.windowed_ctx.window().set_title(s);
 	}
 
-	fn title(&self) -> &str {
+	pub fn title(&self) -> &str {
 		return &self.title;
 	}
 
-	fn run(
+	pub fn set_cursor(&mut self, c: CursorIcon) {
+		self.windowed_ctx.window().set_cursor_icon(c.to_winit());
+	}
+
+	pub fn quit(&mut self) {
+		self.quit = true;
+	}
+
+	pub(crate) fn run(
 		mut self,
-		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<bool> + 'static,
+		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
 	) -> Result<()> {
+
+		#[cfg(feature = "midi")]
+		let midi_buf = {
+
+			use std::sync::Mutex;
+			use std::sync::Arc;
+
+			let buf = Arc::new(Mutex::new(vec![]));
+			let buf_in = buf.clone();
+
+			// TODO: why does this still block the main thread sometime??
+			std::thread::spawn(move || {
+
+				// TODO: extremely slow
+				if let Ok(midi_in) = midir::MidiInput::new("DIRTY") {
+
+					if let Some(port) = midi_in.ports().last() {
+
+						let port_name = midi_in.port_name(port).unwrap_or(format!("unknown"));
+
+						let _conn = midi_in.connect(port, &format!("DIRTY ({})", port_name), move |_, msg, buf| {
+							if let Ok(mut buf) = buf.lock() {
+								buf.push(midi::Msg::from(&msg));
+							}
+						}, buf_in).map_err(|_| format!("failed to read midi input"));
+
+						loop {}
+
+					}
+
+				} else {
+					eprintln!("failed to init midi input")
+				}
+
+			});
+
+			buf
+
+		};
 
 		use glutin::event_loop::ControlFlow;
 
@@ -215,6 +274,11 @@ impl window::WindowCtx for Window {
 		};
 
 		event_loop.run(move |e, _, flow| {
+
+			if self.quit {
+				*flow = ControlFlow::Exit;
+				return;
+			}
 
 			*flow = ControlFlow::Poll;
 
@@ -228,12 +292,12 @@ impl window::WindowCtx for Window {
 
 				let mut events = vec![];
 
-// 				#[cfg(feature = "midi")]
-// 				if let Ok(mut buf) = midi_buf.lock() {
-// 					for msg in std::mem::replace(&mut *buf, vec![]) {
-// 						handle(Event::MIDI(msg.clone()))?;
-// 					}
-// 				}
+				#[cfg(feature = "midi")]
+				if let Ok(mut buf) = midi_buf.lock() {
+					for msg in std::mem::replace(&mut *buf, vec![]) {
+						events.push(Event::MIDI(msg.clone()));
+					}
+				}
 
 				match e {
 
@@ -243,6 +307,10 @@ impl window::WindowCtx for Window {
 
 						WEvent::CloseRequested => {
 							*flow = ControlFlow::Exit;
+						},
+
+						WEvent::ScaleFactorChanged { scale_factor, .. } => {
+							handle(&mut self, WindowEvent::DPIChange(*scale_factor as f32))?;
 						},
 
 						WEvent::KeyboardInput { input, .. } => {
@@ -343,10 +411,9 @@ impl window::WindowCtx for Window {
 
 							self.width = w;
 							self.height = h;
-// 							let cam = self.default_cam();
-// 							self.apply_cam(&cam);
 							self.windowed_ctx.resize(*size);
 
+							handle(&mut self, WindowEvent::Resize(w, h))?;
 							events.push(Event::Resize(w, h));
 
 						},
@@ -392,10 +459,7 @@ impl window::WindowCtx for Window {
 
 					glutin::event::Event::RedrawRequested(_) => {
 
-						if !handle(&mut self, WindowEvent::Frame)? {
-							*flow = ControlFlow::Exit;
-						}
-
+						handle(&mut self, WindowEvent::Frame)?;
 						self.swap()?;
 
 					},
@@ -418,9 +482,7 @@ impl window::WindowCtx for Window {
 				};
 
 				for e in events {
-					if !handle(&mut self, WindowEvent::Input(e))? {
-						*flow = ControlFlow::Exit;
-					}
+					handle(&mut self, WindowEvent::Input(e))?;
 				}
 
 			};
@@ -431,6 +493,18 @@ impl window::WindowCtx for Window {
 
 		});
 
+	}
+
+	pub fn toggle_fullscreen(&mut self) {
+		self.set_fullscreen(!self.is_fullscreen());
+	}
+
+	pub fn toggle_cursor_hidden(&mut self) {
+		self.set_cursor_hidden(!self.is_cursor_hidden());
+	}
+
+	pub fn toggle_cursor_locked(&mut self) {
+		self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
 }
@@ -482,6 +556,20 @@ impl From<PhysicalPosition<i32>> for Vec2 {
 		return Self {
 			x: pos.x as f32,
 			y: pos.y as f32,
+		};
+	}
+}
+
+impl CursorIcon {
+	fn to_winit(&self) -> glutin::window::CursorIcon {
+		return match self {
+			CursorIcon::Normal => glutin::window::CursorIcon::Default,
+			CursorIcon::Hand => glutin::window::CursorIcon::Hand,
+			CursorIcon::Cross => glutin::window::CursorIcon::Crosshair,
+			CursorIcon::Move => glutin::window::CursorIcon::Move,
+			CursorIcon::Progress => glutin::window::CursorIcon::Progress,
+			CursorIcon::Wait => glutin::window::CursorIcon::Wait,
+			CursorIcon::Text => glutin::window::CursorIcon::Text,
 		};
 	}
 }

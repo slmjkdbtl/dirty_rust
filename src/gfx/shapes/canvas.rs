@@ -1,7 +1,6 @@
 // wengwengweng
 
 use super::*;
-use crate::window::WindowCtx;
 
 #[derive(Clone)]
 pub struct Canvas<'a> {
@@ -44,7 +43,7 @@ impl<'a> Canvas<'a> {
 
 impl<'a> Drawable for Canvas<'a> {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		let mut sprite = sprite(&self.canvas.tex())
 			.color(self.color)
@@ -60,7 +59,7 @@ impl<'a> Drawable for Canvas<'a> {
 
 		ctx.draw_t(
 			mat4!()
-				.s2(vec2!(1.0 / ctx.window.dpi() as f32))
+				.s2(vec2!(1.0 / ctx.dpi() as f32))
 				,
 			&sprite
 		)?;

@@ -14,15 +14,7 @@ pub trait State: 'static + Sized {
 		return Ok(());
 	}
 
-	fn ui(&mut self, _: &mut Ctx, _: &mut ui::UI) -> Result<()> {
-		return Ok(());
-	}
-
 	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
-		return Ok(());
-	}
-
-	fn quit(&mut self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 

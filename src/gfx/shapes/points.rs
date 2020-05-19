@@ -49,7 +49,7 @@ pub fn points<'a>(pts: &'a[Vec2]) -> Points<'a> {
 
 impl<'a> Drawable for Points<'a> {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		for pt in self.pts {
 			match self.mode {

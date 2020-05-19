@@ -38,7 +38,7 @@ impl Rect3D {
 
 impl Drawable for Rect3D {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		let p1 = vec3!(self.p1.x, self.p2.y, self.p1.z);
 		let p2 = vec3!(self.p2.x, self.p2.y, self.p1.z);

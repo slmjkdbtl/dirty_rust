@@ -33,20 +33,20 @@ pub fn cube() -> Cube {
 
 impl Drawable for Cube {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
-		ctx.gfx.draw_calls += 1;
+		ctx.draw_calls += 1;
 
-		ctx.gfx.cube_renderer.draw(
+		ctx.cube_renderer.draw(
 			gl::Primitive::Triangle,
-			&ctx.gfx.cur_pipeline,
+			&ctx.cur_pipeline,
 			&gfx::Uniform {
-				proj: ctx.gfx.proj,
-				view: ctx.gfx.view,
-				model: ctx.gfx.transform,
+				proj: ctx.proj,
+				view: ctx.view,
+				model: ctx.transform,
 				color: self.color,
-				tex: ctx.gfx.empty_tex.clone(),
-				custom: ctx.gfx.cur_custom_uniform.clone(),
+				tex: ctx.empty_tex.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			},
 		);
 

@@ -43,7 +43,7 @@ impl Line3D {
 
 impl Drawable for Line3D {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		return ctx.draw(
 			&raw(

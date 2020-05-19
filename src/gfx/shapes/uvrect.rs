@@ -3,14 +3,14 @@
 use super::*;
 
 #[derive(Clone)]
-pub struct Quad<'a> {
+pub struct UVRect<'a> {
 	p1: Vec2,
 	p2: Vec2,
 	color: Color,
 	tex: Option<&'a gfx::Texture>,
 }
 
-impl<'a> Quad<'a> {
+impl<'a> UVRect<'a> {
 	pub fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
 			p1: p1,
@@ -33,15 +33,15 @@ impl<'a> Quad<'a> {
 	}
 }
 
-pub fn quad<'a>(p1: Vec2, p2: Vec2) -> Quad<'a> {
-	return Quad::new(p1, p2);
+pub fn uvrect<'a>(p1: Vec2, p2: Vec2) -> UVRect<'a> {
+	return UVRect::new(p1, p2);
 }
 
-impl<'a> Drawable for Quad<'a> {
+impl<'a> Drawable for UVRect<'a> {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
-		let tex = self.tex.cloned().unwrap_or(ctx.gfx.empty_tex.clone());
+		let tex = self.tex.cloned().unwrap_or(ctx.empty_tex.clone());
 
 		let p1 = vec2!(f32::min(self.p1.x, self.p2.x), f32::min(self.p1.y, self.p2.y));
 		let p2 = vec2!(f32::max(self.p1.x, self.p2.x), f32::max(self.p1.y, self.p2.y));

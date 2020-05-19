@@ -43,7 +43,7 @@ impl<'a> Model<'a> {
 
 impl<'a> Drawable for Model<'a> {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		for t in self.model.root_nodes() {
 			draw_mesh(ctx, &self, Mat4::identity(), *t);
@@ -55,7 +55,7 @@ impl<'a> Drawable for Model<'a> {
 
 }
 
-fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
+fn draw_mesh(ctx: &mut Gfx, dctx: &Model, ptr: Mat4, id: usize) {
 
 	let model = &dctx.model;
 
@@ -74,22 +74,22 @@ fn draw_mesh(ctx: &mut Ctx, dctx: &Model, ptr: Mat4, id: usize) {
 		}
 
 		let tr = ptr * tr.as_mat4();
-		let tex = model.texture().unwrap_or(&ctx.gfx.empty_tex);
+		let tex = model.texture().unwrap_or(&ctx.empty_tex);
 
 		for mesh in &node.meshes {
 
-			ctx.gfx.draw_calls += 1;
+			ctx.draw_calls += 1;
 
 			mesh.gl_mesh().draw(
 				dctx.prim,
-				&ctx.gfx.cur_pipeline,
+				&ctx.cur_pipeline,
 				&gfx::Uniform {
-					proj: ctx.gfx.proj,
-					view: ctx.gfx.view,
-					model: ctx.gfx.transform * tr,
+					proj: ctx.proj,
+					view: ctx.view,
+					model: ctx.transform * tr,
 					color: dctx.color,
 					tex: tex.clone(),
-					custom: ctx.gfx.cur_custom_uniform.clone(),
+					custom: ctx.cur_custom_uniform.clone(),
 				},
 			);
 

@@ -154,9 +154,6 @@ impl TruetypeFont {
 
 			let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
 			let (w, h) = (metrics.width as i32, metrics.height as i32);
-
-			println!("{}: {:#?}", ch, metrics);
-
 			let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
 
 			for b in bitmap {

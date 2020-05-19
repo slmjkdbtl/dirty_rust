@@ -5,20 +5,18 @@
 use std::f32::consts::PI;
 
 use crate::gfx;
-use crate::app;
 use crate::gl;
 use crate::geom;
 use crate::Result;
 use crate::math::*;
-use app::Ctx;
-use gl::VertexLayout;
+use gfx::Gfx;
 use gfx::Drawable;
 use gfx::Vertex;
 use gfx::Primitive;
 
 export!(raw);
 export!(sprite);
-export!(quad);
+export!(uvrect);
 export!(polygon);
 export!(rect);
 export!(line);

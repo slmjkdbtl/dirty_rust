@@ -1,7 +1,6 @@
 // wengwengweng
 
-use crate::*;
-use math::*;
+use super::*;
 
 #[derive(Clone)]
 pub struct Sprite<'a> {
@@ -62,7 +61,7 @@ pub fn sprite<'a>(tex: &'a gfx::Texture) -> Sprite<'a> {
 
 impl<'a> gfx::Drawable for Sprite<'a> {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		let tw = self.tex.width() as f32 * self.quad.w;
 		let th = self.tex.height() as f32 * self.quad.h;
@@ -76,7 +75,7 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 
 		let offset = self.offset.unwrap_or(vec2!(0));
 
-		let t = ctx.gfx.transform
+		let t = ctx.transform
 			.s2(scale)
 			.t2(offset * -0.5)
 			;
@@ -88,17 +87,17 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 			flip: self.flip,
 		};
 
-		ctx.gfx.renderer.push_shape(
+		ctx.renderer.push_shape(
 			gl::Primitive::Triangle,
 			shape,
-			&ctx.gfx.cur_pipeline,
+			&ctx.cur_pipeline,
 			&gfx::Uniform {
 				model: mat4!(),
-				proj: ctx.gfx.proj,
-				view: ctx.gfx.view,
+				proj: ctx.proj,
+				view: ctx.view,
 				color: rgba!(1),
 				tex: self.tex.clone(),
-				custom: ctx.gfx.cur_custom_uniform.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			}
 		)?;
 

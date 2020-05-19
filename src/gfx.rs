@@ -1,10 +1,20 @@
 // wengwengweng
 
+mod desc;
+mod texture;
+mod canvas;
+mod model;
+mod transform;
+mod camera;
+mod shader;
+mod font;
+pub mod shapes;
+
 use std::rc::Rc;
 
 use crate::*;
 use math::*;
-use window::WindowCtx;
+use window::*;
 
 pub use desc::*;
 pub use shader::*;
@@ -26,33 +36,53 @@ const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
 const DEFAULT_FAR: f32 = 4096.0;
 
-pub(crate) struct GfxCtx {
+pub struct Gfx {
 
-	pub gl: Rc<gl::Device>,
+	gl: Rc<gl::Device>,
 
-	pub proj: Mat4,
-	pub view: Mat4,
-	pub transform: Mat4,
+	width: i32,
+	height: i32,
+	dpi: f32,
 
-	pub renderer: gl::BatchedMesh<Vertex, Uniform>,
-	pub cube_renderer: gl::Mesh<gfx::Vertex, gfx::Uniform>,
+	proj: Mat4,
+	view: Mat4,
+	transform: Mat4,
 
-	pub empty_tex: gfx::Texture,
+	renderer: gl::BatchedMesh<Vertex, Uniform>,
+	cube_renderer: gl::Mesh<gfx::Vertex, gfx::Uniform>,
 
-	pub default_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
-	pub cur_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
-	pub cur_custom_uniform: Option<Vec<(&'static str, gl::UniformValue)>>,
+	empty_tex: gfx::Texture,
 
-	pub cur_canvas: Option<Canvas>,
+	default_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
+	cur_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
+	cur_custom_uniform: Option<Vec<(&'static str, gl::UniformValue)>>,
 
-	pub default_font: gfx::BitmapFont,
+	cur_canvas: Option<Canvas>,
 
-	pub draw_calls_last: usize,
-	pub draw_calls: usize,
+	default_font: gfx::BitmapFont,
+
+	draw_calls_last: usize,
+	draw_calls: usize,
 
 }
 
-impl HasGLDevice for GfxCtx {
+pub trait HasGLDevice {
+	fn device(&self) -> &gl::Device;
+}
+
+impl HasGLDevice for Gfx {
+	fn device(&self) -> &gl::Device {
+		return &self.gl;
+	}
+}
+
+impl HasGLDevice for &Gfx {
+	fn device(&self) -> &gl::Device {
+		return &self.gl;
+	}
+}
+
+impl HasGLDevice for &mut Gfx {
 	fn device(&self) -> &gl::Device {
 		return &self.gl;
 	}
@@ -70,9 +100,9 @@ impl HasGLDevice for Rc<gl::Device> {
 	}
 }
 
-impl GfxCtx {
+impl Gfx {
 
-	pub fn new(window: &impl WindowCtx, conf: &Conf,) -> Result<Self> {
+	pub(crate) fn new(window: &Window, conf: &Conf) -> Result<Self> {
 
 		let gl = Rc::clone(window.gl());
 
@@ -116,6 +146,10 @@ impl GfxCtx {
 
 		return Ok(Self {
 
+			width: window.width(),
+			height: window.height(),
+			dpi: window.dpi(),
+
 			renderer: gl::BatchedMesh::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 			cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 
@@ -142,33 +176,41 @@ impl GfxCtx {
 
 	}
 
-}
-
-impl<'a> Ctx<'a> {
-
 	pub fn clear(&mut self) {
 
 		self.flush();
-		self.gfx.gl.clear(Surface::Color);
-		self.gfx.gl.clear(Surface::Depth);
-		self.gfx.gl.clear(Surface::Stencil);
+		self.gl.clear(Surface::Color);
+		self.gl.clear(Surface::Depth);
+		self.gl.clear(Surface::Stencil);
 
 	}
 
 	pub fn clear_ex(&mut self, s: Surface) {
 
 		self.flush();
-		self.gfx.gl.clear(s);
+		self.gl.clear(s);
 
+	}
+
+	pub fn coord(&self, orig: gfx::Origin) -> Vec2 {
+		return orig.as_pt() / 2.0 * vec2!(self.width, self.height);
+	}
+
+	pub fn clip_to_screen(&self, p: Vec2) -> Vec2 {
+		return p * vec2!(self.width, self.height) * 0.5;
+	}
+
+	pub fn screen_to_clip(&self, p: Vec2) -> Vec2 {
+		return p / 0.5 / vec2!(self.width, self.height);
 	}
 
 	pub fn push_t(&mut self, t: Mat4, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let ot = self.gfx.transform;
+		let ot = self.transform;
 
-		self.gfx.transform = ot * t;
+		self.transform = ot * t;
 		f(self)?;
-		self.gfx.transform = ot;
+		self.transform = ot;
 
 		return Ok(());
 
@@ -176,11 +218,11 @@ impl<'a> Ctx<'a> {
 
 	pub fn reset_t(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let ot = self.gfx.transform;
+		let ot = self.transform;
 
-		self.gfx.transform = mat4!();
+		self.transform = mat4!();
 		f(self)?;
-		self.gfx.transform = ot;
+		self.transform = ot;
 
 		return Ok(());
 
@@ -199,24 +241,23 @@ impl<'a> Ctx<'a> {
 	// TODO: viewport 2x scaled with no hidpi
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		if self.gfx.cur_canvas.is_some() {
+		if self.cur_canvas.is_some() {
 			return Err(format!("cannot use canvas inside a canvas"));
 		}
 
 		self.flush();
 
-		let t = self.gfx.transform;
-		let dpi = self.window.dpi();
+		let t = self.transform;
 		let (cw, ch) = (canvas.width(), canvas.height());
 
-		self.gfx.cur_canvas = Some(canvas.clone());
-		self.gfx.transform = mat4!();
+		self.cur_canvas = Some(canvas.clone());
+		self.transform = mat4!();
 
-		self.gfx.gl.viewport(
+		self.gl.viewport(
 			0,
 			0,
-			(cw as f32 * dpi) as i32,
-			(ch as f32 * dpi) as i32,
+			(cw as f32 * self.dpi) as i32,
+			(ch as f32 * self.dpi) as i32,
 		);
 
 		canvas.gl_fbuf().with(|| -> Result<()> {
@@ -225,14 +266,14 @@ impl<'a> Ctx<'a> {
 			return Ok(());
 		})?;
 
-		self.gfx.cur_canvas = None;
-		self.gfx.transform = t;
+		self.cur_canvas = None;
+		self.transform = t;
 
-		self.gfx.gl.viewport(
+		self.gl.viewport(
 			0,
 			0,
-			(self.window.width() as f32 * dpi) as i32,
-			(self.window.height() as f32 * dpi) as i32,
+			(self.width as f32 * self.dpi) as i32,
+			(self.height as f32 * self.dpi) as i32,
 		);
 
 		return Ok(());
@@ -246,16 +287,16 @@ impl<'a> Ctx<'a> {
 			.map(|(n, v)| (n, v.into_uniform()))
 			.collect::<Vec<(&'static str, gl::UniformValue)>>();
 
-		let prev_pipeline = self.gfx.cur_pipeline.clone();
-		let prev_uniform = self.gfx.cur_custom_uniform.clone();
+		let prev_pipeline = self.cur_pipeline.clone();
+		let prev_uniform = self.cur_custom_uniform.clone();
 
 		self.flush();
-		self.gfx.cur_pipeline = gl::Pipeline::clone(&shader.gl_pipeline());
-		self.gfx.cur_custom_uniform = Some(uniforms);
+		self.cur_pipeline = gl::Pipeline::clone(&shader.gl_pipeline());
+		self.cur_custom_uniform = Some(uniforms);
 		f(self)?;
 		self.flush();
-		self.gfx.cur_pipeline = prev_pipeline;
-		self.gfx.cur_custom_uniform = prev_uniform;
+		self.cur_pipeline = prev_pipeline;
+		self.cur_custom_uniform = prev_uniform;
 
 		return Ok(());
 
@@ -264,10 +305,10 @@ impl<'a> Ctx<'a> {
 	pub fn no_depth_test(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		self.flush();
-		self.gfx.gl.disable(gl::Capability::DepthTest);
+		self.gl.disable(gl::Capability::DepthTest);
 		f(self)?;
 		self.flush();
-		self.gfx.gl.enable(gl::Capability::DepthTest);
+		self.gl.enable(gl::Capability::DepthTest);
 
 		return Ok(());
 
@@ -276,10 +317,10 @@ impl<'a> Ctx<'a> {
 	pub fn no_depth_write(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		self.flush();
-		self.gfx.gl.depth_mask(false);
+		self.gl.depth_mask(false);
 		f(self)?;
 		self.flush();
-		self.gfx.gl.depth_mask(true);
+		self.gl.depth_mask(true);
 
 		return Ok(());
 
@@ -287,7 +328,7 @@ impl<'a> Ctx<'a> {
 
 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let gl = self.gfx.gl.clone();
+		let gl = self.gl.clone();
 
 		self.flush();
 		gl.enable(gl::Capability::StencilTest);
@@ -332,30 +373,26 @@ impl<'a> Ctx<'a> {
 		let b = b.to_gl();
 
 		self.flush();
-		self.gfx.gl.blend_func(b.0, b.1);
+		self.gl.blend_func(b.0, b.1);
 		f(self)?;
 		self.flush();
-		self.gfx.gl.blend_func(default.0, default.1);
+		self.gl.blend_func(default.0, default.1);
 
 		return Ok(());
 
 	}
 
-	pub fn coord(&self, coord: Origin) -> Vec2 {
-		return coord.as_pt() / 2.0 * vec2!(self.window.width(), self.window.height());
-	}
-
 	pub fn use_cam(&mut self, cam: &dyn Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let oview = self.gfx.view;
-		let oproj = self.gfx.proj;
+		let oview = self.view;
+		let oproj = self.proj;
 
 		self.apply_cam(cam);
 
 		f(self)?;
 
-		self.gfx.view = oview;
-		self.gfx.proj = oproj;
+		self.view = oview;
+		self.proj = oproj;
 
 		return Ok(());
 
@@ -367,27 +404,42 @@ impl<'a> Ctx<'a> {
 	}
 
 	pub fn transform(&self) -> Mat4 {
-		return self.gfx.transform;
+		return self.transform;
 	}
 
 	pub fn default_font(&self) -> &impl Font {
-		return &self.gfx.default_font;
+		return &self.default_font;
 	}
 
 	pub fn flush(&mut self) {
-		self.gfx.renderer.flush();
+		self.renderer.flush();
+	}
+
+	pub(crate) fn set_dpi(&mut self, dpi: f32) {
+		self.dpi = dpi;
+	}
+
+	pub(crate) fn resize(&mut self, w: i32, h: i32) {
+
+		self.width = w;
+		self.height = h;
+
+		let cam = self.default_cam();
+
+		self.apply_cam(&cam);
+
 	}
 
 	pub(crate) fn apply_cam(&mut self, cam: &dyn Camera) {
-		self.gfx.proj = cam.proj();
-		self.gfx.view = cam.view();
+		self.proj = cam.proj();
+		self.view = cam.view();
 	}
 
 	pub(crate) fn default_cam(&mut self) -> impl Camera {
 
 		return OrthoCam {
-			width: self.window.width() as f32,
-			height: self.window.height() as f32,
+			width: self.width as f32,
+			height: self.height as f32,
 			near: DEFAULT_NEAR,
 			far: DEFAULT_FAR,
 		};
@@ -396,8 +448,8 @@ impl<'a> Ctx<'a> {
 
 	pub(crate) fn begin_frame(&mut self) {
 
-		self.gfx.draw_calls_last = self.gfx.draw_calls;
-		self.gfx.draw_calls = 0;
+		self.draw_calls_last = self.draw_calls;
+		self.draw_calls = 0;
 		self.clear();
 
 	}
@@ -405,14 +457,26 @@ impl<'a> Ctx<'a> {
 	pub(crate) fn end_frame(&mut self) {
 
 		self.flush();
-		self.gfx.transform = mat4!();
-		self.gfx.draw_calls += self.gfx.renderer.draw_count();
-		self.gfx.renderer.clear();
+		self.transform = mat4!();
+		self.draw_calls += self.renderer.draw_count();
+		self.renderer.clear();
 
 	}
 
+	pub fn width(&self) -> i32 {
+		return self.width;
+	}
+
+	pub fn height(&self) -> i32 {
+		return self.height;
+	}
+
+	pub fn dpi(&self) -> f32 {
+		return self.dpi;
+	}
+
 	pub fn draw_calls(&self) -> usize {
-		return self.gfx.draw_calls_last;
+		return self.draw_calls_last;
 	}
 
 }
@@ -478,6 +542,6 @@ impl Origin {
 }
 
 pub trait Drawable {
-	fn draw(&self, ctx: &mut Ctx) -> Result<()>;
+	fn draw(&self, ctx: &mut Gfx) -> Result<()>;
 }
 
