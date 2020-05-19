@@ -5,6 +5,11 @@ mod native;
 #[cfg(web)]
 mod web;
 
+#[cfg(web)]
+pub use web::Window;
+#[cfg(not(web))]
+pub use native::Window;
+
 use crate::*;
 
 pub(crate) enum WindowEvent {
@@ -24,9 +29,4 @@ pub enum CursorIcon {
 	Wait,
 	Text,
 }
-
-#[cfg(web)]
-pub use web::Window;
-#[cfg(not(web))]
-pub use native::Window;
 

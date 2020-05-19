@@ -59,7 +59,7 @@ instant = { version = "0.1", features = [ "wasm-bindgen", ] }
 serde = { version = "1.0", features = [ "derive", ] }
 
 # fs
-directories = "2.0"
+dirs-next = "1.0"
 glob = "0.3"
 
 # app
@@ -96,6 +96,7 @@ rodio = { version = "0.11", default-features = false, features = [ "vorbis", "mp
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
 wasm-bindgen = "0.2"
+js-sys = "0.3"
 
 [target.'cfg(target_arch="wasm32")'.dependencies.web-sys]
 version = "0.3"
@@ -112,6 +113,10 @@ features = [
 	"MouseEvent",
 	"KeyboardEvent",
 	"WheelEvent",
+	"AudioContext",
+	"AudioBufferSourceNode",
+	"AudioBuffer",
+	"AudioDestinationNode",
 ]
 
 [target.'cfg(target_os="macos")'.dependencies]

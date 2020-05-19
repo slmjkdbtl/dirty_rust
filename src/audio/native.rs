@@ -10,43 +10,16 @@ use rodio::source::Buffered;
 
 use crate::*;
 
-pub struct Device {
-	name: String,
-	cpal_device: rodio::Device,
+pub struct Audio {
+	device: rodio::Device,
 }
 
-impl Device {
-
-	fn from_cpal(d: rodio::Device) -> Option<Self> {
-
-		pub use rodio::DeviceTrait;
-
-		return Some(Self {
-			name: d.name().ok()?,
-			cpal_device: d,
+impl Audio {
+	pub fn new() -> Result<Self> {
+		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
+		return Ok(Self {
+			device: device,
 		});
-
-	}
-
-	fn cpal_device(&self) -> &rodio::Device {
-		return &self.cpal_device;
-	}
-
-	pub fn name(&self) -> &str {
-		return &self.name;
-	}
-
-}
-
-impl std::fmt::Display for Device {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		return write!(f, "{}", self.name());
-	}
-}
-
-impl std::fmt::Debug for Device {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		return write!(f, "{}", self.name());
 	}
 }
 
@@ -90,12 +63,8 @@ impl Sound {
 
 	}
 
-	pub fn as_track(self, ctx: &Device) -> Result<Track> {
-		return Track::from_sound(ctx, self);
-	}
-
-	pub fn duration(&self) -> Option<Duration> {
-		return self.buffer.total_duration();
+	pub fn as_track(self) -> Result<Track> {
+		return Track::from_sound(self);
 	}
 
 	pub fn speed(&self, s: f32) -> Self {
@@ -140,6 +109,12 @@ impl Sound {
 		}
 	}
 
+	pub fn play(&self) -> Result<()> {
+		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
+		rodio::play_raw(&device, self.apply().convert_samples());
+		return Ok(());
+	}
+
 	// TODO: clean this up
 	fn apply(&self) -> Box<dyn Source<Item = i16> + Send> {
 
@@ -180,32 +155,26 @@ impl Sound {
 
 pub struct Track {
 	sink: Sink,
-	duration: Option<Duration>,
 }
 
 impl Track {
 
-	pub fn from_bytes(ctx: &Device, data: &[u8]) -> Result<Self> {
-		return Self::from_sound(ctx, Sound::from_bytes(data)?);
+	pub fn from_bytes(data: &[u8]) -> Result<Self> {
+		return Self::from_sound(Sound::from_bytes(data)?);
 	}
 
-	pub fn from_sound(ctx: &Device, sound: Sound) -> Result<Self> {
+	pub fn from_sound(sound: Sound) -> Result<Self> {
 
-		let sink = Sink::new(ctx.cpal_device());
-		let duration = sound.duration();
+		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
+		let sink = Sink::new(&device);
 
 		sink.append(sound.buffer);
 		sink.pause();
 
 		return Ok(Self {
 			sink,
-			duration: duration,
 		});
 
-	}
-
-	pub fn duration(&self) -> Option<Duration> {
-		return self.duration;
 	}
 
 	pub fn is_playing(&self) -> bool {
@@ -225,38 +194,5 @@ impl Track {
 		self.sink.detach();
 	}
 
-}
-
-pub trait Playable {
-	fn play(&self, device: &Device) -> Result<()>;
-}
-
-impl Playable for Sound {
-	fn play(&self, device: &Device) -> Result<()> {
-		return Ok(rodio::play_raw(device.cpal_device(), self.apply().convert_samples()));
-	}
-}
-
-impl Playable for Track {
-	fn play(&self, _: &Device) -> Result<()> {
-		return Ok(self.sink.play());
-	}
-}
-
-pub fn default_device() -> Option<Device> {
-	return rodio::default_output_device()
-		.map(Device::from_cpal)
-		.flatten();
-}
-
-pub fn devices() -> Vec<Device> {
-	return rodio::output_devices()
-		.map(|c| {
-			return c
-				.map(Device::from_cpal)
-				.flatten()
-				.collect();
-		})
-		.unwrap_or(vec![]);
 }
 

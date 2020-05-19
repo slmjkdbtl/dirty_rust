@@ -6,8 +6,6 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
-use directories::BaseDirs;
-
 use crate::Result;
 
 #[cfg(target_os = "macos")]
@@ -217,26 +215,7 @@ pub fn size(path: impl AsRef<Path>) -> Result<u64> {
 
 }
 
-pub fn data_dir(name: &str) -> Result<PathBuf> {
-
-	let dirs = BaseDirs::new().ok_or(format!("failed to get data dir"))?;
-	let data_dir = dirs.data_dir();
-	let data_dir = data_dir.join(name);
-
-	if !data_dir.exists() {
-		mkdir(&data_dir)?;
-	}
-
-	return Ok(data_dir);
-
-}
-
-pub fn home_dir() -> Result<PathBuf> {
-
-	let dirs = BaseDirs::new().ok_or(format!("failed to get home dir"))?;
-	let home_dir = dirs.home_dir();
-
-	return Ok(home_dir.to_path_buf());
-
+pub fn data_dir() -> Option<PathBuf> {
+	return dirs_next::data_dir();
 }
 

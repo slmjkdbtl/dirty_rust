@@ -3,7 +3,7 @@
 //! Audio
 
 #[cfg(not(web))]
-mod native;
+export!(native);
 #[cfg(web)]
-mod web;
+export!(web);
 
