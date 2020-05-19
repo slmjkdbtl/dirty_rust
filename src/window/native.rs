@@ -1,6 +1,5 @@
 // wengwengweng
 
-use std::rc::Rc;
 use std::collections::HashSet;
 
 use glutin::dpi::*;
@@ -12,7 +11,6 @@ use input::*;
 use window::*;
 
 pub struct Window {
-	gl: Rc<gl::Device>,
 	event_loop: Option<EventLoop<()>>,
 	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pressed_keys: HashSet<Key>,
@@ -78,12 +76,7 @@ impl Window {
 			windowed_ctx.window().set_cursor_grab(true);
 		}
 
-		let gl = gl::Device::from_loader(|s| {
-			return windowed_ctx.get_proc_address(s) as *const _;
-		});
-
 		return Ok(Self {
-			gl: Rc::new(gl),
 			event_loop: Some(event_loop),
 			windowed_ctx: windowed_ctx,
 			pressed_keys: hset![],
@@ -105,8 +98,12 @@ impl Window {
 // impl window::WindowCtx for Window {
 impl Window {
 
-	pub(crate) fn gl(&self) -> &Rc<gl::Device> {
-		return &self.gl;
+	pub(crate) fn get_gl_ctx(&self) -> Result<gl::Device> {
+
+		return Ok(gl::Device::from_loader(|s| {
+			return self.windowed_ctx.get_proc_address(s) as *const _;
+		}));
+
 	}
 
 	pub(crate) fn swap(&self) -> Result<()> {

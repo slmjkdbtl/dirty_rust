@@ -172,6 +172,7 @@ impl State for Game {
 
 		let win = &mut ctx.window;
 		let app = &mut ctx.app;
+		let gfx = &mut ctx.gfx;
 		let dt = app.dt().as_secs_f32();
 
 		if win.key_down(Key::W) {
@@ -190,7 +191,7 @@ impl State for Game {
 			self.cam.pos += self.cam.right() * dt * self.move_speed;
 		}
 
-// 		win.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+		win.set_title(&format!("FPS: {} DCS: {}", app.fps(), gfx.draw_calls()));
 
 		return Ok(());
 
@@ -264,10 +265,9 @@ fn main() {
 		.cursor_locked(true)
 		.resizable(true)
 // 		.hidpi(false)
-// 		.fps_cap(None)
 // 		.vsync(false)
 		.run::<Game>() {
-		println!("{}", err);
+		log!("{}", err);
 	}
 
 }

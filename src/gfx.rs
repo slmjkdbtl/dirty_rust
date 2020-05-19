@@ -10,8 +10,6 @@ mod shader;
 mod font;
 pub mod shapes;
 
-use std::rc::Rc;
-
 use crate::*;
 use math::*;
 use window::*;
@@ -38,7 +36,7 @@ const DEFAULT_FAR: f32 = 4096.0;
 
 pub struct Gfx {
 
-	gl: Rc<gl::Device>,
+	gl: gl::Device,
 
 	width: i32,
 	height: i32,
@@ -94,17 +92,11 @@ impl HasGLDevice for gl::Device {
 	}
 }
 
-impl HasGLDevice for Rc<gl::Device> {
-	fn device(&self) -> &gl::Device {
-		return &self;
-	}
-}
-
 impl Gfx {
 
 	pub(crate) fn new(window: &Window, conf: &Conf) -> Result<Self> {
 
-		let gl = Rc::clone(window.gl());
+		let gl = window.get_gl_ctx()?;
 
 		gl.enable(gl::Capability::Blend);
 		gl.enable(gl::Capability::DepthTest);
@@ -326,46 +318,46 @@ impl Gfx {
 
 	}
 
-	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+// 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let gl = self.gl.clone();
+// 		let gl = self.gl.clone();
 
-		self.flush();
-		gl.enable(gl::Capability::StencilTest);
-		gl.clear(Surface::Stencil);
+// 		self.flush();
+// 		gl.enable(gl::Capability::StencilTest);
+// 		gl.clear(Surface::Stencil);
 
-		gl.stencil(gl::StencilFunc {
-			cmp: Cmp::Never,
-			rf: 1,
-			mask: 0xff,
-		}, gl::StencilOps {
-			sfail: gl::StencilOp::Replace,
-			dpfail: gl::StencilOp::Replace,
-			dppass: gl::StencilOp::Replace,
-		}, || {
-			return mask(self);
-		})?;
+// 		gl.stencil(gl::StencilFunc {
+// 			cmp: Cmp::Never,
+// 			rf: 1,
+// 			mask: 0xff,
+// 		}, gl::StencilOps {
+// 			sfail: gl::StencilOp::Replace,
+// 			dpfail: gl::StencilOp::Replace,
+// 			dppass: gl::StencilOp::Replace,
+// 		}, || {
+// 			return mask(self);
+// 		})?;
 
-		self.flush();
+// 		self.flush();
 
-		gl.stencil(gl::StencilFunc {
-			cmp: Cmp::Equal,
-			rf: 1,
-			mask: 0xff,
-		}, gl::StencilOps {
-			sfail: gl::StencilOp::Keep,
-			dpfail: gl::StencilOp::Keep,
-			dppass: gl::StencilOp::Keep,
-		}, || {
-			return draw(self);
-		})?;
+// 		gl.stencil(gl::StencilFunc {
+// 			cmp: Cmp::Equal,
+// 			rf: 1,
+// 			mask: 0xff,
+// 		}, gl::StencilOps {
+// 			sfail: gl::StencilOp::Keep,
+// 			dpfail: gl::StencilOp::Keep,
+// 			dppass: gl::StencilOp::Keep,
+// 		}, || {
+// 			return draw(self);
+// 		})?;
 
-		self.flush();
-		gl.disable(gl::Capability::StencilTest);
+// 		self.flush();
+// 		gl.disable(gl::Capability::StencilTest);
 
-		return Ok(());
+// 		return Ok(());
 
-	}
+// 	}
 
 	pub fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
