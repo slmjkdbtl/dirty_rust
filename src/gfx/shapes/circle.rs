@@ -152,7 +152,7 @@ pub(super) fn arc_verts(radius: f32, start: f32, end: f32, segments: Option<u32>
 
 impl Drawable for Circle {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		if self.radius < 0.0 {
 			return Ok(());

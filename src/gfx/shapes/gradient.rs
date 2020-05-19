@@ -31,7 +31,7 @@ pub fn gradient(p1: Vec2, p2: Vec2, steps: &[(Color, f32)]) -> Gradient {
 
 impl Drawable for Gradient {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		if self.steps.len() < 2 {
 			return Err(format!("need at least 2 points to draw a gradient"));
@@ -42,7 +42,7 @@ impl Drawable for Gradient {
 		let rot = (self.p2.y - self.p1.y).atan2(self.p2.x - self.p1.x);
 		let mut verts = Vec::with_capacity(4 + 2 * (self.steps.len() - 2));
 
-		let matrix = ctx.gfx.transform
+		let matrix = ctx.transform
 			.t2((self.p1 + self.p2) * 0.5)
 			.r(rot - 90f32.to_radians())
 			;

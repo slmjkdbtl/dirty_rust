@@ -51,26 +51,26 @@ pub fn raw<'a>(verts: &'a [Vertex], indices: &'a [u32]) -> Raw<'a> {
 
 impl<'a> Drawable for Raw<'a> {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
-		let tex = self.tex.unwrap_or(&ctx.gfx.empty_tex);
+		let tex = self.tex.unwrap_or(&ctx.empty_tex);
 
-		ctx.gfx.renderer.push(
+		ctx.renderer.push(
 			self.prim,
 			&self.verts,
 			&self.indices,
-			&ctx.gfx.cur_pipeline,
+			&ctx.cur_pipeline,
 			&gfx::Uniform {
-				proj: ctx.gfx.proj,
-				view: ctx.gfx.view,
+				proj: ctx.proj,
+				view: ctx.view,
 				model: if self.ignore_transform {
 					mat4!()
 				} else {
-					ctx.gfx.transform
+					ctx.transform
 				},
 				color: self.color,
 				tex: tex.clone(),
-				custom: ctx.gfx.cur_custom_uniform.clone(),
+				custom: ctx.cur_custom_uniform.clone(),
 			},
 		)?;
 

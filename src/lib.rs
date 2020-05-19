@@ -23,31 +23,37 @@ pub mod res;
 mod gl;
 mod window;
 mod conf;
-
-#[cfg(not(web))]
-mod native;
-#[cfg(web)]
-mod web;
+pub use conf::*;
 
 mod app;
-pub use app::*;
+mod state;
+pub use state::*;
+mod run;
+mod ctx;
+pub use run::*;
+pub use ctx::*;
 
 pub mod gfx;
-mod desc;
-mod texture;
-mod canvas;
-mod model;
-mod transform;
-mod camera;
-mod shader;
-mod font;
 mod fps;
-pub mod shapes;
 pub mod fs;
 pub mod geom;
 pub mod img;
 pub mod input;
 pub mod math;
+pub mod codec;
+// pub mod kit;
+
+#[cfg(feature = "midi")]
+pub mod midi;
+
+#[cfg(feature = "synth")]
+pub mod synth;
+
+#[cfg(feature = "http")]
+pub mod http;
+
+#[cfg(feature = "ase")]
+pub mod ase;
 
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;

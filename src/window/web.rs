@@ -41,7 +41,7 @@ impl CursorIcon {
 
 impl Window {
 
-	pub fn new(conf: &conf::Conf) -> Result<Self> {
+	pub(crate) fn new(conf: &conf::Conf) -> Result<Self> {
 
 		use wasm_bindgen::JsCast;
 
@@ -102,45 +102,55 @@ impl Window {
 
 }
 
-impl window::WindowCtx for Window {
+// impl window::WindowCtx for Window {
+impl Window {
 
-	fn gl(&self) -> &Rc<gl::Device> {
+	pub(crate) fn gl(&self) -> &Rc<gl::Device> {
 		return &self.gl;
 	}
 
-	fn swap(&self) -> Result<()> {
+	pub(crate) fn swap(&self) -> Result<()> {
 		return Ok(());
 	}
 
-	fn key_down(&self, k: Key) -> bool {
+	pub fn key_down(&self, k: Key) -> bool {
 		return self.pressed_keys.contains(&k);
 	}
 
-	fn mouse_down(&self, m: Mouse) -> bool {
+	pub fn key_mods(&self) -> KeyMod {
+		return KeyMod {
+			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
+			ctrl: self.key_down(Key::LCtrl) || self.key_down(Key::RCtrl),
+			alt: self.key_down(Key::LAlt) || self.key_down(Key::RAlt),
+			meta: self.key_down(Key::LMeta) || self.key_down(Key::RMeta),
+		};
+	}
+
+	pub fn mouse_down(&self, m: Mouse) -> bool {
 		return self.pressed_mouse.contains(&m);
 	}
 
-	fn dpi(&self) -> f32 {
+	pub fn dpi(&self) -> f32 {
 		return 1.0;
 	}
 
-	fn width(&self) -> i32 {
+	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
-	fn height(&self) -> i32 {
+	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
-	fn mouse_pos(&self) -> Vec2 {
+	pub fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
 	}
 
-	fn set_mouse_pos(&mut self, _: Vec2) -> Result<()> {
+	pub fn set_mouse_pos(&mut self, _: Vec2) -> Result<()> {
 		return Ok(());
 	}
 
-	fn set_fullscreen(&mut self, b: bool) {
+	pub fn set_fullscreen(&mut self, b: bool) {
 
 		if b {
 			self.canvas.request_fullscreen();
@@ -150,11 +160,11 @@ impl window::WindowCtx for Window {
 
 	}
 
-	fn is_fullscreen(&self) -> bool {
+	pub fn is_fullscreen(&self) -> bool {
 		return false;
 	}
 
-	fn set_cursor_hidden(&mut self, b: bool) {
+	pub fn set_cursor_hidden(&mut self, b: bool) {
 
 		self.cursor_hidden = b;
 
@@ -166,11 +176,11 @@ impl window::WindowCtx for Window {
 
 	}
 
-	fn is_cursor_hidden(&self) -> bool {
+	pub fn is_cursor_hidden(&self) -> bool {
 		return self.cursor_hidden;
 	}
 
-	fn set_cursor_locked(&mut self, b: bool) {
+	pub fn set_cursor_locked(&mut self, b: bool) {
 // 		if b {
 // 			self.canvas.request_pointer_lock();
 // 		} else {
@@ -178,23 +188,32 @@ impl window::WindowCtx for Window {
 // 		}
 	}
 
-	fn is_cursor_locked(&self) -> bool {
+	pub fn is_cursor_locked(&self) -> bool {
 		return false;
 	}
 
-	fn set_title(&mut self, s: &str) {
+	pub fn set_title(&mut self, s: &str) {
 		self.title = s.to_owned();
 		self.document.set_title(s);
 		self.canvas.set_attribute("alt", s);
 	}
 
-	fn title(&self) -> &str {
+	pub fn title(&self) -> &str {
 		return &self.title;
 	}
 
-	fn run(
+	pub fn set_cursor(&mut self, c: CursorIcon) {
+		self.prev_cursor = c;
+		self.canvas.set_attribute("style", &format!("cursor: {}", c.to_web()));
+	}
+
+	pub fn quit(&mut self) {
+		// ...
+	}
+
+	pub(crate) fn run(
 		mut self,
-		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<bool> + 'static,
+		mut handle: impl FnMut(&mut Self, WindowEvent) -> Result<()> + 'static,
 	) -> Result<()> {
 
 		use wasm_bindgen::JsCast;
@@ -324,6 +343,18 @@ impl window::WindowCtx for Window {
 
 		return Ok(());
 
+	}
+
+	pub fn toggle_fullscreen(&mut self) {
+		self.set_fullscreen(!self.is_fullscreen());
+	}
+
+	pub fn toggle_cursor_hidden(&mut self) {
+		self.set_cursor_hidden(!self.is_cursor_hidden());
+	}
+
+	pub fn toggle_cursor_locked(&mut self) {
+		self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
 }

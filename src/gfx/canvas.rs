@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::*;
 use gfx::*;
-use window::WindowCtx;
+use gfx::*;
 
 #[derive(Clone, PartialEq)]
 pub struct Canvas {
@@ -16,9 +16,9 @@ pub struct Canvas {
 
 impl Canvas {
 
-	pub fn new(ctx: &Ctx, w: i32, h: i32) -> Result<Self> {
+	pub fn new(ctx: &Gfx, w: i32, h: i32) -> Result<Self> {
 
-		let dpi = ctx.window.dpi();
+		let dpi = ctx.dpi();
 		let tw = (w as f32 * dpi) as i32;
 		let th = (h as f32 * dpi) as i32;
 		let fbuf = gl::Framebuffer::new(&ctx.device(), tw, th)?;
@@ -58,7 +58,7 @@ impl Canvas {
 
 	}
 
-	pub fn resize(&mut self, ctx: &Ctx, w: i32, h: i32) -> Result<()> {
+	pub fn resize(&mut self, ctx: &Gfx, w: i32, h: i32) -> Result<()> {
 
 		let new = Self::new(ctx, w, h)?;
 		let old = std::mem::replace(self, new);

@@ -1,7 +1,6 @@
 // wengwengweng
 
-use crate::*;
-use math::*;
+use super::*;
 
 #[derive(Clone)]
 pub struct FormattedChar {
@@ -104,7 +103,7 @@ impl FormattedText {
 
 impl gfx::Drawable for FormattedText {
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		let italic = if self.italic {
 			0.3
@@ -118,7 +117,7 @@ impl gfx::Drawable for FormattedText {
 				.skx(italic)
 				.tx(italic * fch.width)
 				.s2(vec2!(self.scale))
-			, &shapes::sprite(&fch.tex)
+			, &sprite(&fch.tex)
 				.offset(vec2!(-1, 1))
 				.quad(fch.quad)
 				.color(fch.color.unwrap_or(self.color))
@@ -361,14 +360,14 @@ pub fn text<'a>(s: &'a str) -> Text<'a> {
 }
 
 impl<'a> Text<'a> {
-	pub fn format(&self, ctx: &app::Ctx) -> FormattedText {
+	pub fn format(&self, ctx: &Gfx) -> FormattedText {
 		return format(&self.content, self.font.unwrap_or(ctx.default_font()), &self.conf);
 	}
 }
 
 impl<'a> gfx::Drawable for Text<'a> {
 
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 		return ctx.draw(&self.format(ctx));
 	}
 

@@ -84,7 +84,7 @@ pub fn rect2(o: gfx::Origin, w: f32, h: f32) -> Rect {
 
 impl Drawable for Rect {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		let pts = vec![
 			self.p1,

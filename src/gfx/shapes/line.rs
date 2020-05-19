@@ -54,7 +54,7 @@ pub fn line(p1: Vec2, p2: Vec2) -> Line {
 
 impl Drawable for Line {
 
-	fn draw(&self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
 		if let Some(dash) = self.dash {
 

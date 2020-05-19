@@ -1,7 +1,8 @@
 // wengwengweng
 
 use crate::*;
-use img::Image;
+use gfx::*;
+use img::*;
 
 #[derive(Clone, PartialEq)]
 pub struct Texture {
