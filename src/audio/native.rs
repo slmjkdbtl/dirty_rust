@@ -50,7 +50,7 @@ impl Default for Effect {
 
 impl Sound {
 
-	pub fn from_bytes(data: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let cursor = Cursor::new(data.to_owned());
 		let source = Decoder::new(cursor)
@@ -109,9 +109,8 @@ impl Sound {
 		}
 	}
 
-	pub fn play(&self) -> Result<()> {
-		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
-		rodio::play_raw(&device, self.apply().convert_samples());
+	pub fn play(&self, ctx: &Audio) -> Result<()> {
+		rodio::play_raw(&ctx.device, self.apply().convert_samples());
 		return Ok(());
 	}
 
@@ -159,8 +158,8 @@ pub struct Track {
 
 impl Track {
 
-	pub fn from_bytes(data: &[u8]) -> Result<Self> {
-		return Self::from_sound(Sound::from_bytes(data)?);
+	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
+		return Self::from_sound(Sound::from_bytes(ctx, data)?);
 	}
 
 	pub fn from_sound(sound: Sound) -> Result<Self> {
@@ -181,11 +180,11 @@ impl Track {
 		return !self.sink.is_paused();
 	}
 
-	pub fn pause(&self) {
+	pub fn pause(&self, ctx: &Audio) {
 		self.sink.pause();
 	}
 
-	pub fn play(&self) {
+	pub fn play(&self, ctx: &Audio) {
 		self.sink.play();
 	}
 
