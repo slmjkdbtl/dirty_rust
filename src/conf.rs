@@ -2,6 +2,13 @@
 
 use crate::*;
 
+#[cfg(web)]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum CanvasMode {
+	Create,
+	Get(&'static str),
+}
+
 #[derive(Clone, Debug)]
 pub struct Conf {
 	pub width: i32,
@@ -17,6 +24,8 @@ pub struct Conf {
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
 	pub cull_face: bool,
+	#[cfg(web)]
+	pub canvas_mode: CanvasMode,
 	pub default_font: Option<gfx::BitmapFontData>,
 }
 
@@ -50,6 +59,8 @@ impl Default for Conf {
 			cull_face: false,
 			cursor_hidden: false,
 			cursor_locked: false,
+			#[cfg(web)]
+			canvas_mode: CanvasMode::Create,
 			default_font: None,
 		};
 	}
@@ -121,6 +132,12 @@ impl Launcher {
 
 	pub fn cull_face(mut self, b: bool) -> Self {
 		self.conf.cull_face = b;
+		return self;
+	}
+
+	#[cfg(web)]
+	pub fn canvas_mode(mut self, c: CanvasMode) -> Self {
+		self.conf.canvas_mode = c;
 		return self;
 	}
 

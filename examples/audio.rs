@@ -32,7 +32,6 @@ impl State for Game {
 		use input::Event::*;
 
 		let win = &mut ctx.window;
-		let audio = &mut ctx.audio;
 
 		match e {
 			KeyPress(k) => {
@@ -45,7 +44,7 @@ impl State for Game {
 							self.track.play();
 						}
 					},
-					_ => self.sound.play(&audio)?,
+					_ => self.sound.play()?,
 				}
 			},
 			_ => {},
