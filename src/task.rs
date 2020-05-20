@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Simple Threading Utilities
-
 use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::thread;

@@ -1,19 +1,14 @@
 // wengwengweng
 
-//! # DIRTY
-//! Toolkit for Games & Interactive Experiences
-
 #![feature(clamp)]
-#![feature(const_fn)]
 #![feature(try_blocks)]
 #![feature(box_syntax)]
 #![feature(option_zip)]
 #![feature(trait_alias)]
-#![feature(bool_to_option)]
-#![feature(fixed_size_array)]
-#![feature(type_alias_impl_trait)]
+#![feature(const_int_pow)]
 
 #![allow(unused_parens)]
+#![allow(unused_variables)]
 #![allow(dead_code)]
 
 #[macro_use]
@@ -28,16 +23,16 @@ mod gl;
 pub mod app;
 pub mod window;
 pub mod gfx;
+pub mod audio;
 pub mod input;
 
-mod state;
-pub use state::*;
 mod run;
 pub use run::*;
+mod state;
+pub use state::*;
 mod ctx;
 pub use ctx::*;
 
-pub mod audio;
 pub mod fs;
 pub mod geom;
 pub mod img;
@@ -48,13 +43,10 @@ pub mod codec;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-
 #[cfg(feature = "synth")]
 pub mod synth;
-
 #[cfg(feature = "http")]
 pub mod http;
-
 #[cfg(feature = "ase")]
 pub mod ase;
 

@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Common Math Functions & Types
-
 mexport!(mat);
 mexport!(rand);
 export!(vec);

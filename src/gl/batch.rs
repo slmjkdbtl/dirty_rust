@@ -96,21 +96,6 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	}
 
-	pub fn push_shape<S: Shape<Vertex = V>>(
-		&mut self,
-		prim: Primitive,
-		shape: S,
-		pipeline: &Pipeline<V, U>,
-		uniform: &U,
-	) -> Result<()> {
-
-		self.push(prim, &[], S::indices(), pipeline, uniform)?;
-		self.vqueue.extend_from_slice(&shape.vertices());
-
-		return Ok(());
-
-	}
-
 	pub fn flush(&mut self) {
 
 		if self.empty() {

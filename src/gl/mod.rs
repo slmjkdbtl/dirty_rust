@@ -12,7 +12,6 @@ export!(attr);
 export!(uniform);
 export!(stencil);
 export!(mesh);
-export!(shape);
 export!(batch);
 
 use std::mem;

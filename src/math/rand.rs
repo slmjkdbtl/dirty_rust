@@ -236,3 +236,72 @@ macro_rules! choose {
 	};
 
 }
+
+// use crate::math::*;
+
+// const A: u128 = 1664525;
+// const C: u128 = 1013904223;
+// const M: u128 = u128::pow(2, 32);
+
+// pub trait RandRange {
+// 	fn rand_within(a: Self, b: Self, r: &mut Rng) -> Self;
+// }
+
+// impl RandRange for f32 {
+// 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
+// 		return a + (b - a) * f.gen_f();
+// 	}
+// }
+
+// impl RandRange for Vec2 {
+// 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
+// 		return vec2!(
+// 			a.x + (b.x - a.x) * f.gen_f(),
+// 			a.y + (b.y - a.y) * f.gen_f(),
+// 		);
+// 	}
+// }
+
+// impl RandRange for Vec3 {
+// 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
+// 		return vec3!(
+// 			a.x + (b.x - a.x) * f.gen_f(),
+// 			a.y + (b.y - a.y) * f.gen_f(),
+// 			a.z + (b.z - a.z) * f.gen_f(),
+// 		);
+// 	}
+// }
+
+// impl RandRange for Color {
+// 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
+// 		return rgba!(
+// 			a.r + (b.r - a.r) * f.gen_f(),
+// 			a.g + (b.g - a.g) * f.gen_f(),
+// 			a.b + (b.b - a.b) * f.gen_f(),
+// 			a.a + (b.a - a.a) * f.gen_f(),
+// 		);
+// 	}
+// }
+
+// pub struct Rng {
+// 	seed: u128,
+// }
+
+// impl Rng {
+// 	pub const fn new(s: u128) -> Self {
+// 		return Self {
+// 			seed: s,
+// 		};
+// 	}
+// 	fn gen(&mut self) -> u128 {
+// 		self.seed = (A * self.seed + C) % M;
+// 		return self.seed;
+// 	}
+// 	pub fn gen_f(&mut self) -> f32 {
+// 		return self.gen() as f32 / M as f32;
+// 	}
+// 	pub fn gen_range<R: RandRange>(&mut self, a: R, b: R) -> R {
+// 		return R::rand_within(a, b, self);
+// 	}
+// }
+

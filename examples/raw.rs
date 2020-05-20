@@ -62,6 +62,7 @@ impl State for Game {
 }
 
 fn main() {
+
 	if let Err(e) = launcher()
 		.title("raw")
 		.run::<Game>() {

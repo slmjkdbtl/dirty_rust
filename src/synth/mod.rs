@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Software Synthesizer
-
 export!(note);
 export!(envelope);
 export!(life);

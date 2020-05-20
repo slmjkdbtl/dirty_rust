@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! General Collision Detection
-
 use super::*;
 
 fn fix_pt_pair(pts: (Vec2, Vec2)) -> (Vec2, Vec2) {

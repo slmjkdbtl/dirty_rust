@@ -1,27 +1,32 @@
 # wengwengweng
 
-run example="basic":
+check:
+	cargo c
+
+run example="raw":
 	cargo run \
 		--example {{example}}
 
-build-web example="basic":
+build-web example="raw":
 	cargo build \
 		--example {{example}} \
 		--target wasm32-unknown-unknown
-	wasm-bindgen \
-		target/wasm32-unknown-unknown/debug/examples/{{example}}.wasm \
+	wasm-bindgen target/wasm32-unknown-unknown/debug/examples/{{example}}.wasm \
 		--out-dir target/wasm32-unknown-unknown/debug/examples/ \
 		--target web \
 		--no-typescript
 
-run-web example="basic":
+run-web:
 	miniserve . \
 		--index examples/web/index.html
 
-install:
-	cargo install \
-		--force \
-		--path .
+run-site:
+	cd site; \
+		now dev
+
+deploy-site:
+	cd site; \
+		now --prod
 
 test:
 	cargo test --tests
@@ -34,10 +39,8 @@ doc crate="dirty":
 
 update:
 	cargo update
+	cargo outdated --root-deps-only
 
 loc:
 	loc
-
-checkdep:
-	cargo outdated --root-deps-only
 

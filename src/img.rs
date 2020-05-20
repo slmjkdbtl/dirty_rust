@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Image decoding & encoding
-
 use std::path::Path;
 
 use crate::math::Color;
