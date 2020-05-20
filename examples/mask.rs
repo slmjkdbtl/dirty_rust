@@ -11,14 +11,15 @@ impl State for Game {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
-		match *e {
+		match e {
 			KeyPress(k) => {
-				if k == Key::Esc {
-					ctx.quit();
+				match *k {
+					Key::Esc => d.window.quit(),
+					_ => {},
 				}
 			},
 			_ => {},
@@ -28,12 +29,12 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		ctx.draw_masked(|ctx| {
-			return ctx.draw(&shapes::circle(vec2!(0), 120.0));
-		}, |ctx| {
-			return ctx.draw(&shapes::gradient(
+		d.gfx.draw_masked(|gfx| {
+			return gfx.draw(&shapes::circle(vec2!(0), 120.0));
+		}, |gfx| {
+			return gfx.draw(&shapes::gradient(
 				vec2!(0, -120),
 				vec2!(0, 120),
 				&[
@@ -51,9 +52,9 @@ impl State for Game {
 }
 
 fn main() {
-	if let Err(err) = launcher()
+	if let Err(e) = launcher()
 		.run::<Game>() {
-		println!("{}", err);
+		log!("{}", e);
 	}
 }
 

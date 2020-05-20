@@ -31,6 +31,7 @@ pub(self) type TextureID = <GLCtx as HasContext>::Texture;
 pub(self) type FramebufferID = <GLCtx as HasContext>::Framebuffer;
 pub(self) type RenderbufferID = <GLCtx as HasContext>::Renderbuffer;
 
+#[derive(Clone)]
 pub struct Device {
 	ctx: Rc<GLCtx>,
 }

@@ -8,21 +8,18 @@ struct Game;
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-
-		let win = &mut ctx.window;
-		let audio = &mut ctx.audio;
 
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => win.quit(),
+					Key::Esc => d.window.quit(),
 					_ => {},
 				}
 			},
@@ -33,13 +30,11 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		use gfx::Vertex;
 
-		let gfx = &mut ctx.gfx;
-
-		gfx.draw(&shapes::raw(&[
+		d.gfx.draw(&shapes::raw(&[
 			Vertex {
 				pos: vec3!(0, 72, 0),
 				color: rgba!(1, 0, 0, 1),

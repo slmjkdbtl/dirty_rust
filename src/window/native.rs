@@ -321,7 +321,7 @@ impl Window {
 
 							if let Some(kc) = input.virtual_keycode {
 
-								if let Some(key) = Key::from_extern(kc) {
+								if let Some(key) = Key::from_winit(kc) {
 
 									match input.state {
 
@@ -352,7 +352,7 @@ impl Window {
 
 						WEvent::MouseInput { button, state, .. } => {
 
-							if let Some(button) = Mouse::from_extern(*button) {
+							if let Some(button) = Mouse::from_winit(*button) {
 
 								match state {
 
@@ -487,7 +487,7 @@ impl Window {
 
 								ButtonPressed(button, ..) => {
 
-									if let Some(button) = GamepadButton::from_extern(button) {
+									if let Some(button) = GamepadButton::from_gilrs(button) {
 
 										self
 											.pressed_gamepad_buttons
@@ -502,14 +502,14 @@ impl Window {
 								},
 
 								ButtonRepeated(button, ..) => {
-									if let Some(button) = GamepadButton::from_extern(button) {
+									if let Some(button) = GamepadButton::from_gilrs(button) {
 										events.push(Event::GamepadPressRepeat(id, button));
 									}
 								},
 
 								ButtonReleased(button, ..) => {
 
-									if let Some(button) = GamepadButton::from_extern(button) {
+									if let Some(button) = GamepadButton::from_gilrs(button) {
 
 										self
 											.pressed_gamepad_buttons
@@ -665,6 +665,129 @@ impl CursorIcon {
 			CursorIcon::Progress => glutin::window::CursorIcon::Progress,
 			CursorIcon::Wait => glutin::window::CursorIcon::Wait,
 			CursorIcon::Text => glutin::window::CursorIcon::Text,
+		};
+	}
+}
+
+impl Key {
+
+	fn from_winit(k: glutin::event::VirtualKeyCode) -> Option<Self> {
+		use glutin::event::VirtualKeyCode::*;
+		return match k {
+			Q => Some(Key::Q),
+			W => Some(Key::W),
+			E => Some(Key::E),
+			R => Some(Key::R),
+			T => Some(Key::T),
+			Y => Some(Key::Y),
+			U => Some(Key::U),
+			I => Some(Key::I),
+			O => Some(Key::O),
+			P => Some(Key::P),
+			A => Some(Key::A),
+			S => Some(Key::S),
+			D => Some(Key::D),
+			F => Some(Key::F),
+			G => Some(Key::G),
+			H => Some(Key::H),
+			J => Some(Key::J),
+			K => Some(Key::K),
+			L => Some(Key::L),
+			Z => Some(Key::Z),
+			X => Some(Key::X),
+			C => Some(Key::C),
+			V => Some(Key::V),
+			B => Some(Key::B),
+			N => Some(Key::N),
+			M => Some(Key::M),
+			Key1 => Some(Key::Key1),
+			Key2 => Some(Key::Key2),
+			Key3 => Some(Key::Key3),
+			Key4 => Some(Key::Key4),
+			Key5 => Some(Key::Key5),
+			Key6 => Some(Key::Key6),
+			Key7 => Some(Key::Key7),
+			Key8 => Some(Key::Key8),
+			Key9 => Some(Key::Key9),
+			Key0 => Some(Key::Key0),
+			F1 => Some(Key::F1),
+			F2 => Some(Key::F2),
+			F3 => Some(Key::F3),
+			F4 => Some(Key::F4),
+			F5 => Some(Key::F5),
+			F6 => Some(Key::F6),
+			F7 => Some(Key::F7),
+			F8 => Some(Key::F8),
+			F9 => Some(Key::F9),
+			F10 => Some(Key::F10),
+			F11 => Some(Key::F11),
+			F12 => Some(Key::F12),
+			Minus => Some(Key::Minus),
+			Equals => Some(Key::Equal),
+			Comma => Some(Key::Comma),
+			Period => Some(Key::Period),
+			Grave => Some(Key::Backquote),
+			Slash => Some(Key::Slash),
+			Backslash => Some(Key::Backslash),
+			Semicolon => Some(Key::Semicolon),
+			Apostrophe => Some(Key::Quote),
+			Up => Some(Key::Up),
+			Down => Some(Key::Down),
+			Left => Some(Key::Left),
+			Right => Some(Key::Right),
+			Escape => Some(Key::Esc),
+			Tab => Some(Key::Tab),
+			Space => Some(Key::Space),
+			Back => Some(Key::Backspace),
+			Return => Some(Key::Enter),
+			LShift => Some(Key::LShift),
+			RShift => Some(Key::RShift),
+			LAlt => Some(Key::LAlt),
+			RAlt => Some(Key::RAlt),
+			LWin => Some(Key::LMeta),
+			RWin => Some(Key::RMeta),
+			LControl => Some(Key::LCtrl),
+			RControl => Some(Key::RCtrl),
+			_ => None,
+		};
+	}
+
+}
+
+impl Mouse {
+	fn from_winit(m: glutin::event::MouseButton) -> Option<Self> {
+		use glutin::event::MouseButton::*;
+		return match m {
+			Left => Some(Mouse::Left),
+			Right => Some(Mouse::Right),
+			Middle => Some(Mouse::Middle),
+			_ => None,
+		};
+	}
+}
+
+impl GamepadButton {
+	fn from_gilrs(b: gilrs::ev::Button) -> Option<Self> {
+		use gilrs::ev::Button::*;
+		return match b {
+			South => Some(GamepadButton::A),
+			East => Some(GamepadButton::B),
+			West => Some(GamepadButton::X),
+			North => Some(GamepadButton::Y),
+			LeftTrigger => Some(GamepadButton::LBumper),
+			LeftTrigger2 => Some(GamepadButton::LTrigger),
+			RightTrigger => Some(GamepadButton::RBumper),
+			RightTrigger2 => Some(GamepadButton::RTrigger),
+			Select => Some(GamepadButton::Select),
+			Start => Some(GamepadButton::Start),
+			Mode => Some(GamepadButton::Mode),
+			LeftThumb => Some(GamepadButton::LStick),
+			RightThumb => Some(GamepadButton::RStick),
+			DPadUp => Some(GamepadButton::Up),
+			DPadDown => Some(GamepadButton::Down),
+			DPadLeft => Some(GamepadButton::Left),
+			DPadRight => Some(GamepadButton::Right),
+			_ => None,
 		};
 	}
 }

@@ -27,20 +27,6 @@ pub struct Window {
 	title: String,
 }
 
-impl CursorIcon {
-	fn to_web(&self) -> &'static str {
-		return match self {
-			CursorIcon::Normal => "default",
-			CursorIcon::Hand => "pointer",
-			CursorIcon::Cross => "crosshair",
-			CursorIcon::Move => "move",
-			CursorIcon::Progress => "progress",
-			CursorIcon::Wait => "wait",
-			CursorIcon::Text => "text",
-		};
-	}
-}
-
 impl Window {
 
 	pub(crate) fn new(conf: &conf::Conf) -> Result<Self> {
@@ -285,7 +271,7 @@ impl Window {
 					match e {
 
 						WebEvent::KeyPress(e) => {
-							if let Some(k) = Key::from_code(e.key_code()) {
+							if let Some(k) = Key::from_web(e) {
 								events.push(KeyPressRepeat(k));
 								if !self.key_down(k) {
 									events.push(KeyPress(k));
@@ -295,7 +281,7 @@ impl Window {
 						},
 
 						WebEvent::KeyRelease(e) => {
-							if let Some(k) = Key::from_code(e.key_code()) {
+							if let Some(k) = Key::from_web(e) {
 								self.pressed_keys.remove(&k);
 								events.push(KeyRelease(k));
 							}
@@ -364,6 +350,107 @@ impl Window {
 
 	pub fn toggle_cursor_locked(&mut self) {
 		self.set_cursor_locked(!self.is_cursor_locked());
+	}
+
+}
+
+impl CursorIcon {
+	fn to_web(&self) -> &'static str {
+		return match self {
+			CursorIcon::Normal => "default",
+			CursorIcon::Hand => "pointer",
+			CursorIcon::Cross => "crosshair",
+			CursorIcon::Move => "move",
+			CursorIcon::Progress => "progress",
+			CursorIcon::Wait => "wait",
+			CursorIcon::Text => "text",
+		};
+	}
+}
+
+impl Key {
+
+	fn from_web(e: &web_sys::KeyboardEvent) -> Option<Self> {
+
+		return match e.code().as_ref() {
+			"KeyQ" => Some(Key::Q),
+			"KeyW" => Some(Key::W),
+			"KeyE" => Some(Key::E),
+			"KeyR" => Some(Key::R),
+			"KeyT" => Some(Key::T),
+			"KeyY" => Some(Key::Y),
+			"KeyU" => Some(Key::U),
+			"KeyI" => Some(Key::I),
+			"KeyO" => Some(Key::O),
+			"KeyP" => Some(Key::P),
+			"KeyA" => Some(Key::A),
+			"KeyS" => Some(Key::S),
+			"KeyD" => Some(Key::D),
+			"KeyF" => Some(Key::F),
+			"KeyG" => Some(Key::G),
+			"KeyH" => Some(Key::H),
+			"KeyJ" => Some(Key::J),
+			"KeyK" => Some(Key::K),
+			"KeyL" => Some(Key::L),
+			"KeyZ" => Some(Key::Z),
+			"KeyX" => Some(Key::X),
+			"KeyC" => Some(Key::C),
+			"KeyV" => Some(Key::V),
+			"KeyB" => Some(Key::B),
+			"KeyN" => Some(Key::N),
+			"KeyM" => Some(Key::M),
+			"Digit1" => Some(Key::Key1),
+			"Digit2" => Some(Key::Key2),
+			"Digit3" => Some(Key::Key3),
+			"Digit4" => Some(Key::Key4),
+			"Digit5" => Some(Key::Key5),
+			"Digit6" => Some(Key::Key6),
+			"Digit7" => Some(Key::Key7),
+			"Digit8" => Some(Key::Key8),
+			"Digit9" => Some(Key::Key9),
+			"Digit0" => Some(Key::Key0),
+			"F1" => Some(Key::F1),
+			"F2" => Some(Key::F2),
+			"F3" => Some(Key::F3),
+			"F4" => Some(Key::F4),
+			"F5" => Some(Key::F5),
+			"F6" => Some(Key::F6),
+			"F7" => Some(Key::F7),
+			"F8" => Some(Key::F8),
+			"F9" => Some(Key::F9),
+			"F10" => Some(Key::F10),
+			"F11" => Some(Key::F11),
+			"F12" => Some(Key::F12),
+			"Minus" => Some(Key::Minus),
+			"Equal" => Some(Key::Equal),
+			"Comma" => Some(Key::Comma),
+			"Period" => Some(Key::Period),
+			"Backquote" => Some(Key::Backquote),
+			"Slash" => Some(Key::Slash),
+			"Backslash" => Some(Key::Backslash),
+			"Semicolon" => Some(Key::Semicolon),
+			"Quote" => Some(Key::Quote),
+			"ArrowUp" => Some(Key::Up),
+			"ArrowDown" => Some(Key::Down),
+			"ArrowLeft" => Some(Key::Left),
+			"ArrowRight" => Some(Key::Right),
+			"Escape" => Some(Key::Esc),
+			"Tab" => Some(Key::Tab),
+			"Space" => Some(Key::Space),
+			"Backspace" => Some(Key::Backspace),
+			"Enter" => Some(Key::Enter),
+			"ShiftLeft" => Some(Key::LShift),
+			"ShiftRight" => Some(Key::RShift),
+			"AltLeft" => Some(Key::LAlt),
+			"AltRight" => Some(Key::RAlt),
+			"MetaLeft" => Some(Key::LMeta),
+			"MetaRight" => Some(Key::RMeta),
+			"ControlLeft" => Some(Key::LCtrl),
+			"ControlRight" => Some(Key::RCtrl),
+			_ => None,
+
+		};
+
 	}
 
 }

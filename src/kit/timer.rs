@@ -1,20 +1,20 @@
 // wengwengweng
 
-use std::time::Instant;
+use instant::Instant;
 use std::time::Duration;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Timer {
-	time: f32,
-	limit: f32,
+	time: Duration,
+	limit: Duration,
 	done: bool,
 }
 
 impl Timer {
 
-	pub fn new(time: f32,) -> Self {
+	pub fn new(time: Duration) -> Self {
 		return Self {
-			time: 0.0,
+			time: Duration::from_secs_f32(0.0),
 			limit: time,
 			done: false,
 		}
@@ -24,9 +24,9 @@ impl Timer {
 		self.reset_to(self.limit);
 	}
 
-	pub fn reset_to(&mut self, time: f32,) {
+	pub fn reset_to(&mut self, time: Duration) {
 
-		self.time = 0.0;
+		self.time = Duration::from_secs_f32(0.0);
 		self.limit = time;
 		self.done = false;
 
@@ -40,7 +40,7 @@ impl Timer {
 		return self.done;
 	}
 
-	pub fn tick(&mut self, dt: f32) -> bool {
+	pub fn tick(&mut self, dt: Duration) -> bool {
 
 		self.time += dt;
 

@@ -1,6 +1,7 @@
 // wengwengweng
 
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::*;
 use math::*;
@@ -13,8 +14,8 @@ pub struct Sprite {
 	offset: Vec2,
 	anims: HashMap<String, Anim>,
 	cur_anim: Option<String>,
-	timer: f32,
-	speed: f32,
+	timer: Duration,
+	speed: Duration,
 }
 
 impl Sprite {
@@ -27,12 +28,12 @@ impl Sprite {
 			offset: vec2!(0),
 			anims: HashMap::new(),
 			cur_anim: None,
-			timer: 0.0,
-			speed: 0.1,
+			timer: Duration::from_secs_f32(0.0),
+			speed: Duration::from_secs_f32(0.1),
 		};
 	}
 
-	pub fn from_bytes(ctx: &app::Ctx, b: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &Gfx, b: &[u8]) -> Result<Self> {
 		return Ok(Self::from_tex(gfx::Texture::from_bytes(ctx, b)?));
 	}
 
@@ -126,7 +127,7 @@ impl Sprite {
 		self.offset = o;
 	}
 
-	pub fn set_speed(&mut self, s: f32) {
+	pub fn set_speed(&mut self, s: Duration) {
 		self.speed = s;
 	}
 
@@ -155,7 +156,7 @@ impl Sprite {
 
 	}
 
-	pub fn update(&mut self, dt: f32,) {
+	pub fn update(&mut self, dt: Duration,) {
 
 		let anim = match &self.cur_anim {
 			Some(cur_anim) => {

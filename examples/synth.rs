@@ -103,23 +103,21 @@ impl State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-
-		let win = &mut ctx.window;
 
 		match e {
 
 			KeyPress(k) => {
 
-				let mods = win.key_mods();
+				let mods = d.window.key_mods();
 
 				match *k {
-					Key::Esc => win.quit(),
+					Key::Esc => d.window.quit(),
 					Key::F => {
 						if mods.meta {
-							win.toggle_fullscreen()
+							d.window.toggle_fullscreen()
 						}
 					},
 					Key::Up => {},
@@ -166,9 +164,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
-
-		let gfx = &mut ctx.gfx;
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		if let Ok(synth) = self.synth.lock() {
 
@@ -176,7 +172,7 @@ impl State for Game {
 			let mut last = None;
 			let height = 120.0;
 			let len = buf.len() as f32;
-			let dis = gfx.width() as f32 / len;
+			let dis = d.gfx.width() as f32 / len;
 
 			for (i, buf) in buf.iter().enumerate() {
 
@@ -187,7 +183,7 @@ impl State for Game {
 					let ax = -len / 2.0 * dis + (i - 1) as f32 * dis;
 					let bx = -len / 2.0 * dis + i as f32 * dis;
 
-					gfx.draw(&shapes::line(vec2!(ax, ay), vec2!(bx, by)))?;
+					d.gfx.draw(&shapes::line(vec2!(ax, ay), vec2!(bx, by)))?;
 
 				}
 
