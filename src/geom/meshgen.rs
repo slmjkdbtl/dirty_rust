@@ -258,21 +258,3 @@ pub fn checkerboard(s: f32, c: usize, r: usize) -> MeshData {
 
 }
 
-// use once_cell::sync::Lazy;
-
-// pub static CUBE: Lazy<MeshData> = Lazy::new(|| {
-// 	return meshgen::cube(1.0);
-// });
-
-// pub static SPHERE: Lazy<MeshData> = Lazy::new(|| {
-// 	return meshgen::sphere(1.0);
-// });
-
-// pub static CYLINDER: Lazy<MeshData> = Lazy::new(|| {
-// 	return meshgen::cylinder(0.5, 1.0, 24);
-// });
-
-// pub static TORUS: Lazy<MeshData> = Lazy::new(|| {
-// 	return meshgen::torus(1.0, 0.5);
-// });
-

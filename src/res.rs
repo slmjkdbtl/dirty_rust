@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Global Resources
-
 pub mod shader {
 	pub const TEMPLATE_VERT: &str = include_str!("shaders/template.vert");
 	pub const DEFAULT_VERT: &str = include_str!("shaders/default.vert");

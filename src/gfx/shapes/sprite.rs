@@ -1,6 +1,10 @@
 // wengwengweng
 
 use super::*;
+use gfx::Flip;
+use std::mem;
+
+const INDICES: [u32; 6] = [0, 3, 1, 1, 3, 2];
 
 #[derive(Clone)]
 pub struct Sprite<'a> {
@@ -80,25 +84,68 @@ impl<'a> gfx::Drawable for Sprite<'a> {
 			.t2(offset * -0.5)
 			;
 
-		let shape = gfx::QuadShape {
-			transform: t,
-			quad: self.quad,
-			color: self.color,
-			flip: self.flip,
-		};
+		let p1 = t * vec3!(-0.5, 0.5, 0.0);
+		let p2 = t * vec3!(0.5, 0.5, 0.0);
+		let p3 = t * vec3!(0.5, -0.5, 0.0);
+		let p4 = t * vec3!(-0.5, -0.5, 0.0);
 
-		ctx.renderer.push_shape(
-			gl::Primitive::Triangle,
-			shape,
-			&ctx.cur_pipeline,
-			&gfx::Uniform {
-				model: mat4!(),
-				proj: ctx.proj,
-				view: ctx.view,
-				color: rgba!(1),
-				tex: self.tex.clone(),
-				custom: ctx.cur_custom_uniform.clone(),
-			}
+		// TODO: flip img instead of tex coord
+		let q = self.quad;
+		let mut u1 = vec2!(q.x, q.y);
+		let mut u2 = vec2!(q.x + q.w, q.y);
+		let mut u3 = vec2!(q.x + q.w, q.y + q.h);
+		let mut u4 = vec2!(q.x, q.y + q.h);
+
+// 		let mut u1 = vec2!(q.x, q.y + q.h);
+// 		let mut u2 = vec2!(q.x + q.w, q.y + q.h);
+// 		let mut u3 = vec2!(q.x + q.w, q.y);
+// 		let mut u4 = vec2!(q.x, q.y);
+
+		match self.flip {
+			Flip::X => {
+				mem::swap(&mut u1, &mut u2);
+				mem::swap(&mut u3, &mut u4);
+			},
+			Flip::Y => {
+				mem::swap(&mut u1, &mut u4);
+				mem::swap(&mut u2, &mut u3);
+			},
+			Flip::XY => {
+				mem::swap(&mut u1, &mut u3);
+				mem::swap(&mut u2, &mut u4);
+			},
+			_ => {},
+		}
+
+		ctx.draw(
+			&raw(&[
+				Vertex {
+					pos: p1,
+					uv: u1,
+					normal: vec3!(0, 0, 1),
+					color: self.color,
+				},
+				Vertex {
+					pos: p2,
+					uv: u2,
+					normal: vec3!(0, 0, 1),
+					color: self.color,
+				},
+				Vertex {
+					pos: p3,
+					uv: u3,
+					normal: vec3!(0, 0, 1),
+					color: self.color,
+				},
+				Vertex {
+					pos: p4,
+					uv: u4,
+					normal: vec3!(0, 0, 1),
+					color: self.color,
+				},
+			], &INDICES)
+				.texture(&self.tex)
+				.transformed()
 		)?;
 
 		return Ok(());

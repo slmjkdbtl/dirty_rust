@@ -95,7 +95,7 @@ impl Drawable for Gradient {
 			.map(|(i, vertex)| vertex + i as u32 / 6 * 2 )
 			.collect();
 
-		ctx.draw(&raw(&verts, &indices).ignore_transform())?;
+		ctx.draw(&raw(&verts, &indices).transformed())?;
 
 		return Ok(());
 

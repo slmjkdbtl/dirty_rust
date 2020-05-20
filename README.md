@@ -79,6 +79,9 @@ fn main() {
 
 for build instructions, check out `doc/dist.md`
 
+## doc
+check out `doc/` and cargo docs
+
 ## facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
 

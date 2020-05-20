@@ -1,8 +1,9 @@
 // wengwengweng
 
+#![allow(dead_code)]
+
 use std::env;
 
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Lib {
 	Dylib(&'static str),
@@ -10,7 +11,6 @@ enum Lib {
 	Framework(&'static str),
 }
 
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Path {
 	Dependency(&'static str),
@@ -20,79 +20,44 @@ enum Path {
 	All(&'static str),
 }
 
-#[allow(dead_code)]
 fn link(lib: Lib) {
 
 	use Lib::*;
 
-	let kind;
-	let name;
-
-	match lib {
-		Static(p) => {
-			kind = "static";
-			name = p;
-		},
-		Dylib(p) => {
-			kind = "dylib";
-			name = p;
-		},
-		Framework(p) => {
-			kind = "framework";
-			name = p;
-		},
-	}
+	let (kind, name) = match lib {
+		Static(p) => ("static", p),
+		Dylib(p) => ("dylib", p),
+		Framework(p) => ("framework", p),
+	};
 
 	println!("cargo:rustc-link-lib={}={}", kind, name);
 
 }
 
-#[allow(dead_code)]
 fn search(search: Path) {
 
 	use Path::*;
 
-	let kind;
-	let path;
-
-	match search {
-		Dependency(p) => {
-			kind = "dependency";
-			path = p;
-		},
-		Crate(p) => {
-			kind = "crate";
-			path = p;
-		},
-		Native(p) => {
-			kind = "native";
-			path = p;
-		},
-		Framework(p) => {
-			kind = "framework";
-			path = p;
-		},
-		All(p) => {
-			kind = "all";
-			path = p;
-		},
-	}
+	let (kind, path) = match search {
+		Dependency(p) => ("dependency", p),
+		Crate(p) => ("crate", p),
+		Native(p) => ("native", p),
+		Framework(p) => ("framework", p),
+		All(p) => ("all", p),
+	};
 
 	println!("cargo:rustc-link-search={}={}", kind, path);
 
 }
 
-#[allow(dead_code)]
 fn flags(f: &str) {
 	println!("cargo:rustc-flags={}", f);
 }
 
-#[allow(dead_code)]
 fn cfg(c: &str) {
 	println!("cargo:rustc-cfg={}", c);
 }
 
-#[allow(dead_code)]
 fn env(k: &str, v: &str) {
 	println!("cargo:rustc-env={}={}", k, v);
 }
@@ -119,18 +84,20 @@ macro_rules! os {
 
 fn main() {
 
-	arch!("wasm32", cfg("web"));
-	os!("ios", cfg("mobile"));
-	os!("ios", cfg("ios"));
-	os!("ios", link(Lib::Framework("OpenGLES")));
-	os!("android", cfg("mobile"));
-	os!("android", cfg("android"));
 	os!("macos", cfg("desktop"));
-	os!("macos", cfg("macos"));
 	os!("linux", cfg("desktop"));
-	os!("linux", cfg("linux"));
 	os!("windows", cfg("desktop"));
+	os!("android", cfg("mobile"));
+	os!("ios", cfg("mobile"));
+
+	arch!("wasm32", cfg("web"));
+	os!("macos", cfg("macos"));
+	os!("linux", cfg("linux"));
 	os!("windows", cfg("windows"));
+	os!("ios", cfg("ios"));
+	os!("android", cfg("android"));
+
+	os!("ios", link(Lib::Framework("OpenGLES")));
 
 }
 

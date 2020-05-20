@@ -27,10 +27,6 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	}
 
-	pub fn from_shape<S: Shape<Vertex = V>>(device: &Device, shape: S) -> Result<Self> {
-		return Self::from(device, &shape.vertices(), &S::indices());
-	}
-
 	pub fn vbuf(&self) -> &VertexBuffer<V> {
 		return &self.vbuf;
 	}

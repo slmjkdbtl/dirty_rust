@@ -15,7 +15,7 @@ impl State for Game {
 	fn init(d: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
 			tex: gfx::Texture::from_bytes(d.gfx, include_bytes!("res/bunny.png"))?,
-			count: 1000,
+			count: 10000,
 		});
 	}
 
@@ -95,7 +95,7 @@ fn main() {
 // 		.hidpi(false)
 		.vsync(false)
 		.run::<Game>() {
-		println!("{}", err);
+		elog!("{}", err);
 	}
 
 }

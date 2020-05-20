@@ -49,7 +49,6 @@ pub struct Gfx {
 	transform: Mat4,
 
 	renderer: gl::BatchedMesh<Vertex, Uniform>,
-	cube_renderer: gl::Mesh<gfx::Vertex, gfx::Uniform>,
 
 	empty_tex: gfx::Texture,
 
@@ -133,7 +132,6 @@ impl Gfx {
 			dpi: window.dpi(),
 
 			renderer: gl::BatchedMesh::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
-			cube_renderer: gl::Mesh::from_shape(&gl, gfx::CubeShape)?,
 
 			view: cam.view(),
 			proj: cam.proj(),

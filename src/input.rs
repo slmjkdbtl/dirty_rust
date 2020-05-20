@@ -50,6 +50,17 @@ pub struct KeyMod {
 	pub meta: bool,
 }
 
+impl KeyMod {
+	pub fn empty() -> Self {
+		return Self {
+			shift: false,
+			ctrl: false,
+			alt: false,
+			meta: false,
+		};
+	}
+}
+
 #[derive(Clone, Debug)]
 pub enum Event {
 	KeyPress(Key),

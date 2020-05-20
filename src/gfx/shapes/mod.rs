@@ -1,7 +1,5 @@
 // wengwengweng
 
-//! Common Drawing Primitives
-
 use std::f32::consts::PI;
 
 use crate::gfx;
@@ -26,7 +24,6 @@ export!(canvas);
 export!(gradient);
 export!(text);
 export!(model);
-export!(cube);
 export!(line3d);
 export!(rect3d);
 
