@@ -11,9 +11,9 @@ struct Game {
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let mut sprite = Sprite::from_bytes(ctx, include_bytes!("res/car.png"))?;
+		let mut sprite = Sprite::from_bytes(d.gfx, include_bytes!("res/car.png"))?;
 
 		sprite.slice(4, 1);
 		sprite.add_anim("run", 0, 3, true);
@@ -25,15 +25,15 @@ impl State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => ctx.quit(),
-					Key::F => ctx.toggle_fullscreen(),
+					Key::Esc => d.window.quit(),
+					Key::F => d.window.toggle_fullscreen(),
 					_ => {},
 				}
 			},
@@ -44,18 +44,18 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
-		self.sprite.update(ctx.dt());
+		d.app.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
+		self.sprite.update(d.app.dt());
 
 		return Ok(());
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		ctx.draw(&self.sprite)?;
+		d.gfx.draw(&self.sprite)?;
 
 		return Ok(());
 
@@ -65,10 +65,10 @@ impl State for Game {
 
 fn main() {
 
-	if let Err(err) = launcher()
+	if let Err(e) = launcher()
 		.resizable(true)
 		.run::<Game>() {
-		println!("{}", err);
+		log!("{}", e);
 	}
 
 }

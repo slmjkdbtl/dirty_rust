@@ -18,11 +18,9 @@ impl State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-
-		let win = &mut ctx.window;
 
 		self.events.push_back(e.clone());
 
@@ -33,7 +31,7 @@ impl State for Game {
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => win.quit(),
+					Key::Esc => d.window.quit(),
 					_ => {},
 				}
 			},
@@ -44,18 +42,16 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let gfx = &mut ctx.gfx;
-
-		let top_left = gfx.coord(gfx::Origin::TopLeft);
+		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 		let mut y = 0.0;
 
 		for (i, e) in self.events.iter().enumerate() {
 
 			let size = i as f32 + 1.0;
 
-			gfx.draw_t(
+			d.gfx.draw_t(
 				mat4!()
 					.t2(top_left + vec2!(0, y))
 					,

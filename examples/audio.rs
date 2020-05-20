@@ -12,11 +12,10 @@ struct Game {
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let audio = &ctx.audio;
-		let sound = Sound::from_bytes(audio, include_bytes!("res/shoot.ogg"))?;
-		let track = Track::from_bytes(audio, include_bytes!("res/yo.ogg"))?;
+		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.ogg"))?;
+		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.ogg"))?;
 
 // 		track.play(audio);
 
@@ -27,16 +26,14 @@ impl State for Game {
 
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-
-		let win = &mut ctx.window;
 
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => win.quit(),
+					Key::Esc => d.window.quit(),
 					Key::Space => {
 						if self.track.is_playing() {
 							self.track.pause();
@@ -54,14 +51,12 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
-
-		let gfx = &mut ctx.gfx;
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		if self.track.is_playing() {
-			gfx.draw(&shapes::text("playing").size(16.0))?;
+			d.gfx.draw(&shapes::text("playing").size(16.0))?;
 		} else {
-			gfx.draw(&shapes::text("paused").size(16.0))?;
+			d.gfx.draw(&shapes::text("paused").size(16.0))?;
 		}
 
 		return Ok(());

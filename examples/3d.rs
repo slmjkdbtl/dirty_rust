@@ -41,17 +41,15 @@ struct Game {
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
-
-		let gfx = &mut ctx.gfx;
+	fn init(d: &mut Ctx) -> Result<Self> {
 
 		let model = gfx::Model::from_glb(
-			gfx,
+			d.gfx,
 			include_bytes!("res/btfly.glb"),
 		)?;
 
 		let model = gfx::Model::from_obj(
-			gfx,
+			d.gfx,
 			include_str!("res/truck.obj"),
 			Some(include_str!("res/truck.mtl")),
 			None,
@@ -59,14 +57,14 @@ impl State for Game {
 
 		let floor = meshgen::checkerboard(2.0, 9, 9);
 
-		let cw = (gfx.width() as f32 / SCALE) as i32;
-		let ch = (gfx.height() as f32 / SCALE) as i32;
+		let cw = (d.gfx.width() as f32 / SCALE) as i32;
+		let ch = (d.gfx.height() as f32 / SCALE) as i32;
 
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
 				fov: f32::to_radians(60.0),
-				aspect: gfx.width() as f32 / gfx.height() as f32,
+				aspect: d.gfx.width() as f32 / d.gfx.height() as f32,
 				near: 0.1,
 				far: 1024.0,
 				pos: vec3!(0, 1, 6),
@@ -74,20 +72,17 @@ impl State for Game {
 			},
 			move_speed: 12.0,
 			eye_speed: 32.0,
-			shader: gfx::Shader::from_frag(gfx, include_str!("res/fog.frag"))?,
+			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
-			canvas: gfx::Canvas::new(gfx, cw, ch)?,
+			canvas: gfx::Canvas::new(d.gfx, cw, ch)?,
 			floor: floor,
 		});
 
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
-
-		let win = &mut ctx.window;
-		let gfx = &mut ctx.gfx;
 
 		match e {
 
@@ -96,23 +91,23 @@ impl State for Game {
 				let cw = (*w as f32 / SCALE) as i32;
 				let ch = (*h as f32 / SCALE) as i32;
 
-				self.canvas.resize(gfx, cw, ch)?;
+				self.canvas.resize(d.gfx, cw, ch)?;
 				self.cam.aspect = *w as f32 / *h as f32;
 
 			},
 
 			KeyPress(k) => {
-				let mods = win.key_mods();
+				let mods = d.window.key_mods();
 				match *k {
 					Key::Esc => {
-						win.toggle_cursor_hidden();
-						win.toggle_cursor_locked();
+						d.window.toggle_cursor_hidden();
+						d.window.toggle_cursor_locked();
 					},
-					Key::F => win.toggle_fullscreen(),
-					Key::Q if mods.meta => win.quit(),
+					Key::F => d.window.toggle_fullscreen(),
+					Key::Q if mods.meta => d.window.quit(),
 					Key::L => {
-						win.set_cursor_hidden(self.show_ui);
-						win.set_cursor_locked(self.show_ui);
+						d.window.set_cursor_hidden(self.show_ui);
+						d.window.set_cursor_locked(self.show_ui);
 						self.show_ui = !self.show_ui;
 					}
 					_ => {},
@@ -121,7 +116,7 @@ impl State for Game {
 
 			MouseMove(delta) => {
 
-				if win.is_cursor_hidden() {
+				if d.window.is_cursor_hidden() {
 
 					let mut rx = self.cam.yaw();
 					let mut ry = self.cam.pitch();
@@ -146,7 +141,7 @@ impl State for Game {
 
 	}
 
-// 	fn ui(&mut self, ctx: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
+// 	fn ui(&mut self, d: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
 
 // 		if self.show_ui {
 
@@ -168,32 +163,29 @@ impl State for Game {
 
 // 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let win = &mut ctx.window;
-		let app = &mut ctx.app;
-		let gfx = &mut ctx.gfx;
-		let dt = app.dt().as_secs_f32();
+		let dt = d.app.dt().as_secs_f32();
 
-		if win.key_down(Key::W) {
+		if d.window.key_down(Key::W) {
 			self.cam.pos += self.cam.front() * dt * self.move_speed;
 		}
 
-		if win.key_down(Key::S) {
+		if d.window.key_down(Key::S) {
 			self.cam.pos += self.cam.back() * dt * self.move_speed;
 		}
 
-		if win.key_down(Key::A) {
+		if d.window.key_down(Key::A) {
 			self.cam.pos += self.cam.left() * dt * self.move_speed;
 		}
 
-		if win.key_down(Key::D) {
+		if d.window.key_down(Key::D) {
 			self.cam.pos += self.cam.right() * dt * self.move_speed;
 		}
 
-		win.set_title(&format!("FPS: {} DCS: {}", app.fps(), gfx.draw_calls()));
+		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 
-		gfx.draw_on(&self.canvas, |gfx| {
+		d.gfx.draw_on(&self.canvas, |gfx| {
 
 			gfx.clear();
 
@@ -250,17 +242,15 @@ impl State for Game {
 
 			return Ok(());
 
-		});
+		})?;
 
 		return Ok(());
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let gfx = &mut ctx.gfx;
-
-		gfx.draw_t(mat4!().s2(vec2!(SCALE)), &shapes::canvas(&self.canvas))?;
+		d.gfx.draw_t(mat4!().s2(vec2!(SCALE)), &shapes::canvas(&self.canvas))?;
 
 		return Ok(());
 
