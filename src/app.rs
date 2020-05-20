@@ -79,3 +79,40 @@ impl FPSCounter {
 
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Platform {
+	MacOS,
+	Windows,
+	Linux,
+	WASM,
+	IOS,
+	Android,
+}
+
+#[cfg(macos)]
+pub const PLATFORM: Platform = Platform::MacOS;
+#[cfg(windows)]
+pub const PLATFORM: Platform = Platform::Windows;
+#[cfg(linux)]
+pub const PLATFORM: Platform = Platform::Linux;
+#[cfg(ios)]
+pub const PLATFORM: Platform = Platform::IOS;
+#[cfg(android)]
+pub const PLATFORM: Platform = Platform::Android;
+#[cfg(web)]
+pub const PLATFORM: Platform = Platform::WASM;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Env {
+	Web,
+	Desktop,
+	Mobile,
+}
+
+#[cfg(web)]
+pub const ENV: Env = Env::Web;
+#[cfg(desktop)]
+pub const ENV: Env = Env::Desktop;
+#[cfg(mobile)]
+pub const ENV: Env = Env::Mobile;
+

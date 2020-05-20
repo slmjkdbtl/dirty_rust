@@ -1,21 +1,5 @@
 // wengwengweng
 
-// custom shader inputs:
-//
-// varying vec3 v_pos;
-// varying vec3 v_normal;
-// varying vec2 v_uv;
-// varying vec4 v_color;
-//
-// uniform mat4 u_model;
-// uniform mat4 u_view;
-// uniform mat4 u_proj;
-// uniform sampler2D u_tex;
-// uniform vec4 u_color;
-//
-// vec4 default_pos();
-// vec4 default_color();
-
 use std::rc::Rc;
 use std::marker::PhantomData;
 
