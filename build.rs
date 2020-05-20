@@ -121,11 +121,16 @@ fn main() {
 
 	arch!("wasm32", cfg("web"));
 	os!("ios", cfg("mobile"));
+	os!("ios", cfg("ios"));
 	os!("ios", link(Lib::Framework("OpenGLES")));
 	os!("android", cfg("mobile"));
+	os!("android", cfg("android"));
 	os!("macos", cfg("desktop"));
+	os!("macos", cfg("macos"));
 	os!("linux", cfg("desktop"));
+	os!("linux", cfg("linux"));
 	os!("windows", cfg("desktop"));
+	os!("windows", cfg("windows"));
 
 }
 

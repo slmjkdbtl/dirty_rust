@@ -1,17 +1,14 @@
 // wengwengweng
 
-//! Input & Events
-
 use std::path::PathBuf;
 use std::collections::HashSet;
 
 use once_cell::sync::Lazy;
 pub use gilrs::GamepadId as GamepadID;
+pub type TouchID = u64;
 
 use crate::*;
 use math::*;
-
-pub type TouchID = u64;
 
 pub(crate) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hset![

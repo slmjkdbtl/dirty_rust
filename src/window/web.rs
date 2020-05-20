@@ -313,7 +313,7 @@ impl Window {
 						},
 
 						WebEvent::Wheel(e) => {
-							events.push(Wheel(vec2!(e.delta_x(), e.delta_y()), input::ScrollPhase::Solid));
+							events.push(Wheel(vec2!(-e.delta_x(), e.delta_y()), input::ScrollPhase::Solid));
 						},
 
 					}
