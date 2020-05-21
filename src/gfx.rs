@@ -439,7 +439,7 @@ impl Gfx {
 		self.flush();
 		self.transform = mat4!();
 		self.draw_calls += self.renderer.draw_count();
-		self.renderer.clear();
+		self.renderer.clear_draw_count();
 
 	}
 

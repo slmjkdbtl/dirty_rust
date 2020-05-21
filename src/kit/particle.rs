@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::time::Duration;
+
 use crate::*;
 use super::*;
 use timer::*;
@@ -23,7 +25,7 @@ pub struct Particle {
 
 impl Particle {
 
-	fn update(&mut self, dt: f32) {
+	fn update(&mut self, dt: Duration) {
 
 		if self.timer.tick(dt) {
 			self.dead = true;
@@ -31,6 +33,7 @@ impl Particle {
 		}
 
 		let t = self.timer.progress();
+		let dt = dt.as_secs_f32();
 
 		self.vel += self.acc * dt;
 		self.pos += self.vel * self.speed * dt;
@@ -86,7 +89,7 @@ impl ParticleSystem {
 		let timer = if rate == 0.0 {
 			None
 		} else {
-			Some(Timer::new(1.0 / rate))
+			Some(Timer::from_secs(1.0 / rate))
 		};
 
 		return Self {
@@ -99,7 +102,7 @@ impl ParticleSystem {
 
 	}
 
-	pub fn update(&mut self, dt: f32) {
+	pub fn update(&mut self, dt: Duration) {
 
 		if let Some(timer) = &mut self.spawn_timer {
 			if !self.paused {
@@ -108,7 +111,7 @@ impl ParticleSystem {
 					if rate == 0.0 {
 						self.spawn_timer = None;
 					} else {
-						timer.reset_to(1.0 / rate)
+						timer.reset_to_secs(1.0 / rate)
 					};
 					self.emit();
 				}
@@ -116,7 +119,7 @@ impl ParticleSystem {
 		} else {
 			let rate = rand_t(self.conf.rate);
 			if rate != 0.0 {
-				self.spawn_timer = Some(Timer::new(1.0 / rate));
+				self.spawn_timer = Some(Timer::from_secs(1.0 / rate));
 			}
 		}
 
@@ -174,7 +177,7 @@ impl ParticleSystem {
 				let size_start = rand_t(self.conf.size_start);
 
 				let p = Particle {
-					timer: Timer::new(rand_t(self.conf.life)),
+					timer: Timer::from_secs(rand_t(self.conf.life)),
 					pos: self.pos + rand_t(self.conf.offset),
 					color: color_start,
 					size: size_start,

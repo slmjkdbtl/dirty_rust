@@ -30,7 +30,7 @@ impl Slider {
 
 impl Widget for Slider {
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
 		use input::Key;
@@ -40,7 +40,7 @@ impl Widget for Slider {
 
 			MousePress(m) => {
 				match *m {
-					Mouse::Left if self.hovering => self.draggin = Some(ctx.mouse_pos().x),
+					Mouse::Left if self.hovering => self.draggin = Some(d.window.mouse_pos().x),
 					_ => {},
 				}
 			},
@@ -58,7 +58,7 @@ impl Widget for Slider {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
 
 		use input::Mouse;
 		use geom::*;
@@ -70,17 +70,17 @@ impl Widget for Slider {
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
-			.format(ctx)
+			.format(gfx)
 			;
 
 		y += ptext.height() + theme.padding;
 
-		ctx.draw(&ptext)?;
+		gfx.draw(&ptext)?;
 
 		let itext = shapes::text(&format!("{:.2}", self.val))
 			.size(theme.font_size)
 			.color(theme.title_color)
-			.format(ctx)
+			.format(gfx)
 			;
 
 		let box_height = itext.height() + theme.padding * 2.0;
@@ -92,18 +92,17 @@ impl Widget for Slider {
 		);
 
 		let rect = Rect::new(vec2!(0, -y), vec2!(wctx.width, -y - box_height));
-		let mpos = ctx.mouse_pos() - wctx.offset;
 
-		self.hovering = col::intersect2d(rect, mpos);
+		self.hovering = col::intersect2d(rect, wctx.mouse_pos);
 
 		if let Some(prev_x) = self.draggin {
 
-			let delta_x = ctx.mouse_pos().x - prev_x;
+			let delta_x = wctx.mouse_pos.x - prev_x;
 
 			self.val += (delta_x / wctx.width) * (self.max - self.min);
 			self.val = self.val.clamp(self.min, self.max);
 
-			self.draggin = Some(ctx.mouse_pos().x)
+			self.draggin = Some(wctx.mouse_pos.x)
 
 		}
 
@@ -113,7 +112,7 @@ impl Widget for Slider {
 			theme.bar_color
 		};
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::rect(
 				vec2!(0, -y),
 				vec2!(wctx.width - 4.0, -y - box_height)
@@ -123,7 +122,7 @@ impl Widget for Slider {
 				.fill(c)
 		)?;
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::rect(
 				bpos - vec2!(handle_width * 0.5, box_height * 0.5),
 				bpos + vec2!(handle_width * 0.5, box_height * 0.5),
@@ -131,7 +130,7 @@ impl Widget for Slider {
 				.fill(theme.border_color)
 		)?;
 
-		ctx.draw_t(
+		gfx.draw_t(
 			mat4!()
 				.t2(vec2!(wctx.width / 2.0, -y - box_height * 0.5))
 				,

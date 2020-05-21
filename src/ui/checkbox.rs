@@ -23,7 +23,7 @@ impl CheckBox {
 
 impl Widget for CheckBox {
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
 		use input::Key;
@@ -41,7 +41,7 @@ impl Widget for CheckBox {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
 
 		use geom::*;
 
@@ -53,10 +53,10 @@ impl Widget for CheckBox {
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
-			.format(ctx)
+			.format(gfx)
 			;
 
-		ctx.draw_t(mat4!().t2(vec2!(size + sep, -3.0)), &ptext)?;
+		gfx.draw_t(mat4!().t2(vec2!(size + sep, -3.0)), &ptext)?;
 
 		let fill = if self.checked {
 			theme.bar_color
@@ -64,7 +64,7 @@ impl Widget for CheckBox {
 			rgba!(0, 0, 0, 0)
 		};
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::rect(vec2!(0), vec2!(size, -size))
 				.stroke(theme.border_color)
 				.fill(fill)
@@ -73,7 +73,7 @@ impl Widget for CheckBox {
 
 		if self.checked {
 
-			ctx.draw(
+			gfx.draw(
 				&shapes::rect(vec2!(4, -4), vec2!(size, -size) + vec2!(-4, 4))
 					.fill(theme.border_color)
 					.stroke(theme.border_color)
@@ -83,9 +83,8 @@ impl Widget for CheckBox {
 		}
 
 		let rect = Rect::new(vec2!(0), vec2!(size + sep + ptext.width(), -size));
-		let mpos = ctx.mouse_pos() - wctx.offset;
 
-		self.hovering = col::intersect2d(rect, mpos);
+		self.hovering = col::intersect2d(rect, wctx.mouse_pos);
 
 		return Ok(size);
 

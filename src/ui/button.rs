@@ -25,7 +25,7 @@ impl Button {
 
 impl Widget for Button {
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
 		use input::Mouse;
@@ -51,7 +51,7 @@ impl Widget for Button {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
 
 		use geom::*;
 
@@ -61,7 +61,7 @@ impl Widget for Button {
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
-			.format(ctx)
+			.format(gfx)
 			;
 
 		let bw = ptext.width() + theme.padding * 2.0;
@@ -73,14 +73,14 @@ impl Widget for Button {
 			theme.bar_color
 		};
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::rect(vec2!(0), vec2!(bw, -bh))
 				.stroke(theme.border_color)
 				.fill(bg_color)
 				.line_width(2.0)
 		)?;
 
-		ctx.draw_t(
+		gfx.draw_t(
 			mat4!()
 				.t2(vec2!(theme.padding, -theme.padding))
 				,
@@ -88,9 +88,8 @@ impl Widget for Button {
 		)?;
 
 		let rect = Rect::new(vec2!(0), vec2!(bw, -bh));
-		let mpos = ctx.mouse_pos() - wctx.offset;
 
-		self.hovering = col::intersect2d(rect, mpos);
+		self.hovering = col::intersect2d(rect, wctx.mouse_pos);
 		self.clicked = false;
 
 		return Ok(bh);

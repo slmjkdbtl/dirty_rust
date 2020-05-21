@@ -1,7 +1,7 @@
 // wengwengweng
 
+use instant::Instant;
 use std::collections::HashMap;
-use std::time::Instant;
 use std::time::Duration;
 
 #[derive(Clone, Copy)]

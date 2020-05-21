@@ -6,22 +6,28 @@ use dirty::*;
 use math::*;
 use input::Key;
 
-struct Game;
+struct Game {
+	ui: ui::UI,
+}
 
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
-		return Ok(Self);
+		return Ok(Self {
+			ui: ui::UI::new(),
+		});
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
+
+		self.ui.event(d, &e);
 
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::Esc => ctx.quit(),
+					Key::Esc => d.window.quit(),
 					_ => {},
 				}
 			},
@@ -32,11 +38,11 @@ impl State for Game {
 
 	}
 
-	fn ui(&mut self, ctx: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let top_left = ctx.coord(gfx::Origin::TopLeft);
+		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
-		ui.window(ctx, "test", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
+		self.ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
 
 			p.text(ctx, "yo")?;
 			p.input(ctx, "name")?;
@@ -56,25 +62,11 @@ impl State for Game {
 
 }
 
-// #[derive(UI)]
-struct Person {
-	name: String,
-	age: f32,
-	dead: bool,
-	gender: Gender,
-}
-
-enum Gender {
-	Male,
-	Femail,
-	Unknown,
-}
-
 fn main() {
 	if let Err(e) = launcher()
 		.title("ui")
 		.run::<Game>() {
-		log!("{}", e);
+		elog!("{}", e);
 	}
 }
 

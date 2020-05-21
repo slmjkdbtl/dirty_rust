@@ -34,26 +34,25 @@ impl State for Game {
 
 		use gfx::Vertex;
 
-		d.gfx.draw(&shapes::raw(&[
-			Vertex {
-				pos: vec3!(0, 72, 0),
-				color: rgba!(1, 0, 0, 1),
-				normal: vec3!(0, 0, 1),
-				uv: vec2!(0),
-			},
-			Vertex {
-				pos: vec3!(-96, -72, 0),
-				color: rgba!(0, 1, 0, 1),
-				normal: vec3!(0, 0, 1),
-				uv: vec2!(0),
-			},
-			Vertex {
-				pos: vec3!(96, -72, 0),
-				color: rgba!(0, 0, 1, 1),
-				normal: vec3!(0, 0, 1),
-				uv: vec2!(0),
-			},
-		], &[0, 1, 2]))?;
+		d.gfx.draw_with(&self.light_shader, &LightUniform {
+			// ...
+		}, |gfx| {
+
+			gfx.draw_with(&self.m1_shader, &M1Uniform {
+				// ...
+			}, |gfx| {
+				return Ok(());
+			})?;
+
+			gfx.draw_with(&self.m2_shader, &M2Uniform {
+				// ...
+			}, |gfx| {
+				return Ok(());
+			})?;
+
+			return Ok(());
+
+		})?;
 
 		return Ok(());
 

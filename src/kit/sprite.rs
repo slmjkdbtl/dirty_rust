@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use crate::*;
 use math::*;
+use gfx::shapes;
 
 #[derive(Clone)]
 pub struct Sprite {
@@ -33,7 +34,7 @@ impl Sprite {
 		};
 	}
 
-	pub fn from_bytes(ctx: &Gfx, b: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &gfx::Gfx, b: &[u8]) -> Result<Self> {
 		return Ok(Self::from_tex(gfx::Texture::from_bytes(ctx, b)?));
 	}
 
@@ -182,7 +183,7 @@ impl Sprite {
 					self.cur_frame += 1;
 				}
 			}
-			self.timer = 0.0;
+			self.timer = Duration::from_secs_f32(0.0);
 		}
 
 	}
@@ -198,7 +199,7 @@ impl Sprite {
 }
 
 impl gfx::Drawable for Sprite {
-	fn draw(&self, ctx: &mut app::Ctx) -> Result<()> {
+	fn draw(&self, ctx: &mut gfx::Gfx) -> Result<()> {
 		return ctx.draw(&self.shape());
 	}
 }
