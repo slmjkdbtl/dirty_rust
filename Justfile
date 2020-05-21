@@ -26,9 +26,6 @@ deploy-site:
 	cd site; \
 		now --prod
 
-# TODO
-site-examples:
-
 test:
 	cargo test --tests
 

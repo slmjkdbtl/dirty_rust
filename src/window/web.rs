@@ -23,6 +23,7 @@ pub struct Window {
 	width: i32,
 	height: i32,
 	cursor_hidden: bool,
+	cursor_locked: bool,
 	prev_cursor: CursorIcon,
 	title: String,
 }
@@ -68,6 +69,14 @@ impl Window {
 			},
 		};
 
+		if conf.cursor_hidden {
+			canvas.set_attribute("style", "cursor: none");
+		}
+
+		if conf.cursor_locked {
+			canvas.request_pointer_lock();
+		}
+
 		let render_loop = glow::RenderLoop::from_request_animation_frame();
 
 		return Ok(Self {
@@ -80,7 +89,8 @@ impl Window {
 			mouse_pos: vec2!(),
 			width: conf.width,
 			height: conf.height,
-			cursor_hidden: false,
+			cursor_hidden: conf.cursor_hidden,
+			cursor_locked: conf.cursor_locked,
 			prev_cursor: CursorIcon::Normal,
 			title: conf.title.to_string(),
 		});
@@ -161,13 +171,13 @@ impl Window {
 
 	pub fn set_cursor_hidden(&mut self, b: bool) {
 
-		self.cursor_hidden = b;
-
 		if b {
 			self.canvas.set_attribute("style", "cursor: none");
 		} else {
 			self.canvas.set_attribute("style", &format!("cursor: {}", self.prev_cursor.to_web()));
 		}
+
+		self.cursor_hidden = b;
 
 	}
 
@@ -176,15 +186,16 @@ impl Window {
 	}
 
 	pub fn set_cursor_locked(&mut self, b: bool) {
-// 		if b {
-// 			self.canvas.request_pointer_lock();
-// 		} else {
-// 			self.document.exit_pointer_lock();
-// 		}
+		if b {
+			self.canvas.request_pointer_lock();
+		} else {
+			self.document.exit_pointer_lock();
+		}
+		self.cursor_locked = b;
 	}
 
 	pub fn is_cursor_locked(&self) -> bool {
-		return false;
+		return self.cursor_locked;
 	}
 
 	pub fn set_title(&mut self, s: &str) {
