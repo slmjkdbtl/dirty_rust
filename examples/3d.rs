@@ -224,7 +224,7 @@ fn main() {
 // 		.hidpi(false)
 // 		.vsync(false)
 		.run::<Game>() {
-		log!("{}", err);
+		elog!("{}", err);
 	}
 
 }

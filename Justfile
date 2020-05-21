@@ -3,11 +3,11 @@
 check:
 	cargo c
 
-run example="raw":
+run example:
 	cargo run \
 		--example {{example}}
 
-build-web example="raw":
+build-web example:
 	cargo build \
 		--example {{example}} \
 		--release \
@@ -16,7 +16,6 @@ build-web example="raw":
 		--out-dir site/examples \
 		--target web \
 		--no-typescript
-	sed 's/{name}/{{example}}/g' misc/example.html > site/examples/{{example}}.html
 
 run-site:
 	cd site; \
