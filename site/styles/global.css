@@ -7,7 +7,8 @@
 }
 
 body {
-	margin: 48px;
+	padding-top: 4vw;
+	padding-left: 4vw;
 	background: black;
 }
 
@@ -29,10 +30,6 @@ a {
 a:hover {
 	background: pink;
 	color: black;
-}
-
-pre, code {
-	background: transparent !important;
 }
 
 #logo {
