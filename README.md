@@ -66,7 +66,7 @@ impl State for Game {
 
 fn main() {
 	if let Err(e) = run::<Game>() {
-		log!("{}", e);
+		elog!("{}", e);
 	}
 }
 ```

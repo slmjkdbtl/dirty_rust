@@ -64,7 +64,7 @@ glob = "0.3"
 
 # app
 glow = "0.4"
-clipboard = "0.5"
+copypasta = "0.7"
 fontdue = "0.0"
 gilrs = "0.7"
 image = { version = "0.23", default-features = false, features = [ "png", "jpeg", "tga", "bmp", ] }

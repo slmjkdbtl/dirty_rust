@@ -6,6 +6,7 @@
 #![feature(option_zip)]
 #![feature(trait_alias)]
 #![feature(const_int_pow)]
+#![feature(type_alias_impl_trait)]
 
 #![allow(unused_parens)]
 #![allow(unused_variables)]
