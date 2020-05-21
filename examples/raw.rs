@@ -64,7 +64,6 @@ impl State for Game {
 fn main() {
 	if let Err(e) = launcher()
 		.title("raw")
-		.canvas_root(CanvasRoot::Element("#container"))
 		.run::<Game>() {
 		elog!("{}", e);
 	}

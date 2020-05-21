@@ -13,13 +13,10 @@ build-web example="raw":
 		--release \
 		--target wasm32-unknown-unknown
 	wasm-bindgen target/wasm32-unknown-unknown/release/examples/{{example}}.wasm \
-		--out-dir target/wasm32-unknown-unknown/release/examples/ \
+		--out-dir site/examples \
 		--target web \
 		--no-typescript
-
-run-web:
-	miniserve . \
-		--index examples/web/index.html
+	sed 's/{name}/{{example}}/g' misc/example.html > site/examples/{{example}}.html
 
 run-site:
 	cd site; \

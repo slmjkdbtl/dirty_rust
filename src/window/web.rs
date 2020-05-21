@@ -40,10 +40,6 @@ impl Window {
 
 		document.set_title(&conf.title);
 
-		let body = document
-			.body()
-			.ok_or_else(|| format!("no body found"))?;
-
 		let canvas = document
 			.create_element("canvas")
 			.map_err(|_| format!("failed to create canvas"))?
@@ -56,7 +52,9 @@ impl Window {
 
 		match conf.canvas_root {
 			CanvasRoot::Body => {
-				body
+				document
+					.body()
+					.ok_or_else(|| format!("no body found"))?
 					.append_child(&canvas)
 					.map_err(|_| format!("failed to append canvas"))?;
 			},
@@ -65,7 +63,8 @@ impl Window {
 					.query_selector(query)
 					.map_err(|_| format!("failed to get {}", query))?
 					.ok_or_else(|| format!("failed to get {}", query))?
-					.append_child(&canvas);
+					.append_child(&canvas)
+					.map_err(|_| format!("failed to append canvas"))?;
 			},
 		};
 
