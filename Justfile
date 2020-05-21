@@ -10,6 +10,7 @@ run example="raw":
 build-web example="raw":
 	cargo build \
 		--example {{example}} \
+		--release \
 		--target wasm32-unknown-unknown
 	wasm-bindgen target/wasm32-unknown-unknown/debug/examples/{{example}}.wasm \
 		--out-dir target/wasm32-unknown-unknown/debug/examples/ \
