@@ -35,7 +35,6 @@ struct Game {
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
-	canvas: gfx::Canvas,
 	floor: gfx::MeshData,
 }
 
@@ -57,9 +56,6 @@ impl State for Game {
 
 		let floor = meshgen::checkerboard(2.0, 9, 9);
 
-		let cw = (d.gfx.width() as f32 / SCALE) as i32;
-		let ch = (d.gfx.height() as f32 / SCALE) as i32;
-
 		return Ok(Self {
 			model: model,
 			cam: gfx::PerspectiveCam {
@@ -74,7 +70,6 @@ impl State for Game {
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
-			canvas: gfx::Canvas::new(d.gfx, cw, ch)?,
 			floor: floor,
 		});
 
@@ -87,13 +82,7 @@ impl State for Game {
 		match e {
 
 			Resize(w, h) => {
-
-				let cw = (*w as f32 / SCALE) as i32;
-				let ch = (*h as f32 / SCALE) as i32;
-
-				self.canvas.resize(d.gfx, cw, ch)?;
 				self.cam.aspect = *w as f32 / *h as f32;
-
 			},
 
 			KeyPress(k) => {
@@ -141,28 +130,6 @@ impl State for Game {
 
 	}
 
-// 	fn ui(&mut self, d: &mut Ctx, ui: &mut ui::UI) -> Result<()> {
-
-// 		if self.show_ui {
-
-// 			let top_left = ctx.coord(gfx::Origin::TopLeft);
-
-// 			ui.window(ctx, "debug", top_left + vec2!(120, -120), 240.0, 240.0, |ctx, p| {
-
-// 				let fov = self.cam.fov.to_degrees();
-
-// 				self.cam.fov = p.slider(ctx, "FOV", fov, 45.0, 90.0)?.to_radians();
-
-// 				return Ok(());
-
-// 			})?;
-
-// 		}
-
-// 		return Ok(());
-
-// 	}
-
 	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let dt = d.app.dt().as_secs_f32();
@@ -185,72 +152,62 @@ impl State for Game {
 
 		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 
-		d.gfx.draw_on(&self.canvas, |gfx| {
-
-			gfx.clear();
-
-			let p = vec3!(0);
-			let origin = self.cam.to_screen(gfx, p);
-
-			gfx.use_cam(&self.cam, |gfx| {
-
-				gfx.draw_with(&self.shader, &Uniform {
-					cam_pos: self.cam.pos,
-					fog_color: rgba!(0, 0, 0, 1),
-					fog_level: 3.0,
-				}, |gfx| {
-
-					let bbox = self.model.bbox().transform(mat4!());
-					let mray = Ray3::new(self.cam.pos, self.cam.dir);
-
-					let c = if col::intersect3d(mray, bbox) {
-						rgba!(0, 0, 1, 1)
-					} else {
-						rgba!(1)
-					};
-
-					gfx.draw(&shapes::model(&self.model))?;
-
-					gfx.draw(
-						&shapes::Rect3D::from_bbox(bbox)
-							.line_width(1.0)
-							.color(c)
-					)?;
-
-					let ground = Plane::new(vec3!(0, 1, 0), 0.0);
-
-					gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
-
-					return Ok(());
-
-				})?;
-
-				return Ok(());
-
-			})?;
-
-			gfx.draw(&shapes::circle(vec2!(0), 2.0))?;
-
-			gfx.draw_t(
-				mat4!()
-					.t2(origin)
-					,
-				&shapes::text("car")
-					.size(16.0)
-					,
-			)?;
-
-			return Ok(());
-
-		})?;
-
 		return Ok(());
 
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		d.gfx.draw_t(mat4!().s2(vec2!(SCALE)), &shapes::canvas(&self.canvas))?;
+		d.gfx.use_cam(&self.cam, |gfx| {
+
+			gfx.draw_with(&self.shader, &Uniform {
+				cam_pos: self.cam.pos,
+				fog_color: rgba!(0, 0, 0, 1),
+				fog_level: 3.0,
+			}, |gfx| {
+
+				let bbox = self.model.bbox().transform(mat4!());
+				let mray = Ray3::new(self.cam.pos, self.cam.dir);
+
+				let c = if col::intersect3d(mray, bbox) {
+					rgba!(0, 0, 1, 1)
+				} else {
+					rgba!(1)
+				};
+
+				gfx.draw(&shapes::model(&self.model))?;
+
+				gfx.draw(
+					&shapes::Rect3D::from_bbox(bbox)
+						.line_width(1.0)
+						.color(c)
+				)?;
+
+				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
+
+				gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
+
+				return Ok(());
+
+			})?;
+
+			return Ok(());
+
+		})?;
+
+		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+
+		d.gfx.draw_t(
+			mat4!()
+				.t2(top_left + vec2!(24, -24))
+				,
+			&shapes::text("press F to fullscreen")
+				.align(gfx::Origin::TopLeft)
+				.size(12.0)
+				,
+		)?;
+
+		d.gfx.draw(&shapes::circle(vec2!(0), 2.0))?;
 
 		return Ok(());
 
