@@ -1,7 +1,9 @@
 ![icon](icon.png)
 
 # DIRTY
-toolkit for games and stuff
+a cross-platform toolkit for making games / interactive experiences
+
+[website](https://tool.wengwengweng.me/)
 
 ## example
 here's a minimal window setup:
@@ -78,6 +80,16 @@ fn main() {
 - Android (WIP)
 
 for build instructions, check out `doc/dist.md`
+
+## examples
+
+the examples are under `examples/`, run them natively with
+
+```sh
+$ cargo run --example (example_name)
+```
+
+or go check out the built wasm examples [here](https://tool.wengwengweng.me/examples.html)
 
 ## doc
 check out `doc/` and cargo docs
