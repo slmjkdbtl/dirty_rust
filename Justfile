@@ -12,8 +12,8 @@ build-web example="raw":
 		--example {{example}} \
 		--release \
 		--target wasm32-unknown-unknown
-	wasm-bindgen target/wasm32-unknown-unknown/debug/examples/{{example}}.wasm \
-		--out-dir target/wasm32-unknown-unknown/debug/examples/ \
+	wasm-bindgen target/wasm32-unknown-unknown/release/examples/{{example}}.wasm \
+		--out-dir target/wasm32-unknown-unknown/release/examples/ \
 		--target web \
 		--no-typescript
 
@@ -28,6 +28,9 @@ run-site:
 deploy-site:
 	cd site; \
 		now --prod
+
+# TODO
+site-examples:
 
 test:
 	cargo test --tests
