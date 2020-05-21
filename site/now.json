@@ -1,7 +1,18 @@
 {
 	"routes": [
-		{ "handle": "filesystem" },
-		{ "src": "/.*", "dest": "/index.html" }
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "/.*",
+			"dest": "/index.html"
+		},
+		{
+			"src": "/*.wasm",
+			"headers": {
+				"Content-Type": "application/wasm"
+			}
+		}
 	]
 }
 

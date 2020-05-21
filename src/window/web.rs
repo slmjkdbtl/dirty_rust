@@ -44,31 +44,30 @@ impl Window {
 			.body()
 			.ok_or_else(|| format!("no body found"))?;
 
-		let canvas = match conf.canvas_mode {
-			CanvasMode::Create => {
-				document
-					.create_element("canvas")
-					.map_err(|_| format!("failed to create canvas"))?
-					.dyn_into::<web_sys::HtmlCanvasElement>()
-					.map_err(|_| format!("failed to create canvas"))?
-			},
-			CanvasMode::Get(id) => {
-				document
-					.query_selector(&format!("canvas#{}", id))
-					.map_err(|_| format!("failed to create canvas"))?
-					.ok_or_else(|| format!("failed to create canvas"))?
-					.dyn_into::<web_sys::HtmlCanvasElement>()
-					.map_err(|_| format!("failed to create canvas"))?
-			},
-		};
+		let canvas = document
+			.create_element("canvas")
+			.map_err(|_| format!("failed to create canvas"))?
+			.dyn_into::<web_sys::HtmlCanvasElement>()
+			.map_err(|_| format!("failed to create canvas"))?;
 
 		canvas.set_width(conf.width as u32);
 		canvas.set_height(conf.height as u32);
 		canvas.set_attribute("alt", &conf.title);
 
-		body
-			.append_child(&canvas)
-			.map_err(|_| format!("failed to append canvas"))?;
+		match conf.canvas_root {
+			CanvasRoot::Body => {
+				body
+					.append_child(&canvas)
+					.map_err(|_| format!("failed to append canvas"))?;
+			},
+			CanvasRoot::Element(query) => {
+				document
+					.query_selector(query)
+					.map_err(|_| format!("failed to get {}", query))?
+					.ok_or_else(|| format!("failed to get {}", query))?
+					.append_child(&canvas);
+			},
+		};
 
 		let render_loop = glow::RenderLoop::from_request_animation_frame();
 
