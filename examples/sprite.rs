@@ -46,7 +46,7 @@ impl State for Game {
 
 	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
-		d.app.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
+		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 		self.sprite.update(d.app.dt());
 
 		return Ok(());

@@ -38,8 +38,8 @@ pub mod geom;
 pub mod img;
 pub mod math;
 pub mod codec;
-// pub mod ui;
-// pub mod kit;
+pub mod ui;
+pub mod kit;
 
 #[cfg(feature = "midi")]
 pub mod midi;

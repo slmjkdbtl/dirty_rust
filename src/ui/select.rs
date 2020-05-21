@@ -30,13 +30,13 @@ impl Select {
 
 impl Widget for Select {
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
 		use input::Key;
 		use input::Mouse;
 
-		let kmods = ctx.key_mods();
+		let kmods = d.window.key_mods();
 
 		match e {
 			MousePress(m) => {
@@ -66,7 +66,7 @@ impl Widget for Select {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
 
 		use geom::*;
 
@@ -76,17 +76,17 @@ impl Widget for Select {
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
-			.format(ctx)
+			.format(gfx)
 			;
 
-		ctx.draw_t(mat4!().ty(-theme.padding), &ptext)?;
+		gfx.draw_t(mat4!().ty(-theme.padding), &ptext)?;
 
 		let text = self.options.iter().map(|s| {
 			return shapes::text(s)
 				.size(theme.font_size)
 				.color(theme.title_color)
 				.align(gfx::Origin::TopLeft)
-				.format(ctx)
+				.format(gfx)
 				;
 		}).collect::<Vec<shapes::FormattedText>>();
 
@@ -103,13 +103,12 @@ impl Widget for Select {
 		let bw = max_width + theme.padding * 2.0 + bh;
 
 		let area = Rect::new(vec2!(ox, 0.0), vec2!(ox + bw, -bh));
-		let mpos = ctx.mouse_pos() - wctx.offset;
 
 		if let State::Idle(_) = self.state {
-			self.state = State::Idle(col::intersect2d(area, mpos));
+			self.state = State::Idle(col::intersect2d(area, wctx.mouse_pos));
 		}
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::rect(
 				vec2!(ox, 0.0),
 				vec2!(ox + bw, -bh),
@@ -124,7 +123,7 @@ impl Widget for Select {
 			let by = self.selected as f32 * bh;
 			let by2 = by - text.len() as f32 * bh;
 
-			ctx.draw(
+			gfx.draw(
 				&shapes::rect(
 					vec2!(ox, by),
 					vec2!(ox + bw - bh, by2),
@@ -138,27 +137,27 @@ impl Widget for Select {
 
 				let oy = (i as f32 - self.selected as f32) * bh;
 				let area = Rect::new(vec2!(ox, -oy), vec2!(ox + bw - bh, -oy - bh));
-				let hovered = col::intersect2d(area, mpos);
+				let hovered = col::intersect2d(area, wctx.mouse_pos);
 
 				if hovered {
 					self.state = State::Expanded(Some(i));
-					ctx.draw(
+					gfx.draw(
 						&shapes::Rect::from_rect(area)
 							.fill(theme.border_color)
 					)?;
 				}
 
-				ctx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -oy - theme.padding)), t)?;
+				gfx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -oy - theme.padding)), t)?;
 
 			}
 
 		}
 
 		if let Some(t) = text.get(self.selected) {
-			ctx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -theme.padding)), t)?;
+			gfx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -theme.padding)), t)?;
 		}
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::rect(
 				vec2!(ox + bw - bh, 0.0),
 				vec2!(ox + bw, -bh),
@@ -166,7 +165,7 @@ impl Widget for Select {
 				.fill(theme.border_color)
 		)?;
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::line(
 				vec2!(ox + bw - bh * 0.7, -bh * 0.4),
 				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
@@ -175,7 +174,7 @@ impl Widget for Select {
 				.width(2.0)
 		)?;
 
-		ctx.draw(
+		gfx.draw(
 			&shapes::line(
 				vec2!(ox + bw - bh * 0.3, -bh * 0.4),
 				vec2!(ox + bw - bh * 0.5, -bh * 0.6),

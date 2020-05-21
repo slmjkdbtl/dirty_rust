@@ -23,7 +23,7 @@ pub trait Widget: AsAny + 'static {
 	fn event(&mut self, _: &mut Ctx, _: &input::Event) {
 	}
 
-	fn draw(&mut self, _: &mut Ctx, _: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, _: &mut gfx::Gfx, _: &WidgetCtx) -> Result<f32> {
 		return Ok(0.0);
 	}
 

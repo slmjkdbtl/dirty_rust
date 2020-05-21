@@ -2,6 +2,7 @@
 
 use crate::*;
 use math::*;
+use gfx::shapes;
 
 export!(widget);
 export!(theme);
@@ -33,19 +34,19 @@ impl UI {
 		};
 	}
 
-	pub fn event(&mut self, ctx: &mut Ctx, e: &input::Event) {
+	pub fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
 		use input::Mouse;
 		use input::Key;
 		use geom::*;
 
-		let mpos = ctx.mouse_pos();
+		let mpos = d.window.mouse_pos();
 		let t = &self.theme;
 
 		for p in self.windows.values_mut() {
 			for w in p.widgets.values_mut() {
-				w.event(ctx, e);
+				w.event(d, e);
 			}
 		}
 
@@ -113,7 +114,7 @@ impl UI {
 
 	pub fn window(
 		&mut self,
-		ctx: &mut Ctx,
+		d: &mut Ctx,
 		title: &'static str,
 		pos: Vec2,
 		w: f32,
@@ -136,10 +137,10 @@ impl UI {
 		let view_height = window.height;
 
 		// drawing window frame
-		ctx.push_t(mat4!().t2(window.pos), |ctx| {
+		d.gfx.push_t(mat4!().t2(window.pos), |gfx| {
 
 			// background
-			ctx.draw(
+			gfx.draw(
 				&shapes::rect(vec2!(0), vec2!(window.width, -window.height))
 					.fill(theme.background_color)
 					.stroke(theme.border_color)
@@ -147,7 +148,7 @@ impl UI {
 			)?;
 
 			// title bar
-			ctx.draw(
+			gfx.draw(
 				&shapes::rect(vec2!(0), vec2!(window.width, -bar_height))
 					.fill(theme.bar_color)
 					.stroke(theme.border_color)
@@ -155,7 +156,7 @@ impl UI {
 			)?;
 
 			// title
-			ctx.draw_t(
+			gfx.draw_t(
 				mat4!().t2(vec2!(theme.padding, -theme.padding)),
 				&shapes::text(&window.title)
 					.size(theme.font_size)
@@ -168,15 +169,27 @@ impl UI {
 		})?;
 
 		let width = window.width - theme.padding * 2.0;
+		let offset = window.pos + vec2!(theme.padding, -bar_height - theme.padding);
 
 		let window_ctx = WindowCtx {
 			theme: &self.theme,
 			width: width,
-			offset: window.pos + vec2!(theme.padding, -bar_height - theme.padding),
+			offset: offset,
 		};
 
+		let dwindow = &mut d.window;
+		let daudio = &mut d.audio;
+		let dapp = &mut d.app;
+
 		// TODO: overflow: hidden
-		ctx.push_t(mat4!().t2(window_ctx.offset), |ctx| {
+		d.gfx.push_t(mat4!().t2(window_ctx.offset), |gfx| {
+
+			let mut ctx = Ctx {
+				window: dwindow,
+				audio: daudio,
+				app: dapp,
+				gfx: gfx,
+			};
 
 			let mut wman = WidgetManager {
 				widgets: &mut window.widgets,
@@ -184,7 +197,7 @@ impl UI {
 				ctx: window_ctx,
 			};
 
-			f(ctx, &mut wman)?;
+			f(&mut ctx, &mut wman)?;
 
 			return Ok(());
 
@@ -208,6 +221,7 @@ pub struct WidgetCtx<'a> {
 	pub theme: &'a Theme,
 	pub width: f32,
 	pub offset: Vec2,
+	pub mouse_pos: Vec2,
 }
 
 pub struct Window {
@@ -226,18 +240,20 @@ pub struct WidgetManager<'a> {
 
 impl<'a> WidgetManager<'a> {
 
-	fn widget_light<W: Widget>(&mut self, ctx: &mut Ctx, mut w: W) -> Result<()> {
+	fn widget_light<W: Widget>(&mut self, d: &mut Ctx, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
+		let offset = self.ctx.offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
 			theme: self.ctx.theme,
 			width: self.ctx.width,
-			offset: self.ctx.offset + vec2!(0, -self.cur_y),
+			offset: offset,
+			mouse_pos: d.window.mouse_pos() - offset,
 		};
 
-		ctx.push_t(mat4!().ty(-self.cur_y), |ctx| {
-			height = w.draw(ctx, &wctx)?;
+		d.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
+			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
 
@@ -249,7 +265,7 @@ impl<'a> WidgetManager<'a> {
 
 	fn widget<O, W: Widget>(
 		&mut self,
-		ctx: &mut Ctx,
+		d: &mut Ctx,
 		id: ID,
 		w: impl FnOnce() -> W,
 		f: impl FnOnce(&W) -> O
@@ -266,16 +282,19 @@ impl<'a> WidgetManager<'a> {
 			.downcast_mut::<W>()
 			.ok_or(format!("failed to cast widget types"))?;
 
+		let offset = self.ctx.offset + vec2!(0, -self.cur_y);
+
 		let wctx = WidgetCtx {
 			theme: self.ctx.theme,
 			width: self.ctx.width,
-			offset: self.ctx.offset + vec2!(0, -self.cur_y),
+			offset: offset,
+			mouse_pos: d.window.mouse_pos() - offset,
 		};
 
 		val = Ok(f(w));
 
-		ctx.push_t(mat4!().ty(-self.cur_y), |ctx| {
-			height = w.draw(ctx, &wctx)?;
+		d.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
+			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
 
@@ -285,46 +304,46 @@ impl<'a> WidgetManager<'a> {
 
 	}
 
-	pub fn text(&mut self, ctx: &mut Ctx, s: &str) -> Result<()> {
-		return self.widget_light(ctx, Text::new(s));
+	pub fn text(&mut self, d: &mut Ctx, s: &str) -> Result<()> {
+		return self.widget_light(d, Text::new(s));
 	}
 
-	pub fn input(&mut self, ctx: &mut Ctx, prompt: &'static str) -> Result<String> {
-		return self.widget(ctx, prompt, || Input::new(prompt), |i| {
+	pub fn input(&mut self, d: &mut Ctx, prompt: &'static str) -> Result<String> {
+		return self.widget(d, prompt, || Input::new(prompt), |i| {
 			return i.text();
 		});
 	}
 
-	pub fn slider(&mut self, ctx: &mut Ctx, prompt: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
-		return self.widget(ctx, prompt, || Slider::new(prompt, val, min, max), |i| {
+	pub fn slider(&mut self, d: &mut Ctx, prompt: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
+		return self.widget(d, prompt, || Slider::new(prompt, val, min, max), |i| {
 			return i.value();
 		});
 	}
 
-	pub fn button(&mut self, ctx: &mut Ctx, text: &'static str) -> Result<bool> {
-		return self.widget(ctx, text, || Button::new(text), |i| {
+	pub fn button(&mut self, d: &mut Ctx, text: &'static str) -> Result<bool> {
+		return self.widget(d, text, || Button::new(text), |i| {
 			return i.clicked();
 		});
 	}
 
-	pub fn checkbox(&mut self, ctx: &mut Ctx, prompt: &'static str, b: bool) -> Result<bool> {
-		return self.widget(ctx, prompt, || CheckBox::new(prompt, b), |i| {
+	pub fn checkbox(&mut self, d: &mut Ctx, prompt: &'static str, b: bool) -> Result<bool> {
+		return self.widget(d, prompt, || CheckBox::new(prompt, b), |i| {
 			return i.checked();
 		});
 	}
 
-	pub fn sep(&mut self, ctx: &mut Ctx) -> Result<()> {
-		return self.widget_light(ctx, Sep);
+	pub fn sep(&mut self, d: &mut Ctx) -> Result<()> {
+		return self.widget_light(d, Sep);
 	}
 
-	pub fn select(&mut self, ctx: &mut Ctx, prompt: &'static str, options: &[&str], i: usize) -> Result<usize> {
-		return self.widget(ctx, prompt, || Select::new(prompt, options, i), |i| {
+	pub fn select(&mut self, d: &mut Ctx, prompt: &'static str, options: &[&str], i: usize) -> Result<usize> {
+		return self.widget(d, prompt, || Select::new(prompt, options, i), |i| {
 			return i.selected();
 		});
 	}
 
 	// TODO
-	pub fn canvas(&mut self, ctx: &mut Ctx, f: impl FnOnce(&mut Ctx, &mut WidgetCtx) -> Result<()>) -> Result<()> {
+	pub fn canvas(&mut self, d: &mut Ctx, f: impl FnOnce(&mut Ctx, &mut WidgetCtx) -> Result<()>) -> Result<()> {
 		return Ok(());
 	}
 

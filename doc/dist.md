@@ -24,7 +24,7 @@ for more information, checkout [apple's official doc](https://developer.apple.co
 
 or use my cli tool [packapp](https://git.sr.ht/~slmjkdbtl/packapp) to quickly generate the bundle
 
-## WASM
+## Web
 
 ```sh
 $ cargo build --release --target wasm32-unknown-unknown

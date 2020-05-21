@@ -5,8 +5,8 @@ use std::time::Duration;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Timer {
+	elapsed: Duration,
 	time: Duration,
-	limit: Duration,
 	done: bool,
 }
 
@@ -14,26 +14,32 @@ impl Timer {
 
 	pub fn new(time: Duration) -> Self {
 		return Self {
-			time: Duration::from_secs_f32(0.0),
-			limit: time,
+			elapsed: Duration::from_secs_f32(0.0),
+			time: time,
 			done: false,
 		}
 	}
 
+	pub fn from_secs(time: f32) -> Self {
+		return Self::new(Duration::from_secs_f32(time));
+	}
+
 	pub fn reset(&mut self) {
-		self.reset_to(self.limit);
+		self.reset_to(self.time);
 	}
 
 	pub fn reset_to(&mut self, time: Duration) {
-
-		self.time = Duration::from_secs_f32(0.0);
-		self.limit = time;
+		self.elapsed = Duration::from_secs_f32(0.0);
+		self.time = time;
 		self.done = false;
+	}
 
+	pub fn reset_to_secs(&mut self, time: f32) {
+		self.reset_to(Duration::from_secs_f32(time));
 	}
 
 	pub fn progress(&self) -> f32 {
-		return self.time / self.limit;
+		return self.elapsed.as_secs_f32() / self.time.as_secs_f32();
 	}
 
 	pub fn done(&self) -> bool {
@@ -42,9 +48,9 @@ impl Timer {
 
 	pub fn tick(&mut self, dt: Duration) -> bool {
 
-		self.time += dt;
+		self.elapsed += dt;
 
-		if self.time >= self.limit {
+		if self.elapsed >= self.time {
 			self.done = true;
 			return true;
 		}

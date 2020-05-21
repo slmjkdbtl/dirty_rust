@@ -6,6 +6,7 @@ use crate::Result;
 pub trait BatchedVertex = VertexLayout + Clone;
 pub trait BatchedUniform = UniformLayout + Clone + PartialEq;
 
+// TODO: take blending and stuff into account
 #[derive(Clone, PartialEq)]
 struct RenderState<V: BatchedVertex, U: BatchedUniform> {
 	pipeline: Pipeline<V, U>,
@@ -13,7 +14,6 @@ struct RenderState<V: BatchedVertex, U: BatchedUniform> {
 	uniform: U,
 }
 
-// TODO: trait alias plz
 pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
@@ -42,6 +42,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 
 	}
 
+	// TODO: review the logic here
 	pub fn push(
 		&mut self,
 		prim: Primitive,
@@ -129,13 +130,8 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 		return self.vqueue.is_empty();
 	}
 
-	pub fn clear(&mut self) {
-
-		self.cur_state = None;
-		self.vqueue.clear();
-		self.iqueue.clear();
+	pub fn clear_draw_count(&mut self) {
 		self.draw_count = 0;
-
 	}
 
 	pub fn draw_count(&self) -> usize {
@@ -143,10 +139,8 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 	}
 
 	pub fn free(self) {
-
 		self.vbuf.free();
 		self.ibuf.free();
-
 	}
 
 }
