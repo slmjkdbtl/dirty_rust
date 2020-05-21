@@ -1,0 +1,41 @@
+/* wengwengweng */
+
+* {
+	margin: 0;
+	padding: 0;
+	font-family: Monospace;
+	color: white;
+}
+
+body {
+	margin: 48px;
+	background: black;
+}
+
+img {
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+}
+
+#logo {
+	width: 120px;
+	height: auto;
+}
+
+#intro {
+	margin-top: 16px;
+	font-size: 16px;
+	margin-bottom: 9px;
+}
+
+a {
+	color: pink;
+	font-size: 14px;
+	line-height: 1.3;
+}
+
+a:hover {
+	background: pink;
+	color: black;
+}
+
