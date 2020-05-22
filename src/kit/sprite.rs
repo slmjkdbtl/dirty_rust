@@ -54,7 +54,7 @@ impl Sprite {
 	}
 
 	#[cfg(feature = "ase")]
-	pub fn from_ase(ctx: &app::Ctx, tex: gfx::Texture, json: &str) -> Result<Self> {
+	pub fn from_ase(ctx: &gfx::Gfx, tex: gfx::Texture, json: &str) -> Result<Self> {
 
 		let mut sprite = Self::from_tex(tex);
 
@@ -65,7 +65,7 @@ impl Sprite {
 	}
 
 	#[cfg(feature = "ase")]
-	pub fn from_bytes_ase(ctx: &app::Ctx, img: &[u8], json: &str) -> Result<Self> {
+	pub fn from_bytes_ase(ctx: &gfx::Gfx, img: &[u8], json: &str) -> Result<Self> {
 		return Self::from_ase(ctx, gfx::Texture::from_bytes(ctx, img)?, json);
 	}
 

@@ -156,6 +156,10 @@ impl Gfx {
 
 	}
 
+	pub(self) fn gl(&self) -> &gl::Device {
+		return &self.gl;
+	}
+
 	pub fn clear(&mut self) {
 
 		self.flush();

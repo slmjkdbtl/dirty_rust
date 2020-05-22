@@ -2,8 +2,11 @@
 
 export default {
 
-	view() {
+	oninit() {
+		document.title = "DIRTY";
+	},
 
+	view() {
 		return [
 			m("img#logo", {
 				src: "/img/icon.png",
@@ -18,10 +21,9 @@ export default {
 			}, "examples"),
 			m("br"),
 			m("a", {
-				href: "/doc",
+				href: "/doc/dirty/index.html",
 			}, "doc"),
 		];
-
 	},
 
 };

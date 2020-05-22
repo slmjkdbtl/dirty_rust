@@ -10,6 +10,10 @@ const list = [
 
 export default {
 
+	oninit() {
+		document.title = "Examples";
+	},
+
 	view() {
 
 		return [

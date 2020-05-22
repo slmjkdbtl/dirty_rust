@@ -2,4 +2,5 @@
 
 .vercel
 examples/*
+doc/*
 
