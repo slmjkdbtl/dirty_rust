@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Parse Aseprite Spritesheet Data
+
 use serde::Serialize;
 use serde::Deserialize;
 use std::collections::HashMap;

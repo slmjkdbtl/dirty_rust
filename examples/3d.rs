@@ -197,15 +197,23 @@ impl State for Game {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
-		d.gfx.draw_t(
-			mat4!()
-				.t2(top_left + vec2!(24, -24))
-				,
-			&shapes::text("press F to fullscreen")
-				.align(gfx::Origin::TopLeft)
-				.size(12.0)
-				,
-		)?;
+		let lines = [
+			"F:       toggle fullscreen",
+			"Esc:     toggle cursor",
+			"W/A/S/D: move",
+		];
+
+		for (i, l) in lines.iter().enumerate() {
+			d.gfx.draw_t(
+				mat4!()
+					.t2(top_left + vec2!(24, -24.0 - i as f32 * 24.0))
+					,
+				&shapes::text(l)
+					.align(gfx::Origin::TopLeft)
+					.size(12.0)
+					,
+			)?;
+		}
 
 		d.gfx.draw(&shapes::circle(vec2!(0), 2.0))?;
 

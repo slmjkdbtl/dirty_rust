@@ -190,6 +190,7 @@ impl Rng {
 
 }
 
+/// choose a random one from given arguments
 #[macro_export]
 macro_rules! choose {
 

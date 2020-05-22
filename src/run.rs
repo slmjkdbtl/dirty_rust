@@ -10,10 +10,12 @@ impl Launcher {
 	}
 }
 
+/// run with configs, see methods under [Launcher](conf::Launcher)
 pub fn launcher() -> Launcher {
 	return Launcher::default();
 }
 
+/// run simple
 pub fn run<S: State>() -> Result<()> {
 	return launcher().run::<S>();
 }
