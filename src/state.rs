@@ -2,6 +2,7 @@
 
 use crate::*;
 
+/// The Main Trait
 pub trait State: 'static + Sized {
 
 	fn init(_: &mut Ctx) -> Result<Self>;

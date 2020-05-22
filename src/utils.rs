@@ -40,7 +40,7 @@ pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&std::panic::Location>) + 
 
 }
 
-/// cross platform console output
+/// cross-platform console output
 #[macro_export]
 macro_rules! log {
 	($($t:tt)*) => {
@@ -51,7 +51,7 @@ macro_rules! log {
 	};
 }
 
-/// cross platform console error output
+/// cross-platform console error output
 #[macro_export]
 macro_rules! elog {
 	($($t:tt)*) => {

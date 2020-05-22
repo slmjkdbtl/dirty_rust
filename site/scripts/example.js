@@ -25,6 +25,7 @@ export default {
 					href: `https://git.sr.ht/~slmjkdbtl/DIRTY/tree/master/examples/${vnode.attrs.name}.rs`,
 				}, "source"),
 				m("br"),
+				m("br"),
 			];
 		} else if (state == 0) {
 			return m("p", "no such example");

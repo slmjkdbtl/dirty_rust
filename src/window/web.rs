@@ -11,6 +11,7 @@ use crate::*;
 use math::*;
 use input::*;
 use window::*;
+use conf::CanvasRoot;
 
 /// The Window Context
 pub struct Window {

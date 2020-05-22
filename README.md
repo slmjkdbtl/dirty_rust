@@ -92,7 +92,9 @@ $ cargo run --example (example_name)
 or go check out the built wasm examples [here](https://tool.wengwengweng.me/examples.html)
 
 ## doc
-check out `doc/` and cargo docs
+docs are hosted [here](https://tool.wengwengweng.me/doc/dirty/index.html), or you can `cargo doc` and generate yourself
+
+there're some extra docs under `doc/`
 
 ## facts
 - `DIRTY` is short for **Dangerous Ichthyopolist Reincarnates Tropical Yeti**
