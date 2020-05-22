@@ -9,7 +9,7 @@ export default {
 	view() {
 		return [
 			m("img#logo", {
-				src: "/img/icon.png",
+				src: "/img/logo.png",
 			}),
 			m("p#intro", [m("b", "DIRTY"), " is a cross-platform toolkit for making games / interactive experiences."]),
 			m("a", {

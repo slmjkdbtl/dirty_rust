@@ -13,7 +13,7 @@ pub struct Audio {
 }
 
 impl Audio {
-	pub fn new() -> Result<Self> {
+	pub(crate) fn new() -> Result<Self> {
 		let ctx = web_sys::AudioContext::new()
 			.map_err(|_| format!("failed to create audio context"))?;
 		return Ok(Self {

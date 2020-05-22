@@ -1,4 +1,4 @@
-![icon](icon.png)
+![logo](logo.png)
 
 # DIRTY
 a cross-platform toolkit for making games / interactive experiences

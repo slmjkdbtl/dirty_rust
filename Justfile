@@ -49,6 +49,7 @@ build-doc:
 	rm -rf site/doc
 	cp -r target/doc site/
 	cp site/doc/light.css site/doc/dark.css
+	cp site/img/logo.png site/doc/rust-logo.png
 
 update:
 	cargo update
