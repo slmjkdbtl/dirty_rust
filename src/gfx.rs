@@ -1,5 +1,30 @@
 // wengwengweng
 
+//! The Graphics Context
+//!
+//! ## Drawing Stuff
+//!
+//! ## Custom Shader
+//!
+//! Use [`Shader`](Shader) to create custom shaders. It requires a type that implements [`CustomUniform`](CustomUniform), see [example](https://git.sr.ht/~slmjkdbtl/DIRTY/tree/master/examples/shader.rs) for usage
+//!
+//! custom shaders have access to these following inputs:
+//!
+//! | prefix  | type      | name          | desc                            | visibility |
+//! |---------|-----------|---------------|---------------------------------|------------|
+//! | varing  | vec3      | v_pos         | vertex position                 | all        |
+//! | varing  | vec3      | v_normal      | vertex normal                   | all        |
+//! | varing  | vec2      | v_uv          | vertex texture coord            | all        |
+//! | varing  | vec4      | v_color       | vertex color                    | all        |
+//! | uniform | mat4      | u_model       | uniform model matrix            | vert       |
+//! | uniform | mat4      | u_proj        | uniform projection matrix       | vert       |
+//! | uniform | mat4      | u_view        | uniform view matrix             | vert       |
+//! | uniform | mat4      | u_view        | uniform view matrix             | vert       |
+//! | uniform | sampler2D | u_tex         | current texture                 | frag       |
+//! | uniform | vec4      | u_color       | uniform color                   | frag       |
+//! |         | vec4()    | default_pos   | get the default vertex position | vert       |
+//! |         | vec4()    | default_color | get the default fragment color  | frag       |
+
 mod desc;
 mod texture;
 mod canvas;
