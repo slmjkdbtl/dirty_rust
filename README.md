@@ -41,20 +41,8 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let time = d.app.time().as_secs_f32();
-
-		d.gfx.draw_t(
-			mat4!()
-				.tz(-120.0)
-				.s3(vec3!(64))
-				.ry(time)
-				.rz(time)
-				,
-			&shapes::cube()
-		)?;
-
 		d.gfx.draw(
-			&shapes::text("yo")
+			&shapes::text("hi")
 				.size(16.0)
 		)?;
 
