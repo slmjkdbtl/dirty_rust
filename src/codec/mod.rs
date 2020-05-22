@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Encoding / Decoding Utilities
+
 pub use serde;
 // pub use serde::Serialize;
 // pub use serde::Deserialize;

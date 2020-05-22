@@ -8,6 +8,7 @@ use math::*;
 use gfx::*;
 use res::shader::*;
 
+/// Trait for Custom Uniform Data. See [mod-level doc](gfx) for Usage.
 pub trait CustomUniform: Clone {
 	fn values(&self) -> UniformValues {
 		return hmap![];
@@ -61,6 +62,7 @@ impl IntoUniformValue for std::time::Duration {
 	}
 }
 
+/// Custom Shader. See [mod-level doc](gfx) for Usage.
 #[derive(Clone, PartialEq)]
 pub struct Shader<U: CustomUniform> {
 	gl_pipeline: Rc<gl::Pipeline<Vertex, Uniform>>,

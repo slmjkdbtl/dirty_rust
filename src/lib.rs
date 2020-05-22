@@ -56,11 +56,9 @@
 pub mod utils;
 pub mod res;
 
-mod conf;
-pub use conf::*;
-
 mod gl;
 
+pub mod conf;
 pub mod app;
 pub mod window;
 pub mod gfx;

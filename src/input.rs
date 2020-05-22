@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Input / Event Types
+
 use std::path::PathBuf;
 use std::collections::HashSet;
 
@@ -61,6 +63,7 @@ impl KeyMod {
 	}
 }
 
+/// Input Events
 #[derive(Clone, Debug)]
 pub enum Event {
 	KeyPress(Key),

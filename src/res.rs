@@ -1,6 +1,8 @@
 // wengwengweng
 
-pub mod shader {
+//! Default Resources
+
+pub(crate) mod shader {
 	pub const TEMPLATE_VERT: &str = include_str!("shaders/template.vert");
 	pub const DEFAULT_VERT: &str = include_str!("shaders/default.vert");
 	pub const TEMPLATE_FRAG: &str = include_str!("shaders/template.frag");

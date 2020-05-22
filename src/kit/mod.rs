@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! More Gamedev Utilities
+
 pub mod timer;
 pub mod prof;
 pub mod sprite;

@@ -2,6 +2,7 @@
 
 use crate::*;
 use window::*;
+use conf::*;
 
 impl Launcher {
 	pub fn run<S: State>(self) -> Result<()> {

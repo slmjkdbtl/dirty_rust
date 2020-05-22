@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! A Simple Immediate Mode GUI Lib
+
 use crate::*;
 use math::*;
 use gfx::shapes;

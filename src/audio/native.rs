@@ -2,7 +2,6 @@
 
 use std::rc::Rc;
 use std::io::Cursor;
-use std::time::Duration;
 
 use rodio::Source;
 use rodio::Decoder;
@@ -11,6 +10,7 @@ use rodio::source::Buffered;
 
 use crate::*;
 
+/// The Audio Context. See [mod-level doc](audio) for usage.
 pub struct Audio {
 	device: Rc<rodio::Device>,
 }
@@ -24,34 +24,16 @@ impl Audio {
 	}
 }
 
+/// One-shot Sound
 #[derive(Clone)]
 pub struct Sound {
 	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
-	effect: Effect,
 	device: Rc<rodio::Device>,
-}
-
-#[derive(Clone, Copy)]
-struct Effect {
-	speed: f32,
-	volume: f32,
-	repeat: bool,
-	fadein: f32,
-}
-
-impl Default for Effect {
-	fn default() -> Self {
-		return Self {
-			speed: 1.0,
-			volume: 1.0,
-			repeat: false,
-			fadein: 0.0,
-		};
-	}
 }
 
 impl Sound {
 
+	/// create sound from bytes of an audio file
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let cursor = Cursor::new(data.to_owned());
@@ -60,109 +42,27 @@ impl Sound {
 
 		return Ok(Self {
 			buffer: source.buffered(),
-			effect: Effect::default(),
 			device: ctx.device.clone(),
 		});
 
 	}
 
-	pub fn as_track(self) -> Result<Track> {
-		return Track::from_sound(self);
-	}
-
-	pub fn speed(&self, s: f32) -> Self {
-		return Self {
-			effect: Effect {
-				speed: s,
-				.. self.effect
-			},
-			device: self.device.clone(),
-			buffer: self.buffer.clone(),
-		}
-	}
-
-	pub fn volume(&self, v: f32) -> Self {
-		return Self {
-			effect: Effect {
-				volume: v,
-				.. self.effect
-			},
-			device: self.device.clone(),
-			buffer: self.buffer.clone(),
-		}
-	}
-
-	pub fn repeat(&self) -> Self {
-		return Self {
-			effect: Effect {
-				repeat: true,
-				.. self.effect
-			},
-			device: self.device.clone(),
-			buffer: self.buffer.clone(),
-		}
-	}
-
-	pub fn fadein(&self, time: f32) -> Self {
-		return Self {
-			effect: Effect {
-				fadein: time,
-				.. self.effect
-			},
-			device: self.device.clone(),
-			buffer: self.buffer.clone(),
-		}
-	}
-
+	/// play sound
 	pub fn play(&self) -> Result<()> {
-		rodio::play_raw(&self.device, self.apply().convert_samples());
+		rodio::play_raw(&self.device, self.buffer.clone().convert_samples());
 		return Ok(());
-	}
-
-	// TODO: clean this up
-	fn apply(&self) -> Box<dyn Source<Item = i16> + Send> {
-
-		type S = dyn Source<Item = i16> + Send;
-
-		let s = box self.buffer.clone();
-		let effect = self.effect;
-
-		let s: Box<S> = if effect.speed != 0.0 {
-			box s.speed(effect.speed)
-		} else {
-			s
-		};
-
-		let s: Box<S> = if effect.volume != 0.0 {
-			box s.amplify(effect.volume)
-		} else {
-			s
-		};
-
-		let s: Box<S> = if effect.fadein != 0.0 {
-			box s.fade_in(Duration::from_secs_f32(effect.fadein))
-		} else {
-			s
-		};
-
-		let s: Box<S> = if effect.repeat {
-			box s.repeat_infinite()
-		} else {
-			s
-		};
-
-		return s;
-
 	}
 
 }
 
+/// Streamed Audio That Can Pause / Seek
 pub struct Track {
 	sink: Sink,
 }
 
 impl Track {
 
+	/// create sound from bytes of an audio file
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 		return Self::from_sound(Sound::from_bytes(ctx, data)?);
 	}
@@ -181,18 +81,22 @@ impl Track {
 
 	}
 
-	pub fn is_playing(&self) -> bool {
-		return !self.sink.is_paused();
-	}
-
-	pub fn pause(&self) {
-		self.sink.pause();
-	}
-
+	/// play / resume track
 	pub fn play(&self) {
 		self.sink.play();
 	}
 
+	/// pause track
+	pub fn pause(&self) {
+		self.sink.pause();
+	}
+
+	/// check if is playing
+	pub fn is_playing(&self) -> bool {
+		return !self.sink.is_paused();
+	}
+
+	/// free track
 	pub fn free(self) {
 		self.sink.stop();
 		self.sink.detach();

@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! General Utilities
+
 pub use once_cell;
 
 #[allow(unused_macros)]
@@ -19,6 +21,7 @@ macro_rules! mexport {
 	}
 }
 
+/// set panic hook
 pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&std::panic::Location>) + Send + Sync>(f: F) {
 
 	std::panic::set_hook(Box::new(move |info: &std::panic::PanicInfo| {
@@ -37,6 +40,7 @@ pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&std::panic::Location>) + 
 
 }
 
+/// cross platform console output
 #[macro_export]
 macro_rules! log {
 	($($t:tt)*) => {
@@ -47,6 +51,7 @@ macro_rules! log {
 	};
 }
 
+/// cross platform console error output
 #[macro_export]
 macro_rules! elog {
 	($($t:tt)*) => {
@@ -57,6 +62,7 @@ macro_rules! elog {
 	};
 }
 
+/// create a HashMap
 #[macro_export]
 macro_rules! hmap {
 	($($key:expr => $val:expr),*$(,)?) => {
@@ -72,6 +78,7 @@ macro_rules! hmap {
 	}
 }
 
+/// create a HashSet
 #[macro_export]
 macro_rules! hset {
 	($($item:expr),*$(,)?) => {
@@ -87,6 +94,7 @@ macro_rules! hset {
 	};
 }
 
+/// create a BTreeMap
 #[macro_export]
 macro_rules! bmap {
 	($($key:expr => $val:expr),*$(,)?) => {
@@ -102,6 +110,7 @@ macro_rules! bmap {
 	}
 }
 
+/// create a BTreeSet
 #[macro_export]
 macro_rules! bset {
 	($($item:expr),*$(,)?) => {
@@ -117,6 +126,7 @@ macro_rules! bset {
 	}
 }
 
+/// create a VecDeque
 #[macro_export]
 macro_rules! vecd {
 	($($item:expr),*$(,)?) => {
@@ -132,6 +142,7 @@ macro_rules! vecd {
 	}
 }
 
+/// create a LinkedList
 #[macro_export]
 macro_rules! llist {
 	($($item:expr),*$(,)?) => {
