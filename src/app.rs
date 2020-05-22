@@ -1,9 +1,12 @@
 // wengwengweng
 
+//! Application Lifecycle
+
 use std::time::Duration;
 use instant::Instant;
 use crate::*;
 
+/// Provides Information to the Application Lifecycle
 pub struct App {
 	last_frame_time: Instant,
 	fps_counter: FPSCounter,
@@ -30,14 +33,17 @@ impl App {
 		self.last_frame_time = Instant::now();
 	}
 
+	/// current run time
 	pub fn time(&self) -> Duration {
 		return self.start_time.elapsed();
 	}
 
+	/// time since last frame
 	pub fn dt(&self) -> Duration {
 		return self.dt;
 	}
 
+	/// current fps stat (frames per second)
 	pub fn fps(&self) -> u16 {
 		return self.fps_counter.fps();
 	}

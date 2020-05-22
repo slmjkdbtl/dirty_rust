@@ -3,6 +3,7 @@
 const list = [
 	"raw",
 	"sprite",
+	"shader",
 	"3d",
 	"input",
 	"audio",
