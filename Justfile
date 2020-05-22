@@ -3,6 +3,9 @@
 check:
 	cargo c
 
+check-web:
+	cargo c --target wasm32-unknown-unknown
+
 run example:
 	cargo run \
 		--example {{example}}
@@ -31,8 +34,21 @@ test:
 build:
 	cargo build
 
-doc crate="dirty":
-	cargo doc --no-deps --open -p {{crate}}
+doc crate:
+	cargo doc \
+		--no-deps \
+		--open \
+		-p {{crate}}
+
+build-doc:
+	rm -rf target/doc
+	cargo doc \
+		--no-deps \
+		--release \
+		--all-features
+	rm -rf site/doc
+	cp -r target/doc site/
+	cp site/doc/light.css site/doc/dark.css
 
 update:
 	cargo update

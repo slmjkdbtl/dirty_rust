@@ -1,5 +1,7 @@
 // wengwengweng
 
+// TODO: kinda messy
+
 let state = 1;
 
 export default {
