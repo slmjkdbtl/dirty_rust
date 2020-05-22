@@ -1,5 +1,9 @@
 // wengwengweng
 
+//! Window Events & Operations
+//!
+//! see methods under [Window](window::Window)
+
 #[cfg(not(web))]
 export!(native);
 #[cfg(web)]

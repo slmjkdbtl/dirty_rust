@@ -1,11 +1,18 @@
 // wengwengweng
 
+//! File Systems Function Wrappers That Works with App Bundles
+//!
+//! All functions here uses [`res_dir`](res_dir()) so that it can read file from app bundle dirs (e.g. on macOS `*.app/Content/Resources`)
+//!
+//! There're also extra utilitiy functions like [`glob`](glob()) and [`data_dir`](data_dir())
+
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
 use crate::Result;
 
+/// get the bundle resource dir
 #[cfg(target_os = "macos")]
 pub fn res_dir() -> Option<PathBuf> {
 
@@ -24,6 +31,7 @@ pub fn res_dir() -> Option<PathBuf> {
 
 }
 
+/// get the bundle resource dir
 #[cfg(not(target_os = "macos"))]
 pub fn res_dir() -> Option<PathBuf> {
 
@@ -38,6 +46,7 @@ pub fn res_dir() -> Option<PathBuf> {
 
 }
 
+/// get the path that's prepended with the res dir, if it doesn't exit then return the input path back
 pub fn bundled_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 	let path = path.as_ref();
@@ -62,10 +71,12 @@ pub fn bundled_path(path: impl AsRef<Path>) -> Result<PathBuf> {
 
 }
 
+/// check if a file exists
 pub fn exists(path: impl AsRef<Path>) -> bool {
 	return bundled_path(path).is_ok();
 }
 
+/// get files that matches a glob pattern (e.g. `glob("img/*.png")`)
 pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 	let listings = glob::glob(&format!("{}", pat))
@@ -79,6 +90,7 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
 }
 
+/// read bytes from a file
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
@@ -89,6 +101,7 @@ pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 }
 
+/// read text from a file
 pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
@@ -99,6 +112,7 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 }
 
+/// get directory listing
 pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir> {
 
 	let path = path.as_ref();
@@ -109,6 +123,7 @@ pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir> {
 
 }
 
+/// get file basename
 pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
@@ -125,6 +140,7 @@ pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 }
 
+/// get file extension
 pub fn extname(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
@@ -139,6 +155,7 @@ pub fn extname(path: impl AsRef<Path>) -> Result<String> {
 
 }
 
+/// copy file
 pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64> {
 
 	let p1 = p1.as_ref();
@@ -149,6 +166,7 @@ pub fn copy(p1: impl AsRef<Path>, p2: impl AsRef<Path>) -> Result<u64> {
 
 }
 
+/// create directory
 pub fn mkdir(path: impl AsRef<Path>) -> Result<()> {
 
 	let path = path.as_ref();
@@ -158,14 +176,17 @@ pub fn mkdir(path: impl AsRef<Path>) -> Result<()> {
 
 }
 
+/// check if a path is a file
 pub fn is_file(path: impl AsRef<Path>) -> bool {
 	return path.as_ref().is_file();
 }
 
+/// check if a path is a directory
 pub fn is_dir(path: impl AsRef<Path>) -> bool {
 	return path.as_ref().is_dir();
 }
 
+/// remove file
 pub fn remove(path: impl AsRef<Path>) -> Result<()> {
 
 	let path = path.as_ref();
@@ -175,6 +196,7 @@ pub fn remove(path: impl AsRef<Path>) -> Result<()> {
 
 }
 
+/// remove directory
 pub fn remove_dir(path: impl AsRef<Path>) -> Result<()> {
 
 	let path = path.as_ref();
@@ -184,6 +206,7 @@ pub fn remove_dir(path: impl AsRef<Path>) -> Result<()> {
 
 }
 
+/// rename file
 pub fn rename(path: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
 
 	let path = path.as_ref();
@@ -193,6 +216,7 @@ pub fn rename(path: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
 
 }
 
+/// write to a file
 pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
 
 	let path = path.as_ref();
@@ -202,6 +226,7 @@ pub fn write(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
 
 }
 
+/// get file size
 pub fn size(path: impl AsRef<Path>) -> Result<u64> {
 
 	let path = path.as_ref();
@@ -213,7 +238,13 @@ pub fn size(path: impl AsRef<Path>) -> Result<u64> {
 
 }
 
+/// get system data dir
 pub fn data_dir() -> Option<PathBuf> {
 	return dirs_next::data_dir();
+}
+
+/// get system home dir
+pub fn home_dir() -> Option<PathBuf> {
+	return dirs_next::home_dir();
 }
 

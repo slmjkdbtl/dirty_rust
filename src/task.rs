@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Simple Task / Threading Abstraction
+
 use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::thread;

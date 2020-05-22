@@ -1,12 +1,12 @@
 // wengwengweng
 
-//! The Graphics Context
+//! Graphics
 //!
 //! ## Drawing Stuff
 //!
 //! ## Custom Shader
 //!
-//! Use [`Shader`](Shader) to create custom shaders. It requires a type that implements [`CustomUniform`](CustomUniform), see [example](https://git.sr.ht/~slmjkdbtl/DIRTY/tree/master/examples/shader.rs) for usage
+//! Use [`Shader`](Shader) to create custom shaders. It requires a type that implements [`CustomUniform`](CustomUniform), see [this example](https://git.sr.ht/~slmjkdbtl/DIRTY/tree/master/examples/shader.rs) for usage
 //!
 //! custom shaders have access to these following inputs:
 //!
@@ -61,6 +61,7 @@ const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
 const DEFAULT_FAR: f32 = 4096.0;
 
+/// The Graphics Context. See [mod-level doc](gfx) for usage.
 pub struct Gfx {
 
 	gl: Rc<gl::Device>,
@@ -108,7 +109,7 @@ impl HasGLDevice for gl::Device {
 
 impl Gfx {
 
-	pub(crate) fn new(window: &Window, conf: &Conf) -> Result<Self> {
+	pub(crate) fn new(window: &Window, conf: &conf::Conf) -> Result<Self> {
 
 		let gl = window.get_gl_ctx()?;
 

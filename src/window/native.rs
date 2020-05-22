@@ -11,6 +11,7 @@ use math::*;
 use input::*;
 use window::*;
 
+/// The Window Context
 pub struct Window {
 	event_loop: Option<EventLoop<()>>,
 	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
@@ -120,10 +121,12 @@ impl Window {
 		return Ok(());
 	}
 
+	/// check if a key is currently pressed
 	pub fn key_down(&self, k: Key) -> bool {
 		return self.pressed_keys.contains(&k);
 	}
 
+	/// get current ([KeyMod](input::KeyMod))
 	pub fn key_mods(&self) -> KeyMod {
 		return KeyMod {
 			shift: self.key_down(Key::LShift) || self.key_down(Key::RShift),
@@ -133,26 +136,32 @@ impl Window {
 		};
 	}
 
+	/// check if a mouse button is currently pressed
 	pub fn mouse_down(&self, m: Mouse) -> bool {
 		return self.pressed_mouse.contains(&m);
 	}
 
+	/// get current dpi
 	pub fn dpi(&self) -> f32 {
 		return self.windowed_ctx.window().scale_factor() as f32;
 	}
 
+	/// get current window width
 	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
+	/// get current window height
 	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
+	/// get current mouse position
 	pub fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
 	}
 
+	/// set mouse position
 	pub fn set_mouse_pos(&mut self, p: Vec2) -> Result<()> {
 
 		let (w, h) = (self.width as f32, self.height as f32);
@@ -171,6 +180,7 @@ impl Window {
 
 	}
 
+	/// set fullscreen
 	pub fn set_fullscreen(&mut self, b: bool) {
 
 		use glutin::window::Fullscreen;
@@ -185,41 +195,50 @@ impl Window {
 
 	}
 
+	/// check if is fullscreen
 	pub fn is_fullscreen(&self) -> bool {
 		return self.windowed_ctx.window().fullscreen().is_some();
 	}
 
+	/// set cursor hidden
 	pub fn set_cursor_hidden(&mut self, b: bool) {
 		self.windowed_ctx.window().set_cursor_visible(!b);
 		self.cursor_hidden = b;
 	}
 
+	/// check if is cursor hidden
 	pub fn is_cursor_hidden(&self) -> bool {
 		return self.cursor_hidden;
 	}
 
+	/// set cursor locked
 	pub fn set_cursor_locked(&mut self, b: bool) {
 		self.windowed_ctx.window().set_cursor_grab(b);
 		self.cursor_locked = b;
 	}
 
+	/// check if is cursor locked
 	pub fn is_cursor_locked(&self) -> bool {
 		return self.cursor_locked;
 	}
 
+	/// set window title
 	pub fn set_title(&mut self, s: &str) {
 		self.title = s.to_owned();
 		self.windowed_ctx.window().set_title(s);
 	}
 
+	/// get window title
 	pub fn title(&self) -> &str {
 		return &self.title;
 	}
 
+	/// set cursor icon
 	pub fn set_cursor(&mut self, c: CursorIcon) {
 		self.windowed_ctx.window().set_cursor_icon(c.to_winit());
 	}
 
+	/// quit
 	pub fn quit(&mut self) {
 		self.quit = true;
 	}
@@ -590,14 +609,17 @@ impl Window {
 
 	}
 
+	/// toggle fullscreen state
 	pub fn toggle_fullscreen(&mut self) {
 		self.set_fullscreen(!self.is_fullscreen());
 	}
 
+	/// toggle cursor hidden state
 	pub fn toggle_cursor_hidden(&mut self) {
 		self.set_cursor_hidden(!self.is_cursor_hidden());
 	}
 
+	/// toggle cursor lock state
 	pub fn toggle_cursor_locked(&mut self) {
 		self.set_cursor_locked(!self.is_cursor_locked());
 	}

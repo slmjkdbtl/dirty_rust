@@ -8,6 +8,7 @@ use wasm_bindgen::closure::Closure;
 
 use crate::*;
 
+/// The Audio Context. See [mod-level doc](audio) for usage.
 pub struct Audio {
 	ctx: Rc<web_sys::AudioContext>,
 }
@@ -22,6 +23,7 @@ impl Audio {
 	}
 }
 
+/// One-shot Sound
 pub struct Sound {
 	buffer: Rc<RefCell<Option<web_sys::AudioBuffer>>>,
 	ctx: Rc<web_sys::AudioContext>,
@@ -29,6 +31,7 @@ pub struct Sound {
 
 impl Sound {
 
+	/// create sound from bytes of an audio file
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let buf = js_sys::Uint8Array::from(data);
@@ -52,6 +55,7 @@ impl Sound {
 
 	}
 
+	/// play sound
 	pub fn play(&self) -> Result<()> {
 
 		let src = self.ctx
@@ -68,12 +72,14 @@ impl Sound {
 
 }
 
+/// Streamed Audio That Can Pause / Seek
 pub struct Track {
 	audio: web_sys::HtmlAudioElement,
 }
 
 impl Track {
 
+	/// create track from bytes of an audio file
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let buffer = js_sys::Uint8Array::from(data);
@@ -97,14 +103,17 @@ impl Track {
 
 	}
 
+	/// play / resume track
 	pub fn play(&self) {
 		self.audio.play();
 	}
 
+	/// pause track
 	pub fn pause(&self) {
 		self.audio.pause();
 	}
 
+	/// check if is playing
 	pub fn is_playing(&self) -> bool {
 		return !self.audio.paused();
 	}

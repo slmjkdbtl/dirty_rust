@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Geometry Related Types / Functions
+
 use crate::*;
 use math::*;
 use gfx::MeshData;

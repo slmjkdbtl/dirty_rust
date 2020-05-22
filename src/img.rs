@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Image Buffer
+
 use std::path::Path;
 
 use crate::math::Color;
