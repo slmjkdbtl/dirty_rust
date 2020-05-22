@@ -1,5 +1,45 @@
 // wengwengweng
 
+//! a cross-platform toolkit for making games / interactive experiences
+//!
+//! ## Basic Setup
+//!
+//! to create a window, make a struct that implements the [`State`](State) trait:
+//! ```no_run
+//! use dirty::*;
+//!
+//! struct Game;
+//!
+//! impl State for Game {
+//!     fn init(_: &mut Ctx) -> Result<Self> {
+//!         return Ok(Self);
+//!     }
+//! }
+//! ```
+//! for more information checkout the doc of [`State`](State)
+//!
+//! then use [`run`](run()) to run
+//!
+//! ```no_run
+//! fn main() {
+//!     run::<Game>();
+//! }
+//! ```
+//! or use [`launcher`](launcher()) to enable startup options
+//!
+//! ## Context
+//! each method under [`State`](State) takes a [`Ctx`](Ctx) as parameter, which represents the application context, it has 4 fields (modules):
+//!  - [`ctx.window`](window::Window)
+//!    provides ways to interact with the window, like toggling fullscreen
+//!  - [`ctx.gfx`](gfx::Gfx)
+//!    provides everything you need with rendering stuff on screen
+//!  - [`ctx.app`](app::App)
+//!    provides methods that relates to the application lifecycle, like time
+//!  - [`ctx.audio`](audio::Audio)
+//!    provides everything you need to play audio
+//!
+//! for more information checkout each indivisual docs
+
 #![feature(clamp)]
 #![feature(try_blocks)]
 #![feature(box_syntax)]

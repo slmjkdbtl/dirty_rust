@@ -8,7 +8,7 @@ struct Game;
 
 impl State for Game {
 
-	fn init(d: &mut Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self);
 	}
 
@@ -62,9 +62,7 @@ impl State for Game {
 }
 
 fn main() {
-	if let Err(e) = launcher()
-		.title("raw")
-		.run::<Game>() {
+	if let Err(e) = run::<Game>() {
 		elog!("{}", e);
 	}
 }

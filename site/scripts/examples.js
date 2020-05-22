@@ -18,7 +18,7 @@ export default {
 
 		return [
 			m("img#logo", {
-				src: "/img/icon.png",
+				src: "/img/logo.png",
 			}),
 			m("p#intro", [m("b", "Examples")]),
 			list.map((name) => {

@@ -2,7 +2,6 @@
 
 use crate::*;
 
-#[cfg(web)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum CanvasRoot {
 	Body,
@@ -24,7 +23,6 @@ pub struct Conf {
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
 	pub cull_face: bool,
-	#[cfg(web)]
 	pub canvas_root: CanvasRoot,
 	pub default_font: Option<gfx::BitmapFontData>,
 }
@@ -59,7 +57,6 @@ impl Default for Conf {
 			cull_face: false,
 			cursor_hidden: false,
 			cursor_locked: false,
-			#[cfg(web)]
 			canvas_root: CanvasRoot::Body,
 			default_font: None,
 		};
@@ -135,7 +132,6 @@ impl Launcher {
 		return self;
 	}
 
-	#[cfg(web)]
 	pub fn canvas_root(mut self, c: CanvasRoot) -> Self {
 		self.conf.canvas_root = c;
 		return self;

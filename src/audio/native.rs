@@ -16,7 +16,7 @@ pub struct Audio {
 }
 
 impl Audio {
-	pub fn new() -> Result<Self> {
+	pub(crate) fn new() -> Result<Self> {
 		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
 		return Ok(Self {
 			device: Rc::new(device),
