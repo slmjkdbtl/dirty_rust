@@ -49,7 +49,8 @@ build-doc:
 	rm -rf site/doc
 	cp -r target/doc site/
 	cp site/doc/light.css site/doc/dark.css
-	cp site/img/logo.png site/doc/rust-logo.png
+	cp logo.png site/doc/rust-logo.png
+	convert logo.png -resize 128x128 -filter point site/doc/favicon.ico
 
 update:
 	cargo update
