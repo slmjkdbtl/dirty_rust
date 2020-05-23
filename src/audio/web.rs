@@ -57,17 +57,13 @@ impl Sound {
 	}
 
 	/// play sound
-	pub fn play(&self) -> Result<()> {
+	pub fn play(&self) {
 
-		let src = self.ctx
-			.create_buffer_source()
-			.map_err(|_| format!("failed to create audio source"))?;
-
-		src.connect_with_audio_node(&self.ctx.destination());
-		src.set_buffer(self.buffer.borrow().as_ref());
-		src.start();
-
-		return Ok(());
+		if let Ok(src) = self.ctx.create_buffer_source() {
+			src.connect_with_audio_node(&self.ctx.destination());
+			src.set_buffer(self.buffer.borrow().as_ref());
+			src.start();
+		}
 
 	}
 

@@ -10,16 +10,20 @@ pub struct BasicSynth {
 	volume: f32,
 	last_time: f32,
 	buf: VecDeque<f32>,
+	clock: f32,
+	sample_rate: f32,
 }
 
 impl BasicSynth {
 
-	pub fn new() -> Self {
+	pub fn new(ctx: &Audio) -> Self {
 		return BasicSynth {
 			volume: 1.0,
 			notes: hmap![],
 			last_time: 0.0,
 			buf: VecDeque::with_capacity(100),
+			clock: 0.0,
+			sample_rate: ctx.sample_rate(),
 		};
 	}
 
@@ -58,9 +62,17 @@ impl BasicSynth {
 
 }
 
-impl Stream for BasicSynth {
+impl Source for BasicSynth {}
 
-	fn data(&mut self, time: f32) -> f32 {
+impl Iterator for BasicSynth {
+
+	type Item = f32;
+
+	fn next(&mut self) -> Option<Self::Item> {
+
+		self.clock = (self.clock + 1.0) % self.sample_rate;
+
+		let time = self.clock / self.sample_rate;
 
 		let dt = if time >= self.last_time {
 			time - self.last_time
@@ -90,7 +102,7 @@ impl Stream for BasicSynth {
 
 		self.buf.push_back(sound);
 
-		return sound;
+		return Some(sound);
 
 	}
 
