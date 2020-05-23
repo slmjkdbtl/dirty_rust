@@ -7,18 +7,18 @@ use input::Key;
 
 struct Game {
 	track: Track,
-// 	sound: Sound,
+	sound: Sound,
 }
 
 impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-// 		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.ogg"))?;
+		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.ogg"))?;
 		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.ogg"))?;
 
 		return Ok(Self {
-// 			sound: sound,
+			sound: sound,
 			track: track,
 		});
 
@@ -39,8 +39,7 @@ impl State for Game {
 							self.track.pause();
 						}
 					},
-// 					_ => self.sound.play()?,
-					_ => {},
+					_ => self.sound.play(),
 				}
 			},
 			_ => {},
