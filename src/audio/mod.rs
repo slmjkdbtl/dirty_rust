@@ -4,7 +4,6 @@
 
 use crate::Result;
 
-import!(source);
 import!(mixer);
 import!(utils);
 import!(wav);
@@ -12,6 +11,7 @@ import!(vorbis);
 import!(mp3);
 import!(decoder);
 import!(buffer);
+export!(source);
 
 #[cfg(not(web))]
 export!(track);
