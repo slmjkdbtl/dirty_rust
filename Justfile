@@ -42,10 +42,11 @@ doc crate:
 
 build-doc:
 	rm -rf target/doc
-	cargo doc \
-		--no-deps \
+	cargo rustdoc \
 		--release \
-		--all-features
+		--all-features \
+		-- \
+		--extend-css misc/doc.css
 	rm -rf site/doc
 	cp -r target/doc site/
 	cp site/doc/light.css site/doc/dark.css

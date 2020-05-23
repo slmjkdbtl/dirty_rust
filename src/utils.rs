@@ -13,6 +13,14 @@ macro_rules! export {
 }
 
 #[allow(unused_macros)]
+macro_rules! import {
+	($name:ident) => {
+		mod $name;
+		use $name::*;
+	}
+}
+
+#[allow(unused_macros)]
 macro_rules! mexport {
 	($name:ident) => {
 		#[macro_use]

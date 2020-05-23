@@ -10,9 +10,11 @@ export default {
 		import(`/examples/${vnode.attrs.name}.js`).then((mod) => {
 			state = 2;
 			mod.default();
+			document.title = vnode.attrs.name;
 			m.redraw();
 		}).catch((e) => {
 			state = 0;
+			document.title = "error";
 			m.redraw();
 		});
 	},

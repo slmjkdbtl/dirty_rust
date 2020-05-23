@@ -1,105 +1,102 @@
 // wengwengweng
 
-use std::rc::Rc;
 use std::io::Cursor;
+use std::sync::Mutex;
+use std::sync::Arc;
+use std::thread;
 
-use rodio::Source;
-use rodio::Decoder;
-use rodio::Sink;
-use rodio::source::Buffered;
+use cpal::traits::HostTrait;
+use cpal::traits::DeviceTrait;
+use cpal::traits::EventLoopTrait;
 
 use crate::*;
+use super::*;
 
 /// The Audio Context. See [mod-level doc](audio) for usage.
 pub struct Audio {
-	device: Rc<rodio::Device>,
+	mixer: Arc<Mutex<Mixer>>,
 }
 
 impl Audio {
+
 	pub(crate) fn new() -> Result<Self> {
-		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
-		return Ok(Self {
-			device: Rc::new(device),
+
+		let mixer = Arc::new(Mutex::new(Mixer::new()));
+		let t_mixer = Arc::clone(&mixer);
+
+		let host = cpal::default_host();
+
+		let device = host
+			.default_output_device()
+			.ok_or(format!("failed to get default output device"))?;
+
+		let format = device
+			.default_output_format()
+			.map_err(|_| format!("failed to get default audio output format"))?;
+
+		let event_loop = host.event_loop();
+		let stream_id = event_loop
+			.build_output_stream(&device, &format)
+			.map_err(|_| format!("failed to build audio output stream"))?;
+
+		event_loop
+			.play_stream(stream_id.clone())
+			.map_err(|_| format!("failed to start audio stream"))?;
+
+		thread::spawn(move || {
+
+			event_loop.run(move |id, data| {
+
+				let data = match data {
+					Ok(data) => data,
+					Err(err) => {
+						eprintln!("an error occurred on stream {:?}: {}", id, err);
+						return;
+					}
+				};
+
+				match data {
+
+					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut buffer) } => {
+						if let Ok(mut mixer) = t_mixer.lock() {
+							for d in buffer.iter_mut() {
+								*d = mixer.next().map(f32_to_u16).unwrap_or(0);
+							}
+						}
+					},
+
+					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut buffer) } => {
+						if let Ok(mut mixer) = t_mixer.lock() {
+							for d in buffer.iter_mut() {
+								*d = mixer.next().map(f32_to_i16).unwrap_or(0);
+							}
+						}
+					},
+
+					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut buffer) } => {
+						if let Ok(mut mixer) = t_mixer.lock() {
+							for d in buffer.iter_mut() {
+								*d = mixer.next().unwrap_or(0.0);
+							}
+						}
+					},
+
+					_ => (),
+
+				}
+
+			});
+
 		});
-	}
-}
-
-/// One-shot Sound
-#[derive(Clone)]
-pub struct Sound {
-	buffer: Buffered<Decoder<Cursor<Vec<u8>>>>,
-	device: Rc<rodio::Device>,
-}
-
-impl Sound {
-
-	/// create sound from bytes of an audio file
-	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
-
-		let cursor = Cursor::new(data.to_owned());
-		let source = Decoder::new(cursor)
-			.map_err(|_| format!("failed to parse sound from file"))?;
 
 		return Ok(Self {
-			buffer: source.buffered(),
-			device: ctx.device.clone(),
+			mixer: mixer,
 		});
 
 	}
 
-	/// play sound
-	pub fn play(&self) -> Result<()> {
-		rodio::play_raw(&self.device, self.buffer.clone().convert_samples());
-		return Ok(());
-	}
-
-}
-
-/// Streamed Audio That Can Pause / Seek
-pub struct Track {
-	sink: Sink,
-}
-
-impl Track {
-
-	/// create sound from bytes of an audio file
-	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
-		return Self::from_sound(Sound::from_bytes(ctx, data)?);
-	}
-
-	pub fn from_sound(sound: Sound) -> Result<Self> {
-
-		let device = rodio::default_output_device().ok_or(format!("failed to get audio device"))?;
-		let sink = Sink::new(&device);
-
-		sink.append(sound.buffer);
-		sink.pause();
-
-		return Ok(Self {
-			sink,
-		});
-
-	}
-
-	/// play / resume track
-	pub fn play(&self) {
-		self.sink.play();
-	}
-
-	/// pause track
-	pub fn pause(&self) {
-		self.sink.pause();
-	}
-
-	/// check if is playing
-	pub fn is_playing(&self) -> bool {
-		return !self.sink.is_paused();
-	}
-
-	/// free track
-	pub fn free(self) {
-		self.sink.stop();
-		self.sink.detach();
+	pub(super) fn mixer(&self) -> &Arc<Mutex<Mixer>> {
+		return &self.mixer;
 	}
 
 }
