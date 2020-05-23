@@ -14,8 +14,8 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.ogg"))?;
-		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.ogg"))?;
+		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.wav"))?;
+		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.wav"))?;
 
 		return Ok(Self {
 			sound: sound,

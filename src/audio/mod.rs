@@ -9,6 +9,8 @@ import!(mixer);
 import!(utils);
 import!(wav);
 import!(vorbis);
+import!(mp3);
+import!(decoder);
 import!(buffer);
 
 #[cfg(not(web))]
@@ -20,4 +22,7 @@ export!(sound);
 export!(native);
 #[cfg(web)]
 export!(web);
+
+#[cfg(feature = "synth")]
+pub mod synth;
 

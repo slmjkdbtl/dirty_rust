@@ -1,6 +1,5 @@
 // wengwengweng
 
-use std::io::Cursor;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::thread;
@@ -34,6 +33,8 @@ impl Audio {
 			.default_output_format()
 			.map_err(|_| format!("failed to get default audio output format"))?;
 
+		dbg!(&format);
+
 		let event_loop = host.event_loop();
 		let stream_id = event_loop
 			.build_output_stream(&device, &format)
@@ -50,7 +51,7 @@ impl Audio {
 				let data = match data {
 					Ok(data) => data,
 					Err(err) => {
-						eprintln!("an error occurred on stream {:?}: {}", id, err);
+						elog!("an error occurred on stream {:?}: {}", id, err);
 						return;
 					}
 				};

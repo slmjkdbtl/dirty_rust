@@ -6,6 +6,7 @@ use std::io::Cursor;
 
 use super::*;
 
+/// Streamed Sound (mainly for music)
 #[derive(Clone)]
 pub struct Track {
 	src: Arc<Mutex<dyn Source + Send>>,
@@ -16,7 +17,7 @@ impl Track {
 
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
-		let src = VorbisDecoder::from_reader(Cursor::new(data.to_owned()))?;
+		let src = Decoder::new(Cursor::new(data.to_owned()))?;
 		let src = Arc::new(Mutex::new(src));
 		let mut ctrl = Control::new();
 		ctrl.paused = true;

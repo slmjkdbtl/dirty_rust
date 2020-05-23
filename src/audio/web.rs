@@ -23,7 +23,8 @@ impl Audio {
 	}
 }
 
-/// One-shot Sound
+/// Buffered Sound (mainly for short sound effects)
+#[derive(Clone)]
 pub struct Sound {
 	buffer: Rc<RefCell<Option<web_sys::AudioBuffer>>>,
 	ctx: Rc<web_sys::AudioContext>,
@@ -72,7 +73,7 @@ impl Sound {
 
 }
 
-/// Streamed Audio That Can Pause / Seek
+/// Streamed Sound (mainly for music)
 pub struct Track {
 	audio: web_sys::HtmlAudioElement,
 }

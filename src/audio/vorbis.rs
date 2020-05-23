@@ -3,6 +3,7 @@
 use std::time::Duration;
 use std::io::Read;
 use std::io::Seek;
+use std::io::SeekFrom;
 use std::vec;
 
 use lewton::inside_ogg::OggStreamReader;
@@ -14,14 +15,13 @@ pub struct VorbisDecoder<R: Read + Seek> {
 	current_data: vec::IntoIter<i16>,
 }
 
-impl<R: Read + Seek> Source for VorbisDecoder<R> {
-}
+impl<R: Read + Seek> Source for VorbisDecoder<R> {}
 
 impl<R: Read + Seek> VorbisDecoder<R> {
 
-	pub fn from_reader(data: R) -> Result<Self> {
+	pub fn new(data: R) -> Result<Self> {
 
-		let mut reader = OggStreamReader::new(data).map_err(|_| format!("failed to decode vorbis"))?;
+		let mut reader = OggStreamReader::new(data).map_err(|_| format!("failed to parse vorbis"))?;
 
 		let mut data = match reader.read_dec_packet_itl().ok().and_then(|v| v) {
 			Some(d) => d,
@@ -59,7 +59,7 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 					self.current_data = data.into_iter();
 				}
 			}
-			return Some(i16_to_f32(sample));
+			return Some(utils::i16_to_f32(sample));
 		} else {
 			if let Some(data) = self
 				.reader
@@ -69,10 +69,28 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 			{
 				self.current_data = data.into_iter();
 			}
-			return self.current_data.next().map(i16_to_f32);
+			return self.current_data.next().map(utils::i16_to_f32);
 		}
 
 	}
+
+}
+
+pub fn is_vorbis<R: Read + Seek>(mut data: R) -> bool {
+
+	let pos = match data.seek(SeekFrom::Current(0)) {
+		Ok(pos) => pos,
+		Err(_) => return false,
+	};
+
+	if OggStreamReader::new(data.by_ref()).is_err() {
+		data.seek(SeekFrom::Start(pos));
+		return false;
+	}
+
+	data.seek(SeekFrom::Start(pos));
+
+	return true;
 
 }
 

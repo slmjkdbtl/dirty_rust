@@ -82,8 +82,6 @@ pub mod kit;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-#[cfg(feature = "synth")]
-pub mod synth;
 #[cfg(feature = "http")]
 pub mod http;
 #[cfg(feature = "ase")]
