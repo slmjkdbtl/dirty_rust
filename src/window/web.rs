@@ -42,8 +42,6 @@ impl Window {
 			.document()
 			.ok_or_else(|| format!("should have a document on window"))?;
 
-		document.set_title(&conf.title);
-
 		let canvas = document
 			.create_element("canvas")
 			.map_err(|_| format!("failed to create canvas"))?
@@ -219,7 +217,6 @@ impl Window {
 	/// set window title
 	pub fn set_title(&mut self, s: &str) {
 		self.title = s.to_owned();
-		self.document.set_title(s);
 		self.canvas.set_attribute("alt", s);
 	}
 

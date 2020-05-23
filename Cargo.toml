@@ -72,6 +72,9 @@ gltf = "0.15"
 
 # audio
 cpal = "0.11"
+puremp3 = "0.1"
+lewton = "0.10"
+hound = "3.4"
 
 # http
 url = { version = "2.1", optional = true }
@@ -91,7 +94,6 @@ bincode = { version = "1.2", optional = true }
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 glutin = "0.24"
-rodio = { version = "0.11", default-features = false, features = [ "vorbis", "mp3", "wav", ] }
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
 wasm-bindgen = "0.2"
