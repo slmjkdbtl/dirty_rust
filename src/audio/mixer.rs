@@ -5,6 +5,8 @@ use std::sync::Arc;
 
 use super::*;
 
+// TODO: deal with sample rate
+
 pub(super) struct Control {
 	pub paused: bool,
 	pub volume: f32,
