@@ -8,6 +8,7 @@ use std::sync::Mutex;
 
 use dirty::*;
 use gfx::shapes;
+use audio::synth;
 use synth::BasicSynth;
 use synth::Waveform;
 use synth::Voice;
@@ -76,18 +77,17 @@ impl Game {
 			}
 		}
 
-
 	}
 
 }
 
 impl State for Game {
 
-	fn init(_: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let synth = Arc::new(Mutex::new(BasicSynth::new()));
+		let synth = Arc::new(Mutex::new(BasicSynth::new(&d.audio)));
 
-		synth::run(synth.clone());
+		d.audio.run(Arc::clone(&synth));
 
 		return Ok(Self {
 			octave: 4,

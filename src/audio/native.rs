@@ -14,6 +14,7 @@ use super::*;
 /// The Audio Context. See [mod-level doc](audio) for usage.
 pub struct Audio {
 	mixer: Arc<Mutex<Mixer>>,
+	format: cpal::Format,
 }
 
 impl Audio {
@@ -32,8 +33,6 @@ impl Audio {
 		let format = device
 			.default_output_format()
 			.map_err(|_| format!("failed to get default audio output format"))?;
-
-		dbg!(&format);
 
 		let event_loop = host.event_loop();
 		let stream_id = event_loop
@@ -92,12 +91,23 @@ impl Audio {
 
 		return Ok(Self {
 			mixer: mixer,
+			format: format,
 		});
 
 	}
 
 	pub(super) fn mixer(&self) -> &Arc<Mutex<Mixer>> {
 		return &self.mixer;
+	}
+
+	pub fn sample_rate(&self) -> f32 {
+		return self.format.sample_rate.0 as f32;
+	}
+
+	pub fn run<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) {
+		if let Ok(mut mixer) = self.mixer.lock() {
+			mixer.add(src);
+		}
 	}
 
 }

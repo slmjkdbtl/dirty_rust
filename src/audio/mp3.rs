@@ -25,8 +25,6 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 		let mut decoder = puremp3::Mp3Decoder::new(data);
 		let cur_frame = decoder.next_frame().map_err(|_| format!("failed to parse mp3"))?;
 
-		dbg!(&cur_frame.header);
-
 		return Ok(Self {
 			decoder: decoder,
 			cur_frame: cur_frame,
