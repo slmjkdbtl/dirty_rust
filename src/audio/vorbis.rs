@@ -1,6 +1,5 @@
 // wengwengweng
 
-use std::time::Duration;
 use std::io::Read;
 use std::io::Seek;
 use std::io::SeekFrom;
@@ -12,7 +11,10 @@ use super::*;
 
 pub struct VorbisDecoder<R: Read + Seek> {
 	reader: OggStreamReader<R>,
-	current_data: vec::IntoIter<i16>,
+	cur_packet: Option<vec::IntoIter<i16>>,
+	cur_channel: Channel,
+	channel_count: ChannelCount,
+	last_sample: f32,
 }
 
 impl<R: Read + Seek> Source for VorbisDecoder<R> {}
@@ -21,21 +23,28 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 	pub fn new(data: R) -> Result<Self> {
 
-		let mut reader = OggStreamReader::new(data).map_err(|_| format!("failed to parse vorbis"))?;
+		let mut reader = OggStreamReader::new(data)
+			.map_err(|_| format!("failed to parse vorbis"))?;
 
-		let mut data = match reader.read_dec_packet_itl().ok().and_then(|v| v) {
-			Some(d) => d,
-			None => Vec::new(),
+		let header = &reader.ident_hdr;
+
+		let channel_count = match header.audio_channels {
+			1 => ChannelCount::One,
+			2 => ChannelCount::Two,
+			_ => return Err(format!("unsupported channel count: {}", header.audio_channels)),
 		};
 
-		match reader.read_dec_packet_itl().ok().and_then(|v| v) {
-			Some(mut d) => data.append(&mut d),
-			None => (),
+		let data = match reader.read_dec_packet_itl() {
+			Ok(data) => data,
+			Err(e) => return Err(format!("failed to read vorbis")),
 		};
 
 		return Ok(Self {
 			reader: reader,
-			current_data: data.into_iter(),
+			cur_packet: data.map(|d| d.into_iter()),
+			cur_channel: Channel::Left,
+			channel_count: channel_count,
+			last_sample: 0.0,
 		});
 
 	}
@@ -48,28 +57,42 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		if let Some(sample) = self.current_data.next() {
-			if self.current_data.len() == 0 {
-				if let Some(data) = self
-					.reader
-					.read_dec_packet_itl()
-					.ok()
-					.and_then(|v| v)
-				{
-					self.current_data = data.into_iter();
+		let cur_packet = match &mut self.cur_packet {
+			Some(packet) => packet,
+			None => return None,
+		};
+
+		match self.channel_count {
+			ChannelCount::One => {
+				match self.cur_channel {
+					Channel::Left => self.cur_channel = Channel::Right,
+					Channel::Right => {
+						self.cur_channel = Channel::Left;
+						return Some(self.last_sample);
+					}
 				}
-			}
-			return Some(utils::i16_to_f32(sample));
+			},
+			_ => {},
+		}
+
+		if let Some(sample) = cur_packet.next() {
+
+			let sample = utils::i16_to_f32(sample);
+
+			self.last_sample = sample;
+
+			return Some(sample);
+
 		} else {
-			if let Some(data) = self
-				.reader
+
+			self.cur_packet = self.reader
 				.read_dec_packet_itl()
 				.ok()
-				.and_then(|v| v)
-			{
-				self.current_data = data.into_iter();
-			}
-			return self.current_data.next().map(utils::i16_to_f32);
+				.flatten()
+				.map(|v| v.into_iter());
+
+			return self.next();
+
 		}
 
 	}

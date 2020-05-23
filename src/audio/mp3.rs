@@ -6,11 +6,6 @@ use std::io::SeekFrom;
 
 use super::*;
 
-enum Channel {
-	Left,
-	Right,
-}
-
 pub struct Mp3Decoder<R: Read + Seek> {
 	decoder: puremp3::Mp3Decoder<R>,
 	cur_frame: puremp3::Frame,
