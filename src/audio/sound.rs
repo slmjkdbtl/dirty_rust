@@ -6,6 +6,7 @@ use std::io::Cursor;
 
 use super::*;
 
+/// Buffered Sound (mainly for short sound effects)
 #[derive(Clone)]
 pub struct Sound {
 	buf: Buffered,
@@ -16,7 +17,7 @@ impl Sound {
 
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
-		let buf = Buffered::from_source(VorbisDecoder::from_reader(Cursor::new(data.to_owned()))?);
+		let buf = Buffered::from_source(Decoder::new(Cursor::new(data.to_owned()))?);
 
 		let t = Self {
 			buf: buf,

@@ -3,6 +3,7 @@
 use std::time::Duration;
 use std::io::Read;
 use std::io::Seek;
+use std::io::SeekFrom;
 
 use super::*;
 
@@ -10,43 +11,29 @@ pub struct WavDecoder<R: Read + Seek> {
 	decoder: hound::WavReader<R>,
 	specs: hound::WavSpec,
 	duration: Duration,
-	paused: bool,
 }
 
 impl<R: Read + Seek> WavDecoder<R> {
 
-	pub fn from_reader(data: R) -> Result<Self> {
+	pub fn new(data: R) -> Result<Self> {
 
-		let wav = hound::WavReader::new(data).map_err(|_| format!("failed to read wav"))?;
+		let wav = hound::WavReader::new(data).map_err(|_| format!("failed to parse wav"))?;
 		let spec = wav.spec();
 
-		let ms = wav.len() * 1000 / (spec.channels as u32 * spec.sample_rate as u32);
+		let ms = wav.len() as usize * 1000 / (spec.channels as usize * spec.sample_rate as usize);
 		let len = Duration::from_millis(ms as u64);
-
-		dbg!(&spec);
 
 		return Ok(Self {
 			specs: spec,
 			decoder: wav,
 			duration: len,
-			paused: false,
 		});
 
 	}
 
 }
 
-impl<R: Read + Seek> Source for WavDecoder<R> {
-// 	fn duration(&self) -> Duration {
-// 		return self.duration;
-// 	}
-// 	fn sample_rate(&self) -> u32 {
-// 		return self.specs.sample_rate;
-// 	}
-// 	fn channels(&self) -> u16 {
-// 		return self.specs.channels;
-// 	}
-}
+impl<R: Read + Seek> Source for WavDecoder<R> {}
 
 impl<R: Read + Seek> Iterator for WavDecoder<R> {
 
@@ -61,7 +48,7 @@ impl<R: Read + Seek> Iterator for WavDecoder<R> {
 				return value.unwrap_or(0.0);
 			}),
 			(Int, 16) => self.decoder.samples::<i16>().next().map(|value| {
-				return i16_to_f32(value.unwrap_or(0));
+				return utils::i16_to_f32(value.unwrap_or(0));
 			}),
 			_ => None,
 		};
@@ -69,6 +56,24 @@ impl<R: Read + Seek> Iterator for WavDecoder<R> {
 		return v;
 
 	}
+
+}
+
+pub fn is_wav<R: Read + Seek>(mut data: R) -> bool {
+
+	let pos = match data.seek(SeekFrom::Current(0)) {
+		Ok(pos) => pos,
+		Err(_) => return false,
+	};
+
+	if hound::WavReader::new(data.by_ref()).is_err() {
+		data.seek(SeekFrom::Start(pos));
+		return false;
+	}
+
+	data.seek(SeekFrom::Start(pos));
+
+	return true;
 
 }
 
