@@ -12,6 +12,7 @@ import!(mp3);
 import!(decoder);
 import!(buffer);
 export!(source);
+export!(types);
 
 #[cfg(not(web))]
 export!(track);

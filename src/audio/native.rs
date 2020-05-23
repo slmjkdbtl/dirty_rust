@@ -34,6 +34,12 @@ impl Audio {
 			.default_output_format()
 			.map_err(|_| format!("failed to get default audio output format"))?;
 
+		let format = cpal::Format {
+			channels: 2,
+			sample_rate: cpal::SampleRate(44100),
+			data_type: cpal::SampleFormat::F32,
+		};
+
 		let event_loop = host.event_loop();
 		let stream_id = event_loop
 			.build_output_stream(&device, &format)
