@@ -113,9 +113,9 @@ impl Track {
 		self.audio.pause();
 	}
 
-	/// check if is playing
-	pub fn is_playing(&self) -> bool {
-		return !self.audio.paused();
+	/// check if is paused
+	pub fn paused(&self) -> bool {
+		return self.audio.paused();
 	}
 }
 

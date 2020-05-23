@@ -1,17 +1,19 @@
 // wengwengweng
 
+use std::sync::Arc;
+
 use super::*;
 
 #[derive(Clone)]
 pub(super) struct Buffered {
-	buf: Vec<f32>,
+	buf: Arc<Vec<f32>>,
 	cur_idx: usize,
 }
 
 impl Buffered {
 	pub fn from_source(src: impl Source) -> Self {
 		return Self {
-			buf: src.into_iter().collect(),
+			buf: Arc::new(src.into_iter().collect()),
 			cur_idx: 0,
 		};
 	}
