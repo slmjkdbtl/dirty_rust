@@ -54,6 +54,13 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 	}
 
+	pub fn reset(&mut self) -> Result<()> {
+		self.decoder
+			.seek(0)
+			.map_err(|_| format!("failed to seek wav"))?;
+		return Ok(());
+	}
+
 }
 
 impl<R: Read + Seek> Source for WavDecoder<R> {
@@ -84,10 +91,14 @@ impl<R: Read + Seek> Iterator for WavDecoder<R> {
 
 pub fn is_wav<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
+	let pos = reader
+		.seek(SeekFrom::Current(0))
+		.map_err(|_| format!("failed to seek"))?;
+
 	let is_wav = hound::WavReader::new(&mut reader).is_ok();
 
 	reader
-		.seek(SeekFrom::Start(0))
+		.seek(SeekFrom::Start(pos))
 		.map_err(|_| format!("failed to seek"))?;
 
 	return Ok(is_wav);

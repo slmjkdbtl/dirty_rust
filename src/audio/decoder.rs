@@ -30,6 +30,16 @@ impl<R: Read + Seek> Decoder<R> {
 		return Err(format!("failed to decode audio"));
 
 	}
+
+	pub fn reset(&mut self) -> Result<()> {
+		match self {
+			Decoder::Wav(decoder) => decoder.reset()?,
+			Decoder::Mp3(decoder) => decoder.reset()?,
+			Decoder::Vorbis(decoder) => decoder.reset()?,
+		}
+		return Ok(());
+	}
+
 }
 
 impl<R: Read + Seek> Source for Decoder<R> {
