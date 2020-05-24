@@ -40,13 +40,6 @@
 //!
 //! for more information checkout each indivisual docs
 
-#![feature(clamp)]
-#![feature(try_blocks)]
-#![feature(box_syntax)]
-#![feature(option_zip)]
-#![feature(const_int_pow)]
-#![feature(type_alias_impl_trait)]
-
 #![allow(unused_parens)]
 #![allow(unused_variables)]
 #![allow(dead_code)]

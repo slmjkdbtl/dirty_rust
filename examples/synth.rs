@@ -1,7 +1,5 @@
 // wengwengweng
 
-#![feature(clamp)]
-
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::Mutex;

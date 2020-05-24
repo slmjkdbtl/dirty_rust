@@ -100,7 +100,7 @@ impl Widget for Slider {
 			let delta_x = wctx.mouse_pos.x - prev_x;
 
 			self.val += (delta_x / wctx.width) * (self.max - self.min);
-			self.val = self.val.clamp(self.min, self.max);
+			self.val = num_traits::clamp(self.val, self.min, self.max);
 
 			self.draggin = Some(wctx.mouse_pos.x)
 

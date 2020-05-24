@@ -279,7 +279,7 @@ impl<'a> WidgetManager<'a> {
 
 		let w = self.widgets
 			.entry(id)
-			.or_insert_with(|| box w())
+			.or_insert_with(|| Box::new(w()))
 			.as_mut()
 			.as_any_mut()
 			.downcast_mut::<W>()
