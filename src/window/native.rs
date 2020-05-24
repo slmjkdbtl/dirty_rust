@@ -78,7 +78,7 @@ impl Window {
 		}
 
 		if conf.cursor_locked {
-			windowed_ctx.window().set_cursor_grab(true);
+			windowed_ctx.window().set_cursor_grab(true).expect("cannot set cursor grab");
 		}
 
 		return Ok(Self {
@@ -213,7 +213,7 @@ impl Window {
 
 	/// set cursor locked
 	pub fn set_cursor_locked(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_grab(b);
+		self.windowed_ctx.window().set_cursor_grab(b).expect("cannot set cursor grab");
 		self.cursor_locked = b;
 	}
 

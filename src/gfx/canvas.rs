@@ -4,7 +4,6 @@ use std::path::Path;
 
 use crate::*;
 use gfx::*;
-use gfx::*;
 
 #[derive(Clone, PartialEq)]
 pub struct Canvas {

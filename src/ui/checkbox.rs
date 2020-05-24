@@ -26,7 +26,7 @@ impl Widget for CheckBox {
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
-		use input::Key;
+		// use input::Key;
 		use input::Mouse;
 
 		match e {

@@ -66,11 +66,11 @@ pub fn is_mp3<R: Read + Seek>(mut data: R) -> bool {
 	let mut decoder = puremp3::Mp3Decoder::new(data.by_ref());
 
 	if decoder.next_frame().is_err() {
-		data.seek(SeekFrom::Start(pos));
+		data.seek(SeekFrom::Start(pos)).expect("cannot seek to start");
 		return false;
 	}
 
-	data.seek(SeekFrom::Start(pos));
+	data.seek(SeekFrom::Start(pos)).expect("cannot seek to start");
 
 	return true;
 

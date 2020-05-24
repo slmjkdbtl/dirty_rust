@@ -4,7 +4,6 @@
 
 use std::time::Duration;
 use instant::Instant;
-use crate::*;
 
 /// Provides Information to the Application Lifecycle
 pub struct App {

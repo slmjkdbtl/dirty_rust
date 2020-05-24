@@ -109,8 +109,8 @@ pub fn cube(s: f32) -> MeshData {
 // TODO
 pub fn sphere(r: f32) -> MeshData {
 
-	let mut verts = vec![];
-	let mut indices = vec![];
+	let verts = vec![];
+	let indices = vec![];
 
 	return MeshData {
 		vertices: verts,
@@ -169,8 +169,8 @@ pub fn cylinder(r: f32, h: f32, s: usize) -> MeshData {
 // TODO
 pub fn torus(r1: f32, r2: f32) -> MeshData {
 
-	let mut verts = vec![];
-	let mut indices = vec![];
+	let verts = vec![];
+	let indices = vec![];
 
 	return MeshData {
 		vertices: verts,

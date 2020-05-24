@@ -59,11 +59,11 @@ impl<'a> SoundBuilder<'a> {
 		self.effects.push(Arc::new(Mutex::new(e)));
 		return self;
 	}
-	pub fn pan(mut self, p: f32) -> Self {
-		return self.add(Pan(p));
+	pub fn pan(self, p: f32) -> Self {
+		self.add(Pan(p))
 	}
-	pub fn volume(mut self, v: f32) -> Self {
-		return self.add(Volume(v));
+	pub fn volume(self, v: f32) -> Self {
+		self.add(Volume(v))
 	}
 	pub fn play(self) {
 		if let Ok(mut mixer) = self.mixer.lock() {
