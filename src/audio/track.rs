@@ -19,10 +19,11 @@ impl Track {
 
 		let src = Decoder::new(Cursor::new(data.to_owned()))?;
 		let src = Arc::new(Mutex::new(src));
-		let mut ctrl = Control::new();
-		ctrl.paused = true;
-
-		let ctrl = Arc::new(Mutex::new(ctrl));
+		let ctrl = Arc::new(Mutex::new(Control {
+			pan: 0.0,
+			paused: true,
+			volume: 1.0,
+		}));
 
 		let t = Self {
 			src: src,
@@ -46,6 +47,12 @@ impl Track {
 	pub fn pause(&self) {
 		if let Ok(mut ctrl) = self.ctrl.lock() {
 			ctrl.paused = true;
+		}
+	}
+
+	pub fn set_pan(&self, pan: f32) {
+		if let Ok(mut ctrl) = self.ctrl.lock() {
+			ctrl.pan = pan;
 		}
 	}
 

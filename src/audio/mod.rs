@@ -3,6 +3,7 @@
 //! Audio Playback
 
 use crate::Result;
+use crate::math::*;
 
 import!(mixer);
 import!(utils);
