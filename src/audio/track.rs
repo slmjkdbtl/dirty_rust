@@ -31,15 +31,14 @@ impl Track {
 			.lock()
 			.map_err(|_| format!("failed to get mixer"))?;
 
-		let id = mixer.add_ex(src.clone(), vec![
-			volume.clone(),
-			pan.clone(),
-		]);
+		let id = mixer.add(src.clone());
 
 		let control = mixer
 			.get_control(&id)
 			.ok_or(format!("failed to get mixer"))?;
 
+		mixer.add_effect(&id, volume.clone());
+		mixer.add_effect(&id, pan.clone());
 		control.set_paused(true);
 
 		return Ok(Self {

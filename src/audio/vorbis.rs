@@ -79,8 +79,8 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 		};
 
 		return Some(match self.channel_count {
-			ChannelCount::One => (sample, sample),
-			ChannelCount::Two => (sample, self.next_sample().unwrap_or(0.0)),
+			ChannelCount::One => Frame::new(sample, sample),
+			ChannelCount::Two => Frame::new(sample, self.next_sample().unwrap_or(0.0)),
 		});
 
 	}

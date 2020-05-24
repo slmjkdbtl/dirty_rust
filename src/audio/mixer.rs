@@ -61,17 +61,13 @@ impl Mixer {
 	}
 
 	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) -> SourceID {
-		return self.add_ex(src, vec![]);
-	}
-
-	pub fn add_ex(&mut self, src: Arc<Mutex<dyn Source + Send>>, effects: Vec<Arc<Mutex<dyn Effect + Send>>>) -> SourceID {
 
 		let id = self.last_id;
 
 		self.sources.insert(id, SourceCtx {
 			src: src,
 			control: Arc::new(Control::default()),
-			effects: effects,
+			effects: vec![],
 			done: false,
 		});
 
@@ -101,18 +97,16 @@ impl Iterator for Mixer {
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		let sample = self.sources.iter_mut().fold((0.0, 0.0), |n, (id, ctx)| {
-
-			let (left, right) = n;
+		let sample = self.sources.iter_mut().fold(Frame::new(0.0, 0.0), |frame_acc, (id, ctx)| {
 
 			let mut src = match ctx.src.lock() {
 				Ok(src) => src,
-				Err(_) => return n,
+				Err(_) => return frame_acc,
 			};
 
 			if ctx.control.paused() {
 
-				return n;
+				return frame_acc;
 
 			} else {
 
@@ -124,16 +118,16 @@ impl Iterator for Mixer {
 						}
 					}
 
-					return (
-						left + frame.0,
-						right + frame.1,
+					return Frame::new(
+						frame_acc.left + frame.left,
+						frame_acc.right + frame.right,
 					);
 
 				} else {
 
 					ctx.done = true;
 
-					return n;
+					return frame_acc;
 
 				}
 

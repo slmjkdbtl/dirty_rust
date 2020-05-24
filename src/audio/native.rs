@@ -62,9 +62,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some((left, right)) = mixer.next() {
-									d[0] = utils::f32_to_u16(left);
-									d[1] = utils::f32_to_u16(right);
+								if let Some(frame) = mixer.next() {
+									d[0] = utils::f32_to_u16(frame.left);
+									d[1] = utils::f32_to_u16(frame.right);
 								}
 							}
 						}
@@ -73,9 +73,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some((left, right)) = mixer.next() {
-									d[0] = utils::f32_to_i16(left);
-									d[1] = utils::f32_to_i16(right);
+								if let Some(frame) = mixer.next() {
+									d[0] = utils::f32_to_i16(frame.left);
+									d[1] = utils::f32_to_i16(frame.right);
 								}
 							}
 						}
@@ -84,9 +84,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some((left, right)) = mixer.next() {
-									d[0] = left;
-									d[1] = right;
+								if let Some(frame) = mixer.next() {
+									d[0] = frame.left;
+									d[1] = frame.right;
 								}
 							}
 						}
