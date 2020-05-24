@@ -100,7 +100,7 @@ impl Audio {
 
 			});
 
-		});
+		}).map_err(|_| format!("failed to spawn audio thread"))?;
 
 		return Ok(Self {
 			mixer: mixer,

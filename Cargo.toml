@@ -75,6 +75,7 @@ cpal = "0.11"
 puremp3 = "0.1"
 lewton = "0.10"
 hound = "3.4"
+sfxr = "0.1"
 
 # http
 url = { version = "2.1", optional = true }

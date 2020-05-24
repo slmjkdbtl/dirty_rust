@@ -6,6 +6,8 @@ use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::thread;
 
+use crate::Result;
+
 pub trait TaskItem = Send + 'static;
 pub trait TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
 
@@ -122,7 +124,7 @@ impl<T: TaskItem> Task<T> {
 
 	}
 
-	pub fn start(&mut self) {
+	pub fn start(&mut self) -> Result<()> {
 
 		if let Some(action) = self.action.take() {
 
@@ -133,12 +135,14 @@ impl<T: TaskItem> Task<T> {
 				.name(String::from("dirty_task"))
 				.spawn(move || {
 				tx.send(action()).expect("thread failure");
-			});
+			}).map_err(|_| format!("failed to spawn task thread"))?;
 
 			self.rx = Some(rx);
 			self.phase = TaskPhase::Working;
 
 		}
+
+		return Ok(());
 
 	}
 

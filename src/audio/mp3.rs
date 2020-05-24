@@ -10,6 +10,7 @@ pub struct Mp3Decoder<R: Read + Seek> {
 	decoder: puremp3::Mp3Decoder<R>,
 	cur_frame: puremp3::Frame,
 	cur_frame_offset: usize,
+	sample_rate: SampleRate,
 }
 
 impl<R: Read + Seek> Mp3Decoder<R> {
@@ -18,18 +19,30 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 
 		let mut decoder = puremp3::Mp3Decoder::new(data);
 		let cur_frame = decoder.next_frame().map_err(|_| format!("failed to parse mp3"))?;
+		let header = &cur_frame.header;
+
+		let sample_rate = match header.sample_rate {
+			puremp3::SampleRate::Hz44100 => SampleRate::Hz44100,
+			puremp3::SampleRate::Hz48000 => SampleRate::Hz48000,
+			_ => return Err(format!("unsupported channel count: {:?}", header.sample_rate)),
+		};
 
 		return Ok(Self {
 			decoder: decoder,
 			cur_frame: cur_frame,
 			cur_frame_offset: 0,
+			sample_rate: sample_rate,
 		});
 
 	}
 
 }
 
-impl<R: Read + Seek> Source for Mp3Decoder<R> {}
+impl<R: Read + Seek> Source for Mp3Decoder<R> {
+	fn sample_rate(&self) -> SampleRate {
+		return self.sample_rate;
+	}
+}
 
 impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
 

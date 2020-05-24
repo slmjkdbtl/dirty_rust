@@ -12,6 +12,7 @@ pub struct WavDecoder<R: Read + Seek> {
 	specs: hound::WavSpec,
 	duration: Duration,
 	channel_count: ChannelCount,
+	sample_rate: SampleRate,
 }
 
 impl<R: Read + Seek> WavDecoder<R> {
@@ -27,6 +28,12 @@ impl<R: Read + Seek> WavDecoder<R> {
 			_ => return Err(format!("unsupported channel count: {}", spec.channels)),
 		};
 
+		let sample_rate = match spec.sample_rate {
+			44100 => SampleRate::Hz44100,
+			48000 => SampleRate::Hz48000,
+			_ => return Err(format!("unsupported sample rate: {}", spec.sample_rate)),
+		};
+
 		let ms = wav.len() as usize * 1000 / (spec.channels as usize * spec.sample_rate as usize);
 		let duration = Duration::from_millis(ms as u64);
 
@@ -35,6 +42,7 @@ impl<R: Read + Seek> WavDecoder<R> {
 			decoder: wav,
 			duration: duration,
 			channel_count: channel_count,
+			sample_rate: sample_rate,
 		});
 
 	}
@@ -57,7 +65,11 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 }
 
-impl<R: Read + Seek> Source for WavDecoder<R> {}
+impl<R: Read + Seek> Source for WavDecoder<R> {
+	fn sample_rate(&self) -> SampleRate {
+		return self.sample_rate;
+	}
+}
 
 impl<R: Read + Seek> Iterator for WavDecoder<R> {
 

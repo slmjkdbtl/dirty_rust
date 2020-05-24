@@ -32,7 +32,15 @@ impl<R: Read + Seek> Decoder<R> {
 	}
 }
 
-impl<R: Read + Seek> Source for Decoder<R> {}
+impl<R: Read + Seek> Source for Decoder<R> {
+	fn sample_rate(&self) -> SampleRate {
+		return match self {
+			Decoder::Wav(decoder) => decoder.sample_rate(),
+			Decoder::Mp3(decoder) => decoder.sample_rate(),
+			Decoder::Vorbis(decoder) => decoder.sample_rate(),
+		};
+	}
+}
 
 impl<R: Read + Seek> Iterator for Decoder<R> {
 	type Item = Frame;
