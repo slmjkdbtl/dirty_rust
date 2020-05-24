@@ -8,10 +8,7 @@ use cpal::traits::*;
 
 use super::*;
 
-const SAMPLE_RATE: SampleRate = SampleRate::Hz44100;
-const CHANNEL_COUNT: ChannelCount = ChannelCount::Two;
-
-/// The Audio Context. See [mod-level doc](audio) for usage.
+/// The Audio Context. See [mod-level doc](super) for usage.
 pub struct Audio {
 	mixer: Arc<Mutex<Mixer>>,
 }
@@ -117,7 +114,7 @@ impl Audio {
 		return SAMPLE_RATE;
 	}
 
-	pub fn run<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) {
+	pub fn play<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) {
 		if let Ok(mut mixer) = self.mixer.lock() {
 			mixer.add(src);
 		}

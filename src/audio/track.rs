@@ -15,6 +15,7 @@ pub struct Track {
 
 impl Track {
 
+	/// create track from bytes of an audio file
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let src = Decoder::new(Cursor::new(data.to_owned()))?;
@@ -38,24 +39,35 @@ impl Track {
 
 	}
 
+	/// play / resume track
 	pub fn play(&self) {
 		if let Ok(mut ctrl) = self.ctrl.lock() {
 			ctrl.paused = false;
 		}
 	}
 
+	/// pause track
 	pub fn pause(&self) {
 		if let Ok(mut ctrl) = self.ctrl.lock() {
 			ctrl.paused = true;
 		}
 	}
 
+	/// set pan
 	pub fn set_pan(&self, pan: f32) {
 		if let Ok(mut ctrl) = self.ctrl.lock() {
 			ctrl.pan = pan;
 		}
 	}
 
+	/// set volume
+	pub fn set_volume(&self, v: f32) {
+		if let Ok(mut ctrl) = self.ctrl.lock() {
+			ctrl.volume = v;
+		}
+	}
+
+	/// check if is paused
 	pub fn paused(&self) -> bool {
 		if let Ok(ctrl) = self.ctrl.lock() {
 			return ctrl.paused;

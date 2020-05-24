@@ -35,7 +35,7 @@ impl<R: Read + Seek> Decoder<R> {
 impl<R: Read + Seek> Source for Decoder<R> {}
 
 impl<R: Read + Seek> Iterator for Decoder<R> {
-	type Item = (f32, f32);
+	type Item = Frame;
 	fn next(&mut self) -> Option<Self::Item> {
 		return match self {
 			Decoder::Wav(decoder) => decoder.next(),
