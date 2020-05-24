@@ -64,7 +64,7 @@ pub struct Anim {
 	scale: Track<Vec3>,
 }
 
-fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
+fn get_track_val<T: Copy>(track: &Track<T>, t: f32) -> Option<T> {
 
 	if track.is_empty() {
 		return None;

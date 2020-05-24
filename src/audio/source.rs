@@ -2,5 +2,5 @@
 
 use super::*;
 
-pub trait Source: Iterator<Item = Frame> {}
+pub trait Source: Iterator<Item=Frame> {}
 

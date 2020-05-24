@@ -2,12 +2,20 @@
 
 use std::ops::*;
 
-pub trait Lerpable =
+pub trait Lerpable:
 	Copy
-	+ Add<Output = Self>
-	+ Sub<Output = Self>
-	+ Mul<f32, Output = Self>
-	;
+	+ Add<Output=Self>
+	+ Sub<Output=Self>
+	+ Mul<f32, Output=Self>
+	where Self: Sized
+{}
+
+impl<T> Lerpable for T
+	where T: Copy
+		+ Add<Output=T>
+		+ Sub<Output=T>
+		+ Mul<f32, Output=T>
+{}
 
 pub trait Lerping: Lerpable {
 
