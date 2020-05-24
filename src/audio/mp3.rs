@@ -39,12 +39,12 @@ impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		let idx = match self.cur_channel {
+		let channel_idx = match self.cur_channel {
 			Channel::Left => 0,
 			Channel::Right => 1,
 		};
 
-		if self.cur_frame_offset == self.cur_frame.samples[idx].len() {
+		if self.cur_frame_offset == self.cur_frame.samples[channel_idx].len() {
 			self.cur_frame_offset = 0;
 			match self.decoder.next_frame() {
 				Ok(frame) => self.cur_frame = frame,
@@ -52,7 +52,7 @@ impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
 			}
 		}
 
-		let v = self.cur_frame.samples[idx][self.cur_frame_offset];
+		let v = self.cur_frame.samples[channel_idx][self.cur_frame_offset];
 
 		match self.cur_channel {
 			Channel::Left => self.cur_channel = Channel::Right,

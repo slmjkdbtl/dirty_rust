@@ -10,10 +10,10 @@ use lewton::inside_ogg::OggStreamReader;
 use super::*;
 
 pub struct VorbisDecoder<R: Read + Seek> {
-	reader: OggStreamReader<R>,
+	decoder: OggStreamReader<R>,
 	cur_packet: Option<vec::IntoIter<i16>>,
-	cur_channel: Channel,
 	channel_count: ChannelCount,
+	cur_channel: Channel,
 	last_sample: f32,
 }
 
@@ -23,10 +23,10 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 	pub fn new(data: R) -> Result<Self> {
 
-		let mut reader = OggStreamReader::new(data)
+		let mut decoder = OggStreamReader::new(data)
 			.map_err(|_| format!("failed to parse vorbis"))?;
 
-		let header = &reader.ident_hdr;
+		let header = &decoder.ident_hdr;
 
 		let channel_count = match header.audio_channels {
 			1 => ChannelCount::One,
@@ -34,13 +34,13 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 			_ => return Err(format!("unsupported channel count: {}", header.audio_channels)),
 		};
 
-		let data = match reader.read_dec_packet_itl() {
+		let data = match decoder.read_dec_packet_itl() {
 			Ok(data) => data,
 			Err(e) => return Err(format!("failed to read vorbis")),
 		};
 
 		return Ok(Self {
-			reader: reader,
+			decoder: decoder,
 			cur_packet: data.map(|d| d.into_iter()),
 			cur_channel: Channel::Left,
 			channel_count: channel_count,
@@ -85,7 +85,7 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 
 		} else {
 
-			self.cur_packet = self.reader
+			self.cur_packet = self.decoder
 				.read_dec_packet_itl()
 				.ok()
 				.flatten()
@@ -99,6 +99,7 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 
 }
 
+// TODO
 pub fn is_vorbis<R: Read + Seek>(mut data: R) -> bool {
 
 	let pos = match data.seek(SeekFrom::Current(0)) {
