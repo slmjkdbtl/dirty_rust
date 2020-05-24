@@ -33,7 +33,7 @@ impl Widget for Select {
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
-		use input::Key;
+		// use input::Key;
 		use input::Mouse;
 
 		let kmods = d.window.key_mods();

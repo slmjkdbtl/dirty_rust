@@ -96,11 +96,11 @@ pub fn is_vorbis<R: Read + Seek>(mut data: R) -> bool {
 	};
 
 	if OggStreamReader::new(data.by_ref()).is_err() {
-		data.seek(SeekFrom::Start(pos));
+		data.seek(SeekFrom::Start(pos)).expect("cannot seek to start");
 		return false;
 	}
 
-	data.seek(SeekFrom::Start(pos));
+	data.seek(SeekFrom::Start(pos)).expect("cannot seek to start");
 
 	return true;
 
