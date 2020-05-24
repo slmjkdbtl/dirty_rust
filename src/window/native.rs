@@ -284,7 +284,7 @@ impl Window {
 					eprintln!("failed to init midi input")
 				}
 
-			});
+			}).map_err(|_| format!("failed to spawn midi thread"))?;
 
 			buf
 

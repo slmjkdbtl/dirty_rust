@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::time::Duration;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::io::Cursor;
@@ -20,12 +21,10 @@ impl Sound {
 
 		let buffer = Buffered::new(Decoder::new(Cursor::new(data.to_owned()))?);
 
-		let t = Self {
+		return Ok(Self {
 			buffer: buffer,
 			mixer: Arc::clone(ctx.mixer()),
-		};
-
-		return Ok(t);
+		});
 
 	}
 
@@ -43,6 +42,11 @@ impl Sound {
 			mixer: &self.mixer,
 			effects: vec![],
 		};
+	}
+
+	/// get duration
+	pub fn duration(&self) -> Duration {
+		return self.buffer.duration();
 	}
 
 }

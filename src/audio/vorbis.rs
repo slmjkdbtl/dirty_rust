@@ -13,9 +13,8 @@ pub struct VorbisDecoder<R: Read + Seek> {
 	decoder: OggStreamReader<R>,
 	cur_packet: Option<vec::IntoIter<i16>>,
 	channel_count: ChannelCount,
+	sample_rate: SampleRate,
 }
-
-impl<R: Read + Seek> Source for VorbisDecoder<R> {}
 
 impl<R: Read + Seek> VorbisDecoder<R> {
 
@@ -32,6 +31,12 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 			_ => return Err(format!("unsupported channel count: {}", header.audio_channels)),
 		};
 
+		let sample_rate = match header.audio_sample_rate {
+			44100 => SampleRate::Hz44100,
+			48000 => SampleRate::Hz48000,
+			_ => return Err(format!("unsupported sample rate: {}", header.audio_sample_rate)),
+		};
+
 		let data = match decoder.read_dec_packet_itl() {
 			Ok(data) => data,
 			Err(e) => return Err(format!("failed to read vorbis")),
@@ -41,6 +46,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 			decoder: decoder,
 			cur_packet: data.map(|d| d.into_iter()),
 			channel_count: channel_count,
+			sample_rate: sample_rate,
 		});
 
 	}
@@ -65,6 +71,12 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 	}
 
+}
+
+impl<R: Read + Seek> Source for VorbisDecoder<R> {
+	fn sample_rate(&self) -> SampleRate {
+		return self.sample_rate;
+	}
 }
 
 impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
