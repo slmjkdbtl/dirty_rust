@@ -39,9 +39,9 @@ impl Sound {
 	/// returns a [`SoundBuilder`](SoundBuilder) that plays sound with config
 	pub fn builder(&self) -> SoundBuilder {
 		return SoundBuilder {
-			ctrl: Control::default(),
 			buffer: Arc::new(Mutex::new(self.buffer.clone())),
 			mixer: &self.mixer,
+			effects: vec![],
 		};
 	}
 
@@ -49,23 +49,25 @@ impl Sound {
 
 /// A Builder for Playing [`Sound`](Sound) with Configs
 pub struct SoundBuilder<'a> {
-	ctrl: Control,
 	buffer: Arc<Mutex<Buffered>>,
+	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	mixer: &'a Arc<Mutex<Mixer>>,
 }
 
 impl<'a> SoundBuilder<'a> {
-	pub fn pan(mut self, p: f32) -> Self {
-		self.ctrl.pan = p;
+	pub fn add(mut self, e: impl Effect + Send + 'static) -> Self {
+		self.effects.push(Arc::new(Mutex::new(e)));
 		return self;
 	}
+	pub fn pan(mut self, p: f32) -> Self {
+		return self.add(Pan(p));
+	}
 	pub fn volume(mut self, v: f32) -> Self {
-		self.ctrl.volume = v;
-		return self;
+		return self.add(Volume(v));
 	}
 	pub fn play(self) {
 		if let Ok(mut mixer) = self.mixer.lock() {
-			mixer.add(self.buffer);
+			mixer.add_ex(self.buffer, self.effects);
 		}
 	}
 }

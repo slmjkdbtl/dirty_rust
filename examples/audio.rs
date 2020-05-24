@@ -39,7 +39,11 @@ impl State for Game {
 							self.track.pause();
 						}
 					},
-					_ => self.sound.play(),
+					_ => self.sound
+						.builder()
+						.pan(math::rand(-1.0, 1.0))
+						.play()
+						,
 				}
 			},
 			_ => {},
