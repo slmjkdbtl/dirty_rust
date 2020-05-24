@@ -2,6 +2,7 @@
 
 use super::*;
 
+/// Chainable Audio Effect
 pub trait Effect {
 	fn frame(&mut self, _: Frame) -> Frame;
 }

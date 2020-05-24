@@ -31,6 +31,7 @@ impl Framebuffer {
 
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
 
+			// TODO: panics on wasm
 			ctx.renderbuffer_storage(
 				glow::RENDERBUFFER,
 				glow::DEPTH24_STENCIL8,
