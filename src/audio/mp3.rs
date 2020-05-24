@@ -10,7 +10,7 @@ pub struct Mp3Decoder<R: Read + Seek> {
 	decoder: puremp3::Mp3Decoder<R>,
 	cur_frame: puremp3::Frame,
 	cur_frame_offset: usize,
-	sample_rate: SampleRate,
+	sample_rate: u32,
 }
 
 impl<R: Read + Seek> Mp3Decoder<R> {
@@ -20,12 +20,7 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 		let mut decoder = puremp3::Mp3Decoder::new(data);
 		let cur_frame = decoder.next_frame().map_err(|_| format!("failed to parse mp3"))?;
 		let header = &cur_frame.header;
-
-		let sample_rate = match header.sample_rate {
-			puremp3::SampleRate::Hz44100 => SampleRate::Hz44100,
-			puremp3::SampleRate::Hz48000 => SampleRate::Hz48000,
-			_ => return Err(format!("unsupported channel count: {:?}", header.sample_rate)),
-		};
+		let sample_rate = header.sample_rate.hz();
 
 		return Ok(Self {
 			decoder: decoder,
@@ -39,7 +34,7 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 }
 
 impl<R: Read + Seek> Source for Mp3Decoder<R> {
-	fn sample_rate(&self) -> SampleRate {
+	fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
 	}
 }
@@ -69,23 +64,16 @@ impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
 
 }
 
-pub fn is_mp3<R: Read + Seek>(mut data: R) -> bool {
+pub fn is_mp3<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
-	let pos = match data.seek(SeekFrom::Current(0)) {
-		Ok(pos) => pos,
-		Err(_) => return false,
-	};
+	let mut decoder = puremp3::Mp3Decoder::new(&mut reader);
+	let is_mp3 = decoder.next_frame().is_ok();
 
-	let mut decoder = puremp3::Mp3Decoder::new(data.by_ref());
+	reader
+		.seek(SeekFrom::Start(0))
+		.map_err(|_| format!("failed to seek"))?;
 
-	if decoder.next_frame().is_err() {
-		data.seek(SeekFrom::Start(pos));
-		return false;
-	}
-
-	data.seek(SeekFrom::Start(pos));
-
-	return true;
+	return Ok(is_mp3);
 
 }
 

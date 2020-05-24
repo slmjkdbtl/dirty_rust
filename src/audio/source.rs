@@ -3,6 +3,6 @@
 use super::*;
 
 pub trait Source: Iterator<Item = Frame> {
-	fn sample_rate(&self) -> SampleRate;
+	fn sample_rate(&self) -> u32;
 }
 

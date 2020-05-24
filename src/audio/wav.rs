@@ -9,10 +9,9 @@ use super::*;
 
 pub struct WavDecoder<R: Read + Seek> {
 	decoder: hound::WavReader<R>,
-	specs: hound::WavSpec,
+	spec: hound::WavSpec,
 	duration: Duration,
 	channel_count: ChannelCount,
-	sample_rate: SampleRate,
 }
 
 impl<R: Read + Seek> WavDecoder<R> {
@@ -28,21 +27,13 @@ impl<R: Read + Seek> WavDecoder<R> {
 			_ => return Err(format!("unsupported channel count: {}", spec.channels)),
 		};
 
-		let sample_rate = match spec.sample_rate {
-			44100 => SampleRate::Hz44100,
-			48000 => SampleRate::Hz48000,
-			_ => return Err(format!("unsupported sample rate: {}", spec.sample_rate)),
-		};
-
-		let ms = wav.len() as usize * 1000 / (spec.channels as usize * spec.sample_rate as usize);
-		let duration = Duration::from_millis(ms as u64);
+		let duration = Duration::from_secs_f32(wav.duration() as f32 / spec.sample_rate as f32);
 
 		return Ok(Self {
-			specs: spec,
+			spec: spec,
 			decoder: wav,
 			duration: duration,
 			channel_count: channel_count,
-			sample_rate: sample_rate,
 		});
 
 	}
@@ -51,7 +42,7 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 		use hound::SampleFormat::*;
 
-		return match (self.specs.sample_format, self.specs.bits_per_sample) {
+		return match (self.spec.sample_format, self.spec.bits_per_sample) {
 			(Float, 32) => self.decoder.samples::<f32>().next().map(|sample| {
 				return sample.unwrap_or(0.0);
 			}),
@@ -66,8 +57,8 @@ impl<R: Read + Seek> WavDecoder<R> {
 }
 
 impl<R: Read + Seek> Source for WavDecoder<R> {
-	fn sample_rate(&self) -> SampleRate {
-		return self.sample_rate;
+	fn sample_rate(&self) -> u32 {
+		return self.spec.sample_rate;
 	}
 }
 
@@ -91,22 +82,15 @@ impl<R: Read + Seek> Iterator for WavDecoder<R> {
 
 }
 
-// TODO
-pub fn is_wav<R: Read + Seek>(mut data: R) -> bool {
+pub fn is_wav<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
-	let pos = match data.seek(SeekFrom::Current(0)) {
-		Ok(pos) => pos,
-		Err(_) => return false,
-	};
+	let is_wav = hound::WavReader::new(&mut reader).is_ok();
 
-	if hound::WavReader::new(data.by_ref()).is_err() {
-		data.seek(SeekFrom::Start(pos));
-		return false;
-	}
+	reader
+		.seek(SeekFrom::Start(0))
+		.map_err(|_| format!("failed to seek"))?;
 
-	data.seek(SeekFrom::Start(pos));
-
-	return true;
+	return Ok(is_wav);
 
 }
 
