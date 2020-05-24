@@ -10,7 +10,9 @@ use super::*;
 #[derive(Clone)]
 pub struct Track {
 	src: Arc<Mutex<dyn Source + Send>>,
-	ctrl: Arc<Mutex<Control>>,
+	paused: Arc<Mutex<bool>>,
+	pan: Arc<Mutex<Pan>>,
+	volume: Arc<Mutex<Volume>>,
 }
 
 impl Track {
@@ -20,60 +22,63 @@ impl Track {
 
 		let src = Decoder::new(Cursor::new(data.to_owned()))?;
 		let src = Arc::new(Mutex::new(src));
-		let ctrl = Arc::new(Mutex::new(Control {
-			pan: 0.0,
-			paused: true,
-			volume: 1.0,
-		}));
 
-		let t = Self {
+		let volume = Arc::new(Mutex::new(Volume(1.0)));
+		let pan = Arc::new(Mutex::new(Pan(0.0)));
+
+		let paused = ctx
+			.mixer()
+			.lock()
+			.map_err(|_| format!("failed to get mixer"))?
+			.add_ex_paused(src.clone(), vec![
+				volume.clone(),
+				pan.clone(),
+			]);
+
+		return Ok(Self {
 			src: src,
-			ctrl: ctrl,
-		};
-
-		if let Ok(mut mixer) = ctx.mixer().lock() {
-			mixer.add_with_ctrl(Arc::clone(&t.src), Arc::clone(&t.ctrl));
-		}
-
-		return Ok(t);
+			paused: paused,
+			volume: volume,
+			pan: pan,
+		});
 
 	}
 
 	/// play / resume track
 	pub fn play(&self) {
-		if let Ok(mut ctrl) = self.ctrl.lock() {
-			ctrl.paused = false;
+		if let Ok(mut paused) = self.paused.lock() {
+			*paused = false;
 		}
 	}
 
 	/// pause track
 	pub fn pause(&self) {
-		if let Ok(mut ctrl) = self.ctrl.lock() {
-			ctrl.paused = true;
+		if let Ok(mut paused) = self.paused.lock() {
+			*paused = true;
 		}
 	}
 
 	/// set pan
-	pub fn set_pan(&self, pan: f32) {
-		if let Ok(mut ctrl) = self.ctrl.lock() {
-			ctrl.pan = pan;
+	pub fn set_pan(&self, p: f32) {
+		if let Ok(mut pan) = self.pan.lock() {
+			*pan = Pan(p);
 		}
 	}
 
 	/// set volume
 	pub fn set_volume(&self, v: f32) {
-		if let Ok(mut ctrl) = self.ctrl.lock() {
-			ctrl.volume = v;
+		if let Ok(mut volume) = self.volume.lock() {
+			*volume = Volume(v);
 		}
 	}
 
 	/// check if is paused
 	pub fn paused(&self) -> bool {
-		if let Ok(ctrl) = self.ctrl.lock() {
-			return ctrl.paused;
-		}
-		// TODO
-		return true;
+		return self.paused
+			.lock()
+			.map(|b| *b)
+			.unwrap_or(true)
+			;
 	}
 
 }

@@ -18,6 +18,7 @@ import!(decoder);
 import!(buffer);
 export!(source);
 export!(types);
+export!(effect);
 
 #[cfg(not(web))]
 export!(track);

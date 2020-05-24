@@ -7,27 +7,10 @@ use super::*;
 
 // TODO: deal with sample rate
 
-// TODO: a better way to deal with control? a plugin system?
-#[derive(Clone, Copy)]
-pub(super) struct Control {
-	pub paused: bool,
-	pub volume: f32,
-	pub pan: f32,
-}
-
-impl Default for Control {
-	fn default() -> Self {
-		return Self {
-			paused: false,
-			volume: 1.0,
-			pan: 0.0,
-		};
-	}
-}
-
 struct SourceCtx {
 	src: Arc<Mutex<dyn Source + Send>>,
-	ctrl: Arc<Mutex<Control>>,
+	paused: Arc<Mutex<bool>>,
+	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	done: bool,
 }
 
@@ -42,14 +25,25 @@ impl Mixer {
 		};
 	}
 	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) {
-		self.add_with_ctrl(src, Arc::new(Mutex::new(Control::default())));
+		self.add_ex(src, vec![]);
 	}
-	pub fn add_with_ctrl(&mut self, src: Arc<Mutex<dyn Source + Send>>, ctrl: Arc<Mutex<Control>>) {
+	pub fn add_ex(&mut self, src: Arc<Mutex<dyn Source + Send>>, effects: Vec<Arc<Mutex<dyn Effect + Send>>>) {
 		self.sources.push(SourceCtx {
 			src: src,
-			ctrl: ctrl,
+			paused: Arc::new(Mutex::new(false)),
+			effects: effects,
 			done: false,
 		});
+	}
+	pub fn add_ex_paused(&mut self, src: Arc<Mutex<dyn Source + Send>>, effects: Vec<Arc<Mutex<dyn Effect + Send>>>) -> Arc<Mutex<bool>> {
+		let paused = Arc::new(Mutex::new(true));
+		self.sources.push(SourceCtx {
+			src: src,
+			paused: Arc::clone(&paused),
+			effects: effects,
+			done: false,
+		});
+		return paused;
 	}
 }
 
@@ -68,22 +62,23 @@ impl Iterator for Mixer {
 				Err(_) => return n,
 			};
 
-			let ctrl = match ctx.ctrl.lock() {
-				Ok(ctrl) => *ctrl,
-				Err(_) => Control::default(),
-			};
-
-			if ctrl.paused {
+			if ctx.paused.lock().map(|b| *b).unwrap_or(false) {
 
 				return n;
 
 			} else {
 
-				if let Some((left_sample, right_sample)) = src.next() {
+				if let Some(mut frame) = src.next() {
+
+					for e in &ctx.effects {
+						if let Ok(mut e) = e.lock() {
+							frame = e.frame(frame);
+						}
+					}
 
 					return (
-						left + left_sample * ctrl.volume * ctrl.pan.map(1.0, -1.0, 0.0, 2.0),
-						right + right_sample * ctrl.volume * ctrl.pan.map(-1.0, 1.0, 0.0, 2.0),
+						left + frame.0,
+						right + frame.1,
 					);
 
 				} else {
