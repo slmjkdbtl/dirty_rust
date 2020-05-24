@@ -45,7 +45,9 @@ impl Audio {
 			.play_stream(stream_id.clone())
 			.map_err(|_| format!("failed to start audio stream"))?;
 
-		thread::spawn(move || {
+		thread::Builder::new()
+			.name(String::from("dirty_audio"))
+			.spawn(move || {
 
 			event_loop.run(move |id, data| {
 

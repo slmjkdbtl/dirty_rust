@@ -129,7 +129,9 @@ impl<T: TaskItem> Task<T> {
 			let (tx, rx) = mpsc::channel();
 
 			// TODO: deal with error inside thread::spawn
-			thread::spawn(move || {
+			thread::Builder::new()
+				.name(String::from("dirty_task"))
+				.spawn(move || {
 				tx.send(action()).expect("thread failure");
 			});
 

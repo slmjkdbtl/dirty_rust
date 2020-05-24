@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::thread;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -258,7 +259,9 @@ impl Window {
 			let buf_in = buf.clone();
 
 			// TODO: why does this still block the main thread sometime??
-			std::thread::spawn(move || {
+			thread::Builder::new()
+				.name(String::from("dirty_midi"))
+				.spawn(move || {
 
 				// TODO: extremely slow
 				if let Ok(midi_in) = midir::MidiInput::new("DIRTY") {
