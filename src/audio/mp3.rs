@@ -50,7 +50,7 @@ impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
 
 		self.cur_frame_offset += 1;
 
-		return Some((left, right));
+		return Some(Frame::new(left, right));
 
 	}
 

@@ -11,8 +11,8 @@ pub trait Effect {
 pub struct Volume(pub f32);
 
 impl Effect for Volume {
-	fn frame(&mut self, (left, right): Frame) -> Frame {
-		return (left * self.0, right * self.0);
+	fn frame(&mut self, f: Frame) -> Frame {
+		return Frame::new(f.left * self.0, f.right * self.0);
 	}
 }
 
@@ -20,10 +20,10 @@ impl Effect for Volume {
 pub struct Pan(pub f32);
 
 impl Effect for Pan {
-	fn frame(&mut self, (left, right): Frame) -> Frame {
-		return (
-			left * self.0.map(1.0, -1.0, 0.0, 2.0),
-			right * self.0.map(-1.0, 1.0, 0.0, 2.0),
+	fn frame(&mut self, f: Frame) -> Frame {
+		return Frame::new(
+			f.left * self.0.map(1.0, -1.0, 0.0, 2.0),
+			f.right * self.0.map(-1.0, 1.0, 0.0, 2.0),
 		);
 	}
 }
