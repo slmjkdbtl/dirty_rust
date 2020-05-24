@@ -13,8 +13,6 @@ pub struct VorbisDecoder<R: Read + Seek> {
 	decoder: OggStreamReader<R>,
 	cur_packet: Option<vec::IntoIter<i16>>,
 	channel_count: ChannelCount,
-	cur_channel: Channel,
-	last_sample: f32,
 }
 
 impl<R: Read + Seek> Source for VorbisDecoder<R> {}
@@ -42,10 +40,28 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 		return Ok(Self {
 			decoder: decoder,
 			cur_packet: data.map(|d| d.into_iter()),
-			cur_channel: Channel::Left,
 			channel_count: channel_count,
-			last_sample: 0.0,
 		});
+
+	}
+
+	fn next_sample(&mut self) -> Option<f32> {
+
+		let cur_packet = match &mut self.cur_packet {
+			Some(packet) => packet,
+			None => return None,
+		};
+
+		if let Some(sample) = cur_packet.next() {
+			return Some(utils::i16_to_f32(sample));
+		} else {
+			self.cur_packet = self.decoder
+				.read_dec_packet_itl()
+				.ok()
+				.flatten()
+				.map(|v| v.into_iter());
+			return self.next_sample();
+		}
 
 	}
 
@@ -53,47 +69,19 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 
-	type Item = f32;
+	type Item = (f32, f32);
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		let cur_packet = match &mut self.cur_packet {
-			Some(packet) => packet,
+		let sample = match self.next_sample() {
+			Some(sample) => sample,
 			None => return None,
 		};
 
-		match self.channel_count {
-			ChannelCount::One => {
-				match self.cur_channel {
-					Channel::Left => self.cur_channel = Channel::Right,
-					Channel::Right => {
-						self.cur_channel = Channel::Left;
-						return Some(self.last_sample);
-					}
-				}
-			},
-			_ => {},
-		}
-
-		if let Some(sample) = cur_packet.next() {
-
-			let sample = utils::i16_to_f32(sample);
-
-			self.last_sample = sample;
-
-			return Some(sample);
-
-		} else {
-
-			self.cur_packet = self.decoder
-				.read_dec_packet_itl()
-				.ok()
-				.flatten()
-				.map(|v| v.into_iter());
-
-			return self.next();
-
-		}
+		return Some(match self.channel_count {
+			ChannelCount::One => (sample, sample),
+			ChannelCount::Two => (sample, self.next_sample().unwrap_or(0.0)),
+		});
 
 	}
 
