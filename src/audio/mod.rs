@@ -6,6 +6,9 @@
 //!  - [`Sound`](Sound), buffered audio mainly for sound effects
 //!  - [`Track`](Track), streamed audio mainly for music
 
+// TODO: loop
+// TODO: sample rate conversion
+
 use crate::Result;
 use crate::math::*;
 
