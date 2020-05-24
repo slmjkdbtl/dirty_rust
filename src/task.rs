@@ -106,7 +106,7 @@ impl<T: TaskItem> Task<T> {
 
 	pub fn new(f: impl FnOnce() -> T + TaskItem) -> Self {
 		return Self {
-			action: Some(box f),
+			action: Some(Box::new(f)),
 			rx: None,
 			phase: TaskPhase::StandBy,
 		};

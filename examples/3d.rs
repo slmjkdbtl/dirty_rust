@@ -1,7 +1,5 @@
 // wengwengweng
 
-#![feature(clamp)]
-
 use dirty::*;
 use math::*;
 use geom::*;
@@ -114,7 +112,7 @@ impl State for Game {
 					rx += delta.x * self.eye_speed * 0.0001;
 					ry += delta.y * self.eye_speed * 0.0001;
 
-					ry = ry.clamp(-dead, dead);
+					ry = num_traits::(ry, -dead, dead);
 
 					self.cam.set_angle(rx, ry);
 

@@ -39,9 +39,9 @@ impl Sound {
 		let abuf = Rc::new(RefCell::new(None));
 		let abuf2 = abuf.clone();
 
-		let handler = Closure::wrap(box (move |b: web_sys::AudioBuffer| {
+		let handler = Closure::wrap(Box::new((move |b: web_sys::AudioBuffer| {
 			*abuf2.borrow_mut() = Some(b);
-		}) as Box<dyn FnMut(_)>);
+		})) as Box<dyn FnMut(_)>);
 
 		ctx.ctx
 			.decode_audio_data_with_success_callback(&buf.buffer(), handler.as_ref().unchecked_ref())

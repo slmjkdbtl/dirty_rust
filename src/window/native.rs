@@ -305,7 +305,7 @@ impl Window {
 
 			*flow = ControlFlow::Poll;
 
-			let res: Result<()> = try {
+			let res: Result<()> = || -> Result<()> {
 
 				use glutin::event::WindowEvent as WEvent;
 				use glutin::event::DeviceEvent as DEvent;
@@ -599,7 +599,8 @@ impl Window {
 					handle(&mut self, WindowEvent::Input(e))?;
 				}
 
-			};
+				Ok(())
+			}();
 
 			if let Err(err) = res {
 				elog!("{}", err);
