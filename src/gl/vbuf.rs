@@ -7,7 +7,7 @@ use glow::HasContext;
 use super::*;
 use crate::Result;
 
-pub trait VertexLayout {
+pub trait VertexLayout: Clone {
 	fn attrs() -> VertexAttrGroup;
 }
 

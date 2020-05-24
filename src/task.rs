@@ -6,8 +6,8 @@ use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::thread;
 
-pub trait TaskItem = Send + 'static;
-pub trait TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
+pub type TaskItem = Send + 'static;
+pub type TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TaskPhase {
