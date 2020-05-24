@@ -12,8 +12,6 @@ pub struct WavDecoder<R: Read + Seek> {
 	specs: hound::WavSpec,
 	duration: Duration,
 	channel_count: ChannelCount,
-	cur_channel: Channel,
-	last_sample: f32,
 }
 
 impl<R: Read + Seek> WavDecoder<R> {
@@ -37,9 +35,23 @@ impl<R: Read + Seek> WavDecoder<R> {
 			decoder: wav,
 			duration: duration,
 			channel_count: channel_count,
-			cur_channel: Channel::Left,
-			last_sample: 0.0,
 		});
+
+	}
+
+	fn next_sample(&mut self) -> Option<f32> {
+
+		use hound::SampleFormat::*;
+
+		return match (self.specs.sample_format, self.specs.bits_per_sample) {
+			(Float, 32) => self.decoder.samples::<f32>().next().map(|sample| {
+				return sample.unwrap_or(0.0);
+			}),
+			(Int, 16) => self.decoder.samples::<i16>().next().map(|sample| {
+				return utils::i16_to_f32(sample.unwrap_or(0));
+			}),
+			_ => None,
+		};
 
 	}
 
@@ -49,38 +61,19 @@ impl<R: Read + Seek> Source for WavDecoder<R> {}
 
 impl<R: Read + Seek> Iterator for WavDecoder<R> {
 
-	type Item = f32;
+	type Item = (f32, f32);
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		use hound::SampleFormat::*;
-
-		match self.channel_count {
-			ChannelCount::One => {
-				match self.cur_channel {
-					Channel::Left => self.cur_channel = Channel::Right,
-					Channel::Right => {
-						self.cur_channel = Channel::Left;
-						return Some(self.last_sample);
-					}
-				}
-			},
-			_ => {},
-		}
-
-		return match (self.specs.sample_format, self.specs.bits_per_sample) {
-			(Float, 32) => self.decoder.samples::<f32>().next().map(|value| {
-				let sample = value.unwrap_or(0.0);
-				self.last_sample = sample;
-				return sample;
-			}),
-			(Int, 16) => self.decoder.samples::<i16>().next().map(|value| {
-				let sample = utils::i16_to_f32(value.unwrap_or(0));
-				self.last_sample = sample;
-				return sample;
-			}),
-			_ => None,
+		let sample = match self.next_sample() {
+			Some(sample) => sample,
+			None => return None,
 		};
+
+		return Some(match self.channel_count {
+			ChannelCount::One => (sample, sample),
+			ChannelCount::Two => (sample, self.next_sample().unwrap_or(0.0)),
+		});
 
 	}
 

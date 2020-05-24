@@ -6,13 +6,14 @@ use std::thread;
 
 use cpal::traits::*;
 
-use crate::*;
 use super::*;
+
+const SAMPLE_RATE: SampleRate = SampleRate::Hz44100;
+const CHANNEL_COUNT: ChannelCount = ChannelCount::Two;
 
 /// The Audio Context. See [mod-level doc](audio) for usage.
 pub struct Audio {
 	mixer: Arc<Mutex<Mixer>>,
-	format: cpal::Format,
 }
 
 impl Audio {
@@ -33,8 +34,8 @@ impl Audio {
 			.map_err(|_| format!("failed to get default audio output format"))?;
 
 		let format = cpal::Format {
-			channels: 2,
-			sample_rate: cpal::SampleRate(44100),
+			channels: CHANNEL_COUNT.to_cpal(),
+			sample_rate: SAMPLE_RATE.to_cpal(),
 			data_type: cpal::SampleFormat::F32,
 		};
 
@@ -61,26 +62,35 @@ impl Audio {
 
 				match data {
 
-					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut buffer) } => {
+					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
-							for d in buffer.iter_mut() {
-								*d = mixer.next().map(f32_to_u16).unwrap_or(0);
+							for d in output.chunks_mut(2) {
+								if let Some((left, right)) = mixer.next() {
+									d[0] = utils::f32_to_u16(left);
+									d[1] = utils::f32_to_u16(right);
+								}
 							}
 						}
 					},
 
-					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut buffer) } => {
+					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
-							for d in buffer.iter_mut() {
-								*d = mixer.next().map(f32_to_i16).unwrap_or(0);
+							for d in output.chunks_mut(2) {
+								if let Some((left, right)) = mixer.next() {
+									d[0] = utils::f32_to_i16(left);
+									d[1] = utils::f32_to_i16(right);
+								}
 							}
 						}
 					},
 
-					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut buffer) } => {
+					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
-							for d in buffer.iter_mut() {
-								*d = mixer.next().unwrap_or(0.0);
+							for d in output.chunks_mut(2) {
+								if let Some((left, right)) = mixer.next() {
+									d[0] = left;
+									d[1] = right;
+								}
 							}
 						}
 					},
@@ -95,7 +105,6 @@ impl Audio {
 
 		return Ok(Self {
 			mixer: mixer,
-			format: format,
 		});
 
 	}
@@ -104,8 +113,8 @@ impl Audio {
 		return &self.mixer;
 	}
 
-	pub fn sample_rate(&self) -> f32 {
-		return self.format.sample_rate.0 as f32;
+	pub fn sample_rate(&self) -> SampleRate {
+		return SAMPLE_RATE;
 	}
 
 	pub fn run<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) {

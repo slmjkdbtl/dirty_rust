@@ -7,8 +7,8 @@ use crate::math::*;
 
 import!(mixer);
 import!(utils);
-import!(wav);
 import!(vorbis);
+import!(wav);
 import!(mp3);
 import!(decoder);
 import!(buffer);

@@ -33,14 +33,12 @@ struct SourceCtx {
 
 pub(super) struct Mixer {
 	sources: Vec<SourceCtx>,
-	cur_channel: Channel,
 }
 
 impl Mixer {
 	pub fn new() -> Self {
 		return Self {
 			sources: vec![],
-			cur_channel: Channel::Left,
 		};
 	}
 	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) {
@@ -57,13 +55,13 @@ impl Mixer {
 
 impl Iterator for Mixer {
 
-	type Item = f32;
+	type Item = (f32, f32);
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		let cur_channel = self.cur_channel;
+		let sample = self.sources.iter_mut().fold((0.0, 0.0), |n, ctx| {
 
-		let sample = self.sources.iter_mut().fold(0.0, |n, ctx| {
+			let (left, right) = n;
 
 			let mut src = match ctx.src.lock() {
 				Ok(src) => src,
@@ -81,14 +79,12 @@ impl Iterator for Mixer {
 
 			} else {
 
-				if let Some(val) = src.next() {
+				if let Some((left_sample, right_sample)) = src.next() {
 
-					let volume = ctrl.volume * match cur_channel {
-						Channel::Left => ctrl.pan.map(1.0, -1.0, 0.0, 2.0),
-						Channel::Right => ctrl.pan.map(-1.0, 1.0, 0.0, 2.0),
-					};
-
-					return n + val * volume;
+					return (
+						left + left_sample * ctrl.volume * ctrl.pan.map(1.0, -1.0, 0.0, 2.0),
+						right + right_sample * ctrl.volume * ctrl.pan.map(-1.0, 1.0, 0.0, 2.0),
+					);
 
 				} else {
 
@@ -101,11 +97,6 @@ impl Iterator for Mixer {
 			}
 
 		});
-
-		self.cur_channel = match self.cur_channel {
-			Channel::Left => Channel::Right,
-			Channel::Right => Channel::Left,
-		};
 
 		self.sources.retain(|ctx| {
 			return !ctx.done;
