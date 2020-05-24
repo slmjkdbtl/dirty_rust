@@ -6,12 +6,12 @@ use super::*;
 
 #[derive(Clone)]
 pub(super) struct Buffered {
-	buf: Arc<Vec<(f32, f32)>>,
+	buf: Arc<Vec<Frame>>,
 	cur_idx: usize,
 }
 
 impl Buffered {
-	pub fn from_source(src: impl Source) -> Self {
+	pub fn new(src: impl Source) -> Self {
 		return Self {
 			buf: Arc::new(src.into_iter().collect()),
 			cur_idx: 0,
@@ -20,7 +20,7 @@ impl Buffered {
 }
 
 impl Iterator for Buffered {
-	type Item = (f32, f32);
+	type Item = Frame;
 	fn next(&mut self) -> Option<Self::Item> {
 		let v = self.buf.get(self.cur_idx).map(|f| *f);
 		self.cur_idx += 1;

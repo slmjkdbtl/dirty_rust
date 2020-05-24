@@ -87,7 +87,7 @@ impl State for Game {
 
 		let synth = Arc::new(Mutex::new(BasicSynth::new(&d.audio)));
 
-		d.audio.run(Arc::clone(&synth));
+		d.audio.play(Arc::clone(&synth));
 
 		return Ok(Self {
 			octave: 4,

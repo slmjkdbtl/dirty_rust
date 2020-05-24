@@ -33,7 +33,7 @@ impl<R: Read + Seek> Source for Mp3Decoder<R> {}
 
 impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
 
-	type Item = (f32, f32);
+	type Item = Frame;
 
 	fn next(&mut self) -> Option<Self::Item> {
 

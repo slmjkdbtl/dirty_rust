@@ -69,7 +69,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 
-	type Item = (f32, f32);
+	type Item = Frame;
 
 	fn next(&mut self) -> Option<Self::Item> {
 

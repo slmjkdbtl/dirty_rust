@@ -55,7 +55,7 @@ impl Mixer {
 
 impl Iterator for Mixer {
 
-	type Item = (f32, f32);
+	type Item = Frame;
 
 	fn next(&mut self) -> Option<Self::Item> {
 

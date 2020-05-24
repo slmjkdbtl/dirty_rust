@@ -1,4 +1,6 @@
 // wengwengweng
 
-pub trait Source: Iterator<Item = (f32, f32)> {}
+use super::*;
+
+pub trait Source: Iterator<Item = Frame> {}
 
