@@ -4,9 +4,7 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::thread;
 
-use cpal::traits::HostTrait;
-use cpal::traits::DeviceTrait;
-use cpal::traits::EventLoopTrait;
+use cpal::traits::*;
 
 use crate::*;
 use super::*;

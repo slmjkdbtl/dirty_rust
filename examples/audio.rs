@@ -51,7 +51,10 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
+		let time = d.app.time().as_secs_f32();
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+
+		self.track.set_pan(math::wave(time, -1.0, 1.0));
 
 		let lines = [
 			"space:   play / pause",

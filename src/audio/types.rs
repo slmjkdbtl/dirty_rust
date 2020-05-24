@@ -14,6 +14,7 @@ pub enum ChannelCount {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SampleRate {
-	S44100,
+	Hz44100,
+	Hz48000,
 }
 
