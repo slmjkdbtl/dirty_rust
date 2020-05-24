@@ -10,7 +10,7 @@ use super::*;
 #[derive(Clone)]
 pub struct Track {
 	id: SourceID,
-	src: Arc<Mutex<dyn Source + Send>>,
+	src: Arc<Mutex<Decoder<Cursor<Vec<u8>>>>>,
 	control: Arc<Control>,
 	pan: Arc<Mutex<Pan>>,
 	volume: Arc<Mutex<Volume>>,
@@ -59,6 +59,13 @@ impl Track {
 	/// pause track
 	pub fn pause(&mut self) {
 		self.control.set_paused(true);
+	}
+
+	pub fn reset(&self) -> Result<()> {
+		if let Ok(mut src) = self.src.lock() {
+			src.reset()?;
+		}
+		return Ok(());
 	}
 
 	/// set pan
