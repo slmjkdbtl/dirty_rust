@@ -40,7 +40,6 @@ impl UI {
 
 		use input::Event::*;
 		use input::Mouse;
-		use input::Key;
 		use geom::*;
 
 		let mpos = d.window.mouse_pos();

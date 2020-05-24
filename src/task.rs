@@ -38,28 +38,32 @@ impl<T: TaskItem> TaskQueue<T> {
 		};
 	}
 
-	pub fn exec(&mut self, f: impl FnOnce() -> T + TaskItem) {
+	pub fn exec(&mut self, f: impl FnOnce() -> T + TaskItem) -> Result<()> {
 
 		self.queue.push_back(Task::new(f));
-		self.adjust();
+		self.adjust()?;
 		self.total += 1;
+
+		return Ok(());
 
 	}
 
-	fn adjust(&mut self) {
+	fn adjust(&mut self) -> Result<()> {
 
 		self.active.retain(|t| t.phase() != TaskPhase::Done);
 
 		for _ in 0..self.max as usize - self.active.len() {
 			if let Some(mut task) = self.queue.pop_front() {
-				task.start();
+				task.start()?;
 				self.active.push(task);
 			}
 		}
 
+		return Ok(());
+
 	}
 
-	pub fn poll(&mut self) -> Vec<T> {
+	pub fn poll(&mut self) -> Result<Vec<T>> {
 
 		let mut basket = vec![];
 
@@ -70,9 +74,9 @@ impl<T: TaskItem> TaskQueue<T> {
 			}
 		}
 
-		self.adjust();
+		self.adjust()?;
 
-		return basket;
+		return Ok(basket);
 
 	}
 
@@ -114,13 +118,13 @@ impl<T: TaskItem> Task<T> {
 		};
 	}
 
-	pub fn exec(f: impl FnOnce() -> T + TaskItem) -> Self {
+	pub fn exec(f: impl FnOnce() -> T + TaskItem) -> Result<Self> {
 
 		let mut task = Self::new(f);
 
-		task.start();
+		task.start()?;
 
-		return task;
+		return Ok(task);
 
 	}
 

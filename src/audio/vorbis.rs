@@ -13,7 +13,7 @@ pub struct VorbisDecoder<R: Read + Seek> {
 	decoder: OggStreamReader<R>,
 	cur_packet: Option<vec::IntoIter<i16>>,
 	channel_count: ChannelCount,
-	sample_rate: SampleRate,
+	sample_rate: u32,
 }
 
 impl<R: Read + Seek> VorbisDecoder<R> {
@@ -31,11 +31,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 			_ => return Err(format!("unsupported channel count: {}", header.audio_channels)),
 		};
 
-		let sample_rate = match header.audio_sample_rate {
-			44100 => SampleRate::Hz44100,
-			48000 => SampleRate::Hz48000,
-			_ => return Err(format!("unsupported sample rate: {}", header.audio_sample_rate)),
-		};
+		let sample_rate = header.audio_sample_rate;
 
 		let data = match decoder.read_dec_packet_itl() {
 			Ok(data) => data,
@@ -74,7 +70,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 }
 
 impl<R: Read + Seek> Source for VorbisDecoder<R> {
-	fn sample_rate(&self) -> SampleRate {
+	fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
 	}
 }
@@ -99,22 +95,15 @@ impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
 
 }
 
-// TODO
-pub fn is_vorbis<R: Read + Seek>(mut data: R) -> bool {
+pub fn is_vorbis<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
-	let pos = match data.seek(SeekFrom::Current(0)) {
-		Ok(pos) => pos,
-		Err(_) => return false,
-	};
+	let is_vorbis = OggStreamReader::new(&mut reader).is_ok();
 
-	if OggStreamReader::new(data.by_ref()).is_err() {
-		data.seek(SeekFrom::Start(pos));
-		return false;
-	}
+	reader
+		.seek(SeekFrom::Start(0))
+		.map_err(|_| format!("failed to seek"))?;
 
-	data.seek(SeekFrom::Start(pos));
-
-	return true;
+	return Ok(is_vorbis)
 
 }
 

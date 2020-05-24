@@ -30,24 +30,3 @@ impl ChannelCount {
 	}
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum SampleRate {
-	Hz44100,
-	Hz48000,
-}
-
-impl SampleRate {
-	pub(super) fn to_cpal(&self) -> cpal::SampleRate {
-		return match self {
-			SampleRate::Hz44100 => cpal::SampleRate(44100),
-			SampleRate::Hz48000 => cpal::SampleRate(48000),
-		};
-	}
-	pub fn as_f32(&self) -> f32 {
-		return match self {
-			SampleRate::Hz44100 => 44100.0,
-			SampleRate::Hz48000 => 48000.0,
-		};
-	}
-}
-

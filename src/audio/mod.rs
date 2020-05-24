@@ -37,7 +37,7 @@ export!(web);
 #[cfg(feature = "synth")]
 pub mod synth;
 
-const SAMPLE_RATE: SampleRate = SampleRate::Hz44100;
+const SAMPLE_RATE: u32 = 44100;
 const CHANNEL_COUNT: ChannelCount = ChannelCount::Two;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

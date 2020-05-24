@@ -32,7 +32,7 @@ impl Audio {
 
 		let format = cpal::Format {
 			channels: CHANNEL_COUNT.to_cpal(),
-			sample_rate: SAMPLE_RATE.to_cpal(),
+			sample_rate: cpal::SampleRate(SAMPLE_RATE),
 			data_type: cpal::SampleFormat::F32,
 		};
 
@@ -112,7 +112,7 @@ impl Audio {
 		return &self.mixer;
 	}
 
-	pub fn sample_rate(&self) -> SampleRate {
+	pub fn sample_rate(&self) -> u32 {
 		return SAMPLE_RATE;
 	}
 

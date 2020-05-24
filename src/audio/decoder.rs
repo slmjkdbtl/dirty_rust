@@ -15,15 +15,15 @@ impl<R: Read + Seek> Decoder<R> {
 
 	pub fn new(mut reader: R) -> Result<Self> {
 
-		if is_vorbis(reader.by_ref()) {
+		if is_vorbis(&mut reader)? {
 			return Ok(Self::Vorbis(VorbisDecoder::new(reader)?));
 		}
 
-		if is_wav(reader.by_ref()) {
+		if is_wav(&mut reader)? {
 			return Ok(Self::Wav(WavDecoder::new(reader)?));
 		}
 
-		if is_mp3(reader.by_ref()) {
+		if is_mp3(&mut reader)? {
 			return Ok(Self::Mp3(Mp3Decoder::new(reader)?));
 		}
 
@@ -33,7 +33,7 @@ impl<R: Read + Seek> Decoder<R> {
 }
 
 impl<R: Read + Seek> Source for Decoder<R> {
-	fn sample_rate(&self) -> SampleRate {
+	fn sample_rate(&self) -> u32 {
 		return match self {
 			Decoder::Wav(decoder) => decoder.sample_rate(),
 			Decoder::Mp3(decoder) => decoder.sample_rate(),
