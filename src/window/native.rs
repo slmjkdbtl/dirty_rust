@@ -258,7 +258,9 @@ impl Window {
 			let buf_in = buf.clone();
 
 			// TODO: why does this still block the main thread sometime??
-			std::thread::spawn(move || {
+			std::thread::Builder::new()
+				.name(String::from("dirty_midi"))
+				.spawn(move || {
 
 				// TODO: extremely slow
 				if let Ok(midi_in) = midir::MidiInput::new("DIRTY") {
@@ -281,7 +283,7 @@ impl Window {
 					eprintln!("failed to init midi input")
 				}
 
-			});
+			}).map_err(|_| format!("failed to spawn midi thread"))?;
 
 			buf
 

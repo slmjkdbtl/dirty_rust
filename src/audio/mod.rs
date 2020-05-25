@@ -6,11 +6,15 @@
 //!  - [`Sound`](Sound), buffered audio mainly for sound effects
 //!  - [`Track`](Track), streamed audio mainly for music
 
+// TODO: loop
+// TODO: sample rate conversion
+
 use crate::Result;
 use crate::math::*;
 
+mod utils;
+
 import!(mixer);
-import!(utils);
 import!(vorbis);
 import!(wav);
 import!(mp3);
@@ -33,7 +37,27 @@ export!(web);
 #[cfg(feature = "synth")]
 pub mod synth;
 
-pub type Frame = (f32, f32);
-const SAMPLE_RATE: SampleRate = SampleRate::Hz44100;
+const SAMPLE_RATE: u32 = 44100;
 const CHANNEL_COUNT: ChannelCount = ChannelCount::Two;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Frame {
+	left: f32,
+	right: f32,
+}
+
+impl Frame {
+	pub fn new(l: f32, r: f32) -> Self {
+		return Self {
+			left: l,
+			right: r,
+		};
+	}
+	pub fn from_i16(l: i16, r: i16) -> Self {
+		return Self {
+			left: l as f32 / i16::MAX as f32,
+			right: r as f32 / i16::MAX as f32,
+		};
+	}
+}
 
