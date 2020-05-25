@@ -77,7 +77,7 @@ impl Squiggly {
 
 	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-			let off = vec2!(-(i as isize) * sz as isize * gfx.dpi() as isize, 0);
+			let off = vec2!(-(i as isize) * sz as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())
@@ -94,7 +94,6 @@ struct Game {
 	tol: usize,
 	density: f32,
 	sz: isize,
-	canvas: gfx::Canvas,
 }
 
 impl State for Game {
@@ -109,7 +108,6 @@ impl State for Game {
 			tol: 3,
 			density: 3.,
 			sz: 200,
-			canvas: gfx::Canvas::new(d.gfx, 200, 200)?,
 		})
 	}
 
@@ -172,27 +170,15 @@ impl State for Game {
 		let top_right = d.gfx.coord(gfx::Origin::TopRight);
 
 		d.gfx.draw(
-			&shapes::rect(vec2!(-self.sz, self.sz), vec2!(self.sz, -self.sz))
+			&shapes::rect(vec2!(-self.sz, self.sz) * 0.5, vec2!(self.sz, -self.sz) * 0.5)
 				.fill(rgba!(0.5, 0.5, 0.5, 1)),
 		)?;
 
 		self.buf.draw(d.gfx)?;
 
-		d.gfx.draw_on(&self.canvas, |gfx| {
-			gfx.clear();
-			self.buf.draw(gfx)?;
-			for line in &self.lines {
-				line.draw(self.t, gfx)?;
-			}
-			return Ok(());
-		})?;
-
 		for line in &self.lines {
 			line.draw(self.t, d.gfx)?;
 		}
-
-		d.gfx.draw_t(mat4!().t2(bot_left + vec2!(150)), &shapes::canvas(&self.canvas))?;
-
 
 		let mut tol = 0;
 		let mut density = 0.;
@@ -214,7 +200,7 @@ impl State for Game {
 		})?;
 		self.tol = tol;
 		self.density = density;
-// 		self.sz = sz;
+		self.sz = sz;
 		if save {
 			self.save(d.gfx, &fname)?;
 		}
