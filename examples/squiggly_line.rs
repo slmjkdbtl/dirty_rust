@@ -77,11 +77,9 @@ impl Squiggly {
 
 	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-// <<<<<<< Updated upstream
-// 			let off = vec2!(-(i as isize) * sz as isize, 0);
-// =======
-			let off = vec2!(sz / 2, 0) + vec2!(-sz * (N_FRAMES as isize) / 2, 0) + vec2!((i as isize) * sz as isize * gfx.dpi() as isize, 0);
-// >>>>>>> Stashed changes
+			let off = vec2!(sz / 2, 0) +
+					  vec2!(-sz * (N_FRAMES as isize) / 2, 0) +
+					  vec2!((i as isize) * sz as isize * gfx.dpi() as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())
