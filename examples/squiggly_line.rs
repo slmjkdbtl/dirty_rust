@@ -66,6 +66,8 @@ struct Game {
 	lines: Vec<Squiggly>,
 	buf: Polyline,
 	t: usize,
+	ui: ui::UI,
+	tol: usize,
 }
 
 impl State for Game {
@@ -76,6 +78,8 @@ impl State for Game {
 			lines: vec![],
 			buf: Polyline::new(vec![]),
 			t: 0,
+			ui: ui::UI::new(),
+			tol: 3,
 		})
 	}
 
@@ -87,24 +91,37 @@ impl State for Game {
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 		use input::Event::*;
-
+		self.ui.event(d, &e);
 		match e {
 			MousePress(_) => {
 				self.key_down = true;
 			}
 			MouseRelease(_) => {
 				self.key_down = false;
-				self.lines.push(Squiggly::new(&self.buf, 10, 3));
+				self.lines.push(Squiggly::new(&self.buf, 10, self.tol));
 				self.buf.clear();
 			}
 			MouseMove(_) => {
 				let pos = d.window.mouse_pos();
 				if self.key_down {
-					self.buf.push(pos);
+					if let Some(last) = self.buf.line.last() {
+						if pos.dist(*last) > 8. {
+							self.buf.push(pos);
+						}
+					} else {
+						self.buf.push(pos);
+					}
 				}
 			}
 			KeyPress(k) => {
 				match *k {
+					Key::Z => {
+						self.lines.pop();
+					}
+					Key::C => {
+						self.lines.clear();
+						self.buf.clear();
+					},
 					Key::Esc => d.window.quit(),
 					_ => {},
 				}
@@ -121,6 +138,17 @@ impl State for Game {
 		for line in &self.lines {
 			line.draw(self.t, d)?;
 		}
+
+		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+		let mut tol = 0;
+		self.ui.window(d, "options", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
+
+			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
+
+			Ok(())
+
+		})?;
+		self.tol = tol;
 
 		Ok(())
 
