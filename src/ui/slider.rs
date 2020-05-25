@@ -15,9 +15,9 @@ impl Slider {
 	pub fn new(p: &'static str, val: f32, min: f32, max: f32) -> Self {
 		return Self {
 			prompt: p,
-			val: val,
-			min: min,
-			max: max,
+			val,
+			min,
+			max,
 			draggin: None,
 			hovering: false,
 		};
@@ -97,7 +97,7 @@ impl Widget for Slider {
 			let delta_x = wctx.mouse_pos.x - prev_x;
 
 			self.val += (delta_x / wctx.width) * (self.max - self.min);
-			self.val = self.val.clamp(self.min, self.max);
+			self.val = num_traits::clamp(self.val, self.min, self.max);
 
 			self.draggin = Some(wctx.mouse_pos.x)
 

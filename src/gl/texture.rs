@@ -39,10 +39,10 @@ impl Texture2D {
 			let id = ctx.create_texture()?;
 
 			let tex = Self {
-				ctx: ctx,
-				id: id,
-				width: width,
-				height: height,
+				ctx,
+				id,
+				width,
+				height,
 			};
 
 			tex.bind();
@@ -254,10 +254,10 @@ impl CubemapTexture {
 			let id = ctx.create_texture()?;
 
 			let tex = Self {
-				ctx: ctx,
-				id: id,
-				width: width,
-				height: height,
+				ctx,
+				id,
+				width,
+				height,
 			};
 
 			tex.bind();

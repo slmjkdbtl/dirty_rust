@@ -16,7 +16,7 @@ impl IntoUniformValue for UniformValue {
 	}
 }
 
-pub trait UniformLayout: 'static {
+pub trait UniformLayout: Clone + PartialEq + 'static {
 	fn values(&self) -> UniformValues;
 	fn textures(&self) -> Vec<&dyn Texture>;
 }

@@ -31,29 +31,29 @@ pub fn uv_quad(cols: usize, rows: usize) -> MeshData {
 
 			verts.push(Vertex {
 				pos: vec3!(x, y + gh, 0) - vec3!(0.5, 0.5, 0),
-				color: color,
-				normal: normal,
+				color,
+				normal,
 				uv: vec2!(x, y),
 			});
 
 			verts.push(Vertex {
 				pos: vec3!(x + gw, y + gh, 0) - vec3!(0.5, 0.5, 0),
-				color: color,
-				normal: normal,
+				color,
+				normal,
 				uv: vec2!(x + gw, y),
 			});
 
 			verts.push(Vertex {
 				pos: vec3!(x + gw, y, 0) - vec3!(0.5, 0.5, 0),
-				color: color,
-				normal: normal,
+				color,
+				normal,
 				uv: vec2!(x + gw, y + gh),
 			});
 
 			verts.push(Vertex {
 				pos: vec3!(x, y, 0) - vec3!(0.5, 0.5, 0),
-				color: color,
-				normal: normal,
+				color,
+				normal,
 				uv: vec2!(x, y + gh),
 			});
 
@@ -63,7 +63,7 @@ pub fn uv_quad(cols: usize, rows: usize) -> MeshData {
 
 	return MeshData {
 		vertices: verts,
-		indices: indices,
+		indices,
 	};
 
 }
@@ -114,7 +114,7 @@ pub fn sphere(r: f32) -> MeshData {
 
 	return MeshData {
 		vertices: verts,
-		indices: indices,
+		indices,
 	};
 
 }
@@ -159,7 +159,7 @@ pub fn cylinder(r: f32, h: f32, s: usize) -> MeshData {
 
 	let circle = MeshData {
 		vertices: verts,
-		indices: indices,
+		indices,
 	};
 
 	return ops::extrude(&circle, &edges, h);
@@ -174,7 +174,7 @@ pub fn torus(r1: f32, r2: f32) -> MeshData {
 
 	return MeshData {
 		vertices: verts,
-		indices: indices,
+		indices,
 	};
 
 }
@@ -207,28 +207,28 @@ pub fn checkerboard(s: f32, c: usize, r: usize) -> MeshData {
 			verts.push(Vertex {
 				pos: pt + vec3!(0),
 				normal: vec3!(0, 1, 0),
-				color: color,
+				color,
 				uv: vec2!(0, 0),
 			});
 
 			verts.push(Vertex {
 				pos: pt + vec3!(s, 0, 0),
 				normal: vec3!(0, 1, 0),
-				color: color,
+				color,
 				uv: vec2!(0, 0),
 			});
 
 			verts.push(Vertex {
 				pos: pt + vec3!(s, 0, s),
 				normal: vec3!(0, 1, 0),
-				color: color,
+				color,
 				uv: vec2!(0, 0),
 			});
 
 			verts.push(Vertex {
 				pos: pt + vec3!(0, 0, s),
 				normal: vec3!(0, 1, 0),
-				color: color,
+				color,
 				uv: vec2!(0, 0),
 			});
 
@@ -253,7 +253,7 @@ pub fn checkerboard(s: f32, c: usize, r: usize) -> MeshData {
 
 	return MeshData {
 		vertices: verts,
-		indices: indices,
+		indices,
 	};
 
 }

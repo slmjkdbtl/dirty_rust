@@ -15,8 +15,8 @@ pub struct Line {
 impl Line {
 	pub fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 			width: 1.0,
 			color: rgba!(1),
 			cap: LineCap::Butt,
@@ -41,8 +41,8 @@ impl Line {
 	}
 	pub fn dashed(mut self, len: f32, interval: f32) -> Self {
 		self.dash = Some(LineDash {
-			len: len,
-			interval: interval,
+			len,
+			interval,
 		});
 		return self;
 	}
@@ -76,8 +76,8 @@ impl Drawable for Line {
 				}
 
 				ctx.draw(&Line {
-					p1: p1,
-					p2: p2,
+					p1,
+					p2,
 					width: self.width,
 					color: self.color,
 					cap: self.cap,

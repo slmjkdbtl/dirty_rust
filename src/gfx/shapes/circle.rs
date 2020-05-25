@@ -15,8 +15,8 @@ pub struct Circle {
 impl Circle {
 	pub fn new(center: Vec2, radius: f32) -> Self {
 		return Self {
-			center: center,
-			radius: radius,
+			center,
+			radius,
 			segments: None,
 			stroke: None,
 			fill: Some(rgba!(1)),
@@ -98,9 +98,9 @@ pub(super) fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u
 	for i in 0..len {
 
 		// TODO: subtraction overflow
-		let prev = verts.get(i - 1).map(|p| *p).unwrap_or(verts[len - 1]);
+		let prev = verts.get(i - 1).copied().unwrap_or(verts[len - 1]);
 		let p = verts[i];
-		let next = verts.get(i + 1).map(|p| *p).unwrap_or(verts[0]);
+		let next = verts.get(i + 1).copied().unwrap_or(verts[0]);
 		let angle = normalize_angle(p.angle(prev) - p.angle(next));
 		let dis = radius / f32::tan(angle / 2.0);
 
@@ -168,7 +168,7 @@ impl Drawable for Circle {
 		}
 
 		let poly = Polygon {
-			pts: pts,
+			pts,
 			fill: self.fill,
 			stroke: self.stroke.clone(),
 			radius: None,

@@ -14,7 +14,7 @@ impl Texture {
 
 	pub(crate) fn from_gl_tex(gl_tex: gl::Texture2D) -> Self {
 		return Self {
-			gl_tex: gl_tex,
+			gl_tex,
 		};
 	}
 

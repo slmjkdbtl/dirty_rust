@@ -12,7 +12,7 @@ pub struct Button {
 impl Button {
 	pub fn new(text: &'static str) -> Self {
 		return Self {
-			text: text,
+			text,
 			clicked: false,
 			pressed: false,
 			hovering: false,
@@ -57,7 +57,7 @@ impl Widget for Button {
 
 		let theme = &wctx.theme;
 
-		let ptext = shapes::text(&format!("{}", self.text))
+		let ptext = shapes::text(&self.text.to_string())
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)

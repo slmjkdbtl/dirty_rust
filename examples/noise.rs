@@ -47,14 +47,14 @@ impl Game {
 		let seed = self.seed as u32;
 
 		let noise: Box<dyn NoiseFn<[f64; 2]>> = match self.noise_type {
-			NoiseType::Perlin => box Perlin::new().set_seed(seed),
-			NoiseType::OpenSimplex => box OpenSimplex::new().set_seed(seed),
-			NoiseType::SuperSimplex => box SuperSimplex::new().set_seed(seed),
-			NoiseType::Fbm => box Fbm::new().set_seed(seed),
-			NoiseType::Billow => box Billow::new().set_seed(seed),
-			NoiseType::Worley => box Worley::new().enable_range(true).set_seed(seed),
-			NoiseType::RidgedMulti => box RidgedMulti::new().set_seed(seed),
-			NoiseType::Turbulence => box Turbulence::new(Fbm::new()).set_seed(seed),
+			NoiseType::Perlin => Box::new(Perlin::new().set_seed(seed)),
+			NoiseType::OpenSimplex => Box::new(OpenSimplex::new().set_seed(seed)),
+			NoiseType::SuperSimplex => Box::new(SuperSimplex::new().set_seed(seed)),
+			NoiseType::Fbm => Box::new(Fbm::new().set_seed(seed)),
+			NoiseType::Billow => Box::new(Billow::new().set_seed(seed)),
+			NoiseType::Worley => Box::new(Worley::new().enable_range(true).set_seed(seed)),
+			NoiseType::RidgedMulti => Box::new(RidgedMulti::new().set_seed(seed)),
+			NoiseType::Turbulence => Box::new(Turbulence::new(Fbm::new()).set_seed(seed)),
 		};
 
 		let w = ctx.width() as i32;

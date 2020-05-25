@@ -3,18 +3,15 @@
 use super::*;
 use crate::Result;
 
-pub trait BatchedVertex = VertexLayout + Clone;
-pub trait BatchedUniform = UniformLayout + Clone + PartialEq;
-
 // TODO: take blending and stuff into account
 #[derive(Clone, PartialEq)]
-struct RenderState<V: BatchedVertex, U: BatchedUniform> {
+struct RenderState<V: VertexLayout, U: UniformLayout> {
 	pipeline: Pipeline<V, U>,
 	prim: Primitive,
 	uniform: U,
 }
 
-pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
+pub struct BatchedMesh<V: VertexLayout, U: UniformLayout> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	vqueue: Vec<V>,
@@ -23,7 +20,7 @@ pub struct BatchedMesh<V: BatchedVertex, U: BatchedUniform> {
 	draw_count: usize,
 }
 
-impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
+impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
 
 	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
@@ -32,8 +29,8 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
 		return Ok(Self {
-			vbuf: vbuf,
-			ibuf: ibuf,
+			vbuf,
+			ibuf,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
 			cur_state: None,
@@ -71,7 +68,7 @@ impl<V: BatchedVertex, U: BatchedUniform> BatchedMesh<V, U> {
 			self.cur_state = Some(RenderState {
 				pipeline: pipeline.clone(),
 				uniform: uniform.clone(),
-				prim: prim,
+				prim,
 			});
 		}
 

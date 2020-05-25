@@ -19,7 +19,7 @@ pub struct Points<'a> {
 impl<'a> Points<'a> {
 	pub fn from(pts: &'a[Vec2]) -> Self {
 		return Self {
-			pts: pts,
+			pts,
 			size: 1.0,
 			color: rgba!(1),
 			mode: PointMode::Rect,

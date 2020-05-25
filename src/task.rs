@@ -8,9 +8,6 @@ use std::thread;
 
 use crate::Result;
 
-pub trait TaskItem = Send + 'static;
-pub trait TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TaskPhase {
 	StandBy,
@@ -18,7 +15,7 @@ pub enum TaskPhase {
 	Done,
 }
 
-pub struct TaskQueue<T: TaskItem> {
+pub struct TaskQueue<T: Send + 'static> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
 	max: usize,
@@ -26,19 +23,19 @@ pub struct TaskQueue<T: TaskItem> {
 	total: usize,
 }
 
-impl<T: TaskItem> TaskQueue<T> {
+impl<T: Send + 'static> TaskQueue<T> {
 
 	pub fn new(max: usize) -> Self {
 		return Self {
 			queue: VecDeque::new(),
 			active: vec![],
-			max: max,
+			max,
 			completed: 0,
 			total: 0,
 		};
 	}
 
-	pub fn exec(&mut self, f: impl FnOnce() -> T + TaskItem) -> Result<()> {
+	pub fn exec(&mut self, f: impl FnOnce() -> T + Send + 'static) -> Result<()> {
 
 		self.queue.push_back(Task::new(f));
 		self.adjust()?;
@@ -102,23 +99,23 @@ impl<T: TaskItem> TaskQueue<T> {
 
 }
 
-pub struct Task<T: TaskItem> {
+pub struct Task<T: Send + 'static> {
 	rx: Option<mpsc::Receiver<T>>,
-	action: Option<Box<dyn TaskAction<T>>>,
+	action: Option<Box<dyn FnOnce() -> T + Send + 'static>>,
 	phase: TaskPhase,
 }
 
-impl<T: TaskItem> Task<T> {
+impl<T: Send + 'static> Task<T> {
 
-	pub fn new(f: impl FnOnce() -> T + TaskItem) -> Self {
+	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Self {
 		return Self {
-			action: Some(box f),
+			action: Some(Box::new(f)),
 			rx: None,
 			phase: TaskPhase::StandBy,
 		};
 	}
 
-	pub fn exec(f: impl FnOnce() -> T + TaskItem) -> Result<Self> {
+	pub fn exec(f: impl FnOnce() -> T + Send + 'static) -> Result<Self> {
 
 		let mut task = Self::new(f);
 
@@ -139,7 +136,7 @@ impl<T: TaskItem> Task<T> {
 				.name(String::from("dirty_task"))
 				.spawn(move || {
 				tx.send(action()).expect("thread failure");
-			}).map_err(|_| format!("failed to spawn task thread"))?;
+			}).map_err(|_| "failed to spawn task thread".to_string())?;
 
 			self.rx = Some(rx);
 			self.phase = TaskPhase::Working;

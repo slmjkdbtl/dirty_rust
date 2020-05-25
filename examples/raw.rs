@@ -9,7 +9,7 @@ struct Game;
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
-		return Ok(Self);
+		Ok(Self)
 	}
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
@@ -26,7 +26,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		return Ok(());
+		Ok(())
 
 	}
 
@@ -55,7 +55,7 @@ impl State for Game {
 			},
 		], &[0, 1, 2]))?;
 
-		return Ok(());
+		Ok(())
 
 	}
 

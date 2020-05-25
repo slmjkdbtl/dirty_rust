@@ -15,8 +15,8 @@ impl Ray3 {
 
 	pub const fn new(origin: Vec3, dir: Vec3) -> Self {
 		return Self {
-			origin: origin,
-			dir: dir,
+			origin,
+			dir,
 		};
 	}
 
@@ -36,8 +36,8 @@ impl Ray2 {
 
 	pub const fn new(origin: Vec2, dir: Vec2) -> Self {
 		return Self {
-			origin: origin,
-			dir: dir,
+			origin,
+			dir,
 		};
 	}
 
@@ -56,8 +56,8 @@ pub struct Line2 {
 impl Line2 {
 	pub const fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 		};
 	}
 }
@@ -71,8 +71,8 @@ pub struct Line3 {
 impl Line3 {
 	pub const fn new(p1: Vec3, p2: Vec3) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 		};
 	}
 }
@@ -87,8 +87,8 @@ impl Rect {
 
 	pub const fn new(min: Vec2, max: Vec2) -> Self {
 		return Self {
-			min: min,
-			max: max,
+			min,
+			max,
 		};
 	}
 
@@ -116,8 +116,8 @@ impl BBox {
 
 	pub const fn new(min: Vec3, max: Vec3) -> Self {
 		return Self {
-			min: min,
-			max: max,
+			min,
+			max,
 		};
 	}
 
@@ -235,8 +235,8 @@ impl Plane {
 
 	pub const fn new(normal: Vec3, dist: f32) -> Self {
 		return Self {
-			normal: normal,
-			dist: dist,
+			normal,
+			dist,
 		};
 	}
 	pub fn from_pts(p0: Vec3, p1: Vec3, p2: Vec3) -> Self {
@@ -260,8 +260,8 @@ impl Circle {
 
 	pub const fn new(center: Vec2, radius: f32) -> Self {
 		return Self {
-			center: center,
-			radius: radius,
+			center,
+			radius,
 		};
 	}
 
@@ -286,8 +286,8 @@ impl Sphere {
 
 	pub const fn new(center: Vec3, radius: f32) -> Self {
 		return Self {
-			center: center,
-			radius: radius,
+			center,
+			radius,
 		};
 	}
 

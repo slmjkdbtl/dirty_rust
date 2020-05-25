@@ -24,11 +24,11 @@ impl Audio {
 
 		let device = host
 			.default_output_device()
-			.ok_or(format!("failed to get default output device"))?;
+			.ok_or("failed to get default output device".to_string())?;
 
 		let format = device
 			.default_output_format()
-			.map_err(|_| format!("failed to get default audio output format"))?;
+			.map_err(|_| "failed to get default audio output format".to_string())?;
 
 		let format = cpal::Format {
 			channels: CHANNEL_COUNT.to_cpal(),
@@ -39,11 +39,11 @@ impl Audio {
 		let event_loop = host.event_loop();
 		let stream_id = event_loop
 			.build_output_stream(&device, &format)
-			.map_err(|_| format!("failed to build audio output stream"))?;
+			.map_err(|_| "failed to build audio output stream".to_string())?;
 
 		event_loop
-			.play_stream(stream_id.clone())
-			.map_err(|_| format!("failed to start audio stream"))?;
+			.play_stream(stream_id)
+			.map_err(|_| "failed to start audio stream".to_string())?;
 
 		thread::Builder::new()
 			.name(String::from("dirty_audio"))
@@ -100,10 +100,10 @@ impl Audio {
 
 			});
 
-		}).map_err(|_| format!("failed to spawn audio thread"))?;
+		}).map_err(|_| "failed to spawn audio thread".to_string())?;
 
 		return Ok(Self {
-			mixer: mixer,
+			mixer,
 		});
 
 	}

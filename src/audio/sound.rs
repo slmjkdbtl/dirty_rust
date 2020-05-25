@@ -22,7 +22,7 @@ impl Sound {
 		let buffer = Buffered::new(Decoder::new(Cursor::new(data.to_owned()))?);
 
 		return Ok(Self {
-			buffer: buffer,
+			buffer,
 			mixer: Arc::clone(ctx.mixer()),
 		});
 

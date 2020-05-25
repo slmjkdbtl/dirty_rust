@@ -260,9 +260,9 @@ impl Window {
 
 				let web_events_c = web_events.clone();
 
-				let handler = Closure::wrap(box (move |e: $ty| {
+				let handler = Closure::wrap(Box::new((move |e: $ty| {
 					web_events_c.borrow_mut().push(WebEvent::$t(e));
-				}) as Box<dyn FnMut(_)>);
+				})) as Box<dyn FnMut(_)>);
 
 				self.$root
 					.add_event_listener_with_callback($name, handler.as_ref().unchecked_ref())
@@ -290,7 +290,7 @@ impl Window {
 
 		render_loop.run(move |running: &mut bool| {
 
-			let res: Result<()> = try {
+			let res = || -> Result<()> {
 
 				let mut events = vec![];
 
@@ -355,8 +355,8 @@ impl Window {
 				}
 
 				handle(&mut self, WindowEvent::Frame)?;
-
-			};
+				Ok(())
+			}();
 
 			if let Err(err) = res {
 				elog!("{}", err);
