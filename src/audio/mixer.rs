@@ -2,49 +2,93 @@
 
 use std::sync::Mutex;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::collections::HashMap;
 
 use super::*;
 
-// TODO: deal with sample rate
+pub(super) type SourceID = usize;
+
+pub(super) struct Control {
+	paused: AtomicBool,
+	remove: AtomicBool,
+}
+
+impl Control {
+	pub fn remove(&self) {
+		self.remove.store(true, Ordering::SeqCst);
+	}
+	pub fn removed(&self) -> bool {
+		return self.remove.load(Ordering::SeqCst);
+	}
+	pub fn set_paused(&self, b: bool) {
+		self.paused.store(b, Ordering::SeqCst);
+	}
+	pub fn paused(&self) -> bool {
+		return self.paused.load(Ordering::SeqCst);
+	}
+}
+
+impl Default for Control {
+	fn default() -> Self {
+		return Self {
+			paused: AtomicBool::new(false),
+			remove: AtomicBool::new(false),
+		};
+	}
+}
 
 struct SourceCtx {
 	src: Arc<Mutex<dyn Source + Send>>,
-	paused: Arc<Mutex<bool>>,
+	control: Arc<Control>,
 	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	done: bool,
 }
 
 pub(super) struct Mixer {
-	sources: Vec<SourceCtx>,
+	sources: HashMap<SourceID, SourceCtx>,
+	last_id: SourceID,
 }
 
 impl Mixer {
+
 	pub fn new() -> Self {
 		return Self {
-			sources: vec![],
+			sources: hmap![],
+			last_id: 0,
 		};
 	}
-	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) {
-		self.add_ex(src, vec![]);
-	}
-	pub fn add_ex(&mut self, src: Arc<Mutex<dyn Source + Send>>, effects: Vec<Arc<Mutex<dyn Effect + Send>>>) {
-		self.sources.push(SourceCtx {
+
+	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) -> SourceID {
+
+		let id = self.last_id;
+
+		self.sources.insert(id, SourceCtx {
 			src: src,
-			paused: Arc::new(Mutex::new(false)),
-			effects: effects,
+			control: Arc::new(Control::default()),
+			effects: vec![],
 			done: false,
 		});
+
+		self.last_id += 1;
+
+		return id;
+
 	}
-	pub fn add_ex_paused(&mut self, src: Arc<Mutex<dyn Source + Send>>, effects: Vec<Arc<Mutex<dyn Effect + Send>>>) -> Arc<Mutex<bool>> {
-		let paused = Arc::new(Mutex::new(true));
-		self.sources.push(SourceCtx {
-			src: src,
-			paused: Arc::clone(&paused),
-			effects: effects,
-			done: false,
+
+	pub fn get_control(&self, id: &SourceID) -> Option<Arc<Control>> {
+		return self.sources.get(&id).map(|ctx| {
+			return ctx.control.clone();
 		});
-		return paused;
 	}
+
+	pub fn add_effect(&mut self, id: &SourceID, e: Arc<Mutex<dyn Effect + Send>>) {
+		if let Some(ctx) = self.sources.get_mut(&id) {
+			ctx.effects.push(e);
+		}
+	}
+
 }
 
 impl Iterator for Mixer {
@@ -53,18 +97,16 @@ impl Iterator for Mixer {
 
 	fn next(&mut self) -> Option<Self::Item> {
 
-		let sample = self.sources.iter_mut().fold((0.0, 0.0), |n, ctx| {
-
-			let (left, right) = n;
+		let sample = self.sources.iter_mut().fold(Frame::new(0.0, 0.0), |frame_acc, (id, ctx)| {
 
 			let mut src = match ctx.src.lock() {
 				Ok(src) => src,
-				Err(_) => return n,
+				Err(_) => return frame_acc,
 			};
 
-			if ctx.paused.lock().map(|b| *b).unwrap_or(false) {
+			if ctx.control.paused() {
 
-				return n;
+				return frame_acc;
 
 			} else {
 
@@ -76,16 +118,16 @@ impl Iterator for Mixer {
 						}
 					}
 
-					return (
-						left + frame.0,
-						right + frame.1,
+					return Frame::new(
+						frame_acc.left + frame.left,
+						frame_acc.right + frame.right,
 					);
 
 				} else {
 
 					ctx.done = true;
 
-					return n;
+					return frame_acc;
 
 				}
 
@@ -93,8 +135,8 @@ impl Iterator for Mixer {
 
 		});
 
-		self.sources.retain(|ctx| {
-			return !ctx.done;
+		self.sources.retain(|_, ctx| {
+			return !ctx.done || ctx.control.removed();
 		});
 
 		return Some(sample);

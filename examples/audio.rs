@@ -32,6 +32,7 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
+					Key::R => self.track.reset()?,
 					Key::Space => {
 						if self.track.paused() {
 							self.track.play();
@@ -42,6 +43,7 @@ impl State for Game {
 					_ => self.sound
 						.builder()
 						.pan(math::rand(-1.0, 1.0))
+						.volume(0.2)
 						.play()
 						,
 				}

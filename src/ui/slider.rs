@@ -32,7 +32,6 @@ impl Widget for Slider {
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
 
 		use input::Event::*;
-		// use input::Key;
 		use input::Mouse;
 
 		match e {
@@ -59,7 +58,6 @@ impl Widget for Slider {
 
 	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
 
-		// use input::Mouse;
 		use geom::*;
 
 		let mut y = 0.0;

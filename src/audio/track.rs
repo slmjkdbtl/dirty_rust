@@ -9,8 +9,9 @@ use super::*;
 /// Streamed Sound (mainly for music)
 #[derive(Clone)]
 pub struct Track {
-	src: Arc<Mutex<dyn Source + Send>>,
-	paused: Arc<Mutex<bool>>,
+	id: SourceID,
+	src: Arc<Mutex<Decoder<Cursor<Vec<u8>>>>>,
+	control: Arc<Control>,
 	pan: Arc<Mutex<Pan>>,
 	volume: Arc<Mutex<Volume>>,
 }
@@ -26,18 +27,24 @@ impl Track {
 		let volume = Arc::new(Mutex::new(Volume(1.0)));
 		let pan = Arc::new(Mutex::new(Pan(0.0)));
 
-		let paused = ctx
-			.mixer()
+		let mut mixer = ctx.mixer()
 			.lock()
-			.map_err(|_| format!("failed to get mixer"))?
-			.add_ex_paused(src.clone(), vec![
-				volume.clone(),
-				pan.clone(),
-			]);
+			.map_err(|_| format!("failed to get mixer"))?;
+
+		let id = mixer.add(src.clone());
+
+		let control = mixer
+			.get_control(&id)
+			.ok_or(format!("failed to get mixer"))?;
+
+		mixer.add_effect(&id, volume.clone());
+		mixer.add_effect(&id, pan.clone());
+		control.set_paused(true);
 
 		return Ok(Self {
 			src: src,
-			paused: paused,
+			id: id,
+			control: control,
 			volume: volume,
 			pan: pan,
 		});
@@ -45,17 +52,20 @@ impl Track {
 	}
 
 	/// play / resume track
-	pub fn play(&self) {
-		if let Ok(mut paused) = self.paused.lock() {
-			*paused = false;
-		}
+	pub fn play(&mut self) {
+		self.control.set_paused(false);
 	}
 
 	/// pause track
-	pub fn pause(&self) {
-		if let Ok(mut paused) = self.paused.lock() {
-			*paused = true;
+	pub fn pause(&mut self) {
+		self.control.set_paused(true);
+	}
+
+	pub fn reset(&self) -> Result<()> {
+		if let Ok(mut src) = self.src.lock() {
+			src.reset()?;
 		}
+		return Ok(());
 	}
 
 	/// set pan
@@ -74,11 +84,7 @@ impl Track {
 
 	/// check if is paused
 	pub fn paused(&self) -> bool {
-		return self.paused
-			.lock()
-			.map(|b| *b)
-			.unwrap_or(true)
-			;
+		return self.control.paused();
 	}
 
 }

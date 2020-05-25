@@ -32,7 +32,7 @@ impl Audio {
 
 		let format = cpal::Format {
 			channels: CHANNEL_COUNT.to_cpal(),
-			sample_rate: SAMPLE_RATE.to_cpal(),
+			sample_rate: cpal::SampleRate(SAMPLE_RATE),
 			data_type: cpal::SampleFormat::F32,
 		};
 
@@ -45,7 +45,9 @@ impl Audio {
 			.play_stream(stream_id.clone())
 			.map_err(|_| format!("failed to start audio stream"))?;
 
-		thread::spawn(move || {
+		thread::Builder::new()
+			.name(String::from("dirty_audio"))
+			.spawn(move || {
 
 			event_loop.run(move |id, data| {
 
@@ -62,9 +64,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some((left, right)) = mixer.next() {
-									d[0] = utils::f32_to_u16(left);
-									d[1] = utils::f32_to_u16(right);
+								if let Some(frame) = mixer.next() {
+									d[0] = utils::f32_to_u16(frame.left);
+									d[1] = utils::f32_to_u16(frame.right);
 								}
 							}
 						}
@@ -73,9 +75,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some((left, right)) = mixer.next() {
-									d[0] = utils::f32_to_i16(left);
-									d[1] = utils::f32_to_i16(right);
+								if let Some(frame) = mixer.next() {
+									d[0] = utils::f32_to_i16(frame.left);
+									d[1] = utils::f32_to_i16(frame.right);
 								}
 							}
 						}
@@ -84,9 +86,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some((left, right)) = mixer.next() {
-									d[0] = left;
-									d[1] = right;
+								if let Some(frame) = mixer.next() {
+									d[0] = frame.left;
+									d[1] = frame.right;
 								}
 							}
 						}
@@ -98,7 +100,7 @@ impl Audio {
 
 			});
 
-		});
+		}).map_err(|_| format!("failed to spawn audio thread"))?;
 
 		return Ok(Self {
 			mixer: mixer,
@@ -110,7 +112,7 @@ impl Audio {
 		return &self.mixer;
 	}
 
-	pub fn sample_rate(&self) -> SampleRate {
+	pub fn sample_rate(&self) -> u32 {
 		return SAMPLE_RATE;
 	}
 

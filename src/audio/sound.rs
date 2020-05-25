@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::time::Duration;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::io::Cursor;
@@ -20,12 +21,10 @@ impl Sound {
 
 		let buffer = Buffered::new(Decoder::new(Cursor::new(data.to_owned()))?);
 
-		let t = Self {
+		return Ok(Self {
 			buffer: buffer,
 			mixer: Arc::clone(ctx.mixer()),
-		};
-
-		return Ok(t);
+		});
 
 	}
 
@@ -45,6 +44,11 @@ impl Sound {
 		};
 	}
 
+	/// get duration
+	pub fn duration(&self) -> Duration {
+		return self.buffer.duration();
+	}
+
 }
 
 /// A Builder for Playing [`Sound`](Sound) with Configs
@@ -60,14 +64,17 @@ impl<'a> SoundBuilder<'a> {
 		return self;
 	}
 	pub fn pan(self, p: f32) -> Self {
-		self.add(Pan(p))
+		return self.add(Pan(p));
 	}
 	pub fn volume(self, v: f32) -> Self {
-		self.add(Volume(v))
+		return self.add(Volume(v));
 	}
 	pub fn play(self) {
 		if let Ok(mut mixer) = self.mixer.lock() {
-			mixer.add_ex(self.buffer, self.effects);
+			let id = mixer.add(self.buffer);
+			for e in self.effects {
+				mixer.add_effect(&id, e);
+			}
 		}
 	}
 }

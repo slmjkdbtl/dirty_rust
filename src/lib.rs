@@ -71,6 +71,7 @@ pub mod math;
 pub mod codec;
 pub mod ui;
 pub mod kit;
+pub mod task;
 
 #[cfg(feature = "midi")]
 pub mod midi;
