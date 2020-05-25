@@ -77,7 +77,11 @@ impl Squiggly {
 
 	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-			let off = vec2!(-(i as isize) * sz as isize, 0);
+// <<<<<<< Updated upstream
+// 			let off = vec2!(-(i as isize) * sz as isize, 0);
+// =======
+			let off = vec2!(sz / 2, 0) + vec2!(-sz * (N_FRAMES as isize) / 2, 0) + vec2!((i as isize) * sz as isize * gfx.dpi() as isize, 0);
+// >>>>>>> Stashed changes
 			frame.render(gfx, off)?;
 		}
 		Ok(())
@@ -190,7 +194,7 @@ impl State for Game {
 
 			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
 			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
-			sz = p.slider(ctx, "sz", 300., 10., 500.)? as isize;
+			sz = p.slider(ctx, "sz", 200., 10., 500.)? as isize;
 			fname = p.input(ctx, "filename")?;
 			p.text(ctx, ".png")?;
 			save = p.button(ctx, "save")?;
@@ -242,7 +246,7 @@ impl Game {
 		})?;
 
 		let img = fbuf.capture()?;
-// 		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
+		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
 
 		img.save(format!("{}.png", fname))?;
 
