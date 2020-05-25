@@ -24,6 +24,7 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
+					Key::Key1 => self.canvas1.capture()?.save("1.png")?,
 					_ => {},
 				}
 			},
@@ -34,33 +35,19 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
-		use gfx::Vertex;
-
-		d.gfx.draw(&shapes::raw(&[
-			Vertex {
-				pos: vec3!(0, 72, 0),
-				color: rgba!(1, 0, 0, 1),
-				normal: vec3!(0, 0, 1),
-				uv: vec2!(0),
-			},
-			Vertex {
-				pos: vec3!(-96, -72, 0),
-				color: rgba!(0, 1, 0, 1),
-				normal: vec3!(0, 0, 1),
-				uv: vec2!(0),
-			},
-			Vertex {
-				pos: vec3!(96, -72, 0),
-				color: rgba!(0, 0, 1, 1),
-				normal: vec3!(0, 0, 1),
-				uv: vec2!(0),
-			},
-		], &[0, 1, 2]))?;
+		d.gfx.draw_on(&self.canvas1, |gfx| {
+			gfx.draw(&shapes::rect(vec2!(0), vec2!(50, -50)))?;
+			return Ok(());
+		})?;
 
 		return Ok(());
+	}
 
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+		d.gfx.draw(&shapes::canvas(&self.canvas1))?;
+		return Ok(());
 	}
 
 }

@@ -30,7 +30,7 @@ impl Select {
 
 impl Widget for Select {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
 
 		use input::Event::*;
 		use input::Mouse;
@@ -46,6 +46,7 @@ impl Widget for Select {
 							State::Idle(b) => {
 								if b {
 									self.state = State::Expanded(None);
+									return true;
 								}
 							},
 							State::Expanded(b) => {
@@ -53,6 +54,7 @@ impl Widget for Select {
 								if let Some(i) = b {
 									self.selected = i;
 								}
+								return true;
 							},
 						}
 
@@ -62,6 +64,8 @@ impl Widget for Select {
 			},
 			_ => {},
 		}
+
+		return false;
 
 	}
 

@@ -29,16 +29,20 @@ impl Slider {
 
 impl Widget for Slider {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
 
 		use input::Event::*;
 		use input::Mouse;
 
+		// TODO: use MouseMove to deal with drag
 		match e {
 
 			MousePress(m) => {
 				match *m {
-					Mouse::Left if self.hovering => self.draggin = Some(d.window.mouse_pos().x),
+					Mouse::Left if self.hovering => {
+						self.draggin = Some(d.window.mouse_pos().x);
+						return true;
+					},
 					_ => {},
 				}
 			},
@@ -53,6 +57,8 @@ impl Widget for Slider {
 			_ => {},
 
 		}
+
+		return false;
 
 	}
 
