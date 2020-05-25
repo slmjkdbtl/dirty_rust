@@ -121,7 +121,9 @@ impl State for Game {
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 		use input::Event::*;
-		self.ui.event(d, &e);
+		if self.ui.event(d, &e) {
+			return Ok(());
+		}
 		match e {
 			MousePress(_) => {
 				self.key_down = true;

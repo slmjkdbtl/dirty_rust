@@ -23,7 +23,7 @@ impl CheckBox {
 
 impl Widget for CheckBox {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
 
 		use input::Event::*;
 		use input::Mouse;
@@ -31,12 +31,17 @@ impl Widget for CheckBox {
 		match e {
 			MousePress(m) => {
 				match *m {
-					Mouse::Left if self.hovering => self.checked = !self.checked,
+					Mouse::Left if self.hovering => {
+						self.checked = !self.checked;
+						return true;
+					}
 					_ => {},
 				}
 			},
 			_ => {},
 		}
+
+		return false;
 
 	}
 

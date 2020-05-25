@@ -26,18 +26,22 @@ impl Input {
 
 impl Widget for Input {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
 
 		use input::Event::*;
 		use input::Key;
 		use input::Mouse;
 
 		let kmods = d.window.key_mods();
+		let mut has_event = false;
 
 		match e {
 			MousePress(m) => {
 				match *m {
-					Mouse::Left => self.focused = self.hovering,
+					Mouse::Left => {
+						self.focused = self.hovering;
+						has_event = true;
+					}
 					_ => {},
 				}
 			},
@@ -45,16 +49,28 @@ impl Widget for Input {
 		}
 
 		if !self.focused {
-			return;
+			return has_event;
 		}
 
 		match e {
 			KeyPressRepeat(k) => {
 				match *k {
-					Key::Left => self.buf.move_left(),
-					Key::Right => self.buf.move_right(),
-					Key::Backspace if kmods.alt => self.buf.del_word(),
-					Key::Backspace => self.buf.del(),
+					Key::Left => {
+						self.buf.move_left();
+						has_event = true;
+					},
+					Key::Right => {
+						self.buf.move_right();
+						has_event = true;
+					},
+					Key::Backspace if kmods.alt => {
+						self.buf.del_word();
+						has_event = true;
+					},
+					Key::Backspace => {
+						self.buf.del();
+						has_event = true;
+					},
 					_ => {},
 				}
 			},
@@ -63,6 +79,8 @@ impl Widget for Input {
 			},
 			_ => {},
 		}
+
+		return has_event;
 
 	}
 
