@@ -17,7 +17,7 @@ impl State for Game {
 		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.ogg"))?;
 		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.ogg"))?;
 
-		Ok(Self {
+		return Ok(Self {
 			sound,
 			track,
 		})
@@ -51,7 +51,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -85,7 +85,7 @@ impl State for Game {
 			d.gfx.draw(&shapes::text("playing").size(16.0))?;
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 

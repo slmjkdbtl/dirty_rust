@@ -43,7 +43,7 @@
 #![allow(unused_parens)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
-#![allow(clippy::needless_return)]
+#![deny(clippy::implicit_return)]
 
 #[macro_use]
 pub mod utils;
@@ -76,8 +76,6 @@ pub mod task;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-#[cfg(feature = "http")]
-pub mod http;
 #[cfg(feature = "ase")]
 pub mod ase;
 

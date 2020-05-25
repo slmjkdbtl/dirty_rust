@@ -13,10 +13,10 @@ struct Game {
 impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
-		Ok(Self {
+		return Ok(Self {
 			tex: gfx::Texture::from_bytes(d.gfx, include_bytes!("res/bunny.png"))?,
 			count: 10000,
-		})
+		});
 	}
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
@@ -34,7 +34,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -42,7 +42,7 @@ impl State for Game {
 
 		d.window.set_title(&format!("FPS: {} DCS: {} OBJS: {}", d.app.fps(), d.gfx.draw_calls(), self.count));
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -83,7 +83,7 @@ impl State for Game {
 			&shapes::text(&format!("{} bunnies", self.count)),
 		)?;
 
-		Ok(())
+		return Ok(());
 
 	}
 

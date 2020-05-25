@@ -113,7 +113,7 @@ impl State for Viewer {
 						let orig_scale = 480.0 / size;
 
 						self.scale -= s.y * (1.0 / size);
-						self.scale = num_traits::clamp(self.scale, orig_scale * 0.1, orig_scale * 3.2);
+						self.scale = self.scale.max(orig_scale * 0.1).min(orig_scale * 3.2);
 
 					}
 

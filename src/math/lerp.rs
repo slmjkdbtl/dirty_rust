@@ -20,12 +20,12 @@ impl<T> Lerpable for T
 pub trait Lerping: Lerpable {
 
 	fn lerp(self, to: Self, amount: f32) -> Self {
-		return self + (to - self) * num_traits::clamp(amount, 0.0, 1.0);
+		return self + (to - self) * amount.max(0.0).min(1.0);
 	}
 
 	fn smooth(self, to: Self, amount: f32) -> Self {
 
-		let t = num_traits::clamp(amount, 0.0, 1.0);
+		let t = amount.max(0.0).min(1.0);
 		let m = t * t * (3.0 - 2.0 * t);
 
 		return self + (to - self) * m;

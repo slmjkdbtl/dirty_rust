@@ -13,9 +13,9 @@ struct Game {
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
-		Ok(Self {
+		return Ok(Self {
 			events: VecDeque::with_capacity(24),
-		})
+		});
 	}
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
@@ -38,7 +38,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -66,7 +66,7 @@ impl State for Game {
 
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -75,7 +75,7 @@ impl State for Game {
 fn main() {
 	if let Err(err) = launcher()
 		.run::<Game>() {
-		println!("{}", err);
+		elog!("{}", err);
 	}
 }
 

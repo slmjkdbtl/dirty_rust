@@ -112,7 +112,7 @@ impl State for Game {
 					rx += delta.x * self.eye_speed * 0.0001;
 					ry += delta.y * self.eye_speed * 0.0001;
 
-					ry = num_traits::(ry, -dead, dead);
+					ry = ry.max(-dead).min(dead);
 
 					self.cam.set_angle(rx, ry);
 
