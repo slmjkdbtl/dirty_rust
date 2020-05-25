@@ -11,7 +11,7 @@ pub struct BasicSynth {
 	last_time: f32,
 	buf: VecDeque<f32>,
 	clock: f32,
-	sample_rate: SampleRate,
+	sample_rate: u32,
 }
 
 impl BasicSynth {
@@ -62,7 +62,11 @@ impl BasicSynth {
 
 }
 
-impl Source for BasicSynth {}
+impl Source for BasicSynth {
+	fn sample_rate(&self) -> u32 {
+		return self.sample_rate;
+	}
+}
 
 impl Iterator for BasicSynth {
 
