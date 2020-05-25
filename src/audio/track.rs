@@ -87,5 +87,10 @@ impl Track {
 		return self.control.paused();
 	}
 
+	/// remove audio from mixer
+	pub fn detach(&self) {
+		return self.control.detach();
+	}
+
 }
 
