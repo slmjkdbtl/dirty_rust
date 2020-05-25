@@ -6,13 +6,15 @@ use input::Key;
 
 struct Game {
 	canvas1: gfx::Canvas,
+	model: gfx::Model,
 }
 
 impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
-			canvas1: gfx::Canvas::new(d.gfx, 100, 100)?,
+			canvas1: gfx::Canvas::new(d.gfx, 120, 160)?,
+			model: gfx::Model::from_glb(d.gfx, include_bytes!("res/btfly.glb"))?,
 		});
 	}
 
@@ -38,7 +40,8 @@ impl State for Game {
 	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw_on(&self.canvas1, |gfx| {
-			gfx.draw(&shapes::rect(vec2!(0), vec2!(50, -50)))?;
+// 			gfx.draw(&shapes::line(vec2!(-120), vec2!(120)))?;
+			gfx.draw_t(mat4!().s3(vec3!(300)), &shapes::model(&self.model))?;
 			return Ok(());
 		})?;
 
@@ -46,14 +49,17 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
-		d.gfx.draw(&shapes::canvas(&self.canvas1))?;
+// 		d.gfx.draw(&shapes::canvas(&self.canvas1))?;
+		d.gfx.draw_t(mat4!().s3(vec3!(300)), &shapes::model(&self.model))?;
 		return Ok(());
 	}
 
 }
 
 fn main() {
-	if let Err(e) = run::<Game>() {
+	if let Err(e) = launcher()
+		.resizable(true)
+		.run::<Game>() {
 		elog!("{}", e);
 	}
 }

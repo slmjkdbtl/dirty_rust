@@ -118,11 +118,17 @@ impl State for Game {
 
 			gfx.clear_ex(gfx::Surface::Depth);
 
-			gfx.draw_with(&self.shader, &(), |gfx| {
-				for t in &self.teapots {
-					gfx.draw_t(t.transform, &shapes::model(&t.model))?;
-				}
+			gfx.push_t(mat4!().s3(vec3!(1.0 / SCALE)), |gfx| {
+
+				gfx.draw_with(&self.shader, &(), |gfx| {
+					for t in &self.teapots {
+						gfx.draw_t(t.transform, &shapes::model(&t.model))?;
+					}
+					return Ok(());
+				})?;
+
 				return Ok(());
+
 			})?;
 
 			return Ok(());

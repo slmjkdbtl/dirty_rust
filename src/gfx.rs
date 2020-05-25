@@ -261,8 +261,8 @@ impl Gfx {
 		let (cw, ch) = (canvas.width(), canvas.height());
 
 		let new_cam = OrthoCam {
-			width: cw as f32 * self.dpi,
-			height: ch as f32 * self.dpi,
+			width: cw as f32,
+			height: ch as f32,
 			near: DEFAULT_NEAR,
 			far: DEFAULT_FAR,
 		};
