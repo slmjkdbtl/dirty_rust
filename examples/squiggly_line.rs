@@ -170,7 +170,7 @@ impl State for Game {
 		let top_right = d.gfx.coord(gfx::Origin::TopRight);
 		d.gfx.draw(
 			&shapes::rect(vec2!(-self.sz, self.sz), vec2!(self.sz, -self.sz))
-				.fill(rgba!(0.1, 0.1, 0.1, 1)),
+				.fill(rgba!(0.5, 0.5, 0.5, 1)),
 		)?;
 
 		self.buf.draw(d)?;
@@ -208,6 +208,8 @@ impl State for Game {
 			if p.button(ctx, "red")? 	{ color = Some(rgba!(1,0,0,1)); }
 			if p.button(ctx, "green")? 	{ color = Some(rgba!(0,1,0,1)); }
 			if p.button(ctx, "blue")? 	{ color = Some(rgba!(0,0,1,1)); }
+			if p.button(ctx, "white")? 	{ color = Some(rgba!(1)); }
+			if p.button(ctx, "black")? 	{ color = Some(rgba!(0,0,0,1)); }
 			Ok(())
 		})?;
 		if let Some(col) = color {
