@@ -31,15 +31,6 @@ impl<R: Read + Seek> Decoder<R> {
 
 	}
 
-	pub fn reset(&mut self) -> Result<()> {
-		match self {
-			Decoder::Wav(decoder) => decoder.reset()?,
-			Decoder::Mp3(decoder) => decoder.reset()?,
-			Decoder::Vorbis(decoder) => decoder.reset()?,
-		}
-		return Ok(());
-	}
-
 }
 
 impl<R: Read + Seek> Source for Decoder<R> {
@@ -48,6 +39,13 @@ impl<R: Read + Seek> Source for Decoder<R> {
 			Decoder::Wav(decoder) => decoder.sample_rate(),
 			Decoder::Mp3(decoder) => decoder.sample_rate(),
 			Decoder::Vorbis(decoder) => decoder.sample_rate(),
+		};
+	}
+	fn seek_start(&mut self) -> Result<()> {
+		return match self {
+			Decoder::Wav(decoder) => decoder.seek_start(),
+			Decoder::Mp3(decoder) => decoder.seek_start(),
+			Decoder::Vorbis(decoder) => decoder.seek_start(),
 		};
 	}
 }

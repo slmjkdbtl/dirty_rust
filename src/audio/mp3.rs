@@ -33,7 +33,15 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 
 	}
 
-	pub fn reset(&mut self) -> Result<()> {
+}
+
+impl<R: Read + Seek> Source for Mp3Decoder<R> {
+
+	fn sample_rate(&self) -> u32 {
+		return self.sample_rate;
+	}
+
+	fn seek_start(&mut self) -> Result<()> {
 
 		let reader = self.decoder.get_mut();
 
@@ -47,12 +55,6 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 
 	}
 
-}
-
-impl<R: Read + Seek> Source for Mp3Decoder<R> {
-	fn sample_rate(&self) -> u32 {
-		return self.sample_rate;
-	}
 }
 
 impl<R: Read + Seek> Iterator for Mp3Decoder<R> {

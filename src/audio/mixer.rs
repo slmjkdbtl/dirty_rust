@@ -13,6 +13,7 @@ pub(super) type SourceID = usize;
 pub(super) struct Control {
 	paused: AtomicBool,
 	detach: AtomicBool,
+	looping: AtomicBool,
 }
 
 impl Control {
@@ -28,6 +29,12 @@ impl Control {
 	pub fn paused(&self) -> bool {
 		return self.paused.load(Ordering::SeqCst);
 	}
+	pub fn set_looping(&self, l: bool) {
+		self.looping.store(l, Ordering::SeqCst);
+	}
+	pub fn looping(&self) -> bool {
+		return self.looping.load(Ordering::SeqCst);
+	}
 }
 
 impl Default for Control {
@@ -35,6 +42,7 @@ impl Default for Control {
 		return Self {
 			paused: AtomicBool::new(false),
 			detach: AtomicBool::new(false),
+			looping: AtomicBool::new(false),
 		};
 	}
 }
@@ -123,7 +131,11 @@ impl Iterator for Mixer {
 
 			} else {
 
-				ctx.done = true;
+				if ctx.control.looping() {
+					src.seek_start();
+				} else {
+					ctx.done = true;
+				}
 
 				return frame_acc;
 

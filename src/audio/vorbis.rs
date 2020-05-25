@@ -11,7 +11,8 @@ use lewton::samples::InterleavedSamples;
 use super::*;
 
 pub struct VorbisDecoder<R: Read + Seek> {
-	decoder: OggStreamReader<R>,
+	// TODO: have to do this for seek_start cuz seek_absgp_pg won't work
+	decoder: Option<OggStreamReader<R>>,
 	cur_packet: Option<vec::IntoIter<f32>>,
 	channel_count: ChannelCount,
 	sample_rate: u32,
@@ -40,7 +41,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 		};
 
 		return Ok(Self {
-			decoder,
+			decoder: Some(decoder),
 			cur_packet: data.map(|d| d.samples.into_iter()),
 			channel_count,
 			sample_rate,
@@ -50,6 +51,11 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 	fn next_sample(&mut self) -> Option<f32> {
 
+		let decoder = match &mut self.decoder {
+			Some(decoder) => decoder,
+			None => return None,
+		};
+
 		let cur_packet = match &mut self.cur_packet {
 			Some(packet) => packet,
 			None => return None,
@@ -58,7 +64,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 		if let Some(sample) = cur_packet.next() {
 			return Some(sample);
 		} else {
-			self.cur_packet = self.decoder
+			self.cur_packet = decoder
 				.read_dec_packet_generic::<InterleavedSamples<f32>>()
 				.ok()
 				.flatten()
@@ -68,25 +74,42 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 	}
 
-	pub fn reset(&mut self) -> Result<()> {
-		self.decoder
-			// TODO: not working
-			.seek_absgp_pg(0)
-			.map_err(|_| "failed to seek vorbis".to_string())?;
-		self.cur_packet = self.decoder
-			.read_dec_packet_generic::<InterleavedSamples<f32>>()
-			.ok()
-			.flatten()
-			.map(|v| v.samples.into_iter());
-		return Ok(());
-	}
-
 }
 
 impl<R: Read + Seek> Source for VorbisDecoder<R> {
+
 	fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
 	}
+
+	fn seek_start(&mut self) -> Result<()> {
+
+		let decoder = match self.decoder.take() {
+			Some(decoder) => decoder,
+			None => return Err("failed to seek vorbis".to_string()),
+		};
+
+		let mut reader = decoder.into_inner().into_inner();
+
+		reader
+			.seek(SeekFrom::Start(0))
+			.map_err(|_| "failed to seek mp3".to_string())?;
+
+		let mut decoder = OggStreamReader::new(reader)
+			.map_err(|_| "failed to parse vorbis".to_string())?;
+
+		let data = match decoder.read_dec_packet_generic::<InterleavedSamples<f32>>() {
+			Ok(data) => data,
+			Err(e) => return Err("failed to read vorbis".to_string()),
+		};
+
+		self.decoder = Some(decoder);
+		self.cur_packet = data.map(|d| d.samples.into_iter());
+
+		return Ok(());
+
+	}
+
 }
 
 impl<R: Read + Seek> Iterator for VorbisDecoder<R> {

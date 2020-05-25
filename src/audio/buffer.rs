@@ -33,10 +33,6 @@ impl Buffered {
 		return self.duration;
 	}
 
-	pub fn reset(&mut self) {
-		self.cur_pos = 0;
-	}
-
 }
 
 impl Iterator for Buffered {
@@ -55,6 +51,11 @@ impl Source for Buffered {
 
 	fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
+	}
+
+	fn seek_start(&mut self) -> Result<()> {
+		self.cur_pos = 0;
+		return Ok(());
 	}
 
 }

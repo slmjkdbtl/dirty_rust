@@ -106,6 +106,16 @@ impl Track {
 
 	}
 
+	/// set looping
+	pub fn set_looping(&self, b: bool) {
+		self.audio.set_loop(b);
+	}
+
+	/// set volume
+	pub fn set_volume(&self, v: f32) {
+		self.audio.set_volume(v as f64);
+	}
+
 	/// play / resume track
 	pub fn play(&self) {
 		self.audio.play();

@@ -100,7 +100,7 @@ struct Game {
 
 impl State for Game {
 
-	fn init(d: &mut Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 		Ok(Self {
 			key_down: false,
 			lines: vec![],
@@ -168,7 +168,6 @@ impl State for Game {
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
-		let bot_left = d.gfx.coord(gfx::Origin::BottomLeft);
 		let top_right = d.gfx.coord(gfx::Origin::TopRight);
 
 		d.gfx.draw(

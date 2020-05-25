@@ -61,13 +61,6 @@ impl Track {
 		self.control.set_paused(true);
 	}
 
-	pub fn reset(&self) -> Result<()> {
-		if let Ok(mut src) = self.src.lock() {
-			src.reset()?;
-		}
-		return Ok(());
-	}
-
 	/// set pan
 	pub fn set_pan(&self, p: f32) {
 		if let Ok(mut pan) = self.pan.lock() {
@@ -80,6 +73,11 @@ impl Track {
 		if let Ok(mut volume) = self.volume.lock() {
 			*volume = Volume(v);
 		}
+	}
+
+	/// set looping
+	pub fn set_looping(&self, l: bool) {
+		self.control.set_looping(l);
 	}
 
 	/// check if is paused

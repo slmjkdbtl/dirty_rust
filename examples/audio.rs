@@ -17,6 +17,8 @@ impl State for Game {
 		let sound = Sound::from_bytes(d.audio, include_bytes!("res/shoot.ogg"))?;
 		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.ogg"))?;
 
+		track.set_looping(true);
+
 		return Ok(Self {
 			sound,
 			track,

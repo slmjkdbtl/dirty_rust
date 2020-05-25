@@ -54,19 +54,21 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 	}
 
-	pub fn reset(&mut self) -> Result<()> {
+}
+
+impl<R: Read + Seek> Source for WavDecoder<R> {
+
+	fn sample_rate(&self) -> u32 {
+		return self.spec.sample_rate;
+	}
+
+	fn seek_start(&mut self) -> Result<()> {
 		self.decoder
 			.seek(0)
 			.map_err(|_| "failed to seek wav".to_string())?;
 		return Ok(());
 	}
 
-}
-
-impl<R: Read + Seek> Source for WavDecoder<R> {
-	fn sample_rate(&self) -> u32 {
-		return self.spec.sample_rate;
-	}
 }
 
 impl<R: Read + Seek> Iterator for WavDecoder<R> {
