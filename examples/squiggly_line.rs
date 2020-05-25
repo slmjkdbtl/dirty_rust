@@ -9,12 +9,14 @@ use input::Key;
 
 struct Polyline {
 	line: Vec<Vec2>,
+	color: Color,
 }
 
 impl Polyline {
-	fn new(line: Vec<Vec2>) -> Self {
+	fn new(line: Vec<Vec2>, color: Color) -> Self {
 		Self {
 			line,
+			color,
 		}
 	}
 
@@ -31,7 +33,7 @@ impl Polyline {
 			d.gfx.draw(
 				&shapes::line(*p0, *p1)
 					.width(2.0)
-					// .color()
+					.color(self.color)
 			)?
 		}
 		Ok(())
@@ -42,7 +44,7 @@ impl Polyline {
 			gfx.draw(
 				&shapes::line(*p0 + offset, *p1 + offset)
 					.width(2.0)
-					// .color()
+					.color(self.color)
 			)?;
 		}
 		Ok(())
@@ -54,13 +56,13 @@ struct Squiggly {
 }
 
 impl Squiggly {
-	fn new(buf: &Polyline, n_frames: usize, tol: usize) -> Self {
+	fn new(buf: &Polyline, n_frames: usize, tol: usize, color: Color) -> Self {
 		let mut frames = vec![];
 		for _ in 0..n_frames {
 			let frame = buf.line.iter()
 				.map(|&v| v + vec2!(rand(0,tol), rand(0,tol)))
 				.collect::<Vec<_>>();
-			frames.push(Polyline::new(frame));
+			frames.push(Polyline::new(frame, color));
 		}
 		Self {
 			frames,
@@ -73,9 +75,9 @@ impl Squiggly {
 		Ok(())
 	}
 
-	fn render(&self, gfx: &mut gfx::Gfx, sz: usize, offset: Vec2) -> Result<()> {
+	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-			let off = offset + vec2!(-(i as isize) * sz as isize, 0);
+			let off = vec2!(-sz, sz) + vec2!(-(i as isize) * sz as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())
@@ -88,6 +90,7 @@ struct Game {
 	buf: Polyline,
 	t: usize,
 	ui: ui::UI,
+	color: Color,
 
 	tol: usize,
 	density: f32,
@@ -100,12 +103,13 @@ impl State for Game {
 		Ok(Self {
 			key_down: false,
 			lines: vec![],
-			buf: Polyline::new(vec![]),
+			buf: Polyline::new(vec![], rgba!(1.)),
 			t: 0,
 			ui: ui::UI::new(),
 			tol: 3,
 			density: 3.,
 			sz: 100,
+			color: rgba!(1),
 		})
 	}
 
@@ -124,7 +128,7 @@ impl State for Game {
 			}
 			MouseRelease(_) => {
 				self.key_down = false;
-				self.lines.push(Squiggly::new(&self.buf, N_FRAMES, self.tol));
+				self.lines.push(Squiggly::new(&self.buf, N_FRAMES, self.tol, self.color));
 				self.buf.clear();
 			}
 			MouseMove(_) => {
@@ -162,10 +166,9 @@ impl State for Game {
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
-		let tl = vec2!(0, 240);
-
+		let top_right = d.gfx.coord(gfx::Origin::TopRight);
 		d.gfx.draw(
-			&shapes::rect(tl, tl + vec2!(self.sz, -self.sz))
+			&shapes::rect(vec2!(-self.sz, self.sz), vec2!(self.sz, -self.sz))
 				.fill(rgba!(0.1, 0.1, 0.1, 1)),
 		)?;
 
@@ -185,7 +188,7 @@ impl State for Game {
 
 			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
 			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
-			sz = p.slider(ctx, "sz", 30., 10., 360.)? as isize;
+			sz = p.slider(ctx, "sz", 300., 10., 500.)? as isize;
 			fname = p.input(ctx, "filename")?;
 			p.text(ctx, ".png")?;
 			save = p.button(ctx, "save")?;
@@ -196,8 +199,19 @@ impl State for Game {
 		self.tol = tol;
 		self.density = density;
 		self.sz = sz;
-		if save{
-			self.save(d.gfx, &fname);
+		if save {
+			self.save(d.gfx, &fname)?;
+		}
+
+		let mut color = None;
+		self.ui.window(d, "color", top_right-vec2!(240., 0.), 240.0, 360.0, |ctx, p| {
+			if p.button(ctx, "red")? 	{ color = Some(rgba!(1,0,0,1)); }
+			if p.button(ctx, "green")? 	{ color = Some(rgba!(0,1,0,1)); }
+			if p.button(ctx, "blue")? 	{ color = Some(rgba!(0,0,1,1)); }
+			Ok(())
+		})?;
+		if let Some(col) = color {
+			self.color = col;
 		}
 
 		Ok(())
@@ -207,15 +221,16 @@ impl State for Game {
 }
 
 impl Game {
-	fn save(&self, ctx: &mut gfx::Gfx, fname: &str) {
+	fn save(&self, ctx: &mut gfx::Gfx, fname: &str) -> Result<()> {
 		let fbuf = gfx::Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32).unwrap();
 		ctx.draw_on(&fbuf, |gfx| {
 			for line in &self.lines {
-				line.render(gfx, self.sz as usize, vec2!(0, 240))?;
+				line.render(gfx, self.sz)?;
 			}
 			Ok(())
-		});
-		fbuf.capture(format!("{}.png", fname));
+		})?;
+		fbuf.capture(format!("{}.png", fname))?;
+		Ok(())
 	}
 }
 
