@@ -75,7 +75,7 @@ impl Squiggly {
 
 	fn render(&self, gfx: &mut gfx::Gfx, sz: usize, offset: Vec2) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-			let off = offset + vec2!(i * sz, 0);
+			let off = offset + vec2!(-(i as isize) * sz as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())
@@ -162,12 +162,13 @@ impl State for Game {
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
-		let orig = vec2!(0, 240);
+		let tl = vec2!(0, 240);
 
 		d.gfx.draw(
-			&shapes::rect(orig, orig + vec2!(self.sz, -self.sz))
+			&shapes::rect(tl, tl + vec2!(self.sz, -self.sz))
 				.fill(rgba!(0.1, 0.1, 0.1, 1)),
 		)?;
+
 
 		self.buf.draw(d)?;
 		for line in &self.lines {
@@ -186,7 +187,7 @@ impl State for Game {
 			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
 			sz = p.slider(ctx, "sz", 30., 10., 360.)? as isize;
 			fname = p.input(ctx, "filename")?;
-			p.text(ctx, ".png");
+			p.text(ctx, ".png")?;
 			save = p.button(ctx, "save")?;
 
 			Ok(())
