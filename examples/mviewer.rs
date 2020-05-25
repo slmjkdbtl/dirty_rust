@@ -7,6 +7,7 @@ use std::path::Path;
 use dirty::*;
 use task::*;
 use math::*;
+use gfx::shapes;
 use input::Key;
 use input::Mouse;
 
@@ -24,7 +25,7 @@ struct Viewer {
 	helping: bool,
 }
 
-fn load_file(path: impl AsRef<Path>) -> Task<Result<gfx::ModelData>> {
+fn load_file(path: impl AsRef<Path>) -> Result<Task<Result<gfx::ModelData>>> {
 
 	let path = path.as_ref().to_owned();
 
@@ -43,12 +44,14 @@ impl Viewer {
 
 	}
 
-	fn load_file(&mut self, path: impl AsRef<Path>) {
+	fn load_file(&mut self, path: impl AsRef<Path>) -> Result<()> {
 
-		self.loader = load_file(path);
+		self.loader = load_file(path)?;
 		self.model = None;
 		self.scale = 0.0;
 		self.resetting = false;
+
+		return Ok(());
 
 	}
 
@@ -56,15 +59,15 @@ impl Viewer {
 
 impl State for Viewer {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
 		return Ok(Self {
 			model: None,
 			pos: vec2!(0),
-			shader: gfx::Shader::from_frag(ctx, include_str!("res/normal.frag"))?,
+			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/normal.frag"))?,
 			rot: vec2!(0),
 			resetting: false,
-			loader: load_file("examples/res/truck.obj"),
+			loader: load_file("examples/res/truck.obj")?,
 			draw_wireframe: false,
 			draw_bound: false,
 			run_anim: true,
@@ -74,7 +77,7 @@ impl State for Viewer {
 
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -82,12 +85,12 @@ impl State for Viewer {
 
 			KeyPress(k) => {
 
-				let mods = ctx.key_mods();
+				let mods = d.window.key_mods();
 
 				match *k {
-					Key::F => ctx.toggle_fullscreen(),
-					Key::Esc => ctx.quit(),
-					Key::Q if mods.meta => ctx.quit(),
+					Key::F => d.window.toggle_fullscreen(),
+					Key::Esc => d.window.quit(),
+					Key::Q if mods.meta => d.window.quit(),
 					Key::Space => self.resetting = true,
 					Key::L => self.draw_wireframe = !self.draw_wireframe,
 					Key::B => self.draw_bound = !self.draw_bound,
@@ -98,7 +101,7 @@ impl State for Viewer {
 
 			},
 
-			Scroll(s, phase) => {
+			Wheel(s, phase) => {
 
 				if let input::ScrollPhase::Solid = phase {
 					self.resetting = false;
@@ -123,7 +126,7 @@ impl State for Viewer {
 
 			MouseMove(delta) => {
 
-				if ctx.mouse_down(Mouse::Left) {
+				if d.window.mouse_down(Mouse::Left) {
 
 					self.resetting = false;
 					self.rot += *delta;
@@ -149,7 +152,7 @@ impl State for Viewer {
 			},
 
 			FileDrop(path) => {
-				self.load_file(&path);
+				self.load_file(&path)?;
 			},
 
 			_ => {},
@@ -160,13 +163,15 @@ impl State for Viewer {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+		let dt = d.app.dt().as_secs_f32();
+
+		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 
 		if let Some(data) = self.loader.poll() {
 			if let Ok(data) = data {
-				if let Ok(model) = gfx::Model::from_data(ctx, data) {
+				if let Ok(model) = gfx::Model::from_data(d.gfx, data) {
 					self.update_model(model);
 				}
 			}
@@ -176,24 +181,24 @@ impl State for Viewer {
 
 			let move_speed = 480.0;
 
-			if ctx.key_down(Key::A) {
+			if d.window.key_down(Key::A) {
 				self.resetting = false;
-				self.pos.x += move_speed * ctx.dt();
+				self.pos.x += move_speed * dt;
 			}
 
-			if ctx.key_down(Key::D) {
+			if d.window.key_down(Key::D) {
 				self.resetting = false;
-				self.pos.x -= move_speed * ctx.dt();
+				self.pos.x -= move_speed * dt;
 			}
 
-			if ctx.key_down(Key::W) {
+			if d.window.key_down(Key::W) {
 				self.resetting = false;
-				self.pos.y -= move_speed * ctx.dt();
+				self.pos.y -= move_speed * dt;
 			}
 
-			if ctx.key_down(Key::S) {
+			if d.window.key_down(Key::S) {
 				self.resetting = false;
-				self.pos.y += move_speed * ctx.dt();
+				self.pos.y += move_speed * dt;
 			}
 
 			if self.resetting {
@@ -204,7 +209,7 @@ impl State for Viewer {
 				let dest_rot = vec2!(0);
 				let dest_pos = vec2!(0);
 				let dest_scale = 480.0 / size;
-				let t = ctx.dt() * 4.0;
+				let t = dt * 4.0;
 
 				self.rot = self.rot.lerp(dest_rot, t);
 				self.pos = self.pos.lerp(dest_pos, t);
@@ -218,30 +223,31 @@ impl State for Viewer {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+
+		let time = d.app.time().as_secs_f32();
 
 		if let Some(model) = &self.model {
 
 			let center = model.center();
 
-			ctx.push_t(mat4!()
+			d.gfx.push_t(mat4!()
 				.t2(self.pos)
 				.s3(vec3!(self.scale))
 				.ry(self.rot.x.to_radians())
-				.rx(-self.rot.y.to_radians())
+				.rx(self.rot.y.to_radians())
 				.t3(-center)
-			, |ctx| {
+			, |gfx| {
 
 				let t = if self.run_anim {
 					let anim_len = model.anim_len();
-					let t = ctx.time();
-					t - f32::floor(t / anim_len) * anim_len
+					time - f32::floor(time / anim_len) * anim_len
 				} else {
 					0.0
 				};
 
-				ctx.draw_with(&self.shader, &(), |ctx| {
-					ctx.draw(
+				gfx.draw_with(&self.shader, &(), |gfx| {
+					gfx.draw(
 						&shapes::model(&model)
 // 							.wireframe(self.draw_wireframe)
 							.time(t)
@@ -251,7 +257,7 @@ impl State for Viewer {
 
 				if self.draw_bound {
 					let bbox = model.bbox();
-					ctx.draw(&shapes::Rect3D::from_bbox(bbox))?;
+					gfx.draw(&shapes::Rect3D::from_bbox(bbox))?;
 				}
 
 				return Ok(());
@@ -260,31 +266,31 @@ impl State for Viewer {
 
 		}
 
-		ctx.push_t(mat4!()
-			.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
+		d.gfx.push_t(mat4!()
+			.t2(d.gfx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
 			.tz(320.0)
-		, |ctx| {
+		, |gfx| {
 
 			if self.loader.phase() == TaskPhase::Working {
 
-				ctx.draw(
+				gfx.draw(
 					&shapes::text("loading...")
 						.align(gfx::Origin::TopLeft)
 				)?;
 
 			} else {
 
-				ctx.draw(
+				gfx.draw(
 					&shapes::text("drag 3d model files into this window")
 						.size(12.0)
 						.align(gfx::Origin::TopLeft)
 				)?;
 
-				ctx.push_t(mat4!()
+				gfx.push_t(mat4!()
 					.ty(-22.0)
-				, |ctx| {
+				, |gfx| {
 
-					ctx.draw(
+					gfx.draw(
 						&shapes::text("H: help")
 							.size(9.0)
 							.align(gfx::Origin::TopLeft)
@@ -300,8 +306,8 @@ impl State for Viewer {
 
 		})?;
 
-		ctx.push_t(mat4!()
-			.t2(ctx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
+		d.gfx.push_t(mat4!()
+			.t2(d.gfx.coord(gfx::Origin::BottomLeft) + vec2!(24, 24))
 			.s2(vec2!(0.8))
 			.tz(320.0)
 		, |ctx| {

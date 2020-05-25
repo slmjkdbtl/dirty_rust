@@ -4,10 +4,7 @@ use dirty::*;
 use math::*;
 use geom::*;
 use input::Key;
-use gfx::Camera;
 use gfx::shapes;
-
-const SCALE: f32 = 4.0;
 
 #[derive(Clone)]
 struct Uniform {

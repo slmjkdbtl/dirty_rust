@@ -4,7 +4,7 @@
 //!
 //! ## Basic Setup
 //!
-//! to create a window, make a struct that implements the [`State`](State) trait:
+//! to create a window, make a struct that implements the [`State`](State) trait, then use [`run`](run()) to run
 //! ```no_run
 //! use dirty::*;
 //!
@@ -15,17 +15,12 @@
 //!         return Ok(Self);
 //!     }
 //! }
-//! ```
-//! for more information checkout the doc of [`State`](State)
-//!
-//! then use [`run`](run()) to run
-//!
-//! ```no_run
+
 //! fn main() {
 //!     run::<Game>();
 //! }
 //! ```
-//! or use [`launcher`](launcher()) to enable startup options
+//! for more information checkout the doc of [`State`](State), and [`launcher`](launcher()) if you wish to have more start up options
 //!
 //! ## Context
 //! each method under [`State`](State) takes a [`Ctx`](Ctx) as parameter, which represents the application context, it has 4 fields (modules):

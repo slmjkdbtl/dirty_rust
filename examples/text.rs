@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use gfx::shapes;
 use input::Key;
 
 struct Game {
@@ -21,15 +22,15 @@ impl State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
-				let mods = ctx.key_mods();
+				let mods = d.window.key_mods();
 				match *k {
-					Key::Esc => ctx.quit(),
+					Key::Esc => d.window.quit(),
 					Key::I if mods.meta => self.italic = !self.italic,
 					Key::C if mods.meta => self.text.clear(),
 					Key::Left if mods.meta => self.wrap -= 10.0,
@@ -38,13 +39,13 @@ impl State for Game {
 				}
 			},
 			KeyPressRepeat(k) => {
-				let mods = ctx.key_mods();
+				let mods = d.window.key_mods();
 				match *k {
-					Key::Back => {
+					Key::Backspace => {
 						self.text.pop();
 					},
 					Key::Minus if mods.meta => self.size -= 1.0,
-					Key::Equals if mods.meta => self.size += 1.0,
+					Key::Equal if mods.meta => self.size += 1.0,
 					_ => {},
 				}
 			},
@@ -58,12 +59,12 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
-		ctx.set_title(&format!("FPS: {} DCS: {}", ctx.fps(), ctx.draw_calls()));
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
+		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 		return Ok(());
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let aligns = [
 			gfx::Origin::TopLeft,
@@ -79,7 +80,7 @@ impl State for Game {
 
 		for a in &aligns {
 
-			let pos = ctx.coord(*a);
+			let pos = d.gfx.coord(*a);
 
 			let text = shapes::text(&self.text)
 				.align(*a)
@@ -89,9 +90,9 @@ impl State for Game {
 				})
 				.size(self.size)
 				.italic(self.italic)
-				.format(ctx);
+				.format(d.gfx);
 
-			ctx.draw_t(
+			d.gfx.draw_t(
 				mat4!()
 					.t2(pos)
 					,
@@ -101,7 +102,7 @@ impl State for Game {
 			let tw = text.width();
 			let th = text.height();
 
-			ctx.draw_t(
+			d.gfx.draw_t(
 				mat4!()
 					.t2(pos)
 					,

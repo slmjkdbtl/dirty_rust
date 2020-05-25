@@ -1,8 +1,7 @@
 // wengwengweng
 
-#![feature(box_syntax)]
-
 use dirty::*;
+use gfx::shapes;
 use input::Key;
 
 use math::noise::*;
@@ -42,7 +41,7 @@ impl NoiseType {
 
 impl Game {
 
-	fn gen(&mut self, ctx: &Ctx) -> Result<()> {
+	fn gen(&mut self, d: &Ctx) -> Result<()> {
 
 		let seed = self.seed as u32;
 
@@ -57,8 +56,8 @@ impl Game {
 			NoiseType::Turbulence => Box::new(Turbulence::new(Fbm::new()).set_seed(seed)),
 		};
 
-		let w = ctx.width() as i32;
-		let h = ctx.height() as i32;
+		let w = d.gfx.width() as i32;
+		let h = d.gfx.height() as i32;
 		let scale = 0.3;
 
 		let mut buf = Vec::with_capacity((w * h * 4) as usize);
@@ -82,7 +81,7 @@ impl Game {
 
 		let img = img::Image::from_raw(w, h, buf)?;
 
-		self.tex = gfx::Texture::from_img(ctx, img)?;
+		self.tex = gfx::Texture::from_img(d.gfx, img)?;
 
 		return Ok(());
 
@@ -92,21 +91,21 @@ impl Game {
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
 		let mut g = Self {
-			tex: gfx::Texture::new(ctx, ctx.width(), ctx.height())?,
+			tex: gfx::Texture::new(d.gfx, d.gfx.width(), d.gfx.height())?,
 			noise_type: NoiseType::Perlin,
 			seed: 0,
 		};
 
-		g.gen(ctx)?;
+		g.gen(d)?;
 
 		return Ok(g);
 
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -114,12 +113,12 @@ impl State for Game {
 
 			KeyPress(k) => {
 
-				let mods = ctx.key_mods();
+				let mods = d.window.key_mods();
 
 				match *k {
-					Key::Esc => ctx.quit(),
-					Key::Q if mods.meta => ctx.quit(),
-					Key::F if mods.meta => ctx.toggle_fullscreen(),
+					Key::Esc => d.window.quit(),
+					Key::Q if mods.meta => d.window.quit(),
+					Key::F if mods.meta => d.window.toggle_fullscreen(),
 					_ => {},
 				}
 
@@ -140,7 +139,7 @@ impl State for Game {
 							NoiseType::Turbulence => NoiseType::RidgedMulti,
 							NoiseType::Perlin => NoiseType::Turbulence,
 						};
-						self.gen(ctx)?;
+						self.gen(d)?;
 					},
 
 					Key::Down => {
@@ -154,17 +153,17 @@ impl State for Game {
 							NoiseType::RidgedMulti => NoiseType::Turbulence,
 							NoiseType::Turbulence => NoiseType::Perlin,
 						};
-						self.gen(ctx)?;
+						self.gen(d)?;
 					},
 
 					Key::Left => {
 						self.seed = self.seed.wrapping_sub(1);
-						self.gen(ctx)?;
+						self.gen(d)?;
 					},
 
 					Key::Right => {
 						self.seed = self.seed.wrapping_add(1);
-						self.gen(ctx)?;
+						self.gen(d)?;
 					},
 
 					_ => {},
@@ -181,13 +180,13 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let top_left = ctx.coord(gfx::Origin::TopLeft);
+		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
-		ctx.draw(&shapes::sprite(&self.tex))?;
+		d.gfx.draw(&shapes::sprite(&self.tex))?;
 
-		ctx.draw_t(
+		d.gfx.draw_t(
 			mat4!()
 				.t2(top_left + vec2!(24, -24))
 				,
@@ -197,7 +196,7 @@ impl State for Game {
 				,
 		)?;
 
-		ctx.draw_t(
+		d.gfx.draw_t(
 			mat4!()
 				.t2(top_left + vec2!(24, -44))
 				,

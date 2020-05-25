@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use gfx::shapes;
 use input::Key;
 
 struct Game {
@@ -9,9 +10,9 @@ struct Game {
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let mut font = gfx::TruetypeFont::from_bytes(ctx, include_bytes!("res/Zpix.ttf"), 12)?;
+		let mut font = gfx::TruetypeFont::from_bytes(d.gfx, include_bytes!("res/Zpix.ttf"), 12)?;
 
 		// TODO: temperarily have to cache manually
 		font.cache_str("营养过剩")?;
@@ -22,15 +23,15 @@ impl State for Game {
 		});
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
 		match e {
 			KeyPress(k) => {
 				match *k {
-					Key::F => ctx.toggle_fullscreen(),
-					Key::Esc => ctx.quit(),
+					Key::F => d.window.toggle_fullscreen(),
+					Key::Esc => d.window.quit(),
 					_ => {},
 				}
 			},
@@ -41,22 +42,15 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		use shapes::*;
-
-		ctx.push_t(
+		d.gfx.draw_t(
 			mat4!()
 				.s2(vec2!(12))
 				,
-			|ctx| {
-				ctx.draw(
-					&text("1agyo+-好")
-						.font(&self.font)
-						,
-				)?;
-				return Ok(());
-			}
+			&shapes::text("1agyo+-好")
+				.font(&self.font)
+				,
 		)?;
 
 		return Ok(());
