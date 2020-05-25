@@ -86,7 +86,7 @@ impl Input {
 	}
 
 	fn clamp_cursor(&self, i: Col) -> Col {
-		return num_traits::clamp(i, 0, self.content.len() as Col);
+		return i.max(0).min(self.content.len() as Col);
 	}
 
 	pub fn move_to(&mut self, i: Col) {
@@ -491,7 +491,7 @@ impl TextArea {
 
 		}
 
-		return num_traits::clamp(ln, 1, self.lines.len() as Line);
+		return ln.max(1).min(self.lines.len() as Line);
 
 	}
 
@@ -623,8 +623,8 @@ impl TextArea {
 			if let Some(line) = self.get_line_at(start.line) {
 
 				let mut line = line.clone();
-				let start_col = num_traits::clamp((start.col - 1), 0, line.len() as i32);
-				let end_col = num_traits::clamp(end.col, 0, line.len() as i32);
+				let start_col = (start.col - 1).max(0).min(line.len() as i32);
+				let end_col = end.col.max(0).min(line.len() as i32);
 
 				self.push_undo();
 				line.replace_range(start_col as usize..end_col as usize, "");
@@ -766,7 +766,7 @@ impl TextArea {
 
 		if pos.col <= line.len() as Col + 1 {
 
-			let end = num_traits::clamp((pos.col - 2), 0, line.len() as i32);
+			let end = (pos.col - 2).max(0).min(line.len() as i32);
 
 			for (i, ch) in line[..end as usize].char_indices().rev() {
 

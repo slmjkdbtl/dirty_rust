@@ -227,8 +227,8 @@ impl Vec2 {
 
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
 		return vec2!(
-			num_traits::clamp(self.x, low.x, hi.x),
-			num_traits::clamp(self.y, low.y, hi.y),
+			self.x.max(low.x).min(hi.x),
+			self.y.max(low.y).min(hi.y),
 		);
 	}
 
@@ -274,9 +274,9 @@ impl Vec3 {
 
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
 		return vec3!(
-			num_traits::clamp(self.x, low.x, hi.x),
-			num_traits::clamp(self.y, low.y, hi.y),
-			num_traits::clamp(self.z, low.z, hi.z),
+			self.x.max(low.x).min(hi.x),
+			self.y.max(low.y).min(hi.y),
+			self.z.max(low.z).min(hi.z),
 		);
 	}
 
@@ -333,10 +333,10 @@ impl Color {
 
 	pub fn clamp(self, c1: Self, c2: Self) -> Self {
 		return rgba!(
-			num_traits::clamp(self.r, c1.r, c2.r),
-			num_traits::clamp(self.g, c1.g, c2.g),
-			num_traits::clamp(self.b, c1.b, c2.b),
-			num_traits::clamp(self.a, c1.a, c2.a),
+			self.r.max(c1.r).min(c2.r),
+			self.g.max(c1.g).min(c2.g),
+			self.b.max(c1.b).min(c2.b),
+			self.a.max(c1.a).min(c2.a),
 		);
 	}
 

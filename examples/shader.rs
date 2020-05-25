@@ -29,10 +29,10 @@ struct Game {
 impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
-		Ok(Self {
+		return Ok(Self {
 			rainbow_shader: gfx::Shader::from_frag(d.gfx, include_str!("res/rainbow.frag"))?,
 			model: gfx::Model::from_glb(d.gfx, include_bytes!("res/duck.glb"))?,
-		})
+		});
 	}
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
@@ -49,7 +49,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -73,11 +73,11 @@ impl State for Game {
 					,
 			)?;
 
-			Ok(())
+			return Ok(());
 
 		})?;
 
-		Ok(())
+		return Ok(());
 
 	}
 

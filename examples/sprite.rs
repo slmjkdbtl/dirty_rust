@@ -19,9 +19,9 @@ impl State for Game {
 		sprite.add_anim("run", 0, 3, true);
 		sprite.play("run");
 
-		Ok(Self {
+		return Ok(Self {
 			sprite,
-		})
+		});
 
 	}
 
@@ -40,7 +40,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -49,7 +49,7 @@ impl State for Game {
 		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 		self.sprite.update(d.app.dt());
 
-		Ok(())
+		return Ok(());
 
 	}
 
@@ -57,7 +57,7 @@ impl State for Game {
 
 		d.gfx.draw(&self.sprite)?;
 
-		Ok(())
+		return Ok(());
 
 	}
 
