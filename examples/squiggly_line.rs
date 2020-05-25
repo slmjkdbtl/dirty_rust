@@ -94,7 +94,6 @@ struct Game {
 	tol: usize,
 	density: f32,
 	sz: isize,
-	canvas: gfx::Canvas,
 }
 
 impl State for Game {
@@ -109,7 +108,6 @@ impl State for Game {
 			tol: 3,
 			density: 3.,
 			sz: 100,
-			canvas: gfx::Canvas::new(d.gfx, d.gfx.width(), d.gfx.height())?,
 		})
 	}
 
@@ -223,19 +221,31 @@ impl State for Game {
 }
 
 impl Game {
+
 	fn save(&self, ctx: &mut gfx::Gfx, fname: &str) -> Result<()> {
-		let fbuf = gfx::Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32).unwrap();
+
+		if fname.is_empty() {
+			return Ok(());
+		}
+
+		let fbuf = gfx::Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32)?;
+
 		ctx.draw_on(&fbuf, |gfx| {
 			for line in &self.lines {
 				line.render(gfx, self.sz)?;
 			}
 			Ok(())
 		})?;
+
 		let img = fbuf.capture()?;
 		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
+
 		img.save(format!("{}.png", fname))?;
+
 		Ok(())
+
 	}
+
 }
 
 fn main() {
