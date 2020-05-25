@@ -2,6 +2,7 @@
 
 use dirty::*;
 use math::*;
+use gfx::shapes;
 use task::TaskQueue;
 use input::Key;
 
@@ -18,45 +19,45 @@ struct Game {
 	tasks: TaskQueue<Result<gfx::ModelData>>,
 	teapots: Vec<Teapot>,
 	shader: gfx::Shader<()>,
-
 	canvas: gfx::Canvas,
 }
 
 impl Game {
-	fn load_more(&mut self) {
+	fn load_more(&mut self) -> Result<()> {
 		for _ in 0..LOAD_COUNT {
 			self.tasks.exec(|| {
 				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
-			});
+			})?;
 		}
+		return Ok(());
 	}
 }
 
 impl State for Game {
 
-	fn init(ctx: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 
 		let mut tasks = TaskQueue::new(THREAD_COUNT);
 
 		for _ in 0..LOAD_COUNT {
 			tasks.exec(|| {
 				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
-			});
+			})?;
 		}
 
-		let cw = (ctx.width() as f32 / SCALE) as i32;
-		let ch = (ctx.height() as f32 / SCALE) as i32;
+		let cw = (d.gfx.width() as f32 / SCALE) as i32;
+		let ch = (d.gfx.height() as f32 / SCALE) as i32;
 
 		return Ok(Self {
 			tasks: tasks,
 			teapots: vec![],
-			shader: gfx::Shader::from_frag(ctx, include_str!("res/blue.frag"))?,
-			canvas: gfx::Canvas::new(ctx, cw, ch)?,
+			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/blue.frag"))?,
+			canvas: gfx::Canvas::new(d.gfx, cw, ch)?,
 		});
 
 	}
 
-	fn event(&mut self, ctx: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
 		use input::Event::*;
 
@@ -67,15 +68,15 @@ impl State for Game {
 				let cw = (*w as f32 / SCALE) as i32;
 				let ch = (*h as f32 / SCALE) as i32;
 
-				self.canvas.resize(ctx, cw, ch)?;
+				self.canvas.resize(d.gfx, cw, ch)?;
 
 			},
 
 			KeyPress(k) => {
 				match *k {
-					Key::F => ctx.toggle_fullscreen(),
-					Key::Esc => ctx.quit(),
-					Key::Space => self.load_more(),
+					Key::F => d.window.toggle_fullscreen(),
+					Key::Esc => d.window.quit(),
+					Key::Space => self.load_more()?,
 					_ => {},
 				}
 			},
@@ -88,9 +89,11 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
-		for m in self.tasks.poll() {
+		let dt = d.app.dt().as_secs_f32();
+
+		for m in self.tasks.poll()? {
 			let modeldata = m?;
 			self.teapots.push(Teapot {
 				transform: mat4!()
@@ -99,25 +102,25 @@ impl State for Game {
 					.ry(rand(0f32, 360f32).to_radians())
 					.rz(rand(0f32, 360f32).to_radians())
 					,
-				model: gfx::Model::from_data(ctx, modeldata)?,
+				model: gfx::Model::from_data(d.gfx, modeldata)?,
 			});
 		}
 
 		for t in &mut self.teapots {
 			t.transform = t.transform
-				.rx(ctx.dt())
-				.ry(ctx.dt())
-				.rz(ctx.dt())
+				.rx(dt)
+				.ry(dt)
+				.rz(dt)
 				;
 		}
 
-		ctx.draw_on(&self.canvas, |ctx| {
+		d.gfx.draw_on(&self.canvas, |gfx| {
 
-			ctx.clear_ex(gfx::Surface::Depth);
+			gfx.clear_ex(gfx::Surface::Depth);
 
-			ctx.draw_with(&self.shader, &(), |ctx| {
+			gfx.draw_with(&self.shader, &(), |gfx| {
 				for t in &self.teapots {
-					ctx.draw_t(t.transform, &shapes::model(&t.model))?;
+					gfx.draw_t(t.transform, &shapes::model(&t.model))?;
 				}
 				return Ok(());
 			})?;
@@ -130,18 +133,18 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, ctx: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		ctx.draw_t(
+		d.gfx.draw_t(
 			mat4!()
 				.s2(vec2!(SCALE))
 				,
 			&shapes::canvas(&self.canvas)
 		)?;
 
-		ctx.draw_t(
+		d.gfx.draw_t(
 			mat4!()
-				.t2(ctx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
+				.t2(d.gfx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
 				,
 			&shapes::text(
 				&format!("{}/{}", self.tasks.completed_count(), self.tasks.total())

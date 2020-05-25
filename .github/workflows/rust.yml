@@ -8,18 +8,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-    - name: install web target
-      run: rustup target add wasm32-unknown-unknown
     - name: install deps
       run: sudo apt-get install libasound2-dev libudev-dev
-    - name: Build
-      run: cargo build --verbose
-    - name: Build Web
-      run: cargo build --target wasm32-unknown-unknown --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - name: install web target
+      run: rustup target add wasm32-unknown-unknown
+    - name: test
+      run: cargo test --verbose --all-features
+    - name: test web
+      run: cargo test --verbose --all-features --target wasm32-unknown-unknown
+

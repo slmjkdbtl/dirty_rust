@@ -32,7 +32,6 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
-					Key::R => self.track.reset()?,
 					Key::Space => {
 						if self.track.paused() {
 							self.track.play();
@@ -40,12 +39,15 @@ impl State for Game {
 							self.track.pause();
 						}
 					},
+					#[cfg(not(web))]
 					_ => self.sound
 						.builder()
 						.pan(math::rand(-1.0, 1.0))
 						.volume(0.2)
 						.play()
 						,
+					#[cfg(web)]
+					_ => self.sound.play(),
 				}
 			},
 			_ => {},
@@ -60,6 +62,7 @@ impl State for Game {
 		let time = d.app.time().as_secs_f32();
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
+		#[cfg(not(web))]
 		self.track.set_pan(math::wave(time, -1.0, 1.0));
 
 		let lines = [

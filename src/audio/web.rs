@@ -9,6 +9,7 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::closure::Closure;
 
 use crate::*;
+use super::*;
 
 /// The Audio Context. See [mod-level doc](audio) for usage.
 pub struct Audio {
@@ -22,6 +23,9 @@ impl Audio {
 		return Ok(Self {
 			ctx: Rc::new(ctx),
 		});
+	}
+	pub fn sample_rate(&self) -> u32 {
+		return SAMPLE_RATE;
 	}
 }
 
@@ -116,5 +120,6 @@ impl Track {
 	pub fn paused(&self) -> bool {
 		return self.audio.paused();
 	}
+
 }
 

@@ -1,6 +1,7 @@
 // wengwengweng
 
 use dirty::*;
+use gfx::shapes;
 use input::Key;
 
 struct Game;

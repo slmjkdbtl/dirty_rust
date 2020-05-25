@@ -1,7 +1,5 @@
 // wengwengweng
 
-#![feature(box_syntax)]
-
 use dirty::*;
 
 use input::Key;

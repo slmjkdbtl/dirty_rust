@@ -1,10 +1,15 @@
 # wengwengweng
 
 check:
-	cargo c
+	cargo c \
+		--examples \
+		--all-features \
+		--tests
 
 check-web:
-	cargo c --target wasm32-unknown-unknown
+	cargo c \
+		--all-features \
+		--target wasm32-unknown-unknown
 
 run example:
 	cargo run \
@@ -29,7 +34,13 @@ deploy-site:
 		now --prod
 
 test:
-	cargo test --tests
+	cargo test \
+		--all-features
+
+test-web:
+	cargo test \
+		--all-features \
+		--target wasm32-unknown-unknown
 
 build:
 	cargo build
