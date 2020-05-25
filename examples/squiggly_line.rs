@@ -67,7 +67,10 @@ struct Game {
 	buf: Polyline,
 	t: usize,
 	ui: ui::UI,
+
 	tol: usize,
+	density: f32,
+	sz: isize,
 }
 
 impl State for Game {
@@ -80,6 +83,8 @@ impl State for Game {
 			t: 0,
 			ui: ui::UI::new(),
 			tol: 3,
+			density: 3.,
+			sz: 100,
 		})
 	}
 
@@ -105,7 +110,7 @@ impl State for Game {
 				let pos = d.window.mouse_pos();
 				if self.key_down {
 					if let Some(last) = self.buf.line.last() {
-						if pos.dist(*last) > 8. {
+						if pos.dist(*last) > self.density {
 							self.buf.push(pos);
 						}
 					} else {
@@ -134,21 +139,35 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+		let bottom_right = d.gfx.coord(gfx::Origin::BottomRight);
+
+		let orig = vec2!(0, 240);
+		d.gfx.draw(
+			&shapes::rect(orig, orig + vec2!(self.sz, -self.sz)).fill(rgba!(0.1, 0.1, 0.1, 1)),
+		);
+
 		self.buf.draw(d)?;
 		for line in &self.lines {
 			line.draw(self.t, d)?;
 		}
 
-		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+
 		let mut tol = 0;
-		self.ui.window(d, "options", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
+		let mut density = 0.;
+		let mut sz = 0;
+		self.ui.window(d, "options", top_left, 240.0, 360.0, |ctx, p| {
 
 			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
+			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
+			sz = p.slider(ctx, "sz", 30., 10., 360.)? as isize;
 
 			Ok(())
 
 		})?;
 		self.tol = tol;
+		self.density = density;
+		self.sz = sz;
 
 		Ok(())
 
