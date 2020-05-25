@@ -17,8 +17,8 @@ pub fn rect3d(p1: Vec3, p2: Vec3) -> Rect3D {
 impl Rect3D {
 	pub fn from_pts(p1: Vec3, p2: Vec3) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 			color: rgba!(),
 			line_width: 1.0,
 		};

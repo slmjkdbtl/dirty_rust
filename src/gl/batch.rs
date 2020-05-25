@@ -29,8 +29,8 @@ impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
 		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
 
 		return Ok(Self {
-			vbuf: vbuf,
-			ibuf: ibuf,
+			vbuf,
+			ibuf,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
 			cur_state: None,
@@ -68,7 +68,7 @@ impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
 			self.cur_state = Some(RenderState {
 				pipeline: pipeline.clone(),
 				uniform: uniform.clone(),
-				prim: prim,
+				prim,
 			});
 		}
 

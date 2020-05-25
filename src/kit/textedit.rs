@@ -65,7 +65,7 @@ impl Input {
 
 		return Self {
 			content: conf.init_content.clone(),
-			conf: conf,
+			conf,
 			cursor: 0,
 			undo_stack: vec![],
 			redo_stack: vec![],
@@ -367,7 +367,7 @@ impl TextArea {
 	pub fn with_conf(conf: Conf) -> Self {
 		return Self {
 			lines: conf.init_content.split('\n').map(String::from).collect(),
-			conf: conf,
+			conf,
 			cursor: CursorPos::default(),
 			undo_stack: vec![],
 			redo_stack: vec![],
@@ -595,15 +595,11 @@ impl TextArea {
 
 				}
 
-			} else {
-
-				if let Some(prev_pos) = self.prev_word_at(pos) {
-					return self.del_range((prev_pos, CursorPos {
-						col: pos.col - 1,
-						.. pos
-					}));
-				}
-
+			} else if let Some(prev_pos) = self.prev_word_at(pos) {
+				return self.del_range((prev_pos, CursorPos {
+					col: pos.col - 1,
+					.. pos
+				}));
 			}
 
 		}

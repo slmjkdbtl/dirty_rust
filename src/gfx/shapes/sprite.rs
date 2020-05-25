@@ -20,7 +20,7 @@ pub struct Sprite<'a> {
 impl<'a> Sprite<'a> {
 	pub fn new(tex: &'a gfx::Texture) -> Self {
 		return Self {
-			tex: tex,
+			tex,
 			quad: quad!(0, 0, 1, 1),
 			color: rgba!(1),
 			offset: None,

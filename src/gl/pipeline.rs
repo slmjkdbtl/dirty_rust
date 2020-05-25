@@ -86,9 +86,9 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			ctx.delete_shader(frag_id);
 
 			let program = Self {
-				ctx: ctx,
+				ctx,
 				attrs: V::attrs(),
-				program_id: program_id,
+				program_id,
 				_vertex_layout: PhantomData,
 				_uniform_layout: PhantomData,
 			};

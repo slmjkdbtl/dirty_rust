@@ -29,10 +29,10 @@ pub struct BitmapFontData {
 impl BitmapFontData {
 	pub const fn new(img: &'static [u8], gw: u8, gh: u8, chars: &'static str) -> Self {
 		return Self {
-			img: img,
-			gw: gw,
-			gh: gh,
-			chars: chars,
+			img,
+			gw,
+			gh,
+			chars,
 		};
 	}
 }
@@ -70,7 +70,7 @@ impl BitmapFont {
 		let cols = tw / gw as i32;
 
 		if (tw % gw as i32 != 0 || th % gh as i32 != 0) {
-			return Err(format!("bitmap font grid size not correct"));
+			return Err("bitmap font grid size not correct".to_string());
 		}
 
 		for (i, ch) in chars.chars().enumerate() {
@@ -85,9 +85,9 @@ impl BitmapFont {
 		}
 
 		return Ok(Self {
-			tex: tex,
-			map: map,
-			quad_size: quad_size,
+			tex,
+			map,
+			quad_size,
 			grid_width: gw,
 			grid_height: gh,
 		});
@@ -133,15 +133,15 @@ impl TruetypeFont {
 		let tex = Texture::new(ctx, max_w, max_h)?;
 
 		if size > 72 {
-			return Err(format!("font size cannot exceed 72"));
+			return Err("font size cannot exceed 72".to_string());
 		}
 
 		return Ok(Self {
-			font: font,
-			size: size,
+			font,
+			size,
 			map: HashMap::new(),
 			cur_pt: pt!(0, 0),
-			tex: tex,
+			tex,
 		});
 
 	}
@@ -168,7 +168,7 @@ impl TruetypeFont {
 			}
 
 			if y >= th {
-				return Err(format!("reached font texture size limit"));
+				return Err("reached font texture size limit".to_string());
 			}
 
 			self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);

@@ -13,8 +13,8 @@ pub struct UVRect<'a> {
 impl<'a> UVRect<'a> {
 	pub fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 			color: rgba!(1),
 			tex: None,
 		};

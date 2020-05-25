@@ -63,14 +63,12 @@ impl FormattedText {
 	pub fn cursor_pos(&self, i: usize) -> Option<Vec2> {
 		if self.chars.is_empty() {
 			return Some(vec2!(0));
+		} else if i == 0 {
+			return Some(vec2!(0))
 		} else {
-			if i == 0 {
-				return Some(vec2!(0))
-			} else {
-				return self.chars.get(i - 1).map(|ch| {
-					return ch.pos + vec2!(ch.width, 0);
-				});
-			}
+			return self.chars.get(i - 1).map(|ch| {
+				return ch.pos + vec2!(ch.width, 0);
+			});
 		}
 	}
 
@@ -212,10 +210,10 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 					}
 
 					cur_line.chars.push(FormattedChar {
-						ch: ch,
+						ch,
 						pos: vec2!(),
 						tex: tex.clone(),
-						quad: quad,
+						quad,
 						color: chunk.color,
 						width: gw - conf.char_spacing,
 					});
@@ -278,7 +276,7 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 
 	return FormattedText {
 		chars: fchars,
-		scale: scale,
+		scale,
 		width: w,
 		height: h,
 		color: conf.color,

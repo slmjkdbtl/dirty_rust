@@ -94,7 +94,7 @@ impl Drawable for Polygon {
 					pos: ctx.transform * vec3!(p.x, p.y, 0.0),
 					uv: vec2!(0),
 					normal: vec3!(0, 0, 1),
-					color: color,
+					color,
 				});
 
 				if i >= 2 {

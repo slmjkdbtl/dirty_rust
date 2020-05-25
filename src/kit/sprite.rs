@@ -23,7 +23,7 @@ impl Sprite {
 
 	pub fn from_tex(tex: gfx::Texture) -> Self {
 		return Self {
-			tex: tex,
+			tex,
 			frames: vec![quad!(0, 0, 1, 1)],
 			cur_frame: 0,
 			offset: vec2!(0),
@@ -106,9 +106,9 @@ impl Sprite {
 
 	pub fn add_anim(&mut self, name: &str, from: usize, to: usize, looping: bool) {
 		self.anims.insert(name.to_owned(), Anim {
-			from: from,
-			to: to,
-			looping: looping,
+			from,
+			to,
+			looping,
 		});
 	}
 

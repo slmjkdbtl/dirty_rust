@@ -25,7 +25,7 @@ impl Canvas {
 
 		return Ok(Self {
 			gl_fbuf: fbuf,
-			tex: tex,
+			tex,
 			width: w,
 			height: h,
 		});
