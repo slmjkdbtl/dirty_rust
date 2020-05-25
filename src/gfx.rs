@@ -261,8 +261,8 @@ impl Gfx {
 		let (cw, ch) = (canvas.width(), canvas.height());
 
 		let new_cam = OrthoCam {
-			width: cw as f32,
-			height: ch as f32,
+			width: cw as f32 * self.dpi,
+			height: ch as f32 * self.dpi,
 			near: DEFAULT_NEAR,
 			far: DEFAULT_FAR,
 		};
@@ -353,6 +353,8 @@ impl Gfx {
 
 	}
 
+	// TODO: figure out how stencil truely works
+	// TODO: not working on wasm / webgl
 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let gl = self.gl.clone();

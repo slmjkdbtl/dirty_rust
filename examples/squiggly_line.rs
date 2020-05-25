@@ -28,9 +28,9 @@ impl Polyline {
 		self.line.clear();
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, gfx: &mut gfx::Gfx) -> Result<()> {
 		for (p0, p1) in self.line.iter().zip(self.line.iter().skip(1)) {
-			d.gfx.draw(
+			gfx.draw(
 				&shapes::line(*p0, *p1)
 					.width(2.0)
 					.color(self.color)
@@ -69,15 +69,15 @@ impl Squiggly {
 		}
 	}
 
-	fn draw(&self, t: usize, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, t: usize, gfx: &mut gfx::Gfx) -> Result<()> {
 		let f = &self.frames[t % self.frames.len()];
-		f.draw(d)?;
+		f.draw(gfx)?;
 		Ok(())
 	}
 
 	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-			let off = vec2!(-sz, sz) + vec2!(-(i as isize) * sz as isize, 0);
+			let off = vec2!(-(i as isize) * sz as isize * gfx.dpi() as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())
@@ -94,6 +94,7 @@ struct Game {
 	tol: usize,
 	density: f32,
 	sz: isize,
+	canvas: gfx::Canvas,
 }
 
 impl State for Game {
@@ -107,7 +108,8 @@ impl State for Game {
 			ui: ui::UI::new(),
 			tol: 3,
 			density: 3.,
-			sz: 100,
+			sz: 200,
+			canvas: gfx::Canvas::new(d.gfx, 200, 200)?,
 		})
 	}
 
@@ -164,17 +166,32 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+		let bot_left = d.gfx.coord(gfx::Origin::BottomLeft);
 		let top_right = d.gfx.coord(gfx::Origin::TopRight);
+
 		d.gfx.draw(
 			&shapes::rect(vec2!(-self.sz, self.sz), vec2!(self.sz, -self.sz))
 				.fill(rgba!(0.5, 0.5, 0.5, 1)),
 		)?;
 
-		self.buf.draw(d)?;
+		self.buf.draw(d.gfx)?;
+
+		d.gfx.draw_on(&self.canvas, |gfx| {
+			gfx.clear();
+			self.buf.draw(gfx)?;
+			for line in &self.lines {
+				line.draw(self.t, gfx)?;
+			}
+			return Ok(());
+		})?;
+
 		for line in &self.lines {
-			line.draw(self.t, d)?;
+			line.draw(self.t, d.gfx)?;
 		}
+
+		d.gfx.draw_t(mat4!().t2(bot_left + vec2!(150)), &shapes::canvas(&self.canvas))?;
 
 
 		let mut tol = 0;
@@ -182,6 +199,7 @@ impl State for Game {
 		let mut sz = 0;
 		let mut save = false;
 		let mut fname = String::new();
+
 		self.ui.window(d, "options", top_left, 240.0, 360.0, |ctx, p| {
 
 			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
@@ -196,7 +214,7 @@ impl State for Game {
 		})?;
 		self.tol = tol;
 		self.density = density;
-		self.sz = sz;
+// 		self.sz = sz;
 		if save {
 			self.save(d.gfx, &fname)?;
 		}
@@ -238,7 +256,7 @@ impl Game {
 		})?;
 
 		let img = fbuf.capture()?;
-		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
+// 		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
 
 		img.save(format!("{}.png", fname))?;
 
