@@ -79,7 +79,7 @@ pub fn exists(path: impl AsRef<Path>) -> bool {
 /// get files that matches a glob pattern (e.g. `glob("img/*.png")`)
 pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 
-	let listings = glob::glob(&format!("{}", pat))
+	let listings = glob::glob(&pat.to_string())
 		.ok()
 		.or_else(|| glob::glob(&format!("{}/{}", res_dir()?.display(), pat)).ok())
 		.ok_or(format!("failed to execute glob pattern {}", pat))?

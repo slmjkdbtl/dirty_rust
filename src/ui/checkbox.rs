@@ -11,8 +11,8 @@ pub struct CheckBox {
 impl CheckBox {
 	pub fn new(prompt: &'static str, checked: bool,) -> Self {
 		return Self {
-			prompt: prompt,
-			checked: checked,
+			prompt,
+			checked,
 			hovering: false,
 		};
 	}
@@ -48,7 +48,7 @@ impl Widget for CheckBox {
 		let size = theme.font_size + 6.0;
 		let sep = 12.0;
 
-		let ptext = shapes::text(&format!("{}", self.prompt))
+		let ptext = shapes::text(&self.prompt.to_string())
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)

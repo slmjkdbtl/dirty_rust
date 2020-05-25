@@ -15,9 +15,9 @@ impl Slider {
 	pub fn new(p: &'static str, val: f32, min: f32, max: f32) -> Self {
 		return Self {
 			prompt: p,
-			val: val,
-			min: min,
-			max: max,
+			val,
+			min,
+			max,
 			draggin: None,
 			hovering: false,
 		};

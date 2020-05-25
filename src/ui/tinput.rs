@@ -14,7 +14,7 @@ impl Input {
 	pub fn new(prompt: &'static str,) -> Self {
 		return Self {
 			buf: textedit::Input::new(),
-			prompt: prompt,
+			prompt,
 			focused: false,
 			hovering: false,
 		};

@@ -29,7 +29,7 @@ impl<T: Send + 'static> TaskQueue<T> {
 		return Self {
 			queue: VecDeque::new(),
 			active: vec![],
-			max: max,
+			max,
 			completed: 0,
 			total: 0,
 		};
@@ -136,7 +136,7 @@ impl<T: Send + 'static> Task<T> {
 				.name(String::from("dirty_task"))
 				.spawn(move || {
 				tx.send(action()).expect("thread failure");
-			}).map_err(|_| format!("failed to spawn task thread"))?;
+			}).map_err(|_| "failed to spawn task thread".to_string())?;
 
 			self.rx = Some(rx);
 			self.phase = TaskPhase::Working;

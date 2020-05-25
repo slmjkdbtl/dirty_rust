@@ -97,7 +97,7 @@ impl ParticleSystem {
 			spawn_timer: timer,
 			particles: Vec::with_capacity(256),
 			paused: false,
-			conf: conf,
+			conf,
 		};
 
 	}
@@ -105,16 +105,14 @@ impl ParticleSystem {
 	pub fn update(&mut self, dt: Duration) {
 
 		if let Some(timer) = &mut self.spawn_timer {
-			if !self.paused {
-				if timer.tick(dt) {
-					let rate = rand_t(self.conf.rate);
-					if rate == 0.0 {
-						self.spawn_timer = None;
-					} else {
-						timer.reset_to_secs(1.0 / rate)
-					};
-					self.emit();
-				}
+			if !self.paused && timer.tick(dt) {
+				let rate = rand_t(self.conf.rate);
+				if rate == 0.0 {
+					self.spawn_timer = None;
+				} else {
+					timer.reset_to_secs(1.0 / rate)
+				};
+				self.emit();
 			}
 		} else {
 			let rate = rand_t(self.conf.rate);
@@ -184,9 +182,9 @@ impl ParticleSystem {
 					acc: rand_t(self.conf.acc),
 					vel: rand_t(self.conf.vel),
 					speed: rand_t(self.conf.speed),
-					color_start: color_start,
+					color_start,
 					color_end: self.conf.color_end,
-					size_start: size_start,
+					size_start,
 					size_end: rand_t(self.conf.size_end),
 					dead: false,
 				};

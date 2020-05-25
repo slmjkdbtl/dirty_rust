@@ -3,7 +3,7 @@
 #![feature(box_syntax)]
 
 use dirty::*;
-use math::*;
+
 use input::Key;
 
 struct Game {
@@ -13,9 +13,9 @@ struct Game {
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
-		return Ok(Self {
+		Ok(Self {
 			ui: ui::UI::new(),
-		});
+		})
 	}
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
@@ -34,7 +34,7 @@ impl State for Game {
 			_ => {},
 		}
 
-		return Ok(());
+		Ok(())
 
 	}
 
@@ -52,11 +52,11 @@ impl State for Game {
 			p.sep(ctx)?;
 			p.button(ctx, "explode")?;
 
-			return Ok(());
+			Ok(())
 
 		})?;
 
-		return Ok(());
+		Ok(())
 
 	}
 

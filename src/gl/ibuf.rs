@@ -23,8 +23,8 @@ impl IndexBuffer {
 			let id = ctx.create_buffer()?;
 
 			let buf = Self {
-				ctx: ctx,
-				id: id,
+				ctx,
+				id,
 			};
 
 			buf.bind();

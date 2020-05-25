@@ -18,7 +18,7 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 	pub fn new(data: R) -> Result<Self> {
 
-		let wav = hound::WavReader::new(data).map_err(|_| format!("failed to parse wav"))?;
+		let wav = hound::WavReader::new(data).map_err(|_| "failed to parse wav".to_string())?;
 		let spec = wav.spec();
 
 		let channel_count = match spec.channels {
@@ -30,10 +30,10 @@ impl<R: Read + Seek> WavDecoder<R> {
 		let duration = Duration::from_secs_f32(wav.duration() as f32 / spec.sample_rate as f32);
 
 		return Ok(Self {
-			spec: spec,
+			spec,
 			decoder: wav,
-			duration: duration,
-			channel_count: channel_count,
+			duration,
+			channel_count,
 		});
 
 	}
@@ -57,7 +57,7 @@ impl<R: Read + Seek> WavDecoder<R> {
 	pub fn reset(&mut self) -> Result<()> {
 		self.decoder
 			.seek(0)
-			.map_err(|_| format!("failed to seek wav"))?;
+			.map_err(|_| "failed to seek wav".to_string())?;
 		return Ok(());
 	}
 
@@ -93,13 +93,13 @@ pub fn is_wav<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
 	let pos = reader
 		.seek(SeekFrom::Current(0))
-		.map_err(|_| format!("failed to seek"))?;
+		.map_err(|_| "failed to seek".to_string())?;
 
 	let is_wav = hound::WavReader::new(&mut reader).is_ok();
 
 	reader
 		.seek(SeekFrom::Start(pos))
-		.map_err(|_| format!("failed to seek"))?;
+		.map_err(|_| "failed to seek".to_string())?;
 
 	return Ok(is_wav);
 

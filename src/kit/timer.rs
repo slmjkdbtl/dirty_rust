@@ -15,7 +15,7 @@ impl Timer {
 	pub fn new(time: Duration) -> Self {
 		return Self {
 			elapsed: Duration::from_secs_f32(0.0),
-			time: time,
+			time,
 			done: false,
 		}
 	}
