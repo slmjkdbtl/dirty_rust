@@ -7,8 +7,6 @@ use std::sync::mpsc;
 use std::thread;
 
 use crate::Result;
-pub type TaskItem = Send + 'static;
-pub type TaskAction<T: TaskItem> = FnOnce() -> T + Send + 'static;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TaskPhase {
@@ -17,7 +15,7 @@ pub enum TaskPhase {
 	Done,
 }
 
-pub struct TaskQueue<T: TaskItem> {
+pub struct TaskQueue<T: Send + 'static> {
 	queue: VecDeque<Task<T>>,
 	active: Vec<Task<T>>,
 	max: usize,
@@ -25,7 +23,7 @@ pub struct TaskQueue<T: TaskItem> {
 	total: usize,
 }
 
-impl<T: TaskItem> TaskQueue<T> {
+impl<T: Send + 'static> TaskQueue<T> {
 
 	pub fn new(max: usize) -> Self {
 		return Self {
@@ -37,7 +35,7 @@ impl<T: TaskItem> TaskQueue<T> {
 		};
 	}
 
-	pub fn exec(&mut self, f: impl FnOnce() -> T + TaskItem) -> Result<()> {
+	pub fn exec(&mut self, f: impl FnOnce() -> T + Send + 'static) -> Result<()> {
 
 		self.queue.push_back(Task::new(f));
 		self.adjust()?;
@@ -101,15 +99,15 @@ impl<T: TaskItem> TaskQueue<T> {
 
 }
 
-pub struct Task<T: TaskItem> {
+pub struct Task<T: Send + 'static> {
 	rx: Option<mpsc::Receiver<T>>,
-	action: Option<Box<dyn TaskAction<T>>>,
+	action: Option<Box<dyn FnOnce() -> T + Send + 'static>>,
 	phase: TaskPhase,
 }
 
-impl<T: TaskItem> Task<T> {
+impl<T: Send + 'static> Task<T> {
 
-	pub fn new(f: impl FnOnce() -> T + TaskItem) -> Self {
+	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Self {
 		return Self {
 			action: Some(Box::new(f)),
 			rx: None,
@@ -117,7 +115,7 @@ impl<T: TaskItem> Task<T> {
 		};
 	}
 
-	pub fn exec(f: impl FnOnce() -> T + TaskItem) -> Result<Self> {
+	pub fn exec(f: impl FnOnce() -> T + Send + 'static) -> Result<Self> {
 
 		let mut task = Self::new(f);
 

@@ -43,6 +43,7 @@
 #![allow(unused_parens)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
+#![allow(clippy::needless_return)]
 
 #[macro_use]
 pub mod utils;
