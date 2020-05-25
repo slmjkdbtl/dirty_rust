@@ -14,8 +14,8 @@ pub struct Rect {
 impl Rect {
 	pub fn from_pts(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 			radius: None,
 			stroke: None,
 			fill: Some(rgba!(1)),

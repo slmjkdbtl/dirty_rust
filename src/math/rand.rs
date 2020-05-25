@@ -2,7 +2,7 @@
 
 use super::*;
 
-use random;
+
 use random::seq::SliceRandom;
 use random::SeedableRng;
 

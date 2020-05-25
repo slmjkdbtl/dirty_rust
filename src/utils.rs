@@ -16,6 +16,7 @@ macro_rules! export {
 macro_rules! import {
 	($name:ident) => {
 		mod $name;
+		#[allow(unused)]
 		use $name::*;
 	}
 }

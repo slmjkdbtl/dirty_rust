@@ -29,24 +29,24 @@ impl Track {
 
 		let mut mixer = ctx.mixer()
 			.lock()
-			.map_err(|_| format!("failed to get mixer"))?;
+			.map_err(|_| "failed to get mixer".to_string())?;
 
 		let id = mixer.add(src.clone());
 
 		let control = mixer
 			.get_control(&id)
-			.ok_or(format!("failed to get mixer"))?;
+			.ok_or("failed to get mixer".to_string())?;
 
 		mixer.add_effect(&id, volume.clone());
 		mixer.add_effect(&id, pan.clone());
 		control.set_paused(true);
 
 		return Ok(Self {
-			src: src,
-			id: id,
-			control: control,
-			volume: volume,
-			pan: pan,
+			src,
+			id,
+			control,
+			volume,
+			pan,
 		});
 
 	}

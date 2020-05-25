@@ -19,8 +19,8 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 		let ibuf = IndexBuffer::from(&device, &indices)?;
 
 		return Ok(Self {
-			vbuf: vbuf,
-			ibuf: ibuf,
+			vbuf,
+			ibuf,
 			count: indices.len(),
 			_uniform_layout: PhantomData,
 		});

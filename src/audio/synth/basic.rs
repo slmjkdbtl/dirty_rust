@@ -36,7 +36,7 @@ impl BasicSynth {
 	}
 
 	pub fn set_volume(&mut self, v: f32) {
-		self.volume = v.clamp(0.0, 1.0);
+		self.volume = num_traits::clamp(v, 0.0, 1.0);
 	}
 
 	pub fn play(&mut self, v: Voice) {

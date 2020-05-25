@@ -2,22 +2,30 @@
 
 use std::ops::*;
 
-pub trait Lerpable =
+pub trait Lerpable:
 	Copy
-	+ Add<Output = Self>
-	+ Sub<Output = Self>
-	+ Mul<f32, Output = Self>
-	;
+	+ Add<Output=Self>
+	+ Sub<Output=Self>
+	+ Mul<f32, Output=Self>
+	where Self: Sized
+{}
+
+impl<T> Lerpable for T
+	where T: Copy
+		+ Add<Output=T>
+		+ Sub<Output=T>
+		+ Mul<f32, Output=T>
+{}
 
 pub trait Lerping: Lerpable {
 
 	fn lerp(self, to: Self, amount: f32) -> Self {
-		return self + (to - self) * amount.clamp(0.0, 1.0);
+		return self + (to - self) * num_traits::clamp(amount, 0.0, 1.0);
 	}
 
 	fn smooth(self, to: Self, amount: f32) -> Self {
 
-		let t = amount.clamp(0.0, 1.0);
+		let t = num_traits::clamp(amount, 0.0, 1.0);
 		let m = t * t * (3.0 - 2.0 * t);
 
 		return self + (to - self) * m;

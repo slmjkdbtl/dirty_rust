@@ -68,9 +68,9 @@ impl Window {
 		let windowed_ctx = unsafe {
 			ctx_builder
 				.build_windowed(window_builder, &event_loop)
-				.map_err(|_| format!("failed to build window"))?
+				.map_err(|_| "failed to build window".to_string())?
 				.make_current()
-				.map_err(|_| format!("failed to make opengl context"))?
+				.map_err(|_| "failed to make opengl context".to_string())?
 		};
 
 		if conf.cursor_hidden {
@@ -78,12 +78,12 @@ impl Window {
 		}
 
 		if conf.cursor_locked {
-			windowed_ctx.window().set_cursor_grab(true);
+			windowed_ctx.window().set_cursor_grab(true).expect("cannot set cursor grab");
 		}
 
 		return Ok(Self {
 			event_loop: Some(event_loop),
-			windowed_ctx: windowed_ctx,
+			windowed_ctx,
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
 			pressed_gamepad_buttons: hmap![],
@@ -97,7 +97,7 @@ impl Window {
 			title: conf.title.to_string(),
 			quit: false,
 			gamepad_ctx: gilrs::Gilrs::new()
-				.map_err(|_| format!("failed to create gamepad context"))?,
+				.map_err(|_| "failed to create gamepad context".to_string())?,
 		});
 
 	}
@@ -117,7 +117,7 @@ impl Window {
 	pub(crate) fn swap(&self) -> Result<()> {
 		self.windowed_ctx
 			.swap_buffers()
-			.map_err(|_| format!("failed to swap buffer"))?;
+			.map_err(|_| "failed to swap buffer".to_string())?;
 		return Ok(());
 	}
 
@@ -171,7 +171,7 @@ impl Window {
 		self.windowed_ctx
 			.window()
 			.set_cursor_position(g_mpos)
-			.map_err(|_| format!("failed to set mouse position"))?
+			.map_err(|_| "failed to set mouse position".to_string())?
 			;
 
 		self.mouse_pos = mpos;
@@ -213,7 +213,7 @@ impl Window {
 
 	/// set cursor locked
 	pub fn set_cursor_locked(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_grab(b);
+		self.windowed_ctx.window().set_cursor_grab(b).expect("cannot set cursor grab");
 		self.cursor_locked = b;
 	}
 
@@ -307,7 +307,7 @@ impl Window {
 
 			*flow = ControlFlow::Poll;
 
-			let res: Result<()> = try {
+			let res: Result<()> = || -> Result<()> {
 
 				use glutin::event::WindowEvent as WEvent;
 				use glutin::event::DeviceEvent as DEvent;
@@ -601,7 +601,8 @@ impl Window {
 					handle(&mut self, WindowEvent::Input(e))?;
 				}
 
-			};
+				Ok(())
+			}();
 
 			if let Err(err) = res {
 				elog!("{}", err);

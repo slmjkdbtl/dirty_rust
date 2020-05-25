@@ -65,7 +65,7 @@ impl Mixer {
 		let id = self.last_id;
 
 		self.sources.insert(id, SourceCtx {
-			src: src,
+			src,
 			control: Arc::new(Control::default()),
 			effects: vec![],
 			done: false,
@@ -108,28 +108,24 @@ impl Iterator for Mixer {
 
 				return frame_acc;
 
+			} else if let Some(mut frame) = src.next() {
+
+				for e in &ctx.effects {
+					if let Ok(mut e) = e.lock() {
+						frame = e.frame(frame);
+					}
+				}
+
+				return Frame::new(
+					frame_acc.left + frame.left,
+					frame_acc.right + frame.right,
+				);
+
 			} else {
 
-				if let Some(mut frame) = src.next() {
+				ctx.done = true;
 
-					for e in &ctx.effects {
-						if let Ok(mut e) = e.lock() {
-							frame = e.frame(frame);
-						}
-					}
-
-					return Frame::new(
-						frame_acc.left + frame.left,
-						frame_acc.right + frame.right,
-					);
-
-				} else {
-
-					ctx.done = true;
-
-					return frame_acc;
-
-				}
+				return frame_acc;
 
 			}
 

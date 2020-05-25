@@ -124,8 +124,8 @@ impl UI {
 	) -> Result<()> {
 
 		let window = self.windows.entry(title).or_insert(Window {
-			title: title,
-			pos: pos,
+			title,
+			pos,
 			width: w,
 			height: h,
 			widgets: hmap![],
@@ -174,8 +174,8 @@ impl UI {
 
 		let window_ctx = WindowCtx {
 			theme: &self.theme,
-			width: width,
-			offset: offset,
+			width,
+			offset,
 		};
 
 		let dwindow = &mut d.window;
@@ -190,7 +190,7 @@ impl UI {
 				window: dwindow,
 				audio: daudio,
 				app: dapp,
-				gfx: gfx,
+				gfx,
 			};
 
 			let mut wman = WidgetManager {
@@ -250,7 +250,7 @@ impl<'a> WidgetManager<'a> {
 		let wctx = WidgetCtx {
 			theme: self.ctx.theme,
 			width: self.ctx.width,
-			offset: offset,
+			offset,
 			mouse_pos: d.window.mouse_pos() - offset,
 		};
 
@@ -278,18 +278,18 @@ impl<'a> WidgetManager<'a> {
 
 		let w = self.widgets
 			.entry(id)
-			.or_insert_with(|| box w())
+			.or_insert_with(|| Box::new(w()))
 			.as_mut()
 			.as_any_mut()
 			.downcast_mut::<W>()
-			.ok_or(format!("failed to cast widget types"))?;
+			.ok_or("failed to cast widget types".to_string())?;
 
 		let offset = self.ctx.offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
 			theme: self.ctx.theme,
 			width: self.ctx.width,
-			offset: offset,
+			offset,
 			mouse_pos: d.window.mouse_pos() - offset,
 		};
 

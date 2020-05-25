@@ -64,7 +64,7 @@ pub struct Anim {
 	scale: Track<Vec3>,
 }
 
-fn get_track_val<T: Lerpable>(track: &Track<T>, t: f32) -> Option<T> {
+fn get_track_val<T: Copy>(track: &Track<T>, t: f32) -> Option<T> {
 
 	if track.is_empty() {
 		return None;
@@ -174,8 +174,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 					return positions
 						.map(|v| vec3!(v[0], v[1], v[2]))
 						.collect::<Vec<Vec3>>();
-				})
-				.unwrap_or(vec![]);
+				}).unwrap_or_default();
 
 			let indices = reader
 				.read_indices()
@@ -183,8 +182,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 					return indices
 						.into_u32()
 						.collect::<Vec<u32>>();
-				})
-				.unwrap_or(vec![]);
+				}).unwrap_or_default();
 
 			let normals = reader
 				.read_normals()
@@ -192,8 +190,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 					return normals
 						.map(|v| vec3!(v[0], v[1], v[2]))
 						.collect::<Vec<Vec3>>();
-				})
-				.unwrap_or(vec![]);
+				}).unwrap_or_default();
 
 			let normals = if normals.len() != positions.len() {
 				ops::gen_normals(&positions, &indices)
@@ -209,8 +206,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 						// gltf/glb exported by blender uses linear color space
 						.map(|c| rgba!(c[0], c[1], c[2], c[3]).to_srgb())
 						.collect::<Vec<Color>>();
-				})
-				.unwrap_or(vec![]);
+				}).unwrap_or_default();
 
 			let texcoords = reader
 				.read_tex_coords(0)
@@ -219,8 +215,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 						.into_f32()
 						.map(|t| vec2!(t[0], t[1]))
 						.collect::<Vec<Vec2>>();
-				})
-				.unwrap_or(vec![]);
+				}).unwrap_or_default();
 
 			let mut verts = Vec::with_capacity(positions.len());
 
@@ -239,19 +234,19 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::
 
 			return MeshData {
 				vertices: verts,
-				indices: indices,
+				indices,
 			};
 
 		}).collect();
 
-	}).unwrap_or(vec![]);
+	}).unwrap_or_default();
 
 	nodes.insert(id, NodeData {
-		id: id,
+		id,
 		name: name.map(String::from),
 		children: node.children().map(|c| c.index()).collect(),
-		transform: transform,
-		meshes: meshes,
+		transform,
+		meshes,
 	});
 
 	for c in node.children() {
@@ -275,12 +270,12 @@ impl Model {
 				path.set_extension("mtl");
 
 				let mtl_src = fs::read_str(&path).ok();
-				let mtl_src = mtl_src.as_ref().map(|s| s.as_str());
+				let mtl_src = mtl_src.as_deref();
 
 				path.set_extension("png");
 
 				let img_src = fs::read(&path).ok();
-				let img_src = img_src.as_ref().map(|i| i.as_slice());
+				let img_src = img_src.as_deref();
 
 				let data = gfx::Model::load_obj(&obj_src, mtl_src, img_src)?;
 
@@ -298,7 +293,7 @@ impl Model {
 			},
 
 			_ => {
-				return Err(format!("unrecognized model"));
+				return Err("unrecognized model".to_string());
 			},
 
 		}
@@ -341,11 +336,11 @@ impl Model {
 
 		// init
 		let glb = Glb::from_slice(bytes)
-			.map_err(|_| format!("failed to parse glb"))?;
+			.map_err(|_| "failed to parse glb".to_string())?;
 		let document = Gltf::from_slice(&glb.json)
-			.map_err(|_| format!("failed to parse document from glb"))?;
+			.map_err(|_| "failed to parse document from glb".to_string())?;
 		let bin = glb.bin
-			.ok_or_else(|| format!("failed to parse bin from glb"))?;
+			.ok_or_else(|| "failed to parse bin from glb".to_string())?;
 
 		// image
 		use gltf::image::Source;
@@ -400,21 +395,21 @@ impl Model {
 
 				let frames: Vec<f32> = reader
 					.read_inputs()
-					.ok_or(format!("failed to read anim"))?
+					.ok_or("failed to read anim".to_string())?
 					.collect();
 
 				use gltf::animation::util::ReadOutputs;
 
 				match reader
 					.read_outputs()
-					.ok_or(format!("failed to read anim"))? {
+					.ok_or("failed to read anim".to_string())? {
 
 					ReadOutputs::Translations(translations) => {
 						let mut values = Vec::with_capacity(frames.len());
 						for (i, v) in translations.enumerate() {
 							let t = frames
 								.get(i)
-								.ok_or(format!("failed to read anim from glb"))?;
+								.ok_or("failed to read anim from glb".to_string())?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
 						}
 						anim.pos = values;
@@ -425,7 +420,7 @@ impl Model {
 						for (i, v) in rotations.into_f32().enumerate() {
 							let t = frames
 								.get(i)
-								.ok_or(format!("failed to read anim from glb"))?;
+								.ok_or("failed to read anim from glb".to_string())?;
 							values.push((*t, vec4!(v[0], v[1], v[2], v[3])));
 						}
 						anim.rot = values;
@@ -436,7 +431,7 @@ impl Model {
 						for (i, v) in scales.enumerate() {
 							let t = frames
 								.get(i)
-								.ok_or(format!("failed to read anim from glb"))?;
+								.ok_or("failed to read anim from glb".to_string())?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
 						}
 						anim.scale = values;
@@ -468,11 +463,11 @@ impl Model {
 		}
 
 		return Ok(ModelData {
-			nodes: nodes,
-			root_nodes: root_nodes,
-			img: img,
-			anims: anims,
-			anim_len: anim_len,
+			nodes,
+			root_nodes,
+			img,
+			anims,
+			anim_len,
 		});
 
 	}
@@ -483,7 +478,7 @@ impl Model {
 			return mtl
 				.map(|m| tobj::load_mtl_buf(&mut Cursor::new(m)))
 				.unwrap_or(Ok((vec![], hmap![])));
-		}).map_err(|_| format!("failed to parse obj"))?;
+		}).map_err(|_| "failed to parse obj".to_string())?;
 
 		let mut root_nodes = Vec::with_capacity(models.len());
 		let mut nodes = HashMap::with_capacity(models.len());
@@ -556,9 +551,9 @@ impl Model {
 		};
 
 		return Ok(ModelData {
-			nodes: nodes,
-			root_nodes: root_nodes,
-			img: img,
+			nodes,
+			root_nodes,
+			img,
 			anims: hmap![],
 			anim_len: 0.0,
 		});
@@ -590,16 +585,16 @@ impl Model {
 				name: node.name,
 				children: node.children,
 				transform: node.transform,
-				meshes: meshes,
+				meshes,
 			});
 		}).collect::<HashMap<usize, Node>>();
 
 		return Ok(Self {
 			bbox: get_bbox(&nodes, &root_nodes),
-			nodes: nodes,
-			anim_len: anim_len,
-			anims: anims,
-			root_nodes: root_nodes,
+			nodes,
+			anim_len,
+			anims,
+			root_nodes,
 			texture: tex,
 		});
 

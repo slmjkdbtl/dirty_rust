@@ -17,7 +17,7 @@ enum State {
 impl Select {
 	pub fn new(prompt: &'static str, options: &[&str], i: usize) -> Self {
 		return Self {
-			prompt: prompt,
+			prompt,
 			options: options.iter().map(|s| s.to_string()).collect(),
 			selected: i,
 			state: State::Idle(false),

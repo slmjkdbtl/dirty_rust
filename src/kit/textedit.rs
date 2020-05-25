@@ -65,7 +65,7 @@ impl Input {
 
 		return Self {
 			content: conf.init_content.clone(),
-			conf: conf,
+			conf,
 			cursor: 0,
 			undo_stack: vec![],
 			redo_stack: vec![],
@@ -86,7 +86,7 @@ impl Input {
 	}
 
 	fn clamp_cursor(&self, i: Col) -> Col {
-		return i.clamp(0, self.content.len() as Col);
+		return num_traits::clamp(i, 0, self.content.len() as Col);
 	}
 
 	pub fn move_to(&mut self, i: Col) {
@@ -367,7 +367,7 @@ impl TextArea {
 	pub fn with_conf(conf: Conf) -> Self {
 		return Self {
 			lines: conf.init_content.split('\n').map(String::from).collect(),
-			conf: conf,
+			conf,
 			cursor: CursorPos::default(),
 			undo_stack: vec![],
 			redo_stack: vec![],
@@ -491,7 +491,7 @@ impl TextArea {
 
 		}
 
-		return ln.clamp(1, self.lines.len() as Line);
+		return num_traits::clamp(ln, 1, self.lines.len() as Line);
 
 	}
 
@@ -595,15 +595,11 @@ impl TextArea {
 
 				}
 
-			} else {
-
-				if let Some(prev_pos) = self.prev_word_at(pos) {
-					return self.del_range((prev_pos, CursorPos {
-						col: pos.col - 1,
-						.. pos
-					}));
-				}
-
+			} else if let Some(prev_pos) = self.prev_word_at(pos) {
+				return self.del_range((prev_pos, CursorPos {
+					col: pos.col - 1,
+					.. pos
+				}));
 			}
 
 		}
@@ -627,8 +623,8 @@ impl TextArea {
 			if let Some(line) = self.get_line_at(start.line) {
 
 				let mut line = line.clone();
-				let start_col = (start.col - 1).clamp(0, line.len() as i32);
-				let end_col = end.col.clamp(0, line.len() as i32);
+				let start_col = num_traits::clamp((start.col - 1), 0, line.len() as i32);
+				let end_col = num_traits::clamp(end.col, 0, line.len() as i32);
 
 				self.push_undo();
 				line.replace_range(start_col as usize..end_col as usize, "");
@@ -770,7 +766,7 @@ impl TextArea {
 
 		if pos.col <= line.len() as Col + 1 {
 
-			let end = (pos.col - 2).clamp(0, line.len() as i32);
+			let end = num_traits::clamp((pos.col - 2), 0, line.len() as i32);
 
 			for (i, ch) in line[..end as usize].char_indices().rev() {
 

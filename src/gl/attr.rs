@@ -10,7 +10,7 @@ pub(super) struct VertexAttrIter<'a> {
 
 pub(super) fn iter_attrs<'a>(attrs: &'a VertexAttrGroup) -> VertexAttrIter<'a> {
 	return VertexAttrIter {
-		attrs: attrs,
+		attrs,
 		cur_offset: 0,
 		cur_idx: 0,
 	};

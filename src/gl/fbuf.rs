@@ -42,10 +42,10 @@ impl Framebuffer {
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
 
 			let fbuf = Self {
-				ctx: ctx,
-				id: id,
-				tex: tex,
-				rbo: rbo,
+				ctx,
+				id,
+				tex,
+				rbo,
 			};
 
 			fbuf.bind();
@@ -66,7 +66,7 @@ impl Framebuffer {
 			);
 
 			if fbuf.ctx.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-				return Err(format!("failed to create framebuffer"));
+				return Err("failed to create framebuffer".to_string());
 			}
 
 			device.clear(Surface::Depth);

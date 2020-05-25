@@ -94,14 +94,14 @@ impl Device {
 
 			return match self.ctx.get_error() {
 				glow::NO_ERROR => Ok(()),
-				glow::INVALID_ENUM => Err(format!("opengl: invalid enum")),
-				glow::INVALID_VALUE => Err(format!("opengl: invalid value")),
-				glow::INVALID_OPERATION => Err(format!("opengl: invalid operation")),
-				glow::STACK_OVERFLOW => Err(format!("opengl: stack overflow")),
-				glow::STACK_UNDERFLOW => Err(format!("opengl: stack underflow")),
-				glow::OUT_OF_MEMORY => Err(format!("opengl: out of memory")),
-				glow::INVALID_FRAMEBUFFER_OPERATION => Err(format!("opengl: invalid framebuffer operation")),
-				_ => Err(format!("opengl: unknown error")),
+				glow::INVALID_ENUM => Err("opengl: invalid enum".to_string()),
+				glow::INVALID_VALUE => Err("opengl: invalid value".to_string()),
+				glow::INVALID_OPERATION => Err("opengl: invalid operation".to_string()),
+				glow::STACK_OVERFLOW => Err("opengl: stack overflow".to_string()),
+				glow::STACK_UNDERFLOW => Err("opengl: stack underflow".to_string()),
+				glow::OUT_OF_MEMORY => Err("opengl: out of memory".to_string()),
+				glow::INVALID_FRAMEBUFFER_OPERATION => Err("opengl: invalid framebuffer operation".to_string()),
+				_ => Err("opengl: unknown error".to_string()),
 			};
 
 		}

@@ -15,7 +15,7 @@ impl Mat4 {
 
 	pub fn new(m: [f32; 16]) -> Self {
 		return Self {
-			m: m,
+			m,
 		};
 	}
 

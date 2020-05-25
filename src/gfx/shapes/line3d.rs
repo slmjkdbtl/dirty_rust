@@ -17,8 +17,8 @@ pub fn line3d(p1: Vec3, p2: Vec3) -> Line3D {
 impl Line3D {
 	pub fn new(p1: Vec3, p2: Vec3) -> Self {
 		return Self {
-			p1: p1,
-			p2: p2,
+			p1,
+			p2,
 			color: rgba!(),
 			width: 1.0,
 		};

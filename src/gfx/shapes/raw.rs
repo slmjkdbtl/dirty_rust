@@ -16,8 +16,8 @@ pub struct Raw<'a> {
 impl<'a> Raw<'a> {
 	pub fn new(verts: &'a [Vertex], indices: &'a [u32]) -> Self {
 		return Self {
-			verts: verts,
-			indices: indices,
+			verts,
+			indices,
 			prim: gl::Primitive::Triangle,
 			tex: None,
 			color: rgba!(1),

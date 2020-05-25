@@ -34,8 +34,8 @@ impl Conf {
 	pub fn basic(title: &str, width: i32, height: i32) -> Self {
 		return Self {
 			title: String::from(title),
-			width: width,
-			height: height,
+			width,
+			height,
 			..Default::default()
 		};
 	}

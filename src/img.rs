@@ -28,15 +28,15 @@ impl Image {
 	pub fn from_raw(w: i32, h: i32, data: Vec<u8>) -> Result<Self> {
 
 		if data.len() != w as usize * h as usize * 4 {
-			return Err(format!("incorrect image size"));
+			return Err("incorrect image size".to_string());
 		}
 
 		if w <= 0 || h <= 0 {
-			return Err(format!("image size must be > 0"))
+			return Err("image size must be > 0".to_string())
 		}
 
 		return Ok(Self {
-			data: data,
+			data,
 			width: w,
 			height: h,
 		});
@@ -46,7 +46,7 @@ impl Image {
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let img = image::load_from_memory(data)
-			.map_err(|_| format!("failed to parse img"))?
+			.map_err(|_| "failed to parse img".to_string())?
 			.to_rgba()
 			;
 

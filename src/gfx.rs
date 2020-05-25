@@ -252,7 +252,7 @@ impl Gfx {
 	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
-			return Err(format!("cannot use canvas inside a canvas"));
+			return Err("cannot use canvas inside a canvas".to_string());
 		}
 
 		self.flush();

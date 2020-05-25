@@ -36,7 +36,7 @@ pub fn extrude(data: &MeshData, edges: &[(u32, u32)], dis: f32) -> MeshData {
 
 	return MeshData {
 		vertices: verts,
-		indices: indices,
+		indices,
 	};
 
 }
