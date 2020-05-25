@@ -73,7 +73,7 @@ impl UI {
 					Mouse::Left => {
 
 						if self.draggin.is_none() {
-
+							let mut temp = false;
 							// TODO: windows should be sorted
 							for (id, window) in &self.windows {
 
@@ -86,11 +86,12 @@ impl UI {
 
 								if col::intersect2d(mpos, bar) {
 									self.draggin = Some((id, window.pos - mpos));
-									has_event = true;
+									temp = true;
 									break;
 								}
 
 							}
+							has_event = temp;
 
 						}
 
