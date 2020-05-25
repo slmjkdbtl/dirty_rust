@@ -125,22 +125,3 @@ pub fn is_vorbis<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
 }
 
-// pub fn is_vorbis<R: Read + Seek>(mut data: R) -> bool {
-
-// 	let pos = match data.seek(SeekFrom::Current(0)) {
-// 		Ok(pos) => pos,
-// 		Err(_) => return false,
-// 	};
-
-// 	if OggStreamReader::new(data.by_ref()).is_err() {
-// 		data.seek(SeekFrom::Start(pos));
-// 		return false;
-// 	}
-
-// 	data.seek(SeekFrom::Start(pos));
-
-// 	return true;
-
-// }
-
-
