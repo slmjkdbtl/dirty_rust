@@ -36,7 +36,7 @@ impl UI {
 		};
 	}
 
-	pub fn event(&mut self, d: &mut Ctx, e: &input::Event) {
+	pub fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
 
 		use input::Event::*;
 		use input::Mouse;
@@ -45,9 +45,13 @@ impl UI {
 		let mpos = d.window.mouse_pos();
 		let t = &self.theme;
 
+		let mut has_event = false;
+
 		for p in self.windows.values_mut() {
 			for w in p.widgets.values_mut() {
-				w.event(d, e);
+				if w.event(d, e) {
+					has_event = true;
+				}
 			}
 		}
 
@@ -57,6 +61,7 @@ impl UI {
 				if let Some((id, offset)) = self.draggin {
 					if let Some(window) = self.windows.get_mut(id) {
 						window.pos = mpos + offset;
+						has_event = true;
 					}
 				}
 			},
@@ -81,6 +86,7 @@ impl UI {
 
 								if col::intersect2d(mpos, bar) {
 									self.draggin = Some((id, window.pos - mpos));
+									has_event = true;
 									break;
 								}
 
@@ -110,6 +116,8 @@ impl UI {
 			_ => {},
 
 		}
+
+		return has_event;
 
 	}
 
