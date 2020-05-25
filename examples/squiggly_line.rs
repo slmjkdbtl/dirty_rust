@@ -56,13 +56,13 @@ struct Squiggly {
 }
 
 impl Squiggly {
-	fn new(buf: &Polyline, n_frames: usize, tol: usize, color: Color) -> Self {
+	fn new(buf: &Polyline, n_frames: usize, tol: usize) -> Self {
 		let mut frames = vec![];
 		for _ in 0..n_frames {
 			let frame = buf.line.iter()
 				.map(|&v| v + vec2!(rand(0,tol), rand(0,tol)))
 				.collect::<Vec<_>>();
-			frames.push(Polyline::new(frame, color));
+			frames.push(Polyline::new(frame, buf.color));
 		}
 		Self {
 			frames,
@@ -90,7 +90,6 @@ struct Game {
 	buf: Polyline,
 	t: usize,
 	ui: ui::UI,
-	color: Color,
 
 	tol: usize,
 	density: f32,
@@ -110,7 +109,6 @@ impl State for Game {
 			tol: 3,
 			density: 3.,
 			sz: 100,
-			color: rgba!(1),
 			canvas: gfx::Canvas::new(d.gfx, d.gfx.width(), d.gfx.height())?,
 		})
 	}
@@ -130,7 +128,7 @@ impl State for Game {
 			}
 			MouseRelease(_) => {
 				self.key_down = false;
-				self.lines.push(Squiggly::new(&self.buf, N_FRAMES, self.tol, self.color));
+				self.lines.push(Squiggly::new(&self.buf, N_FRAMES, self.tol));
 				self.buf.clear();
 			}
 			MouseMove(_) => {
@@ -173,7 +171,6 @@ impl State for Game {
 				.fill(rgba!(0.1, 0.1, 0.1, 1)),
 		)?;
 
-
 		self.buf.draw(d)?;
 		for line in &self.lines {
 			line.draw(self.t, d)?;
@@ -212,7 +209,7 @@ impl State for Game {
 			Ok(())
 		})?;
 		if let Some(col) = color {
-			self.color = col;
+			self.buf.color = col;
 		}
 
 		Ok(())
