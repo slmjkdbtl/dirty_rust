@@ -45,16 +45,12 @@ impl Canvas {
 		return &self.tex;
 	}
 
-	pub fn capture(&self, path: impl AsRef<Path>) -> Result<()> {
-
-		return img::Image::from_raw(
+	pub fn capture(&self) -> Result<img::Image> {
+		return Ok(img::Image::from_raw(
 			self.tex.width(),
 			self.tex.height(),
 			self.tex.get_pixels()
-		)?
-			.flip_v()
-			.save(path);
-
+		)?.flip_v());
 	}
 
 	pub fn resize(&mut self, ctx: &Gfx, w: i32, h: i32) -> Result<()> {

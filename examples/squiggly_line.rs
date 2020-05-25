@@ -1,5 +1,7 @@
 // wengwengweng
 
+const N_FRAMES: usize = 10;
+
 use dirty::*;
 use dirty::math::*;
 use gfx::shapes;
@@ -34,6 +36,17 @@ impl Polyline {
 		}
 		Ok(())
 	}
+
+	fn render(&self, gfx: &mut gfx::Gfx, offset: Vec2) -> Result<()> {
+		for (p0, p1) in self.line.iter().zip(self.line.iter().skip(1)) {
+			gfx.draw(
+				&shapes::line(*p0 + offset, *p1 + offset)
+					.width(2.0)
+					// .color()
+			)?;
+		}
+		Ok(())
+	}
 }
 
 struct Squiggly {
@@ -41,9 +54,9 @@ struct Squiggly {
 }
 
 impl Squiggly {
-	fn new(buf: &Polyline, n: usize, tol: usize) -> Self {
+	fn new(buf: &Polyline, n_frames: usize, tol: usize) -> Self {
 		let mut frames = vec![];
-		for _ in 0..n {
+		for _ in 0..n_frames {
 			let frame = buf.line.iter()
 				.map(|&v| v + vec2!(rand(0,tol), rand(0,tol)))
 				.collect::<Vec<_>>();
@@ -59,6 +72,14 @@ impl Squiggly {
 		f.draw(d)?;
 		Ok(())
 	}
+
+	fn render(&self, gfx: &mut gfx::Gfx, sz: usize, offset: Vec2) -> Result<()> {
+		for (i, frame) in self.frames.iter().enumerate() {
+			let off = offset + vec2!(i * sz, 0);
+			frame.render(gfx, off)?;
+		}
+		Ok(())
+	}
 }
 
 struct Game {
@@ -71,11 +92,12 @@ struct Game {
 	tol: usize,
 	density: f32,
 	sz: isize,
+	canvas: gfx::Canvas,
 }
 
 impl State for Game {
 
-	fn init(_: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 		Ok(Self {
 			key_down: false,
 			lines: vec![],
@@ -85,6 +107,7 @@ impl State for Game {
 			tol: 3,
 			density: 3.,
 			sz: 100,
+			canvas: gfx::Canvas::new(d.gfx, d.gfx.width(), d.gfx.height())?,
 		})
 	}
 
@@ -103,7 +126,7 @@ impl State for Game {
 			}
 			MouseRelease(_) => {
 				self.key_down = false;
-				self.lines.push(Squiggly::new(&self.buf, 10, self.tol));
+				self.lines.push(Squiggly::new(&self.buf, N_FRAMES, self.tol));
 				self.buf.clear();
 			}
 			MouseMove(_) => {
@@ -140,11 +163,16 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
+// 		d.gfx.draw_on(&self.canvas, || {
+			// ..
+// 		})?;
+
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 		let orig = vec2!(0, 240);
 
 		d.gfx.draw(
-			&shapes::rect(orig, orig + vec2!(self.sz, -self.sz)).fill(rgba!(0.1, 0.1, 0.1, 1)),
+			&shapes::rect(orig, orig + vec2!(self.sz, -self.sz))
+				.fill(rgba!(0.1, 0.1, 0.1, 1)),
 		)?;
 
 		self.buf.draw(d)?;
@@ -156,11 +184,16 @@ impl State for Game {
 		let mut tol = 0;
 		let mut density = 0.;
 		let mut sz = 0;
+		let mut save = false;
+		let mut fname = String::new();
 		self.ui.window(d, "options", top_left, 240.0, 360.0, |ctx, p| {
 
 			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
 			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
 			sz = p.slider(ctx, "sz", 30., 10., 360.)? as isize;
+			fname = p.input(ctx, "filename")?;
+			p.text(ctx, ".png");
+			save = p.button(ctx, "save")?;
 
 			Ok(())
 
@@ -168,6 +201,9 @@ impl State for Game {
 		self.tol = tol;
 		self.density = density;
 		self.sz = sz;
+		if save{
+			self.save(d.gfx, &fname);
+		}
 
 		Ok(())
 
@@ -175,10 +211,26 @@ impl State for Game {
 
 }
 
+impl Game {
+	fn save(&self, ctx: &mut gfx::Gfx, fname: &str) -> Result<()> {
+		let fbuf = gfx::Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32).unwrap();
+		ctx.draw_on(&fbuf, |gfx| {
+			for line in &self.lines {
+				line.render(gfx, self.sz as usize, vec2!(0, 240))?;
+			}
+			Ok(())
+		})?;
+		let img = fbuf.capture()?;
+		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
+		img.save(format!("{}.png", fname))?;
+		return Ok(());
+	}
+}
+
 fn main() {
 	if let Err(err) = launcher()
+		.size(1024, 768)
 		.run::<Game>() {
 		println!("{}", err);
 	}
 }
-
