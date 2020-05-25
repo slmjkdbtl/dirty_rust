@@ -2,9 +2,7 @@
 
 check:
 	cargo c \
-		--examples \
-		--all-features \
-		--tests
+		--all-features
 
 check-web:
 	cargo c \

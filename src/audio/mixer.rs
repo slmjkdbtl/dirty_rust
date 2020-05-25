@@ -112,7 +112,7 @@ impl Iterator for Mixer {
 
 				for e in &ctx.effects {
 					if let Ok(mut e) = e.lock() {
-						frame = e.frame(frame);
+						frame = e.process(frame);
 					}
 				}
 
