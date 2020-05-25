@@ -9,12 +9,14 @@ use input::Key;
 
 struct Polyline {
 	line: Vec<Vec2>,
+	color: Color,
 }
 
 impl Polyline {
-	fn new(line: Vec<Vec2>) -> Self {
+	fn new(line: Vec<Vec2>, color: Color) -> Self {
 		Self {
 			line,
+			color,
 		}
 	}
 
@@ -31,7 +33,7 @@ impl Polyline {
 			d.gfx.draw(
 				&shapes::line(*p0, *p1)
 					.width(2.0)
-					// .color()
+					.color(self.color)
 			)?
 		}
 		Ok(())
@@ -42,7 +44,7 @@ impl Polyline {
 			gfx.draw(
 				&shapes::line(*p0 + offset, *p1 + offset)
 					.width(2.0)
-					// .color()
+					.color(self.color)
 			)?;
 		}
 		Ok(())
@@ -60,7 +62,7 @@ impl Squiggly {
 			let frame = buf.line.iter()
 				.map(|&v| v + vec2!(rand(0,tol), rand(0,tol)))
 				.collect::<Vec<_>>();
-			frames.push(Polyline::new(frame));
+			frames.push(Polyline::new(frame, buf.color));
 		}
 		Self {
 			frames,
@@ -73,9 +75,9 @@ impl Squiggly {
 		Ok(())
 	}
 
-	fn render(&self, gfx: &mut gfx::Gfx, sz: usize, offset: Vec2) -> Result<()> {
+	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
-			let off = offset + vec2!(i * sz, 0);
+			let off = vec2!(-sz, sz) + vec2!(-(i as isize) * sz as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())
@@ -101,7 +103,7 @@ impl State for Game {
 		Ok(Self {
 			key_down: false,
 			lines: vec![],
-			buf: Polyline::new(vec![]),
+			buf: Polyline::new(vec![], rgba!(1.)),
 			t: 0,
 			ui: ui::UI::new(),
 			tol: 3,
@@ -164,17 +166,11 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
-
-// 		d.gfx.draw_on(&self.canvas, || {
-			// ..
-// 		})?;
-
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
-		let orig = vec2!(0, 240);
-
+		let top_right = d.gfx.coord(gfx::Origin::TopRight);
 		d.gfx.draw(
-			&shapes::rect(orig, orig + vec2!(self.sz, -self.sz))
-				.fill(rgba!(0.1, 0.1, 0.1, 1)),
+			&shapes::rect(vec2!(-self.sz, self.sz), vec2!(self.sz, -self.sz))
+				.fill(rgba!(0.5, 0.5, 0.5, 1)),
 		)?;
 
 		self.buf.draw(d)?;
@@ -192,9 +188,9 @@ impl State for Game {
 
 			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
 			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
-			sz = p.slider(ctx, "sz", 30., 10., 360.)? as isize;
+			sz = p.slider(ctx, "sz", 300., 10., 500.)? as isize;
 			fname = p.input(ctx, "filename")?;
-			p.text(ctx, ".png");
+			p.text(ctx, ".png")?;
 			save = p.button(ctx, "save")?;
 
 			Ok(())
@@ -203,8 +199,21 @@ impl State for Game {
 		self.tol = tol;
 		self.density = density;
 		self.sz = sz;
-		if save{
-			self.save(d.gfx, &fname);
+		if save {
+			self.save(d.gfx, &fname)?;
+		}
+
+		let mut color = None;
+		self.ui.window(d, "color", top_right-vec2!(240., 0.), 240.0, 360.0, |ctx, p| {
+			if p.button(ctx, "red")? 	{ color = Some(rgba!(1,0,0,1)); }
+			if p.button(ctx, "green")? 	{ color = Some(rgba!(0,1,0,1)); }
+			if p.button(ctx, "blue")? 	{ color = Some(rgba!(0,0,1,1)); }
+			if p.button(ctx, "white")? 	{ color = Some(rgba!(1)); }
+			if p.button(ctx, "black")? 	{ color = Some(rgba!(0,0,0,1)); }
+			Ok(())
+		})?;
+		if let Some(col) = color {
+			self.buf.color = col;
 		}
 
 		Ok(())
@@ -218,14 +227,14 @@ impl Game {
 		let fbuf = gfx::Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32).unwrap();
 		ctx.draw_on(&fbuf, |gfx| {
 			for line in &self.lines {
-				line.render(gfx, self.sz as usize, vec2!(0, 240))?;
+				line.render(gfx, self.sz)?;
 			}
 			Ok(())
 		})?;
 		let img = fbuf.capture()?;
 		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
 		img.save(format!("{}.png", fname))?;
-		return Ok(());
+		Ok(())
 	}
 }
 
