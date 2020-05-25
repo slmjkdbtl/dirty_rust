@@ -260,6 +260,20 @@ impl Gfx {
 		let t = self.transform;
 		let (cw, ch) = (canvas.width(), canvas.height());
 
+		let new_cam = OrthoCam {
+			width: cw as f32,
+			height: ch as f32,
+			near: DEFAULT_NEAR,
+			far: DEFAULT_FAR,
+		};
+
+		let oproj = self.proj;
+		let oview = self.view;
+
+		// TODO: only reset if no active custom camera?
+		self.proj = new_cam.proj();
+		self.view = new_cam.view();
+
 		self.cur_canvas = Some(canvas.clone());
 		self.transform = mat4!();
 
@@ -278,6 +292,9 @@ impl Gfx {
 
 		self.cur_canvas = None;
 		self.transform = t;
+
+		self.proj = oproj;
+		self.view = oview;
 
 		self.gl.viewport(
 			0,
