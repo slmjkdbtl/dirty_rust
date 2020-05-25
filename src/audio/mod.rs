@@ -34,6 +34,7 @@ export!(native);
 #[cfg(web)]
 export!(web);
 
+pub mod music;
 #[cfg(feature = "synth")]
 pub mod synth;
 

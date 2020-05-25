@@ -6,12 +6,12 @@ use std::sync::Mutex;
 
 use dirty::*;
 use gfx::shapes;
-use audio::synth;
+use audio::*;
+use music::*;
 use synth::BasicSynth;
 use synth::Waveform;
 use synth::Voice;
 use synth::Envelope;
-use synth::Note;
 use input::Key;
 
 fn key_to_note(k: Key, o: i32) -> Option<Note> {
