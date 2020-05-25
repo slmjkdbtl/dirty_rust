@@ -25,7 +25,7 @@ impl Button {
 
 impl Widget for Button {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) {
+	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
 
 		use input::Event::*;
 		use input::Mouse;
@@ -36,6 +36,7 @@ impl Widget for Button {
 					Mouse::Left if self.hovering => {
 						self.clicked = true;
 						self.pressed = true;
+						return true;
 					},
 					_ => {},
 				}
@@ -48,6 +49,8 @@ impl Widget for Button {
 			},
 			_ => {},
 		}
+
+		return false;
 
 	}
 
