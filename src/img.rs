@@ -10,7 +10,7 @@ use crate::Result;
 
 use serde::Serialize;
 use serde::Deserialize;
-pub use image::ImageFormat as Format;
+pub use image::imageops::FilterType;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Image {
@@ -104,6 +104,26 @@ impl Image {
 			*a = (c.a * 255.0) as u8;
 		}
 
+	}
+
+	fn into_image(self) -> Result<image::RgbaImage> {
+		let img: image::RgbaImage = image::ImageBuffer::from_raw(self.width as u32, self.height as u32, self.data)
+			.ok_or_else(|| "failed to create image".to_string())?;
+		return Ok(img);
+	}
+
+	fn from_image(img: image::RgbaImage) -> Self {
+		return Self {
+			width: img.width() as i32,
+			height: img.height() as i32,
+			data: img.into_raw(),
+		};
+	}
+
+	pub fn resize(self, w: i32, h: i32, filter: FilterType) -> Result<Self> {
+		let img = self.into_image()?;
+		let img = image::imageops::resize(&img, w as u32, h as u32, filter);
+		return Ok(Self::from_image(img));
 	}
 
 	pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {

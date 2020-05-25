@@ -95,11 +95,12 @@ struct Game {
 	tol: usize,
 	density: f32,
 	sz: isize,
+	canvas: gfx::Canvas,
 }
 
 impl State for Game {
 
-	fn init(_: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 		Ok(Self {
 			key_down: false,
 			lines: vec![],
@@ -110,6 +111,7 @@ impl State for Game {
 			density: 3.,
 			sz: 100,
 			color: rgba!(1),
+			canvas: gfx::Canvas::new(d.gfx, d.gfx.width(), d.gfx.height())?,
 		})
 	}
 
@@ -164,7 +166,6 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
-
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 		let top_right = d.gfx.coord(gfx::Origin::TopRight);
 		d.gfx.draw(
@@ -229,7 +230,9 @@ impl Game {
 			}
 			Ok(())
 		})?;
-		fbuf.capture(format!("{}.png", fname))?;
+		let img = fbuf.capture()?;
+		let img = img.resize(fbuf.width(), fbuf.height(), img::FilterType::Nearest)?;
+		img.save(format!("{}.png", fname))?;
 		Ok(())
 	}
 }
@@ -241,4 +244,3 @@ fn main() {
 		println!("{}", err);
 	}
 }
-
