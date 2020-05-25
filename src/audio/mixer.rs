@@ -12,15 +12,15 @@ pub(super) type SourceID = usize;
 
 pub(super) struct Control {
 	paused: AtomicBool,
-	remove: AtomicBool,
+	detach: AtomicBool,
 }
 
 impl Control {
-	pub fn remove(&self) {
-		self.remove.store(true, Ordering::SeqCst);
+	pub fn detach(&self) {
+		self.detach.store(true, Ordering::SeqCst);
 	}
-	pub fn removed(&self) -> bool {
-		return self.remove.load(Ordering::SeqCst);
+	fn detaching(&self) -> bool {
+		return self.detach.load(Ordering::SeqCst);
 	}
 	pub fn set_paused(&self, b: bool) {
 		self.paused.store(b, Ordering::SeqCst);
@@ -34,7 +34,7 @@ impl Default for Control {
 	fn default() -> Self {
 		return Self {
 			paused: AtomicBool::new(false),
-			remove: AtomicBool::new(false),
+			detach: AtomicBool::new(false),
 		};
 	}
 }
@@ -132,7 +132,7 @@ impl Iterator for Mixer {
 		});
 
 		self.sources.retain(|_, ctx| {
-			return !ctx.done || ctx.control.removed();
+			return !ctx.done || ctx.control.detaching();
 		});
 
 		return Some(sample);
