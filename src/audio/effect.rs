@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::time::Duration;
 use std::collections::VecDeque;
 use super::*;
 
@@ -74,12 +75,13 @@ pub struct Delay {
 }
 
 impl Delay {
-	pub fn new(len: usize, c: usize, d: f32) -> Self {
+	pub fn new(duration: Duration, cycles: usize, decay: f32) -> Self {
+		let len = (duration.as_secs_f32() * SAMPLE_RATE as f32) as usize;
 		return Self {
-			buffer: VecDeque::with_capacity(len * c),
+			buffer: VecDeque::with_capacity(len * cycles),
 			len: len,
-			cycles: c,
-			decay: d,
+			cycles: cycles,
+			decay: decay,
 			filled: false,
 		};
 	}
@@ -87,7 +89,7 @@ impl Delay {
 
 impl Default for Delay {
 	fn default() -> Self {
-		return Self::new(0, 0, 0.0);
+		return Self::new(Duration::from_secs_f32(0.0), 0, 0.0);
 	}
 }
 
@@ -195,7 +197,7 @@ impl BasicEffectChain {
 		}
 	}
 
-	pub fn set_delay(&self, len: usize, cycles: usize, d: f32) {
+	pub fn set_delay(&self, len: Duration, cycles: usize, d: f32) {
 		if let Ok(mut delay) = self.delay.lock() {
 			*delay = Delay::new(len, cycles, d);
 		}

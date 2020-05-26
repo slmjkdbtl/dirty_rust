@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::time::Duration;
+
 use dirty::*;
 use audio::*;
 use gfx::*;
@@ -44,7 +46,7 @@ impl State for Game {
 					#[cfg(not(web))]
 					_ => self.sound
 						.builder()
-						.delay(10000, 3, 0.3)
+						.delay(Duration::from_secs_f32(0.2), 3, 0.3)
 						.pan(math::rand(-1.0, 1.0))
 						.volume(0.2)
 						.play()?

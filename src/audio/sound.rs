@@ -79,7 +79,7 @@ impl<'a> SoundBuilder<'a> {
 		return self.add(Volume::new(v));
 	}
 
-	pub fn delay(self, len: usize, cycles: usize, d: f32) -> Self {
+	pub fn delay(self, len: Duration, cycles: usize, d: f32) -> Self {
 		return self.add(Delay::new(len, cycles, d));
 	}
 

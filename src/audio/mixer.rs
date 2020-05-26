@@ -174,6 +174,10 @@ impl Mixer {
 		}
 	}
 
+	pub fn count(&self) -> usize {
+		return self.sources.len();
+	}
+
 }
 
 impl Iterator for Mixer {
@@ -185,8 +189,6 @@ impl Iterator for Mixer {
 		if self.sources.is_empty() {
 			return None;
 		}
-
-// 		println!("{}", self.sources.len());
 
 		let sample = self.sources.iter_mut().fold(Frame::new(0.0, 0.0), |frame_acc, (id, ctx)| {
 

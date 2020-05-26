@@ -1,5 +1,6 @@
 // wengwengweng
 
+use std::time::Duration;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::io::Cursor;
@@ -71,7 +72,7 @@ impl Track {
 	}
 
 	/// set delay
-	pub fn set_delay(&self, len: usize, cycles: usize, d: f32) {
+	pub fn set_delay(&self, len: Duration, cycles: usize, d: f32) {
 		self.effects.set_delay(len, cycles, d);
 	}
 
