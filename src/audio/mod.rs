@@ -60,9 +60,6 @@ impl Frame {
 			right: r as f32 / i16::MAX as f32,
 		};
 	}
-	pub fn mono(f: f32) -> Self {
-		return Self::new(f, f);
-	}
 }
 
 impl Default for Frame {
@@ -128,3 +125,8 @@ impl Div<f32> for Frame {
 
 }
 
+impl AddAssign for Frame {
+	fn add_assign(&mut self, other: Frame) {
+		*self = *self + other;
+	}
+}

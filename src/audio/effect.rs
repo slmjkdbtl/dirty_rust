@@ -1,7 +1,10 @@
 // wengwengweng
 
+use std::sync::Mutex;
+use std::sync::Arc;
 use std::time::Duration;
 use std::collections::VecDeque;
+
 use super::*;
 
 /// Chainable Audio Effect
@@ -123,20 +126,14 @@ impl Effect for Overdrive {
 
 }
 
+// TODO
 #[derive(Clone, Debug)]
 pub struct Reverb {
-	delays: [Delay; 4],
 }
 
 impl Reverb {
 	pub fn new(d: f32) -> Self {
 		return Self {
-			delays: [
-				Delay::new(Duration::from_secs_f32(0.0297), 2, d),
-				Delay::new(Duration::from_secs_f32(0.0371), 2, d),
-				Delay::new(Duration::from_secs_f32(0.0411), 2, d),
-				Delay::new(Duration::from_secs_f32(0.0437), 2, d),
-			],
 		};
 	}
 }
@@ -150,38 +147,39 @@ impl Default for Reverb {
 impl Effect for Reverb {
 
 	fn process(&mut self, mut f: Frame) -> Frame {
-
-// 		for d in &mut self.delays {
-// 			f = f + d.process(f);
-// 		}
-
 		return f;
-
 	}
 
 }
 
-// TODO: improve this
 #[derive(Clone, Debug)]
 pub struct Delay {
 	buffer: VecDeque<Frame>,
 	len: usize,
 	cycles: usize,
 	decay: f32,
-	filled: bool,
 }
 
 impl Delay {
+
 	pub fn new(duration: Duration, cycles: usize, decay: f32) -> Self {
+
 		let len = (duration.as_secs_f32() * SAMPLE_RATE as f32) as usize;
+		let mut buffer = VecDeque::with_capacity(len * cycles);
+
+		for _ in 0..len * cycles {
+			buffer.push_back(Frame::new(0.0, 0.0));
+		}
+
 		return Self {
-			buffer: VecDeque::with_capacity(len * cycles),
+			buffer: buffer,
 			len: len,
 			cycles: cycles,
 			decay: decay,
-			filled: false,
 		};
+
 	}
+
 }
 
 impl Default for Delay {
@@ -194,26 +192,20 @@ impl Effect for Delay {
 
 	fn process(&mut self, f: Frame) -> Frame {
 
-		if self.len == 0 || self.cycles == 0 {
+		if self.len == 0 || self.cycles == 0 || self.decay == 0.0 {
 			return f;
 		}
 
-		let mut of = f;
-
-		for i in 0..self.cycles {
-			if self.buffer.len() as isize - (self.len * i) as isize >= 0 {
-				if let Some(frame) = self.buffer.get(self.buffer.len() - (self.len * i)) {
-					of = of + *frame * self.decay.powf(i as f32);
-				}
-			}
-		}
+		let of = (0..self.cycles).fold(f, |frame_acc, i| {
+			return frame_acc + self.buffer
+				.get(i * self.len)
+				.map(|sample| *sample * self.decay.powf((self.cycles - i) as f32))
+				.unwrap_or_default()
+				;
+		});
 
 		self.buffer.push_back(f);
-
-		if self.buffer.len() > self.len * self.cycles {
-			self.filled = true;
-			self.buffer.pop_front();
-		}
+		self.buffer.pop_front();
 
 		return of;
 
@@ -221,41 +213,25 @@ impl Effect for Delay {
 
 	fn leftover(&mut self) -> Option<Frame> {
 
-		let mut has_left = false;
-		let mut of = Frame::default();
-
-		for i in 0..self.cycles {
-			if self.buffer.len() as isize - (self.len * i) as isize >= 0 {
-				if let Some(frame) = self.buffer.get(self.buffer.len() - (self.len * i)) {
-					has_left = true;
-					of = of + *frame * self.decay.powf(i as f32);
-				}
-			}
-		}
-
-		if !self.filled {
-			if self.buffer.len() < self.len * self.cycles {
-				has_left = true;
-				self.buffer.push_back(Frame::default());
-			} else {
-				self.filled = true;
-			}
-		} else {
-			self.buffer.pop_front();
-		}
-
-		if has_left {
-			return Some(of);
-		} else {
+		if self.buffer.is_empty() {
 			return None;
 		}
+
+		let of = (0..self.cycles).fold(Frame::default(), |frame_acc, i| {
+			return frame_acc + self.buffer
+				.get(i * self.len)
+				.map(|sample| *sample * self.decay.powf((self.cycles - i) as f32))
+				.unwrap_or_default()
+				;
+		});
+
+		self.buffer.pop_front();
+
+		return Some(of);
 
 	}
 
 }
-
-use std::sync::Mutex;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub(super) struct BasicEffectChain {
