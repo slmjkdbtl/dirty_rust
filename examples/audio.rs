@@ -46,7 +46,7 @@ impl State for Game {
 						.builder()
 						.pan(math::rand(-1.0, 1.0))
 						.volume(0.2)
-						.play()
+						.play()?
 						,
 					#[cfg(web)]
 					_ => self.sound.play(),

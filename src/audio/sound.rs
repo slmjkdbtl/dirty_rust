@@ -29,10 +29,16 @@ impl Sound {
 	}
 
 	/// play sound
-	pub fn play(&self) {
-		if let Ok(mut mixer) = self.mixer.lock() {
-			mixer.add(Arc::new(Mutex::new(self.buffer.clone())));
-		}
+	pub fn play(&self) -> Result<()> {
+
+		let mut mixer = self.mixer
+			.lock()
+			.map_err(|_| "failed to get mixer".to_string())?;
+
+		mixer.add(Arc::new(Mutex::new(self.buffer.clone())))?;
+
+		return Ok(());
+
 	}
 
 	/// returns a [`SoundBuilder`](SoundBuilder) that plays sound with config
@@ -59,23 +65,35 @@ pub struct SoundBuilder<'a> {
 }
 
 impl<'a> SoundBuilder<'a> {
+
 	pub fn add(mut self, e: impl Effect + Send + 'static) -> Self {
 		self.effects.push(Arc::new(Mutex::new(e)));
 		return self;
 	}
+
 	pub fn pan(self, p: f32) -> Self {
 		return self.add(Pan(p));
 	}
+
 	pub fn volume(self, v: f32) -> Self {
 		return self.add(Volume(v));
 	}
-	pub fn play(self) {
-		if let Ok(mut mixer) = self.mixer.lock() {
-			let id = mixer.add(self.buffer);
-			for e in self.effects {
-				mixer.add_effect(&id, e);
-			}
+
+	pub fn play(self) -> Result<()> {
+
+		let mut mixer = self.mixer
+			.lock()
+			.map_err(|_| "failed to get mixer".to_string())?;
+
+		let id = mixer.add(self.buffer)?;
+
+		for e in self.effects {
+			mixer.add_effect(&id, e);
 		}
+
+		return Ok(());
+
 	}
+
 }
 

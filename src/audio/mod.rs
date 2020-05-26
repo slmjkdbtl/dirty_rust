@@ -62,3 +62,66 @@ impl Frame {
 	}
 }
 
+impl Default for Frame {
+	fn default() -> Self {
+		return Self {
+			left: 0.0,
+			right: 0.0,
+		};
+	}
+}
+
+use std::ops::*;
+
+impl Add for Frame {
+
+	type Output = Self;
+
+	fn add(self, other: Self) -> Self {
+		return Self {
+			left: self.left + other.left,
+			right: self.right + other.right,
+		};
+	}
+
+}
+
+impl Sub for Frame {
+
+	type Output = Self;
+
+	fn sub(self, other: Self) -> Self {
+		return Self {
+			left: self.left - other.left,
+			right: self.right - other.right,
+		};
+	}
+
+}
+
+impl Mul<f32> for Frame {
+
+	type Output = Self;
+
+	fn mul(self, f: f32) -> Self {
+		return Self {
+			left: self.left * f,
+			right: self.right * f,
+		};
+	}
+
+}
+
+impl Div<f32> for Frame {
+
+	type Output = Self;
+
+	fn div(self, f: f32) -> Self {
+		return Self {
+			left: self.left / f,
+			right: self.right / f,
+		};
+	}
+
+}
+

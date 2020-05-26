@@ -17,9 +17,6 @@ impl Audio {
 
 	pub(crate) fn new() -> Result<Self> {
 
-		let mixer = Arc::new(Mutex::new(Mixer::new()));
-		let t_mixer = Arc::clone(&mixer);
-
 		let host = cpal::default_host();
 
 		let device = host
@@ -44,6 +41,9 @@ impl Audio {
 		event_loop
 			.play_stream(stream_id)
 			.map_err(|_| "failed to start audio stream".to_string())?;
+
+		let mixer = Arc::new(Mutex::new(Mixer::new(format.sample_rate.0)));
+		let t_mixer = Arc::clone(&mixer);
 
 		thread::Builder::new()
 			.name(String::from("dirty_audio"))
@@ -116,10 +116,16 @@ impl Audio {
 		return SAMPLE_RATE;
 	}
 
-	pub fn play<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) {
-		if let Ok(mut mixer) = self.mixer.lock() {
-			mixer.add(src);
-		}
+	pub fn play<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) -> Result<()> {
+
+		let mut mixer = self.mixer
+			.lock()
+			.map_err(|_| "failed to get mixer".to_string())?;
+
+		mixer.add(src)?;
+
+		return Ok(());
+
 	}
 
 }

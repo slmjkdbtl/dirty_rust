@@ -86,7 +86,7 @@ impl State for Game {
 		let synth = Arc::new(Mutex::new(BasicSynth::new(&d.audio)));
 
 		#[cfg(not(web))]
-		d.audio.play(Arc::clone(&synth));
+		d.audio.play(Arc::clone(&synth))?;
 
 		return Ok(Self {
 			octave: 4,

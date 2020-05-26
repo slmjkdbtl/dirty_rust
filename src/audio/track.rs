@@ -31,7 +31,7 @@ impl Track {
 			.lock()
 			.map_err(|_| "failed to get mixer".to_string())?;
 
-		let id = mixer.add(src.clone());
+		let id = mixer.add(src.clone())?;
 
 		let control = mixer
 			.get_control(&id)
