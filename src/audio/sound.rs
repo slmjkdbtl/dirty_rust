@@ -79,6 +79,14 @@ impl<'a> SoundBuilder<'a> {
 		return self.add(Volume::new(v));
 	}
 
+	pub fn overdrive(self, s: f32) -> Self {
+		return self.add(Overdrive::new(s));
+	}
+
+	pub fn reverb(self, d: f32) -> Self {
+		return self.add(Reverb::new(d));
+	}
+
 	pub fn delay(self, len: Duration, cycles: usize, d: f32) -> Self {
 		return self.add(Delay::new(len, cycles, d));
 	}

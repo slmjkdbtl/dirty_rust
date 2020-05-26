@@ -61,14 +61,24 @@ impl Track {
 		self.control.set_paused(true);
 	}
 
+	/// set volume
+	pub fn set_volume(&self, v: f32) {
+		self.effects.set_volume(v);
+	}
+
 	/// set pan
 	pub fn set_pan(&self, p: f32) {
 		self.effects.set_pan(p);
 	}
 
-	/// set volume
-	pub fn set_volume(&self, v: f32) {
-		self.effects.set_volume(v);
+	/// set overdrive
+	pub fn set_overdrive(&self, s: f32) {
+		self.effects.set_overdrive(s);
+	}
+
+	/// set reverb
+	pub fn set_reverb(&self, d: f32) {
+		self.effects.set_reverb(d);
 	}
 
 	/// set delay
