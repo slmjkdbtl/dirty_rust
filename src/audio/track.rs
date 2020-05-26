@@ -12,8 +12,7 @@ pub struct Track {
 	id: SourceID,
 	src: Arc<Mutex<Decoder<Cursor<Vec<u8>>>>>,
 	control: Arc<Control>,
-	pan: Arc<Mutex<Pan>>,
-	volume: Arc<Mutex<Volume>>,
+	effects: BasicEffectChain,
 }
 
 impl Track {
@@ -23,9 +22,6 @@ impl Track {
 
 		let src = Decoder::new(Cursor::new(data.to_owned()))?;
 		let src = Arc::new(Mutex::new(src));
-
-		let volume = Arc::new(Mutex::new(Volume(1.0)));
-		let pan = Arc::new(Mutex::new(Pan(0.0)));
 
 		let mut mixer = ctx.mixer()
 			.lock()
@@ -37,16 +33,19 @@ impl Track {
 			.get_control(&id)
 			.ok_or("failed to get mixer".to_string())?;
 
-		mixer.add_effect(&id, volume.clone());
-		mixer.add_effect(&id, pan.clone());
 		control.set_paused(true);
+
+		let effects = BasicEffectChain::new();
+
+		for e in effects.chain() {
+			mixer.add_effect(&id, e);
+		}
 
 		return Ok(Self {
 			src,
 			id,
 			control,
-			volume,
-			pan,
+			effects,
 		});
 
 	}
@@ -63,16 +62,17 @@ impl Track {
 
 	/// set pan
 	pub fn set_pan(&self, p: f32) {
-		if let Ok(mut pan) = self.pan.lock() {
-			*pan = Pan(p);
-		}
+		self.effects.set_pan(p);
 	}
 
 	/// set volume
 	pub fn set_volume(&self, v: f32) {
-		if let Ok(mut volume) = self.volume.lock() {
-			*volume = Volume(v);
-		}
+		self.effects.set_volume(v);
+	}
+
+	/// set delay
+	pub fn set_delay(&self, s: usize, f: f32) {
+		self.effects.set_delay(s, f);
 	}
 
 	/// set looping

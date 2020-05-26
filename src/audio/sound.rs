@@ -72,11 +72,15 @@ impl<'a> SoundBuilder<'a> {
 	}
 
 	pub fn pan(self, p: f32) -> Self {
-		return self.add(Pan(p));
+		return self.add(Pan::new(p));
 	}
 
 	pub fn volume(self, v: f32) -> Self {
-		return self.add(Volume(v));
+		return self.add(Volume::new(v));
+	}
+
+	pub fn delay(self, v: usize, d: f32) -> Self {
+		return self.add(Delay::new(v, d));
 	}
 
 	pub fn play(self) -> Result<()> {

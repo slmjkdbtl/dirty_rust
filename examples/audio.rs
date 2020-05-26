@@ -18,6 +18,7 @@ impl State for Game {
 		let track = Track::from_bytes(d.audio, include_bytes!("res/yo.ogg"))?;
 
 		track.set_looping(true);
+		track.set_delay(10000, 0.3);
 
 		return Ok(Self {
 			sound,
@@ -44,6 +45,7 @@ impl State for Game {
 					#[cfg(not(web))]
 					_ => self.sound
 						.builder()
+						.delay(10000, 0.5)
 						.pan(math::rand(-1.0, 1.0))
 						.volume(0.2)
 						.play()?

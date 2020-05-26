@@ -60,6 +60,9 @@ impl Frame {
 			right: r as f32 / i16::MAX as f32,
 		};
 	}
+	pub fn mono(f: f32) -> Self {
+		return Self::new(f, f);
+	}
 }
 
 impl Default for Frame {

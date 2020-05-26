@@ -6,6 +6,35 @@ use std::sync::Arc;
 use super::*;
 
 #[derive(Clone)]
+pub struct AudioBuffer {
+	frames: Vec<Frame>,
+	sample_rate: u32,
+	duration: Duration,
+}
+
+impl AudioBuffer {
+
+	pub fn from_source(src: impl Source) -> Self {
+
+		let sample_rate = src.sample_rate();
+		let frames = src.into_iter().collect::<Vec<Frame>>();
+
+		return Self {
+			sample_rate: sample_rate,
+			duration: Duration::from_secs_f32(frames.len() as f32 / sample_rate as f32),
+			frames: frames,
+		};
+
+	}
+
+	pub fn duration(&self) -> Duration {
+		return self.duration;
+	}
+
+}
+
+// TODO: bad name
+#[derive(Clone)]
 pub(super) struct Buffered {
 	buf: Arc<Vec<Frame>>,
 	sample_rate: u32,

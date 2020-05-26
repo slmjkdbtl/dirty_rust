@@ -182,6 +182,10 @@ impl Iterator for Mixer {
 
 	fn next(&mut self) -> Option<Self::Item> {
 
+		if self.sources.is_empty() {
+			return None;
+		}
+
 		let sample = self.sources.iter_mut().fold(Frame::new(0.0, 0.0), |frame_acc, (id, ctx)| {
 
 			if ctx.control.paused() {
@@ -196,21 +200,39 @@ impl Iterator for Mixer {
 					}
 				}
 
-				return Frame::new(
-					frame_acc.left + frame.left,
-					frame_acc.right + frame.right,
-				);
+				return frame_acc + frame;
 
 			} else {
 
-				if ctx.control.looping() {
-					if let Ok(mut src) = ctx.src.get_inner().lock() {
-						if let Err(e) = src.seek_start() {
-							elog!("{}", e);
+				let mut has_leftover = false;
+				let mut leftover_acc = Frame::default();
+
+				for i in 0..ctx.effects.len() {
+					if let Ok(mut e) = ctx.effects[i].lock() {
+						if let Some(mut leftover) = e.leftover() {
+							has_leftover = true;
+							for j in (i + 1)..ctx.effects.len() {
+								if let Ok(mut e2) = ctx.effects[j].lock() {
+									leftover = e2.process(leftover);
+								}
+							}
+							leftover_acc = leftover_acc + leftover;
 						}
-					}
+					};
+				}
+
+				if has_leftover {
+					return frame_acc + leftover_acc;
 				} else {
-					ctx.done = true;
+					if ctx.control.looping() {
+						if let Ok(mut src) = ctx.src.get_inner().lock() {
+							if let Err(e) = src.seek_start() {
+								elog!("{}", e);
+							}
+						}
+					} else {
+						ctx.done = true;
+					}
 				}
 
 				return frame_acc;

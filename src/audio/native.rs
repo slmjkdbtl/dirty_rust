@@ -30,7 +30,7 @@ impl Audio {
 		let format = cpal::Format {
 			channels: CHANNEL_COUNT.to_cpal(),
 			sample_rate: cpal::SampleRate(SAMPLE_RATE),
-			data_type: cpal::SampleFormat::F32,
+			data_type: format.data_type,
 		};
 
 		let event_loop = host.event_loop();
@@ -64,10 +64,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some(frame) = mixer.next() {
-									d[0] = utils::f32_to_u16(frame.left);
-									d[1] = utils::f32_to_u16(frame.right);
-								}
+								let frame = mixer.next().unwrap_or_default();
+								d[0] = utils::f32_to_u16(frame.left);
+								d[1] = utils::f32_to_u16(frame.right);
 							}
 						}
 					},
@@ -75,10 +74,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some(frame) = mixer.next() {
-									d[0] = utils::f32_to_i16(frame.left);
-									d[1] = utils::f32_to_i16(frame.right);
-								}
+								let frame = mixer.next().unwrap_or_default();
+								d[0] = utils::f32_to_i16(frame.left);
+								d[1] = utils::f32_to_i16(frame.right);
 							}
 						}
 					},
@@ -86,10 +84,9 @@ impl Audio {
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut output) } => {
 						if let Ok(mut mixer) = t_mixer.lock() {
 							for d in output.chunks_mut(2) {
-								if let Some(frame) = mixer.next() {
-									d[0] = frame.left;
-									d[1] = frame.right;
-								}
+								let frame = mixer.next().unwrap_or_default();
+								d[0] = frame.left;
+								d[1] = frame.right;
 							}
 						}
 					},
