@@ -67,23 +67,27 @@ impl Effect for Pan {
 #[derive(Clone, Debug)]
 pub struct Delay {
 	buffer: VecDeque<Frame>,
-	size: usize,
-	strength: f32,
+	len: usize,
+	cycles: usize,
+	decay: f32,
+	filled: bool,
 }
 
 impl Delay {
-	pub fn new(s: usize, d: f32) -> Self {
+	pub fn new(len: usize, c: usize, d: f32) -> Self {
 		return Self {
-			buffer: VecDeque::with_capacity(s),
-			size: s,
-			strength: d,
+			buffer: VecDeque::with_capacity(len * c),
+			len: len,
+			cycles: c,
+			decay: d,
+			filled: false,
 		};
 	}
 }
 
 impl Default for Delay {
 	fn default() -> Self {
-		return Self::new(0, 0.0);
+		return Self::new(0, 0, 0.0);
 	}
 }
 
@@ -91,20 +95,62 @@ impl Effect for Delay {
 
 	fn process(&mut self, f: Frame) -> Frame {
 
-		self.buffer.push_back(f * self.strength);
+		if self.len == 0 || self.cycles == 0 {
+			return f;
+		}
 
-		if self.buffer.len() > self.size - 1 {
-			if let Some(ff) = self.buffer.pop_front() {
-				return f + ff;
+		let mut of = f;
+
+		for i in 0..self.cycles {
+			if self.buffer.len() as isize - (self.len * i) as isize >= 0 {
+				if let Some(frame) = self.buffer.get(self.buffer.len() - (self.len * i)) {
+					of = of + *frame * self.decay.powf(i as f32);
+				}
 			}
 		}
 
-		return f;
+		self.buffer.push_back(f);
+
+		if self.buffer.len() > self.len * self.cycles {
+			self.filled = true;
+			self.buffer.pop_front();
+		}
+
+		return of;
 
 	}
 
 	fn leftover(&mut self) -> Option<Frame> {
-		return self.buffer.pop_front();
+
+		let mut has_left = false;
+		let mut of = Frame::default();
+
+		for i in 0..self.cycles {
+			if self.buffer.len() as isize - (self.len * i) as isize >= 0 {
+				if let Some(frame) = self.buffer.get(self.buffer.len() - (self.len * i)) {
+					has_left = true;
+					of = of + *frame * self.decay.powf(i as f32);
+				}
+			}
+		}
+
+		if !self.filled {
+			if self.buffer.len() < self.len * self.cycles {
+				has_left = true;
+				self.buffer.push_back(Frame::default());
+			} else {
+				self.filled = true;
+			}
+		} else {
+			self.buffer.pop_front();
+		}
+
+		if has_left {
+			return Some(of);
+		} else {
+			return None;
+		}
+
 	}
 
 }
@@ -149,9 +195,9 @@ impl BasicEffectChain {
 		}
 	}
 
-	pub fn set_delay(&self, s: usize, f: f32) {
+	pub fn set_delay(&self, len: usize, cycles: usize, d: f32) {
 		if let Ok(mut delay) = self.delay.lock() {
-			*delay = Delay::new(s, f);
+			*delay = Delay::new(len, cycles, d);
 		}
 	}
 

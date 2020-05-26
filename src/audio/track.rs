@@ -71,8 +71,8 @@ impl Track {
 	}
 
 	/// set delay
-	pub fn set_delay(&self, s: usize, f: f32) {
-		self.effects.set_delay(s, f);
+	pub fn set_delay(&self, len: usize, cycles: usize, d: f32) {
+		self.effects.set_delay(len, cycles, d);
 	}
 
 	/// set looping

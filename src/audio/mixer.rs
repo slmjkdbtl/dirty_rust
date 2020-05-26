@@ -186,6 +186,8 @@ impl Iterator for Mixer {
 			return None;
 		}
 
+// 		println!("{}", self.sources.len());
+
 		let sample = self.sources.iter_mut().fold(Frame::new(0.0, 0.0), |frame_acc, (id, ctx)| {
 
 			if ctx.control.paused() {
