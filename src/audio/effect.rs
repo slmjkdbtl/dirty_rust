@@ -103,30 +103,6 @@ impl Effect for Distortion {
 
 }
 
-// TODO
-#[derive(Clone, Debug)]
-pub struct Reverb {
-}
-
-impl Reverb {
-	pub fn new(d: f32) -> Self {
-		return Self {
-		};
-	}
-}
-
-impl Default for Reverb {
-	fn default() -> Self {
-		return Self::new(0.0);
-	}
-}
-
-impl Effect for Reverb {
-	fn process(&mut self, f: Frame) -> Frame {
-		return f;
-	}
-}
-
 #[derive(Clone, Debug)]
 pub struct Delay {
 	buffer: VecDeque<Frame>,
@@ -206,6 +182,30 @@ impl Effect for Delay {
 
 	}
 
+}
+
+// TODO
+#[derive(Clone, Debug)]
+pub struct Reverb {
+}
+
+impl Reverb {
+	pub fn new(d: f32) -> Self {
+		return Self {
+		};
+	}
+}
+
+impl Default for Reverb {
+	fn default() -> Self {
+		return Self::new(0.0);
+	}
+}
+
+impl Effect for Reverb {
+	fn process(&mut self, f: Frame) -> Frame {
+		return f;
+	}
 }
 
 #[derive(Clone)]

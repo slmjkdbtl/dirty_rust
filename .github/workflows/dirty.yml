@@ -1,16 +1,14 @@
-name: Rust
+name: dirty
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: update apt
+      run: sudo apt update
     - name: install deps
       run: sudo apt-get install libasound2-dev libudev-dev
     - name: install web target
