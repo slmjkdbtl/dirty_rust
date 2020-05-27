@@ -69,58 +69,35 @@ impl Effect for Pan {
 }
 
 #[derive(Clone, Debug)]
-pub struct Overdrive {
-	strength: f32,
+pub struct Distortion {
+	crunch: f32,
 }
 
-impl Overdrive {
-	pub fn new(s: f32) -> Self {
+impl Distortion {
+	pub fn new(c: f32) -> Self {
 		return Self {
-			strength: s.max(0.0).min(1.0),
+			crunch: c.max(0.0).min(1.0),
 		};
 	}
 }
 
-impl Default for Overdrive {
+impl Default for Distortion {
 	fn default() -> Self {
 		return Self::new(0.0);
 	}
 }
 
-impl Effect for Overdrive {
+impl Effect for Distortion {
 
 	fn process(&mut self, f: Frame) -> Frame {
 
-		// https://rickyhan.com/jekyll/update/2018/02/06/rust-guitar-pedal-effects-dsp.html
+        let c = 1.0 - self.crunch;
+		let l_sign = f.left.signum();
+		let r_sign = f.right.signum();
+		let l = (f.left * l_sign).powf(c).min(1.0) * l_sign;
+		let r = (f.right * r_sign).powf(c).min(1.0) * r_sign;
 
-		if self.strength == 0.0 {
-			return f;
-		}
-
-		let a = f.left.abs();
-		let b = f.right.abs();
-
-		let l = if a >= 0.0 && a < 0.33 {
-			a * 2.0
-		} else if a >= 0.33 && a < 0.66 {
-			let t = 2.0 - 3.0 * a;
-			(3.0 - t * t) / 3.0
-		} else {
-			a
-		};
-
-		let r = if b >= 0.0 && b < 0.33 {
-			b * 2.0
-		} else if b >= 0.33 && b < 0.66 {
-			let t = 2.0 - 3.0 * b;
-			(3.0 - t * t) / 3.0
-		} else {
-			b
-		};
-
-		let ff = Frame::new(l, r);
-
-		return f + (ff - f) * self.strength;
+		return Frame::new(l, r);
 
 	}
 
@@ -145,11 +122,9 @@ impl Default for Reverb {
 }
 
 impl Effect for Reverb {
-
 	fn process(&mut self, f: Frame) -> Frame {
 		return f;
 	}
-
 }
 
 #[derive(Clone, Debug)]
@@ -238,7 +213,7 @@ pub(super) struct BasicEffectChain {
 	pan: Arc<Mutex<Pan>>,
 	volume: Arc<Mutex<Volume>>,
 	delay: Arc<Mutex<Delay>>,
-	overdrive: Arc<Mutex<Overdrive>>,
+	distortion: Arc<Mutex<Distortion>>,
 	reverb: Arc<Mutex<Reverb>>,
 }
 
@@ -249,14 +224,14 @@ impl BasicEffectChain {
 			pan: Arc::new(Mutex::new(Pan::default())),
 			volume: Arc::new(Mutex::new(Volume::default())),
 			delay: Arc::new(Mutex::new(Delay::default())),
-			overdrive: Arc::new(Mutex::new(Overdrive::default())),
+			distortion: Arc::new(Mutex::new(Distortion::default())),
 			reverb: Arc::new(Mutex::new(Reverb::default())),
 		};
 	}
 
 	pub fn chain(&self) -> Vec<Arc<Mutex<dyn Effect + Send>>> {
 		return vec![
-			self.overdrive.clone(),
+			self.distortion.clone(),
 			self.delay.clone(),
 			self.reverb.clone(),
 			self.pan.clone(),
@@ -276,9 +251,9 @@ impl BasicEffectChain {
 		}
 	}
 
-	pub fn set_overdrive(&self, s: f32) {
-		if let Ok(mut overdrive) = self.overdrive.lock() {
-			*overdrive = Overdrive::new(s);
+	pub fn set_distortion(&self, s: f32) {
+		if let Ok(mut distortion) = self.distortion.lock() {
+			*distortion = Distortion::new(s);
 		}
 	}
 

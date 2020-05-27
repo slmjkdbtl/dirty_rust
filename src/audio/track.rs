@@ -71,9 +71,9 @@ impl Track {
 		self.effects.set_pan(p);
 	}
 
-	/// set overdrive
-	pub fn set_overdrive(&self, s: f32) {
-		self.effects.set_overdrive(s);
+	/// set distortion
+	pub fn set_distortion(&self, s: f32) {
+		self.effects.set_distortion(s);
 	}
 
 	/// set reverb
