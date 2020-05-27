@@ -26,7 +26,6 @@ pub struct Window {
 	height: i32,
 	cursor_hidden: bool,
 	cursor_locked: bool,
-	fullscreen: bool,
 	prev_cursor: CursorIcon,
 	title: String,
 }
@@ -96,7 +95,6 @@ impl Window {
 			height: conf.height,
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
-			fullscreen: conf.fullscreen,
 			prev_cursor: CursorIcon::Normal,
 			title: conf.title.to_string(),
 		});
@@ -176,12 +174,11 @@ impl Window {
 		} else {
 			self.document.exit_fullscreen();
 		}
-		self.fullscreen = b;
 	}
 
 	/// check if is fullscreen
 	pub fn is_fullscreen(&self) -> bool {
-		return self.fullscreen;
+		return self.document.fullscreen_element().is_some();
 	}
 
 	/// set cursor hidden
@@ -252,6 +249,7 @@ impl Window {
 			MousePress(web_sys::MouseEvent),
 			MouseRelease(web_sys::MouseEvent),
 			Wheel(web_sys::WheelEvent),
+			Fullscreen(web_sys::Event),
 		}
 
 		macro_rules! add_event {
@@ -280,6 +278,7 @@ impl Window {
 		add_event!(canvas, "mousedown", web_sys::MouseEvent, MousePress);
 		add_event!(canvas, "mouseup", web_sys::MouseEvent, MouseRelease);
 		add_event!(canvas, "wheel", web_sys::WheelEvent, Wheel);
+		add_event!(canvas, "fullscreenchange", web_sys::Event, Fullscreen);
 
 		use glow::HasRenderLoop;
 
@@ -342,6 +341,44 @@ impl Window {
 
 						WebEvent::Wheel(e) => {
 							events.push(Wheel(vec2!(-e.delta_x(), e.delta_y()), input::ScrollPhase::Solid));
+						},
+
+						WebEvent::Fullscreen(e) => {
+
+							let cw = self.canvas.width();
+							let ch = self.canvas.height();
+
+							let (w, h) = if self.is_fullscreen() {
+
+								let ww = self.window
+									.inner_width()
+									.map_err(|_| "failed to get window size".to_string())?
+									.as_f64()
+									.ok_or_else(|| "failed to get window size".to_string())?;
+
+								let wh = self.window
+									.inner_height()
+									.map_err(|_| "failed to get window size".to_string())?
+									.as_f64()
+									.ok_or_else(|| "failed to get window size".to_string())?;
+
+								let c_aspect = cw as f32 / ch as f32;
+								let w_aspect = ww as f32 / wh as f32;
+
+								if c_aspect > w_aspect {
+									(ww as i32, (ww as f32 / c_aspect) as i32)
+								} else {
+									((wh as f32 * c_aspect) as i32, wh as i32)
+								}
+
+							} else {
+								(cw as i32, ch as i32)
+							};
+
+							self.width = w;
+							self.height = h;
+							events.push(Resize(w, h));
+
 						},
 
 					}

@@ -11,17 +11,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: update apt
-      if: matrix.os == 'ubuntu-latest'
+      if: contains(matrix.os, 'ubuntu')
       run: sudo apt update
     - name: install deps
-      if: matrix.os == 'ubuntu-latest'
+      if: contains(matrix.os, 'ubuntu')
       run: sudo apt-get install libasound2-dev libudev-dev
     - name: install web target
-      if: matrix.os == 'ubuntu-latest'
       run: rustup target add wasm32-unknown-unknown
-    - name: test web
-      if: matrix.os == 'ubuntu-latest'
-      run: cargo test --verbose --all-features --no-run --target wasm32-unknown-unknown
     - name: test
       run: cargo test --verbose --all-features
+    - name: test web
+      run: cargo test --verbose --all-features --no-run --target wasm32-unknown-unknown
 
