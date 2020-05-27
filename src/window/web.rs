@@ -2,6 +2,7 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use wasm_bindgen::JsCast;
@@ -21,6 +22,7 @@ pub struct Window {
 	render_loop: Option<glow::RenderLoop>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
+	styles: HashMap<&'static str, String>,
 	mouse_pos: Vec2,
 	width: i32,
 	height: i32,
@@ -28,6 +30,14 @@ pub struct Window {
 	cursor_locked: bool,
 	prev_cursor: CursorIcon,
 	title: String,
+}
+
+fn build_styles(map: &HashMap<&'static str, String>) -> String {
+	let mut styles = String::new();
+	for (prop, val) in map {
+		styles.push_str(&format!("{}: {};", prop, val));
+	}
+	return styles;
 }
 
 impl Window {
@@ -47,9 +57,13 @@ impl Window {
 			.dyn_into::<web_sys::HtmlCanvasElement>()
 			.map_err(|_| format!("failed to create canvas"))?;
 
+		let mut styles = hmap![];
+
 		canvas.set_width(conf.width as u32);
 		canvas.set_height(conf.height as u32);
 		canvas.set_attribute("alt", &conf.title);
+		canvas.set_attribute("tabindex", "0");
+		styles.insert("outline", "none".to_string());
 
 		match conf.canvas_root {
 			CanvasRoot::Body => {
@@ -69,8 +83,10 @@ impl Window {
 			},
 		};
 
+		canvas.focus();
+
 		if conf.cursor_hidden {
-			canvas.set_attribute("style", "cursor: none");
+			styles.insert("cursor", "none".to_string());
 		}
 
 		if conf.cursor_locked {
@@ -83,6 +99,8 @@ impl Window {
 
 		let render_loop = glow::RenderLoop::from_request_animation_frame();
 
+		canvas.set_attribute("style", &build_styles(&styles));
+
 		return Ok(Self {
 			window: window,
 			document: document,
@@ -91,6 +109,7 @@ impl Window {
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
 			mouse_pos: vec2!(),
+			styles: styles,
 			width: conf.width,
 			height: conf.height,
 			cursor_hidden: conf.cursor_hidden,
@@ -181,12 +200,17 @@ impl Window {
 		return self.document.fullscreen_element().is_some();
 	}
 
+	fn add_style(&mut self, prop: &'static str, val: &str) {
+		self.styles.insert(prop, val.to_string());
+		self.canvas.set_attribute("style", &build_styles(&self.styles));
+	}
+
 	/// set cursor hidden
 	pub fn set_cursor_hidden(&mut self, b: bool) {
 		if b {
-			self.canvas.set_attribute("style", "cursor: none");
+			self.add_style("cursor", "none");
 		} else {
-			self.canvas.set_attribute("style", &format!("cursor: {}", self.prev_cursor.to_web()));
+			self.add_style("cursor", &format!("cursor: {}", self.prev_cursor.to_web()));
 		}
 		self.cursor_hidden = b;
 	}
@@ -252,13 +276,14 @@ impl Window {
 			Fullscreen(web_sys::Event),
 		}
 
-		macro_rules! add_canvas_event {
+		macro_rules! add_event {
 
 			($name:expr, $ty:ty, $t:ident) => {
 
 				let web_events_c = web_events.clone();
 
 				let handler = Closure::wrap(Box::new((move |e: $ty| {
+					// TODO: I want to prevent stuff like space / arrow keys scrolling, but this also prevents browser default keys like refresh / tab switch, not good
 					e.prevent_default();
 					web_events_c.borrow_mut().push(WebEvent::$t(e));
 				})) as Box<dyn FnMut(_)>);
@@ -273,33 +298,13 @@ impl Window {
 
 		}
 
-		macro_rules! add_document_event {
-
-			($name:expr, $ty:ty, $t:ident) => {
-
-				let web_events_c = web_events.clone();
-
-				let handler = Closure::wrap(Box::new((move |e: $ty| {
-					web_events_c.borrow_mut().push(WebEvent::$t(e));
-				})) as Box<dyn FnMut(_)>);
-
-				self.document
-					.add_event_listener_with_callback($name, handler.as_ref().unchecked_ref())
-					.map_err(|_| format!("failed to add event {}", $name))?;
-
-				handler.forget();
-
-			};
-
-		}
-
-		add_document_event!("keydown", web_sys::KeyboardEvent, KeyPress);
-		add_document_event!("keyup", web_sys::KeyboardEvent, KeyRelease);
-		add_canvas_event!("mousemove", web_sys::MouseEvent, MouseMove);
-		add_canvas_event!("mousedown", web_sys::MouseEvent, MousePress);
-		add_canvas_event!("mouseup", web_sys::MouseEvent, MouseRelease);
-		add_canvas_event!("wheel", web_sys::WheelEvent, Wheel);
-		add_canvas_event!("fullscreenchange", web_sys::Event, Fullscreen);
+		add_event!("keydown", web_sys::KeyboardEvent, KeyPress);
+		add_event!("keyup", web_sys::KeyboardEvent, KeyRelease);
+		add_event!("mousemove", web_sys::MouseEvent, MouseMove);
+		add_event!("mousedown", web_sys::MouseEvent, MousePress);
+		add_event!("mouseup", web_sys::MouseEvent, MouseRelease);
+		add_event!("wheel", web_sys::WheelEvent, Wheel);
+		add_event!("fullscreenchange", web_sys::Event, Fullscreen);
 
 		use glow::HasRenderLoop;
 
@@ -351,6 +356,7 @@ impl Window {
 						},
 
 						WebEvent::MousePress(_) => {
+							self.canvas.focus();
 							self.pressed_mouse.insert(Mouse::Left);
 							events.push(MousePress(Mouse::Left));
 						},
