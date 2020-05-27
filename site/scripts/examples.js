@@ -27,7 +27,7 @@ export default {
 			list.map((name) => {
 				return [
 					m("a", {
-						href: `/example/${name}`
+						href: `/examples/${name}`
 					}, name),
 					m("br"),
 				];

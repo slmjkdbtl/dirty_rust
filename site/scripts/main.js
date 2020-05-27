@@ -10,7 +10,7 @@ m.route.prefix = "";
 m.route(document.body, "/", {
 	"/": home,
 	"/examples": examples,
-	"/example/:name": example,
+	"/examples/:name": example,
 	"/:404...": err,
 });
 
