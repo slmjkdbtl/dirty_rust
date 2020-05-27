@@ -37,11 +37,6 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let model = gfx::Model::from_glb(
-			d.gfx,
-			include_bytes!("res/btfly.glb"),
-		)?;
-
 		let model = gfx::Model::from_obj(
 			d.gfx,
 			include_str!("res/truck.obj"),
@@ -177,8 +172,6 @@ impl State for Game {
 						.line_width(1.0)
 						.color(c)
 				)?;
-
-				let ground = Plane::new(vec3!(0, 1, 0), 0.0);
 
 				gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
 

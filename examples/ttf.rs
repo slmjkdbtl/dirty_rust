@@ -60,11 +60,9 @@ impl State for Game {
 }
 
 fn main() {
-
-	if let Err(err) = launcher()
+	if let Err(e) = launcher()
 		.run::<Game>() {
-		println!("{}", err);
+		elog!("{}", e);
 	}
-
 }
 

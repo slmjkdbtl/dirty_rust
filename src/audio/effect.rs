@@ -146,7 +146,7 @@ impl Default for Reverb {
 
 impl Effect for Reverb {
 
-	fn process(&mut self, mut f: Frame) -> Frame {
+	fn process(&mut self, f: Frame) -> Frame {
 		return f;
 	}
 

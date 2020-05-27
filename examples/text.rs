@@ -124,8 +124,10 @@ impl State for Game {
 
 }
 
-fn main() -> Result<()> {
-	return launcher()
-		.run::<Game>();
+fn main() {
+	if let Err(e) = launcher()
+		.run::<Game>() {
+		elog!("{}", e);
+	}
 }
 

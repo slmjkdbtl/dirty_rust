@@ -2,7 +2,7 @@
 
 //! General Utilities
 
-pub use once_cell;
+use std::panic;
 
 #[allow(unused_macros)]
 macro_rules! export {
@@ -28,25 +28,6 @@ macro_rules! mexport {
 		mod $name;
 		pub use $name::*;
 	}
-}
-
-/// set panic hook
-pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&std::panic::Location>) + Send + Sync>(f: F) {
-
-	std::panic::set_hook(Box::new(move |info: &std::panic::PanicInfo| {
-
-		let msg: Option<&str> = if let Some(s) = info.payload().downcast_ref::<&str>() {
-			Some(*s)
-		} else if let Some(s) = info.payload().downcast_ref::<String>() {
-			Some(&s)
-		} else {
-			None
-		};
-
-		f(msg, info.location());
-
-	}));
-
 }
 
 /// cross-platform console output
@@ -165,6 +146,42 @@ macro_rules! llist {
 			}
 		}
 	}
+}
+
+/// simple wrapper for panic hook
+pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&panic::Location>) + Send + Sync>(f: F) {
+
+	panic::set_hook(Box::new(move |info: &panic::PanicInfo| {
+
+		let msg: Option<&str> = if let Some(s) = info.payload().downcast_ref::<&str>() {
+			Some(*s)
+		} else if let Some(s) = info.payload().downcast_ref::<String>() {
+			Some(&s)
+		} else {
+			None
+		};
+
+		f(msg, info.location());
+
+	}));
+
+}
+
+/// use a default cross-platform panic hook
+pub fn use_dirty_panic() {
+
+	set_panic(|msg, loc| {
+
+		use crate::term::style as s;
+
+		let loc = loc
+			.map(|loc| format!("{}:{}:{}", loc.file(), loc.line(), loc.column()))
+			.unwrap_or("".to_string());
+
+		elog!("{} {}:\n{}", s("PANIC").bold().red(), loc, msg.unwrap_or(""));
+
+	});
+
 }
 
 #[test]

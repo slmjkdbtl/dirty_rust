@@ -59,35 +59,37 @@ impl Audio {
 					}
 				};
 
+				let mut mixer = match t_mixer.lock() {
+					Ok(mixer) => mixer,
+					Err(err) => {
+						elog!("failed to get mixer");
+						return;
+					}
+				};
+
 				match data {
 
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut output) } => {
-						if let Ok(mut mixer) = t_mixer.lock() {
-							for d in output.chunks_mut(2) {
-								let frame = mixer.next().unwrap_or_default();
-								d[0] = utils::f32_to_u16(frame.left);
-								d[1] = utils::f32_to_u16(frame.right);
-							}
+						for d in output.chunks_mut(2) {
+							let frame = mixer.next().unwrap_or_default();
+							d[0] = utils::f32_to_u16(frame.left);
+							d[1] = utils::f32_to_u16(frame.right);
 						}
 					},
 
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut output) } => {
-						if let Ok(mut mixer) = t_mixer.lock() {
-							for d in output.chunks_mut(2) {
-								let frame = mixer.next().unwrap_or_default();
-								d[0] = utils::f32_to_i16(frame.left);
-								d[1] = utils::f32_to_i16(frame.right);
-							}
+						for d in output.chunks_mut(2) {
+							let frame = mixer.next().unwrap_or_default();
+							d[0] = utils::f32_to_i16(frame.left);
+							d[1] = utils::f32_to_i16(frame.right);
 						}
 					},
 
 					cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut output) } => {
-						if let Ok(mut mixer) = t_mixer.lock() {
-							for d in output.chunks_mut(2) {
-								let frame = mixer.next().unwrap_or_default();
-								d[0] = frame.left;
-								d[1] = frame.right;
-							}
+						for d in output.chunks_mut(2) {
+							let frame = mixer.next().unwrap_or_default();
+							d[0] = frame.left;
+							d[1] = frame.right;
 						}
 					},
 

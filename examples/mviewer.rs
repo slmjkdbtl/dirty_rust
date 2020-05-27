@@ -353,10 +353,10 @@ impl State for Viewer {
 
 fn main() {
 
-	if let Err(err) = launcher()
+	if let Err(e) = launcher()
 		.resizable(true)
 		.run::<Viewer>() {
-		println!("{}", err);
+		elog!("{}", e);
 	}
 
 }

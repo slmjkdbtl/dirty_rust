@@ -254,9 +254,9 @@ impl Game {
 }
 
 fn main() {
-	if let Err(err) = launcher()
+	if let Err(e) = launcher()
 		.size(1024, 768)
 		.run::<Game>() {
-		println!("{}", err);
+		elog!("{}", e);
 	}
 }
