@@ -108,10 +108,10 @@ impl Window {
 	pub(crate) fn get_gl_ctx(&self) -> Result<gl::Device> {
 
 		let webgl_context = self.canvas
-			.get_context("webgl")
+			.get_context("webgl2")
 			.map_err(|_| format!("failed to fetch webgl context"))?
 			.ok_or_else(|| format!("failed to fetch webgl context"))?
-			.dyn_into::<web_sys::WebGlRenderingContext>()
+			.dyn_into::<web_sys::WebGl2RenderingContext>()
 			.map_err(|_| format!("failed to fetch webgl context"))?;
 
 		return Ok(gl::Device::from_webgl_ctx(webgl_context));

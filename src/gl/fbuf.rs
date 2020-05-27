@@ -12,6 +12,7 @@ pub struct Framebuffer {
 	ctx: Rc<GLCtx>,
 	id: FramebufferID,
 	tex: Texture2D,
+	rbo: RenderbufferID,
 }
 
 impl Framebuffer {
@@ -26,10 +27,24 @@ impl Framebuffer {
 			let pixels = vec![0.0 as u8; (w * h * 4) as usize];
 			let tex = Texture2D::from(&device, w, h, &pixels)?;
 
+			let rbo = ctx.create_renderbuffer()?;
+
+			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
+
+			ctx.renderbuffer_storage(
+				glow::RENDERBUFFER,
+				glow::DEPTH24_STENCIL8,
+				w as i32,
+				h as i32,
+			);
+
+			ctx.bind_renderbuffer(glow::RENDERBUFFER, None);
+
 			let fbuf = Self {
 				ctx,
 				id,
 				tex,
+				rbo,
 			};
 
 			fbuf.bind();
@@ -40,6 +55,13 @@ impl Framebuffer {
 				glow::TEXTURE_2D,
 				Some(fbuf.tex.id()),
 				0,
+			);
+
+			fbuf.ctx.framebuffer_renderbuffer(
+				glow::FRAMEBUFFER,
+				glow::DEPTH_STENCIL_ATTACHMENT,
+				glow::RENDERBUFFER,
+				Some(rbo),
 			);
 
 			if fbuf.ctx.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
@@ -90,6 +112,7 @@ impl Framebuffer {
 		unsafe {
 			self.tex.free();
 			self.ctx.delete_framebuffer(self.id);
+			self.ctx.delete_renderbuffer(self.rbo);
 		}
 	}
 

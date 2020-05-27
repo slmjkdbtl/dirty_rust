@@ -6,6 +6,7 @@ const list = [
 	"shader",
 	"model",
 	"3d",
+	"canvas",
 	"input",
 	"audio",
 ];

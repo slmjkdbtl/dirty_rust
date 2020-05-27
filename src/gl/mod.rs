@@ -46,9 +46,9 @@ impl Device {
 	}
 
 	#[cfg(web)]
-	pub fn from_webgl_ctx(c: web_sys::WebGlRenderingContext) -> Self {
+	pub fn from_webgl_ctx(c: web_sys::WebGl2RenderingContext) -> Self {
 		return Self {
-			ctx: Rc::new(GLCtx::from_webgl1_context(c)),
+			ctx: Rc::new(GLCtx::from_webgl2_context(c)),
 		};
 	}
 

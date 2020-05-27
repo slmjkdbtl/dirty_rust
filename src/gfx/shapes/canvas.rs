@@ -8,6 +8,7 @@ pub struct Canvas<'a> {
 	color: Color,
 	width: Option<f32>,
 	height: Option<f32>,
+	offset: Option<Vec2>,
 }
 
 pub fn canvas<'a>(c: &'a gfx::Canvas) -> Canvas<'a> {
@@ -21,6 +22,7 @@ impl<'a> Canvas<'a> {
 			color: rgba!(1),
 			width: None,
 			height: None,
+			offset: None,
 		};
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -39,6 +41,10 @@ impl<'a> Canvas<'a> {
 		self.height = Some(h);
 		return self;
 	}
+	pub fn offset(mut self, offset: Vec2) -> Self {
+		self.offset = Some(offset);
+		return self;
+	}
 }
 
 impl<'a> Drawable for Canvas<'a> {
@@ -55,6 +61,10 @@ impl<'a> Drawable for Canvas<'a> {
 
 		if let Some(h) = self.height {
 			sprite = sprite.height(h);
+		}
+
+		if let Some(o) = self.offset {
+			sprite = sprite.offset(o);
 		}
 
 		ctx.draw_t(
