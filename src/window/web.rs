@@ -252,9 +252,30 @@ impl Window {
 			Fullscreen(web_sys::Event),
 		}
 
-		macro_rules! add_event {
+		macro_rules! add_canvas_event {
 
-			($root:ident, $name:expr, $ty:ty, $t:ident) => {
+			($name:expr, $ty:ty, $t:ident) => {
+
+				let web_events_c = web_events.clone();
+
+				let handler = Closure::wrap(Box::new((move |e: $ty| {
+					e.prevent_default();
+					web_events_c.borrow_mut().push(WebEvent::$t(e));
+				})) as Box<dyn FnMut(_)>);
+
+				self.canvas
+					.add_event_listener_with_callback($name, handler.as_ref().unchecked_ref())
+					.map_err(|_| format!("failed to add event {}", $name))?;
+
+				handler.forget();
+
+			};
+
+		}
+
+		macro_rules! add_document_event {
+
+			($name:expr, $ty:ty, $t:ident) => {
 
 				let web_events_c = web_events.clone();
 
@@ -262,23 +283,23 @@ impl Window {
 					web_events_c.borrow_mut().push(WebEvent::$t(e));
 				})) as Box<dyn FnMut(_)>);
 
-				self.$root
+				self.document
 					.add_event_listener_with_callback($name, handler.as_ref().unchecked_ref())
 					.map_err(|_| format!("failed to add event {}", $name))?;
 
 				handler.forget();
 
-			}
+			};
 
 		}
 
-		add_event!(document, "keydown", web_sys::KeyboardEvent, KeyPress);
-		add_event!(document, "keyup", web_sys::KeyboardEvent, KeyRelease);
-		add_event!(canvas, "mousemove", web_sys::MouseEvent, MouseMove);
-		add_event!(canvas, "mousedown", web_sys::MouseEvent, MousePress);
-		add_event!(canvas, "mouseup", web_sys::MouseEvent, MouseRelease);
-		add_event!(canvas, "wheel", web_sys::WheelEvent, Wheel);
-		add_event!(canvas, "fullscreenchange", web_sys::Event, Fullscreen);
+		add_document_event!("keydown", web_sys::KeyboardEvent, KeyPress);
+		add_document_event!("keyup", web_sys::KeyboardEvent, KeyRelease);
+		add_canvas_event!("mousemove", web_sys::MouseEvent, MouseMove);
+		add_canvas_event!("mousedown", web_sys::MouseEvent, MousePress);
+		add_canvas_event!("mouseup", web_sys::MouseEvent, MouseRelease);
+		add_canvas_event!("wheel", web_sys::WheelEvent, Wheel);
+		add_canvas_event!("fullscreenchange", web_sys::Event, Fullscreen);
 
 		use glow::HasRenderLoop;
 

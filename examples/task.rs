@@ -7,7 +7,7 @@ use task::TaskQueue;
 use input::Key;
 
 const THREAD_COUNT: usize = 1;
-const LOAD_COUNT: usize = 120;
+const LOAD_COUNT: usize = 30;
 const SCALE: f32 = 9.0;
 
 struct Teapot {
@@ -148,15 +148,27 @@ impl State for Game {
 			&shapes::canvas(&self.canvas)
 		)?;
 
+		let bot_left = d.gfx.coord(gfx::Origin::BottomLeft);
+
 		d.gfx.draw_t(
 			mat4!()
-				.t2(d.gfx.coord(gfx::Origin::TopLeft) + vec2!(24, -24))
+				.t2(bot_left + vec2!(24, 48))
 				,
 			&shapes::text(
 				&format!("{}/{}", self.tasks.completed_count(), self.tasks.total())
 			)
-				.align(gfx::Origin::TopLeft)
+				.align(gfx::Origin::BottomLeft)
 				.size(16.0)
+				,
+		)?;
+
+		d.gfx.draw_t(
+			mat4!()
+				.t2(bot_left + vec2!(24, 24))
+				,
+			&shapes::text("press SPACE to load more")
+				.align(gfx::Origin::BottomLeft)
+				.size(12.0)
 				,
 		)?;
 

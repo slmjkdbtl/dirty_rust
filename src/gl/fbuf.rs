@@ -31,10 +31,9 @@ impl Framebuffer {
 
 			ctx.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
 
-			// TODO: panics on wasm
 			ctx.renderbuffer_storage(
 				glow::RENDERBUFFER,
-				glow::DEPTH24_STENCIL8,
+				glow::DEPTH_STENCIL,
 				w as i32,
 				h as i32,
 			);
@@ -58,6 +57,8 @@ impl Framebuffer {
 				0,
 			);
 
+			// TODO: panics on wasm
+			#[cfg(not(web))]
 			fbuf.ctx.framebuffer_renderbuffer(
 				glow::FRAMEBUFFER,
 				glow::DEPTH_STENCIL_ATTACHMENT,

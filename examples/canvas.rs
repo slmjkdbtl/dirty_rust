@@ -13,7 +13,7 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
-			canvas1: gfx::Canvas::new(d.gfx, 120, 160)?,
+			canvas1: gfx::Canvas::new(d.gfx, 40, 160)?,
 			model: gfx::Model::from_glb(d.gfx, include_bytes!("res/btfly.glb"))?,
 		});
 	}
@@ -49,8 +49,8 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
-// 		d.gfx.draw(&shapes::canvas(&self.canvas1))?;
-		d.gfx.draw_t(mat4!().s3(vec3!(300)), &shapes::model(&self.model))?;
+		d.gfx.draw(&shapes::canvas(&self.canvas1))?;
+// 		d.gfx.draw_t(mat4!().s3(vec3!(300)), &shapes::model(&self.model))?;
 		return Ok(());
 	}
 
