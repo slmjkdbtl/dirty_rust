@@ -11,12 +11,14 @@ use crate::*;
 use gfx::*;
 use geom::*;
 
+type NodeID = usize;
+
 // TODO: rework anim system
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NodeData {
-	pub id: usize,
-	pub children: Vec<usize>,
+	pub id: NodeID,
+	pub children: Vec<NodeID>,
 	pub transform: Transform,
 	pub meshes: Vec<MeshData>,
 	pub name: Option<String>,
@@ -24,19 +26,19 @@ pub struct NodeData {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ModelData {
-	nodes: HashMap<usize, NodeData>,
-	root_nodes: Vec<usize>,
+	nodes: HashMap<NodeID, NodeData>,
+	root_nodes: Vec<NodeID>,
 	img: Option<img::Image>,
-	anims: HashMap<usize, Anim>,
+	anims: HashMap<NodeID, Anim>,
 	anim_len: f32,
 }
 
 #[derive(Clone)]
 pub(super) struct Node {
 	meshes: Vec<Mesh<Vertex, Uniform>>,
-	id: usize,
+	id: NodeID,
 	name: Option<String>,
-	children: Vec<usize>,
+	children: Vec<NodeID>,
 	transform: Transform,
 }
 
@@ -47,7 +49,7 @@ impl Node {
 	pub fn meshes(&self) -> &[Mesh<Vertex, Uniform>] {
 		return &self.meshes;
 	}
-	pub fn children(&self) -> &[usize] {
+	pub fn children(&self) -> &[NodeID] {
 		return &self.children;
 	}
 }
@@ -137,15 +139,15 @@ impl Anim {
 
 #[derive(Clone)]
 pub struct Model {
-	nodes: HashMap<usize, Node>,
-	anims: HashMap<usize, Anim>,
+	nodes: HashMap<NodeID, Node>,
+	anims: HashMap<NodeID, Anim>,
 	anim_len: f32,
-	root_nodes: Vec<usize>,
+	root_nodes: Vec<NodeID>,
 	bbox: BBox,
 	texture: Option<Texture>,
 }
 
-fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<usize, NodeData>, node: gltf::Node) {
+fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<NodeID, NodeData>, node: gltf::Node) {
 
 	let id = node.index();
 	let name = node.name();
@@ -365,7 +367,7 @@ impl Model {
 		}
 
 		// anims
-		let mut anims: HashMap<usize, Anim> = hmap![];
+		let mut anims: HashMap<NodeID, Anim> = hmap![];
 
 		for a in document.animations() {
 
@@ -590,7 +592,7 @@ impl Model {
 				});
 
 			})
-			.collect::<HashMap<usize, Node>>();
+			.collect::<HashMap<NodeID, Node>>();
 
 		return Ok(Self {
 			bbox: bbox,
@@ -623,11 +625,11 @@ impl Model {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
-	pub(super) fn get_node(&self, id: usize) -> Option<&Node> {
+	pub(super) fn get_node(&self, id: NodeID) -> Option<&Node> {
 		return self.nodes.get(&id);
 	}
 
-	pub fn get_anim(&self, id: usize) -> Option<&Anim> {
+	pub fn get_anim(&self, id: NodeID) -> Option<&Anim> {
 		return self.anims.get(&id);
 	}
 
@@ -635,7 +637,7 @@ impl Model {
 		return self.anim_len;
 	}
 
-	pub fn root_nodes(&self) -> &[usize] {
+	pub fn root_nodes(&self) -> &[NodeID] {
 		return &self.root_nodes;
 	}
 
@@ -651,14 +653,22 @@ impl Model {
 		return self.bbox;
 	}
 
+	pub fn free(self) {
+		for (_, node) in self.nodes {
+			for mesh in node.meshes {
+				mesh.free();
+			}
+		}
+	}
+
 }
 
 fn get_bbox_inner(
 	min: &mut Vec3,
 	max: &mut Vec3,
 	transform: Mat4,
-	nodes: &HashMap<usize, NodeData>,
-	list: &[usize],
+	nodes: &HashMap<NodeID, NodeData>,
+	list: &[NodeID],
 ) {
 
 	for id in list {

@@ -7,26 +7,25 @@ use std::marker::PhantomData;
 use glow::HasContext;
 
 use super::*;
-use gltypes::*;
 use crate::Result;
 
 pub type VertexAttrGroup = &'static[(&'static str, u8)];
 
-pub(super) struct VertexAttrIter<'a> {
-	attrs: &'a VertexAttrGroup,
+pub(super) struct VertexAttrIter {
+	attrs: VertexAttrGroup,
 	cur_offset: usize,
 	cur_idx: usize,
 }
 
-pub(super) fn iter_attrs<'a>(attrs: &'a VertexAttrGroup) -> VertexAttrIter<'a> {
+pub(super) fn iter_attrs(attrs: VertexAttrGroup) -> VertexAttrIter {
 	return VertexAttrIter {
-		attrs,
+		attrs: attrs,
 		cur_offset: 0,
 		cur_idx: 0,
 	};
 }
 
-impl<'a> Iterator for VertexAttrIter<'a> {
+impl Iterator for VertexAttrIter {
 
 	type Item = VertexAttr;
 

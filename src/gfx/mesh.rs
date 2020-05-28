@@ -39,8 +39,8 @@ impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
 	pub fn draw(&self, prim: Primitive, pipeline: &Pipeline<V, U>, uniforms: &U) {
 		pipeline.draw(
-			Some(&self.vbuf),
-			Some(&self.ibuf),
+			&self.vbuf,
+			&self.ibuf,
 			uniforms,
 			self.count as u32,
 			prim,

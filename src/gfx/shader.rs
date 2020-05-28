@@ -1,10 +1,8 @@
 // wengwengweng
 
-use std::rc::Rc;
 use std::marker::PhantomData;
 
 use crate::*;
-use math::*;
 use gfx::*;
 use res::shader::*;
 
@@ -23,7 +21,7 @@ impl CustomUniform for () {}
 /// Custom Shader. See [mod-level doc](gfx) for Usage.
 #[derive(Clone, PartialEq)]
 pub struct Shader<U: CustomUniform> {
-	pipeline: Rc<Pipeline<Vertex, Uniform>>,
+	pipeline: Pipeline<Vertex, Uniform>,
 	_custom_uniform: PhantomData<U>,
 }
 
@@ -31,7 +29,7 @@ impl<U: CustomUniform> Shader<U> {
 
 	pub(crate) fn from_pipeline(pipeline: Pipeline<Vertex, Uniform>) -> Self {
 		return Self {
-			pipeline: Rc::new(pipeline),
+			pipeline: pipeline,
 			_custom_uniform: PhantomData,
 		};
 	}
@@ -65,6 +63,10 @@ impl<U: CustomUniform> Shader<U> {
 
 	pub fn default(ctx: &impl HasGL) -> Result<Self> {
 		return Self::from_vert_frag(ctx, DEFAULT_VERT, DEFAULT_FRAG);
+	}
+
+	pub fn free(self) {
+		self.pipeline.free();
 	}
 
 	pub(crate) fn pipeline(&self) -> &Pipeline<Vertex, Uniform> {

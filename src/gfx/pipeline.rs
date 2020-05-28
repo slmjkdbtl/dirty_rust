@@ -131,8 +131,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	pub fn draw(
 		&self,
-		vbuf: Option<&VertexBuffer<V>>,
-		ibuf: Option<&IndexBuffer>,
+		vbuf: &VertexBuffer<V>,
+		ibuf: &IndexBuffer,
 		uniform: &U,
 		count: u32,
 		prim: Primitive,
@@ -145,36 +145,32 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			let textures = uniform.textures();
 
 			self.gl.use_program(Some(self.program_id));
-			self.gl.bind_buffer(glow::ARRAY_BUFFER, vbuf.map(|b| b.id()));
+			vbuf.bind();
 
-			if vbuf.is_some() {
+			for attr in iter_attrs(&self.attrs) {
 
-				for attr in iter_attrs(&self.attrs) {
+				if let Some(index) = self.gl.get_attrib_location(self.program_id, &attr.name) {
 
-					if let Some(index) = self.gl.get_attrib_location(self.program_id, &attr.name) {
+					self.gl.vertex_attrib_pointer_f32(
+						index as u32,
+						attr.size,
+						glow::FLOAT,
+						false,
+						mem::size_of::<V>() as i32,
+						(attr.offset * mem::size_of::<f32>()) as i32,
+					);
 
-						self.gl.vertex_attrib_pointer_f32(
-							index as u32,
-							attr.size,
-							glow::FLOAT,
-							false,
-							mem::size_of::<V>() as i32,
-							(attr.offset * mem::size_of::<f32>()) as i32,
-						);
-
-						self.gl.enable_vertex_attrib_array(index as u32);
-
-					}
+					self.gl.enable_vertex_attrib_array(index as u32);
 
 				}
 
 			}
 
-			self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, ibuf.map(|b| b.id()));
+			ibuf.bind();
 
 			for (i, tex) in textures.iter().enumerate() {
 				self.gl.active_texture(glow::TEXTURE0 + i as u32);
-				self.gl.bind_texture(glow::TEXTURE_2D, Some(tex.id()));
+				tex.bind();
 			}
 
 			match prim {
@@ -184,13 +180,13 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.gl.draw_elements(prim.into(), count as i32, glow::UNSIGNED_INT, 0);
 
-			self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
-			self.gl.bind_buffer(glow::ARRAY_BUFFER, None);
+			ibuf.unbind();
+			vbuf.unbind();
 			self.gl.use_program(None);
 
 			for (i, tex) in textures.iter().enumerate() {
 				self.gl.active_texture(glow::TEXTURE0 + i as u32);
-				self.gl.bind_texture(glow::TEXTURE_2D, None);
+				tex.unbind();
 			}
 
 		}

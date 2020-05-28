@@ -108,8 +108,8 @@ impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
 		self.ibuf.data(0, &self.iqueue);
 
 		state.pipeline.draw(
-			Some(&self.vbuf),
-			Some(&self.ibuf),
+			&self.vbuf,
+			&self.ibuf,
 			&state.uniform,
 			self.iqueue.len() as u32,
 			state.prim,
