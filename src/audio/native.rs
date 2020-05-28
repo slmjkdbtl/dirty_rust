@@ -8,7 +8,7 @@ use cpal::traits::*;
 
 use super::*;
 
-/// The Audio Context. See [mod-level doc](super) for usage.
+/// The Audio Context. See [mod-level doc](index.html) for usage.
 pub struct Audio {
 	mixer: Arc<Mutex<Mixer>>,
 }

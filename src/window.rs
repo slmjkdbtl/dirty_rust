@@ -2,7 +2,7 @@
 
 //! Window Events & Operations
 //!
-//! see methods under [Window](window::Window)
+//! see methods under [Window](struct.Window.html)
 
 #[cfg(not(web))]
 export!(native);

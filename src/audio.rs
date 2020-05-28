@@ -3,8 +3,8 @@
 //! Audio Playback
 //!
 //! This module provides 2 types of high-level types:
-//!  - [`Sound`](Sound), buffered audio mainly for sound effects
-//!  - [`Track`](Track), streamed audio mainly for music
+//!  - [`Sound`](struct.Sound.html), buffered audio mainly for sound effects
+//!  - [`Track`](struct.Track.html), streamed audio mainly for music
 
 // TODO: loop
 // TODO: sample rate conversion
@@ -41,6 +41,7 @@ pub mod synth;
 const SAMPLE_RATE: u32 = 44100;
 const CHANNEL_COUNT: ChannelCount = ChannelCount::Two;
 
+/// Represents A Frame in Audio
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Frame {
 	left: f32,

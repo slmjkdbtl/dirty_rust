@@ -16,7 +16,7 @@ type NodeID = usize;
 // TODO: rework anim system
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct NodeData {
+pub(super) struct NodeData {
 	pub id: NodeID,
 	pub children: Vec<NodeID>,
 	pub transform: Transform,
@@ -24,6 +24,7 @@ pub struct NodeData {
 	pub name: Option<String>,
 }
 
+/// Data for Creating [`Model`](`struct.Model.html`)
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ModelData {
 	nodes: HashMap<NodeID, NodeData>,
@@ -56,6 +57,7 @@ impl Node {
 
 type Track<T> = Vec<(f32, T)>;
 
+/// 3D Animation Data
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Anim {
 	pos: Track<Vec3>,
@@ -137,6 +139,7 @@ impl Anim {
 
 }
 
+/// 3D Model
 #[derive(Clone)]
 pub struct Model {
 	nodes: HashMap<NodeID, Node>,
@@ -256,6 +259,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<NodeID, NodeData>, node: gltf:
 
 impl Model {
 
+	/// load [`ModelData`](struct.ModelData.html) from a file
 	pub fn load_file(path: impl AsRef<Path>) -> Result<ModelData> {
 
 		let mut path = path.as_ref().to_owned();
@@ -299,10 +303,12 @@ impl Model {
 
 	}
 
+	/// load [`ModelData`](struct.ModelData.html) from [`MeshData`](struct.MeshData.html)
 	pub fn load_mesh_data(data: MeshData) -> ModelData {
 		return Self::load_raw(data.vertices, data.indices);
 	}
 
+	/// load [`ModelData`](struct.ModelData.html) from raw vertices & indices
 	pub fn load_raw(verts: Vec<Vertex>, indices: Vec<u32>) -> ModelData {
 
 		let node = NodeData {
@@ -328,6 +334,7 @@ impl Model {
 
 	}
 
+	/// load [`ModelData`](struct.ModelData.html) from glb bytes
 	pub fn load_glb(bytes: &[u8]) -> Result<ModelData> {
 
 		use gltf::Glb;
@@ -471,6 +478,7 @@ impl Model {
 
 	}
 
+	/// load [`ModelData`](struct.ModelData.html) from obj file
 	pub fn load_obj(obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<ModelData> {
 
 		let (models, materials) = tobj::load_obj_buf(&mut Cursor::new(obj), true, |_| {
@@ -559,6 +567,7 @@ impl Model {
 
 	}
 
+	/// create model from [`ModelData`](struct.ModelData.html)
 	pub fn from_data(ctx: &impl HasGL, data: ModelData) -> Result<Self> {
 
 		let bbox = get_bbox(&data);
@@ -605,22 +614,27 @@ impl Model {
 
 	}
 
+	/// create model from a file
 	pub fn from_file(ctx: &impl HasGL, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
+	/// create model from a [`MeshData`](struct.MeshData.html)
 	pub fn from_mesh_data(ctx: &impl HasGL, data: MeshData) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_mesh_data(data));
 	}
 
+	/// create model from raw vertices & indices
 	pub fn from_raw(ctx: &impl HasGL, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_raw(verts, indices));
 	}
 
+	/// create model from obj file
 	pub fn from_obj(ctx: &impl HasGL, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_obj(obj, mtl, img)?);
 	}
 
+	/// create model from glb file
 	pub fn from_glb(ctx: &impl HasGL, bytes: &[u8]) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
@@ -645,14 +659,17 @@ impl Model {
 		return self.texture.as_ref();
 	}
 
+	/// get center position
 	pub fn center(&self) -> Vec3 {
 		return (self.bbox.min + self.bbox.max) / 2.0;
 	}
 
+	/// get bounding box
 	pub fn bbox(&self) -> BBox {
 		return self.bbox;
 	}
 
+	/// free memory
 	pub fn free(self) {
 		for (_, node) in self.nodes {
 			for mesh in node.meshes {

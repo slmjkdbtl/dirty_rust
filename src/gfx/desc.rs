@@ -7,12 +7,14 @@ use crate::*;
 use math::*;
 use gfx::*;
 
+/// Mesh Data with Vertices & Indices
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MeshData {
 	pub vertices: Vec<Vertex>,
 	pub indices: Vec<u32>,
 }
 
+/// Default Vertex Type
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Vertex {

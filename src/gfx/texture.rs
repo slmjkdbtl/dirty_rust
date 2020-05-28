@@ -8,6 +8,7 @@ use gfx::*;
 pub use gltypes::WrapMode;
 pub use gltypes::FilterMode;
 
+/// 2D Texture
 #[derive(Clone)]
 pub struct Texture {
 	gl: Rc<glow::Context>,
@@ -18,6 +19,7 @@ pub struct Texture {
 
 impl Texture {
 
+	/// create a new empty texture with width & height
 	pub fn new(ctx: &impl HasGL, w: i32, h: i32) -> Result<Self> {
 
 		unsafe {
@@ -57,6 +59,7 @@ impl Texture {
 
 	}
 
+	/// create a texture from raw pixels
 	pub fn from_raw(ctx: &impl HasGL, width: i32, height: i32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(ctx, width, height)?;
@@ -65,14 +68,17 @@ impl Texture {
 
 	}
 
+	/// create a texture from an [`Image`](../img/struct.Image.html)
 	pub fn from_img(ctx: &impl HasGL, img: img::Image) -> Result<Self> {
 		return Self::from_raw(ctx, img.width(), img.height(), &img.into_raw());
 	}
 
+	/// create a texture from bytes read from an image file
 	pub fn from_bytes(ctx: &impl HasGL, data: &[u8]) -> Result<Self> {
 		return Self::from_img(ctx, img::Image::from_bytes(data)?);
 	}
 
+	/// set min/max filter mode
 	pub fn set_filter(&self, f: FilterMode) {
 
 		unsafe {
@@ -97,6 +103,7 @@ impl Texture {
 
 	}
 
+	/// set wrap mode
 	pub fn set_wrap(&self, w: WrapMode) {
 
 		unsafe {
@@ -161,14 +168,17 @@ impl Texture {
 		self.sub_data(0, 0, self.width, self.height, data);
 	}
 
+	/// get texture width
 	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
+	/// get texture width
 	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
+	/// capture content to an [`Image`](../img/struct.Image.html)
 	pub fn capture(&self) -> Result<img::Image> {
 
 		let size = (self.width * self.height * 4) as usize;
@@ -198,6 +208,7 @@ impl Texture {
 		return self.id;
 	}
 
+	/// free memory
 	pub fn free(self) {
 		unsafe {
 			self.gl.delete_texture(self.id);

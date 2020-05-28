@@ -5,10 +5,15 @@ use math::*;
 use geom::*;
 use gfx::*;
 
+/// Describes Features of a Camera
 pub trait Camera {
+	/// projection matrix
 	fn proj(&self) -> Mat4;
+	/// view matrix
 	fn view(&self) -> Mat4;
+	/// convert a 2d point to a ray
 	fn pt_to_ray(&self, ctx: &Gfx, pt: Vec2) -> Ray3;
+	/// convert a point into 2d screen space
 	fn to_screen(&self, ctx: &Gfx, pt: Vec3) -> Vec2 {
 		let cp = self.proj() * self.view() * vec4!(pt.x, pt.y, pt.z, 1.0);
 		let cp = cp.xy() / cp.w;
@@ -16,6 +21,7 @@ pub trait Camera {
 	}
 }
 
+/// Perspective Camera
 #[derive(Clone, Debug)]
 pub struct PerspectiveCam {
 	pub dir: Vec3,
@@ -28,6 +34,7 @@ pub struct PerspectiveCam {
 
 impl PerspectiveCam {
 
+	/// set pitch / yaw angle
 	pub fn set_angle(&mut self, yaw: f32, pitch: f32) {
 
 		self.dir = vec3!(
@@ -38,30 +45,37 @@ impl PerspectiveCam {
 
 	}
 
+	/// set destination
 	pub fn set_dest(&mut self, l: Vec3) {
 		self.dir = (l - self.pos).unit();
 	}
 
+	/// get yaw angle
 	pub fn yaw(&self) -> f32 {
 		return f32::atan2(self.dir.z, self.dir.x) + f32::to_radians(90.0);
 	}
 
+	/// get pitch angle
 	pub fn pitch(&self) -> f32 {
 		return self.dir.y.asin();
 	}
 
+	/// get front dir
 	pub fn front(&self) -> Vec3 {
 		return self.dir;
 	}
 
+	/// get back dir
 	pub fn back(&self) -> Vec3 {
 		return -self.dir;
 	}
 
+	/// get left dir
 	pub fn left(&self) -> Vec3 {
 		return -self.dir.cross(vec3!(0, 1, 0)).unit();
 	}
 
+	/// get right dir
 	pub fn right(&self) -> Vec3 {
 		return self.dir.cross(vec3!(0, 1, 0)).unit();
 	}
@@ -117,6 +131,7 @@ impl Camera for PerspectiveCam {
 
 }
 
+/// Orthographic Camera
 #[derive(Clone, Debug)]
 pub struct OrthoCam {
 	pub width: f32,
@@ -166,6 +181,7 @@ impl Camera for OrthoCam {
 
 }
 
+/// Oblique Camera
 #[derive(Clone, Debug)]
 pub struct ObliqueCam {
 	pub width: f32,

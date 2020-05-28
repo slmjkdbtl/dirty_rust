@@ -4,9 +4,106 @@
 //!
 //! ## Drawing Stuff
 //!
+//! Gfx provides drawing primitives throught the [`shapes`](shapes/index.html) modules.
+//!
+//! A basic draw operation may look like this:
+//! ```no_run
+//! gfx.draw(&shapes::text("hi"))?;
+//! ```
+//!
+//! All shapes uses a builder pattern for configs:
+//! ```no_run
+//! gfx.draw(
+//!     &shapes::sprite(&self.tex)
+//!         .offset(vec2!(-1.0))
+//!         .color(rgba!(0, 0, 1, 1))
+//!         .flip(Flip::Y)
+//!         ,
+//! )?;
+//! ```
+//!
+//! You can transform objects with [`draw_t`](struct.Gfx.html#method.draw_t):
+//! ```no_run
+//! gfx.draw_t(
+//!     mat4!()
+//!         .t3(vec2!(120))
+//!         .rx(f32::to_radians(90.0))
+//!         .s3(vec2!(2))
+//!         ,
+//!     &shapes::model(&self.model)
+//!         .color(rgba!(0, 1, 1, 1))
+//!         ,
+//! )?;
+//! ```
+//!
+//! There's also [`push_t`](struct.Gfx.html#method.push_t) that transforms every draw operations in the callback:
+//! ```no_run
+//! gfx.push_t(mat4!().t2(vec2!(120)), |gfx| {
+//!
+//!     gfx.draw(&shapes::text("we"))?;
+//!     gfx.draw(&shapes::text("are"))?;
+//!     gfx.draw(&shapes::text("all"))?;
+//!     gfx.draw(&shapes::text("transformed"))?;
+//!
+//!     return Ok(());
+//!
+//! })?;
+//! ```
+//! This kind of callback pattern can be seen in a lot of functions under [`Gfx`](struct.Gfx.html), as it's using an stateless architecture for rendering states.
+//!
+//!
+//! ## Canvas
+//!
+//! You can use an off-screen framebuffer with [`Canvas`](struct.Canvas.html) and [`draw_on`](struct.Gfx.html#method.draw_on):
+//! ```no_run
+//! // init
+//! let canvas = Canvas::new(&gfx, 120, 120)?;
+//!
+//! // mostly called in update, but also can be in init if you're not updating
+//! gfx.draw_on(&canvas, |gfx| {
+//!     gfx.draw(&shapes::text("anything"))?;
+//!     return Ok(());
+//! })?;
+//! ```
+//! Canvases can be used for a lot of things: post-processing, screenshots, ...
+//!
+//! note that binding to a canvas resets the projection & view matrix, you may want to rebind your camera in a canvas call
+//!
 //! ## Custom Shader
 //!
-//! Use [`Shader`](Shader) to create custom shaders. It requires a type that implements [`CustomUniform`](CustomUniform), see [this example](https://git.sr.ht/~slmjkdbtl/DIRTY/tree/master/examples/shader.rs) for usage
+//! Use [`Shader`](struct.Shader.html) to create custom shaders. It requires a type that implements [`CustomUniform`](trait.CustomUniform.html), a minimal example:
+//!
+//! ```glsl
+//! // blue.frag
+//! uniform float u_blueness;
+//! fn frag() {
+//!     return default_color() * u_blueness * vec4(0.0, 0.0, 1.0, 1.0);
+//! }
+//! ```
+//!
+//! ```no_run
+//! struct BlueUniform {
+//!     blueness: f32,
+//! }
+//!
+//! impl CustomUniform for BlueUniform {
+//!     fn values(&self) -> UniformValues {
+//!         return hmap![
+//!             "u_blueness": &self.blueness,
+//!         ];
+//!     }
+//! }
+//!
+//! // init
+//! let shader = Shader::<BlueUniform>::from_frag(gfx, include_str!("blue.frag"))?;
+//!
+//! // draw
+//! gfx.draw_with(&shader, &BlueUniform {
+//!     blueness: 1.0,
+//! }, |gfx| {
+//!     return Ok(());
+//! })?;
+//! ```
 //!
 //! custom shaders have access to these following inputs:
 //!
@@ -24,6 +121,13 @@
 //! | uniform | vec4      | u_color       | uniform color                   | frag       |
 //! |         | vec4()    | default_pos   | get the default vertex position | vert       |
 //! |         | vec4()    | default_color | get the default fragment color  | frag       |
+//!
+//! ## Camera
+//!
+//! ## Memory Management
+//!
+//! Remember to free OpenGL resource when you're done with them. Resource types [`Texture`](struct.Texture.html), [`Model`](struct.Model.html), [`Shader`](struct.Shader.html), [`Canvas`](struct.Canvas.html) all have a `free(self)` method that frees the memory.
+//!
 
 // TODO: major cleaning
 
@@ -32,11 +136,11 @@ import!(vbuf);
 import!(ibuf);
 import!(pipeline);
 import!(renderer);
+import!(mesh);
 
 export!(desc);
 export!(texture);
 export!(canvas);
-export!(mesh);
 export!(shader);
 export!(transform);
 export!(camera);
@@ -69,7 +173,7 @@ const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
 const DEFAULT_FAR: f32 = 4096.0;
 
-/// The Graphics Context. See [mod-level doc](gfx) for usage.
+/// The Graphics Context. See [mod-level doc](index.html) for usage.
 pub struct Gfx {
 
 	gl: Rc<glow::Context>,

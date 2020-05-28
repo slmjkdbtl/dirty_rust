@@ -5,6 +5,7 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
+/// Off-screen Rendering Canvas
 #[derive(Clone)]
 pub struct Canvas {
 	gl: Rc<glow::Context>,
@@ -17,6 +18,7 @@ pub struct Canvas {
 
 impl Canvas {
 
+	/// create a new canvas with width & height
 	pub fn new(ctx: &Gfx, w: i32, h: i32) -> Result<Self> {
 
 		let dpi = ctx.dpi();
@@ -102,22 +104,27 @@ impl Canvas {
 		}
 	}
 
+	/// get canvas width
 	pub fn width(&self) -> i32 {
 		return self.width;
 	}
 
+	/// get canvas height
 	pub fn height(&self) -> i32 {
 		return self.height;
 	}
 
+	/// get canvas texture
 	pub fn tex(&self) -> &Texture {
 		return &self.tex;
 	}
 
+	/// capture content to an [`Image`](../img/struct.Image.html)
 	pub fn capture(&self) -> Result<img::Image> {
 		return self.tex.capture();
 	}
 
+	/// resize canvas
 	pub fn resize(&mut self, ctx: &Gfx, w: i32, h: i32) -> Result<()> {
 
 		let new = Self::new(ctx, w, h)?;
@@ -129,6 +136,7 @@ impl Canvas {
 
 	}
 
+	/// free memory
 	pub fn free(self) {
 		unsafe {
 			self.tex.free();

@@ -4,7 +4,7 @@
 //!
 //! ## Basic Setup
 //!
-//! to create a window, make a struct that implements the [`State`](State) trait, then use [`run`](run()) to run
+//! to create a window, make a struct that implements the [`State`](trait.State.html) trait, then use [`run`](fn.run.html) to run
 //! ```no_run
 //! use dirty::*;
 //!
@@ -20,17 +20,17 @@
 //!     run::<Game>();
 //! }
 //! ```
-//! for more information checkout the doc of [`State`](State), and [`launcher`](launcher()) if you wish to have more start up options
+//! for more information checkout the doc of [`State`](trait.State.html), and [`launcher`](fn.launcher.html) if you wish to have more start up options
 //!
 //! ## Context
-//! each method under [`State`](State) takes a [`Ctx`](Ctx) as parameter, which represents the application context, it has 4 fields (modules):
-//!  - [`ctx.window`](window::Window)
+//! each method under [`State`](trait.State.html) takes a [`Ctx`](struct.Ctx.html) as parameter, which represents the application context, it has 4 fields (modules):
+//!  - [`ctx.window`](window/struct.Window.html)
 //!    provides ways to interact with the window, like toggling fullscreen
-//!  - [`ctx.gfx`](gfx::Gfx)
+//!  - [`ctx.gfx`](gfx/struct.Gfx.html)
 //!    provides everything you need with rendering stuff on screen
-//!  - [`ctx.app`](app::App)
+//!  - [`ctx.app`](app/struct.App.html)
 //!    provides methods that relates to the application lifecycle, like time
-//!  - [`ctx.audio`](audio::Audio)
+//!  - [`ctx.audio`](audio/struct.Audio.html)
 //!    provides everything you need to play audio
 //!
 //! for more information checkout each indivisual docs

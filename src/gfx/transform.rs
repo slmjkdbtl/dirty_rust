@@ -6,6 +6,7 @@ use serde::Deserialize;
 use crate::*;
 use math::*;
 
+/// Transform Data for 3D Objects
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Transform {
 	pub pos: Vec3,

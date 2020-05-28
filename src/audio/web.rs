@@ -11,7 +11,7 @@ use wasm_bindgen::closure::Closure;
 use crate::*;
 use super::*;
 
-/// The Audio Context. See [mod-level doc](audio) for usage.
+/// The Audio Context. See [mod-level doc](index.html) for usage.
 pub struct Audio {
 	ctx: Rc<web_sys::AudioContext>,
 }

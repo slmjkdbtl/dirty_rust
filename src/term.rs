@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Utilities for Terminal Output
+
 use crate::math::Color;
 
 #[derive(Clone)]
