@@ -24,8 +24,8 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 
 	let mut window = window::Window::new(&conf)?;
 	let mut gfx = gfx::Gfx::new(&window, &conf)?;
-	let mut app = app::App::new();
-	let mut audio = audio::Audio::new()?;
+	let mut app = app::App::new(&conf);
+	let mut audio = audio::Audio::new(&conf)?;
 
 	window.swap()?;
 

@@ -71,14 +71,12 @@ pub struct SpriteData {
 	pub anims: HashMap<String, Anim>,
 }
 
-#[cfg(feature = "json")]
 pub fn parse(json: &str) -> Result<SpriteData> {
 
-	use crate::codec::json;
+	let data: SpritesheetData = serde_json::from_str(&json)
+		.map_err(|_| format!("failed to decode json"))?;
 
 	let mut anims = HashMap::new();
-	let data: SpritesheetData = json::decode(json)?;
-
 	let width = data.meta.size.w;
 	let height = data.meta.size.h;
 

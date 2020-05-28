@@ -4,7 +4,7 @@
 //!
 //! All functions here uses [`res_dir`](res_dir()) so that it can read file from app bundle dirs (e.g. on macOS `*.app/Content/Resources`)
 //!
-//! There're also extra utilitiy functions like [`glob`](glob()) and [`data_dir`](data_dir())
+//! There're also extra utilitiy functions like [`glob`](glob())
 
 use std::fs;
 use std::path::Path;
@@ -236,15 +236,5 @@ pub fn size(path: impl AsRef<Path>) -> Result<u64> {
 
 	return Ok(len);
 
-}
-
-/// get system data dir
-pub fn data_dir() -> Option<PathBuf> {
-	return dirs_next::data_dir();
-}
-
-/// get system home dir
-pub fn home_dir() -> Option<PathBuf> {
-	return dirs_next::home_dir();
 }
 

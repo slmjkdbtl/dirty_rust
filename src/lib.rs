@@ -66,7 +66,6 @@ pub mod img;
 pub mod math;
 pub mod physics;
 pub mod term;
-pub mod codec;
 pub mod ui;
 pub mod kit;
 pub mod task;
