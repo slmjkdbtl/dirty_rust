@@ -1,7 +1,6 @@
 // wengwengweng
 
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::io::Cursor;
 use std::path::Path;
 
@@ -9,7 +8,6 @@ use serde::Serialize;
 use serde::Deserialize;
 
 use crate::*;
-use math::*;
 use gfx::*;
 use geom::*;
 
@@ -32,26 +30,23 @@ pub struct ModelData {
 }
 
 #[derive(Clone)]
-pub struct BufferedMesh {
-	mesh: Rc<Mesh<Vertex, Uniform>>,
-	data: MeshData,
+pub(super) struct Node {
+	meshes: Vec<Mesh<Vertex, Uniform>>,
+	id: usize,
+	name: Option<String>,
+	children: Vec<usize>,
+	transform: Transform,
 }
 
-#[derive(Clone)]
-pub struct Node {
-	pub meshes: Vec<BufferedMesh>,
-	pub id: usize,
-	pub name: Option<String>,
-	pub children: Vec<usize>,
-	pub transform: Transform,
-}
-
-impl BufferedMesh {
-	pub(crate) fn mesh(&self) -> &Mesh<Vertex, Uniform> {
-		return &self.mesh;
+impl Node {
+	pub fn transform(&self) -> Transform {
+		return self.transform;
 	}
-	pub fn data(&self) -> &MeshData {
-		return &self.data;
+	pub fn meshes(&self) -> &[Mesh<Vertex, Uniform>] {
+		return &self.meshes;
+	}
+	pub fn children(&self) -> &[usize] {
+		return &self.children;
 	}
 }
 
@@ -562,6 +557,8 @@ impl Model {
 
 	pub fn from_data(ctx: &impl HasGL, data: ModelData) -> Result<Self> {
 
+		let bbox = get_bbox(&data);
+
 		let tex = if let Some(img) = data.img {
 			Some(Texture::from_img(ctx, img)?)
 		} else {
@@ -572,25 +569,29 @@ impl Model {
 		let anim_len = data.anim_len;
 		let root_nodes = data.root_nodes;
 
-		let nodes = data.nodes.into_iter().map(|(id, node)| {
-			let meshes = node.meshes.into_iter().map(|m| {
-				return BufferedMesh {
-					// TODO: no unwrap
-					mesh: Rc::new(Mesh::new(ctx, &m.vertices, &m.indices).unwrap()),
-					data: m,
-				};
-			}).collect::<Vec<BufferedMesh>>();
-			return (id, Node {
-				id: node.id,
-				name: node.name,
-				children: node.children,
-				transform: node.transform,
-				meshes,
-			});
-		}).collect::<HashMap<usize, Node>>();
+		let nodes = data.nodes
+			.into_iter()
+			.map(|(id, node)| {
+
+				let meshes = node.meshes
+					.into_iter()
+					// TODO: don't unwrap here
+					.map(|m| Mesh::new(ctx, &m.vertices, &m.indices).unwrap())
+					.collect::<Vec<Mesh<Vertex, Uniform>>>();
+
+				return (id, Node {
+					id: node.id,
+					name: node.name,
+					children: node.children,
+					transform: node.transform,
+					meshes: meshes,
+				});
+
+			})
+			.collect::<HashMap<usize, Node>>();
 
 		return Ok(Self {
-			bbox: get_bbox(&nodes, &root_nodes),
+			bbox: bbox,
 			nodes,
 			anim_len,
 			anims,
@@ -620,7 +621,7 @@ impl Model {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 
-	pub fn get_node(&self, id: usize) -> Option<&Node> {
+	pub(super) fn get_node(&self, id: usize) -> Option<&Node> {
 		return self.nodes.get(&id);
 	}
 
@@ -654,7 +655,7 @@ fn get_bbox_inner(
 	min: &mut Vec3,
 	max: &mut Vec3,
 	transform: Mat4,
-	nodes: &HashMap<usize, Node>,
+	nodes: &HashMap<usize, NodeData>,
 	list: &[usize],
 ) {
 
@@ -666,7 +667,7 @@ fn get_bbox_inner(
 
 			for m in &node.meshes {
 
-				for v in &m.data.vertices {
+				for v in &m.vertices {
 
 					let pos = tr * v.pos;
 
@@ -689,12 +690,12 @@ fn get_bbox_inner(
 
 }
 
-fn get_bbox(nodes: &HashMap<usize, Node>, list: &[usize]) -> BBox {
+fn get_bbox(model: &ModelData) -> BBox {
 
 	let mut min = vec3!();
 	let mut max = vec3!();
 
-	get_bbox_inner(&mut min, &mut max, mat4!(), nodes, list);
+	get_bbox_inner(&mut min, &mut max, mat4!(), &model.nodes, &model.root_nodes);
 
 	return BBox::new(min, max);
 

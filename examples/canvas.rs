@@ -16,6 +16,7 @@ impl State for Game {
 		let canvas = gfx::Canvas::new(d.gfx, 160, 160)?;
 
 		d.gfx.draw_on(&canvas, |gfx| {
+			gfx.clear();
 			gfx.draw_t(
 				mat4!()
 					.s3(vec3!(300))
@@ -43,6 +44,7 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
+					Key::Space => self.canvas.capture()?.save("test.png")?,
 					_ => {},
 				}
 			},

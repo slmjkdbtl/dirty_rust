@@ -61,7 +61,7 @@ fn draw_mesh(ctx: &mut Gfx, dctx: &Model, ptr: Mat4, id: usize) {
 
 	if let Some(node) = model.get_node(id) {
 
-		let mut tr = node.transform;
+		let mut tr = node.transform();
 
 		if let Some(anim) = model.get_anim(id) {
 
@@ -76,11 +76,11 @@ fn draw_mesh(ctx: &mut Gfx, dctx: &Model, ptr: Mat4, id: usize) {
 		let tr = ptr * tr.as_mat4();
 		let tex = model.texture().unwrap_or(&ctx.empty_tex);
 
-		for mesh in &node.meshes {
+		for mesh in node.meshes() {
 
 			ctx.draw_calls += 1;
 
-			mesh.mesh().draw(
+			mesh.draw(
 				dctx.prim,
 				&ctx.cur_pipeline,
 				&gfx::Uniform {
@@ -95,7 +95,7 @@ fn draw_mesh(ctx: &mut Gfx, dctx: &Model, ptr: Mat4, id: usize) {
 
 		}
 
-		for c in &node.children {
+		for c in node.children() {
 			draw_mesh(ctx, dctx, tr, *c);
 		}
 
