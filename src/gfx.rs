@@ -350,40 +350,28 @@ impl Gfx {
 	// TODO: not working on wasm / webgl
 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-// 		let gl = self.gl.clone();
+		self.flush();
 
-// 		self.flush();
-// 		gl.enable(Capability::StencilTest);
-// 		gl.clear(Surface::Stencil);
+		unsafe {
 
-// 		gl.stencil(StencilFunc {
-// 			cmp: Cmp::Never,
-// 			rf: 1,
-// 			mask: 0xff,
-// 		}, StencilOps {
-// 			sfail: StencilOp::Replace,
-// 			dpfail: StencilOp::Replace,
-// 			dppass: StencilOp::Replace,
-// 		}, || {
-// 			return mask(self);
-// 		})?;
+			self.gl.enable(Capability::StencilTest.into());
+			self.gl.clear(Surface::Stencil.into());
 
-// 		self.flush();
+			self.gl.stencil_func(Cmp::Never.into(), 1, 0xff);
+			self.gl.stencil_op(StencilOp::Replace.into(), StencilOp::Replace.into(), StencilOp::Replace.into());
 
-// 		gl.stencil(StencilFunc {
-// 			cmp: Cmp::Equal,
-// 			rf: 1,
-// 			mask: 0xff,
-// 		}, StencilOps {
-// 			sfail: StencilOp::Keep,
-// 			dpfail: StencilOp::Keep,
-// 			dppass: StencilOp::Keep,
-// 		}, || {
-// 			return draw(self);
-// 		})?;
+			mask(self)?;
+			self.flush();
 
-// 		self.flush();
-// 		gl.disable(Capability::StencilTest);
+			self.gl.stencil_func(Cmp::Equal.into(), 1, 0xff);
+			self.gl.stencil_op(StencilOp::Keep.into(), StencilOp::Keep.into(), StencilOp::Keep.into());
+
+			draw(self)?;
+			self.flush();
+
+			self.gl.disable(Capability::StencilTest.into());
+
+		}
 
 		return Ok(());
 

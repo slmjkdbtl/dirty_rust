@@ -10,8 +10,8 @@ license = "Zlib"
 edition = "2018"
 readme = "README.md"
 exclude = [
-	"TODO",
-	"misc/",
+	"/misc",
+	"/site",
 ]
 
 [profile.dev.package."*"]

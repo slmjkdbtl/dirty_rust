@@ -11,6 +11,8 @@ use crate::*;
 use gfx::*;
 use geom::*;
 
+// TODO: rework anim system
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NodeData {
 	pub id: usize,
@@ -288,7 +290,7 @@ impl Model {
 			},
 
 			_ => {
-				return Err("unrecognized model".to_string());
+				return Err("unsupported 3d format".to_string());
 			},
 
 		}
