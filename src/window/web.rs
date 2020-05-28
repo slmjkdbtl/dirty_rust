@@ -46,11 +46,11 @@ impl Window {
 	pub(crate) fn new(conf: &conf::Conf) -> Result<Self> {
 
 		let window = web_sys::window()
-			.ok_or_else(|| format!("no window found"))?;
+			.ok_or_else(|| format!("failed to get window"))?;
 
 		let document = window
 			.document()
-			.ok_or_else(|| format!("should have a document on window"))?;
+			.ok_or_else(|| format!("failed to get document"))?;
 
 		let canvas = document
 			.create_element("canvas")
@@ -70,7 +70,7 @@ impl Window {
 			CanvasRoot::Body => {
 				document
 					.body()
-					.ok_or_else(|| format!("no body found"))?
+					.ok_or_else(|| format!("failed to get body"))?
 					.append_child(&canvas)
 					.map_err(|_| format!("failed to append canvas"))?;
 			},

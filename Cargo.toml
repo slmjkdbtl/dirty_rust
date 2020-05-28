@@ -24,10 +24,6 @@ default = [
 # 	"midi",
 ]
 
-bin = [
-	"bincode",
-]
-
 midi = [
 	"midir",
 ]
@@ -66,9 +62,6 @@ sfxr = "0.1"
 # midi
 midir = { version = "0.6", optional = true }
 
-# bin
-bincode = { version = "1.2", optional = true }
-
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 glutin = "0.24"
 
@@ -86,6 +79,7 @@ features = [
 	"Node",
 	"Window",
 	"Element",
+	"Storage",
 	"HtmlElement",
 	"HtmlCanvasElement",
 	"HtmlAudioElement",

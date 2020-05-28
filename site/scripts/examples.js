@@ -10,6 +10,7 @@ const list = [
 	"input",
 	"mask",
 	"audio",
+	"data",
 ];
 
 export default {
