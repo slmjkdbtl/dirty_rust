@@ -347,7 +347,6 @@ impl Gfx {
 	}
 
 	// TODO: learn more about stencil
-	// TODO: not working on wasm / webgl
 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		self.flush();

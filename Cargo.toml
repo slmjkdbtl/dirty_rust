@@ -97,6 +97,7 @@ features = [
 	"HtmlElement",
 	"HtmlCanvasElement",
 	"HtmlAudioElement",
+	"WebGlContextAttributes",
 	"WebGl2RenderingContext",
 	"MouseEvent",
 	"KeyboardEvent",

@@ -102,12 +102,18 @@ impl Window {
 
 		canvas.set_attribute("style", &build_styles(&styles));
 
+		let mut config = web_sys::WebGlContextAttributes::new();
+
+		config.antialias(false);
+		config.depth(true);
+		config.stencil(true);
+
 		let webgl_ctx = canvas
-			.get_context("webgl2")
-			.map_err(|_| format!("failed to fetch webgl context"))?
-			.ok_or_else(|| format!("failed to fetch webgl context"))?
+			.get_context_with_context_options("webgl2", &config)
+			.map_err(|_| format!("failed to get webgl context"))?
+			.ok_or_else(|| format!("failed to get webgl context"))?
 			.dyn_into::<web_sys::WebGl2RenderingContext>()
-			.map_err(|_| format!("failed to fetch webgl context"))?;
+			.map_err(|_| format!("failed to get webgl context"))?;
 
 		let gl = glow::Context::from_webgl2_context(webgl_ctx);
 

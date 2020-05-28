@@ -47,6 +47,7 @@ doc crate:
 	cargo doc \
 		--no-deps \
 		--open \
+		--all-features \
 		-p {{crate}}
 
 build-doc:
