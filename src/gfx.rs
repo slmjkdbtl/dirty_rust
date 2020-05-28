@@ -7,12 +7,12 @@
 //! Gfx provides drawing primitives throught the [`shapes`](shapes/index.html) modules.
 //!
 //! A basic draw operation may look like this:
-//! ```no_run
+//! ```ignore
 //! gfx.draw(&shapes::text("hi"))?;
 //! ```
 //!
 //! All shapes uses a builder pattern for configs:
-//! ```no_run
+//! ```ignore
 //! gfx.draw(
 //!     &shapes::sprite(&self.tex)
 //!         .offset(vec2!(-1.0))
@@ -23,7 +23,7 @@
 //! ```
 //!
 //! You can transform objects with [`draw_t`](struct.Gfx.html#method.draw_t):
-//! ```no_run
+//! ```ignore
 //! gfx.draw_t(
 //!     mat4!()
 //!         .t3(vec2!(120))
@@ -37,7 +37,7 @@
 //! ```
 //!
 //! There's also [`push_t`](struct.Gfx.html#method.push_t) that transforms every draw operations in the callback:
-//! ```no_run
+//! ```ignore
 //! gfx.push_t(mat4!().t2(vec2!(120)), |gfx| {
 //!
 //!     gfx.draw(&shapes::text("we"))?;
@@ -55,7 +55,7 @@
 //! ## Canvas
 //!
 //! You can use an off-screen framebuffer with [`Canvas`](struct.Canvas.html) and [`draw_on`](struct.Gfx.html#method.draw_on):
-//! ```no_run
+//! ```ignore
 //! // init
 //! let canvas = Canvas::new(&gfx, 120, 120)?;
 //!
@@ -81,7 +81,7 @@
 //! }
 //! ```
 //!
-//! ```no_run
+//! ```ignore
 //! struct BlueUniform {
 //!     blueness: f32,
 //! }
