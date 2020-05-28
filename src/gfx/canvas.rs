@@ -1,11 +1,15 @@
 // wengwengweng
 
+use glow::HasContext;
+
 use crate::*;
 use gfx::*;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Canvas {
-	gl_fbuf: gl::Framebuffer,
+	gl: Rc<glow::Context>,
+	id: FramebufferID,
+	rbo: RenderbufferID,
 	tex: Texture,
 	width: i32,
 	height: i32,
@@ -18,19 +22,82 @@ impl Canvas {
 		let dpi = ctx.dpi();
 		let tw = (w as f32 * dpi) as i32;
 		let th = (h as f32 * dpi) as i32;
-		let fbuf = gl::Framebuffer::new(&ctx.device(), tw, th)?;
-		let tex = Texture::from_gl_tex(fbuf.tex().clone());
 
-		return Ok(Self {
-			gl_fbuf: fbuf,
-			tex,
-			width: w,
-			height: h,
-		});
+		unsafe {
+
+			let gl = ctx.gl().clone();
+			let id = gl.create_framebuffer()?;
+
+			let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
+			let tex = Texture::from_raw(ctx, tw, th, &pixels)?;
+
+			let rbo = gl.create_renderbuffer()?;
+
+			gl.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
+
+			gl.renderbuffer_storage(
+				glow::RENDERBUFFER,
+				glow::DEPTH_STENCIL,
+				tw as i32,
+				th as i32,
+			);
+
+			gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+
+			let fbuf = Self {
+				gl: gl,
+				id: id,
+				tex: tex,
+				rbo: rbo,
+				width: w,
+				height: h,
+			};
+
+			fbuf.bind();
+
+			fbuf.gl.framebuffer_texture_2d(
+				glow::FRAMEBUFFER,
+				glow::COLOR_ATTACHMENT0,
+				glow::TEXTURE_2D,
+				Some(fbuf.tex.id()),
+				0,
+			);
+
+			fbuf.gl.framebuffer_renderbuffer(
+				glow::FRAMEBUFFER,
+				glow::DEPTH_STENCIL_ATTACHMENT,
+				glow::RENDERBUFFER,
+				Some(rbo),
+			);
+
+			if fbuf.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+				return Err("failed to create framebuffer".to_string());
+			}
+
+			fbuf.unbind();
+
+			return Ok(fbuf);
+
+		}
 
 	}
 
-	// TODO: give original size
+	pub(super) fn id(&self) -> FramebufferID {
+		return self.id;
+	}
+
+	pub(super) fn bind(&self) {
+		unsafe {
+			self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
+		}
+	}
+
+	pub(super) fn unbind(&self) {
+		unsafe {
+			self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+		}
+	}
+
 	pub fn width(&self) -> i32 {
 		return self.width;
 	}
@@ -44,11 +111,7 @@ impl Canvas {
 	}
 
 	pub fn capture(&self) -> Result<img::Image> {
-		return Ok(img::Image::from_raw(
-			self.tex.width(),
-			self.tex.height(),
-			self.tex.get_pixels()
-		)?.flip_v());
+		return self.tex.capture();
 	}
 
 	pub fn resize(&mut self, ctx: &Gfx, w: i32, h: i32) -> Result<()> {
@@ -63,13 +126,18 @@ impl Canvas {
 	}
 
 	pub fn free(self) {
-		self.tex.free();
-		self.gl_fbuf.free();
+		unsafe {
+			self.tex.free();
+			self.gl.delete_framebuffer(self.id);
+			self.gl.delete_renderbuffer(self.rbo);
+		}
 	}
 
-	pub(crate) fn gl_fbuf(&self) -> &gl::Framebuffer {
-		return &self.gl_fbuf;
-	}
+}
 
+impl PartialEq for Canvas {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
+	}
 }
 

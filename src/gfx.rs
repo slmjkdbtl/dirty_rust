@@ -25,37 +25,45 @@
 //! |         | vec4()    | default_pos   | get the default vertex position | vert       |
 //! |         | vec4()    | default_color | get the default fragment color  | frag       |
 
-mod desc;
-mod texture;
-mod canvas;
-mod model;
-mod transform;
-mod camera;
-mod shader;
-mod font;
+// TODO: major cleaning
+
+mod gltypes;
+import!(vbuf);
+import!(ibuf);
+import!(pipeline);
+import!(renderer);
+
+export!(desc);
+export!(texture);
+export!(canvas);
+export!(mesh);
+export!(shader);
+export!(transform);
+export!(camera);
+export!(font);
+export!(uniform);
+export!(model);
+
 pub mod shapes;
 
 use std::rc::Rc;
+
+use glow::HasContext;
 
 use crate::*;
 use math::*;
 use window::*;
 
-pub use desc::*;
-pub use shader::*;
-pub use camera::*;
-pub use texture::*;
-pub use canvas::*;
-pub use model::*;
-pub use transform::*;
-pub use font::*;
+pub(self) type BufferID = <glow::Context as HasContext>::Buffer;
+pub(self) type ProgramID = <glow::Context as HasContext>::Program;
+pub(self) type TextureID = <glow::Context as HasContext>::Texture;
+pub(self) type FramebufferID = <glow::Context as HasContext>::Framebuffer;
+pub(self) type RenderbufferID = <glow::Context as HasContext>::Renderbuffer;
 
-pub use gl::UniformValues;
-pub use gl::IntoUniformValue;
-pub use gl::FilterMode;
-pub use gl::Surface;
-pub use gl::Cmp;
-pub use gl::Primitive;
+use gltypes::*;
+
+pub use gltypes::Surface;
+pub use gltypes::Primitive;
 
 const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
@@ -64,7 +72,7 @@ const DEFAULT_FAR: f32 = 4096.0;
 /// The Graphics Context. See [mod-level doc](gfx) for usage.
 pub struct Gfx {
 
-	gl: Rc<gl::Device>,
+	gl: Rc<glow::Context>,
 
 	width: i32,
 	height: i32,
@@ -74,13 +82,13 @@ pub struct Gfx {
 	view: Mat4,
 	transform: Mat4,
 
-	renderer: gl::BatchedMesh<Vertex, Uniform>,
+	renderer: BatchedMesh<Vertex, Uniform>,
 
 	empty_tex: gfx::Texture,
 
-	default_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
-	cur_pipeline: gl::Pipeline<gfx::Vertex, gfx::Uniform>,
-	cur_custom_uniform: Option<Vec<(&'static str, gl::UniformValue)>>,
+	default_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
+	cur_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
+	cur_custom_uniform: Option<Vec<(&'static str, UniformValue)>>,
 
 	cur_canvas: Option<Canvas>,
 
@@ -91,18 +99,18 @@ pub struct Gfx {
 
 }
 
-pub trait HasGLDevice {
-	fn device(&self) -> &gl::Device;
+pub trait HasGL {
+	fn gl(&self) -> &Rc<glow::Context>;
 }
 
-impl HasGLDevice for Gfx {
-	fn device(&self) -> &gl::Device {
+impl HasGL for Gfx {
+	fn gl(&self) -> &Rc<glow::Context> {
 		return &self.gl;
 	}
 }
 
-impl HasGLDevice for gl::Device {
-	fn device(&self) -> &gl::Device {
+impl HasGL for &Rc<glow::Context> {
+	fn gl(&self) -> &Rc<glow::Context> {
 		return &self;
 	}
 }
@@ -111,23 +119,29 @@ impl Gfx {
 
 	pub(crate) fn new(window: &Window, conf: &conf::Conf) -> Result<Self> {
 
-		let gl = window.get_gl_ctx()?;
+		let gl = window.gl();
 
-		gl.enable(gl::Capability::Blend);
-		gl.enable(gl::Capability::DepthTest);
-		gl.blend_func(gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha);
-		gl.depth_func(gl::Cmp::LessOrEqual);
+		use gltypes::*;
 
-		if conf.cull_face {
-			gl.enable(gl::Capability::CullFace);
-			gl.cull_face(gl::Face::Back);
-			gl.front_face(gl::CullMode::CounterClockwise);
+		unsafe {
+
+			gl.enable(Capability::Blend.into());
+			gl.enable(Capability::DepthTest.into());
+			gl.blend_func(BlendFac::SrcAlpha.into(), BlendFac::OneMinusSrcAlpha.into());
+			gl.depth_func(Cmp::LessOrEqual.into());
+
+			if conf.cull_face {
+				gl.enable(Capability::CullFace.into());
+				gl.cull_face(Face::Back.into());
+				gl.front_face(CullMode::CounterClockwise.into());
+			}
+
+			gl.clear_color(0.0, 0.0, 0.0, 1.0);
+			gl.clear(Surface::Color.into());
+			gl.clear(Surface::Depth.into());
+			gl.clear(Surface::Stencil.into());
+
 		}
-
-		gl.clear_color(0.0, 0.0, 0.0, 1.0);
-		gl.clear(gl::Surface::Color);
-		gl.clear(gl::Surface::Depth);
-		gl.clear(gl::Surface::Stencil);
 
 		let cam = OrthoCam {
 			width: conf.width as f32,
@@ -141,9 +155,8 @@ impl Gfx {
 		#[cfg(web)]
 		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
-		let pipeline = gl::Pipeline::new(&gl, &vert_src, &frag_src)?;
+		let pipeline = Pipeline::new(&gl, &vert_src, &frag_src)?;
 
-		// TODO: don't clone here
 		let font_data = conf.default_font
 			.clone()
 			.take()
@@ -157,7 +170,7 @@ impl Gfx {
 			height: window.height(),
 			dpi: window.dpi(),
 
-			renderer: gl::BatchedMesh::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
+			renderer: BatchedMesh::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 
 			view: cam.view(),
 			proj: cam.proj(),
@@ -172,33 +185,35 @@ impl Gfx {
 			draw_calls_last: 0,
 			draw_calls: 0,
 
-			empty_tex: gfx::Texture::from_pixels(&gl, 1, 1, &[255; 4])?,
+			empty_tex: Texture::from_raw(&gl, 1, 1, &[255; 4])?,
 
 			default_font: font,
 
-			gl: Rc::new(gl),
+			gl: gl.clone(),
 
 		});
 
 	}
 
-	pub(self) fn gl(&self) -> &gl::Device {
-		return &self.gl;
-	}
-
 	pub fn clear(&mut self) {
 
 		self.flush();
-		self.gl.clear(Surface::Color);
-		self.gl.clear(Surface::Depth);
-		self.gl.clear(Surface::Stencil);
+
+		unsafe {
+			self.gl.clear(Surface::Color.into());
+			self.gl.clear(Surface::Depth.into());
+			self.gl.clear(Surface::Stencil.into());
+		}
 
 	}
 
 	pub fn clear_ex(&mut self, s: Surface) {
 
 		self.flush();
-		self.gl.clear(s);
+
+		unsafe {
+			self.gl.clear(s.into());
+		}
 
 	}
 
@@ -270,25 +285,25 @@ impl Gfx {
 		let oproj = self.proj;
 		let oview = self.view;
 
-		// TODO: only reset if no active custom camera?
 		self.proj = new_cam.proj();
 		self.view = new_cam.view();
 
 		self.cur_canvas = Some(canvas.clone());
 		self.transform = mat4!();
 
-		self.gl.viewport(
-			0,
-			0,
-			(cw as f32 * self.dpi) as i32,
-			(ch as f32 * self.dpi) as i32,
-		);
+		unsafe {
+			self.gl.viewport(
+				0,
+				0,
+				(cw as f32 * self.dpi) as i32,
+				(ch as f32 * self.dpi) as i32,
+			);
+		}
 
-		canvas.gl_fbuf().with(|| -> Result<()> {
-			f(self)?;
-			self.flush();
-			return Ok(());
-		})?;
+		canvas.bind();
+		f(self)?;
+		self.flush();
+		canvas.unbind();
 
 		self.cur_canvas = None;
 		self.transform = t;
@@ -296,12 +311,14 @@ impl Gfx {
 		self.proj = oproj;
 		self.view = oview;
 
-		self.gl.viewport(
-			0,
-			0,
-			(self.width as f32 * self.dpi) as i32,
-			(self.height as f32 * self.dpi) as i32,
-		);
+		unsafe {
+			self.gl.viewport(
+				0,
+				0,
+				(self.width as f32 * self.dpi) as i32,
+				(self.height as f32 * self.dpi) as i32,
+			);
+		}
 
 		return Ok(());
 
@@ -312,13 +329,13 @@ impl Gfx {
 		let uniforms = uniform.values()
 			.into_iter()
 			.map(|(n, v)| (n, v.into_uniform()))
-			.collect::<Vec<(&'static str, gl::UniformValue)>>();
+			.collect::<Vec<(&'static str, UniformValue)>>();
 
 		let prev_pipeline = self.cur_pipeline.clone();
 		let prev_uniform = self.cur_custom_uniform.clone();
 
 		self.flush();
-		self.cur_pipeline = gl::Pipeline::clone(&shader.gl_pipeline());
+		self.cur_pipeline = Pipeline::clone(&shader.pipeline());
 		self.cur_custom_uniform = Some(uniforms);
 		f(self)?;
 		self.flush();
@@ -329,68 +346,44 @@ impl Gfx {
 
 	}
 
-	pub fn no_depth_test(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		self.flush();
-		self.gl.disable(gl::Capability::DepthTest);
-		f(self)?;
-		self.flush();
-		self.gl.enable(gl::Capability::DepthTest);
-
-		return Ok(());
-
-	}
-
-	pub fn no_depth_write(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		self.flush();
-		self.gl.depth_mask(false);
-		f(self)?;
-		self.flush();
-		self.gl.depth_mask(true);
-
-		return Ok(());
-
-	}
-
 	// TODO: figure out how stencil truely works
 	// TODO: not working on wasm / webgl
 	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let gl = self.gl.clone();
+// 		let gl = self.gl.clone();
 
-		self.flush();
-		gl.enable(gl::Capability::StencilTest);
-		gl.clear(Surface::Stencil);
+// 		self.flush();
+// 		gl.enable(Capability::StencilTest);
+// 		gl.clear(Surface::Stencil);
 
-		gl.stencil(gl::StencilFunc {
-			cmp: Cmp::Never,
-			rf: 1,
-			mask: 0xff,
-		}, gl::StencilOps {
-			sfail: gl::StencilOp::Replace,
-			dpfail: gl::StencilOp::Replace,
-			dppass: gl::StencilOp::Replace,
-		}, || {
-			return mask(self);
-		})?;
+// 		gl.stencil(StencilFunc {
+// 			cmp: Cmp::Never,
+// 			rf: 1,
+// 			mask: 0xff,
+// 		}, StencilOps {
+// 			sfail: StencilOp::Replace,
+// 			dpfail: StencilOp::Replace,
+// 			dppass: StencilOp::Replace,
+// 		}, || {
+// 			return mask(self);
+// 		})?;
 
-		self.flush();
+// 		self.flush();
 
-		gl.stencil(gl::StencilFunc {
-			cmp: Cmp::Equal,
-			rf: 1,
-			mask: 0xff,
-		}, gl::StencilOps {
-			sfail: gl::StencilOp::Keep,
-			dpfail: gl::StencilOp::Keep,
-			dppass: gl::StencilOp::Keep,
-		}, || {
-			return draw(self);
-		})?;
+// 		gl.stencil(StencilFunc {
+// 			cmp: Cmp::Equal,
+// 			rf: 1,
+// 			mask: 0xff,
+// 		}, StencilOps {
+// 			sfail: StencilOp::Keep,
+// 			dpfail: StencilOp::Keep,
+// 			dppass: StencilOp::Keep,
+// 		}, || {
+// 			return draw(self);
+// 		})?;
 
-		self.flush();
-		gl.disable(gl::Capability::StencilTest);
+// 		self.flush();
+// 		gl.disable(Capability::StencilTest);
 
 		return Ok(());
 
@@ -398,14 +391,16 @@ impl Gfx {
 
 	pub fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
-		let default = Blend::Alpha.to_gl();
-		let b = b.to_gl();
+		let (dsrc, ddest) = Blend::Alpha.to_gl();
+		let (src, dest) = b.to_gl();
 
-		self.flush();
-		self.gl.blend_func(b.0, b.1);
-		f(self)?;
-		self.flush();
-		self.gl.blend_func(default.0, default.1);
+		unsafe {
+			self.flush();
+			self.gl.blend_func(src.into(), dest.into());
+			f(self)?;
+			self.flush();
+			self.gl.blend_func(dsrc.into(), ddest.into());
+		}
 
 		return Ok(());
 
@@ -476,20 +471,16 @@ impl Gfx {
 	}
 
 	pub(crate) fn begin_frame(&mut self) {
-
 		self.draw_calls_last = self.draw_calls;
 		self.draw_calls = 0;
 		self.clear();
-
 	}
 
 	pub(crate) fn end_frame(&mut self) {
-
 		self.flush();
 		self.transform = mat4!();
 		self.draw_calls += self.renderer.draw_count();
 		self.renderer.clear_draw_count();
-
 	}
 
 	pub fn width(&self) -> i32 {
@@ -526,11 +517,11 @@ pub enum Blend {
 }
 
 impl Blend {
-	fn to_gl(&self) -> (gl::BlendFac, gl::BlendFac) {
+	fn to_gl(&self) -> (BlendFac, BlendFac) {
 		return match self {
-			Blend::Alpha => (gl::BlendFac::SrcAlpha, gl::BlendFac::OneMinusSrcAlpha),
-			Blend::Add => (gl::BlendFac::SrcAlpha, gl::BlendFac::DestAlpha),
-			Blend::Replace => (gl::BlendFac::SrcAlpha, gl::BlendFac::Zero),
+			Blend::Alpha => (BlendFac::SrcAlpha, BlendFac::OneMinusSrcAlpha),
+			Blend::Add => (BlendFac::SrcAlpha, BlendFac::DestAlpha),
+			Blend::Replace => (BlendFac::SrcAlpha, BlendFac::Zero),
 		};
 	}
 }

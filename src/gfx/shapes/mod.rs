@@ -3,7 +3,6 @@
 use std::f32::consts::PI;
 
 use crate::gfx;
-use crate::gl;
 use crate::geom;
 use crate::Result;
 use crate::math::*;

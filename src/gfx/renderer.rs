@@ -22,11 +22,10 @@ pub struct BatchedMesh<V: VertexLayout, U: UniformLayout> {
 
 impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
 
-	pub fn new(device: &Device, max_vertices: usize, max_indices: usize) -> Result<Self> {
+	pub fn new(ctx: &impl HasGL, max_vertices: usize, max_indices: usize) -> Result<Self> {
 
-		let max_vertices = max_vertices;
-		let vbuf = VertexBuffer::new(&device, max_vertices, BufferUsage::Dynamic)?;
-		let ibuf = IndexBuffer::new(&device, max_indices, BufferUsage::Dynamic)?;
+		let vbuf = VertexBuffer::new(ctx, max_vertices, BufferUsage::Dynamic)?;
+		let ibuf = IndexBuffer::new(ctx, max_indices, BufferUsage::Dynamic)?;
 
 		return Ok(Self {
 			vbuf,
@@ -141,4 +140,6 @@ impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
 	}
 
 }
+
+
 

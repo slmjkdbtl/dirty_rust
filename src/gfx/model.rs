@@ -32,23 +32,23 @@ pub struct ModelData {
 }
 
 #[derive(Clone)]
-pub struct Mesh {
-	gl_mesh: Rc<gl::Mesh<Vertex, Uniform>>,
+pub struct BufferedMesh {
+	mesh: Rc<Mesh<Vertex, Uniform>>,
 	data: MeshData,
 }
 
 #[derive(Clone)]
 pub struct Node {
-	pub meshes: Vec<Mesh>,
+	pub meshes: Vec<BufferedMesh>,
 	pub id: usize,
 	pub name: Option<String>,
 	pub children: Vec<usize>,
 	pub transform: Transform,
 }
 
-impl Mesh {
-	pub(crate) fn gl_mesh(&self) -> &gl::Mesh<Vertex, Uniform> {
-		return &self.gl_mesh;
+impl BufferedMesh {
+	pub(crate) fn mesh(&self) -> &Mesh<Vertex, Uniform> {
+		return &self.mesh;
 	}
 	pub fn data(&self) -> &MeshData {
 		return &self.data;
@@ -560,7 +560,7 @@ impl Model {
 
 	}
 
-	pub fn from_data(ctx: &impl HasGLDevice, data: ModelData) -> Result<Self> {
+	pub fn from_data(ctx: &impl HasGL, data: ModelData) -> Result<Self> {
 
 		let tex = if let Some(img) = data.img {
 			Some(Texture::from_img(ctx, img)?)
@@ -574,12 +574,12 @@ impl Model {
 
 		let nodes = data.nodes.into_iter().map(|(id, node)| {
 			let meshes = node.meshes.into_iter().map(|m| {
-				return Mesh {
+				return BufferedMesh {
 					// TODO: no unwrap
-					gl_mesh: Rc::new(gl::Mesh::from(ctx.device(), &m.vertices, &m.indices).unwrap()),
+					mesh: Rc::new(Mesh::new(ctx, &m.vertices, &m.indices).unwrap()),
 					data: m,
 				};
-			}).collect::<Vec<Mesh>>();
+			}).collect::<Vec<BufferedMesh>>();
 			return (id, Node {
 				id: node.id,
 				name: node.name,
@@ -600,23 +600,23 @@ impl Model {
 
 	}
 
-	pub fn from_file(ctx: &impl HasGLDevice, path: impl AsRef<Path>) -> Result<Self> {
+	pub fn from_file(ctx: &impl HasGL, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
-	pub fn from_mesh_data(ctx: &impl HasGLDevice, data: MeshData) -> Result<Self> {
+	pub fn from_mesh_data(ctx: &impl HasGL, data: MeshData) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_mesh_data(data));
 	}
 
-	pub fn from_raw(ctx: &impl HasGLDevice, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
+	pub fn from_raw(ctx: &impl HasGL, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_raw(verts, indices));
 	}
 
-	pub fn from_obj(ctx: &impl HasGLDevice, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
+	pub fn from_obj(ctx: &impl HasGL, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_obj(obj, mtl, img)?);
 	}
 
-	pub fn from_glb(ctx: &impl HasGLDevice, bytes: &[u8]) -> Result<Self> {
+	pub fn from_glb(ctx: &impl HasGL, bytes: &[u8]) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 

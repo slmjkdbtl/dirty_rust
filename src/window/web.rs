@@ -16,6 +16,7 @@ use conf::CanvasRoot;
 
 /// The Window Context
 pub struct Window {
+	gl: Rc<glow::Context>,
 	canvas: web_sys::HtmlCanvasElement,
 	window: web_sys::Window,
 	document: web_sys::Document,
@@ -101,7 +102,17 @@ impl Window {
 
 		canvas.set_attribute("style", &build_styles(&styles));
 
+		let webgl_ctx = canvas
+			.get_context("webgl2")
+			.map_err(|_| format!("failed to fetch webgl context"))?
+			.ok_or_else(|| format!("failed to fetch webgl context"))?
+			.dyn_into::<web_sys::WebGl2RenderingContext>()
+			.map_err(|_| format!("failed to fetch webgl context"))?;
+
+		let gl = glow::Context::from_webgl2_context(webgl_ctx);
+
 		return Ok(Self {
+			gl: Rc::new(gl),
 			window: window,
 			document: document,
 			canvas: canvas,
@@ -124,17 +135,8 @@ impl Window {
 
 impl Window {
 
-	pub(crate) fn get_gl_ctx(&self) -> Result<gl::Device> {
-
-		let webgl_context = self.canvas
-			.get_context("webgl2")
-			.map_err(|_| format!("failed to fetch webgl context"))?
-			.ok_or_else(|| format!("failed to fetch webgl context"))?
-			.dyn_into::<web_sys::WebGl2RenderingContext>()
-			.map_err(|_| format!("failed to fetch webgl context"))?;
-
-		return Ok(gl::Device::from_webgl_ctx(webgl_context));
-
+	pub(crate) fn gl(&self) -> &Rc<glow::Context> {
+		return &self.gl;
 	}
 
 	pub(crate) fn swap(&self) -> Result<()> {

@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::marker::PhantomData;
+
 use super::*;
 use crate::Result;
 
@@ -13,10 +15,10 @@ pub struct Mesh<V: VertexLayout, U: UniformLayout> {
 
 impl<V: VertexLayout, U: UniformLayout> Mesh<V, U> {
 
-	pub fn from(device: &Device, verts: &[V], indices: &[u32]) -> Result<Self> {
+	pub fn new(ctx: &impl HasGL, verts: &[V], indices: &[u32]) -> Result<Self> {
 
-		let vbuf = VertexBuffer::<V>::from(&device, &verts)?;
-		let ibuf = IndexBuffer::from(&device, &indices)?;
+		let vbuf = VertexBuffer::<V>::from(ctx, &verts)?;
+		let ibuf = IndexBuffer::from(ctx, &indices)?;
 
 		return Ok(Self {
 			vbuf,

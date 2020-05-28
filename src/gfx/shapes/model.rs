@@ -6,7 +6,7 @@ use super::*;
 pub struct Model<'a> {
 	model: &'a gfx::Model,
 	color: Color,
-	prim: gl::Primitive,
+	prim: Primitive,
 	time: f32,
 }
 
@@ -19,7 +19,7 @@ impl<'a> Model<'a> {
 		return Self {
 			model: m,
 			color: rgba!(1),
-			prim: gl::Primitive::Triangle,
+			prim: Primitive::Triangle,
 			time: 0.0,
 		};
 	}
@@ -80,7 +80,7 @@ fn draw_mesh(ctx: &mut Gfx, dctx: &Model, ptr: Mat4, id: usize) {
 
 			ctx.draw_calls += 1;
 
-			mesh.gl_mesh().draw(
+			mesh.mesh().draw(
 				dctx.prim,
 				&ctx.cur_pipeline,
 				&gfx::Uniform {

@@ -1,84 +1,214 @@
 // wengwengweng
 
+use glow::HasContext;
+
 use crate::*;
 use gfx::*;
-use img::*;
 
-/// 2D Texture
-#[derive(Clone, PartialEq)]
+pub use gltypes::WrapMode;
+pub use gltypes::FilterMode;
+
+#[derive(Clone)]
 pub struct Texture {
-	gl_tex: gl::Texture2D,
+	gl: Rc<glow::Context>,
+	id: TextureID,
+	width: i32,
+	height: i32,
 }
 
 impl Texture {
 
-	pub(crate) fn from_gl_tex(gl_tex: gl::Texture2D) -> Self {
-		return Self {
-			gl_tex,
-		};
+	pub fn new(ctx: &impl HasGL, w: i32, h: i32) -> Result<Self> {
+
+		unsafe {
+
+			let gl = ctx.gl().clone();
+			let id = gl.create_texture()?;
+
+			let tex = Self {
+				gl: gl,
+				id: id,
+				width: w,
+				height: h,
+			};
+
+			tex.bind();
+
+			tex.gl.tex_image_2d(
+				glow::TEXTURE_2D,
+				0,
+				glow::RGBA as i32,
+				w,
+				h,
+				0,
+				glow::RGBA,
+				glow::UNSIGNED_BYTE,
+				None,
+			);
+
+			tex.unbind();
+
+			tex.set_filter(FilterMode::Nearest);
+			tex.set_wrap(WrapMode::ClampToEdge);
+
+			return Ok(tex);
+
+		}
+
 	}
 
-	/// create an empty texture
-	pub fn new(ctx: &impl HasGLDevice, w: i32, h: i32) -> Result<Self> {
-		return Ok(Self::from_gl_tex(gl::Texture2D::new(&ctx.device(), w, h)?));
-	}
+	pub fn from_raw(ctx: &impl HasGL, width: i32, height: i32, data: &[u8]) -> Result<Self> {
 
-	/// create texture from an [Image](img::Image)
-	pub fn from_img(ctx: &impl HasGLDevice, img: Image) -> Result<Self> {
-
-		let w = img.width();
-		let h = img.height();
-
-		return Self::from_pixels(ctx, w, h, &img.into_raw());
+		let tex = Self::new(ctx, width, height)?;
+		tex.data(data);
+		return Ok(tex);
 
 	}
 
-	/// create texture from bytes read from an image file
-	pub fn from_bytes(ctx: &impl HasGLDevice, data: &[u8]) -> Result<Self> {
-		return Self::from_img(ctx, Image::from_bytes(data)?);
+	pub fn from_img(ctx: &impl HasGL, img: img::Image) -> Result<Self> {
+		return Self::from_raw(ctx, img.width(), img.height(), &img.into_raw());
 	}
 
-	/// create texture from raw pixels
-	pub fn from_pixels(ctx: &impl HasGLDevice, w: i32, h: i32, pixels: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &impl HasGL, data: &[u8]) -> Result<Self> {
+		return Self::from_img(ctx, img::Image::from_bytes(data)?);
+	}
 
-		let gl_tex = gl::Texture2D::from(&ctx.device(), w, h, &pixels)?;
-		return Ok(Self::from_gl_tex(gl_tex));
+	pub fn set_filter(&self, f: FilterMode) {
+
+		unsafe {
+
+			self.bind();
+
+			self.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_MIN_FILTER,
+				f.into(),
+			);
+
+			self.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_MAG_FILTER,
+				f.into(),
+			);
+
+			self.unbind();
+
+		}
 
 	}
 
-	/// texture width
+	pub fn set_wrap(&self, w: WrapMode) {
+
+		unsafe {
+
+			self.bind();
+
+			self.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_WRAP_S,
+				w.into(),
+			);
+
+			self.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_WRAP_T,
+				w.into(),
+			);
+
+			self.unbind();
+
+		}
+
+	}
+
+	pub(super) fn bind(&self) {
+		unsafe {
+			self.gl.bind_texture(glow::TEXTURE_2D, Some(self.id));
+		}
+	}
+
+	pub(super) fn unbind(&self) {
+		unsafe {
+			self.gl.bind_texture(glow::TEXTURE_2D, None);
+		}
+	}
+
+	pub(super) fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
+
+		unsafe {
+
+			self.bind();
+
+			self.gl.tex_sub_image_2d_u8_slice(
+				glow::TEXTURE_2D,
+				0,
+				x as i32,
+				y as i32,
+				w as i32,
+				h as i32,
+				glow::RGBA,
+				glow::UNSIGNED_BYTE,
+				Some(data),
+			);
+
+			self.unbind();
+
+		}
+
+	}
+
+	pub(super) fn data(&self, data: &[u8]) {
+		self.sub_data(0, 0, self.width, self.height, data);
+	}
+
 	pub fn width(&self) -> i32 {
-		return self.gl_tex.width();
+		return self.width;
 	}
 
-	/// texture height
 	pub fn height(&self) -> i32 {
-		return self.gl_tex.height();
+		return self.height;
 	}
 
-	/// get texture pixel data
-	pub fn get_pixels(&self) -> Vec<u8> {
-		return self.gl_tex.get_data(self.width(), self.height());
+	pub fn capture(&self) -> Result<img::Image> {
+
+		let size = (self.width * self.height * 4) as usize;
+		let pixels = vec![0.0 as u8; size];
+
+		self.bind();
+
+		unsafe {
+
+			self.gl.get_tex_image_u8_slice(
+				glow::TEXTURE_2D,
+				0,
+				glow::RGBA,
+				glow::UNSIGNED_BYTE,
+				Some(&pixels),
+			);
+
+		}
+
+		self.unbind();
+
+		return img::Image::from_raw(self.width, self.height, pixels);
+
 	}
 
-	/// set texture pixel data
-	pub fn data(&self, data: &[u8]) {
-		self.gl_tex.data(data);
+	pub(super) fn id(&self) -> TextureID {
+		return self.id;
 	}
 
-	/// set texture pixel data of an area
-	pub fn sub_data(&self, x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
-		self.gl_tex.sub_data(x, y, w, h, data);
-	}
-
-	/// free texture memory
 	pub fn free(self) {
-		self.gl_tex.free();
+		unsafe {
+			self.gl.delete_texture(self.id);
+		}
 	}
 
-	pub(crate) fn gl_tex(&self) -> &gl::Texture2D {
-		return &self.gl_tex;
-	}
+}
 
+impl PartialEq for Texture {
+	fn eq(&self, other: &Self) -> bool {
+		return self.id == other.id;
+	}
 }
 

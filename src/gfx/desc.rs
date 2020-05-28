@@ -22,8 +22,8 @@ pub struct Vertex {
 	pub color: Color,
 }
 
-impl gl::VertexLayout for Vertex {
-	fn attrs() -> gl::VertexAttrGroup {
+impl VertexLayout for Vertex {
+	fn attrs() -> VertexAttrGroup {
 		return &[
 			("a_pos", 3),
 			("a_uv", 2),
@@ -40,14 +40,14 @@ pub(crate) struct Uniform {
 	pub model: Mat4,
 	pub color: Color,
 	pub tex: Texture,
-	pub custom: Option<Vec<(&'static str, gl::UniformValue)>>,
+	pub custom: Option<Vec<(&'static str, UniformValue)>>,
 }
 
-impl gl::UniformLayout for Uniform {
+impl UniformLayout for Uniform {
 
-	fn values(&self) -> gl::UniformValues {
+	fn values(&self) -> UniformValues {
 
-		let mut values: gl::UniformValues = hmap![
+		let mut values: UniformValues = hmap![
 			"u_proj" => &self.proj,
 			"u_view" => &self.view,
 			"u_model" => &self.model,
@@ -64,8 +64,8 @@ impl gl::UniformLayout for Uniform {
 
 	}
 
-	fn textures(&self) -> Vec<&dyn gl::Texture> {
-		return vec![self.tex.gl_tex()];
+	fn textures(&self) -> Vec<&Texture> {
+		return vec![&self.tex];
 	}
 
 }

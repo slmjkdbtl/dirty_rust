@@ -1,6 +1,8 @@
 // wengwengweng
 
 use std::collections::HashMap;
+
+use crate::math::*;
 use super::Texture;
 
 // TODO: is there a way to use &dyn Into<UniformValue>?
@@ -18,14 +20,14 @@ impl IntoUniformValue for UniformValue {
 
 pub trait UniformLayout: Clone + PartialEq + 'static {
 	fn values(&self) -> UniformValues;
-	fn textures(&self) -> Vec<&dyn Texture>;
+	fn textures(&self) -> Vec<&Texture>;
 }
 
 impl UniformLayout for () {
 	fn values(&self) -> UniformValues {
 		return hmap![];
 	}
-	fn textures(&self) -> Vec<&dyn Texture> {
+	fn textures(&self) -> Vec<&Texture> {
 		return vec![];
 	}
 }
@@ -66,6 +68,48 @@ impl IntoUniformValue for [f32; 4] {
 impl IntoUniformValue for [f32; 16] {
 	fn into_uniform(&self) -> UniformValue {
 		return UniformValue::Mat4(*self);
+	}
+}
+
+impl IntoUniformValue for Vec2 {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::F2(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Vec3 {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::F3(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Vec4 {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::F4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Color {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::F4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Quad {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::F4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for Mat4 {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::Mat4(self.as_arr());
+	}
+}
+
+impl IntoUniformValue for std::time::Duration {
+	fn into_uniform(&self) -> UniformValue {
+		return UniformValue::F1(self.as_secs_f32());
 	}
 }
 

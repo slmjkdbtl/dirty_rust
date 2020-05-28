@@ -7,7 +7,7 @@ use gfx::MeshData;
 pub struct Raw<'a> {
 	verts: &'a [Vertex],
 	indices: &'a [u32],
-	prim: gl::Primitive,
+	prim: Primitive,
 	tex: Option<&'a gfx::Texture>,
 	color: Color,
 	transformed: bool,
@@ -18,7 +18,7 @@ impl<'a> Raw<'a> {
 		return Self {
 			verts,
 			indices,
-			prim: gl::Primitive::Triangle,
+			prim: Primitive::Triangle,
 			tex: None,
 			color: rgba!(1),
 			transformed: false,
