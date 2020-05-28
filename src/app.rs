@@ -90,8 +90,6 @@ impl App {
 
 	}
 
-	// TODO: use data_path on web
-
 	#[cfg(web)]
 	pub fn save_data<D: serde::ser::Serialize>(&self, entry: &'static str, data: D) -> Result<()> {
 

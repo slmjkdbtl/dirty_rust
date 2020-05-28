@@ -15,7 +15,7 @@
 //!         return Ok(Self);
 //!     }
 //! }
-
+//!
 //! fn main() {
 //!     run::<Game>();
 //! }

@@ -23,6 +23,12 @@ build-web example:
 		--target web \
 		--no-typescript
 
+build-web-all:
+	rm -rf site/examples/*
+	for e in raw sprite shader model 3d canvas input mask audio data; do \
+		just build-web $e; \
+		done
+
 run-site:
 	cd site; \
 		now dev

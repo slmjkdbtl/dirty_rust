@@ -5,7 +5,6 @@ use serde::Serialize;
 use serde::Deserialize;
 
 use crate::*;
-use math::*;
 use gfx::*;
 
 const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;

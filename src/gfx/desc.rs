@@ -4,7 +4,6 @@ use serde::Serialize;
 use serde::Deserialize;
 
 use crate::*;
-use math::*;
 use gfx::*;
 
 /// Mesh Data with Vertices & Indices

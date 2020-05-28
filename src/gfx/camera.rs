@@ -1,7 +1,6 @@
 // wengwengweng
 
 use crate::*;
-use math::*;
 use geom::*;
 use gfx::*;
 

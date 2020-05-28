@@ -6,7 +6,6 @@ use std::rc::Rc;
 use glow::HasContext;
 
 use super::*;
-use gltypes::*;
 use crate::Result;
 
 #[derive(Clone, Debug)]
