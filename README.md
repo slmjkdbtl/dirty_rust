@@ -3,7 +3,7 @@
 # DIRTY
 a cross-platform toolkit for making games / interactive experiences
 
-[website](https://tool.wengwengweng.me/)
+[website](http://tool.enemyspy.me/)
 
 ## example
 here's a minimal window setup:

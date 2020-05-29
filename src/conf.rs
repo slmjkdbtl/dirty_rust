@@ -27,7 +27,6 @@ pub struct Conf {
 	pub cull_face: bool,
 	pub canvas_root: CanvasRoot,
 	pub default_font: Option<gfx::BitmapFontData>,
-	pub data_path: Option<&'static str>,
 }
 
 impl Conf {
@@ -62,7 +61,6 @@ impl Default for Conf {
 			cursor_locked: false,
 			canvas_root: CanvasRoot::Body,
 			default_font: None,
-			data_path: None,
 		};
 	}
 
@@ -143,11 +141,6 @@ impl Launcher {
 
 	pub fn default_font(mut self, f: gfx::BitmapFontData) -> Self {
 		self.conf.default_font = Some(f);
-		return self;
-	}
-
-	pub fn data_path(mut self, path: &'static str) -> Self {
-		self.conf.data_path = Some(path);
 		return self;
 	}
 

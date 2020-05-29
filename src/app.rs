@@ -13,7 +13,6 @@ pub struct App {
 	fps_counter: FPSCounter,
 	start_time: Instant,
 	dt: Duration,
-	data_path: Option<&'static str>,
 }
 
 impl App {
@@ -23,7 +22,6 @@ impl App {
 			dt: Duration::from_secs_f32(0.0),
 			fps_counter: FPSCounter::new(),
 			last_frame_time: Instant::now(),
-			data_path: conf.data_path,
 		};
 	}
 }
@@ -49,88 +47,6 @@ impl App {
 	/// current fps stat (frames per second)
 	pub fn fps(&self) -> u16 {
 		return self.fps_counter.fps();
-	}
-
-	#[cfg(not(web))]
-	pub fn save_data<D: serde::ser::Serialize>(&self, entry: &'static str, data: D) -> Result<()> {
-
-		let path = self.data_path
-			.ok_or_else(|| format!("no data path specified"))?;
-		let data_dir = dirs_next::data_dir()
-			.ok_or_else(|| format!("failed to get data dir"))?
-			.join(path);
-
-		if !fs::exists(&data_dir) {
-			fs::mkdir(&data_dir)?;
-		}
-
-		let data_file = data_dir.join(&format!("{}.json", entry));
-		let content = serde_json::to_string(&data)
-			.map_err(|_| format!("failed to encode json"))?;
-
-		fs::write(data_file, content)?;
-
-		return Ok(());
-
-	}
-
-	#[cfg(not(web))]
-	pub fn get_data<D: for<'a> serde::de::Deserialize<'a>>(&self, entry: &'static str) -> Result<D> {
-
-		let path = self.data_path
-			.ok_or_else(|| format!("no data path specified"))?;
-		let data_dir = dirs_next::data_dir()
-			.ok_or_else(|| format!("failed to get data dir"))?
-			.join(path);
-		let data_file = data_dir.join(&format!("{}.json", entry));
-		let content = fs::read_str(data_file)?;
-
-		return serde_json::from_str(&content)
-			.map_err(|_| format!("failed to decode json"));
-
-	}
-
-	#[cfg(web)]
-	pub fn save_data<D: serde::ser::Serialize>(&self, entry: &'static str, data: D) -> Result<()> {
-
-		let window = web_sys::window()
-			.ok_or_else(|| format!("failed to get window"))?;
-
-		let storage = window
-			.local_storage()
-			.map_err(|_| format!("failed to get local storage"))?
-			.ok_or_else(|| format!("failed to get local storage"))?;
-
-		let content = serde_json::to_string(&data)
-			.map_err(|_| format!("failed to encode json"))?;
-
-		storage
-			.set_item(entry, &content)
-			.map_err(|_| format!("failed to set entry {}", entry))?;
-
-		return Ok(());
-
-	}
-
-	#[cfg(web)]
-	pub fn get_data<D: for<'a> serde::de::Deserialize<'a>>(&self, entry: &'static str) -> Result<D> {
-
-		let window = web_sys::window()
-			.ok_or_else(|| format!("failed to get window"))?;
-
-		let storage = window
-			.local_storage()
-			.map_err(|_| format!("failed to get local storage"))?
-			.ok_or_else(|| format!("failed to get local storage"))?;
-
-		let content = storage
-			.get_item(entry)
-			.map_err(|_| format!("failed to get entry {}", entry))?
-			.ok_or_else(|| format!("failed to get entry {}", entry))?;
-
-		return serde_json::from_str(&content)
-			.map_err(|_| format!("failed to decode json"));
-
 	}
 
 }

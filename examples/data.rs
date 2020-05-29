@@ -6,6 +6,9 @@ use dirty::*;
 use gfx::shapes;
 use input::Key;
 
+const PROJ: &str = "dirty_data_example";
+const ENTRY: &str = "counter";
+
 #[derive(Default, Serialize, Deserialize)]
 struct Data {
 	count: usize,
@@ -17,15 +20,15 @@ struct Game {
 
 impl State for Game {
 
-	fn init(d: &mut Ctx) -> Result<Self> {
+	fn init(_: &mut Ctx) -> Result<Self> {
 
-		let data = d.app.get_data::<Data>("counter");
+		let data = data::get::<Data>(PROJ, ENTRY);
 
 		if data.is_err() {
-			d.app.save_data("counter", Data::default())?;
+			data::save(PROJ, ENTRY, Data::default())?;
 		}
 
-		let data = d.app.get_data::<Data>("counter")?;
+		let data = data::get::<Data>(PROJ, ENTRY)?;
 
 		return Ok(Self {
 			data: data,
@@ -43,7 +46,7 @@ impl State for Game {
 					Key::Esc => d.window.quit(),
 					Key::Space => {
 						self.data.count += 1;
-						d.app.save_data("counter", &self.data)?;
+						data::save(PROJ, ENTRY, &self.data)?;
 					},
 					_ => {},
 				}
@@ -86,7 +89,6 @@ impl State for Game {
 
 fn main() {
 	if let Err(e) = launcher()
-		.data_path("dirty_data_example")
 		.run::<Game>() {
 		elog!("{}", e);
 	}

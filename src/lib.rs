@@ -68,6 +68,7 @@ pub mod physics;
 pub mod term;
 pub mod ui;
 pub mod kit;
+pub mod data;
 pub mod task;
 
 #[cfg(feature = "midi")]

@@ -261,9 +261,7 @@ impl Window {
 	}
 
 	/// quit
-	pub fn quit(&mut self) {
-		// ...
-	}
+	pub fn quit(&mut self) {}
 
 	pub(crate) fn run(
 		mut self,
@@ -454,6 +452,9 @@ impl Window {
 	pub fn toggle_cursor_locked(&mut self) {
 		self.set_cursor_locked(!self.is_cursor_locked());
 	}
+
+	/// minimize window
+	pub fn minimize(&self) {}
 
 }
 

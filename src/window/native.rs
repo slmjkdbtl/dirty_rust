@@ -630,6 +630,11 @@ impl Window {
 		self.set_cursor_locked(!self.is_cursor_locked());
 	}
 
+	/// minimize window
+	pub fn minimize(&self) {
+		self.windowed_ctx.window().set_minimized(true);
+	}
+
 }
 
 impl From<glutin::event::MouseScrollDelta> for Vec2 {
