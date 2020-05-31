@@ -20,7 +20,7 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 		let mut decoder = puremp3::Mp3Decoder::new(data);
 		let cur_frame = decoder
 			.next_frame()
-			.map_err(|_| "failed to parse mp3".to_string())?;
+			.map_err(|_| format!("failed to parse mp3"))?;
 		let header = &cur_frame.header;
 		let sample_rate = header.sample_rate.hz();
 
@@ -47,7 +47,7 @@ impl<R: Read + Seek> Source for Mp3Decoder<R> {
 
 		reader
 			.seek(SeekFrom::Start(0))
-			.map_err(|_| "failed to seek mp3".to_string())?;
+			.map_err(|_| format!("failed to seek mp3"))?;
 
 		self.cur_frame_offset = 0;
 
@@ -86,14 +86,14 @@ pub fn is_mp3<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
 	let pos = reader
 		.seek(SeekFrom::Current(0))
-		.map_err(|_| "failed to seek".to_string())?;
+		.map_err(|_| format!("failed to seek"))?;
 
 	let mut decoder = puremp3::Mp3Decoder::new(&mut reader);
 	let is_mp3 = decoder.next_frame().is_ok();
 
 	reader
 		.seek(SeekFrom::Start(pos))
-		.map_err(|_| "failed to seek".to_string())?;
+		.map_err(|_| format!("failed to seek"))?;
 
 	return Ok(is_mp3);
 

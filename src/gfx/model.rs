@@ -296,7 +296,7 @@ impl Model {
 			},
 
 			_ => {
-				return Err("unsupported 3d format".to_string());
+				return Err(format!("unsupported 3d format"));
 			},
 
 		}
@@ -342,11 +342,11 @@ impl Model {
 
 		// init
 		let glb = Glb::from_slice(bytes)
-			.map_err(|_| "failed to parse glb".to_string())?;
+			.map_err(|_| format!("failed to parse glb"))?;
 		let document = Gltf::from_slice(&glb.json)
-			.map_err(|_| "failed to parse document from glb".to_string())?;
+			.map_err(|_| format!("failed to parse document from glb"))?;
 		let bin = glb.bin
-			.ok_or_else(|| "failed to parse bin from glb".to_string())?;
+			.ok_or_else(|| format!("failed to parse bin from glb"))?;
 
 		// image
 		use gltf::image::Source;
@@ -401,21 +401,21 @@ impl Model {
 
 				let frames: Vec<f32> = reader
 					.read_inputs()
-					.ok_or("failed to read anim".to_string())?
+					.ok_or_else(|| format!("failed to read anim"))?
 					.collect();
 
 				use gltf::animation::util::ReadOutputs;
 
 				match reader
 					.read_outputs()
-					.ok_or("failed to read anim".to_string())? {
+					.ok_or_else(|| format!("failed to read anim"))? {
 
 					ReadOutputs::Translations(translations) => {
 						let mut values = Vec::with_capacity(frames.len());
 						for (i, v) in translations.enumerate() {
 							let t = frames
 								.get(i)
-								.ok_or("failed to read anim from glb".to_string())?;
+								.ok_or_else(|| format!("failed to read anim from glb"))?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
 						}
 						anim.pos = values;
@@ -426,7 +426,7 @@ impl Model {
 						for (i, v) in rotations.into_f32().enumerate() {
 							let t = frames
 								.get(i)
-								.ok_or("failed to read anim from glb".to_string())?;
+								.ok_or_else(|| format!("failed to read anim from glb"))?;
 							values.push((*t, vec4!(v[0], v[1], v[2], v[3])));
 						}
 						anim.rot = values;
@@ -437,7 +437,7 @@ impl Model {
 						for (i, v) in scales.enumerate() {
 							let t = frames
 								.get(i)
-								.ok_or("failed to read anim from glb".to_string())?;
+								.ok_or_else(|| format!("failed to read anim from glb"))?;
 							values.push((*t, vec3!(v[0], v[1], v[2])));
 						}
 						anim.scale = values;
@@ -485,7 +485,7 @@ impl Model {
 			return mtl
 				.map(|m| tobj::load_mtl_buf(&mut Cursor::new(m)))
 				.unwrap_or(Ok((vec![], hmap![])));
-		}).map_err(|_| "failed to parse obj".to_string())?;
+		}).map_err(|_| format!("failed to parse obj"))?;
 
 		let mut root_nodes = Vec::with_capacity(models.len());
 		let mut nodes = HashMap::with_capacity(models.len());

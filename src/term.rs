@@ -2,6 +2,8 @@
 
 //! Utilities for Terminal Output
 
+use std::fmt;
+
 use crate::math::Color;
 
 #[derive(Clone)]
@@ -70,14 +72,14 @@ impl StyledOutput {
 	}
 }
 
-impl std::fmt::Display for StyledOutput {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl fmt::Display for StyledOutput {
+	fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
 		return write!(f, "{}", self.text);
 	}
 }
 
-impl std::fmt::Debug for StyledOutput {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl fmt::Debug for StyledOutput {
+	fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
 		return write!(f, "{}", self);
 	}
 }
@@ -86,41 +88,5 @@ pub fn style(s: &str) -> StyledOutput {
 	return StyledOutput {
 		text: String::from(s),
 	};
-}
-
-pub fn display(pixels: &[Color], width: u32, height: u32) {
-
-	let mut x = 0;
-	let mut y = 0;
-	let mut out = String::with_capacity(pixels.len());
-
-	loop {
-
-		let i1 = y * width as usize + x;
-		let i2 = (y + 1) * width as usize + x;
-
-		if let Some(c1) = pixels.get(i1) {
-			if let Some(c2) = pixels.get(i2) {
-				// draw upper block
-				out.push_str(&format!("{}", style("\u{2580}").truec(*c1).bg_truec(*c2)))
-			}
-		}
-
-		x += 1;
-
-		if x >= width as usize {
-			out.push('\n');
-			x = 0;
-			y += 2;
-		}
-
-		if y >= height as usize {
-			break;
-		}
-
-	}
-
-	print!("{}\x1b[{}A", out, height / 2);
-
 }
 

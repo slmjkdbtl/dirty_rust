@@ -4,8 +4,9 @@
 name = "dirty"
 description = "dirty tool kit"
 version = "0.0.0"
-authors = ["tga <tga@wengwengweng.me>"]
+authors = ["tga <tga@enemyspy.xyz>"]
 repository = "https://git.sr.ht/~slmjkdbtl/DIRTY"
+homepage = "http://tool.enemyspy.xyz"
 license = "Zlib"
 edition = "2018"
 readme = "README.md"
@@ -19,17 +20,12 @@ opt-level = 2
 
 [features]
 default = [
-# 	"ase",
-# 	"synth",
 # 	"midi",
 ]
 
 midi = [
 	"midir",
 ]
-
-ase = []
-synth = []
 
 [dependencies]
 random = { version = "0.7", package = "rand", features = [ "wasm-bindgen", ] }

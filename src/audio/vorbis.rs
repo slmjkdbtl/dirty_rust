@@ -23,7 +23,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 	pub fn new(reader: R) -> Result<Self> {
 
 		let mut decoder = OggStreamReader::new(reader)
-			.map_err(|_| "failed to parse vorbis".to_string())?;
+			.map_err(|_| format!("failed to parse vorbis"))?;
 
 		let header = &decoder.ident_hdr;
 
@@ -37,7 +37,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 		let data = match decoder.read_dec_packet_generic::<InterleavedSamples<f32>>() {
 			Ok(data) => data,
-			Err(e) => return Err("failed to read vorbis".to_string()),
+			Err(e) => return Err(format!("failed to read vorbis")),
 		};
 
 		return Ok(Self {
@@ -86,21 +86,21 @@ impl<R: Read + Seek> Source for VorbisDecoder<R> {
 
 		let decoder = match self.decoder.take() {
 			Some(decoder) => decoder,
-			None => return Err("failed to seek vorbis".to_string()),
+			None => return Err(format!("failed to seek vorbis")),
 		};
 
 		let mut reader = decoder.into_inner().into_inner();
 
 		reader
 			.seek(SeekFrom::Start(0))
-			.map_err(|_| "failed to seek mp3".to_string())?;
+			.map_err(|_| format!("failed to seek mp3"))?;
 
 		let mut decoder = OggStreamReader::new(reader)
-			.map_err(|_| "failed to parse vorbis".to_string())?;
+			.map_err(|_| format!("failed to parse vorbis"))?;
 
 		let data = match decoder.read_dec_packet_generic::<InterleavedSamples<f32>>() {
 			Ok(data) => data,
-			Err(e) => return Err("failed to read vorbis".to_string()),
+			Err(e) => return Err(format!("failed to read vorbis")),
 		};
 
 		self.decoder = Some(decoder);
@@ -136,13 +136,13 @@ pub fn is_vorbis<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
 	let pos = reader
 		.seek(SeekFrom::Current(0))
-		.map_err(|_| "failed to seek".to_string())?;
+		.map_err(|_| format!("failed to seek"))?;
 
 	let is_vorbis = OggStreamReader::new(&mut reader).is_ok();
 
 	reader
 		.seek(SeekFrom::Start(pos))
-		.map_err(|_| "failed to seek".to_string())?;
+		.map_err(|_| format!("failed to seek"))?;
 
 	return Ok(is_vorbis)
 

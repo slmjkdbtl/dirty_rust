@@ -385,15 +385,15 @@ impl Window {
 
 								let ww = self.window
 									.inner_width()
-									.map_err(|_| "failed to get window size".to_string())?
+									.map_err(|_| format!("failed to get window size"))?
 									.as_f64()
-									.ok_or_else(|| "failed to get window size".to_string())?;
+									.ok_or_else(|| format!("failed to get window size"))?;
 
 								let wh = self.window
 									.inner_height()
-									.map_err(|_| "failed to get window size".to_string())?
+									.map_err(|_| format!("failed to get window size"))?
 									.as_f64()
-									.ok_or_else(|| "failed to get window size".to_string())?;
+									.ok_or_else(|| format!("failed to get window size"))?;
 
 								let c_aspect = cw as f32 / ch as f32;
 								let w_aspect = ww as f32 / wh as f32;

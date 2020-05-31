@@ -3,14 +3,13 @@
 use std::time::Duration;
 use std::sync::Mutex;
 use std::sync::Arc;
-use std::io::Cursor;
 
 use super::*;
 
 /// Buffered Sound (mainly for short sound effects)
 #[derive(Clone)]
 pub struct Sound {
-	buffer: Buffered,
+	buffer: AudioBuffer,
 	mixer: Arc<Mutex<Mixer>>,
 }
 
@@ -19,10 +18,10 @@ impl Sound {
 	/// create sound from bytes of an audio file
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
-		let buffer = Buffered::new(Decoder::new(Cursor::new(data.to_owned()))?);
+		let buffer = AudioBuffer::from_bytes(data)?;
 
 		return Ok(Self {
-			buffer,
+			buffer: buffer,
 			mixer: Arc::clone(ctx.mixer()),
 		});
 
@@ -33,9 +32,9 @@ impl Sound {
 
 		let mut mixer = self.mixer
 			.lock()
-			.map_err(|_| "failed to get mixer".to_string())?;
+			.map_err(|_| format!("failed to get mixer"))?;
 
-		mixer.add(Arc::new(Mutex::new(self.buffer.clone())))?;
+		mixer.add(Arc::new(Mutex::new(self.buffer.playback())))?;
 
 		return Ok(());
 
@@ -44,7 +43,7 @@ impl Sound {
 	/// returns a [`SoundBuilder`](SoundBuilder) that plays sound with config
 	pub fn builder(&self) -> SoundBuilder {
 		return SoundBuilder {
-			buffer: Arc::new(Mutex::new(self.buffer.clone())),
+			buffer: self.buffer.playback(),
 			mixer: &self.mixer,
 			effects: vec![],
 		};
@@ -59,7 +58,7 @@ impl Sound {
 
 /// A Builder for Playing [`Sound`](Sound) with Configs
 pub struct SoundBuilder<'a> {
-	buffer: Arc<Mutex<Buffered>>,
+	buffer: AudioBufferPlayback,
 	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	mixer: &'a Arc<Mutex<Mixer>>,
 }
@@ -95,9 +94,9 @@ impl<'a> SoundBuilder<'a> {
 
 		let mut mixer = self.mixer
 			.lock()
-			.map_err(|_| "failed to get mixer".to_string())?;
+			.map_err(|_| format!("failed to get mixer"))?;
 
-		let id = mixer.add(self.buffer)?;
+		let id = mixer.add(Arc::new(Mutex::new(self.buffer)))?;
 
 		for e in self.effects {
 			mixer.add_effect(&id, e);

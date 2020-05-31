@@ -77,7 +77,7 @@ impl Canvas {
 			);
 
 			if fbuf.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-				return Err("failed to create framebuffer".to_string());
+				return Err(format!("failed to create framebuffer"));
 			}
 
 			fbuf.unbind();

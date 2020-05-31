@@ -18,7 +18,8 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 	pub fn new(data: R) -> Result<Self> {
 
-		let wav = hound::WavReader::new(data).map_err(|_| "failed to parse wav".to_string())?;
+		let wav = hound::WavReader::new(data)
+			.map_err(|_| format!("failed to parse wav"))?;
 		let spec = wav.spec();
 
 		let channel_count = match spec.channels {
@@ -65,7 +66,7 @@ impl<R: Read + Seek> Source for WavDecoder<R> {
 	fn seek_start(&mut self) -> Result<()> {
 		self.decoder
 			.seek(0)
-			.map_err(|_| "failed to seek wav".to_string())?;
+			.map_err(|_| format!("failed to seek wav"))?;
 		return Ok(());
 	}
 
@@ -95,13 +96,13 @@ pub fn is_wav<R: Read + Seek>(mut reader: R) -> Result<bool> {
 
 	let pos = reader
 		.seek(SeekFrom::Current(0))
-		.map_err(|_| "failed to seek".to_string())?;
+		.map_err(|_| format!("failed to seek"))?;
 
 	let is_wav = hound::WavReader::new(&mut reader).is_ok();
 
 	reader
 		.seek(SeekFrom::Start(pos))
-		.map_err(|_| "failed to seek".to_string())?;
+		.map_err(|_| format!("failed to seek"))?;
 
 	return Ok(is_wav);
 

@@ -22,13 +22,13 @@ impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
 
-		let data = data::get::<Data>(PROJ, ENTRY);
+		let data = data::load::<Data>(PROJ, ENTRY);
 
 		if data.is_err() {
 			data::save(PROJ, ENTRY, Data::default())?;
 		}
 
-		let data = data::get::<Data>(PROJ, ENTRY)?;
+		let data = data::load::<Data>(PROJ, ENTRY)?;
 
 		return Ok(Self {
 			data: data,

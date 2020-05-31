@@ -77,10 +77,10 @@ the examples are under `examples/`, run them natively with
 $ cargo run --example (example_name)
 ```
 
-or go check out the built wasm examples [here](https://tool.wengwengweng.me/examples.html)
+or go check out the built wasm examples [here](https://tool.enemyspy.xyz/examples.html)
 
 ## doc
-docs are hosted [here](https://tool.wengwengweng.me/doc/dirty/index.html), or you can `cargo doc` and generate yourself
+docs are hosted [here](https://tool.enemyspy.xyz/doc/dirty/index.html), or you can `cargo doc` and generate yourself
 
 there're some extra docs under `doc/`
 

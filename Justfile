@@ -49,7 +49,7 @@ test-web:
 build:
 	cargo build
 
-doc crate:
+doc crate="dirty":
 	cargo doc \
 		--no-deps \
 		--open \

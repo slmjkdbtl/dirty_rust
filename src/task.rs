@@ -136,7 +136,7 @@ impl<T: Send + 'static> Task<T> {
 				.name(String::from("dirty_task"))
 				.spawn(move || {
 				tx.send(action()).expect("thread failure");
-			}).map_err(|_| "failed to spawn task thread".to_string())?;
+			}).map_err(|_| format!("failed to spawn task thread"))?;
 
 			self.rx = Some(rx);
 			self.phase = TaskPhase::Working;

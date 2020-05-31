@@ -26,13 +26,13 @@ impl Track {
 
 		let mut mixer = ctx.mixer()
 			.lock()
-			.map_err(|_| "failed to get mixer".to_string())?;
+			.map_err(|_| format!("failed to get mixer"))?;
 
 		let id = mixer.add(src.clone())?;
 
 		let control = mixer
 			.get_control(&id)
-			.ok_or("failed to get mixer".to_string())?;
+			.ok_or(format!("failed to get mixer"))?;
 
 		control.set_paused(true);
 

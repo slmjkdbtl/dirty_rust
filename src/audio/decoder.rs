@@ -27,7 +27,7 @@ impl<R: Read + Seek> Decoder<R> {
 			return Ok(Self::Mp3(Mp3Decoder::new(reader)?));
 		}
 
-		return Err("failed to decode audio".to_string());
+		return Err(format!("failed to decode audio"));
 
 	}
 

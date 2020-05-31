@@ -23,7 +23,7 @@ pub struct Volume {
 impl Volume {
 	pub fn new(v: f32) -> Self {
 		return Self {
-			volume: v.max(0.0).min(1.0),
+			volume: v.max(0.0),
 		};
 	}
 }

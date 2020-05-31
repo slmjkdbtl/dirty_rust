@@ -77,7 +77,7 @@ impl BitmapFont {
 		let cols = tw / gw as i32;
 
 		if (tw % gw as i32 != 0 || th % gh as i32 != 0) {
-			return Err("bitmap font grid size not correct".to_string());
+			return Err(format!("bitmap font grid size not correct"));
 		}
 
 		for (i, ch) in chars.chars().enumerate() {
@@ -148,7 +148,7 @@ impl TruetypeFont {
 		let tex = Texture::new(ctx, max_w, max_h)?;
 
 		if size > 72 {
-			return Err("font size cannot exceed 72".to_string());
+			return Err(format!("font size cannot exceed 72"));
 		}
 
 		return Ok(Self {
@@ -184,7 +184,7 @@ impl TruetypeFont {
 			}
 
 			if y >= th {
-				return Err("reached font texture size limit".to_string());
+				return Err(format!("reached font texture size limit"));
 			}
 
 			self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);

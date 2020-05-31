@@ -21,11 +21,11 @@ impl Audio {
 
 		let device = host
 			.default_output_device()
-			.ok_or("failed to get default output device".to_string())?;
+			.ok_or(format!("failed to get default output device"))?;
 
 		let format = device
 			.default_output_format()
-			.map_err(|_| "failed to get default audio output format".to_string())?;
+			.map_err(|_| format!("failed to get default audio output format"))?;
 
 		let format = cpal::Format {
 			channels: CHANNEL_COUNT.to_cpal(),
@@ -36,11 +36,11 @@ impl Audio {
 		let event_loop = host.event_loop();
 		let stream_id = event_loop
 			.build_output_stream(&device, &format)
-			.map_err(|_| "failed to build audio output stream".to_string())?;
+			.map_err(|_| format!("failed to build audio output stream"))?;
 
 		event_loop
 			.play_stream(stream_id)
-			.map_err(|_| "failed to start audio stream".to_string())?;
+			.map_err(|_| format!("failed to start audio stream"))?;
 
 		let mixer = Arc::new(Mutex::new(Mixer::new(format.sample_rate.0)));
 		let t_mixer = Arc::clone(&mixer);
@@ -99,7 +99,7 @@ impl Audio {
 
 			});
 
-		}).map_err(|_| "failed to spawn audio thread".to_string())?;
+		}).map_err(|_| format!("failed to spawn audio thread"))?;
 
 		return Ok(Self {
 			mixer,
@@ -119,7 +119,7 @@ impl Audio {
 
 		let mut mixer = self.mixer
 			.lock()
-			.map_err(|_| "failed to get mixer".to_string())?;
+			.map_err(|_| format!("failed to get mixer"))?;
 
 		mixer.add(src)?;
 

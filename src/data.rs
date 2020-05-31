@@ -28,7 +28,7 @@ pub fn save<D: serde::ser::Serialize>(
 }
 
 #[cfg(not(web))]
-pub fn get<D: for<'a> serde::de::Deserialize<'a>>(
+pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
 	proj: &'static str,
 	entry: &'static str,
 ) -> Result<D> {
@@ -72,7 +72,7 @@ pub fn save<D: serde::ser::Serialize>(
 }
 
 #[cfg(web)]
-pub fn get<D: for<'a> serde::de::Deserialize<'a>>(
+pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
 	_: &'static str,
 	entry: &'static str,
 ) -> Result<D> {

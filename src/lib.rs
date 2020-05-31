@@ -44,8 +44,6 @@
 pub mod utils;
 pub mod res;
 
-// mod gl;
-
 pub mod conf;
 pub mod app;
 pub mod window;
@@ -70,11 +68,10 @@ pub mod ui;
 pub mod kit;
 pub mod data;
 pub mod task;
+pub mod ase;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-#[cfg(feature = "ase")]
-pub mod ase;
 
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;

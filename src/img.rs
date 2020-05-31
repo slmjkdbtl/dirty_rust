@@ -28,11 +28,11 @@ impl Image {
 	pub fn from_raw(w: i32, h: i32, data: Vec<u8>) -> Result<Self> {
 
 		if data.len() != w as usize * h as usize * 4 {
-			return Err("incorrect image size".to_string());
+			return Err(format!("incorrect image size"));
 		}
 
 		if w <= 0 || h <= 0 {
-			return Err("image size must be > 0".to_string())
+			return Err(format!("image size must be > 0"));
 		}
 
 		return Ok(Self {
@@ -46,7 +46,7 @@ impl Image {
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 
 		let img = image::load_from_memory(data)
-			.map_err(|_| "failed to parse img".to_string())?
+			.map_err(|_| format!("failed to parse img"))?
 			.to_rgba()
 			;
 
@@ -108,7 +108,7 @@ impl Image {
 
 	fn into_image(self) -> Result<image::RgbaImage> {
 		let img: image::RgbaImage = image::ImageBuffer::from_raw(self.width as u32, self.height as u32, self.data)
-			.ok_or_else(|| "failed to create image".to_string())?;
+			.ok_or_else(|| format!("failed to create image"))?;
 		return Ok(img);
 	}
 
