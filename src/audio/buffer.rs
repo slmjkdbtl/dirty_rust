@@ -2,18 +2,24 @@
 
 use std::io::Cursor;
 use std::time::Duration;
-use std::sync::Arc;
 
 use super::*;
 
+/// Buffer Containing Audio Data
 #[derive(Clone)]
 pub struct AudioBuffer {
-	frames: Arc<Vec<Frame>>,
+	frames: Vec<Frame>,
 	sample_rate: u32,
-	duration: Duration,
 }
 
 impl AudioBuffer {
+
+	pub fn from_frames(frames: Vec<Frame>, sample_rate: u32) -> Self {
+		return Self {
+			frames: frames,
+			sample_rate: sample_rate,
+		};
+	}
 
 	pub fn from_bytes(data: &[u8]) -> Result<Self> {
 		let src = Decoder::new(Cursor::new(data.to_owned()))?;
@@ -27,58 +33,25 @@ impl AudioBuffer {
 
 		return Self {
 			sample_rate: sample_rate,
-			duration: Duration::from_secs_f32(frames.len() as f32 / sample_rate as f32),
-			frames: Arc::new(frames),
+			frames: frames,
 		};
 
 	}
 
 	pub fn duration(&self) -> Duration {
-		return self.duration;
+		return Duration::from_secs_f32(self.frames.len() as f32 / self.sample_rate as f32);
 	}
 
-	pub fn playback(&self) -> AudioBufferPlayback {
-		return AudioBufferPlayback {
-			frames: self.frames.clone(),
-			sample_rate: self.sample_rate,
-			duration: self.duration,
-			cur_pos: 0,
-		};
+	pub fn frames(&self) -> &[Frame] {
+		return &self.frames;
 	}
 
-}
-
-#[derive(Clone)]
-pub struct AudioBufferPlayback {
-	frames: Arc<Vec<Frame>>,
-	sample_rate: u32,
-	duration: Duration,
-	cur_pos: usize,
-}
-
-impl Iterator for AudioBufferPlayback {
-
-	type Item = Frame;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(frame) = self.frames.get(self.cur_pos) {
-			self.cur_pos += 1;
-			return Some(*frame);
-		}
-		return None;
+	pub fn frames_mut(&mut self) -> &mut [Frame] {
+		return &mut self.frames;
 	}
 
-}
-
-impl Source for AudioBufferPlayback {
-
-	fn sample_rate(&self) -> u32 {
+	pub fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
-	}
-
-	fn seek_start(&mut self) -> Result<()> {
-		self.cur_pos = 0;
-		return Ok(());
 	}
 
 }

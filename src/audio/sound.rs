@@ -9,7 +9,7 @@ use super::*;
 /// Buffered Sound (mainly for short sound effects)
 #[derive(Clone)]
 pub struct Sound {
-	buffer: AudioBuffer,
+	playback: AudioBufferPlayback,
 	mixer: Arc<Mutex<Mixer>>,
 }
 
@@ -19,9 +19,10 @@ impl Sound {
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let buffer = AudioBuffer::from_bytes(data)?;
+		let playback = AudioBufferPlayback::new(buffer);
 
 		return Ok(Self {
-			buffer: buffer,
+			playback: playback,
 			mixer: Arc::clone(ctx.mixer()),
 		});
 
@@ -34,7 +35,7 @@ impl Sound {
 			.lock()
 			.map_err(|_| format!("failed to get mixer"))?;
 
-		mixer.add(Arc::new(Mutex::new(self.buffer.playback())))?;
+		mixer.add(Arc::new(Mutex::new(self.playback.clone())))?;
 
 		return Ok(());
 
@@ -43,22 +44,17 @@ impl Sound {
 	/// returns a [`SoundBuilder`](SoundBuilder) that plays sound with config
 	pub fn builder(&self) -> SoundBuilder {
 		return SoundBuilder {
-			buffer: self.buffer.playback(),
+			playback: self.playback.clone(),
 			mixer: &self.mixer,
 			effects: vec![],
 		};
-	}
-
-	/// get duration
-	pub fn duration(&self) -> Duration {
-		return self.buffer.duration();
 	}
 
 }
 
 /// A Builder for Playing [`Sound`](Sound) with Configs
 pub struct SoundBuilder<'a> {
-	buffer: AudioBufferPlayback,
+	playback: AudioBufferPlayback,
 	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	mixer: &'a Arc<Mutex<Mixer>>,
 }
@@ -96,7 +92,7 @@ impl<'a> SoundBuilder<'a> {
 			.lock()
 			.map_err(|_| format!("failed to get mixer"))?;
 
-		let id = mixer.add(Arc::new(Mutex::new(self.buffer)))?;
+		let id = mixer.add(Arc::new(Mutex::new(self.playback)))?;
 
 		for e in self.effects {
 			mixer.add_effect(&id, e);
@@ -104,6 +100,48 @@ impl<'a> SoundBuilder<'a> {
 
 		return Ok(());
 
+	}
+
+}
+
+#[derive(Clone)]
+struct AudioBufferPlayback {
+	buffer: Arc<AudioBuffer>,
+	cur_pos: usize,
+}
+
+impl AudioBufferPlayback {
+	pub fn new(buffer: AudioBuffer) -> Self {
+		return AudioBufferPlayback {
+			buffer: Arc::new(buffer),
+			cur_pos: 0,
+		};
+	}
+}
+
+impl Iterator for AudioBufferPlayback {
+
+	type Item = Frame;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if let Some(frame) = self.buffer.frames().get(self.cur_pos) {
+			self.cur_pos += 1;
+			return Some(*frame);
+		}
+		return None;
+	}
+
+}
+
+impl Source for AudioBufferPlayback {
+
+	fn sample_rate(&self) -> u32 {
+		return self.buffer.sample_rate();
+	}
+
+	fn seek_start(&mut self) -> Result<()> {
+		self.cur_pos = 0;
+		return Ok(());
 	}
 
 }
