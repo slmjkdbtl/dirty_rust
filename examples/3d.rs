@@ -148,8 +148,8 @@ impl State for Game {
 		let rx = self.cam.yaw();
 		let ry = self.cam.pitch();
 
-		// TODO: work with cam front
-		self.cam.pos += vec3!(laxis.x, 0.0, -laxis.y) * dt * MOVE_SPEED;
+		self.cam.pos += laxis.y * self.cam.front() * dt * MOVE_SPEED;
+		self.cam.pos += laxis.x * self.cam.right() * dt * MOVE_SPEED;
 		self.cam.set_angle(rx + raxis.x * dt * ROT_SPEED, ry + raxis.y * dt * ROT_SPEED);
 
 		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
