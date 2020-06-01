@@ -45,7 +45,6 @@ dirs-next = "1.0"
 # app
 glow = "0.4"
 fontdue = "0.0"
-gilrs = "0.7"
 image = { version = "0.23", default-features = false, features = [ "png", "jpeg", "tga", "bmp", ] }
 tobj = "2.0"
 gltf = "0.15"
@@ -62,6 +61,7 @@ midir = { version = "0.6", optional = true }
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 glutin = "0.24"
+gilrs = "0.7"
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
 wasm-bindgen = "0.2"

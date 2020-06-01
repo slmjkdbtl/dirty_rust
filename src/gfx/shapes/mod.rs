@@ -12,6 +12,7 @@ use gfx::Vertex;
 use gfx::Primitive;
 
 export!(raw);
+export!(mesh);
 export!(sprite);
 export!(uvrect);
 export!(polygon);

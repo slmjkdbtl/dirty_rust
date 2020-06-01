@@ -239,7 +239,9 @@ impl Window {
 
 	/// set cursor locked
 	pub fn set_cursor_locked(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_grab(b).expect("cannot set cursor grab");
+		if let Err(e) = self.windowed_ctx.window().set_cursor_grab(b) {
+			elog!("failed to set cursor grab");
+		}
 		self.cursor_locked = b;
 	}
 

@@ -3,6 +3,7 @@
 use super::*;
 
 pub use delaunay::triangulate;
+pub use delaunay::Triangulation;
 
 pub fn extrude(data: &MeshData, edges: &[(u32, u32)], dis: f32) -> MeshData {
 

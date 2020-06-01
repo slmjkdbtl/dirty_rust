@@ -135,9 +135,9 @@ import!(vbuf);
 import!(ibuf);
 import!(pipeline);
 import!(renderer);
-import!(mesh);
 
 export!(desc);
+export!(mesh);
 export!(texture);
 export!(canvas);
 export!(shader);

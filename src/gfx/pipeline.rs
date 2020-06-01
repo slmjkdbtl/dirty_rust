@@ -131,11 +131,11 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	pub fn draw(
 		&self,
+		prim: Primitive,
 		vbuf: &VertexBuffer<V>,
 		ibuf: &IndexBuffer,
+		count: usize,
 		uniform: &U,
-		count: u32,
-		prim: Primitive,
 	) {
 
 		unsafe {

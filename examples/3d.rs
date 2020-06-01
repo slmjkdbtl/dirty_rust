@@ -33,7 +33,7 @@ struct Game {
 	cam: gfx::PerspectiveCam,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
-	floor: gfx::MeshData,
+	floor: gfx::Mesh,
 }
 
 impl State for Game {
@@ -62,7 +62,7 @@ impl State for Game {
 			},
 			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
-			floor: floor,
+			floor: gfx::Mesh::from_meshdata(d.gfx, &floor)?,
 		});
 
 	}
@@ -184,7 +184,7 @@ impl State for Game {
 						.color(c)
 				)?;
 
-				gfx.draw(&shapes::Raw::from_meshdata(&self.floor))?;
+				gfx.draw(&shapes::mesh(&self.floor))?;
 
 				return Ok(());
 

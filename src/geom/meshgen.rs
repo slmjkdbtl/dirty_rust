@@ -120,7 +120,7 @@ pub fn sphere(r: f32) -> MeshData {
 }
 
 // TODO
-pub fn cylinder(r: f32, h: f32, s: usize) -> MeshData {
+pub fn cylinder(r: f32, h: f32, s: usize) -> Option<MeshData> {
 
 	let mut verts = vec![];
 	let mut edges = vec![];
@@ -142,7 +142,7 @@ pub fn cylinder(r: f32, h: f32, s: usize) -> MeshData {
 
 	}
 
-	let tri = ops::triangulate(&pts).unwrap();
+	let tri = ops::triangulate(&pts)?;
 
 	let indices = tri.triangles.iter().map(|i| {
 		return *i as u32;
@@ -162,7 +162,7 @@ pub fn cylinder(r: f32, h: f32, s: usize) -> MeshData {
 		indices,
 	};
 
-	return ops::extrude(&circle, &edges, h);
+	return Some(ops::extrude(&circle, &edges, h));
 
 }
 

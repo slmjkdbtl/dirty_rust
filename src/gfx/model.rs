@@ -36,7 +36,7 @@ pub struct ModelData {
 
 #[derive(Clone)]
 pub(super) struct Node {
-	meshes: Vec<Mesh<Vertex, Uniform>>,
+	meshes: Vec<Mesh>,
 	id: NodeID,
 	name: Option<String>,
 	children: Vec<NodeID>,
@@ -47,7 +47,7 @@ impl Node {
 	pub fn transform(&self) -> Transform {
 		return self.transform;
 	}
-	pub fn meshes(&self) -> &[Mesh<Vertex, Uniform>] {
+	pub fn meshes(&self) -> &[Mesh] {
 		return &self.meshes;
 	}
 	pub fn children(&self) -> &[NodeID] {
@@ -589,8 +589,8 @@ impl Model {
 				let meshes = node.meshes
 					.into_iter()
 					// TODO: don't unwrap here
-					.map(|m| Mesh::new(ctx, &m.vertices, &m.indices).unwrap())
-					.collect::<Vec<Mesh<Vertex, Uniform>>>();
+					.map(|m| Mesh::from_meshdata(ctx, &m).unwrap())
+					.collect::<Vec<Mesh>>();
 
 				return (id, Node {
 					id: node.id,
