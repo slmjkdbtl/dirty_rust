@@ -137,7 +137,7 @@ impl State for Game {
 				let pos = d.window.mouse_pos();
 				if self.key_down {
 					if let Some(last) = self.buf.line.last() {
-						if pos.dist(*last) > self.density {
+						if Vec2::dist(pos, *last) > self.density {
 							self.buf.push(pos);
 						}
 					} else {

@@ -11,17 +11,12 @@ use super::*;
 
 // https://github.com/rust-lang/rust/issues/35853
 macro_rules! nested_macro {
-
 	($($body:tt)*) => {
-
 		macro_rules! __nested_macro {
 			$($body)*
 		}
-
 		__nested_macro!($);
-
 	};
-
 }
 
 macro_rules! gen_vec {
@@ -270,10 +265,6 @@ impl Vec3 {
 
 	pub fn xy(self) -> Vec2 {
 		return vec2!(self.x, self.y);
-	}
-
-	pub fn xz(self) -> Vec2 {
-		return vec2!(self.x, self.z);
 	}
 
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
