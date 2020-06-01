@@ -6,8 +6,8 @@ use std::path::PathBuf;
 use std::collections::HashSet;
 
 use once_cell::sync::Lazy;
-pub use gilrs::GamepadId as GamepadID;
-pub type TouchID = u64;
+pub type GamepadID = usize;
+pub type TouchID = usize;
 
 use crate::*;
 use math::*;
@@ -208,5 +208,23 @@ pub enum ScrollPhase {
 pub enum GamepadAxis {
 	LStick,
 	RStick,
+}
+
+pub fn deadzone(a: Vec2, f: f32) -> Vec2 {
+
+	let x = if a.x.abs() > f {
+		a.x
+	} else {
+		0.0
+	};
+
+	let y = if a.y.abs() > f {
+		a.y
+	} else {
+		0.0
+	};
+
+	return vec2!(x, y);
+
 }
 

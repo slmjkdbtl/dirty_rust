@@ -14,6 +14,8 @@ use input::*;
 use window::*;
 use conf::CanvasRoot;
 
+// TODO: gamepad input
+
 /// The Window Context
 pub struct Window {
 	gl: Rc<glow::Context>,
@@ -167,6 +169,16 @@ impl Window {
 	/// check if a mouse button is currently pressed
 	pub fn mouse_down(&self, m: Mouse) -> bool {
 		return self.pressed_mouse.contains(&m);
+	}
+
+	/// check if a gamepad button is currently pressed
+	pub fn gamepad_down(&self, id: GamepadID, b: GamepadButton) -> bool {
+		return false;
+	}
+
+	/// get gamepad axis position
+	pub fn gamepad_axis(&self, id: GamepadID, b: GamepadAxis) -> Vec2 {
+		return vec2!(0);
 	}
 
 	/// get current dpi

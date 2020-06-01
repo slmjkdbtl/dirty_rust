@@ -20,7 +20,7 @@ pub struct Window {
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
 	pressed_gamepad_buttons: HashMap<GamepadID, HashSet<GamepadButton>>,
-	gamepad_axis_pos: HashMap<GamepadID, (Vec2, Vec2)>,
+	gamepad_axis_pos: HashMap<GamepadID, HashMap<GamepadAxis, Vec2>>,
 	width: i32,
 	height: i32,
 	mouse_pos: Vec2,
@@ -142,6 +142,24 @@ impl Window {
 	/// check if a mouse button is currently pressed
 	pub fn mouse_down(&self, m: Mouse) -> bool {
 		return self.pressed_mouse.contains(&m);
+	}
+
+	/// check if a gamepad button is currently pressed
+	pub fn gamepad_down(&self, id: GamepadID, b: GamepadButton) -> bool {
+		return self.pressed_gamepad_buttons
+			.get(&id)
+			.map(|bts| bts.contains(&b))
+			.unwrap_or(false);
+	}
+
+	/// get gamepad axis position
+	pub fn gamepad_axis(&self, id: GamepadID, axis: GamepadAxis) -> Vec2 {
+		return self.gamepad_axis_pos
+			.get(&id)
+			.map(|p| p.get(&axis))
+			.flatten()
+			.map(|p| *p)
+			.unwrap_or(vec2!(0));
 	}
 
 	/// get current dpi
@@ -447,7 +465,7 @@ impl Window {
 						},
 
 						WEvent::Touch(touch) => {
-							events.push(Event::Touch(touch.id, touch.location.into()));
+							events.push(Event::Touch(touch.id as usize, touch.location.into()));
 						},
 
 						WEvent::HoveredFile(path) => {
@@ -507,6 +525,8 @@ impl Window {
 
 							use gilrs::ev::EventType::*;
 
+							let id: usize = id.into();
+
 							match event {
 
 								ButtonPressed(button, ..) => {
@@ -549,34 +569,43 @@ impl Window {
 
 								AxisChanged(axis, val, ..) => {
 
-									let mut pos = self.gamepad_axis_pos
+									let pos = self.gamepad_axis_pos
 										.entry(id)
-										.or_insert((vec2!(), vec2!()))
-										.clone()
+										.or_insert(hmap![])
 										;
 
 									match axis {
 										gilrs::ev::Axis::LeftStickX => {
-											pos.0.x = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+											let lstick = pos
+												.entry(GamepadAxis::LStick)
+												.or_insert(vec2!(0));
+											lstick.x = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, *lstick));
 										},
 										gilrs::ev::Axis::LeftStickY => {
-											pos.0.y = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, pos.0));
+											let lstick = pos
+												.entry(GamepadAxis::LStick)
+												.or_insert(vec2!(0));
+											lstick.y = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, *lstick));
 										},
 										gilrs::ev::Axis::RightStickX => {
-											pos.1.x = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+											let rstick = pos
+												.entry(GamepadAxis::RStick)
+												.or_insert(vec2!(0));
+											rstick.x = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, *rstick));
 										},
 										gilrs::ev::Axis::RightStickY => {
-											pos.1.y = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, pos.1));
+											let rstick = pos
+												.entry(GamepadAxis::RStick)
+												.or_insert(vec2!(0));
+											rstick.y = val;
+											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, *rstick));
 										},
 										_ => {},
 
 									}
-
-									self.gamepad_axis_pos.insert(id, pos);
 
 								},
 

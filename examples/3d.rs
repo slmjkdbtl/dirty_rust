@@ -4,7 +4,11 @@ use dirty::*;
 use math::*;
 use geom::*;
 use input::Key;
+use input::GamepadAxis;
 use gfx::shapes;
+
+const MOVE_SPEED: f32 = 12.0;
+const ROT_SPEED: f32 = 3.0;
 
 #[derive(Clone)]
 struct Uniform {
@@ -26,7 +30,6 @@ impl gfx::CustomUniform for Uniform {
 struct Game {
 	model: gfx::Model,
 	cam: gfx::PerspectiveCam,
-	move_speed: f32,
 	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
@@ -57,7 +60,6 @@ impl State for Game {
 				pos: vec3!(0, 1, 6),
 				dir: vec3!(0, 0, -1),
 			},
-			move_speed: 12.0,
 			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
@@ -126,20 +128,29 @@ impl State for Game {
 		let dt = d.app.dt().as_secs_f32();
 
 		if d.window.key_down(Key::W) {
-			self.cam.pos += self.cam.front() * dt * self.move_speed;
+			self.cam.pos += self.cam.front() * dt * MOVE_SPEED;
 		}
 
 		if d.window.key_down(Key::S) {
-			self.cam.pos += self.cam.back() * dt * self.move_speed;
+			self.cam.pos += self.cam.back() * dt * MOVE_SPEED;
 		}
 
 		if d.window.key_down(Key::A) {
-			self.cam.pos += self.cam.left() * dt * self.move_speed;
+			self.cam.pos += self.cam.left() * dt * MOVE_SPEED;
 		}
 
 		if d.window.key_down(Key::D) {
-			self.cam.pos += self.cam.right() * dt * self.move_speed;
+			self.cam.pos += self.cam.right() * dt * MOVE_SPEED;
 		}
+
+		let laxis = input::deadzone(d.window.gamepad_axis(0, GamepadAxis::LStick), 0.3);
+		let raxis = input::deadzone(d.window.gamepad_axis(0, GamepadAxis::RStick), 0.3);
+		let rx = self.cam.yaw();
+		let ry = self.cam.pitch();
+
+		// TODO: work with cam front
+		self.cam.pos += vec3!(laxis.x, 0.0, -laxis.y) * dt * MOVE_SPEED;
+		self.cam.set_angle(rx + raxis.x * dt * ROT_SPEED, ry + raxis.y * dt * ROT_SPEED);
 
 		d.window.set_title(&format!("FPS: {} DCS: {}", d.app.fps(), d.gfx.draw_calls()));
 
