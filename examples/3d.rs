@@ -8,6 +8,7 @@ use input::GamepadAxis;
 use gfx::shapes;
 
 const MOVE_SPEED: f32 = 12.0;
+const EYE_SPEED: f32 = 32.0;
 const ROT_SPEED: f32 = 3.0;
 
 #[derive(Clone)]
@@ -30,7 +31,6 @@ impl gfx::CustomUniform for Uniform {
 struct Game {
 	model: gfx::Model,
 	cam: gfx::PerspectiveCam,
-	eye_speed: f32,
 	shader: gfx::Shader<Uniform>,
 	show_ui: bool,
 	floor: gfx::MeshData,
@@ -60,7 +60,6 @@ impl State for Game {
 				pos: vec3!(0, 1, 6),
 				dir: vec3!(0, 0, -1),
 			},
-			eye_speed: 32.0,
 			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
 			show_ui: false,
 			floor: floor,
@@ -104,8 +103,8 @@ impl State for Game {
 					let mut ry = self.cam.pitch();
 					let dead = f32::to_radians(60.0);
 
-					rx += delta.x * self.eye_speed * 0.0001;
-					ry += delta.y * self.eye_speed * 0.0001;
+					rx += delta.x * EYE_SPEED * 0.0001;
+					ry += delta.y * EYE_SPEED * 0.0001;
 
 					ry = ry.max(-dead).min(dead);
 

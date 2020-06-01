@@ -52,7 +52,7 @@ impl Audio {
 		let t_mixer = Arc::clone(&mixer);
 
 		thread::Builder::new()
-			.name(String::from("dirty_audio"))
+			.name(format!("dirty_audio"))
 			.spawn(move || {
 
 			event_loop.run(move |id, data| {

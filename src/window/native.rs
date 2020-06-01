@@ -19,7 +19,7 @@ pub struct Window {
 	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
-	pressed_gamepad_buttons: HashMap<GamepadID, HashSet<GamepadButton>>,
+	gamepad_pressed_buttons: HashMap<GamepadID, HashSet<GamepadButton>>,
 	gamepad_axis_pos: HashMap<GamepadID, HashMap<GamepadAxis, Vec2>>,
 	width: i32,
 	height: i32,
@@ -76,11 +76,16 @@ impl Window {
 		};
 
 		if conf.cursor_hidden {
-			windowed_ctx.window().set_cursor_visible(false);
+			windowed_ctx
+				.window()
+				.set_cursor_visible(false);
 		}
 
 		if conf.cursor_locked {
-			windowed_ctx.window().set_cursor_grab(true).expect("cannot set cursor grab");
+			windowed_ctx
+				.window()
+				.set_cursor_grab(true)
+				.map_err(|_| format!("cannot set cursor grab"))?;
 		}
 
 		let gl = glow::Context::from_loader_function(|s| {
@@ -93,7 +98,7 @@ impl Window {
 			windowed_ctx,
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
-			pressed_gamepad_buttons: hmap![],
+			gamepad_pressed_buttons: hmap![],
 			gamepad_axis_pos: hmap![],
 			mouse_pos: vec2!(),
 			width: conf.width,
@@ -146,7 +151,7 @@ impl Window {
 
 	/// check if a gamepad button is currently pressed
 	pub fn gamepad_down(&self, id: GamepadID, b: GamepadButton) -> bool {
-		return self.pressed_gamepad_buttons
+		return self.gamepad_pressed_buttons
 			.get(&id)
 			.map(|bts| bts.contains(&b))
 			.unwrap_or(false);
@@ -270,43 +275,40 @@ impl Window {
 	) -> Result<()> {
 
 		#[cfg(feature = "midi")]
-		let midi_buf = {
+		let midi_rx = {
 
-			use std::sync::Mutex;
-			use std::sync::Arc;
-
-			let buf = Arc::new(Mutex::new(vec![]));
-			let buf_in = buf.clone();
+			use std::sync::mpsc;
+			let (midi_tx, midi_rx) = mpsc::channel();
 
 			// TODO: why does this still block the main thread sometime??
 			std::thread::Builder::new()
-				.name(String::from("dirty_midi"))
+				.name(format!("dirty_midi"))
 				.spawn(move || {
 
 				// TODO: extremely slow
-				if let Ok(midi_in) = midir::MidiInput::new("DIRTY") {
+				if let Ok(midi_in) = midir::MidiInput::new("dirty_midi") {
 
 					if let Some(port) = midi_in.ports().last() {
 
 						let port_name = midi_in.port_name(port).unwrap_or(format!("unknown"));
 
-						let _conn = midi_in.connect(port, &format!("DIRTY ({})", port_name), move |_, msg, buf| {
-							if let Ok(mut buf) = buf.lock() {
-								buf.push(midi::Msg::from(&msg));
+						let _conn = midi_in.connect(port, &format!("dirty_midi - {}", port_name), move |_, msg, _| {
+							if let Err(e) = midi_tx.send(midi::Msg::from(&msg)) {
+								elog!("failed to send midi msg");
 							}
-						}, buf_in).map_err(|_| format!("failed to read midi input"));
+						}, ()).map_err(|_| format!("failed to read midi input"));
 
 						loop {}
 
 					}
 
 				} else {
-					eprintln!("failed to init midi input")
+					elog!("failed to init midi input");
 				}
 
 			}).map_err(|_| format!("failed to spawn midi thread"))?;
 
-			buf
+			midi_rx
 
 		};
 
@@ -332,6 +334,7 @@ impl Window {
 
 				use glutin::event::WindowEvent as WEvent;
 				use glutin::event::DeviceEvent as DEvent;
+				use glutin::event::Event as WinitEvent;
 				use glutin::event::TouchPhase;
 				use glutin::event::ElementState;
 				use input::*;
@@ -339,17 +342,15 @@ impl Window {
 				let mut events = vec![];
 
 				#[cfg(feature = "midi")]
-				if let Ok(mut buf) = midi_buf.lock() {
-					for msg in std::mem::replace(&mut *buf, vec![]) {
-						events.push(Event::MIDI(msg.clone()));
-					}
+				for msg in midi_rx.try_iter() {
+					events.push(Event::MIDI(msg.clone()));
 				}
 
 				match e {
 
-					glutin::event::Event::LoopDestroyed => *flow = ControlFlow::Exit,
+					WinitEvent::LoopDestroyed => *flow = ControlFlow::Exit,
 
-					glutin::event::Event::WindowEvent { ref event, .. } => match event {
+					WinitEvent::WindowEvent { ref event, .. } => match event {
 
 						WEvent::CloseRequested => {
 							*flow = ControlFlow::Exit;
@@ -496,21 +497,21 @@ impl Window {
 
 					},
 
-					glutin::event::Event::DeviceEvent { event, .. } => match event {
+					WinitEvent::DeviceEvent { event, .. } => match event {
 						DEvent::MouseMotion { delta } => {
 							events.push(Event::MouseMove(vec2!(delta.0, -delta.1)));
 						},
 						_ => (),
 					},
 
-					glutin::event::Event::RedrawRequested(_) => {
+					WinitEvent::RedrawRequested(_) => {
 
 						handle(&mut self, WindowEvent::Frame)?;
 						self.swap()?;
 
 					},
 
-					glutin::event::Event::MainEventsCleared => {
+					WinitEvent::MainEventsCleared => {
 
 						// ugly workaround
 						update = !update;
@@ -534,7 +535,7 @@ impl Window {
 									if let Some(button) = GamepadButton::from_gilrs(button) {
 
 										self
-											.pressed_gamepad_buttons
+											.gamepad_pressed_buttons
 											.entry(id)
 											.or_insert(hset![])
 											.insert(button);
@@ -556,7 +557,7 @@ impl Window {
 									if let Some(button) = GamepadButton::from_gilrs(button) {
 
 										self
-											.pressed_gamepad_buttons
+											.gamepad_pressed_buttons
 											.entry(id)
 											.or_insert(hset![])
 											.remove(&button);
@@ -615,6 +616,8 @@ impl Window {
 
 								Disconnected => {
 									events.push(Event::GamepadDisconnect(id));
+									self.gamepad_pressed_buttons.remove(&id);
+									self.gamepad_axis_pos.remove(&id);
 								},
 
 								_ => {},
@@ -633,7 +636,8 @@ impl Window {
 					handle(&mut self, WindowEvent::Input(e))?;
 				}
 
-				Ok(())
+				return Ok(());
+
 			}();
 
 			if let Err(err) = res {

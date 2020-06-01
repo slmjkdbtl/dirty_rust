@@ -1,7 +1,6 @@
 // wengwengweng
 
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -281,8 +280,9 @@ impl Window {
 	) -> Result<()> {
 
 		use input::Event::*;
+		use std::sync::mpsc;
 
-		let web_events = Rc::new(RefCell::new(vec![]));
+		let (event_tx, event_rx) = mpsc::channel();
 
 		enum WebEvent {
 			KeyPress(web_sys::KeyboardEvent),
@@ -298,12 +298,12 @@ impl Window {
 
 			($name:expr, $ty:ty, $t:ident) => {
 
-				let web_events_c = web_events.clone();
+				let event_tx_2 = event_tx.clone();
 
 				let handler = Closure::wrap(Box::new((move |e: $ty| {
 					// TODO: I want to prevent stuff like space / arrow keys scrolling, but this also prevents browser default keys like refresh / tab switch, not good
 					e.prevent_default();
-					web_events_c.borrow_mut().push(WebEvent::$t(e));
+					event_tx_2.send(WebEvent::$t(e));
 				})) as Box<dyn FnMut(_)>);
 
 				self.canvas
@@ -337,12 +337,12 @@ impl Window {
 
 				let mut events = vec![];
 
-				for e in web_events.borrow().iter() {
+				for e in event_rx.try_iter() {
 
 					match e {
 
 						WebEvent::KeyPress(e) => {
-							if let Some(k) = Key::from_web(e) {
+							if let Some(k) = Key::from_web(&e) {
 								events.push(KeyPressRepeat(k));
 								if !self.key_down(k) {
 									events.push(KeyPress(k));
@@ -352,7 +352,7 @@ impl Window {
 						},
 
 						WebEvent::KeyRelease(e) => {
-							if let Some(k) = Key::from_web(e) {
+							if let Some(k) = Key::from_web(&e) {
 								self.pressed_keys.remove(&k);
 								events.push(KeyRelease(k));
 							}
@@ -430,14 +430,14 @@ impl Window {
 
 				}
 
-				web_events.borrow_mut().clear();
-
 				for e in events {
 					handle(&mut self, WindowEvent::Input(e))?;
 				}
 
 				handle(&mut self, WindowEvent::Frame)?;
-				Ok(())
+
+				return Ok(());
+
 			}();
 
 			if let Err(err) = res {

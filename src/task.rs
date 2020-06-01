@@ -133,9 +133,11 @@ impl<T: Send + 'static> Task<T> {
 
 			// TODO: deal with error inside thread::spawn
 			thread::Builder::new()
-				.name(String::from("dirty_task"))
+				.name(format!("dirty_task"))
 				.spawn(move || {
-				tx.send(action()).expect("thread failure");
+				if let Err(e) = tx.send(action()) {
+					elog!("failed to execute task");
+				};
 			}).map_err(|_| format!("failed to spawn task thread"))?;
 
 			self.rx = Some(rx);
