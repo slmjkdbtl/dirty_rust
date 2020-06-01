@@ -10,7 +10,7 @@ use lewton::samples::InterleavedSamples;
 
 use super::*;
 
-pub struct VorbisDecoder<R: Read + Seek> {
+pub struct VorbisPlayback<R: Read + Seek> {
 	// TODO: have to do this for seek_start cuz seek_absgp_pg won't work
 	decoder: Option<OggStreamReader<R>>,
 	cur_packet: Option<vec::IntoIter<f32>>,
@@ -18,7 +18,7 @@ pub struct VorbisDecoder<R: Read + Seek> {
 	sample_rate: u32,
 }
 
-impl<R: Read + Seek> VorbisDecoder<R> {
+impl<R: Read + Seek> VorbisPlayback<R> {
 
 	pub fn new(reader: R) -> Result<Self> {
 
@@ -76,7 +76,7 @@ impl<R: Read + Seek> VorbisDecoder<R> {
 
 }
 
-impl<R: Read + Seek> Source for VorbisDecoder<R> {
+impl<R: Read + Seek> Source for VorbisPlayback<R> {
 
 	fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
@@ -112,7 +112,7 @@ impl<R: Read + Seek> Source for VorbisDecoder<R> {
 
 }
 
-impl<R: Read + Seek> Iterator for VorbisDecoder<R> {
+impl<R: Read + Seek> Iterator for VorbisPlayback<R> {
 
 	type Item = Frame;
 

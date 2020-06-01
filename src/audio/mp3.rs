@@ -6,18 +6,18 @@ use std::io::SeekFrom;
 
 use super::*;
 
-pub struct Mp3Decoder<R: Read + Seek> {
+pub struct Mp3Playback<R: Read + Seek> {
 	decoder: puremp3::Mp3Decoder<R>,
 	cur_frame: puremp3::Frame,
 	cur_frame_offset: usize,
 	sample_rate: u32,
 }
 
-impl<R: Read + Seek> Mp3Decoder<R> {
+impl<R: Read + Seek> Mp3Playback<R> {
 
-	pub fn new(data: R) -> Result<Self> {
+	pub fn new(reader: R) -> Result<Self> {
 
-		let mut decoder = puremp3::Mp3Decoder::new(data);
+		let mut decoder = puremp3::Mp3Decoder::new(reader);
 		let cur_frame = decoder
 			.next_frame()
 			.map_err(|_| format!("failed to parse mp3"))?;
@@ -35,7 +35,7 @@ impl<R: Read + Seek> Mp3Decoder<R> {
 
 }
 
-impl<R: Read + Seek> Source for Mp3Decoder<R> {
+impl<R: Read + Seek> Source for Mp3Playback<R> {
 
 	fn sample_rate(&self) -> u32 {
 		return self.sample_rate;
@@ -57,7 +57,7 @@ impl<R: Read + Seek> Source for Mp3Decoder<R> {
 
 }
 
-impl<R: Read + Seek> Iterator for Mp3Decoder<R> {
+impl<R: Read + Seek> Iterator for Mp3Playback<R> {
 
 	type Item = Frame;
 

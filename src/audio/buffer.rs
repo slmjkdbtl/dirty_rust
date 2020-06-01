@@ -20,7 +20,7 @@ impl AudioBuffer {
 		return Ok(Self::from_source(src));
 	}
 
-	fn from_source(src: impl Source) -> Self {
+	pub fn from_source(src: impl Source) -> Self {
 
 		let sample_rate = src.sample_rate();
 		let frames = src.into_iter().collect::<Vec<Frame>>();

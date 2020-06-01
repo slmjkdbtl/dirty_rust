@@ -23,6 +23,7 @@ pub trait Camera {
 /// Perspective Camera
 #[derive(Clone, Debug)]
 pub struct PerspectiveCam {
+	pub up: Vec3,
 	pub dir: Vec3,
 	pub pos: Vec3,
 	pub fov: f32,
@@ -44,6 +45,12 @@ impl PerspectiveCam {
 
 	}
 
+	/// set roll angle
+	pub fn set_roll(&mut self, roll: f32) {
+		let xy = Vec2::from_angle(roll + f32::to_radians(90.0));
+		self.up = vec3!(xy.x, xy.y, 0.0);
+	}
+
 	/// set destination
 	pub fn set_dest(&mut self, l: Vec3) {
 		self.dir = (l - self.pos).unit();
@@ -57,6 +64,11 @@ impl PerspectiveCam {
 	/// get pitch angle
 	pub fn pitch(&self) -> f32 {
 		return self.dir.y.asin();
+	}
+
+	/// get roll angle
+	pub fn roll(&self) -> f32 {
+		return f32::atan2(self.up.y, self.up.x) - f32::to_radians(90.0);
 	}
 
 	/// get front dir
@@ -98,17 +110,15 @@ impl Camera for PerspectiveCam {
 
 	fn view(&self) -> Mat4 {
 
-		let eye = self.pos;
-		let up = vec3!(0, 1, 0);
 		let z = self.dir.unit();
-		let x = up.cross(z).unit();
+		let x = self.up.cross(z).unit();
 		let y = z.cross(x);
 
 		return mat4!(
 			x.x, y.x, z.x, 0.0,
 			x.y, y.y, z.y, 0.0,
 			x.z, y.z, z.z, 0.0,
-			-x.dot(eye), -y.dot(eye), -z.dot(eye), 1.0,
+			-x.dot(self.pos), -y.dot(self.pos), -z.dot(self.pos), 1.0,
 		);
 
 	}

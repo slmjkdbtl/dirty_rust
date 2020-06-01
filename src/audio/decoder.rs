@@ -6,9 +6,9 @@ use std::io::Seek;
 use super::*;
 
 pub(super) enum Decoder<R: Read + Seek> {
-	Wav(WavDecoder<R>),
-	Mp3(Mp3Decoder<R>),
-	Vorbis(VorbisDecoder<R>),
+	Wav(WavPlayback<R>),
+	Mp3(Mp3Playback<R>),
+	Vorbis(VorbisPlayback<R>),
 }
 
 impl<R: Read + Seek> Decoder<R> {
@@ -16,15 +16,15 @@ impl<R: Read + Seek> Decoder<R> {
 	pub fn new(mut reader: R) -> Result<Self> {
 
 		if is_vorbis(&mut reader)? {
-			return Ok(Self::Vorbis(VorbisDecoder::new(reader)?));
+			return Ok(Self::Vorbis(VorbisPlayback::new(reader)?));
 		}
 
 		if is_wav(&mut reader)? {
-			return Ok(Self::Wav(WavDecoder::new(reader)?));
+			return Ok(Self::Wav(WavPlayback::new(reader)?));
 		}
 
 		if is_mp3(&mut reader)? {
-			return Ok(Self::Mp3(Mp3Decoder::new(reader)?));
+			return Ok(Self::Mp3(Mp3Playback::new(reader)?));
 		}
 
 		return Err(format!("failed to decode audio"));

@@ -20,6 +20,7 @@ import!(wav);
 import!(mp3);
 import!(decoder);
 import!(buffer);
+import!(converter);
 export!(source);
 export!(types);
 export!(effect);
@@ -129,5 +130,11 @@ impl AddAssign for Frame {
 	fn add_assign(&mut self, other: Frame) {
 		*self = *self + other;
 	}
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Spec {
+	channel_count: u8,
+	sample_rate: u32,
 }
 

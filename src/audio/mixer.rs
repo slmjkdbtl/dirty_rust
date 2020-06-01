@@ -47,83 +47,8 @@ impl Default for Control {
 	}
 }
 
-pub struct SampleRateConverter {
-	src: Arc<Mutex<dyn Source + Send>>,
-	target: u32,
-	prev_frame: Option<Frame>,
-	next_frame: Option<Frame>,
-	pos: f32,
-	frame_pos: usize,
-}
-
-impl SampleRateConverter {
-	fn new(src: Arc<Mutex<dyn Source + Send>>, target: u32) -> Result<Self> {
-		return Ok(Self {
-			src: src,
-			target: target,
-			prev_frame: None,
-			next_frame: None,
-			pos: 0.0,
-			frame_pos: 0,
-		})
-	}
-	fn get_inner(&self) -> &Arc<Mutex<dyn Source + Send>> {
-		return &self.src;
-	}
-}
-
-impl Iterator for SampleRateConverter {
-
-	type Item = Frame;
-
-	fn next(&mut self) -> Option<Self::Item> {
-
-		let mut src = match self.src.lock() {
-			Ok(src) => src,
-			Err(_) => return None,
-		};
-
-		let sample_rate = src.sample_rate();
-
-		if self.target == sample_rate {
-			return src.next();
-		}
-
-		// TODO: bugged yo
-		let speed = sample_rate as f32 / self.target as f32;
-
-		self.pos += speed;
-
-		if self.pos > self.frame_pos as f32 {
-			let skip = self.pos as usize - self.frame_pos;
-			for _ in 0..skip {
-				src.next();
-			}
-			self.prev_frame = self.next_frame;
-			self.next_frame = src.next();
-
-			if self.next_frame.is_none() {
-				return None;
-			}
-
-			self.frame_pos += skip + 1;
-			let progress = self.pos - (self.frame_pos - 1) as f32;
-			let prev = self.prev_frame.unwrap_or_default();
-			let next = self.next_frame.unwrap_or_default();
-			return Some(prev + (next - prev) * progress);
-		} else {
-			let prev = self.prev_frame.unwrap_or_default();
-			let next = self.next_frame.unwrap_or_default();
-			let progress = self.pos - (self.frame_pos - 1) as f32;
-			return Some(prev + (next - prev) * progress);
-		}
-
-	}
-
-}
-
 struct SourceCtx {
-	src: SampleRateConverter,
+	src: Converter,
 	control: Arc<Control>,
 	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	done: bool,
@@ -132,16 +57,16 @@ struct SourceCtx {
 pub(super) struct Mixer {
 	sources: HashMap<SourceID, SourceCtx>,
 	last_id: SourceID,
-	sample_rate: u32,
+	spec: Spec,
 }
 
 impl Mixer {
 
-	pub fn new(sample_rate: u32) -> Self {
+	pub fn new(spec: Spec) -> Self {
 		return Self {
 			sources: hmap![],
 			last_id: 0,
-			sample_rate,
+			spec: spec,
 		};
 	}
 
@@ -150,7 +75,7 @@ impl Mixer {
 		let id = self.last_id;
 
 		self.sources.insert(id, SourceCtx {
-			src: SampleRateConverter::new(src, self.sample_rate)?,
+			src: Converter::new(src, self.spec)?,
 			control: Arc::new(Control::default()),
 			effects: vec![],
 			done: false,

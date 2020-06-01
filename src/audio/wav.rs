@@ -7,18 +7,18 @@ use std::io::SeekFrom;
 
 use super::*;
 
-pub struct WavDecoder<R: Read + Seek> {
+pub struct WavPlayback<R: Read + Seek> {
 	decoder: hound::WavReader<R>,
 	spec: hound::WavSpec,
 	duration: Duration,
 	channel_count: ChannelCount,
 }
 
-impl<R: Read + Seek> WavDecoder<R> {
+impl<R: Read + Seek> WavPlayback<R> {
 
-	pub fn new(data: R) -> Result<Self> {
+	pub fn new(reader: R) -> Result<Self> {
 
-		let wav = hound::WavReader::new(data)
+		let wav = hound::WavReader::new(reader)
 			.map_err(|_| format!("failed to parse wav"))?;
 		let spec = wav.spec();
 
@@ -57,7 +57,7 @@ impl<R: Read + Seek> WavDecoder<R> {
 
 }
 
-impl<R: Read + Seek> Source for WavDecoder<R> {
+impl<R: Read + Seek> Source for WavPlayback<R> {
 
 	fn sample_rate(&self) -> u32 {
 		return self.spec.sample_rate;
@@ -72,7 +72,7 @@ impl<R: Read + Seek> Source for WavDecoder<R> {
 
 }
 
-impl<R: Read + Seek> Iterator for WavDecoder<R> {
+impl<R: Read + Seek> Iterator for WavPlayback<R> {
 
 	type Item = Frame;
 

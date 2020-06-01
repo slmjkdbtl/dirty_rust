@@ -42,7 +42,13 @@ impl Audio {
 			.play_stream(stream_id)
 			.map_err(|_| format!("failed to start audio stream"))?;
 
-		let mixer = Arc::new(Mutex::new(Mixer::new(format.sample_rate.0)));
+		// TODO: support variable channel count
+		let spec = Spec {
+			sample_rate: format.sample_rate.0,
+			channel_count: 2,
+		};
+
+		let mixer = Arc::new(Mutex::new(Mixer::new(spec)));
 		let t_mixer = Arc::clone(&mixer);
 
 		thread::Builder::new()
