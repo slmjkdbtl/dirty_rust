@@ -223,12 +223,12 @@ pub fn sat2d(p1: &[Vec2], p2: &[Vec2]) -> (bool, Vec2) {
 
 	let project = |poly: &[Vec2], axis: Vec2| {
 
-		let mut min = axis.dot(poly[1]);
+		let mut min = Vec2::dot(axis, poly[1]);
 		let mut max = min;
 
 		for p in poly {
 
-			let proj = axis.dot(*p);
+			let proj = Vec2::dot(axis, *p);
 
 			if proj < min {
 				min = proj;
@@ -434,12 +434,12 @@ fn box_plane(b: BBox, p: Plane) -> bool {
 }
 
 pub fn sphere_plane(s: Sphere, p: Plane) -> bool {
-	return f32::abs( p.normal.dot( s.center ) + p.dist ) <= s.radius;
+	return f32::abs( Vec3::dot(p.normal, s.center) + p.dist ) <= s.radius;
 }
 
 pub fn ray_plane(r: Ray3, p: Plane) -> Option<Vec3> {
 
-	let t = -(r.origin.dot(p.normal) - p.dist) / r.dir.dot(p.normal);
+	let t = -(Vec3::dot(r.origin, p.normal) - p.dist) / Vec3::dot(r.dir, p.normal);
 
 	if t >= 0.0 {
 		return Some(r.at(t));

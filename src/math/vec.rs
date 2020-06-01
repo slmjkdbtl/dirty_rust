@@ -194,10 +194,6 @@ impl Vec2 {
 		return vec2!(f32::cos(angle), f32::sin(angle));
 	}
 
-	pub fn len(self) -> f32 {
-		return f32::sqrt(self.x * self.x + self.y * self.y);
-	}
-
 	pub fn unit(self) -> Self {
 		return self / self.len();
 	}
@@ -206,22 +202,30 @@ impl Vec2 {
 		return vec2!(self.y, -self.x);
 	}
 
-	pub fn dot(self, other: Self) -> f32 {
-		return self.x * other.x + self.y * other.y;
+	pub fn dot(p1: Self, p2: Self) -> f32 {
+		return p1.x * p2.x + p1.y * p2.y;
 	}
 
-	pub fn cross(self, other: Self) -> Vec3 {
-		return Vec3::cross(vec3!(self.x, self.y, 0), vec3!(other.x, other.y, 0));
+	pub fn cross(p1: Self, p2: Self) -> Vec3 {
+		return Vec3::cross(vec3!(p1.x, p1.y, 0), vec3!(p2.x, p2.y, 0));
 	}
 
-	pub fn angle(self, other: Self) -> f32 {
-		return f32::atan2(other.y - self.y, other.x - self.x);
+	pub fn angle(self) -> f32 {
+		return Vec2::angle_between(self, vec2!(0));
 	}
 
-	pub fn dist(self, other: Self) -> f32 {
+	pub fn angle_between(p1: Self, p2: Self) -> f32 {
+		return f32::atan2(p1.y - p2.y, p1.x - p2.x);
+	}
+
+	pub fn len(self) -> f32 {
+		return Vec2::dist(self, vec2!(0));
+	}
+
+	pub fn dist(p1: Self, p2: Self) -> f32 {
 		return f32::sqrt(
-			(self.x - other.x) * (self.x - other.x) +
-			(self.y - other.y) * (self.y - other.y)
+			(p1.x - p2.x) * (p1.x - p2.x) +
+			(p1.y - p2.y) * (p1.y - p2.y)
 		);
 	}
 
@@ -237,14 +241,14 @@ impl Vec2 {
 impl Vec3 {
 
 	pub fn len(self) -> f32 {
-		return f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
+		return Vec3::dist(self, vec3!(0));
 	}
 
-	pub fn dist(self, other: Self) -> f32 {
+	pub fn dist(p1: Self, p2: Self) -> f32 {
 		return f32::sqrt(
-			(self.x - other.x) * (self.x - other.x) +
-			(self.y - other.y) * (self.y - other.y) +
-			(self.z - other.z) * (self.z - other.z)
+			(p1.x - p2.x) * (p1.x - p2.x) +
+			(p1.y - p2.y) * (p1.y - p2.y) +
+			(p1.z - p2.z) * (p1.z - p2.z)
 		);
 	}
 
@@ -252,15 +256,15 @@ impl Vec3 {
 		return self / self.len();
 	}
 
-	pub fn dot(self, other: Self) -> f32 {
-		return self.x * other.x + self.y * other.y + self.z * other.z;
+	pub fn dot(p1: Self, p2: Self) -> f32 {
+		return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 	}
 
-	pub fn cross(self, other: Self) -> Self {
+	pub fn cross(p1: Self, p2: Self) -> Self {
 		return vec3!(
-			(self.y * other.z) - (self.z * other.y),
-			(self.z * other.x) - (self.x * other.z),
-			(self.x * other.y) - (self.y * other.x)
+			(p1.y * p2.z) - (p1.z * p2.y),
+			(p1.z * p2.x) - (p1.x * p2.z),
+			(p1.x * p2.y) - (p1.y * p2.x)
         );
 	}
 
@@ -346,11 +350,6 @@ impl Color {
 
 	pub fn darken(self, v: f32) -> Self {
 		return (self - rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
-	}
-
-	pub fn a(mut self, a: f32) -> Self {
-		self.a = a;
-		return self;
 	}
 
 	pub fn rgb(&self) -> Vec3 {

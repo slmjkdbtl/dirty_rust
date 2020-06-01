@@ -101,7 +101,7 @@ pub(super) fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u
 		let prev = verts.get(i - 1).copied().unwrap_or(verts[len - 1]);
 		let p = verts[i];
 		let next = verts.get(i + 1).copied().unwrap_or(verts[0]);
-		let angle = normalize_angle(p.angle(prev) - p.angle(next));
+		let angle = normalize_angle(Vec2::angle_between(prev, p) - Vec2::angle_between(next, p));
 		let dis = radius / f32::tan(angle / 2.0);
 
 		let p1 = p + (prev - p) * (dis / (prev - p).len());
@@ -109,7 +109,7 @@ pub(super) fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u
 
 		let center = p + (p1 - p) + (p2 - p);
 
-		let start_angle = center.angle(p1);
+		let start_angle = Vec2::angle_between(p1, center);
 		let end_angle = start_angle + angle;
 
 		let arc = arc_verts(radius, start_angle, end_angle, None)

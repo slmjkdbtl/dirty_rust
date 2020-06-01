@@ -242,7 +242,7 @@ impl Plane {
 	pub fn from_pts(p0: Vec3, p1: Vec3, p2: Vec3) -> Self {
 
 		let normal = Vec3::cross(p1 - p0, p1 - p2).unit();
-		let d = -p1.dot(normal);
+		let d = -Vec3::dot(p1, normal);
 
 		return Self::new(normal, d);
 

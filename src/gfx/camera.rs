@@ -83,12 +83,12 @@ impl PerspectiveCam {
 
 	/// get left dir
 	pub fn left(&self) -> Vec3 {
-		return -self.dir.cross(vec3!(0, 1, 0)).unit();
+		return -Vec3::cross(self.dir, vec3!(0, 1, 0)).unit();
 	}
 
 	/// get right dir
 	pub fn right(&self) -> Vec3 {
-		return self.dir.cross(vec3!(0, 1, 0)).unit();
+		return Vec3::cross(self.dir, vec3!(0, 1, 0)).unit();
 	}
 
 }
@@ -111,14 +111,14 @@ impl Camera for PerspectiveCam {
 	fn view(&self) -> Mat4 {
 
 		let z = self.dir.unit();
-		let x = self.up.cross(z).unit();
-		let y = z.cross(x);
+		let x = Vec3::cross(self.up, z).unit();
+		let y = Vec3::cross(z, x);
 
 		return mat4!(
 			x.x, y.x, z.x, 0.0,
 			x.y, y.y, z.y, 0.0,
 			x.z, y.z, z.z, 0.0,
-			-x.dot(self.pos), -y.dot(self.pos), -z.dot(self.pos), 1.0,
+			-Vec3::dot(x, self.pos), -Vec3::dot(y, self.pos), -Vec3::dot(z, self.pos), 1.0,
 		);
 
 	}

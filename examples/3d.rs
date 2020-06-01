@@ -50,7 +50,7 @@ impl State for Game {
 			model: model,
 			cam: gfx::PerspectiveCam {
 				fov: f32::to_radians(60.0),
-				up: vec3!(0, -1, 0),
+				up: vec3!(0, 1, 0),
 				aspect: d.gfx.width() as f32 / d.gfx.height() as f32,
 				near: 0.1,
 				far: 1024.0,
