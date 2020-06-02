@@ -6,7 +6,6 @@ use super::*;
 pub struct Rect {
 	p1: Vec2,
 	p2: Vec2,
-	radius: Option<f32>,
 	fill: Option<Color>,
 	stroke: Option<Stroke>,
 }
@@ -16,7 +15,6 @@ impl Rect {
 		return Self {
 			p1,
 			p2,
-			radius: None,
 			stroke: None,
 			fill: Some(rgba!(1)),
 		};
@@ -29,10 +27,6 @@ impl Rect {
 	}
 	pub fn from_rect(r: geom::Rect) -> Self {
 		return Self::from_pts(r.min, r.max);
-	}
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = Some(r);
-		return self
 	}
 	pub fn fill(mut self, c: Color) -> Self {
 		self.fill = Some(c);
@@ -97,7 +91,6 @@ impl Drawable for Rect {
 			pts: pts.to_vec(),
 			fill: self.fill,
 			stroke: self.stroke.clone(),
-			radius: self.radius,
 		};
 
 		ctx.draw(&poly)?;

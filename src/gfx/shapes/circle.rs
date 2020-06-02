@@ -6,10 +6,9 @@ use super::*;
 pub struct Circle {
 	center: Vec2,
 	radius: f32,
-	segments: Option<u32>,
+	segments: u32,
 	stroke: Option<Stroke>,
 	fill: Option<Color>,
-	range: (f32, f32),
 }
 
 impl Circle {
@@ -17,10 +16,9 @@ impl Circle {
 		return Self {
 			center,
 			radius,
-			segments: None,
+			segments: (radius.sqrt() * 6.0) as u32,
 			stroke: None,
 			fill: Some(rgba!(1)),
-			range: (0.0, 2.0 * PI),
 		};
 	}
 	pub fn fill(mut self, c: Color) -> Self {
@@ -62,11 +60,7 @@ impl Circle {
 		return self;
 	}
 	pub fn segments(mut self, s: u32) -> Self {
-		self.segments = Some(s);
-		return self
-	}
-	pub fn range(mut self, p1: f32, p2: f32) -> Self {
-		self.range = (p1, p2);
+		self.segments = s;
 		return self
 	}
 }
@@ -75,103 +69,24 @@ pub fn circle(center: Vec2, radius: f32) -> Circle {
 	return Circle::new(center, radius);
 }
 
-// TODO: is this correct?
-fn circle_segments(radius: f32) -> u32 {
-	return (radius.sqrt() * 6.0) as u32;
-}
-
-fn normalize_angle(angle: f32) -> f32 {
-	if angle < 0.0 {
-		return PI * 2.0 + angle;
-	} else {
-		return angle;
-	}
-}
-
-pub(super) fn rounded_poly_verts(verts: &[Vec2], radius: f32, segments: Option<u32>) -> Vec<Vec2> {
-
-	let segments = segments.unwrap_or(circle_segments(radius));
-	let segments = segments as usize;
-	let mut nv = Vec::with_capacity(segments);
-	let len = verts.len();
-
-	for i in 0..len {
-
-		// TODO: subtraction overflow
-		let prev = verts.get(i - 1).copied().unwrap_or(verts[len - 1]);
-		let p = verts[i];
-		let next = verts.get(i + 1).copied().unwrap_or(verts[0]);
-		let angle = normalize_angle(Vec2::angle_between(prev, p) - Vec2::angle_between(next, p));
-		let dis = radius / f32::tan(angle / 2.0);
-
-		let p1 = p + (prev - p) * (dis / (prev - p).len());
-		let p2 = p + (next - p) * (dis / (next - p).len());
-
-		let center = p + (p1 - p) + (p2 - p);
-
-		let start_angle = Vec2::angle_between(p1, center);
-		let end_angle = start_angle + angle;
-
-		let arc = arc_verts(radius, start_angle, end_angle, None)
-			.iter()
-			.map(|p| *p + center)
-			.collect::<Vec<Vec2>>()
-			;
-
-		nv.extend_from_slice(&arc);
-
-	}
-
-	return nv;
-
-}
-
-pub(super) fn arc_verts(radius: f32, start: f32, end: f32, segments: Option<u32>) -> Vec<Vec2> {
-
-	let (start, end) = if end < start {
-		(end, start)
-	} else {
-		(start, end)
-	};
-
-	let segments = segments.unwrap_or(f32::ceil(circle_segments(radius) as f32 * (end - start) / (PI * 2.0)) as u32);
-	let segments = segments as usize;
-	let step = (end - start) / segments as f32;
-	let mut verts = Vec::with_capacity(segments);
-
-	for i in 0..=segments {
-
-		let angle = start + i as f32 * step;
-		verts.push(Vec2::from_angle(angle) * radius);
-
-	}
-
-	return verts;
-
-}
-
 impl Drawable for Circle {
 
 	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
-		if self.radius < 0.0 {
+		if self.radius <= 0.0 {
 			return Ok(());
 		}
 
-		let p1 = self.range.0.max(0.0).min(PI * 2.0);
-		let p2 = self.range.1.max(0.0).min(PI * 2.0);
+		let step = PI * 2.0 / self.segments as f32;
 
-		let mut pts = arc_verts(self.radius, p1, p2, self.segments);
-
-		if p1 != 0.0 || p2 != PI * 2.0 {
-			pts.push(self.center);
-		}
+		let pts = (0..self.segments)
+			.map(|i| Vec2::from_angle(i as f32 * step) * self.radius)
+			.collect();
 
 		let poly = Polygon {
-			pts,
+			pts: pts,
 			fill: self.fill,
 			stroke: self.stroke.clone(),
-			radius: None,
 		};
 
 		ctx.draw_t(

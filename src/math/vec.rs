@@ -368,14 +368,12 @@ impl Color {
 	}
 
 	pub fn as_u8(&self) -> [u8; 4] {
-
 		return [
 			(self.r * 255.0) as u8,
 			(self.g * 255.0) as u8,
 			(self.b * 255.0) as u8,
 			(self.a * 255.0) as u8,
 		];
-
 	}
 
 	pub fn brightness(&self) -> f32 {
@@ -437,17 +435,6 @@ fn srgb_to_linear(v: f32) -> f32 {
 		return v / 12.92;
 	} else {
 		return f32::powf((v + 0.055) / 1.055, 2.4);
-	}
-}
-
-impl From<Color> for [u8; 4] {
-	fn from(c: Color) -> [u8; 4] {
-		return [
-			(c.r * 255.0) as u8,
-			(c.g * 255.0) as u8,
-			(c.b * 255.0) as u8,
-			(c.a * 255.0) as u8,
-		];
 	}
 }
 

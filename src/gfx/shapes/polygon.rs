@@ -7,7 +7,6 @@ pub struct Polygon {
 	pub(super) pts: Vec<Vec2>,
 	pub(super) fill: Option<Color>,
 	pub(super) stroke: Option<Stroke>,
-	pub(super) radius: Option<f32>,
 }
 
 impl Polygon {
@@ -16,7 +15,6 @@ impl Polygon {
 			pts: pts.to_vec(),
 			fill: Some(rgba!()),
 			stroke: None,
-			radius: None,
 		};
 	}
 	pub fn fill(mut self, c: Color) -> Self {
@@ -57,10 +55,6 @@ impl Polygon {
 		}
 		return self;
 	}
-	pub fn radius(mut self, r: f32) -> Self {
-		self.radius = Some(r);
-		return self
-	}
 }
 
 pub fn polygon(pts: &[Vec2]) -> Polygon {
@@ -75,20 +69,12 @@ impl Drawable for Polygon {
 			return Ok(());
 		}
 
-		use std::borrow::Cow;
-
-		let pts = if let Some(radius) = self.radius {
-			Cow::Owned(rounded_poly_verts(&self.pts, radius, None))
-		} else {
-			Cow::Borrowed(&self.pts)
-		};
-
 		if let Some(color) = self.fill {
 
-			let mut verts = Vec::with_capacity(pts.len());
-			let mut indices = Vec::with_capacity((pts.len() - 2) * 3);
+			let mut verts = Vec::with_capacity(self.pts.len());
+			let mut indices = Vec::with_capacity((self.pts.len() - 2) * 3);
 
-			for (i, p) in pts.iter().enumerate() {
+			for (i, p) in self.pts.iter().enumerate() {
 
 				verts.push(Vertex {
 					pos: ctx.transform * vec3!(p.x, p.y, 1.0),
@@ -97,6 +83,7 @@ impl Drawable for Polygon {
 					color,
 				});
 
+				// TODO: questionable triangulation
 				if i >= 2 {
 					indices.extend_from_slice(&[0, (i as u32 - 1), i as u32]);
 				}
@@ -110,10 +97,10 @@ impl Drawable for Polygon {
 		if let Some(stroke) = &self.stroke {
 
 			// TODO: line join
-			for i in 0..pts.len() {
+			for i in 0..self.pts.len() {
 
-				let p1 = pts[i];
-				let p2 = pts[(i + 1) % pts.len()];
+				let p1 = self.pts[i];
+				let p2 = self.pts[(i + 1) % self.pts.len()];
 
 				use LineJoin::*;
 

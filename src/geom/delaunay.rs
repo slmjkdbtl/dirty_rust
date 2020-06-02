@@ -1,7 +1,9 @@
 // https://github.com/mourner/delaunator-rs/
 
-/// Near-duplicate points (where both `x` and `y` only differ within this value)
-/// will not be included in the triangulation for robustness.
+// TODO: figure out this
+
+// Near-duplicate points (where both `x` and `y` only differ within this value)
+// will not be included in the triangulation for robustness.
 pub const EPSILON: f32 = f32::EPSILON * 2.0;
 
 use super::*;
@@ -66,12 +68,12 @@ impl Vec2 {
 
 }
 
-/// Represents the area outside of the triangulation.
-/// Halfedges on the convex hull (which don't have an adjacent halfedge)
-/// will have this value.
+// Represents the area outside of the triangulation.
+// Halfedges on the convex hull (which don't have an adjacent halfedge)
+// will have this value.
 pub const EMPTY: usize = usize::max_value();
 
-/// Next halfedge in a triangle.
+// Next halfedge in a triangle.
 pub fn next_halfedge(i: usize) -> usize {
 	return if i % 3 == 2 {
 		i - 2
@@ -80,7 +82,7 @@ pub fn next_halfedge(i: usize) -> usize {
 	};
 }
 
-/// Previous halfedge in a triangle.
+// Previous halfedge in a triangle.
 pub fn prev_halfedge(i: usize) -> usize {
 	return if i % 3 == 0 {
 		i + 2
@@ -89,21 +91,21 @@ pub fn prev_halfedge(i: usize) -> usize {
 	};
 }
 
-/// Result of the Delaunay triangulation.
+// Result of the Delaunay triangulation.
 pub struct Triangulation {
-	/// A vector of point indices where each triple represents a Delaunay triangle.
-	/// All triangles are directed counter-clockwise.
+	// A vector of point indices where each triple represents a Delaunay triangle.
+	// All triangles are directed counter-clockwise.
 	pub triangles: Vec<usize>,
 
-	/// A vector of adjacent halfedge indices that allows traversing the triangulation graph.
-	///
-	/// `i`-th half-edge in the array corresponds to vertex `triangles[i]`
-	/// the half-edge is coming from. `halfedges[i]` is the index of a twin half-edge
-	/// in an adjacent triangle (or `EMPTY` for outer half-edges on the convex hull).
+	// A vector of adjacent halfedge indices that allows traversing the triangulation graph.
+	//
+	// `i`-th half-edge in the array corresponds to vertex `triangles[i]`
+	// the half-edge is coming from. `halfedges[i]` is the index of a twin half-edge
+	// in an adjacent triangle (or `EMPTY` for outer half-edges on the convex hull).
 	pub halfedges: Vec<usize>,
 
-	/// A vector of indices that reference points on the convex hull of the triangulation,
-	/// counter-clockwise.
+	// A vector of indices that reference points on the convex hull of the triangulation,
+	// counter-clockwise.
 	pub hull: Vec<usize>,
 }
 
@@ -121,7 +123,7 @@ impl Triangulation {
 
 	}
 
-	/// The number of triangles in the triangulation.
+	// The number of triangles in the triangulation.
 	pub fn len(&self) -> usize {
 		return (self.triangles.len() / 3);
 	}
@@ -420,8 +422,8 @@ fn find_seed_triangle(points: &[Vec2]) -> Option<(usize, usize, usize)> {
 
 }
 
-/// Triangulate a set of 2D points.
-/// Returns `None` if no triangulation exists for the input (e.g. all points are collinear).
+// Triangulate a set of 2D points.
+// Returns `None` if no triangulation exists for the input (e.g. all points are collinear).
 pub fn triangulate(points: &[Vec2]) -> Option<Triangulation> {
 
 	let n = points.len();
