@@ -6,11 +6,12 @@ use std::path::PathBuf;
 use std::collections::HashSet;
 
 use once_cell::sync::Lazy;
-pub type GamepadID = usize;
-pub type TouchID = usize;
 
 use crate::*;
 use math::*;
+
+pub type GamepadID = usize;
+pub type TouchID = usize;
 
 pub(crate) static INVALID_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 	return hset![
