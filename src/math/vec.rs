@@ -1,11 +1,10 @@
 // wengwengweng
 
 use std::fmt;
-use std::ops;
+use std::ops::*;
 
 use serde::Serialize;
 use serde::Deserialize;
-use derive_more::*;
 
 use super::*;
 
@@ -52,7 +51,7 @@ macro_rules! gen_vec {
 		pub use $sname;
 
 		#[allow(missing_docs)]
-		#[derive(Copy, Clone, PartialEq, Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg, From, Into, Serialize, Deserialize)]
+		#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 		pub struct $name {
 			$(
 			pub $member: $type
@@ -77,45 +76,102 @@ macro_rules! gen_vec {
 
 		}
 
-		impl ops::Mul<$name> for $name {
-
+		impl Add for $name {
 			type Output = Self;
+			fn add(self, other: Self) -> Self {
+				return Self {
+					$($member: self.$member + other.$member),+
+				};
+			}
+		}
 
+		impl AddAssign for $name {
+			fn add_assign(&mut self, other: Self) {
+				*self = *self + other;
+			}
+		}
+
+		impl Sub for $name {
+			type Output = Self;
+			fn sub(self, other: Self) -> Self {
+				return Self {
+					$($member: self.$member - other.$member),+
+				};
+			}
+		}
+
+		impl SubAssign for $name {
+			fn sub_assign(&mut self, other: Self) {
+				*self = *self - other;
+			}
+		}
+
+		impl Mul for $name {
+			type Output = Self;
 			fn mul(self, other: Self) -> Self {
 				return Self {
 					$($member: self.$member * other.$member),+
 				};
 			}
-
 		}
 
-		impl ops::Mul<$name> for $type {
-
+		impl Mul<$type> for $name {
 			type Output = $name;
-
-			fn mul(self, v: $name) -> $name {
-				return $name {
-					$($member: v.$member * self),+
+			fn mul(self, s: $type) -> Self {
+				return Self {
+					$($member: self.$member * s),+
 				};
 			}
-
 		}
 
-		impl ops::Div<$name> for $name {
+		impl MulAssign for $name {
+			fn mul_assign(&mut self, other: Self) {
+				*self = *self * other;
+			}
+		}
 
+		impl MulAssign<$type> for $name {
+			fn mul_assign(&mut self, s: $type) {
+				*self = *self * s;
+			}
+		}
+
+		impl Div for $name {
 			type Output = Self;
-
 			fn div(self, other: Self) -> Self {
 				return Self {
 					$($member: self.$member / other.$member),+
 				};
 			}
-
 		}
 
-		impl Into<[$type; $count]> for $name {
-			fn into(self) -> [$type; $count] {
-				return self.as_arr();
+		impl Div<$type> for $name {
+			type Output = Self;
+			fn div(self, s: $type) -> Self {
+				return Self {
+					$($member: self.$member / s),+
+				};
+			}
+		}
+
+		impl DivAssign for $name {
+			fn div_assign(&mut self, other: Self) {
+				*self = *self / other;
+			}
+		}
+
+		impl DivAssign<$type> for $name {
+			fn div_assign(&mut self, s: $type) {
+				*self = *self / s;
+			}
+		}
+
+		impl Neg for $name {
+			type Output = Self;
+			fn neg(self) -> Self {
+				return Self {
+					$($member: -self.$member),+
+				};
 			}
 		}
 

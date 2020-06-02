@@ -176,7 +176,7 @@ impl TruetypeFont {
 				nbitmap.extend_from_slice(&[255, 255, 255, b]);
 			}
 
-			let (mut x, mut y) = self.cur_pt.into();
+			let (mut x, mut y) = (self.cur_pt.x, self.cur_pt.y);
 
 			if x + w >= tw {
 				x = 0;
