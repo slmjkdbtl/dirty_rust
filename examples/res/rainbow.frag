@@ -57,10 +57,6 @@ vec3 hsl2rgb(vec3 hsl) {
 
 }
 
-vec3 hsl2rgb(float h, float s, float l) {
-	return hsl2rgb(vec3(h, s, l));
-}
-
 vec4 frag() {
 
 	float pos = v_pos.x / u_size + v_pos.y / u_size + v_pos.z / u_size;
@@ -68,7 +64,7 @@ vec4 frag() {
 	float s = 1.0;
 	float l = 0.5 + pow(sin(v_pos.x * 3.0 + v_pos.y * 0.5 + u_time), 2.0) * 0.3;
 	float n = (v_normal.x + v_normal.y + v_normal.z) / 3.0;
-	vec4 c = vec4(hsl2rgb(h,s,l), 1);
+	vec4 c = vec4(hsl2rgb(vec3(h, s, l)), 1);
 	c = mix(c, vec4(vec3(n), 1.0), 0.4);
 
 	return c;

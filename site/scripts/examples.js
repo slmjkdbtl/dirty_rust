@@ -1,7 +1,7 @@
 // wengwengweng
 
 const list = [
-	"raw",
+	"tri",
 	"sprite",
 	"shader",
 	"model",

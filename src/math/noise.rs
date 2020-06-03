@@ -1,4 +1,4 @@
 // wengwengweng
 
-
+pub struct PerlinNoise;
 

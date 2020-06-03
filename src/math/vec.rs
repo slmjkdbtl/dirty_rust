@@ -367,6 +367,94 @@ impl Color {
 
 	}
 
+// 	pub fn from_hsl(h: f32, s: f32, l: f32) -> Self {
+// 	}
+
+	pub fn to_hsl(&self) -> (f32, f32, f32) {
+
+		let cmax = self.r.max(self.g).max(self.b);
+		let cmin = self.r.min(self.g).min(self.b);
+		let delta = cmax - cmin;
+		let l = (cmax + cmin) / 2.0;
+
+		if delta == 0.0 {
+			return (0.0, 0.0, l);
+		}
+
+		let h = if cmax == self.r {
+			(self.g - self.b) / delta % 6.0
+		} else if cmax == self.g {
+			(self.b - self.r) / delta + 2.0
+		} else if cmax == self.b {
+			(self.r - self.g) / delta + 4.0
+		} else {
+			0.0
+		} / 6.0;
+
+		let h = if h < 0.0 {
+			1.0 + h
+		} else {
+			h
+		};
+
+		let s = delta / (1.0 - (2.0 * l - 1.0).abs());
+
+		return (h, s, l);
+
+	}
+
+	pub fn red(&self) -> f32 {
+		return self.r;
+	}
+
+	pub fn set_red(&mut self, r: f32) {
+		self.r = r.max(0.0).min(1.0);
+	}
+
+	pub fn green(&self) -> f32 {
+		return self.g;
+	}
+
+	pub fn set_green(&mut self, g: f32) {
+		self.g = g.max(0.0).min(1.0);
+	}
+
+	pub fn blue(&self) -> f32 {
+		return self.b;
+	}
+
+	pub fn set_blue(&mut self, b: f32) {
+		self.b = b.max(0.0).min(1.0);
+	}
+
+	pub fn alpha(&self) -> f32 {
+		return self.a;
+	}
+
+	pub fn set_alpha(&mut self, a: f32) {
+		self.a = a.max(0.0).min(1.0);
+	}
+
+	pub fn hue(&self) -> f32 {
+		return self.to_hsl().0;
+	}
+
+	pub fn saturation(&self) -> f32 {
+		return self.to_hsl().1;
+	}
+
+	pub fn lightness(&self) -> f32 {
+		return self.to_hsl().2;
+	}
+
+	pub fn brighten(self, v: f32) -> Self {
+		return (self + rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
+	}
+
+	pub fn darken(self, v: f32) -> Self {
+		return (self - rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
+	}
+
 	pub fn as_u8(&self) -> [u8; 4] {
 		return [
 			(self.r * 255.0) as u8,
@@ -387,14 +475,6 @@ impl Color {
 			self.b.max(c1.b).min(c2.b),
 			self.a.max(c1.a).min(c2.a),
 		);
-	}
-
-	pub fn brighten(self, v: f32) -> Self {
-		return (self + rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
-	}
-
-	pub fn darken(self, v: f32) -> Self {
-		return (self - rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
 	}
 
 	pub fn rgb(&self) -> Vec3 {

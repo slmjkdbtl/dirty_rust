@@ -25,7 +25,7 @@ build-web example:
 
 build-web-all:
 	rm -rf site/examples/*
-	for e in raw sprite shader model 3d canvas input mask audio data; do \
+	for e in tri sprite shader model 3d canvas input mask audio data; do \
 		just build-web $e; \
 		done
 
