@@ -148,6 +148,29 @@ macro_rules! llist {
 	}
 }
 
+#[macro_export]
+macro_rules! hash {
+
+	($s:expr) => {{
+
+		use std::hash::Hash;
+		use std::hash::Hasher;
+
+		let mut _hasher = std::collections::hash_map::DefaultHasher::new();
+
+		$s.hash(&mut _hasher);
+		_hasher.finish()
+
+	}};
+
+	($($s:expr),*) => {{
+		let mut _hash: u128 = 0;
+		$(_hash += $crate::hash!($s) as u128;)*
+		$crate::hash!(_hash)
+	}};
+
+}
+
 /// simple wrapper for panic hook
 pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&panic::Location>) + Send + Sync>(f: F) {
 

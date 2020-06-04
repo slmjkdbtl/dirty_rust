@@ -77,7 +77,7 @@ impl Drawable for Polygon {
 			for (i, p) in self.pts.iter().enumerate() {
 
 				verts.push(Vertex {
-					pos: ctx.transform * vec3!(p.x, p.y, 1.0),
+					pos: ctx.transform * vec3!(p.x, p.y, 0.0),
 					uv: vec2!(0),
 					normal: vec3!(0, 0, 1),
 					color,

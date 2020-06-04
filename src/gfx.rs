@@ -157,16 +157,16 @@ use crate::*;
 use math::*;
 use window::*;
 
+use gltypes::*;
+
+pub use gltypes::Surface;
+pub use gltypes::Primitive;
+
 pub(self) type BufferID = <glow::Context as HasContext>::Buffer;
 pub(self) type ProgramID = <glow::Context as HasContext>::Program;
 pub(self) type TextureID = <glow::Context as HasContext>::Texture;
 pub(self) type FramebufferID = <glow::Context as HasContext>::Framebuffer;
 pub(self) type RenderbufferID = <glow::Context as HasContext>::Renderbuffer;
-
-use gltypes::*;
-
-pub use gltypes::Surface;
-pub use gltypes::Primitive;
 
 const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
@@ -332,6 +332,7 @@ impl Gfx {
 		return p / 0.5 / vec2!(self.width, self.height);
 	}
 
+	// TODO: alias this closure type
 	pub fn push_t(&mut self, t: Mat4, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 
 		let ot = self.transform;
@@ -515,6 +516,20 @@ impl Gfx {
 	pub fn use_default_cam(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
 		let cam = self.default_cam();
 		return self.use_cam(&cam, f);
+	}
+
+	pub fn no_depth_write(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+
+		unsafe {
+			self.flush();
+			self.gl.depth_mask(false);
+			f(self)?;
+			self.flush();
+			self.gl.depth_mask(true);
+		}
+
+		return Ok(());
+
 	}
 
 	pub fn transform(&self) -> Mat4 {

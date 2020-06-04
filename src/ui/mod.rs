@@ -2,6 +2,9 @@
 
 //! A Simple Immediate Mode GUI Lib
 
+use std::any::TypeId;
+use std::collections::HashMap;
+
 use crate::*;
 use math::*;
 use gfx::shapes;
@@ -16,9 +19,7 @@ export!(checkbox);
 export!(sep);
 export!(select);
 
-use std::collections::HashMap;
-
-pub type ID = &'static str;
+pub type ID = u64;
 
 pub struct UI {
 	windows: HashMap<ID, Window>,
@@ -60,7 +61,7 @@ impl UI {
 
 			MouseMove(_) => {
 				if let Some((id, offset)) = self.draggin {
-					if let Some(window) = self.windows.get_mut(id) {
+					if let Some(window) = self.windows.get_mut(&id) {
 						window.pos = mpos + offset;
 						has_event = true;
 					}
@@ -74,7 +75,7 @@ impl UI {
 					Mouse::Left => {
 
 						if self.draggin.is_none() {
-							let mut temp = false;
+
 							// TODO: windows should be sorted
 							for (id, window) in &self.windows {
 
@@ -86,13 +87,12 @@ impl UI {
 								);
 
 								if col::intersect2d(mpos, bar) {
-									self.draggin = Some((id, window.pos - mpos));
-									temp = true;
+									self.draggin = Some((*id, window.pos - mpos));
+									has_event = true;
 									break;
 								}
 
 							}
-							has_event = temp;
 
 						}
 
@@ -105,14 +105,10 @@ impl UI {
 			},
 
 			MouseRelease(m) => {
-
 				match m {
-
 					Mouse::Left => self.draggin = None,
 					_ => {},
-
 				}
-
 			},
 
 			_ => {},
@@ -133,7 +129,9 @@ impl UI {
 		f: impl FnOnce(&mut Ctx, &mut WidgetManager) -> Result<()>,
 	) -> Result<()> {
 
-		let window = self.windows.entry(title).or_insert(Window {
+		let window = self.windows
+			.entry(hash!(title))
+			.or_insert(Window {
 			title,
 			pos,
 			width: w,
@@ -285,6 +283,7 @@ impl<'a> WidgetManager<'a> {
 
 		let mut height = 0.0;
 		let val;
+		let id = hash!(TypeId::of::<W>(), id);
 
 		let w = self.widgets
 			.entry(id)
@@ -321,25 +320,25 @@ impl<'a> WidgetManager<'a> {
 	}
 
 	pub fn input(&mut self, d: &mut Ctx, prompt: &'static str) -> Result<String> {
-		return self.widget(d, prompt, || Input::new(prompt), |i| {
+		return self.widget(d, hash!(prompt), || Input::new(prompt), |i| {
 			return i.text();
 		});
 	}
 
 	pub fn slider(&mut self, d: &mut Ctx, prompt: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
-		return self.widget(d, prompt, || Slider::new(prompt, val, min, max), |i| {
+		return self.widget(d, hash!(prompt), || Slider::new(prompt, val, min, max), |i| {
 			return i.value();
 		});
 	}
 
 	pub fn button(&mut self, d: &mut Ctx, text: &'static str) -> Result<bool> {
-		return self.widget(d, text, || Button::new(text), |i| {
+		return self.widget(d, hash!(text), || Button::new(text), |i| {
 			return i.clicked();
 		});
 	}
 
 	pub fn checkbox(&mut self, d: &mut Ctx, prompt: &'static str, b: bool) -> Result<bool> {
-		return self.widget(d, prompt, || CheckBox::new(prompt, b), |i| {
+		return self.widget(d, hash!(prompt), || CheckBox::new(prompt, b), |i| {
 			return i.checked();
 		});
 	}
@@ -349,7 +348,7 @@ impl<'a> WidgetManager<'a> {
 	}
 
 	pub fn select(&mut self, d: &mut Ctx, prompt: &'static str, options: &[&str], i: usize) -> Result<usize> {
-		return self.widget(d, prompt, || Select::new(prompt, options, i), |i| {
+		return self.widget(d, hash!(prompt), || Select::new(prompt, options, i), |i| {
 			return i.selected();
 		});
 	}
