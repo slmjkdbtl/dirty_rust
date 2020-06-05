@@ -24,9 +24,6 @@ impl Audio {
 			ctx: Rc::new(ctx),
 		});
 	}
-	pub fn sample_rate(&self) -> u32 {
-		return SAMPLE_RATE;
-	}
 }
 
 /// Buffered Sound (mainly for short sound effects)

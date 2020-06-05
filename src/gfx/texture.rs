@@ -5,9 +5,6 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
-pub use gltypes::WrapMode;
-pub use gltypes::FilterMode;
-
 /// 2D Texture
 #[derive(Clone)]
 pub struct Texture {

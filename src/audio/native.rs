@@ -28,8 +28,8 @@ impl Audio {
 			.map_err(|_| format!("failed to get default audio output format"))?;
 
 		let format = cpal::Format {
-			channels: CHANNEL_COUNT.to_cpal(),
-			sample_rate: cpal::SampleRate(SAMPLE_RATE),
+			channels: SPEC.channel_count,
+			sample_rate: cpal::SampleRate(SPEC.sample_rate),
 			data_type: format.data_type,
 		};
 
@@ -42,13 +42,7 @@ impl Audio {
 			.play_stream(stream_id)
 			.map_err(|_| format!("failed to start audio stream"))?;
 
-		// TODO: support variable channel count
-		let spec = Spec {
-			sample_rate: format.sample_rate.0,
-			channel_count: 2,
-		};
-
-		let mixer = Arc::new(Mutex::new(Mixer::new(spec)));
+		let mixer = Arc::new(Mutex::new(Mixer::new(SPEC)));
 		let t_mixer = Arc::clone(&mixer);
 
 		thread::Builder::new()
@@ -115,10 +109,6 @@ impl Audio {
 
 	pub(super) fn mixer(&self) -> &Arc<Mutex<Mixer>> {
 		return &self.mixer;
-	}
-
-	pub fn sample_rate(&self) -> u32 {
-		return SAMPLE_RATE;
 	}
 
 	pub fn play<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) -> Result<()> {

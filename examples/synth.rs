@@ -83,7 +83,7 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let synth = Arc::new(Mutex::new(BasicSynth::new(&d.audio)));
+		let synth = Arc::new(Mutex::new(BasicSynth::new()));
 
 		#[cfg(not(web))]
 		d.audio.play(Arc::clone(&synth))?;

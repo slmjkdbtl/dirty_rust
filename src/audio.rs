@@ -38,8 +38,10 @@ export!(web);
 pub mod music;
 pub mod synth;
 
-const SAMPLE_RATE: u32 = 44100;
-const CHANNEL_COUNT: ChannelCount = ChannelCount::Two;
+pub const SPEC: Spec = Spec {
+	sample_rate: 44100,
+	channel_count: 2,
+};
 
 /// Represents A Frame in Audio
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -134,7 +136,7 @@ impl AddAssign for Frame {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Spec {
-	channel_count: u8,
+	channel_count: u16,
 	sample_rate: u32,
 }
 

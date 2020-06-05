@@ -16,14 +16,14 @@ pub struct BasicSynth {
 
 impl BasicSynth {
 
-	pub fn new(ctx: &Audio) -> Self {
+	pub fn new() -> Self {
 		return BasicSynth {
 			volume: 1.0,
 			notes: hmap![],
 			last_time: 0.0,
-			buf: VecDeque::with_capacity(100),
+			buf: VecDeque::with_capacity(120),
 			clock: 0.0,
-			sample_rate: ctx.sample_rate(),
+			sample_rate: SPEC.sample_rate,
 		};
 	}
 

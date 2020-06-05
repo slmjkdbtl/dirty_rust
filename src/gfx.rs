@@ -130,12 +130,12 @@
 
 // TODO: major cleaning
 
-mod gltypes;
 import!(vbuf);
 import!(ibuf);
 import!(pipeline);
 import!(renderer);
 
+export!(types);
 export!(desc);
 export!(mesh);
 export!(texture);
@@ -157,10 +157,10 @@ use crate::*;
 use math::*;
 use window::*;
 
-use gltypes::*;
+use types::*;
 
-pub use gltypes::Surface;
-pub use gltypes::Primitive;
+pub use types::Surface;
+pub use types::Primitive;
 
 pub(self) type BufferID = <glow::Context as HasContext>::Buffer;
 pub(self) type ProgramID = <glow::Context as HasContext>::Program;
@@ -224,7 +224,7 @@ impl Gfx {
 
 		let gl = window.gl();
 
-		use gltypes::*;
+		use types::*;
 
 		unsafe {
 
@@ -233,6 +233,7 @@ impl Gfx {
 			gl.blend_func(BlendFac::SrcAlpha.into(), BlendFac::OneMinusSrcAlpha.into());
 			gl.depth_func(Cmp::LessOrEqual.into());
 
+			// TODO: cull face doesn't work with some of the default geoms
 			if conf.cull_face {
 				gl.enable(Capability::CullFace.into());
 				gl.cull_face(Face::Back.into());
@@ -320,20 +321,22 @@ impl Gfx {
 
 	}
 
-	pub fn coord(&self, orig: gfx::Origin) -> Vec2 {
-		return orig.as_pt() / 2.0 * vec2!(self.width, self.height);
+	pub fn draw(&mut self, shape: &impl Drawable) -> Result<()> {
+		return shape.draw(self);
 	}
 
-	pub fn clip_to_screen(&self, p: Vec2) -> Vec2 {
-		return p * vec2!(self.width, self.height) * 0.5;
-	}
-
-	pub fn screen_to_clip(&self, p: Vec2) -> Vec2 {
-		return p / 0.5 / vec2!(self.width, self.height);
+	pub fn draw_t(&mut self, t: Mat4, shape: &impl Drawable) -> Result<()> {
+		return self.push_t(t, |ctx| {
+			return ctx.draw(shape);
+		});
 	}
 
 	// TODO: alias this closure type
-	pub fn push_t(&mut self, t: Mat4, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn push_t(
+		&mut self,
+		t: Mat4,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		let ot = self.transform;
 
@@ -345,7 +348,10 @@ impl Gfx {
 
 	}
 
-	pub fn reset_t(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn reset_t(
+		&mut self,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		let ot = self.transform;
 
@@ -357,18 +363,12 @@ impl Gfx {
 
 	}
 
-	pub fn draw(&mut self, shape: &impl Drawable) -> Result<()> {
-		return shape.draw(self);
-	}
-
-	pub fn draw_t(&mut self, t: Mat4, shape: &impl Drawable) -> Result<()> {
-		return self.push_t(t, |ctx| {
-			return ctx.draw(shape);
-		});
-	}
-
 	// TODO: viewport 2x scaled with no hidpi
-	pub fn draw_on(&mut self, canvas: &Canvas, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_on(
+		&mut self,
+		canvas: &Canvas,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		if self.cur_canvas.is_some() {
 			return Err(format!("cannot use canvas inside a canvas"));
@@ -428,7 +428,12 @@ impl Gfx {
 
 	}
 
-	pub fn draw_with<U: CustomUniform>(&mut self, shader: &Shader<U>, uniform: &U, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn draw_with<U: CustomUniform>(
+		&mut self,
+		shader: &Shader<U>,
+		uniform: &U,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		let uniforms = uniform.values()
 			.into_iter()
@@ -450,26 +455,30 @@ impl Gfx {
 
 	}
 
-	// TODO: learn more about stencil
-	pub fn draw_masked(&mut self, mask: impl FnOnce(&mut Self) -> Result<()>, draw: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
-
-		self.flush();
+	pub fn draw_masked_ex(
+		&mut self,
+		s1: Stencil,
+		f1: impl FnOnce(&mut Self) -> Result<()>,
+		s2: Stencil,
+		f2: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		unsafe {
 
+			self.flush();
 			self.gl.enable(Capability::StencilTest.into());
 			self.gl.clear(Surface::Stencil.into());
 
-			self.gl.stencil_func(Cmp::Never.into(), 1, 0xff);
-			self.gl.stencil_op(StencilOp::Replace.into(), StencilOp::Replace.into(), StencilOp::Replace.into());
-
-			mask(self)?;
+			// 1
+			self.gl.stencil_func(s1.func.into(), 1, 0xff);
+			self.gl.stencil_op(s1.sfail.into(), s1.dpfail.into(), s1.dppass.into());
+			f1(self)?;
 			self.flush();
 
-			self.gl.stencil_func(Cmp::Equal.into(), 1, 0xff);
-			self.gl.stencil_op(StencilOp::Keep.into(), StencilOp::Keep.into(), StencilOp::Keep.into());
-
-			draw(self)?;
+			// 2
+			self.gl.stencil_func(s2.func.into(), 1, 0xff);
+			self.gl.stencil_op(s2.sfail.into(), s2.dpfail.into(), s2.dppass.into());
+			f2(self)?;
 			self.flush();
 
 			self.gl.disable(Capability::StencilTest.into());
@@ -477,10 +486,41 @@ impl Gfx {
 		}
 
 		return Ok(());
+	}
+
+	// TODO: learn more about stencil
+	pub fn draw_masked(
+		&mut self,
+		mask: impl FnOnce(&mut Self) -> Result<()>,
+		draw: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
+
+		self.draw_masked_ex(
+			Stencil {
+				func: Cmp::Never,
+				sfail: StencilOp::Replace,
+				dpfail: StencilOp::Replace,
+				dppass: StencilOp::Replace,
+			},
+			mask,
+			Stencil {
+				func: Cmp::Equal,
+				sfail: StencilOp::Keep,
+				dpfail: StencilOp::Keep,
+				dppass: StencilOp::Keep,
+			},
+			draw,
+		)?;
+
+		return Ok(());
 
 	}
 
-	pub fn use_blend(&mut self, b: Blend, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn use_blend(
+		&mut self,
+		b: Blend,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		let (dsrc, ddest) = Blend::Alpha.to_gl();
 		let (src, dest) = b.to_gl();
@@ -497,7 +537,11 @@ impl Gfx {
 
 	}
 
-	pub fn use_cam(&mut self, cam: &dyn Camera, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn use_cam(
+		&mut self,
+		cam: &dyn Camera,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		let oview = self.view;
 		let oproj = self.proj;
@@ -513,12 +557,18 @@ impl Gfx {
 
 	}
 
-	pub fn use_default_cam(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn use_default_cam(
+		&mut self,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 		let cam = self.default_cam();
 		return self.use_cam(&cam, f);
 	}
 
-	pub fn no_depth_write(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
+	pub fn no_depth_write(
+		&mut self,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
 
 		unsafe {
 			self.flush();
@@ -532,8 +582,37 @@ impl Gfx {
 
 	}
 
+	pub fn no_depth_test(
+		&mut self,
+		f: impl FnOnce(&mut Self) -> Result<()>,
+	) -> Result<()> {
+
+		unsafe {
+			self.flush();
+			self.gl.disable(Capability::DepthTest.into());
+			f(self)?;
+			self.flush();
+			self.gl.enable(Capability::DepthTest.into());
+		}
+
+		return Ok(());
+
+	}
+
 	pub fn transform(&self) -> Mat4 {
 		return self.transform;
+	}
+
+	pub fn coord(&self, orig: gfx::Origin) -> Vec2 {
+		return orig.as_pt() / 2.0 * vec2!(self.width, self.height);
+	}
+
+	pub fn clip_to_screen(&self, p: Vec2) -> Vec2 {
+		return p * vec2!(self.width, self.height) * 0.5;
+	}
+
+	pub fn screen_to_clip(&self, p: Vec2) -> Vec2 {
+		return p / 0.5 / vec2!(self.width, self.height);
 	}
 
 	pub fn default_font(&self) -> &impl Font {
@@ -565,14 +644,12 @@ impl Gfx {
 	}
 
 	pub(crate) fn default_cam(&mut self) -> impl Camera {
-
 		return OrthoCam {
 			width: self.width as f32,
 			height: self.height as f32,
 			near: DEFAULT_NEAR,
 			far: DEFAULT_FAR,
 		};
-
 	}
 
 	pub(crate) fn begin_frame(&mut self) {
@@ -602,66 +679,6 @@ impl Gfx {
 
 	pub fn draw_calls(&self) -> usize {
 		return self.draw_calls_last;
-	}
-
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Flip {
-	None,
-	X,
-	Y,
-	XY,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Blend {
-	Alpha,
-	Add,
-	Replace,
-}
-
-impl Blend {
-	fn to_gl(&self) -> (BlendFac, BlendFac) {
-		return match self {
-			Blend::Alpha => (BlendFac::SrcAlpha, BlendFac::OneMinusSrcAlpha),
-			Blend::Add => (BlendFac::SrcAlpha, BlendFac::DestAlpha),
-			Blend::Replace => (BlendFac::SrcAlpha, BlendFac::Zero),
-		};
-	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Origin {
-	TopLeft,
-	Top,
-	TopRight,
-	Left,
-	Center,
-	Right,
-	BottomLeft,
-	Bottom,
-	BottomRight,
-}
-
-impl Origin {
-
-	pub fn as_pt(&self) -> Vec2 {
-
-		use Origin::*;
-
-		return match self {
-			TopLeft => vec2!(-1, 1),
-			Top => vec2!(0, 1),
-			TopRight => vec2!(1, 1),
-			Left => vec2!(-1, 0),
-			Center => vec2!(0, 0),
-			Right => vec2!(1, 0),
-			BottomLeft => vec2!(-1, -1),
-			Bottom => vec2!(0, -1),
-			BottomRight => vec2!(1, -1),
-		};
-
 	}
 
 }

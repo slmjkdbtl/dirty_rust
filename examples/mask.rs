@@ -39,9 +39,9 @@ impl State for Game {
 				vec2!(0, -120),
 				vec2!(0, 120),
 				&[
-					(rgba!(0.4, 1, 1, 1), 0.0),
-					(rgba!(1, 1, 0.6, 1), 0.5),
-					(rgba!(1, 0.4, 0.8, 1), 1.0),
+					(0.0, rgba!(0.4, 1, 1, 1)),
+					(0.5, rgba!(1, 1, 0.6, 1)),
+					(1.0, rgba!(1, 0.4, 0.8, 1)),
 				],
 			).width(240.0));
 		})?;
@@ -55,7 +55,7 @@ impl State for Game {
 fn main() {
 	if let Err(e) = launcher()
 		.run::<Game>() {
-		log!("{}", e);
+		elog!("{}", e);
 	}
 }
 

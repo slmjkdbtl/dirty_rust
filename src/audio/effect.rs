@@ -115,7 +115,7 @@ impl Delay {
 
 	pub fn new(duration: Duration, cycles: usize, decay: f32) -> Self {
 
-		let len = (duration.as_secs_f32() * SAMPLE_RATE as f32) as usize;
+		let len = (duration.as_secs_f32() * SPEC.sample_rate as f32) as usize;
 		let mut buffer = VecDeque::with_capacity(len * cycles);
 
 		for _ in 0..len * cycles {
