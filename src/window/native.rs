@@ -360,6 +360,7 @@ impl Window {
 
 						WEvent::ScaleFactorChanged { scale_factor, .. } => {
 							handle(&mut self, WindowEvent::DPIChange(*scale_factor as f32))?;
+							events.push(Event::DPIChange(*scale_factor as f32));
 						},
 
 						WEvent::KeyboardInput { input, .. } => {

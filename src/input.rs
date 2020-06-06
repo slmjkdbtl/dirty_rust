@@ -89,6 +89,7 @@ pub enum Event {
 	Focus(bool),
 	CursorEnter,
 	CursorLeave,
+	DPIChange(f32),
 	#[cfg(feature = "midi")]
 	MIDI(midi::Msg),
 }

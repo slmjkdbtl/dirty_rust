@@ -69,6 +69,8 @@
 //!
 //! note that binding to a canvas resets the projection & view matrix, you may want to rebind your camera in a canvas call
 //!
+//! also remember to resize canvas when window resizes if you have a fullscreen canvas, and recreate canvas when window DPI changes
+//!
 //! ## Custom Shader
 //!
 //! Use [`Shader`](struct.Shader.html) to create custom shaders. It requires a type that implements [`CustomUniform`](trait.CustomUniform.html), a minimal example:
