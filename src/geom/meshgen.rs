@@ -20,6 +20,51 @@ pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
 			let tt = t * t;
 			let ttt = tt * t;
 
+			// from OneLoneCoder
+			let qc1 = -ttt + 2.0 * tt - t;
+			let qp1 = 3.0 * ttt - 5.0 * tt + 2.0;
+			let qp2 = -3.0 * ttt + 4.0 * tt + t;
+			let qc2 = ttt - tt;
+
+			let tx = 0.5 * (c1.x * qc1 + p1.x * qp1 + p2.x * qp2 + c2.x * qc2);
+			let ty = 0.5 * (c1.y * qc1 + p1.y * qp1 + p2.y * qp2 + c2.y * qc2);
+
+			spts.push(vec2!(tx, ty));
+			t += 0.05;
+
+		}
+
+	}
+
+	return spts;
+
+}
+
+pub fn spline_loop(pts: &[Vec2]) -> Vec<Vec2> {
+
+	let mut spts = vec![];
+
+	for i in 0..pts.len() {
+
+		let p1 = pts[i];
+		let p2 = pts[(i + 1) % pts.len()];
+
+		let c1 = if i == 0 {
+			pts[pts.len() - 1]
+		} else {
+			pts[i - 1]
+		};
+
+		let c2 = pts[(i + 2) % pts.len()];
+
+		let mut t = 0.0;
+
+		while t <= 1.0 {
+
+			let tt = t * t;
+			let ttt = tt * t;
+
+			// from OneLoneCoder
 			let qc1 = -ttt + 2.0 * tt - t;
 			let qp1 = 3.0 * ttt - 5.0 * tt + 2.0;
 			let qp2 = -3.0 * ttt + 4.0 * tt + t;
