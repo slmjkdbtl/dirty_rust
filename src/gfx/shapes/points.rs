@@ -54,10 +54,16 @@ impl<'a> Drawable for Points<'a> {
 		for pt in self.pts {
 			match self.mode {
 				PointMode::Circle => {
-					ctx.draw(&Circle::new(*pt, self.size).fill(self.color))?;
+					ctx.draw(
+						&circle(*pt, self.size)
+							.fill(self.color)
+					)?;
 				},
 				PointMode::Rect => {
-					ctx.draw(&Rect::from_pts(*pt - vec2!(self.size) * 0.5, *pt + vec2!(self.size) * 0.5).fill(self.color))?;
+					ctx.draw(
+						&rect(*pt - vec2!(self.size) * 0.5, *pt + vec2!(self.size) * 0.5)
+							.fill(self.color)
+					)?;
 				},
 			}
 		}

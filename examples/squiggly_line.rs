@@ -29,13 +29,11 @@ impl Polyline {
 	}
 
 	fn draw(&self, gfx: &mut gfx::Gfx) -> Result<()> {
-		for (p0, p1) in self.line.iter().zip(self.line.iter().skip(1)) {
-			gfx.draw(
-				&shapes::line(*p0, *p1)
-					.width(2.0)
-					.color(self.color)
-			)?
-		}
+		gfx.draw(
+			&shapes::lines(&self.line)
+				.width(2.0)
+				.color(self.color)
+		)?;
 		Ok(())
 	}
 

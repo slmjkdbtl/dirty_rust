@@ -3,20 +3,33 @@
 use super::*;
 
 #[derive(Clone)]
-pub struct Line {
-	p1: Vec2,
-	p2: Vec2,
+enum LineMode<'a> {
+	Single(Vec2, Vec2),
+	Multiple(&'a [Vec2]),
+}
+
+#[derive(Clone)]
+pub struct Line<'a> {
+	pts: LineMode<'a>,
 	width: f32,
 	color: Color,
 	cap: LineCap,
 	dash: Option<LineDash>,
 }
 
-impl Line {
+impl<'a> Line<'a> {
 	pub fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
-			p1,
-			p2,
+			pts: LineMode::Single(p1, p2),
+			width: 1.0,
+			color: rgba!(1),
+			cap: LineCap::Butt,
+			dash: None,
+		};
+	}
+	pub fn multiple(pts: &'a [Vec2]) -> Self {
+		return Self {
+			pts: LineMode::Multiple(pts),
 			width: 1.0,
 			color: rgba!(1),
 			cap: LineCap::Butt,
@@ -48,75 +61,98 @@ impl Line {
 	}
 }
 
-pub fn line(p1: Vec2, p2: Vec2) -> Line {
+pub fn line<'a>(p1: Vec2, p2: Vec2) -> Line<'a> {
 	return Line::new(p1, p2);
 }
 
-impl Drawable for Line {
+pub fn lines<'a>(pts: &'a [Vec2]) -> Line<'a> {
+	return Line::multiple(pts);
+}
+
+impl<'a> Drawable for Line<'a> {
 
 	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
-		if let Some(dash) = self.dash {
+		match self.pts {
 
-			let diff = self.p2 - self.p1;
-			let nd = diff.unit();
-			let len = diff.len();
-			let mut l = 0.0;
-			let mut nxt_p1 = self.p1;
+			LineMode::Single(p1, p2) => {
 
-			loop {
+				if let Some(dash) = self.dash {
 
-				let p1 = nxt_p1;
-				let mut p2 = nxt_p1 + nd * dash.len;
+					let diff = p2 - p1;
+					let nd = diff.unit();
+					let len = diff.len();
+					let mut l = 0.0;
+					let mut nxt_p1 = p1;
 
-				l += dash.len;
+					loop {
 
-				if l >= len {
-					p2 = self.p2;
+						let cp1 = nxt_p1;
+						let mut cp2 = nxt_p1 + nd * dash.len;
+
+						l += dash.len;
+
+						if l >= len {
+							cp2 = p2;
+						}
+
+						ctx.draw(&Line {
+							pts: LineMode::Single(cp1, cp2),
+							width: self.width,
+							color: self.color,
+							cap: self.cap,
+							dash: None,
+						})?;
+
+						nxt_p1 = cp2 + nd * dash.interval;
+						l += dash.interval;
+
+						if l >= len {
+							break;
+						}
+
+					}
+
+				} else {
+
+					let dpos1 = Vec2::normal(p2 - p1).unit() * self.width / 2.0;
+					let dpos2 = Vec2::normal(p1 - p2).unit() * self.width / 2.0;
+					let cp1 = p1 - dpos1;
+					let cp2 = p1 + dpos1;
+					let cp3 = p2 - dpos2;
+					let cp4 = p2 + dpos2;
+
+					ctx.draw(
+						&polygon(&[cp1, cp2, cp3, cp4])
+							.fill(self.color)
+					)?;
+
+					if let LineCap::Round = self.cap {
+						ctx.draw(
+							&circle(p1, self.width / 2.0)
+								.fill(self.color)
+						)?;
+						ctx.draw(
+							&circle(p2, self.width / 2.0)
+								.fill(self.color)
+						)?;
+					}
+
 				}
 
-				ctx.draw(&Line {
-					p1,
-					p2,
-					width: self.width,
-					color: self.color,
-					cap: self.cap,
-					dash: None,
-				})?;
+			},
 
-				nxt_p1 = p2 + nd * dash.interval;
-				l += dash.interval;
-
-				if l >= len {
-					break;
+			LineMode::Multiple(pts) => {
+				for (p1, p2) in pts.iter().zip(pts.iter().skip(1)) {
+					ctx.draw(&Line {
+						pts: LineMode::Single(*p1, *p2),
+						width: self.width,
+						color: self.color,
+						cap: self.cap,
+						dash: self.dash,
+					})?;
 				}
-
-			}
-
-		} else {
-
-			let dpos1 = Vec2::normal(self.p2 - self.p1).unit() * self.width / 2.0;
-			let dpos2 = Vec2::normal(self.p1 - self.p2).unit() * self.width / 2.0;
-			let p1 = self.p1 - dpos1;
-			let p2 = self.p1 + dpos1;
-			let p3 = self.p2 - dpos2;
-			let p4 = self.p2 + dpos2;
-
-			ctx.draw(
-				&polygon(&[p1, p2, p3, p4])
-					.fill(self.color)
-			)?;
-
-			if let LineCap::Round = self.cap {
-				ctx.draw(
-					&circle(self.p1, self.width / 2.0)
-						.fill(self.color)
-				)?;
-				ctx.draw(
-					&circle(self.p2, self.width / 2.0)
-						.fill(self.color)
-				)?;
-			}
+			},
 
 		}
 

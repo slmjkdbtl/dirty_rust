@@ -39,8 +39,10 @@ impl Widget for Input {
 			MousePress(m) => {
 				match *m {
 					Mouse::Left => {
-						self.focused = self.hovering;
-						has_event = true;
+						if self.hovering {
+							self.focused = true;
+							has_event = true;
+						}
 					}
 					_ => {},
 				}

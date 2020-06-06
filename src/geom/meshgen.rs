@@ -2,6 +2,41 @@
 
 use super::*;
 
+pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
+
+	let mut spts = vec![];
+	let mut t = 0.0;
+
+	while t < pts.len() as f32 - 3.0 {
+
+		let p1 = t as usize + 1;
+		let p2 = p1 + 1;
+		let p3 = p2 + 1;
+		let p0 = p1 - 1;
+
+		let dt = t % 1.0;
+
+		let tt = dt * dt;
+		let ttt = tt * dt;
+
+		let q1 = -ttt + 2.0 * tt - dt;
+		let q2 = 3.0 * ttt - 5.0 * tt + 2.0;
+		let q3 = -3.0 * ttt + 4.0 * tt + dt;
+		let q4 = ttt - tt;
+
+		let tx = 0.5 * (pts[p0].x * q1 + pts[p1].x * q2 + pts[p2].x * q3 + pts[p3].x * q4);
+		let ty = 0.5 * (pts[p0].y * q1 + pts[p1].y * q2 + pts[p2].y * q3 + pts[p3].y * q4);
+
+		spts.push(vec2!(tx, ty));
+
+		t += 0.01;
+
+	}
+
+	return spts;
+
+}
+
 pub fn uv_quad(cols: usize, rows: usize) -> MeshData {
 
 	let mut verts = vec![];

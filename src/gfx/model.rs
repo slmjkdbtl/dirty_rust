@@ -236,7 +236,7 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<NodeID, NodeData>, node: gltf:
 
 			return MeshData {
 				vertices: verts,
-				indices,
+				indices: indices,
 			};
 
 		}).collect();
@@ -244,11 +244,11 @@ fn read_gltf_node(bin: &[u8], nodes: &mut HashMap<NodeID, NodeData>, node: gltf:
 	}).unwrap_or_default();
 
 	nodes.insert(id, NodeData {
-		id,
+		id: id,
 		name: name.map(String::from),
 		children: node.children().map(|c| c.index()).collect(),
-		transform,
-		meshes,
+		transform: transform,
+		meshes: meshes,
 	});
 
 	for c in node.children() {
