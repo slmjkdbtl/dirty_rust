@@ -103,10 +103,8 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let spts = geom::meshgen::spline(&self.pts);
-
 		d.gfx.draw(
-			&shapes::lines(&spts)
+			&shapes::lines(&geom::meshgen::spline(&self.pts))
 				.cap(shapes::LineCap::Round)
 				.width(4.0)
 		)?;
