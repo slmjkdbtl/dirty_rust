@@ -9,6 +9,7 @@ const list = [
 	"canvas",
 	"input",
 	"mask",
+	"spline",
 	"audio",
 	"data",
 ];

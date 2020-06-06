@@ -2,9 +2,38 @@
 
 use super::*;
 
+const SPLINE_RES: f32 = 0.05;
+
+fn spline_interp(p1: Vec2, p2: Vec2, c1: Vec2, c2: Vec2) -> Vec<Vec2> {
+
+	let mut pts = Vec::with_capacity((1.0 / SPLINE_RES) as usize);
+	let mut t = 0.0;
+
+	while t <= 1.0 {
+
+		let tt = t * t;
+		let ttt = tt * t;
+
+		// from OneLoneCoder
+		let qc1 = -ttt + 2.0 * tt - t;
+		let qp1 = 3.0 * ttt - 5.0 * tt + 2.0;
+		let qp2 = -3.0 * ttt + 4.0 * tt + t;
+		let qc2 = ttt - tt;
+		let pt = (c1 * qc1 + p1 * qp1 + p2 * qp2 + c2 * qc2) * 0.5;
+
+		pts.push(pt);
+		t += SPLINE_RES;
+
+	}
+
+	return pts;
+
+}
+
 pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
 
-	let mut spts = vec![];
+	// TODO: calculate the capacity
+	let mut spts = Vec::with_capacity((1.0 / SPLINE_RES) as usize * pts.len());
 
 	for i in 0..pts.len() - 1 {
 
@@ -13,26 +42,7 @@ pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
 		let c1 = pts.get(i.wrapping_sub(1)).cloned().unwrap_or(p1);
 		let c2 = pts.get(i + 2).cloned().unwrap_or(p2);
 
-		let mut t = 0.0;
-
-		while t <= 1.0 {
-
-			let tt = t * t;
-			let ttt = tt * t;
-
-			// from OneLoneCoder
-			let qc1 = -ttt + 2.0 * tt - t;
-			let qp1 = 3.0 * ttt - 5.0 * tt + 2.0;
-			let qp2 = -3.0 * ttt + 4.0 * tt + t;
-			let qc2 = ttt - tt;
-
-			let tx = 0.5 * (c1.x * qc1 + p1.x * qp1 + p2.x * qp2 + c2.x * qc2);
-			let ty = 0.5 * (c1.y * qc1 + p1.y * qp1 + p2.y * qp2 + c2.y * qc2);
-
-			spts.push(vec2!(tx, ty));
-			t += 0.05;
-
-		}
+		spts.append(&mut spline_interp(p1, p2, c1, c2));
 
 	}
 
@@ -42,7 +52,8 @@ pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
 
 pub fn spline_loop(pts: &[Vec2]) -> Vec<Vec2> {
 
-	let mut spts = vec![];
+	// TODO: calculate the capacity
+	let mut spts = Vec::with_capacity((1.0 / SPLINE_RES) as usize * pts.len());
 
 	for i in 0..pts.len() {
 
@@ -57,26 +68,7 @@ pub fn spline_loop(pts: &[Vec2]) -> Vec<Vec2> {
 
 		let c2 = pts[(i + 2) % pts.len()];
 
-		let mut t = 0.0;
-
-		while t <= 1.0 {
-
-			let tt = t * t;
-			let ttt = tt * t;
-
-			// from OneLoneCoder
-			let qc1 = -ttt + 2.0 * tt - t;
-			let qp1 = 3.0 * ttt - 5.0 * tt + 2.0;
-			let qp2 = -3.0 * ttt + 4.0 * tt + t;
-			let qc2 = ttt - tt;
-
-			let tx = 0.5 * (c1.x * qc1 + p1.x * qp1 + p2.x * qp2 + c2.x * qc2);
-			let ty = 0.5 * (c1.y * qc1 + p1.y * qp1 + p2.y * qp2 + c2.y * qc2);
-
-			spts.push(vec2!(tx, ty));
-			t += 0.05;
-
-		}
+		spts.append(&mut spline_interp(p1, p2, c1, c2));
 
 	}
 

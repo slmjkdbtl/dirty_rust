@@ -220,6 +220,7 @@ impl Origin {
 
 }
 
+/// Describes a Stencil Operation
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Stencil {
 	pub func: Cmp,

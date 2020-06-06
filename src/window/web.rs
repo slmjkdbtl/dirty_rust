@@ -361,7 +361,7 @@ impl Window {
 						WebEvent::MouseMove(e) => {
 
 							let (w, h) = (self.width as f32, self.height as f32);
-							let mpos = vec2!(e.client_x(), e.client_y());
+							let mpos = vec2!(e.offset_x(), e.offset_y());
 							let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y as f32);
 							let prev_mpos = self.mouse_pos;
 

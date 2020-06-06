@@ -12,15 +12,23 @@ struct Game {
 	pts: Vec<Vec2>,
 	cur_pt: usize,
 	draggin: bool,
+	looping: bool,
 }
 
 impl State for Game {
 
 	fn init(_: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
-			pts: vec![vec2!(-240, 0), vec2!(-120, 120), vec2!(0), vec2!(120), vec2!(240, 0)],
+			pts: vec![
+				vec2!(-240, -160),
+				vec2!(-120, 120),
+				vec2!(0),
+				vec2!(120),
+				vec2!(240, 0),
+			],
 			cur_pt: 0,
 			draggin: false,
+			looping: true,
 		});
 	}
 
@@ -32,6 +40,17 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
+					Key::Backspace => {
+						self.pts.remove(self.cur_pt);
+						if self.cur_pt >= self.pts.len() {
+							self.cur_pt = self.pts.len() - 1;
+						}
+					},
+					Key::Space => {
+						self.pts.insert(self.cur_pt + 1, d.window.mouse_pos());
+						self.cur_pt += 1;
+					},
+					Key::L => self.looping = !self.looping,
 					_ => {},
 				}
 			},
@@ -103,8 +122,14 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
+		let spts = if self.looping {
+			geom::meshgen::spline_loop(&self.pts)
+		} else {
+			geom::meshgen::spline(&self.pts)
+		};
+
 		d.gfx.draw(
-			&shapes::lines(&geom::meshgen::spline(&self.pts))
+			&shapes::lines(&spts)
 				.cap(shapes::LineCap::Round)
 				.width(4.0)
 		)?;
