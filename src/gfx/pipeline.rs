@@ -56,7 +56,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			let gl = ctx.gl().clone();
 			let program_id = gl.create_program()?;
 
-			let vert_id = gl.create_shader(ShaderType::Vertex.into())?;
+			let vert_id = gl.create_shader(ShaderType::Vertex.to_glow())?;
 
 			gl.shader_source(vert_id, vert_src);
 			gl.compile_shader(vert_id);
@@ -66,7 +66,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				return Err(format!("vert error: {}", gl.get_shader_info_log(vert_id).trim()));
 			}
 
-			let frag_id = gl.create_shader(ShaderType::Fragment.into())?;
+			let frag_id = gl.create_shader(ShaderType::Fragment.to_glow())?;
 
 			gl.shader_source(frag_id, frag_src);
 			gl.compile_shader(frag_id);
@@ -178,7 +178,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				_ => {},
 			}
 
-			self.gl.draw_elements(prim.into(), count as i32, glow::UNSIGNED_INT, 0);
+			self.gl.draw_elements(prim.to_glow(), count as i32, glow::UNSIGNED_INT, 0);
 
 			ibuf.unbind();
 			vbuf.unbind();

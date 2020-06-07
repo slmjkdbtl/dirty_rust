@@ -92,7 +92,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 			buf.gl.buffer_data_size(
 				glow::ARRAY_BUFFER,
 				(count * mem::size_of::<V>()) as i32,
-				usage.into(),
+				usage.to_glow(),
 			);
 
 			buf.unbind();

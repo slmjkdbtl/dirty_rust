@@ -230,22 +230,22 @@ impl Gfx {
 
 		unsafe {
 
-			gl.enable(Capability::Blend.into());
-			gl.enable(Capability::DepthTest.into());
-			gl.blend_func(BlendFac::SrcAlpha.into(), BlendFac::OneMinusSrcAlpha.into());
-			gl.depth_func(Cmp::LessOrEqual.into());
+			gl.enable(Capability::Blend.to_glow());
+			gl.enable(Capability::DepthTest.to_glow());
+			gl.blend_func(BlendFac::SrcAlpha.to_glow(), BlendFac::OneMinusSrcAlpha.to_glow());
+			gl.depth_func(Cmp::LessOrEqual.to_glow());
 
 			// TODO: cull face doesn't work with some of the default geoms
 			if conf.cull_face {
-				gl.enable(Capability::CullFace.into());
-				gl.cull_face(Face::Back.into());
-				gl.front_face(CullMode::CounterClockwise.into());
+				gl.enable(Capability::CullFace.to_glow());
+				gl.cull_face(Face::Back.to_glow());
+				gl.front_face(CullMode::CounterClockwise.to_glow());
 			}
 
 			gl.clear_color(0.0, 0.0, 0.0, 1.0);
-			gl.clear(Surface::Color.into());
-			gl.clear(Surface::Depth.into());
-			gl.clear(Surface::Stencil.into());
+			gl.clear(Surface::Color.to_glow());
+			gl.clear(Surface::Depth.to_glow());
+			gl.clear(Surface::Stencil.to_glow());
 
 		}
 
@@ -306,9 +306,9 @@ impl Gfx {
 		self.flush();
 
 		unsafe {
-			self.gl.clear(Surface::Color.into());
-			self.gl.clear(Surface::Depth.into());
-			self.gl.clear(Surface::Stencil.into());
+			self.gl.clear(Surface::Color.to_glow());
+			self.gl.clear(Surface::Depth.to_glow());
+			self.gl.clear(Surface::Stencil.to_glow());
 		}
 
 	}
@@ -318,7 +318,7 @@ impl Gfx {
 		self.flush();
 
 		unsafe {
-			self.gl.clear(s.into());
+			self.gl.clear(s.to_glow());
 		}
 
 	}
@@ -468,22 +468,22 @@ impl Gfx {
 		unsafe {
 
 			self.flush();
-			self.gl.enable(Capability::StencilTest.into());
-			self.gl.clear(Surface::Stencil.into());
+			self.gl.enable(Capability::StencilTest.to_glow());
+			self.gl.clear(Surface::Stencil.to_glow());
 
 			// 1
-			self.gl.stencil_func(s1.func.into(), 1, 0xff);
-			self.gl.stencil_op(s1.sfail.into(), s1.dpfail.into(), s1.dppass.into());
+			self.gl.stencil_func(s1.func.to_glow(), 1, 0xff);
+			self.gl.stencil_op(s1.sfail.to_glow(), s1.dpfail.to_glow(), s1.dppass.to_glow());
 			f1(self)?;
 			self.flush();
 
 			// 2
-			self.gl.stencil_func(s2.func.into(), 1, 0xff);
-			self.gl.stencil_op(s2.sfail.into(), s2.dpfail.into(), s2.dppass.into());
+			self.gl.stencil_func(s2.func.to_glow(), 1, 0xff);
+			self.gl.stencil_op(s2.sfail.to_glow(), s2.dpfail.to_glow(), s2.dppass.to_glow());
 			f2(self)?;
 			self.flush();
 
-			self.gl.disable(Capability::StencilTest.into());
+			self.gl.disable(Capability::StencilTest.to_glow());
 
 		}
 
@@ -524,15 +524,15 @@ impl Gfx {
 		f: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
-		let (dsrc, ddest) = Blend::Alpha.to_gl();
-		let (src, dest) = b.to_gl();
+		let (dsrc, ddest) = Blend::Alpha.to_glow();
+		let (src, dest) = b.to_glow();
 
 		unsafe {
 			self.flush();
-			self.gl.blend_func(src.into(), dest.into());
+			self.gl.blend_func(src.to_glow(), dest.to_glow());
 			f(self)?;
 			self.flush();
-			self.gl.blend_func(dsrc.into(), ddest.into());
+			self.gl.blend_func(dsrc.to_glow(), ddest.to_glow());
 		}
 
 		return Ok(());
@@ -591,10 +591,10 @@ impl Gfx {
 
 		unsafe {
 			self.flush();
-			self.gl.disable(Capability::DepthTest.into());
+			self.gl.disable(Capability::DepthTest.to_glow());
 			f(self)?;
 			self.flush();
-			self.gl.enable(Capability::DepthTest.into());
+			self.gl.enable(Capability::DepthTest.to_glow());
 		}
 
 		return Ok(());

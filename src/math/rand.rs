@@ -13,6 +13,21 @@ const A: u64 = 1103515245;
 const C: u64 = 12345;
 const M: u64 = 2147483648;
 
+static DEFAULT_RNG: Lazy<Mutex<Rng>> = Lazy::new(|| {
+
+	#[cfg(not(web))]
+	let t = SystemTime::now()
+		.duration_since(SystemTime::UNIX_EPOCH)
+		.expect("failed to get system time")
+		.as_secs();
+
+	#[cfg(web)]
+	let t = js_sys::Date::now() as u64;
+
+	return Mutex::new(Rng::new(t));
+
+});
+
 pub trait RandValue {
 	fn rand_within(a: Self, b: Self, r: &mut Rng) -> Self;
 }
@@ -21,7 +36,7 @@ macro_rules! impl_rand {
 	($ty:ty) => {
 		impl RandValue for $ty {
 			fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
-				return (a as f32 + (b as f32 - a as f32) * f.gen_f()) as $ty;
+				return (a as f32 + (b as f32 - a as f32) * f.gen()) as $ty;
 			}
 		}
 	}
@@ -45,8 +60,8 @@ impl_rand!(usize);
 impl RandValue for Vec2 {
 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
 		return vec2!(
-			a.x + (b.x - a.x) * f.gen_f(),
-			a.y + (b.y - a.y) * f.gen_f(),
+			a.x + (b.x - a.x) * f.gen(),
+			a.y + (b.y - a.y) * f.gen(),
 		);
 	}
 }
@@ -54,9 +69,9 @@ impl RandValue for Vec2 {
 impl RandValue for Vec3 {
 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
 		return vec3!(
-			a.x + (b.x - a.x) * f.gen_f(),
-			a.y + (b.y - a.y) * f.gen_f(),
-			a.z + (b.z - a.z) * f.gen_f(),
+			a.x + (b.x - a.x) * f.gen(),
+			a.y + (b.y - a.y) * f.gen(),
+			a.z + (b.z - a.z) * f.gen(),
 		);
 	}
 }
@@ -64,10 +79,10 @@ impl RandValue for Vec3 {
 impl RandValue for Color {
 	fn rand_within(a: Self, b: Self, f: &mut Rng) -> Self {
 		return rgba!(
-			a.r + (b.r - a.r) * f.gen_f(),
-			a.g + (b.g - a.g) * f.gen_f(),
-			a.b + (b.b - a.b) * f.gen_f(),
-			a.a + (b.a - a.a) * f.gen_f(),
+			a.r + (b.r - a.r) * f.gen(),
+			a.g + (b.g - a.g) * f.gen(),
+			a.b + (b.b - a.b) * f.gen(),
+			a.a + (b.a - a.a) * f.gen(),
 		);
 	}
 }
@@ -84,34 +99,16 @@ impl Rng {
 			seed: s,
 		};
 	}
-	fn gen(&mut self) -> u64 {
-		self.seed = (A * self.seed + C) % M;
-		return self.seed;
-	}
 	/// generate a new random f32 between 0.0 and 1.0
-	pub fn gen_f(&mut self) -> f32 {
-		return self.gen() as f32 / M as f32;
+	pub fn gen(&mut self) -> f32 {
+		self.seed = (A * self.seed + C) % M;
+		return self.seed as f32 / M as f32;
 	}
 	/// generate between 2 values that implements [`RandValue`](trait.RandValue.html)
 	pub fn gen_between<R: RandValue>(&mut self, a: R, b: R) -> R {
 		return R::rand_within(a, b, self);
 	}
 }
-
-pub(crate) static DEFAULT_RNG: Lazy<Mutex<Rng>> = Lazy::new(|| {
-
-	#[cfg(not(web))]
-	let t = SystemTime::now()
-		.duration_since(SystemTime::UNIX_EPOCH)
-		.expect("failed to get system time")
-		.as_secs();
-
-	#[cfg(web)]
-	let t = js_sys::Date::now() as u64;
-
-	return Mutex::new(Rng::new(t));
-
-});
 
 /// generate a random value with the default generator
 pub fn rand<R: RandValue>(a: R, b: R) -> R {

@@ -57,9 +57,9 @@ impl Canvas {
 
 			fbuf.bind();
 
-			fbuf.gl.clear(Surface::Color.into());
-			fbuf.gl.clear(Surface::Depth.into());
-			fbuf.gl.clear(Surface::Stencil.into());
+			fbuf.gl.clear(Surface::Color.to_glow());
+			fbuf.gl.clear(Surface::Depth.to_glow());
+			fbuf.gl.clear(Surface::Stencil.to_glow());
 
 			fbuf.gl.framebuffer_texture_2d(
 				glow::FRAMEBUFFER,

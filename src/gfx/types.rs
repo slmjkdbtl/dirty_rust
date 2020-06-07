@@ -13,11 +13,11 @@ macro_rules! bind_enum {
 			$($member,)+
 		}
 
-		impl From<$name> for $type {
-			fn from(t: $name) -> $type {
-				return match t {
+		impl $name {
+			pub(super) fn to_glow(&self) -> $type {
+				return match self {
 					$($name::$member => $dest,)+
-				}
+				};
 			}
 		}
 
@@ -145,10 +145,10 @@ pub enum Primitive {
 	TriangleStrip,
 }
 
-impl From<Primitive> for u32 {
+impl Primitive {
 
-	fn from(p: Primitive) -> u32 {
-		return match p {
+	pub(super) fn to_glow(&self) -> u32 {
+		return match self {
 			Primitive::Point(_) => glow::POINTS,
 			Primitive::Line(_) => glow::LINES,
 			Primitive::Triangle => glow::TRIANGLES,
@@ -176,7 +176,7 @@ pub enum Blend {
 }
 
 impl Blend {
-	pub(super) fn to_gl(&self) -> (BlendFac, BlendFac) {
+	pub(super) fn to_glow(&self) -> (BlendFac, BlendFac) {
 		return match self {
 			Blend::Alpha => (BlendFac::SrcAlpha, BlendFac::OneMinusSrcAlpha),
 			Blend::Add => (BlendFac::SrcAlpha, BlendFac::DestAlpha),

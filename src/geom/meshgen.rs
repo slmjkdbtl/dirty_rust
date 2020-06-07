@@ -1,10 +1,17 @@
 // wengwengweng
 
 use super::*;
+use std::ops::*;
 
 const SPLINE_RES: f32 = 0.05;
 
-fn spline_interp(p1: Vec2, p2: Vec2, c1: Vec2, c2: Vec2) -> Vec<Vec2> {
+// TODO: trait alias
+fn spline_interp<T>(p1: T, p2: T, c1: T, c2: T) -> Vec<T>
+	where T:
+		Copy
+		+ Add<Output = T>
+		+ Mul<f32, Output = T>
+{
 
 	let mut pts = Vec::with_capacity((1.0 / SPLINE_RES) as usize);
 	let mut t = 0.0;
@@ -30,7 +37,12 @@ fn spline_interp(p1: Vec2, p2: Vec2, c1: Vec2, c2: Vec2) -> Vec<Vec2> {
 
 }
 
-pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
+pub fn spline<T>(pts: &[T]) -> Vec<T>
+	where T:
+		Copy
+		+ Add<Output = T>
+		+ Mul<f32, Output = T>
+{
 
 	// TODO: calculate the capacity
 	let mut spts = Vec::with_capacity((1.0 / SPLINE_RES) as usize * pts.len());
@@ -50,7 +62,12 @@ pub fn spline(pts: &[Vec2]) -> Vec<Vec2> {
 
 }
 
-pub fn spline_loop(pts: &[Vec2]) -> Vec<Vec2> {
+pub fn spline_loop<T>(pts: &[T]) -> Vec<T>
+	where T:
+		Copy
+		+ Add<Output = T>
+		+ Mul<f32, Output = T>
+{
 
 	// TODO: calculate the capacity
 	let mut spts = Vec::with_capacity((1.0 / SPLINE_RES) as usize * pts.len());

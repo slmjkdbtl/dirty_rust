@@ -2,9 +2,7 @@
 
 use std::ops::*;
 
-// TODO: trait alias
-
-pub trait Mappable:
+pub trait Map:
 	Copy
 	+ Add<Output=Self>
 	+ Sub<Output=Self>
@@ -17,8 +15,9 @@ pub trait Mappable:
 	}
 }
 
-impl<T> Mappable for T
-	where T: Copy
+impl<T> Map for T
+	where T:
+		Copy
 		+ Add<Output=T>
 		+ Sub<Output=T>
 		+ Mul<f32, Output=Self>

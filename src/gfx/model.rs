@@ -65,7 +65,7 @@ pub struct Anim {
 	scale: Track<Vec3>,
 }
 
-fn get_track_val<T: Copy>(track: &Track<T>, t: f32) -> Option<T> {
+fn get_track_val<T: Lerp>(track: &Track<T>, t: f32) -> Option<T> {
 
 	if track.is_empty() {
 		return None;
@@ -88,11 +88,9 @@ fn get_track_val<T: Copy>(track: &Track<T>, t: f32) -> Option<T> {
 		let (k1, pos1) = track[i];
 		let (k2, pos2) = track[i + 1];
 
-		// TODO: lerp bug?
 		if t >= k1 && t <= k2 {
 			let dt = t - k1;
-			return Some(pos1);
-// 			return Some(pos1.lerp(pos2, dt));
+			return Some(pos1.lerp(pos2, dt));
 		}
 
 	}
