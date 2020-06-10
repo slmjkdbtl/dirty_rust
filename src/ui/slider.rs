@@ -104,8 +104,7 @@ impl Widget for Slider {
 
 			self.val += (delta_x / wctx.width) * (self.max - self.min);
 			self.val = self.val.max(self.min).min(self.max);
-
-			self.draggin = Some(wctx.mouse_pos.x)
+			self.draggin = Some(wctx.mouse_pos.x);
 
 		}
 

@@ -102,12 +102,10 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		let time = d.app.time().as_secs_f32();
-
 		d.gfx.draw_t(
 			mat4!()
 				.rx(f32::to_radians(-45.0))
-				.ry(f32::to_radians(-45.0) + time)
+				.ry(f32::to_radians(-45.0))
 				.s3(vec3!(90))
 				,
 			&shapes::mesh(&self.cube)

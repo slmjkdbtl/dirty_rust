@@ -62,13 +62,11 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 			},
 
 			WindowEvent::Frame => {
-
 				ctx.app.tick();
 				s.update(&mut ctx)?;
 				ctx.gfx.begin_frame();
 				s.draw(&mut ctx)?;
 				ctx.gfx.end_frame();
-
 			},
 
 		}

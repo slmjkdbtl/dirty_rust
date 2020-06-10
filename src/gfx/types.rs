@@ -1,7 +1,7 @@
 // wengwengweng
 
 use crate::*;
-use math::*;
+use super::*;
 
 macro_rules! bind_enum {
 
@@ -220,12 +220,35 @@ impl Origin {
 
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct BlendDesc {
+	pub src: BlendFac,
+	pub dest: BlendFac,
+	pub op: BlendOp,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct BlendState {
+	pub color: BlendDesc,
+	pub alpha: BlendDesc,
+}
+
 /// Describes a Stencil Operation
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Stencil {
-	pub func: Cmp,
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct StencilState {
+	pub cmp: Cmp,
 	pub sfail: StencilOp,
 	pub dpfail: StencilOp,
 	pub dppass: StencilOp,
+}
+
+// TODO: use this
+#[derive(Clone, PartialEq)]
+pub(super) struct RenderState<'a, U: UniformLayout> {
+	pub prim: Primitive,
+	pub stencil: Option<StencilState>,
+	pub uniform: &'a U,
+	pub blend: BlendState,
+	pub canvas: Option<&'a Canvas>,
 }
 

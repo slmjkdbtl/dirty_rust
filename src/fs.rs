@@ -16,9 +16,7 @@ use crate::Result;
 #[cfg(target_os = "macos")]
 pub fn res_dir() -> Option<PathBuf> {
 
-	use core_foundation::bundle;
-
-	let bundle = bundle::CFBundle::main_bundle();
+	let bundle = core_foundation::bundle::CFBundle::main_bundle();
 
 	let path = bundle
 		.executable_url()?
@@ -46,34 +44,22 @@ pub fn res_dir() -> Option<PathBuf> {
 
 }
 
-/// get the path that's prepended with the res dir, if it doesn't exit then return the input path back
-pub fn bundled_path(path: impl AsRef<Path>) -> Result<PathBuf> {
+/// get the path that's prepended with the res dir
+pub fn bundled_path(path: impl AsRef<Path>) -> PathBuf {
 
 	let path = path.as_ref();
 
-	if path.exists() {
-
-		return Ok(path.to_path_buf());
-
+	if let Some(res_dir) = res_dir() {
+		return res_dir.join(path);
 	} else {
-
-		let with_res = res_dir()
-			.ok_or(format!("file not found: {}", path.display()))?
-			.join(path);
-
-		if with_res.exists() {
-			return Ok(with_res);
-		} else {
-			return Err(format!("file not found: {}", path.display()));
-		}
-
+		return path.to_path_buf();
 	}
 
 }
 
 /// check if a file exists
 pub fn exists(path: impl AsRef<Path>) -> bool {
-	return bundled_path(path).is_ok();
+	return bundled_path(path).exists();
 }
 
 /// get files that matches a glob pattern (e.g. `glob("img/*.png")`)
@@ -94,7 +80,7 @@ pub fn glob(pat: &str) -> Result<Vec<PathBuf>> {
 pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 
 	let path = path.as_ref();
-	let path = bundled_path(path)?;
+	let path = bundled_path(path);
 
 	return fs::read(&path)
 		.map_err(|_| format!("failed to read file {}", path.display()));
@@ -105,7 +91,7 @@ pub fn read(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = bundled_path(path)?;
+	let path = bundled_path(path);
 
 	return fs::read_to_string(&path)
 		.map_err(|_| format!("failed to read file {}", path.display()));
@@ -116,7 +102,7 @@ pub fn read_str(path: impl AsRef<Path>) -> Result<String> {
 pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir> {
 
 	let path = path.as_ref();
-	let path = bundled_path(path)?;
+	let path = bundled_path(path);
 
 	return fs::read_dir(&path)
 		.map_err(|_| format!("failed to read dir {}", path.display()));
@@ -127,7 +113,7 @@ pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir> {
 pub fn basename(path: impl AsRef<Path>) -> Result<String> {
 
 	let path = path.as_ref();
-	let path = bundled_path(path)?;
+	let path = bundled_path(path);
 
 	return Ok(
 		Path::new(&path)

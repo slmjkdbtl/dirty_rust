@@ -459,9 +459,9 @@ impl Gfx {
 
 	pub fn draw_masked_ex(
 		&mut self,
-		s1: Stencil,
+		s1: StencilState,
 		f1: impl FnOnce(&mut Self) -> Result<()>,
-		s2: Stencil,
+		s2: StencilState,
 		f2: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
@@ -472,13 +472,13 @@ impl Gfx {
 			self.gl.clear(Surface::Stencil.to_glow());
 
 			// 1
-			self.gl.stencil_func(s1.func.to_glow(), 1, 0xff);
+			self.gl.stencil_func(s1.cmp.to_glow(), 1, 0xff);
 			self.gl.stencil_op(s1.sfail.to_glow(), s1.dpfail.to_glow(), s1.dppass.to_glow());
 			f1(self)?;
 			self.flush();
 
 			// 2
-			self.gl.stencil_func(s2.func.to_glow(), 1, 0xff);
+			self.gl.stencil_func(s2.cmp.to_glow(), 1, 0xff);
 			self.gl.stencil_op(s2.sfail.to_glow(), s2.dpfail.to_glow(), s2.dppass.to_glow());
 			f2(self)?;
 			self.flush();
@@ -498,15 +498,15 @@ impl Gfx {
 	) -> Result<()> {
 
 		self.draw_masked_ex(
-			Stencil {
-				func: Cmp::Never,
+			StencilState {
+				cmp: Cmp::Never,
 				sfail: StencilOp::Replace,
 				dpfail: StencilOp::Replace,
 				dppass: StencilOp::Replace,
 			},
 			mask,
-			Stencil {
-				func: Cmp::Equal,
+			StencilState {
+				cmp: Cmp::Equal,
 				sfail: StencilOp::Keep,
 				dpfail: StencilOp::Keep,
 				dppass: StencilOp::Keep,

@@ -9,35 +9,6 @@ use glow::HasContext;
 use super::*;
 use crate::Result;
 
-// #[derive(Clone, Copy, Debug)]
-// pub struct BlendDesc {
-// 	pub src: BlendFac,
-// 	pub dest: BlendFac,
-// 	pub op: BlendOp,
-// }
-
-// #[derive(Clone, Copy, Debug)]
-// pub struct BlendState {
-// 	pub color: BlendDesc,
-// 	pub alpha: BlendDesc,
-// }
-
-// #[derive(Clone, Copy, Debug)]
-// pub struct StencilState {
-// 	pub cmp: Cmp,
-// 	pub fail_op: StencilOp,
-// 	pub depth_fail_op: StencilOp,
-// 	pub pass_op: StencilOp,
-// }
-
-// #[derive(Clone)]
-// pub struct RenderState<'a, U: UniformLayout> {
-// 	pub prim: Primitive,
-// 	pub uniform: &'a U,
-// 	pub blend: BlendState,
-// 	pub frame_buffer: Option<&'a Framebuffer>,
-// }
-
 #[derive(Clone, Debug)]
 pub struct Pipeline<V: VertexLayout, U: UniformLayout> {
 	gl: Rc<glow::Context>,
@@ -129,6 +100,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
+	// TODO: use RenderState
 	pub fn draw(
 		&self,
 		prim: Primitive,
