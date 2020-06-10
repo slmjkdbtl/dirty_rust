@@ -1,6 +1,14 @@
 // wengwengweng
 
+use std::path::PathBuf;
 use crate::*;
+
+#[cfg(not(web))]
+pub fn path(proj: &'static str) -> Result<PathBuf> {
+	return Ok(dirs_next::data_dir()
+		.ok_or_else(|| format!("failed to get data dir"))?
+		.join(proj));
+}
 
 #[cfg(not(web))]
 pub fn save<D: serde::ser::Serialize>(
@@ -9,19 +17,19 @@ pub fn save<D: serde::ser::Serialize>(
 	data: D
 ) -> Result<()> {
 
-	let data_dir = dirs_next::data_dir()
-		.ok_or_else(|| format!("failed to get data dir"))?
-		.join(proj);
+	let data_dir = path(proj)?;
 
-	if !fs::exists(&data_dir) {
-		fs::mkdir(&data_dir)?;
+	if !data_dir.exists() {
+		std::fs::create_dir_all(&data_dir)
+			.map_err(|_| format!("failed to create dir {}", data_dir.display()))?;
 	}
 
 	let data_file = data_dir.join(&format!("{}.json", entry));
 	let content = serde_json::to_string(&data)
 		.map_err(|_| format!("failed to encode json"))?;
 
-	fs::write(data_file, content)?;
+	std::fs::write(&data_file, content)
+		.map_err(|_| format!("failed to write file {}", data_file.display()))?;
 
 	return Ok(());
 
@@ -33,10 +41,7 @@ pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
 	entry: &'static str,
 ) -> Result<D> {
 
-	let data_dir = dirs_next::data_dir()
-		.ok_or_else(|| format!("failed to get data dir"))?
-		.join(proj);
-
+	let data_dir = path(proj)?;
 	let data_file = data_dir.join(&format!("{}.json", entry));
 	let content = fs::read_str(data_file)?;
 
