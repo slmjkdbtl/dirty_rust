@@ -17,13 +17,18 @@ pub trait Effect {
 
 #[derive(Clone, Debug)]
 pub struct Volume {
-	volume: f32,
+	left: f32,
+	right: f32,
 }
 
 impl Volume {
 	pub fn new(v: f32) -> Self {
+		return Self::panned(v, v);
+	}
+	pub fn panned(l: f32, r: f32) -> Self {
 		return Self {
-			volume: v.max(0.0),
+			left: l.max(0.0),
+			right: r.max(0.0),
 		};
 	}
 }
@@ -36,34 +41,9 @@ impl Default for Volume {
 
 impl Effect for Volume {
 	fn process(&mut self, f: Frame) -> Frame {
-		return f * self.volume;
-	}
-}
-
-#[derive(Clone, Debug)]
-pub struct Pan {
-	pan: f32,
-}
-
-impl Pan {
-	pub fn new(p: f32) -> Self {
-		return Self {
-			pan: p.max(-1.0).min(1.0),
-		};
-	}
-}
-
-impl Default for Pan {
-	fn default() -> Self {
-		return Self::new(0.0);
-	}
-}
-
-impl Effect for Pan {
-	fn process(&mut self, f: Frame) -> Frame {
 		return Frame::new(
-			f.left * self.pan.map(1.0, -1.0, 0.0, 2.0),
-			f.right * self.pan.map(-1.0, 1.0, 0.0, 2.0),
+			f.left * self.left,
+			f.right * self.right,
 		);
 	}
 }
@@ -210,7 +190,6 @@ impl Effect for Reverb {
 
 #[derive(Clone)]
 pub(super) struct BasicEffectChain {
-	pan: Arc<Mutex<Pan>>,
 	volume: Arc<Mutex<Volume>>,
 	delay: Arc<Mutex<Delay>>,
 	distortion: Arc<Mutex<Distortion>>,
@@ -221,7 +200,6 @@ impl BasicEffectChain {
 
 	pub fn new() -> Self {
 		return Self {
-			pan: Arc::new(Mutex::new(Pan::default())),
 			volume: Arc::new(Mutex::new(Volume::default())),
 			delay: Arc::new(Mutex::new(Delay::default())),
 			distortion: Arc::new(Mutex::new(Distortion::default())),
@@ -234,38 +212,31 @@ impl BasicEffectChain {
 			self.distortion.clone(),
 			self.delay.clone(),
 			self.reverb.clone(),
-			self.pan.clone(),
 			self.volume.clone(),
 		];
 	}
 
-	pub fn set_pan(&self, p: f32) {
-		if let Ok(mut pan) = self.pan.lock() {
-			*pan = Pan::new(p);
-		}
-	}
-
-	pub fn set_volume(&self, v: f32) {
+	pub fn set_volume(&self, v: Volume) {
 		if let Ok(mut volume) = self.volume.lock() {
-			*volume = Volume::new(v);
+			*volume = v;
 		}
 	}
 
-	pub fn set_distortion(&self, s: f32) {
+	pub fn set_distortion(&self, d: Distortion) {
 		if let Ok(mut distortion) = self.distortion.lock() {
-			*distortion = Distortion::new(s);
+			*distortion = d;
 		}
 	}
 
-	pub fn set_reverb(&self, d: f32) {
+	pub fn set_reverb(&self, r: Reverb) {
 		if let Ok(mut reverb) = self.reverb.lock() {
-			*reverb = Reverb::new(d);
+			*reverb = r;
 		}
 	}
 
-	pub fn set_delay(&self, len: Duration, cycles: usize, d: f32) {
+	pub fn set_delay(&self, d: Delay) {
 		if let Ok(mut delay) = self.delay.lock() {
-			*delay = Delay::new(len, cycles, d);
+			*delay = d;
 		}
 	}
 

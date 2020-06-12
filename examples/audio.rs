@@ -48,7 +48,7 @@ impl State for Game {
 						.builder()
 						.delay(Duration::from_secs_f32(0.2), 3, 0.5)
 // 						.reverb(0.5)
-						.pan(math::rand(-1.0, 1.0))
+						.pan(math::rand(0.0, 1.0), math::rand(0.0, 1.0))
 						.volume(0.3)
 						.play()?
 						,
@@ -69,7 +69,7 @@ impl State for Game {
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
 		#[cfg(not(web))]
-		self.track.set_pan(math::wave(time, -1.0, 1.0));
+		self.track.set_pan(math::wave(time, 0.0, 1.0), math::wave(time, 1.0, 0.0));
 
 		let lines = [
 			"space:   play / pause",

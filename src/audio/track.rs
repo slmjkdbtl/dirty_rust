@@ -63,27 +63,27 @@ impl Track {
 
 	/// set volume
 	pub fn set_volume(&self, v: f32) {
-		self.effects.set_volume(v);
+		self.effects.set_volume(Volume::new(v));
 	}
 
 	/// set pan
-	pub fn set_pan(&self, p: f32) {
-		self.effects.set_pan(p);
+	pub fn set_pan(&self, l: f32, r: f32) {
+		self.effects.set_volume(Volume::panned(l, r));
 	}
 
 	/// set distortion
 	pub fn set_distortion(&self, s: f32) {
-		self.effects.set_distortion(s);
+		self.effects.set_distortion(Distortion::new(s));
 	}
 
 	/// set reverb
 	pub fn set_reverb(&self, d: f32) {
-		self.effects.set_reverb(d);
+		self.effects.set_reverb(Reverb::new(d));
 	}
 
 	/// set delay
 	pub fn set_delay(&self, len: Duration, cycles: usize, d: f32) {
-		self.effects.set_delay(len, cycles, d);
+		self.effects.set_delay(Delay::new(len, cycles, d));
 	}
 
 	/// set looping

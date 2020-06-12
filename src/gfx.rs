@@ -55,6 +55,9 @@
 //! ## Canvas
 //!
 //! You can use an off-screen framebuffer with [`Canvas`](struct.Canvas.html) and [`draw_on`](struct.Gfx.html#method.draw_on):
+//!
+//! Use [`draw_on`](struct.Gfx.html#method.draw_on) to use custom camera
+//!
 //! ```ignore
 //! // init
 //! let canvas = Canvas::new(&gfx, 120, 120)?;
@@ -71,9 +74,36 @@
 //!
 //! also remember to resize canvas when window resizes if you have a fullscreen canvas, and recreate canvas when window DPI changes
 //!
-//! ## Custom Shader
+//! ## Camera
+//!
+//! Cameras implement the [`Camera`](trait.Camera.html) trait, which lets you define your own projection and view matrix.
+//!
+//! We provide 2 built in cameras, [`OrthoCam`](struct.OrthoCam.html) and [`PerspectiveCam`](struct.PerspectiveCam.html).
+//!
+//! Use [`use_cam`](struct.Gfx.html#method.use_cam) to use custom camera
+//!
+//! ```ignore
+//! let cam = gfx::PerspectiveCam {
+//!    fov: f32::to_radians(60.0),
+//!    up: vec3!(0, 1, 0),
+//!    aspect: d.gfx.width() as f32 / d.gfx.height() as f32,
+//!    near: 0.1,
+//!    far: 1024.0,
+//!    pos: vec3!(0),
+//!    dir: vec3!(0, 0, -1),
+//! };
+//!
+//! d.gfx.use_cam(&cam, |gfx| {
+//!     // draw stuff with cam
+//!     return Ok(());
+//! })?;
+//! ```
+//!
+//! ## Shader
 //!
 //! Use [`Shader`](struct.Shader.html) to create custom shaders. It requires a type that implements [`CustomUniform`](trait.CustomUniform.html), a minimal example:
+//!
+//! Use [`draw_with`](struct.Gfx.html#method.draw_with) to use custom camera
 //!
 //! ```glsl
 //! // blue.frag
@@ -124,13 +154,9 @@
 //! |         | vec4()    | default_pos   | get the default vertex position | vert       |
 //! |         | vec4()    | default_color | get the default fragment color  | frag       |
 //!
-//! ## Camera
-//!
 //! ## Memory Management
 //!
 //! OpenGL uses its own heap memory allocation, so you'll have to free memory yourself when you're done with them. Resource types [`Texture`](struct.Texture.html), [`Model`](struct.Model.html), [`Shader`](struct.Shader.html), [`Canvas`](struct.Canvas.html) and fonts all have a `free(self)` method that frees the memory.
-
-// TODO: major cleaning
 
 import!(vbuf);
 import!(ibuf);
@@ -158,11 +184,6 @@ use glow::HasContext;
 use crate::*;
 use math::*;
 use window::*;
-
-use types::*;
-
-pub use types::Surface;
-pub use types::Primitive;
 
 pub(self) type BufferID = <glow::Context as HasContext>::Buffer;
 pub(self) type ProgramID = <glow::Context as HasContext>::Program;

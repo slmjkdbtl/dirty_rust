@@ -5,6 +5,8 @@ use math::*;
 use gfx::shapes;
 use input::Key;
 
+const INCRE: usize = 100;
+
 struct Game {
 	tex: gfx::Texture,
 	count: usize,
@@ -14,8 +16,8 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
-			tex: gfx::Texture::from_bytes(d.gfx, include_bytes!("res/bunny.png"))?,
-			count: 10000,
+			tex: gfx::Texture::from_bytes(d.gfx, include_bytes!("res/acid2.png"))?,
+			count: INCRE,
 		});
 	}
 
@@ -27,7 +29,7 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
-					Key::Space => self.count += 500,
+					Key::Space => self.count += INCRE,
 					_ => {},
 				}
 			},
@@ -67,20 +69,25 @@ impl State for Game {
 			rgba!(1, 0, 0, 1)
 		};
 
-		d.gfx.draw_t(
-			mat4!()
-				.s2(vec2!(6))
-				,
-			&shapes::text(&format!("{}", d.app.fps()))
-				.color(c)
+		d.gfx.draw(
+			&shapes::rect(-vec2!(144, 96), vec2!(144, 84))
+				.fill(rgba!(0, 0, 0, 1))
 		)?;
 
 		d.gfx.draw_t(
 			mat4!()
-				.ty(-64.0)
-				.s2(vec2!(1.5))
 				,
-			&shapes::text(&format!("{} bunnies", self.count)),
+			&shapes::text(&format!("{}", d.app.fps()))
+				.color(c)
+				.size(64.0)
+		)?;
+
+		d.gfx.draw_t(
+			mat4!()
+				.ty(-54.0)
+				,
+			&shapes::text(&format!("{} faces", self.count))
+				.size(16.0)
 		)?;
 
 		return Ok(());

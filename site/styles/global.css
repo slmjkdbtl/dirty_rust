@@ -32,6 +32,10 @@ a:hover {
 	color: black;
 }
 
+canvas {
+	border: solid pink 1px;
+}
+
 #logo {
 	width: 120px;
 	height: auto;

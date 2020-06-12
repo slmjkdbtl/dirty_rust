@@ -24,6 +24,7 @@ import!(converter);
 export!(source);
 export!(types);
 export!(effect);
+export!(spatial);
 
 #[cfg(not(web))]
 export!(track);

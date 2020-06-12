@@ -9,9 +9,11 @@ check-web:
 		--all-features \
 		--target wasm32-unknown-unknown
 
-run example:
+run example args="":
 	cargo run \
-		--example {{example}}
+		--example {{example}} \
+		-- \
+		{{args}}
 
 build-web example:
 	cargo build \

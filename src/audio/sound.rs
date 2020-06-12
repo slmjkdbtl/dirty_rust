@@ -66,8 +66,8 @@ impl<'a> SoundBuilder<'a> {
 		return self;
 	}
 
-	pub fn pan(self, p: f32) -> Self {
-		return self.add(Pan::new(p));
+	pub fn pan(self, l: f32, r: f32) -> Self {
+		return self.add(Volume::panned(l, r));
 	}
 
 	pub fn volume(self, v: f32) -> Self {

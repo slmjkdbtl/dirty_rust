@@ -3,7 +3,6 @@
 //! Utilities for Terminal Output
 
 use std::fmt;
-
 use crate::math::Color;
 
 #[derive(Clone)]

@@ -323,6 +323,10 @@ impl Vec3 {
 		return vec2!(self.x, self.y);
 	}
 
+	pub fn xz(self) -> Vec2 {
+		return vec2!(self.x, self.z);
+	}
+
 	pub fn clamp(self, low: Self, hi: Self) -> Self {
 		return vec3!(
 			self.x.max(low.x).min(hi.x),
