@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::time::Duration;
 
 use dirty::*;
@@ -46,8 +48,7 @@ impl State for Game {
 					#[cfg(not(web))]
 					_ => self.sound
 						.builder()
-						.delay(Duration::from_secs_f32(0.2), 3, 0.5)
-// 						.reverb(0.5)
+						.chain(Delay::new(Duration::from_secs_f32(0.2), 3, 0.5))
 						.pan(math::rand(0.0, 1.0), math::rand(0.0, 1.0))
 						.volume(0.3)
 						.play()?

@@ -1,8 +1,7 @@
 // wengwengweng
 
-use std::time::Duration;
-use std::sync::Mutex;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::io::Cursor;
 
 use super::*;
@@ -12,8 +11,8 @@ use super::*;
 pub struct Track {
 	id: SourceID,
 	src: Arc<Mutex<Decoder<Cursor<Vec<u8>>>>>,
-	control: Arc<Control>,
-	effects: BasicEffectChain,
+	control: Arc<Mutex<Control>>,
+	mixer: Arc<Mutex<Mixer>>,
 }
 
 impl Track {
@@ -34,71 +33,64 @@ impl Track {
 			.get_control(&id)
 			.ok_or(format!("failed to get mixer"))?;
 
-		control.set_paused(true);
-
-		let effects = BasicEffectChain::new();
-
-		for e in effects.chain() {
-			mixer.add_effect(&id, e);
-		}
+		control.lock().unwrap().paused = true;
 
 		return Ok(Self {
-			src,
-			id,
-			control,
-			effects,
+			src: src,
+			id: id,
+			control: control,
+			mixer: ctx.mixer().clone(),
 		});
 
 	}
 
 	/// play / resume track
 	pub fn play(&mut self) {
-		self.control.set_paused(false);
+		self.control.lock().unwrap().paused = false;
 	}
 
 	/// pause track
 	pub fn pause(&mut self) {
-		self.control.set_paused(true);
+		self.control.lock().unwrap().paused = true;
 	}
 
 	/// set volume
 	pub fn set_volume(&self, v: f32) {
-		self.effects.set_volume(Volume::new(v));
+		self.control.lock().unwrap().volume = v;
+	}
+
+	/// get volume
+	pub fn volume(&self) -> f32 {
+		return self.control.lock().unwrap().volume;
 	}
 
 	/// set pan
 	pub fn set_pan(&self, l: f32, r: f32) {
-		self.effects.set_volume(Volume::panned(l, r));
+		self.control.lock().unwrap().pan = Pan::new(l, r);
 	}
 
-	/// set distortion
-	pub fn set_distortion(&self, s: f32) {
-		self.effects.set_distortion(Distortion::new(s));
-	}
-
-	/// set reverb
-	pub fn set_reverb(&self, d: f32) {
-		self.effects.set_reverb(Reverb::new(d));
-	}
-
-	/// set delay
-	pub fn set_delay(&self, len: Duration, cycles: usize, d: f32) {
-		self.effects.set_delay(Delay::new(len, cycles, d));
+	/// get pan
+	pub fn pan(&self) -> Pan {
+		return self.control.lock().unwrap().pan;
 	}
 
 	/// set looping
 	pub fn set_looping(&self, l: bool) {
-		self.control.set_looping(l);
+		self.control.lock().unwrap().looping = l;
 	}
 
 	/// check if is paused
 	pub fn paused(&self) -> bool {
-		return self.control.paused();
+		return self.control.lock().unwrap().paused;
 	}
 
 	/// remove audio from mixer
 	pub fn detach(&self) {
-		return self.control.detach();
+		self.control.lock().unwrap().detach = true;
+	}
+
+	pub fn add_effect(&self, e: Arc<Mutex<dyn Effect + Send>>) {
+		self.mixer.lock().unwrap().add_effect(&self.id, e);
 	}
 
 }

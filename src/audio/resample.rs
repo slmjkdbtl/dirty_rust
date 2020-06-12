@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use super::*;
 
-pub struct Converter {
+pub struct Resampler {
 	src: Arc<Mutex<dyn Source + Send>>,
 	target: Spec,
 	prev_frame: Option<Frame>,
@@ -14,7 +14,7 @@ pub struct Converter {
 	frame_pos: usize,
 }
 
-impl Converter {
+impl Resampler {
 	pub fn new(src: Arc<Mutex<dyn Source + Send>>, target: Spec) -> Result<Self> {
 		return Ok(Self {
 			src: src,
@@ -30,7 +30,7 @@ impl Converter {
 	}
 }
 
-impl Iterator for Converter {
+impl Iterator for Resampler {
 
 	type Item = Frame;
 

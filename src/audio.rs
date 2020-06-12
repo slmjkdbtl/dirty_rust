@@ -20,7 +20,7 @@ import!(wav);
 import!(mp3);
 import!(decoder);
 import!(buffer);
-import!(converter);
+import!(resample);
 export!(source);
 export!(types);
 export!(effect);
@@ -44,6 +44,44 @@ pub const SPEC: Spec = Spec {
 	channel_count: 2,
 };
 
+/// Influence Left & Right Channel Volume
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Pan {
+	left: f32,
+	right: f32,
+}
+
+impl Pan {
+	pub fn new(l: f32, r: f32) -> Self {
+		return Self {
+			left: l,
+			right: r,
+		};
+	}
+}
+
+impl Default for Pan {
+	fn default() -> Self {
+		return Self {
+			left: 1.0,
+			right: 1.0,
+		};
+	}
+}
+
+impl Mul<f32> for Pan {
+
+	type Output = Self;
+
+	fn mul(self, f: f32) -> Self {
+		return Self {
+			left: self.left * f,
+			right: self.right * f,
+		};
+	}
+
+}
+
 /// Represents A Frame in Audio
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Frame {
@@ -58,10 +96,10 @@ impl Frame {
 			right: r,
 		};
 	}
-	pub fn from_i16(l: i16, r: i16) -> Self {
+	pub fn mono(v: f32) -> Self {
 		return Self {
-			left: l as f32 / i16::MAX as f32,
-			right: r as f32 / i16::MAX as f32,
+			left: v,
+			right: v,
 		};
 	}
 }
@@ -111,6 +149,19 @@ impl Mul<f32> for Frame {
 		return Self {
 			left: self.left * f,
 			right: self.right * f,
+		};
+	}
+
+}
+
+impl Mul<Pan> for Frame {
+
+	type Output = Self;
+
+	fn mul(self, p: Pan) -> Self {
+		return Self {
+			left: self.left * p.left,
+			right: self.right * p.right,
 		};
 	}
 

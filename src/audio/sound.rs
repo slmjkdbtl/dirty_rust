@@ -1,6 +1,5 @@
 // wengwengweng
 
-use std::time::Duration;
 use std::sync::Mutex;
 use std::sync::Arc;
 
@@ -47,6 +46,8 @@ impl Sound {
 			playback: self.playback.clone(),
 			mixer: &self.mixer,
 			effects: vec![],
+			volume: 1.0,
+			pan: Pan::new(1.0, 1.0),
 		};
 	}
 
@@ -57,33 +58,25 @@ pub struct SoundBuilder<'a> {
 	playback: AudioBufferPlayback,
 	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 	mixer: &'a Arc<Mutex<Mixer>>,
+	volume: f32,
+	pan: Pan,
 }
 
 impl<'a> SoundBuilder<'a> {
 
-	pub fn add(mut self, e: impl Effect + Send + 'static) -> Self {
+	pub fn chain(mut self, e: impl Effect + Send + 'static) -> Self {
 		self.effects.push(Arc::new(Mutex::new(e)));
 		return self;
 	}
 
-	pub fn pan(self, l: f32, r: f32) -> Self {
-		return self.add(Volume::panned(l, r));
+	pub fn pan(mut self, l: f32, r: f32) -> Self {
+		self.pan = Pan::new(l, r);
+		return self;
 	}
 
-	pub fn volume(self, v: f32) -> Self {
-		return self.add(Volume::new(v));
-	}
-
-	pub fn distortion(self, s: f32) -> Self {
-		return self.add(Distortion::new(s));
-	}
-
-	pub fn reverb(self, d: f32) -> Self {
-		return self.add(Reverb::new(d));
-	}
-
-	pub fn delay(self, len: Duration, cycles: usize, d: f32) -> Self {
-		return self.add(Delay::new(len, cycles, d));
+	pub fn volume(mut self, v: f32) -> Self {
+		self.volume = v;
+		return self;
 	}
 
 	pub fn play(self) -> Result<()> {
@@ -96,6 +89,15 @@ impl<'a> SoundBuilder<'a> {
 
 		for e in self.effects {
 			mixer.add_effect(&id, e);
+		}
+
+		let control = mixer
+			.get_control(&id)
+			.ok_or(format!("failed to get sound control"))?;
+
+		if let Ok(mut ctrl) = control.lock() {
+			ctrl.pan = self.pan;
+			ctrl.volume = self.volume;
 		}
 
 		return Ok(());

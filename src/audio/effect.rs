@@ -2,6 +2,7 @@
 
 use std::sync::Mutex;
 use std::sync::Arc;
+use std::f32::consts::PI;
 use std::time::Duration;
 use std::collections::VecDeque;
 
@@ -15,36 +16,16 @@ pub trait Effect {
 	}
 }
 
-#[derive(Clone, Debug)]
-pub struct Volume {
-	left: f32,
-	right: f32,
+#[derive(Clone)]
+pub struct EffectChain {
+	effects: Vec<Arc<Mutex<dyn Effect>>>,
 }
 
-impl Volume {
-	pub fn new(v: f32) -> Self {
-		return Self::panned(v, v);
-	}
-	pub fn panned(l: f32, r: f32) -> Self {
+impl EffectChain {
+	pub fn new() -> Self {
 		return Self {
-			left: l.max(0.0),
-			right: r.max(0.0),
+			effects: vec![],
 		};
-	}
-}
-
-impl Default for Volume {
-	fn default() -> Self {
-		return Self::new(1.0);
-	}
-}
-
-impl Effect for Volume {
-	fn process(&mut self, f: Frame) -> Frame {
-		return Frame::new(
-			f.left * self.left,
-			f.right * self.right,
-		);
 	}
 }
 
@@ -188,56 +169,39 @@ impl Effect for Reverb {
 	}
 }
 
-#[derive(Clone)]
-pub(super) struct BasicEffectChain {
-	volume: Arc<Mutex<Volume>>,
-	delay: Arc<Mutex<Delay>>,
-	distortion: Arc<Mutex<Distortion>>,
-	reverb: Arc<Mutex<Reverb>>,
+pub struct Lowpass {
+	cutoff: u32,
+	last_frame: Frame,
 }
 
-impl BasicEffectChain {
-
-	pub fn new() -> Self {
+impl Lowpass {
+	pub fn new(cutoff: u32) -> Self {
 		return Self {
-			volume: Arc::new(Mutex::new(Volume::default())),
-			delay: Arc::new(Mutex::new(Delay::default())),
-			distortion: Arc::new(Mutex::new(Distortion::default())),
-			reverb: Arc::new(Mutex::new(Reverb::default())),
+			cutoff: cutoff,
+			last_frame: Frame::new(0.0, 0.0),
 		};
 	}
+}
 
-	pub fn chain(&self) -> Vec<Arc<Mutex<dyn Effect + Send>>> {
-		return vec![
-			self.distortion.clone(),
-			self.delay.clone(),
-			self.reverb.clone(),
-			self.volume.clone(),
-		];
+impl Default for Lowpass {
+	fn default() -> Self {
+		return Self::new(22050);
 	}
+}
 
-	pub fn set_volume(&self, v: Volume) {
-		if let Ok(mut volume) = self.volume.lock() {
-			*volume = v;
-		}
-	}
+impl Effect for Lowpass {
 
-	pub fn set_distortion(&self, d: Distortion) {
-		if let Ok(mut distortion) = self.distortion.lock() {
-			*distortion = d;
-		}
-	}
+	fn process(&mut self, f: Frame) -> Frame {
 
-	pub fn set_reverb(&self, r: Reverb) {
-		if let Ok(mut reverb) = self.reverb.lock() {
-			*reverb = r;
-		}
-	}
+		let rc = 1.0 / (self.cutoff as f32 * 2.0 * PI);
+		let dt = 1.0 / SPEC.sample_rate as f32;
+		let alpha = dt / (rc + dt);
+		let out = self.last_frame + ((f - self.last_frame) * alpha);
 
-	pub fn set_delay(&self, d: Delay) {
-		if let Ok(mut delay) = self.delay.lock() {
-			*delay = d;
-		}
+		self.last_frame = out;
+
+		return out;
+
 	}
 
 }

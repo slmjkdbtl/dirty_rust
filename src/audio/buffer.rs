@@ -54,5 +54,11 @@ impl AudioBuffer {
 		return self.sample_rate;
 	}
 
+	pub fn process(&mut self, e: &mut impl Effect) {
+		for f in &mut self.frames {
+			*f = e.process(*f);
+		}
+	}
+
 }
 
