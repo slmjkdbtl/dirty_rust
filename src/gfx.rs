@@ -539,6 +539,24 @@ impl Gfx {
 
 	}
 
+	/// draw within a rect
+	pub fn draw_within(
+		&mut self,
+		p1: Vec2,
+		p2: Vec2,
+		f: impl FnOnce(&mut Self) -> Result<()>
+	) -> Result<()> {
+		self.draw_masked(|gfx| {
+			return gfx.draw(&shapes::rect(p1, p2));
+		}, |gfx| {
+			return gfx.push_t(mat4!().t2(p1), |gfx| {
+				return f(gfx);
+			});
+		})?;
+		return Ok(());
+	}
+
+	/// use custom blending
 	pub fn use_blend(
 		&mut self,
 		b: Blend,

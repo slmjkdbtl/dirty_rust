@@ -53,10 +53,13 @@ impl Iterator for Resampler {
 		self.pos += speed;
 
 		if self.pos > self.frame_pos as f32 {
+
 			let skip = self.pos as usize - self.frame_pos;
+
 			for _ in 0..skip {
 				src.next();
 			}
+
 			self.prev_frame = self.next_frame;
 			self.next_frame = src.next();
 
@@ -68,12 +71,17 @@ impl Iterator for Resampler {
 			let progress = self.pos - (self.frame_pos - 1) as f32;
 			let prev = self.prev_frame.unwrap_or_default();
 			let next = self.next_frame.unwrap_or_default();
+
 			return Some(prev + (next - prev) * progress);
+
 		} else {
+
 			let prev = self.prev_frame.unwrap_or_default();
 			let next = self.next_frame.unwrap_or_default();
 			let progress = self.pos - (self.frame_pos - 1) as f32;
+
 			return Some(prev + (next - prev) * progress);
+
 		}
 
 	}

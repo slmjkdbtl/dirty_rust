@@ -79,29 +79,29 @@ impl Line3 {
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Rect {
-	pub min: Vec2,
-	pub max: Vec2,
+	pub p1: Vec2,
+	pub p2: Vec2,
 }
 
 impl Rect {
 
-	pub const fn new(min: Vec2, max: Vec2) -> Self {
+	pub const fn new(p1: Vec2, p2: Vec2) -> Self {
 		return Self {
-			min,
-			max,
+			p1,
+			p2,
 		};
 	}
 
 	pub fn center(&self) -> Vec2 {
-		return (self.min + self.max) * 0.5;
+		return (self.p1 + self.p2) * 0.5;
 	}
 
 	pub fn width(&self) -> f32 {
-		return self.max.x - self.min.x;
+		return (self.p2.x - self.p1.x).abs();
 	}
 
 	pub fn height(&self) -> f32 {
-		return self.max.y - self.min.y;
+		return (self.p2.y - self.p1.y).abs();
 	}
 
 }
@@ -151,14 +151,14 @@ impl BBox {
 
 	}
 
-	pub fn max(self, other: Self) -> Self {
+	pub fn max(b1: Self, b2: Self) -> Self {
 
-		let minx = f32::min(self.min.x, other.min.x);
-		let miny = f32::min(self.min.y, other.min.y);
-		let minz = f32::min(self.min.z, other.min.z);
-		let maxx = f32::max(self.max.x, other.max.x);
-		let maxy = f32::max(self.max.y, other.max.y);
-		let maxz = f32::max(self.max.z, other.max.z);
+		let minx = f32::min(b1.min.x, b2.min.x);
+		let miny = f32::min(b1.min.y, b2.min.y);
+		let minz = f32::min(b1.min.z, b2.min.z);
+		let maxx = f32::max(b1.max.x, b2.max.x);
+		let maxy = f32::max(b1.max.y, b2.max.y);
+		let maxz = f32::max(b1.max.z, b2.max.z);
 
 		return Self {
 			min: vec3!(minx, miny, minz),
@@ -167,14 +167,14 @@ impl BBox {
 
 	}
 
-	pub fn min(self, other: Self) -> Self {
+	pub fn min(b1: Self, b2: Self) -> Self {
 
-		let minx = f32::max(self.min.x, other.min.x);
-		let miny = f32::max(self.min.y, other.min.y);
-		let minz = f32::max(self.min.z, other.min.z);
-		let maxx = f32::min(self.max.x, other.max.x);
-		let maxy = f32::min(self.max.y, other.max.y);
-		let maxz = f32::min(self.max.z, other.max.z);
+		let minx = f32::max(b1.min.x, b2.min.x);
+		let miny = f32::max(b1.min.y, b2.min.y);
+		let minz = f32::max(b1.min.z, b2.min.z);
+		let maxx = f32::min(b1.max.x, b2.max.x);
+		let maxy = f32::min(b1.max.y, b2.max.y);
+		let maxz = f32::min(b1.max.z, b2.max.z);
 
 		return Self {
 			min: vec3!(minx, miny, minz),

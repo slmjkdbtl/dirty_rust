@@ -231,13 +231,10 @@ gen_vec!(Vec4(vec4) -> (x, y, z, w): [f32; 4], (0, 0, 0, 0));
 gen_vec!(Color(rgba) -> (r, g, b, a): [f32; 4], (1, 1, 1, 1));
 gen_vec!(Quad(quad) -> (x, y, w, h): [f32; 4], (0, 0, 1, 1));
 gen_vec!(Pt(pt) -> (x, y): [i32; 2], (0, 0));
-gen_vec!(Size(size) -> (w, h): [i32; 2], (0, 0));
 
 mix!(Vec4(x, y, z, w): f32, Color(r, g, b, a): f32);
 mix!(Vec4(x, y, z, w): f32, Quad(x, y, w, h): f32);
 mix!(Vec2(x, y): f32, Pt(x, y): i32);
-mix!(Vec2(x, y): f32, Size(w, h): i32);
-mix!(Pt(x, y): i32, Size(w, h): i32);
 
 impl Vec2 {
 

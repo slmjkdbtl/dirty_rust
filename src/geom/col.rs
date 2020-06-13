@@ -14,8 +14,8 @@ fn fix_pt_pair(pts: (Vec2, Vec2)) -> (Vec2, Vec2) {
 
 fn rect_rect(r1: Rect, r2: Rect) -> bool {
 
-	let (p1, p2) = fix_pt_pair((r1.min, r2.max));
-	let (p3, p4) = fix_pt_pair((r2.min, r2.max));
+	let (p1, p2) = fix_pt_pair((r1.p1, r1.p2));
+	let (p3, p4) = fix_pt_pair((r2.p1, r2.p2));
 
 	return p2.x >= p3.x && p1.x <= p4.x && p2.y >= p3.y && p1.y <= p4.y;
 
@@ -24,7 +24,7 @@ fn rect_rect(r1: Rect, r2: Rect) -> bool {
 fn line_rect(line: Line2, rect: Rect) -> bool {
 
 	let (p1, p2) = fix_pt_pair((line.p1, line.p2));
-	let (p3, p4) = fix_pt_pair((rect.min, rect.max));
+	let (p3, p4) = fix_pt_pair((rect.p1, rect.p2));
 
 	if point_rect(p1, rect) || point_rect(p2, rect) {
 		return true;
@@ -44,7 +44,7 @@ fn line_rect(line: Line2, rect: Rect) -> bool {
 
 fn rect_circle(r: Rect, c: Circle) -> bool {
 
-	let (p1, p2) = fix_pt_pair((r.min, r.max));
+	let (p1, p2) = fix_pt_pair((r.p1, r.p2));
 	let mut test = c.center;
 
 	if (c.center.x < p1.x) {
@@ -165,7 +165,7 @@ fn poly_poly(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 }
 
 fn point_rect(pt: Vec2, rect: Rect) -> bool {
-	let (p1, p2) = fix_pt_pair((rect.min, rect.max));
+	let (p1, p2) = fix_pt_pair((rect.p1, rect.p2));
 	return pt.x >= p1.x && pt.x <= p2.x && pt.y >= p1.y && pt.y <= p2.y;
 }
 
@@ -193,7 +193,7 @@ fn point_poly(pt: Vec2, poly: &[Vec2]) -> bool {
 }
 
 fn poly_rect(p: &[Vec2], r: Rect) -> bool {
-	let (p1, p2) = fix_pt_pair((r.min, r.max));
+	let (p1, p2) = fix_pt_pair((r.p1, r.p2));
 	return poly_poly(&p, &[p1, vec2!(p2.x, p1.y), p2, vec2!(p1.x, p2.y)])
 }
 

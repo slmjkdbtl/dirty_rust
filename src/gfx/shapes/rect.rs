@@ -26,7 +26,7 @@ impl Rect {
 		return Self::from_pts(p1, p2);
 	}
 	pub fn from_rect(r: geom::Rect) -> Self {
-		return Self::from_pts(r.min, r.max);
+		return Self::from_pts(r.p1, r.p2);
 	}
 	pub fn fill(mut self, c: Color) -> Self {
 		self.fill = Some(c);
