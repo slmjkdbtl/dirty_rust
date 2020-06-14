@@ -322,6 +322,7 @@ impl Gfx {
 
 	}
 
+	/// clear current frame
 	pub fn clear(&mut self) {
 
 		self.flush();
@@ -334,6 +335,7 @@ impl Gfx {
 
 	}
 
+	/// clear specified buffer
 	pub fn clear_ex(&mut self, s: Surface) {
 
 		self.flush();
@@ -344,10 +346,12 @@ impl Gfx {
 
 	}
 
+	/// draw a [`Drawable`](trait.Drawable.html)
 	pub fn draw(&mut self, shape: &impl Drawable) -> Result<()> {
 		return shape.draw(self);
 	}
 
+	/// draw a [`Drawable`](trait.Drawable.html) with transform
 	pub fn draw_t(&mut self, t: Mat4, shape: &impl Drawable) -> Result<()> {
 		return self.push_t(t, |ctx| {
 			return ctx.draw(shape);
@@ -355,6 +359,7 @@ impl Gfx {
 	}
 
 	// TODO: alias this closure type
+	/// draw everything inside with transform
 	pub fn push_t(
 		&mut self,
 		t: Mat4,
@@ -371,22 +376,8 @@ impl Gfx {
 
 	}
 
-	pub fn reset_t(
-		&mut self,
-		f: impl FnOnce(&mut Self) -> Result<()>,
-	) -> Result<()> {
-
-		let ot = self.transform;
-
-		self.transform = mat4!();
-		f(self)?;
-		self.transform = ot;
-
-		return Ok(());
-
-	}
-
 	// TODO: viewport 2x scaled with no hidpi
+	/// draw on a [`Canvas`](struct.Canvas.html)
 	pub fn draw_on(
 		&mut self,
 		canvas: &Canvas,
@@ -451,6 +442,7 @@ impl Gfx {
 
 	}
 
+	/// draw with a [`Shader`](struct.Shader.html)
 	pub fn draw_with<U: CustomUniform>(
 		&mut self,
 		shader: &Shader<U>,
@@ -478,6 +470,7 @@ impl Gfx {
 
 	}
 
+	/// draw with stencil operations
 	pub fn draw_masked_ex(
 		&mut self,
 		s1: StencilState,
@@ -512,6 +505,7 @@ impl Gfx {
 	}
 
 	// TODO: learn more about stencil
+	/// mask pixels from first call to the second
 	pub fn draw_masked(
 		&mut self,
 		mask: impl FnOnce(&mut Self) -> Result<()>,
@@ -578,6 +572,7 @@ impl Gfx {
 
 	}
 
+	/// use a [`Camera`](trait.Camera.html)
 	pub fn use_cam(
 		&mut self,
 		cam: &dyn Camera,
@@ -598,6 +593,7 @@ impl Gfx {
 
 	}
 
+	/// use the default camera
 	pub fn use_default_cam(
 		&mut self,
 		f: impl FnOnce(&mut Self) -> Result<()>,
@@ -606,6 +602,7 @@ impl Gfx {
 		return self.use_cam(&cam, f);
 	}
 
+	/// temporarily disable depth write
 	pub fn no_depth_write(
 		&mut self,
 		f: impl FnOnce(&mut Self) -> Result<()>,
@@ -623,6 +620,7 @@ impl Gfx {
 
 	}
 
+	/// temporarily disable depth test
 	pub fn no_depth_test(
 		&mut self,
 		f: impl FnOnce(&mut Self) -> Result<()>,
@@ -640,22 +638,27 @@ impl Gfx {
 
 	}
 
+	/// get current transform
 	pub fn transform(&self) -> Mat4 {
 		return self.transform;
 	}
 
+	/// get position of a window [`Origin`](struct.Origin.html)
 	pub fn coord(&self, orig: gfx::Origin) -> Vec2 {
 		return orig.as_pt() / 2.0 * vec2!(self.width, self.height);
 	}
 
+	/// transform a point from clip space to screen space
 	pub fn clip_to_screen(&self, p: Vec2) -> Vec2 {
 		return p * vec2!(self.width, self.height) * 0.5;
 	}
 
+	/// transform a point from screen space to clip space
 	pub fn screen_to_clip(&self, p: Vec2) -> Vec2 {
 		return p / 0.5 / vec2!(self.width, self.height);
 	}
 
+	/// get default font
 	pub fn default_font(&self) -> &impl Font {
 		return &self.default_font;
 	}

@@ -4,6 +4,29 @@ use crate::*;
 use window::*;
 use conf::*;
 
+/// The Main Trait
+pub trait State: 'static + Sized {
+
+	fn init(_: &mut Ctx) -> Result<Self>;
+
+	fn event(&mut self, _: &mut Ctx, _: &input::Event) -> Result<()> {
+		return Ok(());
+	}
+
+	fn update(&mut self, _: &mut Ctx) -> Result<()> {
+		return Ok(());
+	}
+
+	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
+		return Ok(());
+	}
+
+	fn quit(&mut self, _: &mut Ctx) -> Result<()> {
+		return Ok(());
+	}
+
+}
+
 impl Launcher {
 	pub fn run<S: State>(self) -> Result<()> {
 		return run_with_conf::<S>(self.conf);
@@ -67,6 +90,10 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 				ctx.gfx.begin_frame();
 				s.draw(&mut ctx)?;
 				ctx.gfx.end_frame();
+			},
+
+			WindowEvent::Quit => {
+				s.quit(&mut ctx)?;
 			},
 
 		}

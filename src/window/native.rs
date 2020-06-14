@@ -325,14 +325,16 @@ impl Window {
 
 		event_loop.run(move |e, _, flow| {
 
-			if self.quit {
-				*flow = ControlFlow::Exit;
-				return;
-			}
-
 			*flow = ControlFlow::Poll;
 
 			let res: Result<()> = || -> Result<()> {
+
+				if self.quit {
+					handle(&mut self, WindowEvent::Quit)?;
+					*flow = ControlFlow::Exit;
+					self.quit = false;
+					return Ok(());
+				}
 
 				use glutin::event::WindowEvent as WEvent;
 				use glutin::event::DeviceEvent as DEvent;
@@ -355,7 +357,9 @@ impl Window {
 					WinitEvent::WindowEvent { ref event, .. } => match event {
 
 						WEvent::CloseRequested => {
+							handle(&mut self, WindowEvent::Quit)?;
 							*flow = ControlFlow::Exit;
+							return Ok(());
 						},
 
 						WEvent::ScaleFactorChanged { scale_factor, .. } => {

@@ -27,12 +27,6 @@ struct InputState {
 	cursor: Col,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum CursorDir {
-	Start,
-	End
-}
-
 #[derive(Clone)]
 pub struct Conf {
 	pub init_content: String,
@@ -312,12 +306,12 @@ fn input_actions() {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct CursorPos {
+pub struct Cursor {
 	pub line: Line,
 	pub col: Col,
 }
 
-impl CursorPos {
+impl Cursor {
 	pub fn new(l: Line, c: Col) -> Self {
 		return Self {
 			line: l,
@@ -326,13 +320,13 @@ impl CursorPos {
 	}
 }
 
-impl fmt::Display for CursorPos {
+impl fmt::Display for Cursor {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		return write!(f, "({}, {})", self.line, self.col);
 	}
 }
 
-impl Default for CursorPos {
+impl Default for Cursor {
 	fn default() -> Self {
 		return Self {
 			line: 1,
@@ -345,7 +339,7 @@ impl Default for CursorPos {
 pub struct TextArea {
 	conf: Conf,
 	lines: Vec<String>,
-	cursor: CursorPos,
+	cursor: Cursor,
 	modified: bool,
 	undo_stack: Vec<TextAreaState>,
 	redo_stack: Vec<TextAreaState>,
@@ -354,7 +348,7 @@ pub struct TextArea {
 #[derive(Debug, Clone, PartialEq)]
 struct TextAreaState {
 	lines: Vec<String>,
-	cursor: CursorPos,
+	cursor: Cursor,
 	modified: bool,
 }
 
@@ -366,13 +360,24 @@ impl TextArea {
 
 	pub fn with_conf(conf: Conf) -> Self {
 		return Self {
-			lines: conf.init_content.split('\n').map(String::from).collect(),
-			conf,
-			cursor: CursorPos::default(),
+			lines: conf.init_content
+				.split('\n')
+				.map(String::from)
+				.collect(),
+			conf: conf,
+			cursor: Cursor::default(),
 			undo_stack: vec![],
 			redo_stack: vec![],
 			modified: false,
 		};
+	}
+
+	pub fn modified(&self) -> bool {
+		return self.modified;
+	}
+
+	pub fn clear_modified(&mut self) {
+		self.modified = false;
 	}
 
 	pub fn set_content(&mut self, content: &str) {
@@ -390,7 +395,7 @@ impl TextArea {
 		return self.lines.join("\n");
 	}
 
-	pub fn cursor(&self) -> CursorPos {
+	pub fn cursor(&self) -> Cursor {
 		return self.cursor;
 	}
 
@@ -422,7 +427,7 @@ impl TextArea {
 		self.set_line_at(self.cursor.line, content);
 	}
 
-	pub fn insert_str_at(&mut self, mut pos: CursorPos, text: &str) -> CursorPos {
+	pub fn insert_str_at(&mut self, mut pos: Cursor, text: &str) -> Cursor {
 
 		if let Some(mut line) = self.get_line_at(pos.line).map(Clone::clone) {
 
@@ -443,7 +448,7 @@ impl TextArea {
 		self.cursor = self.insert_str_at(self.cursor, text);
 	}
 
-	pub fn insert_at(&mut self, mut pos: CursorPos, ch: char) -> CursorPos {
+	pub fn insert_at(&mut self, mut pos: Cursor, ch: char) -> Cursor {
 
 		if !ch.is_ascii() {
 			return pos;
@@ -499,11 +504,11 @@ impl TextArea {
 		self.cursor.line = self.del_line_at(self.cursor.line);
 	}
 
-	pub fn char_at(&self, pos: CursorPos) -> Option<char> {
+	pub fn char_at(&self, pos: Cursor) -> Option<char> {
 		return self.get_line_at(pos.line)?.chars().nth(pos.col as usize - 1);
 	}
 
-	pub fn break_line_at(&mut self, mut pos: CursorPos) -> CursorPos {
+	pub fn break_line_at(&mut self, mut pos: Cursor) -> Cursor {
 
 		if let Some(line) = self.get_line_at(pos.line).map(Clone::clone) {
 
@@ -535,7 +540,15 @@ impl TextArea {
 		self.cursor = self.break_line_at(self.cursor);
 	}
 
-	pub fn del_at(&mut self, mut pos: CursorPos) -> CursorPos {
+	pub fn cur_char(&self) -> Option<char> {
+		return self
+			.get_line_at(self.cursor.line)?
+			.chars()
+			.skip((self.cursor.col - 2) as usize)
+			.next();
+	}
+
+	pub fn del_at(&mut self, mut pos: Cursor) -> Cursor {
 
 		if let Some(mut line) = self.get_line_at(pos.line).map(Clone::clone) {
 
@@ -575,7 +588,7 @@ impl TextArea {
 		self.cursor = self.del_at(self.cursor);
 	}
 
-	pub fn del_word_at(&mut self, mut pos: CursorPos) -> CursorPos {
+	pub fn del_word_at(&mut self, mut pos: Cursor) -> Cursor {
 
 		if let Some(line) = self.get_line_at(pos.line).map(Clone::clone) {
 
@@ -596,7 +609,7 @@ impl TextArea {
 				}
 
 			} else if let Some(prev_pos) = self.prev_word_at(pos) {
-				return self.del_range((prev_pos, CursorPos {
+				return self.del_range((prev_pos, Cursor {
 					col: pos.col - 1,
 					.. pos
 				}));
@@ -614,7 +627,7 @@ impl TextArea {
 	}
 
 	// TODO: multiline
-	pub fn del_range(&mut self, r: (CursorPos, CursorPos)) -> CursorPos {
+	pub fn del_range(&mut self, r: (Cursor, Cursor)) -> Cursor {
 
 		let (start, end) = r;
 
@@ -640,17 +653,17 @@ impl TextArea {
 
 	}
 
-	pub fn clamp_cursor(&self, pos: CursorPos) -> CursorPos {
+	pub fn clamp_cursor(&self, pos: Cursor) -> Cursor {
 
 		if pos.col < 1 {
-			return self.clamp_cursor(CursorPos {
+			return self.clamp_cursor(Cursor {
 				col: 1,
 				.. pos
 			});
 		}
 
 		if pos.line < 1 {
-			return self.clamp_cursor(CursorPos {
+			return self.clamp_cursor(Cursor {
 				line: 1,
 				.. pos
 			});
@@ -662,7 +675,7 @@ impl TextArea {
 
 			if pos.col > len {
 
-				return self.clamp_cursor(CursorPos {
+				return self.clamp_cursor(Cursor {
 					col: len,
 					.. pos
 				});
@@ -674,7 +687,7 @@ impl TextArea {
 		let lines = self.lines.len() as Line;
 
 		if pos.line > lines && lines > 0 {
-			return self.clamp_cursor(CursorPos {
+			return self.clamp_cursor(Cursor {
 				line: lines,
 				.. pos
 			});
@@ -684,33 +697,33 @@ impl TextArea {
 
 	}
 
-	pub fn move_to(&mut self, pos: CursorPos) {
+	pub fn move_to(&mut self, pos: Cursor) {
 		self.cursor = self.clamp_cursor(pos);
 	}
 
 	pub fn move_left(&mut self) {
-		self.move_to(CursorPos {
+		self.move_to(Cursor {
 			col: self.cursor.col - 1,
 			.. self.cursor
 		});
 	}
 
 	pub fn move_right(&mut self) {
-		self.move_to(CursorPos {
+		self.move_to(Cursor {
 			col: self.cursor.col + 1,
 			.. self.cursor
 		});
 	}
 
 	pub fn move_up(&mut self) {
-		self.move_to(CursorPos {
+		self.move_to(Cursor {
 			line: self.cursor.line - 1,
 			.. self.cursor
 		});
 	}
 
 	pub fn move_down(&mut self) {
-		self.move_to(CursorPos {
+		self.move_to(Cursor {
 			line: self.cursor.line + 1,
 			.. self.cursor
 		});
@@ -728,7 +741,7 @@ impl TextArea {
 		}
 	}
 
-	pub fn next_word_at(&self, pos: CursorPos) -> Option<CursorPos> {
+	pub fn next_word_at(&self, pos: Cursor) -> Option<Cursor> {
 
 		let line = self.get_line_at(pos.line)?;
 
@@ -737,7 +750,7 @@ impl TextArea {
 			for (i, ch) in line[pos.col as usize..].char_indices() {
 
 				if self.conf.break_chars.contains(&ch) {
-					return Some(CursorPos {
+					return Some(Cursor {
 						col: pos.col + i as Col + 1 as Col,
 						.. pos
 					});
@@ -745,7 +758,7 @@ impl TextArea {
 
 			}
 
-			return Some(CursorPos {
+			return Some(Cursor {
 				col: line.len() as Col + 1,
 				.. pos
 			});
@@ -756,11 +769,11 @@ impl TextArea {
 
 	}
 
-	pub fn next_word(&self) -> Option<CursorPos> {
+	pub fn next_word(&self) -> Option<Cursor> {
 		return self.next_word_at(self.cursor);
 	}
 
-	pub fn prev_word_at(&self, pos: CursorPos) -> Option<CursorPos> {
+	pub fn prev_word_at(&self, pos: Cursor) -> Option<Cursor> {
 
 		let line = self.get_line_at(pos.line)?;
 
@@ -771,7 +784,7 @@ impl TextArea {
 			for (i, ch) in line[..end as usize].char_indices().rev() {
 
 				if self.conf.break_chars.contains(&ch) {
-					return Some(CursorPos {
+					return Some(Cursor {
 						col: i as Col + 2,
 						.. pos
 					});
@@ -779,7 +792,7 @@ impl TextArea {
 
 			}
 
-			return Some(CursorPos {
+			return Some(Cursor {
 				col: 1,
 				.. pos
 			});
@@ -790,7 +803,7 @@ impl TextArea {
 
 	}
 
-	pub fn prev_word(&self) -> Option<CursorPos> {
+	pub fn prev_word(&self) -> Option<Cursor> {
 		return self.prev_word_at(self.cursor);
 	}
 
@@ -846,7 +859,7 @@ impl TextArea {
 
 	}
 
-	pub fn line_start_at(&self, mut pos: CursorPos) -> CursorPos {
+	pub fn line_start_at(&self, mut pos: Cursor) -> Cursor {
 
 		if let Some(line) = self.get_line_at(pos.line) {
 
@@ -875,7 +888,7 @@ impl TextArea {
 		self.cursor = self.line_start_at(self.cursor);
 	}
 
-	pub fn line_end_at(&self, mut pos: CursorPos) -> CursorPos {
+	pub fn line_end_at(&self, mut pos: Cursor) -> Cursor {
 
 		if let Some(line) = self.get_line_at(pos.line) {
 			pos.col = line.len() as Col + 1;
@@ -902,7 +915,7 @@ fn textarea_actions() {
 		let content1 = b.content();
 		let content2 = content;
 		let pos1 = b.cursor();
-		let pos2 = CursorPos::new(l, c);
+		let pos2 = Cursor::new(l, c);
 
 		assert_eq!(content1, content2, "expected content '{}', found '{}'", content2, content1);
 		assert_eq!(pos1, pos2, "expected cursor {}, found {}", pos2, pos1);

@@ -16,6 +16,7 @@ pub(crate) enum WindowEvent {
 	Resize(i32, i32),
 	DPIChange(f32),
 	Frame,
+	Quit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
