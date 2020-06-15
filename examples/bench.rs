@@ -59,6 +59,8 @@ impl State for Game {
 					.t2(vec2!(rand(-w, w) as f32 * 0.5, rand(-h, h) as f32 * 0.5))
 					,
 				&shapes::sprite(&self.tex)
+					.width(32.0)
+					.height(32.0)
 					,
 			)?;
 		}

@@ -45,12 +45,12 @@ impl Track {
 	}
 
 	/// play / resume track
-	pub fn play(&mut self) {
+	pub fn play(&self) {
 		self.control.lock().unwrap().paused = false;
 	}
 
 	/// pause track
-	pub fn pause(&mut self) {
+	pub fn pause(&self) {
 		self.control.lock().unwrap().paused = true;
 	}
 

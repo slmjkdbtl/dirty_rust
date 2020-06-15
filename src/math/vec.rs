@@ -456,6 +456,15 @@ impl Color {
 		return (self - rgba!(v, v, v, 0)).clamp(rgba!(0), rgba!(1));
 	}
 
+	pub fn invert(self) -> Self {
+		return Self {
+			r: 1.0 - self.r,
+			g: 1.0 - self.g,
+			b: 1.0 - self.b,
+			a: self.a,
+		};
+	}
+
 	pub fn as_u8(&self) -> [u8; 4] {
 		return [
 			(self.r * 255.0) as u8,

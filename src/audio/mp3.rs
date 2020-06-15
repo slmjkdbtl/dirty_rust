@@ -6,6 +6,8 @@ use std::io::SeekFrom;
 
 use super::*;
 
+// TODO: puremp3 cannot decode mp3 with id3 tags
+
 pub struct Mp3Playback<R: Read + Seek> {
 	decoder: puremp3::Mp3Decoder<R>,
 	cur_frame: puremp3::Frame,

@@ -377,6 +377,9 @@ impl TextArea {
 	}
 
 	pub fn clear_modified(&mut self) {
+		for s in &mut self.undo_stack {
+			s.modified = true;
+		}
 		self.modified = false;
 	}
 
