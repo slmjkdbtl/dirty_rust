@@ -150,6 +150,10 @@ impl Window {
 		return Ok(());
 	}
 
+	pub fn focused(&self) -> bool {
+		return self.document.active_element() == Some(self.canvas.clone().into());
+	}
+
 	/// check if a key is currently pressed
 	pub fn key_down(&self, k: Key) -> bool {
 		return self.pressed_keys.contains(&k);

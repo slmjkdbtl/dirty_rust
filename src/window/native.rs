@@ -28,6 +28,7 @@ pub struct Window {
 	cursor_hidden: bool,
 	cursor_locked: bool,
 	title: String,
+	focused: bool,
 	quit: bool,
 	gamepad_ctx: gilrs::Gilrs,
 }
@@ -107,6 +108,7 @@ impl Window {
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_string(),
+			focused: true,
 			quit: false,
 			gamepad_ctx: gilrs::Gilrs::new()
 				.map_err(|_| format!("failed to create gamepad context"))?,
@@ -127,6 +129,10 @@ impl Window {
 			.swap_buffers()
 			.map_err(|_| format!("failed to swap buffer"))?;
 		return Ok(());
+	}
+
+	pub fn focused(&self) -> bool {
+		return self.focused;
 	}
 
 	/// check if a key is currently pressed
@@ -489,6 +495,7 @@ impl Window {
 						},
 
 						WEvent::Focused(b) => {
+							self.focused = *b;
 							events.push(Event::Focus(*b));
 						},
 
