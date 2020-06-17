@@ -3,17 +3,18 @@
 use super::*;
 
 #[derive(Clone)]
-pub struct FormattedChar {
+struct FormattedChar {
 	ch: char,
 	pos: Vec2,
 	tex: gfx::Texture,
 	quad: Quad,
 	width: f32,
+	height: f32,
 	color: Option<Color>,
 }
 
 #[derive(Clone)]
-pub struct FormattedLine {
+struct FormattedLine {
 	chars: Vec<FormattedChar>,
 	width: f32,
 }
@@ -33,11 +34,19 @@ pub struct TextChunk<'a> {
 	color: Option<Color>,
 }
 
-pub fn textc<'a>(s: &'a str, c: Color,) -> TextChunk<'a> {
-	return TextChunk {
-		text: s,
-		color: Some(c),
-	};
+impl<'a> TextChunk<'a> {
+	pub fn new(t: &'a str) -> Self {
+		return Self {
+			text: t,
+			color: None,
+		};
+	}
+	pub fn colored(t: &'a str, c: Color) -> Self {
+		return Self {
+			text: t,
+			color: Some(c),
+		};
+	}
 }
 
 #[derive(Clone)]
@@ -49,6 +58,7 @@ pub struct FormattedText {
 	color: Color,
 	italic: bool,
 	bold: bool,
+	align: gfx::Origin,
 }
 
 impl FormattedText {
@@ -67,7 +77,7 @@ impl FormattedText {
 			return Some(vec2!(0))
 		} else {
 			return self.chars.get(i - 1).map(|ch| {
-				return ch.pos + vec2!(ch.width, 0);
+				return ch.pos + vec2!(ch.width, 0) + vec2!(0, ch.height) * (self.align.as_pt() - gfx::Origin::TopLeft.as_pt()) * 0.5;
 			});
 		}
 	}
@@ -116,7 +126,7 @@ impl gfx::Drawable for FormattedText {
 				.tx(italic * fch.width)
 				.s2(vec2!(self.scale))
 			, &sprite(&fch.tex)
-				.offset(vec2!(-1, 1))
+				.offset(gfx::Origin::TopLeft.as_pt())
 				.quad(fch.quad)
 				.color(fch.color.unwrap_or(self.color))
 			)?;
@@ -141,7 +151,7 @@ pub enum TextWrapBreak {
 }
 
 #[derive(Clone)]
-pub struct FormatConf {
+struct FormatConf {
 	pub align: gfx::Origin,
 	pub wrap: Option<TextWrap>,
 	pub size: Option<f32>,
@@ -151,6 +161,7 @@ pub struct FormatConf {
 	pub italic: bool,
 	pub bold: bool,
 	pub tab_width: usize,
+	pub fallback_char: char,
 }
 
 impl Default for FormatConf {
@@ -165,13 +176,14 @@ impl Default for FormatConf {
 			italic: false,
 			bold: false,
 			tab_width: 1,
+			fallback_char: ' ',
 		};
 	}
 }
 
+// TODO: rework
 fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> FormattedText {
 
-	// TODO: deal with tabs
 	let mut lines = vec![];
 	let mut cur_line = FormattedLine::new();
 	let scale = conf.size.map(|s| s / font.height()).unwrap_or(1.0);
@@ -189,7 +201,7 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 
 			} else {
 
-				if let Some((tex, quad)) = font.get(ch).or(font.get(' ')) {
+				if let Some((tex, quad)) = font.get(ch).or(font.get(conf.fallback_char)) {
 
 					let mut gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
 
@@ -210,12 +222,13 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 					}
 
 					cur_line.chars.push(FormattedChar {
-						ch,
+						ch: ch,
 						pos: vec2!(),
 						tex: tex.clone(),
-						quad,
+						quad: quad,
 						color: chunk.color,
 						width: gw - conf.char_spacing,
+						height: gh,
 					});
 
 					cur_line.width += gw;
@@ -238,6 +251,8 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 	}
 
 	lines.push(cur_line);
+
+	// TODO: don't apply align to char pos
 
 	let h = lines.len() as f32 * gh;
 	let offset_pt = conf.align.as_pt() * 0.5 + vec2!(0.5, -0.5);
@@ -276,12 +291,13 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 
 	return FormattedText {
 		chars: fchars,
-		scale,
+		scale: scale,
 		width: w,
 		height: h,
 		color: conf.color,
 		italic: conf.italic,
 		bold: conf.bold,
+		align: conf.align,
 	};
 
 }

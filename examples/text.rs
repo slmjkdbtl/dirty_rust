@@ -112,9 +112,9 @@ impl State for Game {
 					,
 			)?;
 
-// 			if let Some(cpos) = text.cursor_pos(self.text.len()) {
-
-// 			}
+			if let Some(cpos) = text.cursor_pos(self.text.len()) {
+				d.gfx.draw_t(mat4!().t2(pos), &shapes::circle(cpos, 3.0))?;
+			}
 
 		}
 

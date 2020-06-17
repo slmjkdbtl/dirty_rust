@@ -3,11 +3,9 @@
 use dirty::*;
 use math::*;
 use gfx::shapes;
-use task::TaskQueue;
 use input::Key;
 
-const THREAD_COUNT: usize = 1;
-const LOAD_COUNT: usize = 30;
+const LOAD_COUNT: usize = 120;
 const SCALE: f32 = 9.0;
 
 struct Teapot {
@@ -16,7 +14,9 @@ struct Teapot {
 }
 
 struct Game {
-	tasks: TaskQueue<Result<gfx::ModelData>>,
+	tasks: Vec<task::Loader<Result<gfx::ModelData>>>,
+	loaded: usize,
+	count: usize,
 	teapots: Vec<Teapot>,
 	shader: gfx::Shader<()>,
 	canvas: gfx::Canvas,
@@ -25,10 +25,11 @@ struct Game {
 impl Game {
 	fn load_more(&mut self) -> Result<()> {
 		for _ in 0..LOAD_COUNT {
-			self.tasks.exec(|| {
+			self.tasks.push(task::Loader::new(|| {
 				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
-			})?;
+			})?);
 		}
+		self.count += LOAD_COUNT;
 		return Ok(());
 	}
 }
@@ -37,23 +38,21 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let mut tasks = TaskQueue::new(THREAD_COUNT);
-
-		for _ in 0..LOAD_COUNT {
-			tasks.exec(|| {
-				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
-			})?;
-		}
-
 		let cw = (d.gfx.width() as f32 / SCALE) as i32;
 		let ch = (d.gfx.height() as f32 / SCALE) as i32;
 
-		return Ok(Self {
-			tasks: tasks,
+		let mut l = Self {
+			tasks: vec![],
 			teapots: vec![],
 			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/blue.frag"))?,
 			canvas: gfx::Canvas::new(d.gfx, cw, ch)?,
-		});
+			loaded: 0,
+			count: 0,
+		};
+
+		l.load_more()?;
+
+		return Ok(l);
 
 	}
 
@@ -93,18 +92,22 @@ impl State for Game {
 
 		let dt = d.app.dt().as_secs_f32();
 
-		for m in self.tasks.poll()? {
-			let modeldata = m?;
-			self.teapots.push(Teapot {
-				transform: mat4!()
-					.t3(vec3!(rand(-320, 320), rand(-320, 320), rand(-640, -240)))
-					.rx(rand(0f32, 360f32).to_radians())
-					.ry(rand(0f32, 360f32).to_radians())
-					.rz(rand(0f32, 360f32).to_radians())
-					,
-				model: gfx::Model::from_data(d.gfx, modeldata)?,
-			});
+		for task in &mut self.tasks {
+			if let Some(data) = task.poll() {
+				self.loaded += 1;
+				self.teapots.push(Teapot {
+					transform: mat4!()
+						.t3(vec3!(rand(-320, 320), rand(-320, 320), rand(-640, -240)))
+						.rx(rand(0f32, 360f32).to_radians())
+						.ry(rand(0f32, 360f32).to_radians())
+						.rz(rand(0f32, 360f32).to_radians())
+						,
+					model: gfx::Model::from_data(d.gfx, data?)?,
+				});
+			}
 		}
+
+		self.tasks.retain(|t| !t.done());
 
 		for t in &mut self.teapots {
 			t.transform = t.transform
@@ -155,7 +158,7 @@ impl State for Game {
 				.t2(bot_left + vec2!(24, 48))
 				,
 			&shapes::text(
-				&format!("{}/{}", self.tasks.completed_count(), self.tasks.total())
+				&format!("{}/{}", self.loaded, self.count)
 			)
 				.align(gfx::Origin::BottomLeft)
 				.size(16.0)

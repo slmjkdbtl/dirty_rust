@@ -394,6 +394,10 @@ impl TextArea {
 		return &self.lines;
 	}
 
+	pub fn lines_mut(&mut self) -> &mut [String] {
+		return &mut self.lines;
+	}
+
 	pub fn content(&self) -> String {
 		return self.lines.join("\n");
 	}
@@ -509,6 +513,15 @@ impl TextArea {
 
 	pub fn char_at(&self, pos: Cursor) -> Option<char> {
 		return self.get_line_at(pos.line)?.chars().nth(pos.col as usize - 1);
+	}
+
+	pub fn insert_line_at(&mut self, line: Line) {
+		self.push_undo();
+		self.lines.insert(line as usize, String::new());
+	}
+
+	pub fn insert_line(&mut self) {
+		self.insert_line_at(self.cursor.line);
 	}
 
 	pub fn break_line_at(&mut self, mut pos: Cursor) -> Cursor {
