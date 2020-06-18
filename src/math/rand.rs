@@ -2,31 +2,19 @@
 
 // https://en.wikipedia.org/wiki/Linear_congruential_generator
 
-use std::time::SystemTime;
-use std::sync::Mutex;
-use once_cell::sync::Lazy;
+use std::cell::RefCell;
+use instant::Instant;
 use super::*;
 
 // ANSI C
-// https://en.wikipedia.org/wiki/Linear_congruential_generator#cite_note-16
+// http://citeseer.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3686&rep=rep1&type=pdf
 const A: u64 = 1103515245;
 const C: u64 = 12345;
 const M: u64 = 2147483648;
 
-static DEFAULT_RNG: Lazy<Mutex<Rng>> = Lazy::new(|| {
-
-	#[cfg(not(web))]
-	let t = SystemTime::now()
-		.duration_since(SystemTime::UNIX_EPOCH)
-		.expect("failed to get system time")
-		.as_secs();
-
-	#[cfg(web)]
-	let t = js_sys::Date::now() as u64;
-
-	return Mutex::new(Rng::new(t));
-
-});
+thread_local! {
+	static RNG: RefCell<Rng> = RefCell::new(Rng::new(hash!(Instant::now())));
+}
 
 pub trait RandValue {
 	fn rand_within(a: Self, b: Self, r: &mut Rng) -> Self;
@@ -93,31 +81,37 @@ pub struct Rng {
 }
 
 impl Rng {
+
 	/// create new from a seed
 	pub const fn new(s: u64) -> Self {
 		return Self {
 			seed: s,
 		};
 	}
+
 	/// generate a new random f32 between 0.0 and 1.0
 	pub fn gen(&mut self) -> f32 {
-		self.seed = (A * self.seed + C) % M;
+		self.seed = (A.wrapping_mul(self.seed).wrapping_add(C)) % M;
 		return self.seed as f32 / M as f32;
 	}
+
 	/// generate between 2 values that implements [`RandValue`](trait.RandValue.html)
 	pub fn gen_between<R: RandValue>(&mut self, a: R, b: R) -> R {
 		return R::rand_within(a, b, self);
 	}
+
 }
 
 /// generate a random value with the default generator
 pub fn rand<R: RandValue>(a: R, b: R) -> R {
-	return R::rand_within(a, b, &mut DEFAULT_RNG.lock().expect("failed to lock rng mutex"));
+	return RNG.with(|rng| {
+		return R::rand_within(a, b, &mut *rng.borrow_mut());
+	});
 }
 
-/// [`rand`](fn.rand.html) but for tuple
+/// generate a random value within tuple range
 pub fn rand_t<R: RandValue>(t: (R, R)) -> R {
-	return R::rand_within(t.0, t.1, &mut DEFAULT_RNG.lock().expect("failed to lock rng mutex"));
+	return rand(t.0, t.1);
 }
 
 /// rand value in an array

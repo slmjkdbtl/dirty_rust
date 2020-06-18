@@ -333,7 +333,7 @@ impl Window {
 
 			*flow = ControlFlow::Poll;
 
-			let res: Result<()> = || -> Result<()> {
+			let res = || -> Result<()> {
 
 				if self.quit {
 					handle(&mut self, WindowEvent::Quit)?;
