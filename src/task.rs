@@ -12,11 +12,13 @@ use crate::Result;
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
+/// the default global thread pool, number of worker threads set to number of cpus
 pub static THREAD_POOL: Lazy<ThreadPool> = Lazy::new(|| {
 	return ThreadPool::default()
 		.expect("failed to init thread pool");
 });
 
+/// Simple ThreadPool
 pub struct ThreadPool {
 	job_rx: Arc<Mutex<mpsc::Receiver<Job>>>,
 	job_tx: Mutex<mpsc::Sender<Job>>,
@@ -24,6 +26,7 @@ pub struct ThreadPool {
 
 impl ThreadPool {
 
+	/// create a new thread pool, specifying the number of worker threads
 	pub fn new(count: usize) -> Result<Self> {
 
 		let (job_tx, job_rx) = mpsc::channel::<Job>();
@@ -59,10 +62,12 @@ impl ThreadPool {
 
 	}
 
+	/// create thread pool with numbers of worker threads set to the number of cpus
 	pub fn default() -> Result<Self> {
 		return Self::new(num_cpus::get());
 	}
 
+	/// execute a task
 	pub fn exec(&self, job: impl FnOnce() + Send + 'static) -> Result<()> {
 
 		return self.job_tx
@@ -75,13 +80,15 @@ impl ThreadPool {
 
 }
 
-pub struct Loader<T: Send + 'static> {
+/// Execute a Task Using the Global Thread Pool
+pub struct Task<T: Send + 'static> {
 	rx: mpsc::Receiver<T>,
 	done: bool,
 }
 
-impl<T: Send + 'static> Loader<T> {
+impl<T: Send + 'static> Task<T> {
 
+	/// start a new task
 	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Result<Self> {
 
 		let (tx, rx) = mpsc::channel();
@@ -99,16 +106,19 @@ impl<T: Send + 'static> Loader<T> {
 
 	}
 
+	/// if it's done loading
 	pub fn done(&self) -> bool {
 		return self.done;
 	}
 
+	/// block until the resource is ready
 	pub fn poll_blocked(&mut self) -> Option<T> {
 		let data = self.rx.recv().ok()?;
 		self.done = true;
 		return Some(data);
 	}
 
+	/// check if the resource is ready
 	pub fn poll(&mut self) -> Option<T> {
 
 		let data = self.rx

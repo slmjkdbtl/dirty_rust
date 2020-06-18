@@ -15,7 +15,7 @@ exclude = [
 	"/site",
 ]
 
-[profile.dev.package."*"]
+[profile.dev]
 opt-level = 2
 
 [features]

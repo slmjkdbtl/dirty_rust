@@ -14,7 +14,7 @@ struct Teapot {
 }
 
 struct Game {
-	tasks: Vec<task::Loader<Result<gfx::ModelData>>>,
+	tasks: Vec<task::Task<Result<gfx::ModelData>>>,
 	loaded: usize,
 	count: usize,
 	teapots: Vec<Teapot>,
@@ -25,7 +25,7 @@ struct Game {
 impl Game {
 	fn load_more(&mut self) -> Result<()> {
 		for _ in 0..LOAD_COUNT {
-			self.tasks.push(task::Loader::new(|| {
+			self.tasks.push(task::Task::new(|| {
 				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
 			})?);
 		}

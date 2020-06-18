@@ -18,18 +18,18 @@ struct Viewer {
 	pos: Vec2,
 	scale: f32,
 	resetting: bool,
-	loader: Loader<Result<gfx::ModelData>>,
+	loader: Task<Result<gfx::ModelData>>,
 	draw_wireframe: bool,
 	run_anim: bool,
 	draw_bound: bool,
 	helping: bool,
 }
 
-fn load_file(path: impl AsRef<Path>) -> Result<Loader<Result<gfx::ModelData>>> {
+fn load_file(path: impl AsRef<Path>) -> Result<Task<Result<gfx::ModelData>>> {
 
 	let path = path.as_ref().to_owned();
 
-	return Loader::new(move || {
+	return Task::new(move || {
 		return gfx::Model::load_file(path);
 	});
 
