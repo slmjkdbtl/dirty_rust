@@ -10,6 +10,7 @@ const list = [
 	"input",
 	"mask",
 	"spline",
+	"imgui",
 	"audio",
 	"data",
 ];

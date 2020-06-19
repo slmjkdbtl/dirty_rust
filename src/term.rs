@@ -60,13 +60,13 @@ ansi!({
 
 impl StyledOutput {
 	pub fn truec(mut self, c: Color) -> Self {
-		let c = c.as_u8();
-		self.text = ansi_wrap(&self.text, &format!("38;2;{};{};{}", c[0], c[1], c[2]));
+		let (r, g, b, a) = c.as_u8();
+		self.text = ansi_wrap(&self.text, &format!("38;2;{};{};{}", r, g, b));
 		return self;
 	}
 	pub fn bg_truec(mut self, c: Color) -> Self {
-		let c = c.as_u8();
-		self.text = ansi_wrap(&self.text, &format!("48;2;{};{};{}", c[0], c[1], c[2]));
+		let (r, g, b, a) = c.as_u8();
+		self.text = ansi_wrap(&self.text, &format!("48;2;{};{};{}", r, g, b));
 		return self;
 	}
 }

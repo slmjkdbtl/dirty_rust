@@ -1,13 +1,11 @@
 // wengwengweng
 
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::time::Duration;
 
 use dirty::*;
 use audio::*;
 use gfx::*;
-use input::Key;
+use input::*;
 
 struct Game {
 	track: Track,
@@ -32,10 +30,8 @@ impl State for Game {
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
-		use input::Event::*;
-
 		match e {
-			KeyPress(k) => {
+			Event::KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
 					Key::Space => {

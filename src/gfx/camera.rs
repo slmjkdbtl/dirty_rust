@@ -4,6 +4,8 @@ use crate::*;
 use geom::*;
 use gfx::*;
 
+// TODO: clean up pt_to_ray
+
 /// Describes Features of a Camera
 pub trait Camera {
 	/// projection matrix
@@ -249,6 +251,35 @@ impl Camera for ObliqueCam {
 		let orig = self.proj().inverse() * clip_coord;
 
 		return Ray3::new(orig.xyz(), vec3!(-dir.x, -dir.y, dir.z));
+
+	}
+
+}
+
+pub struct StaticCam {
+	pub proj: Mat4,
+	pub view: Mat4,
+}
+
+impl Camera for StaticCam {
+
+	fn proj(&self) -> Mat4 {
+		return self.proj;
+	}
+
+	fn view(&self) -> Mat4 {
+		return self.view;
+	}
+
+	fn pt_to_ray(&self, ctx: &Gfx, pt: Vec2) -> Ray3 {
+
+		let dir = vec3!(0, 0, -1);
+
+		let normalized = ctx.screen_to_clip(pt);
+		let clip_coord = vec4!(normalized.x, normalized.y, -1, 1);
+		let orig = self.proj().inverse() * clip_coord;
+
+		return Ray3::new(orig.xyz(), vec3!(dir.x, -dir.y, dir.z));
 
 	}
 

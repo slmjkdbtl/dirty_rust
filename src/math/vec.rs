@@ -368,6 +368,15 @@ impl Color {
 
 	}
 
+	pub fn from_u8(r: u8, g: u8, b: u8, a: u8) -> Self {
+		return Self {
+			r: r as f32 / 255.0,
+			g: g as f32 / 255.0,
+			b: b as f32 / 255.0,
+			a: a as f32 / 255.0,
+		};
+	}
+
 // 	pub fn from_hsl(h: f32, s: f32, l: f32) -> Self {
 // 	}
 
@@ -465,13 +474,13 @@ impl Color {
 		};
 	}
 
-	pub fn as_u8(&self) -> [u8; 4] {
-		return [
+	pub fn as_u8(&self) -> (u8, u8, u8, u8) {
+		return (
 			(self.r * 255.0) as u8,
 			(self.g * 255.0) as u8,
 			(self.b * 255.0) as u8,
 			(self.a * 255.0) as u8,
-		];
+		);
 	}
 
 	pub fn brightness(&self) -> f32 {

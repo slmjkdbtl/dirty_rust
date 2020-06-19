@@ -70,6 +70,8 @@ pub mod ase;
 
 #[cfg(feature = "midi")]
 pub mod midi;
+#[cfg(feature = "imgui")]
+pub mod imgui;
 
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;

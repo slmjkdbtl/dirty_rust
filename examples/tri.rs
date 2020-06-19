@@ -1,8 +1,8 @@
 // wengwengweng
 
 use dirty::*;
-use gfx::shapes;
-use input::Key;
+use gfx::*;
+use input::*;
 
 struct Game;
 
@@ -14,10 +14,8 @@ impl State for Game {
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
-		use input::Event::*;
-
 		match e {
-			KeyPress(k) => {
+			Event::KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
 					_ => {},
@@ -31,8 +29,6 @@ impl State for Game {
 	}
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
-
-		use gfx::Vertex;
 
 		d.gfx.draw(&shapes::raw(&[
 			Vertex {

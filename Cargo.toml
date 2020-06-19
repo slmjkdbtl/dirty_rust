@@ -21,10 +21,15 @@ opt-level = 2
 [features]
 default = [
 # 	"midi",
+# 	"imgui",
 ]
 
 midi = [
 	"midir",
+]
+
+imgui = [
+	"libimgui",
 ]
 
 [dependencies]
@@ -46,6 +51,7 @@ lewton = "0.10"
 hound = "3.4"
 sfxr = "0.1"
 midir = { version = "0.6", optional = true }
+libimgui = { version = "0.4", optional = true, package = "imgui" }
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 glutin = "0.24"

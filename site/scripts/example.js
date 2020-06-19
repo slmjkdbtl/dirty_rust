@@ -15,6 +15,7 @@ export default {
 		}).catch((e) => {
 			state = 0;
 			document.title = "error";
+			console.error(e);
 			m.redraw();
 		});
 	},

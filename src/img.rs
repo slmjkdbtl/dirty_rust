@@ -21,8 +21,12 @@ pub struct Image {
 
 impl Image {
 
-	pub fn new(w: i32, h: i32) -> Result<Self> {
-		return Self::from_raw(w, h, vec![0; w as usize * h as usize * 4]);
+	pub fn new(w: i32, h: i32) -> Self {
+		return Self {
+			data: vec![0; w as usize * h as usize * 4],
+			width: w,
+			height: h,
+		};
 	}
 
 	pub fn from_raw(w: i32, h: i32, data: Vec<u8>) -> Result<Self> {
@@ -36,7 +40,7 @@ impl Image {
 		}
 
 		return Ok(Self {
-			data,
+			data: data,
 			width: w,
 			height: h,
 		});
@@ -66,7 +70,6 @@ impl Image {
 		return self.height;
 	}
 
-	// TODO
 	pub fn get(&self, x: i32, y: i32) -> Option<Color> {
 
 		if x < 0 || y < 0 {
@@ -83,26 +86,17 @@ impl Image {
 
 	}
 
-	// TODO
-	pub fn set(&mut self, x: i32, y: i32, c: Color) {
+	pub fn set(&mut self, x: i32, y: i32, c: Color) -> Result<()> {
 
 		let i = (y * self.width * 4 + x * 4) as usize;
+		let (r, g, b, a) = c.as_u8();
 
-		if let Some(r) = self.data.get_mut(i) {
-			*r = (c.r * 255.0) as u8;
-		}
+		*self.data.get_mut(i).ok_or_else(|| format!("pixel out of bound"))? = r;
+		*self.data.get_mut(i + 1).ok_or_else(|| format!("pixel out of bound"))? = g;
+		*self.data.get_mut(i + 2).ok_or_else(|| format!("pixel out of bound"))? = b;
+		*self.data.get_mut(i + 3).ok_or_else(|| format!("pixel out of bound"))? = a;
 
-		if let Some(g) = self.data.get_mut(i + 1) {
-			*g = (c.g * 255.0) as u8;
-		}
-
-		if let Some(b) = self.data.get_mut(i + 2) {
-			*b = (c.b * 255.0) as u8;
-		}
-
-		if let Some(a) = self.data.get_mut(i + 3) {
-			*a = (c.a * 255.0) as u8;
-		}
+		return Ok(());
 
 	}
 
@@ -121,9 +115,12 @@ impl Image {
 	}
 
 	pub fn resize(self, w: i32, h: i32, filter: FilterType) -> Result<Self> {
+
 		let img = self.into_image()?;
 		let img = image::imageops::resize(&img, w as u32, h as u32, filter);
+
 		return Ok(Self::from_image(img));
+
 	}
 
 	pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
@@ -146,15 +143,14 @@ impl Image {
 		return self.data;
 	}
 
-	// TODO
-	pub fn flip_v(&self) -> Self {
+	pub fn flip_v(self) -> Self {
 
-		let mut img = self.clone();
+		let mut img = Self::new(self.width, self.height);
 
 		for y in 0..self.height {
 			for x in 0..self.width {
 				if let Some(p) = self.get(x, y) {
-					img.set(x, self.height - y, p);
+					img.set(x, self.height - y, p).ok();
 				}
 			}
 		}

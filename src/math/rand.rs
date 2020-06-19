@@ -76,6 +76,7 @@ impl RandValue for Color {
 }
 
 /// A Simple Pseudorandom Number Generator
+#[derive(Clone)]
 pub struct Rng {
 	seed: u64,
 }
