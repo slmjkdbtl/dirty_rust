@@ -32,7 +32,6 @@ struct Game {
 	model: gfx::Model,
 	cam: gfx::PerspectiveCam,
 	shader: gfx::Shader<Uniform>,
-	show_ui: bool,
 	floor: gfx::Mesh,
 }
 
@@ -61,7 +60,6 @@ impl State for Game {
 				dir: vec3!(0, 0, -1),
 			},
 			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
-			show_ui: false,
 			floor: gfx::Mesh::from_meshdata(d.gfx, &floor)?,
 		});
 
@@ -86,11 +84,6 @@ impl State for Game {
 					},
 					Key::F => d.window.toggle_fullscreen(),
 					Key::Q if mods.meta => d.window.quit(),
-					Key::L => {
-						d.window.set_cursor_hidden(self.show_ui);
-						d.window.set_cursor_locked(self.show_ui);
-						self.show_ui = !self.show_ui;
-					}
 					_ => {},
 				}
 			},

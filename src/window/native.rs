@@ -850,10 +850,10 @@ impl GamepadButton {
 	fn from_gilrs(b: gilrs::ev::Button) -> Option<Self> {
 		use gilrs::ev::Button::*;
 		return match b {
-			South => Some(GamepadButton::A),
-			East => Some(GamepadButton::B),
-			West => Some(GamepadButton::X),
-			North => Some(GamepadButton::Y),
+			South => Some(GamepadButton::South),
+			East => Some(GamepadButton::East),
+			West => Some(GamepadButton::West),
+			North => Some(GamepadButton::North),
 			LeftTrigger => Some(GamepadButton::LBumper),
 			LeftTrigger2 => Some(GamepadButton::LTrigger),
 			RightTrigger => Some(GamepadButton::RBumper),

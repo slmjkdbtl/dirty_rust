@@ -1,6 +1,5 @@
 // wengwengweng
 
-use instant::Instant;
 pub use libimgui::Window;
 pub use libimgui::Ui;
 pub use libimgui::Condition;
@@ -28,7 +27,6 @@ impl Vertex {
 pub struct Imgui {
 	ctx: libimgui::Context,
 	tex: Texture,
-// 	last_frame: Instant,
 }
 
 impl Imgui {
@@ -63,7 +61,6 @@ impl Imgui {
 		return Ok(Self {
 			ctx: ctx,
 			tex: tex,
-// 			last_frame: Instant::now(),
 		});
 
 	}
@@ -128,15 +125,16 @@ impl Imgui {
 
 	}
 
+	pub fn processing_events(&self) -> bool {
+		let io = self.ctx.io();
+		return io.want_text_input || io.want_capture_mouse || io.want_capture_keyboard;
+	}
+
 	pub fn render(
 		&mut self,
 		d: &mut Ctx,
 		f: impl FnOnce(&mut libimgui::Ui) -> Result<()>,
 	) -> Result<()> {
-
-// 		self.last_frame = self.ctx
-// 			.io_mut()
-// 			.update_delta_time(self.last_frame);
 
 		let mut ui = self.ctx.frame();
 

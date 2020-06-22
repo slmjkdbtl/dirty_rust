@@ -19,6 +19,12 @@ impl State for Game {
 
 		use input::Event::*;
 
+		self.imgui.event(d, e);
+
+		if self.imgui.processing_events() {
+			return Ok(());
+		}
+
 		match e {
 			KeyPress(k) => {
 				match *k {
@@ -28,8 +34,6 @@ impl State for Game {
 			},
 			_ => {},
 		}
-
-		self.imgui.event(d, e);
 
 		return Ok(());
 

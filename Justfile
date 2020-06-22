@@ -12,6 +12,7 @@ check-web:
 run example args="":
 	cargo run \
 		--example {{example}} \
+		--all-features \
 		-- \
 		{{args}}
 

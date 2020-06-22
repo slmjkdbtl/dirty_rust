@@ -181,10 +181,10 @@ pub enum Mouse {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum GamepadButton {
-	A,
-	B,
-	X,
-	Y,
+	South,
+	East,
+	West,
+	North,
 	LBumper,
 	LTrigger,
 	RBumper,

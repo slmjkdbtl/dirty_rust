@@ -1,10 +1,9 @@
 // wengwengweng
 
 use super::*;
-use kit::textedit;
 
 pub struct Input {
-	buf: textedit::Input,
+	buf: kit::input::Input,
 	prompt: &'static str,
 	hovering: bool,
 	focused: bool,
@@ -13,7 +12,7 @@ pub struct Input {
 impl Input {
 	pub fn new(prompt: &'static str,) -> Self {
 		return Self {
-			buf: textedit::Input::new(),
+			buf: kit::input::Input::new(),
 			prompt,
 			focused: false,
 			hovering: false,
