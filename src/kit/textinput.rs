@@ -11,7 +11,6 @@ static BREAK_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
 
 #[derive(Clone)]
 pub struct Input {
-	conf: Conf,
 	content: String,
 	cursor: Col,
 	undo_stack: Vec<InputState>,
@@ -24,37 +23,15 @@ struct InputState {
 	cursor: Col,
 }
 
-#[derive(Clone)]
-pub struct Conf {
-	pub init_content: String,
-	pub break_chars: HashSet<char>,
-}
-
-impl Default for Conf {
-	fn default() -> Self {
-		return Self {
-			init_content: String::new(),
-			break_chars: BREAK_CHARS.clone(),
-		};
-	}
-}
-
 impl Input {
 
 	pub fn new() -> Self {
-		return Self::with_conf(Conf::default());
-	}
-
-	pub fn with_conf(conf: Conf) -> Self {
-
 		return Self {
-			content: conf.init_content.clone(),
-			conf: conf,
+			content: String::new(),
 			cursor: 0,
 			undo_stack: vec![],
 			redo_stack: vec![],
 		};
-
 	}
 
 	pub fn clear(&mut self) {
@@ -98,7 +75,7 @@ impl Input {
 			return;
 		}
 
-		if self.conf.break_chars.contains(&ch) {
+		if BREAK_CHARS.contains(&ch) {
 			self.push_undo();
 		}
 
@@ -123,7 +100,7 @@ impl Input {
 		let ch = self.content.remove(self.cursor as usize - 1);
 		self.move_left();
 
-		if self.conf.break_chars.contains(&ch) {
+		if BREAK_CHARS.contains(&ch) {
 			self.push_undo();
 		}
 
@@ -131,13 +108,13 @@ impl Input {
 
 	fn get_prev_word(&self) -> Col {
 		return get_prev_char(&self.content, self.cursor, |ch| {
-			return self.conf.break_chars.contains(&ch);
+			return BREAK_CHARS.contains(&ch);
 		});
 	}
 
 	fn get_next_word(&self) -> Col {
 		return get_next_char(&self.content, self.cursor, |ch| {
-			return self.conf.break_chars.contains(&ch);
+			return BREAK_CHARS.contains(&ch);
 		});
 	}
 
@@ -202,21 +179,15 @@ impl Input {
 	}
 
 	pub fn undo(&mut self) {
-
 		if let Some(state) = self.undo_stack.pop() {
-
 			self.push_redo();
 			self.set_state(state);
-
 		} else {
-
 			self.set_state(InputState {
-				content: self.conf.init_content.clone(),
+				content: String::new(),
 				cursor: 0,
 			});
-
 		}
-
 	}
 
 	pub fn redo(&mut self) {

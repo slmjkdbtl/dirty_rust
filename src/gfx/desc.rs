@@ -28,29 +28,29 @@ impl VertexLayout for Vertex {
 }
 
 #[derive(Clone, PartialEq)]
-pub(crate) struct Uniform {
+pub(super) struct Uniform {
 	pub proj: Mat4,
 	pub view: Mat4,
 	pub model: Mat4,
 	pub color: Color,
 	pub tex: Texture,
-	pub custom: Option<Vec<(&'static str, UniformValue)>>,
+	pub custom: Option<UniformData>,
 }
 
 impl UniformLayout for Uniform {
 
 	fn values(&self) -> UniformValues {
 
-		let mut values: UniformValues = hmap![
-			"u_proj" => &self.proj,
-			"u_view" => &self.view,
-			"u_model" => &self.model,
-			"u_color" => &self.color,
+		let mut values: UniformValues = vec![
+			("u_proj", &self.proj),
+			("u_view", &self.view),
+			("u_model", &self.model),
+			("u_color", &self.color),
 		];
 
 		if let Some(custom) = &self.custom {
-			for (name, v) in custom {
-				values.insert(name, v);
+			for (name, v) in &custom.values {
+				values.push((name, v));
 			}
 		}
 
@@ -59,7 +59,11 @@ impl UniformLayout for Uniform {
 	}
 
 	fn textures(&self) -> Vec<&Texture> {
-		return vec![&self.tex];
+		let mut textures = vec![&self.tex];
+		if let Some(custom) = &self.custom {
+			textures.extend(custom.textures.iter());
+		}
+		return textures;
 	}
 
 }

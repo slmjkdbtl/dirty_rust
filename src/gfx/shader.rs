@@ -8,15 +8,32 @@ use res::shader::*;
 
 /// Trait for Custom Uniform Data. See [mod-level doc](index.html) for Usage.
 pub trait CustomUniform: Clone {
-	fn values(&self) -> UniformValues {
-		return hmap![];
+	fn values(&self) -> Vec<(&'static str, &dyn IntoUniformValue)> {
+		return vec![];
 	}
-	fn textures(&self) -> Vec<&gfx::Texture> {
+	fn textures(&self) -> Vec<&Texture> {
 		return vec![];
 	}
 }
 
 impl CustomUniform for () {}
+
+impl UniformData {
+	pub fn from_uniform(uniform: &impl CustomUniform) -> Self {
+		return Self {
+			values: uniform
+				.values()
+				.into_iter()
+				.map(|(n, v)| (n, v.into_uniform()))
+				.collect(),
+			textures: uniform
+				.textures()
+				.into_iter()
+				.cloned()
+				.collect(),
+		};
+	}
+}
 
 /// Custom Shader. See [mod-level doc](index.html) for Usage.
 #[derive(Clone, PartialEq)]
@@ -70,7 +87,7 @@ impl<U: CustomUniform> Shader<U> {
 		self.pipeline.free();
 	}
 
-	pub(crate) fn pipeline(&self) -> &Pipeline<Vertex, Uniform> {
+	pub(super) fn pipeline(&self) -> &Pipeline<Vertex, Uniform> {
 		return &self.pipeline;
 	}
 

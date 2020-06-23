@@ -1,12 +1,11 @@
 // wengwengweng
 
-use std::collections::HashMap;
-
 use crate::math::*;
 use super::Texture;
 
-// TODO: is there a way to use &dyn Into<UniformValue>?
-pub type UniformValues<'a> = HashMap<&'static str, &'a dyn IntoUniformValue>;
+// TODO: clean up this and shader.rs
+
+pub type UniformValues<'a> = Vec<(&'static str, &'a dyn IntoUniformValue)>;
 
 pub trait IntoUniformValue {
 	fn into_uniform(&self) -> UniformValue;
@@ -19,17 +18,20 @@ impl IntoUniformValue for UniformValue {
 }
 
 pub trait UniformLayout: Clone + PartialEq + 'static {
-	fn values(&self) -> UniformValues;
-	fn textures(&self) -> Vec<&Texture>;
-}
-
-impl UniformLayout for () {
 	fn values(&self) -> UniformValues {
-		return hmap![];
+		return vec![];
 	}
 	fn textures(&self) -> Vec<&Texture> {
 		return vec![];
 	}
+}
+
+impl UniformLayout for () {}
+
+#[derive(Clone, PartialEq)]
+pub struct UniformData {
+	pub values: Vec<(&'static str, UniformValue)>,
+	pub textures: Vec<Texture>,
 }
 
 #[derive(Clone, Copy, PartialEq)]

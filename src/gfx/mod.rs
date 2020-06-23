@@ -214,7 +214,7 @@ pub struct Gfx {
 
 	default_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
 	cur_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
-	cur_custom_uniform: Option<Vec<(&'static str, UniformValue)>>,
+	cur_custom_uniform: Option<UniformData>,
 
 	cur_canvas: Option<Canvas>,
 
@@ -450,17 +450,12 @@ impl Gfx {
 		f: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
-		let uniforms = uniform.values()
-			.into_iter()
-			.map(|(n, v)| (n, v.into_uniform()))
-			.collect::<Vec<(&'static str, UniformValue)>>();
-
 		let prev_pipeline = self.cur_pipeline.clone();
 		let prev_uniform = self.cur_custom_uniform.clone();
 
 		self.flush();
 		self.cur_pipeline = Pipeline::clone(&shader.pipeline());
-		self.cur_custom_uniform = Some(uniforms);
+		self.cur_custom_uniform = Some(UniformData::from_uniform(uniform));
 		f(self)?;
 		self.flush();
 		self.cur_pipeline = prev_pipeline;

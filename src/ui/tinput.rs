@@ -1,9 +1,10 @@
 // wengwengweng
 
 use super::*;
+use kit::textinput;
 
 pub struct Input {
-	buf: kit::input::Input,
+	buf: textinput::Input,
 	prompt: &'static str,
 	hovering: bool,
 	focused: bool,
@@ -12,7 +13,7 @@ pub struct Input {
 impl Input {
 	pub fn new(prompt: &'static str,) -> Self {
 		return Self {
-			buf: kit::input::Input::new(),
+			buf: textinput::Input::new(),
 			prompt,
 			focused: false,
 			hovering: false,
