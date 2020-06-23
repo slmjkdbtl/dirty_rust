@@ -101,7 +101,7 @@
 //!
 //! ## Shader
 //!
-//! Use [`Shader`](struct.Shader.html) to create custom shaders. It requires a type that implements [`CustomUniform`](trait.CustomUniform.html), a minimal example:
+//! Use [`Shader`](struct.Shader.html) to create custom shaders. It requires a type that implements [`UniformLayout`](trait.UniformLayout.html), a minimal example:
 //!
 //! Use [`draw_with`](struct.Gfx.html#method.draw_with) to use custom camera
 //!
@@ -118,7 +118,7 @@
 //!     blueness: f32,
 //! }
 //!
-//! impl CustomUniform for BlueUniform {
+//! impl UniformLayout for BlueUniform {
 //!     fn values(&self) -> UniformValues {
 //!         return hmap![
 //!             "u_blueness": &self.blueness,
@@ -443,7 +443,7 @@ impl Gfx {
 	}
 
 	/// draw with a [`Shader`](struct.Shader.html)
-	pub fn draw_with<U: CustomUniform>(
+	pub fn draw_with<U: UniformLayout>(
 		&mut self,
 		shader: &Shader<U>,
 		uniform: &U,

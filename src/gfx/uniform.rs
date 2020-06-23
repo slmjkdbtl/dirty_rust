@@ -3,8 +3,6 @@
 use crate::math::*;
 use super::Texture;
 
-// TODO: clean up this and shader.rs
-
 pub type UniformValues<'a> = Vec<(&'static str, &'a dyn IntoUniformValue)>;
 
 pub trait IntoUniformValue {
@@ -17,7 +15,8 @@ impl IntoUniformValue for UniformValue {
 	}
 }
 
-pub trait UniformLayout: Clone + PartialEq + 'static {
+/// Trait for Custom Uniform Data. See [mod-level doc](index.html) for Usage.
+pub trait UniformLayout {
 	fn values(&self) -> UniformValues {
 		return vec![];
 	}
@@ -29,9 +28,26 @@ pub trait UniformLayout: Clone + PartialEq + 'static {
 impl UniformLayout for () {}
 
 #[derive(Clone, PartialEq)]
-pub struct UniformData {
+pub(super) struct UniformData {
 	pub values: Vec<(&'static str, UniformValue)>,
 	pub textures: Vec<Texture>,
+}
+
+impl UniformData {
+	pub fn from_uniform(uniform: &impl UniformLayout) -> Self {
+		return Self {
+			values: uniform
+				.values()
+				.into_iter()
+				.map(|(n, v)| (n, v.into_uniform()))
+				.collect(),
+			textures: uniform
+				.textures()
+				.into_iter()
+				.cloned()
+				.collect(),
+		};
+	}
 }
 
 #[derive(Clone, Copy, PartialEq)]

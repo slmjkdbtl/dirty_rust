@@ -11,7 +11,7 @@ struct RenderState<V: VertexLayout, U: UniformLayout> {
 	uniform: U,
 }
 
-pub struct BatchedMesh<V: VertexLayout, U: UniformLayout> {
+pub(super) struct BatchedMesh<V: VertexLayout, U: UniformLayout + PartialEq + Clone> {
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	vqueue: Vec<V>,
@@ -20,7 +20,7 @@ pub struct BatchedMesh<V: VertexLayout, U: UniformLayout> {
 	draw_count: usize,
 }
 
-impl<V: VertexLayout, U: UniformLayout> BatchedMesh<V, U> {
+impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedMesh<V, U> {
 
 	pub fn new(ctx: &impl HasGL, max_vertices: usize, max_indices: usize) -> Result<Self> {
 

@@ -65,7 +65,7 @@ bind_enum!(pub, StencilOp(u32) {
 	Invert => glow::INVERT,
 });
 
-bind_enum!(pub, BufferUsage(u32) {
+bind_enum!(pub(super), BufferUsage(u32) {
 	Static => glow::STATIC_DRAW,
 	Dynamic => glow::DYNAMIC_DRAW,
 	Stream => glow::STREAM_DRAW,

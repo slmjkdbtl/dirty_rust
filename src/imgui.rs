@@ -1,5 +1,7 @@
 // wengwengweng
 
+//! Integration with Imgui
+
 pub use libimgui::Window;
 pub use libimgui::Ui;
 pub use libimgui::Condition;
@@ -43,7 +45,6 @@ impl Imgui {
 		io.display_framebuffer_scale = [dpi as f32, dpi as f32];
 		io.display_size = [w as f32 * dpi, h as f32 * dpi];
 		io.backend_flags.insert(BackendFlags::HAS_MOUSE_CURSORS);
-		io.backend_flags.insert(BackendFlags::HAS_SET_MOUSE_POS);
 
 		ctx.set_ini_filename(None);
 
@@ -144,20 +145,17 @@ impl Imgui {
 		let [sw, sh] = ui.io().display_framebuffer_scale;
 		let (fw, fh) = (w / sw, h / sh);
 
-		let proj = mat4![
-			2.0 / fw, 0.0, 0.0, 0.0,
-			0.0, 2.0 / -fh, 0.0, 0.0,
-			0.0, 0.0, -1.0, 0.0,
-			-1.0, 1.0, 0.0, 1.0,
-		];
-
-		let cam = StaticCam {
-			proj: proj,
+		let cam = RawCam {
+			proj: mat4![
+				2.0 / fw, 0.0, 0.0, 0.0,
+				0.0, 2.0 / -fh, 0.0, 0.0,
+				0.0, 0.0, -1.0, 0.0,
+				-1.0, 1.0, 0.0, 1.0,
+			],
 			view: mat4!(),
 		};
 
 		let draw_data = ui.render();
-
 		let tex = self.tex.clone();
 
 		d.gfx.use_cam(&cam, |gfx| {

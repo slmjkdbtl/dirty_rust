@@ -10,7 +10,7 @@ use super::*;
 use crate::Result;
 
 #[derive(Clone, Debug)]
-pub struct Pipeline<V: VertexLayout, U: UniformLayout> {
+pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
 	gl: Rc<glow::Context>,
 	program_id: ProgramID,
 	attrs: VertexAttrGroup,

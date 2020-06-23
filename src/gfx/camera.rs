@@ -4,14 +4,13 @@ use crate::*;
 use geom::*;
 use gfx::*;
 
-// TODO: clean up pt_to_ray
-
 /// Describes Features of a Camera
 pub trait Camera {
 	/// projection matrix
 	fn proj(&self) -> Mat4;
 	/// view matrix
 	fn view(&self) -> Mat4;
+	// TODO: test implementations of items below
 	/// convert a 2d point to a ray
 	fn pt_to_ray(&self, ctx: &Gfx, pt: Vec2) -> Ray3;
 	/// convert a point into 2d screen space
@@ -256,12 +255,13 @@ impl Camera for ObliqueCam {
 
 }
 
-pub struct StaticCam {
+/// Camera from Raw Proj & View Matrices
+pub struct RawCam {
 	pub proj: Mat4,
 	pub view: Mat4,
 }
 
-impl Camera for StaticCam {
+impl Camera for RawCam {
 
 	fn proj(&self) -> Mat4 {
 		return self.proj;

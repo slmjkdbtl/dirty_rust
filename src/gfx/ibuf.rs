@@ -9,7 +9,7 @@ use super::*;
 use crate::Result;
 
 #[derive(Clone, Debug)]
-pub struct IndexBuffer {
+pub(super) struct IndexBuffer {
 	gl: Rc<glow::Context>,
 	id: BufferID,
 }

@@ -4,12 +4,11 @@ use dirty::*;
 use gfx::*;
 use input::*;
 
-#[derive(Clone)]
 struct TexUniform {
 	tex: Texture,
 }
 
-impl CustomUniform for TexUniform {
+impl UniformLayout for TexUniform {
 	fn textures(&self) -> Vec<&Texture> {
 		return vec![&self.tex];
 	}

@@ -55,18 +55,18 @@ impl Iterator for VertexAttrIter {
 }
 
 #[derive(Clone, Debug)]
-pub struct VertexAttr {
+pub(super) struct VertexAttr {
 	pub name: &'static str,
 	pub size: i32,
 	pub offset: usize,
 }
 
-pub trait VertexLayout: Clone {
+pub(super) trait VertexLayout: Clone {
 	fn attrs() -> VertexAttrGroup;
 }
 
 #[derive(Clone, Debug)]
-pub struct VertexBuffer<V: VertexLayout> {
+pub(super) struct VertexBuffer<V: VertexLayout> {
 	gl: Rc<glow::Context>,
 	id: BufferID,
 	_layout: PhantomData<V>,

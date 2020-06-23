@@ -12,7 +12,7 @@ pub struct RainbowUniform {
 	pub size: f32,
 }
 
-impl CustomUniform for RainbowUniform {
+impl UniformLayout for RainbowUniform {
 	fn values(&self) -> UniformValues {
 		return vec![
 			("u_time", &self.time),

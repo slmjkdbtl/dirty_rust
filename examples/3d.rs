@@ -3,43 +3,41 @@
 use dirty::*;
 use math::*;
 use geom::*;
-use input::Key;
-use input::GamepadAxis;
-use gfx::shapes;
+use gfx::*;
+use input::*;
 
 const MOVE_SPEED: f32 = 12.0;
 const EYE_SPEED: f32 = 32.0;
 const ROT_SPEED: f32 = 3.0;
 
-#[derive(Clone)]
 struct Uniform {
 	cam_pos: Vec3,
 	fog_color: Color,
 	fog_level: f32,
 }
 
-impl gfx::CustomUniform for Uniform {
-	fn values(&self) -> gfx::UniformValues {
-		return hmap![
-			"u_cam_pos" => &self.cam_pos,
-			"u_fog_color" => &self.fog_color,
-			"u_fog_level" => &self.fog_level,
+impl UniformLayout for Uniform {
+	fn values(&self) -> UniformValues {
+		return vec![
+			("u_cam_pos", &self.cam_pos),
+			("u_fog_color", &self.fog_color),
+			("u_fog_level", &self.fog_level),
 		];
 	}
 }
 
 struct Game {
-	model: gfx::Model,
-	cam: gfx::PerspectiveCam,
-	shader: gfx::Shader<Uniform>,
-	floor: gfx::Mesh,
+	model: Model,
+	cam: PerspectiveCam,
+	shader: Shader<Uniform>,
+	floor: Mesh,
 }
 
 impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let model = gfx::Model::from_obj(
+		let model = Model::from_obj(
 			d.gfx,
 			include_str!("res/truck.obj"),
 			Some(include_str!("res/truck.mtl")),
@@ -50,7 +48,7 @@ impl State for Game {
 
 		return Ok(Self {
 			model: model,
-			cam: gfx::PerspectiveCam {
+			cam: PerspectiveCam {
 				fov: f32::to_radians(60.0),
 				up: vec3!(0, 1, 0),
 				aspect: d.gfx.width() as f32 / d.gfx.height() as f32,
@@ -59,15 +57,15 @@ impl State for Game {
 				pos: vec3!(0, 1, 6),
 				dir: vec3!(0, 0, -1),
 			},
-			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
-			floor: gfx::Mesh::from_meshdata(d.gfx, &floor)?,
+			shader: Shader::from_frag(d.gfx, include_str!("res/fog.frag"))?,
+			floor: Mesh::from_meshdata(d.gfx, &floor)?,
 		});
 
 	}
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 
-		use input::Event::*;
+		use Event::*;
 
 		match e {
 
@@ -187,7 +185,7 @@ impl State for Game {
 
 		})?;
 
-		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+		let top_left = d.gfx.coord(Origin::TopLeft);
 
 		let lines = [
 			"F:       toggle fullscreen",
@@ -201,7 +199,7 @@ impl State for Game {
 					.t2(top_left + vec2!(24, -24.0 - i as f32 * 24.0))
 					,
 				&shapes::text(l)
-					.align(gfx::Origin::TopLeft)
+					.align(Origin::TopLeft)
 					.size(12.0)
 					,
 			)?;
