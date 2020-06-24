@@ -61,6 +61,7 @@ pub mod geom;
 pub mod img;
 pub mod math;
 pub mod physics;
+pub mod net;
 pub mod term;
 pub mod ui;
 pub mod kit;

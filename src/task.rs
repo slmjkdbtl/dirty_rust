@@ -12,10 +12,9 @@ use crate::Result;
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
-/// the default global thread pool, number of worker threads set to number of cpus
-pub static THREAD_POOL: Lazy<ThreadPool> = Lazy::new(|| {
-	return ThreadPool::default()
-		.expect("failed to init thread pool");
+static DEFAULT_POOL: Lazy<ThreadPool> = Lazy::new(|| {
+	return ThreadPool::new(1)
+		.expect("failed to init loader thread pool");
 });
 
 /// Simple ThreadPool
@@ -62,11 +61,6 @@ impl ThreadPool {
 
 	}
 
-	/// create thread pool with numbers of worker threads set to the number of cpus
-	pub fn default() -> Result<Self> {
-		return Self::new(num_cpus::get());
-	}
-
 	/// execute a task
 	pub fn exec(&self, job: impl FnOnce() + Send + 'static) -> Result<()> {
 
@@ -88,12 +82,12 @@ pub struct Task<T: Send + 'static> {
 
 impl<T: Send + 'static> Task<T> {
 
-	/// start a new task
-	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Result<Self> {
+	/// start a new task with custom thread pool
+	pub fn with(pool: &ThreadPool, f: impl FnOnce() -> T + Send + 'static) -> Result<Self> {
 
 		let (tx, rx) = mpsc::channel();
 
-		THREAD_POOL.exec(move || {
+		pool.exec(move || {
 			if let Err(e) = tx.send(f()) {
 				elog!("failed to execute task");
 			};
@@ -104,6 +98,11 @@ impl<T: Send + 'static> Task<T> {
 			done: false,
 		});
 
+	}
+
+	/// start a new task with default thread pool
+	pub fn new(f: impl FnOnce() -> T + Send + 'static) -> Result<Self> {
+		return Self::with(&DEFAULT_POOL, f);
 	}
 
 	/// if it's done loading
