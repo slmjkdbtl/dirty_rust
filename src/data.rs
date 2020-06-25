@@ -2,10 +2,31 @@
 
 //! Data Saving & Loading
 
+use serde::ser::Serialize;
+use serde::de::Deserialize;
 use std::path::PathBuf;
 use crate::*;
 
-#[cfg(not(web))]
+pub fn to_json<D: Serialize>(data: &D) -> Result<String> {
+	return serde_json::to_string(data)
+		.map_err(|_| format!("failed to encode json"));
+}
+
+pub fn from_json<D: for<'a> Deserialize<'a>>(json: &str) -> Result<D> {
+	return serde_json::from_str(&json)
+		.map_err(|_| format!("failed to decode json"));
+}
+
+pub fn to_bin<D: Serialize>(data: &D) -> Result<Vec<u8>> {
+	return bincode::serialize(data)
+		.map_err(|_| format!("failed to encode bin"));
+}
+
+pub fn from_bin<D: for<'a> Deserialize<'a>>(bin: &[u8]) -> Result<D> {
+	return bincode::deserialize(&bin)
+		.map_err(|_| format!("failed to decode bin"));
+}
+
 pub fn path(proj: &'static str) -> Result<PathBuf> {
 	return Ok(dirs_next::data_dir()
 		.ok_or_else(|| format!("failed to get data dir"))?
@@ -13,10 +34,10 @@ pub fn path(proj: &'static str) -> Result<PathBuf> {
 }
 
 #[cfg(not(web))]
-pub fn save<D: serde::ser::Serialize>(
+pub fn save<D: Serialize>(
 	proj: &'static str,
 	entry: &'static str,
-	data: D
+	data: &D
 ) -> Result<()> {
 
 	let data_dir = path(proj)?;
@@ -27,8 +48,7 @@ pub fn save<D: serde::ser::Serialize>(
 	}
 
 	let data_file = data_dir.join(&format!("{}.json", entry));
-	let content = serde_json::to_string(&data)
-		.map_err(|_| format!("failed to encode json"))?;
+	let content = to_json(data)?;
 
 	std::fs::write(&data_file, content)
 		.map_err(|_| format!("failed to write file {}", data_file.display()))?;
@@ -38,7 +58,7 @@ pub fn save<D: serde::ser::Serialize>(
 }
 
 #[cfg(not(web))]
-pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
+pub fn load<D: for<'a> Deserialize<'a>>(
 	proj: &'static str,
 	entry: &'static str,
 ) -> Result<D> {
@@ -47,16 +67,15 @@ pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
 	let data_file = data_dir.join(&format!("{}.json", entry));
 	let content = fs::read_str(data_file)?;
 
-	return serde_json::from_str(&content)
-		.map_err(|_| format!("failed to decode json"));
+	return from_json(&content);
 
 }
 
 #[cfg(web)]
-pub fn save<D: serde::ser::Serialize>(
+pub fn save<D: Serialize>(
 	_: &'static str,
 	entry: &'static str,
-	data: D
+	data: &D
 ) -> Result<()> {
 
 	let window = web_sys::window()
@@ -67,8 +86,7 @@ pub fn save<D: serde::ser::Serialize>(
 		.map_err(|_| format!("failed to get local storage"))?
 		.ok_or_else(|| format!("failed to get local storage"))?;
 
-	let content = serde_json::to_string(&data)
-		.map_err(|_| format!("failed to encode json"))?;
+	let content = to_json(data)?;
 
 	storage
 		.set_item(entry, &content)
@@ -79,7 +97,7 @@ pub fn save<D: serde::ser::Serialize>(
 }
 
 #[cfg(web)]
-pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
+pub fn load<D: for<'a> Deserialize<'a>>(
 	_: &'static str,
 	entry: &'static str,
 ) -> Result<D> {
@@ -97,8 +115,7 @@ pub fn load<D: for<'a> serde::de::Deserialize<'a>>(
 		.map_err(|_| format!("failed to get entry {}", entry))?
 		.ok_or_else(|| format!("failed to get entry {}", entry))?;
 
-	return serde_json::from_str(&content)
-		.map_err(|_| format!("failed to decode json"));
+	return from_json(&content);
 
 }
 

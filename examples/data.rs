@@ -25,7 +25,7 @@ impl State for Game {
 		let data = data::load::<Data>(PROJ, ENTRY);
 
 		if data.is_err() {
-			data::save(PROJ, ENTRY, Data::default())?;
+			data::save(PROJ, ENTRY, &Data::default())?;
 		}
 
 		let data = data::load::<Data>(PROJ, ENTRY)?;

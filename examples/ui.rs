@@ -50,7 +50,7 @@ impl State for Game {
 			p.sep(ctx)?;
 			p.button(ctx, "explode")?;
 
-			Ok(())
+			return Ok(());
 
 		})?;
 

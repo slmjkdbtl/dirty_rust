@@ -43,8 +43,6 @@ deploy-site:
 test:
 	cargo test \
 		--all-features
-
-test-web:
 	cargo test \
 		--all-features \
 		--target wasm32-unknown-unknown

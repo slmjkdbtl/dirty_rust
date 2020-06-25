@@ -61,7 +61,6 @@ pub mod geom;
 pub mod img;
 pub mod math;
 pub mod physics;
-pub mod net;
 pub mod term;
 pub mod ui;
 pub mod kit;
@@ -71,7 +70,8 @@ pub mod ase;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-#[cfg(feature = "imgui")]
+// TODO: support wasm
+#[cfg(all(feature = "imgui", not(web)))]
 pub mod imgui;
 
 pub type Error = String;
