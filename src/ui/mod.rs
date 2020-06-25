@@ -4,10 +4,12 @@
 
 use std::any::TypeId;
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::*;
 use math::*;
-use gfx::shapes;
+use gfx::*;
+use input::*;
 
 export!(widget);
 export!(theme);
@@ -37,22 +39,19 @@ impl UI {
 		};
 	}
 
-	pub fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
+	pub fn event(&mut self, d: &mut Ctx, e: &Event) -> bool {
 
-		use input::Event::*;
-		use input::Mouse;
+		use Event::*;
 		use geom::*;
 
 		let mpos = d.window.mouse_pos();
 		let t = &self.theme;
 
-		// TODO: figure out the correct logic here
-		let mut has_event = false;
-
 		for p in self.windows.values_mut() {
 			for w in p.widgets.values_mut() {
-				if w.event(d, e) {
-					has_event = true;
+				// TODO: construct WidgetCtx
+				if w.event(e) {
+					return true;
 				}
 			}
 		}
@@ -63,7 +62,6 @@ impl UI {
 				if let Some((id, offset)) = self.draggin {
 					if let Some(window) = self.windows.get_mut(&id) {
 						window.pos = mpos + offset;
-						has_event = true;
 					}
 				}
 			},
@@ -76,10 +74,10 @@ impl UI {
 
 						if self.draggin.is_none() {
 
+							let bar_height = t.font_size + t.padding * 2.0;
+
 							// TODO: windows should be sorted
 							for (id, window) in &self.windows {
-
-								let bar_height = t.font_size + t.padding;
 
 								let bar = Rect::new(
 									window.pos,
@@ -88,8 +86,7 @@ impl UI {
 
 								if col::intersect2d(mpos, bar) {
 									self.draggin = Some((*id, window.pos - mpos));
-									has_event = true;
-									break;
+									return true;
 								}
 
 							}
@@ -106,7 +103,10 @@ impl UI {
 
 			MouseRelease(m) => {
 				match m {
-					Mouse::Left => self.draggin = None,
+					Mouse::Left => {
+						self.draggin = None;
+						return true;
+					}
 					_ => {},
 				}
 			},
@@ -115,7 +115,7 @@ impl UI {
 
 		}
 
-		return has_event;
+		return false;
 
 	}
 
@@ -132,82 +132,80 @@ impl UI {
 		let window = self.windows
 			.entry(hash!(title))
 			.or_insert(Window {
-			title,
-			pos,
-			width: w,
-			height: h,
-			widgets: hmap![],
-		});
+				title: title,
+				pos: pos,
+				width: w,
+				height: h,
+				widgets: hmap![],
+			});
 
-		let theme = &self.theme;
-		let bar_height = theme.font_size + theme.padding * 2.0;
-		let out_height = window.height + bar_height;
+		let t = &self.theme;
+		let bar_height = t.font_size + t.padding * 2.0;
+		let box_height = window.height + bar_height;
 		let view_width = window.width;
 		let view_height = window.height;
+		let content_width = window.width - t.padding * 2.0;
+		let content_offset = vec2!(t.padding, -bar_height - t.padding);
+
+		let d_window = &mut d.window;
+		let d_audio = &mut d.audio;
+		let d_app = &mut d.app;
+
+		let window_ctx = WindowCtx {
+			theme: t,
+			width: content_width,
+			offset: content_offset + window.pos,
+		};
 
 		// drawing window frame
 		d.gfx.push_t(mat4!().t2(window.pos), |gfx| {
 
 			// background
 			gfx.draw(
-				&shapes::rect(vec2!(0), vec2!(window.width, -window.height))
-					.fill(theme.background_color)
-					.stroke(theme.border_color)
-					.line_width(theme.border_thickness)
+				&shapes::rect(vec2!(0), vec2!(window.width, -box_height))
+					.fill(t.background_color)
+					.stroke(t.border_color)
+					.line_width(t.border_thickness)
 			)?;
 
 			// title bar
 			gfx.draw(
 				&shapes::rect(vec2!(0), vec2!(window.width, -bar_height))
-					.fill(theme.bar_color)
-					.stroke(theme.border_color)
-					.line_width(theme.border_thickness)
+					.fill(t.bar_color)
+					.stroke(t.border_color)
+					.line_width(t.border_thickness)
 			)?;
 
 			// title
 			gfx.draw_t(
-				mat4!().t2(vec2!(theme.padding, -theme.padding)),
+				mat4!().t2(vec2!(t.padding, -t.padding)),
 				&shapes::text(&window.title)
-					.size(theme.font_size)
-					.color(theme.title_color)
-					.align(gfx::Origin::TopLeft)
+					.size(t.font_size)
+					.color(t.title_color)
+					.align(Origin::TopLeft)
 			)?;
 
-			return Ok(());
+			// widgets
+			gfx.push_t(mat4!().t2(content_offset), |gfx| {
 
-		})?;
+				let mut ctx = Ctx {
+					window: d_window,
+					audio: d_audio,
+					app: d_app,
+					gfx: gfx,
+				};
 
-		let width = window.width - theme.padding * 2.0;
-		let offset = window.pos + vec2!(theme.padding, -bar_height - theme.padding);
+				let mut wman = WidgetManager {
+					widgets: &mut window.widgets,
+					cur_y: 0.0,
+					window: window_ctx,
+				};
 
-		let window_ctx = WindowCtx {
-			theme: &self.theme,
-			width,
-			offset,
-		};
+				f(&mut ctx, &mut wman)?;
 
-		let dwindow = &mut d.window;
-		let daudio = &mut d.audio;
-		let dapp = &mut d.app;
+				return Ok(());
 
-		// TODO: overflow: hidden
-		d.gfx.push_t(mat4!().t2(window_ctx.offset), |gfx| {
-
-			// TODO: ???
-			let mut ctx = Ctx {
-				window: dwindow,
-				audio: daudio,
-				app: dapp,
-				gfx,
-			};
-
-			let mut wman = WidgetManager {
-				widgets: &mut window.widgets,
-				cur_y: 0.0,
-				ctx: window_ctx,
-			};
-
-			f(&mut ctx, &mut wman)?;
+			})?;
 
 			return Ok(());
 
@@ -221,17 +219,39 @@ impl UI {
 
 #[derive(Clone)]
 pub struct WindowCtx<'a> {
-	pub theme: &'a Theme,
-	pub width: f32,
-	pub offset: Vec2,
+	theme: &'a Theme,
+	width: f32,
+	offset: Vec2,
 }
 
 #[derive(Clone)]
 pub struct WidgetCtx<'a> {
-	pub theme: &'a Theme,
-	pub width: f32,
-	pub offset: Vec2,
-	pub mouse_pos: Vec2,
+	mouse_pos: Vec2,
+	key_mods: KeyMod,
+	window: &'a WindowCtx<'a>,
+	time: Duration,
+	dt: Duration,
+}
+
+impl<'a> WidgetCtx<'a> {
+	fn mouse_pos(&self) -> Vec2 {
+		return self.mouse_pos;
+	}
+	fn key_mods(&self) -> KeyMod {
+		return self.key_mods;
+	}
+	fn theme(&self) -> &Theme {
+		return self.window.theme;
+	}
+	fn width(&self) -> f32 {
+		return self.window.width;
+	}
+	fn time(&self) -> Duration {
+		return self.time;
+	}
+	fn dt(&self) -> Duration {
+		return self.dt;
+	}
 }
 
 pub struct Window {
@@ -245,7 +265,7 @@ pub struct Window {
 pub struct WidgetManager<'a> {
 	widgets: &'a mut HashMap<ID, Box<dyn Widget>>,
 	cur_y: f32,
-	ctx: WindowCtx<'a>,
+	window: WindowCtx<'a>,
 }
 
 impl<'a> WidgetManager<'a> {
@@ -253,13 +273,14 @@ impl<'a> WidgetManager<'a> {
 	fn widget_light<W: Widget>(&mut self, d: &mut Ctx, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
-		let offset = self.ctx.offset + vec2!(0, -self.cur_y);
+		let offset = self.window.offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
-			theme: self.ctx.theme,
-			width: self.ctx.width,
-			offset,
+			window: &self.window,
 			mouse_pos: d.window.mouse_pos() - offset,
+			key_mods: d.window.key_mods(),
+			time: d.app.time(),
+			dt: d.app.dt(),
 		};
 
 		d.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
@@ -267,7 +288,7 @@ impl<'a> WidgetManager<'a> {
 			return Ok(());
 		})?;
 
-		self.cur_y += height + self.ctx.theme.padding;
+		self.cur_y += height + self.window.theme.padding;
 
 		return Ok(());
 
@@ -291,15 +312,16 @@ impl<'a> WidgetManager<'a> {
 			.as_mut()
 			.as_any_mut()
 			.downcast_mut::<W>()
-			.ok_or("failed to cast widget types".to_string())?;
+			.ok_or(format!("failed to cast widget types"))?;
 
-		let offset = self.ctx.offset + vec2!(0, -self.cur_y);
+		let offset = self.window.offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
-			theme: self.ctx.theme,
-			width: self.ctx.width,
-			offset,
+			window: &self.window,
 			mouse_pos: d.window.mouse_pos() - offset,
+			key_mods: d.window.key_mods(),
+			time: d.app.time(),
+			dt: d.app.dt(),
 		};
 
 		val = Ok(f(w));
@@ -309,7 +331,7 @@ impl<'a> WidgetManager<'a> {
 			return Ok(());
 		})?;
 
-		self.cur_y += height + self.ctx.theme.padding;
+		self.cur_y += height + self.window.theme.padding;
 
 		return val;
 
@@ -319,14 +341,14 @@ impl<'a> WidgetManager<'a> {
 		return self.widget_light(d, Text::new(s));
 	}
 
-	pub fn input(&mut self, d: &mut Ctx, prompt: &'static str) -> Result<String> {
-		return self.widget(d, hash!(prompt), || Input::new(prompt), |i| {
+	pub fn input(&mut self, d: &mut Ctx, label: &'static str) -> Result<String> {
+		return self.widget(d, hash!(label), || Input::new(label), |i| {
 			return i.text();
 		});
 	}
 
-	pub fn slider(&mut self, d: &mut Ctx, prompt: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
-		return self.widget(d, hash!(prompt), || Slider::new(prompt, val, min, max), |i| {
+	pub fn slider(&mut self, d: &mut Ctx, label: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
+		return self.widget(d, hash!(label), || Slider::new(label, val, min, max), |i| {
 			return i.value();
 		});
 	}
@@ -337,8 +359,8 @@ impl<'a> WidgetManager<'a> {
 		});
 	}
 
-	pub fn checkbox(&mut self, d: &mut Ctx, prompt: &'static str, b: bool) -> Result<bool> {
-		return self.widget(d, hash!(prompt), || CheckBox::new(prompt, b), |i| {
+	pub fn checkbox(&mut self, d: &mut Ctx, label: &'static str, b: bool) -> Result<bool> {
+		return self.widget(d, hash!(label), || CheckBox::new(label, b), |i| {
 			return i.checked();
 		});
 	}
@@ -347,8 +369,8 @@ impl<'a> WidgetManager<'a> {
 		return self.widget_light(d, Sep);
 	}
 
-	pub fn select(&mut self, d: &mut Ctx, prompt: &'static str, options: &[&str], i: usize) -> Result<usize> {
-		return self.widget(d, hash!(prompt), || Select::new(prompt, options, i), |i| {
+	pub fn select(&mut self, d: &mut Ctx, label: &'static str, options: &[&str], i: usize) -> Result<usize> {
+		return self.widget(d, hash!(label), || Select::new(label, options, i), |i| {
 			return i.selected();
 		});
 	}

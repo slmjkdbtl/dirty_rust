@@ -1,8 +1,7 @@
 // wengwengweng
 
 use dirty::*;
-
-use input::Key;
+use input::*;
 
 struct Game {
 	ui: ui::UI,
@@ -16,9 +15,9 @@ impl State for Game {
 		});
 	}
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &Event) -> Result<()> {
 
-		use input::Event::*;
+		use Event::*;
 
 		self.ui.event(d, &e);
 

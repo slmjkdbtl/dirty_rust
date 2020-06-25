@@ -3,16 +3,16 @@
 use super::*;
 
 pub struct Button {
-	text: &'static str,
+	label: &'static str,
 	clicked: bool,
 	pressed: bool,
 	hovering: bool,
 }
 
 impl Button {
-	pub fn new(text: &'static str) -> Self {
+	pub fn new(label: &'static str) -> Self {
 		return Self {
-			text,
+			label: label,
 			clicked: false,
 			pressed: false,
 			hovering: false,
@@ -25,10 +25,9 @@ impl Button {
 
 impl Widget for Button {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
+	fn event(&mut self, e: &Event) -> bool {
 
-		use input::Event::*;
-		use input::Mouse;
+		use Event::*;
 
 		match e {
 			MousePress(m) => {
@@ -54,21 +53,22 @@ impl Widget for Button {
 
 	}
 
-	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, ctx: &WidgetCtx) -> Result<f32> {
 
 		use geom::*;
 
-		let theme = &wctx.theme;
+		let theme = ctx.theme();
 
-		let ptext = shapes::text(&self.text.to_string())
+		let label_shape = shapes::text(&self.label.to_string())
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(gfx)
 			;
 
-		let bw = ptext.width() + theme.padding * 2.0;
-		let bh = ptext.height() + theme.padding * 2.0;
+		// calc button size
+		let box_width = label_shape.width() + theme.padding * 2.0;
+		let box_height = label_shape.height() + theme.padding * 2.0;
 
 		let bg_color = if self.pressed {
 			theme.border_color
@@ -76,26 +76,29 @@ impl Widget for Button {
 			theme.bar_color
 		};
 
+		// draw box
 		gfx.draw(
-			&shapes::rect(vec2!(0), vec2!(bw, -bh))
+			&shapes::rect(vec2!(0), vec2!(box_width, -box_height))
 				.stroke(theme.border_color)
 				.fill(bg_color)
 				.line_width(2.0)
 		)?;
 
+		// draw label
 		gfx.draw_t(
 			mat4!()
 				.t2(vec2!(theme.padding, -theme.padding))
 				,
-			&ptext
+			&label_shape
 		)?;
 
-		let rect = Rect::new(vec2!(0), vec2!(bw, -bh));
+		// check mouse hover
+		let rect = Rect::new(vec2!(0), vec2!(box_width, -box_height));
 
-		self.hovering = col::intersect2d(rect, wctx.mouse_pos);
+		self.hovering = col::intersect2d(rect, ctx.mouse_pos());
 		self.clicked = false;
 
-		return Ok(bh);
+		return Ok(box_height);
 
 	}
 

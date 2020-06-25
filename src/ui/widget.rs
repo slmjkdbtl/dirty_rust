@@ -20,11 +20,12 @@ impl<T: Any> AsAny for T {
 
 pub trait Widget: AsAny + 'static {
 
-	fn event(&mut self, _: &mut Ctx, _: &input::Event) -> bool {
+	// TODO: take WidgetCtx
+	fn event(&mut self, _: &Event) -> bool {
 		return false;
 	}
 
-	fn draw(&mut self, _: &mut gfx::Gfx, _: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, _: &mut Gfx, _: &WidgetCtx) -> Result<f32> {
 		return Ok(0.0);
 	}
 

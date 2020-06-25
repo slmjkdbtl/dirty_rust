@@ -2,8 +2,10 @@
 
 use super::*;
 
+// TODO: clean up
+
 pub struct Select {
-	prompt: &'static str,
+	label: &'static str,
 	options: Vec<String>,
 	selected: usize,
 	state: State,
@@ -15,31 +17,34 @@ enum State {
 }
 
 impl Select {
-	pub fn new(prompt: &'static str, options: &[&str], i: usize) -> Self {
+
+	pub fn new(label: &'static str, options: &[&str], i: usize) -> Self {
 		return Self {
-			prompt,
+			label,
 			options: options.iter().map(|s| s.to_string()).collect(),
 			selected: i,
 			state: State::Idle(false),
 		};
 	}
+
 	pub fn selected(&self) -> usize {
 		return self.selected;
 	}
+
 }
 
 impl Widget for Select {
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> bool {
+	fn event(&mut self, e: &Event) -> bool {
 
-		use input::Event::*;
-		use input::Mouse;
-
-		let kmods = d.window.key_mods();
+		use Event::*;
 
 		match e {
+
 			MousePress(m) => {
+
 				match *m {
+
 					Mouse::Left => {
 
 						match self.state {
@@ -53,38 +58,44 @@ impl Widget for Select {
 								self.state = State::Idle(false);
 								if let Some(i) = b {
 									self.selected = i;
+									return true;
 								}
-								return true;
 							},
 						}
 
 					},
+
 					_ => {},
+
 				}
+
 			},
+
 			_ => {},
+
 		}
 
 		return false;
 
 	}
 
-	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, ctx: &WidgetCtx) -> Result<f32> {
 
 		use geom::*;
 
-		let theme = &wctx.theme;
+		let theme = ctx.theme();
 
-		let ptext = shapes::text(&format!("{}:", self.prompt))
+		let label_shape = shapes::text(&format!("{}:", self.label))
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(gfx)
 			;
 
-		gfx.draw_t(mat4!().ty(-theme.padding), &ptext)?;
+		// draw label
+		gfx.draw_t(mat4!().ty(-theme.padding), &label_shape)?;
 
-		let text = self.options.iter().map(|s| {
+		let option_shapes = self.options.iter().map(|s| {
 			return shapes::text(s)
 				.size(theme.font_size)
 				.color(theme.title_color)
@@ -93,7 +104,8 @@ impl Widget for Select {
 				;
 		}).collect::<Vec<shapes::FormattedText>>();
 
-		let max_width = text.iter().fold(0.0, |w, t| {
+		// get the width of the longest option
+		let max_width = option_shapes.iter().fold(0.0, |w, t| {
 			if t.width() > w {
 				return t.width();
 			} else {
@@ -101,16 +113,17 @@ impl Widget for Select {
 			}
 		});
 
-		let ox = ptext.width() + theme.padding;
-		let bh = ptext.height() + theme.padding * 2.0;
+		let ox = label_shape.width() + theme.padding;
+		let bh = label_shape.height() + theme.padding * 2.0;
 		let bw = max_width + theme.padding * 2.0 + bh;
 
 		let area = Rect::new(vec2!(ox, 0.0), vec2!(ox + bw, -bh));
 
 		if let State::Idle(_) = self.state {
-			self.state = State::Idle(col::intersect2d(area, wctx.mouse_pos));
+			self.state = State::Idle(col::intersect2d(area, ctx.mouse_pos));
 		}
 
+		// draw container
 		gfx.draw(
 			&shapes::rect(
 				vec2!(ox, 0.0),
@@ -124,7 +137,7 @@ impl Widget for Select {
 		if let State::Expanded(_) = self.state {
 
 			let by = self.selected as f32 * bh;
-			let by2 = by - text.len() as f32 * bh;
+			let by2 = by - option_shapes.len() as f32 * bh;
 
 			gfx.draw(
 				&shapes::rect(
@@ -136,11 +149,11 @@ impl Widget for Select {
 					.line_width(2.0)
 			)?;
 
-			for (i, t) in text.iter().enumerate() {
+			for (i, t) in option_shapes.iter().enumerate() {
 
 				let oy = (i as f32 - self.selected as f32) * bh;
 				let area = Rect::new(vec2!(ox, -oy), vec2!(ox + bw - bh, -oy - bh));
-				let hovered = col::intersect2d(area, wctx.mouse_pos);
+				let hovered = col::intersect2d(area, ctx.mouse_pos);
 
 				if hovered {
 					self.state = State::Expanded(Some(i));
@@ -156,10 +169,11 @@ impl Widget for Select {
 
 		}
 
-		if let Some(t) = text.get(self.selected) {
+		if let Some(t) = option_shapes.get(self.selected) {
 			gfx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -theme.padding)), t)?;
 		}
 
+		// draw arrow (?)
 		gfx.draw(
 			&shapes::rect(
 				vec2!(ox + bw - bh, 0.0),
@@ -168,23 +182,23 @@ impl Widget for Select {
 				.fill(theme.border_color)
 		)?;
 
-		gfx.draw(
-			&shapes::line(
-				vec2!(ox + bw - bh * 0.7, -bh * 0.4),
-				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
-			)
-				.color(theme.border_color)
-				.width(2.0)
-		)?;
+// 		gfx.draw(
+// 			&shapes::line(
+// 				vec2!(ox + bw - bh * 0.7, -bh * 0.4),
+// 				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
+// 			)
+// 				.color(theme.border_color)
+// 				.width(2.0)
+// 		)?;
 
-		gfx.draw(
-			&shapes::line(
-				vec2!(ox + bw - bh * 0.3, -bh * 0.4),
-				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
-			)
-				.color(theme.border_color)
-				.width(2.0)
-		)?;
+// 		gfx.draw(
+// 			&shapes::line(
+// 				vec2!(ox + bw - bh * 0.3, -bh * 0.4),
+// 				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
+// 			)
+// 				.color(theme.border_color)
+// 				.width(2.0)
+// 		)?;
 
 		return Ok(bh);
 

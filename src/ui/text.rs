@@ -16,11 +16,13 @@ impl Text {
 
 impl Widget for Text {
 
-	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, ctx: &WidgetCtx) -> Result<f32> {
+
+		let theme = ctx.theme();
 
 		let text = shapes::text(&self.text)
-			.size(wctx.theme.font_size)
-			.color(wctx.theme.title_color)
+			.size(theme.font_size)
+			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
 			.format(gfx)
 			;

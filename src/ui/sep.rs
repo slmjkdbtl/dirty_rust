@@ -6,17 +6,17 @@ pub struct Sep;
 
 impl Widget for Sep {
 
-	fn draw(&mut self, gfx: &mut gfx::Gfx, wctx: &WidgetCtx) -> Result<f32> {
+	fn draw(&mut self, gfx: &mut gfx::Gfx, ctx: &WidgetCtx) -> Result<f32> {
 
-		let p = wctx.theme.padding;
+		let t = ctx.theme();
 
 		gfx.draw(
-			&shapes::line(vec2!(0, -p * 0.5), vec2!(wctx.width, -p * 0.5))
-				.color(wctx.theme.border_color)
+			&shapes::line(vec2!(0, -t.padding * 0.5), vec2!(ctx.width(), -t.padding * 0.5))
+				.color(t.border_color)
 				.width(2.0)
 		)?;
 
-		return Ok(p);
+		return Ok(t.padding);
 
 	}
 
