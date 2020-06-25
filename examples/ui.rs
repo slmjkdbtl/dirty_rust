@@ -43,7 +43,7 @@ impl State for Game {
 
 			p.text(ctx, "yo")?;
 			p.input(ctx, "name")?;
-			p.slider(ctx, "age", 3.5, 1.0, 10.0)?;
+			p.slider::<i32>(ctx, "height", 170, 0, 300)?;
 			p.select(ctx, "gender", &["unknown", "male", "female"], 1)?;
 			p.checkbox(ctx, "dead", false)?;
 			p.sep(ctx)?;

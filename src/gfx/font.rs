@@ -14,7 +14,7 @@ pub type CharMap = HashMap<char, Quad>;
 /// Describes Features of a Font
 pub trait Font {
 	/// get render information of a character
-	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)>;
+	fn get(&self, ch: char) -> Option<(&Texture, Quad)>;
 	/// character height
 	fn height(&self) -> f32;
 	/// if there's a fixed character width
@@ -56,7 +56,7 @@ impl BitmapFont {
 	/// create bitmap font from a [`BitmapFontData`](struct.BitmapFontData)
 	pub fn from_data(ctx: &impl HasGL, data: BitmapFontData) -> Result<Self> {
 
-		let font_tex = gfx::Texture::from_bytes(ctx, &data.img)?;
+		let font_tex = Texture::from_bytes(ctx, &data.img)?;
 
 		return Ok(Self::from_tex(
 			font_tex,
@@ -114,7 +114,7 @@ impl BitmapFont {
 }
 
 impl Font for BitmapFont {
-	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)> {
+	fn get(&self, ch: char) -> Option<(&Texture, Quad)> {
 		return self.map
 			.get(&ch)
 			.map(|quad| (&self.tex, *quad))
@@ -128,6 +128,7 @@ impl Font for BitmapFont {
 	}
 }
 
+// TODO
 /// Font Loaded from a Truetype File
 pub struct TruetypeFont {
 	font: fontdue::Font,
@@ -164,42 +165,41 @@ impl TruetypeFont {
 	/// cache characters to the texture
 	pub fn cache(&mut self, ch: char) -> Result<()> {
 
-		if self.map.get(&ch).is_none() {
-
-			let (tw, th) = (self.tex.width(), self.tex.height());
-
-			let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
-			let (w, h) = (metrics.width as i32, metrics.height as i32);
-			let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
-
-			for b in bitmap {
-				nbitmap.extend_from_slice(&[255, 255, 255, b]);
-			}
-
-			let (mut x, mut y) = (self.cur_pt.x, self.cur_pt.y);
-
-			if x + w >= tw {
-				x = 0;
-				y += h;
-			}
-
-			if y >= th {
-				return Err(format!("reached font texture size limit"));
-			}
-
-			self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);
-
-			self.map.insert(ch, quad!(
-				x as f32 / tw as f32,
-				y as f32 / th as f32,
-				w as f32 / tw as f32,
-				h as f32 / th as f32,
-			));
-
-			x += w;
-			self.cur_pt = pt!(x, y);
-
+		if self.map.get(&ch).is_some() {
+			return Ok(());
 		}
+
+		let (tw, th) = (self.tex.width(), self.tex.height());
+		let (metrics, bitmap) = self.font.rasterize(ch, self.size as f32);
+		let (w, h) = (metrics.width as i32, metrics.height as i32);
+		let mut nbitmap = Vec::with_capacity(bitmap.len() * 4);
+
+		for b in bitmap {
+			nbitmap.extend_from_slice(&[255, 255, 255, b]);
+		}
+
+		let (mut x, mut y) = (self.cur_pt.x, self.cur_pt.y);
+
+		if x + w >= tw {
+			x = 0;
+			y += h;
+		}
+
+		if y >= th {
+			return Err(format!("reached font texture size limit"));
+		}
+
+		self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);
+
+		self.map.insert(ch, quad!(
+			x as f32 / tw as f32,
+			y as f32 / th as f32,
+			w as f32 / tw as f32,
+			h as f32 / th as f32,
+		));
+
+		x += w;
+		self.cur_pt = pt!(x, y);
 
 		return Ok(());
 
@@ -239,7 +239,7 @@ impl TruetypeFont {
 }
 
 impl Font for TruetypeFont {
-	fn get(&self, ch: char) -> Option<(&gfx::Texture, Quad)> {
+	fn get(&self, ch: char) -> Option<(&Texture, Quad)> {
 		return self.map.get(&ch).map(|quad| (&self.tex, *quad));
 	}
 	fn height(&self) -> f32 {

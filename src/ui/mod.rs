@@ -1,6 +1,6 @@
 // wengwengweng
 
-//! A Simple Immediate Mode GUI Lib
+//! Simple Immediate Mode GUI for Debug
 
 use std::any::TypeId;
 use std::collections::HashMap;
@@ -144,7 +144,7 @@ impl UI {
 		let box_height = window.height + bar_height;
 		let view_width = window.width;
 		let view_height = window.height;
-		let content_width = window.width - t.padding * 2.0;
+		let content_width = view_width - t.padding * 2.0;
 		let content_offset = vec2!(t.padding, -bar_height - t.padding);
 
 		let d_window = &mut d.window;
@@ -153,8 +153,8 @@ impl UI {
 
 		let window_ctx = WindowCtx {
 			theme: t,
-			width: content_width,
-			offset: content_offset + window.pos,
+			content_width: content_width,
+			content_offset: content_offset + window.pos,
 		};
 
 		// drawing window frame
@@ -220,8 +220,8 @@ impl UI {
 #[derive(Clone)]
 pub struct WindowCtx<'a> {
 	theme: &'a Theme,
-	width: f32,
-	offset: Vec2,
+	content_width: f32,
+	content_offset: Vec2,
 }
 
 #[derive(Clone)]
@@ -244,7 +244,7 @@ impl<'a> WidgetCtx<'a> {
 		return self.window.theme;
 	}
 	fn width(&self) -> f32 {
-		return self.window.width;
+		return self.window.content_width;
 	}
 	fn time(&self) -> Duration {
 		return self.time;
@@ -273,7 +273,7 @@ impl<'a> WidgetManager<'a> {
 	fn widget_light<W: Widget>(&mut self, d: &mut Ctx, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
-		let offset = self.window.offset + vec2!(0, -self.cur_y);
+		let offset = self.window.content_offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
 			window: &self.window,
@@ -314,7 +314,7 @@ impl<'a> WidgetManager<'a> {
 			.downcast_mut::<W>()
 			.ok_or(format!("failed to cast widget types"))?;
 
-		let offset = self.window.offset + vec2!(0, -self.cur_y);
+		let offset = self.window.content_offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
 			window: &self.window,
@@ -347,7 +347,14 @@ impl<'a> WidgetManager<'a> {
 		});
 	}
 
-	pub fn slider(&mut self, d: &mut Ctx, label: &'static str, val: f32, min: f32, max: f32) -> Result<f32> {
+	pub fn slider<T: SliderValue>(
+		&mut self,
+		d: &mut Ctx,
+		label: &'static str,
+		val: T,
+		min: T,
+		max: T
+	) -> Result<T> {
 		return self.widget(d, hash!(label), || Slider::new(label, val, min, max), |i| {
 			return i.value();
 		});

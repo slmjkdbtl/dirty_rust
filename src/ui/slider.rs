@@ -1,21 +1,62 @@
 // wengwengweng
 
+use std::fmt;
+use std::ops::*;
 use super::*;
 
 const HANDLE_WIDTH: f32 = 32.0;
 
-pub struct Slider {
+pub trait SliderValue:
+	Copy
+	+ PartialOrd
+	+ Sub<Output = Self>
+	+ fmt::Display
+	+ 'static
+{
+	fn into_f32(self) -> f32;
+	fn from_f32(f: f32) -> Self;
+}
+
+macro_rules! impl_slider_val {
+	($ty:ty) => {
+		impl SliderValue for $ty {
+			fn into_f32(self) -> f32 {
+				return self as f32;
+			}
+			fn from_f32(f: f32) -> Self {
+				return f as $ty;
+			}
+		}
+	}
+}
+
+impl_slider_val!(u8);
+impl_slider_val!(u16);
+impl_slider_val!(u32);
+impl_slider_val!(u64);
+impl_slider_val!(u128);
+impl_slider_val!(usize);
+impl_slider_val!(i8);
+impl_slider_val!(i16);
+impl_slider_val!(i32);
+impl_slider_val!(i64);
+impl_slider_val!(i128);
+impl_slider_val!(isize);
+impl_slider_val!(f32);
+impl_slider_val!(f64);
+
+pub struct Slider<T: SliderValue> {
 	label: &'static str,
-	val: f32,
-	min: f32,
-	max: f32,
+	val: T,
+	min: T,
+	max: T,
 	hovering: bool,
 	dragging: bool,
 	unit: f32,
 }
 
-impl Slider {
-	pub fn new(p: &'static str, val: f32, min: f32, max: f32) -> Self {
+impl<T: SliderValue> Slider<T> {
+	pub fn new(p: &'static str, val: T, min: T, max: T) -> Self {
 		return Self {
 			label: p,
 			val: val,
@@ -26,12 +67,12 @@ impl Slider {
 			unit: 0.0,
 		};
 	}
-	pub fn value(&self) -> f32 {
+	pub fn value(&self) -> T {
 		return self.val;
 	}
 }
 
-impl Widget for Slider {
+impl<T: SliderValue> Widget for Slider<T> {
 
 	fn event(&mut self, e: &Event) -> bool {
 
@@ -51,8 +92,13 @@ impl Widget for Slider {
 
 			MouseMove(delta) => {
 				if self.dragging {
-					self.val += delta.x * self.unit;
-					self.val = self.val.min(self.max).max(self.min);
+					self.val = T::from_f32(self.val.into_f32() + delta.x * self.unit);
+					if self.val > self.max {
+						self.val = self.max;
+					}
+					if self.val < self.min {
+						self.val = self.min;
+					}
 					return true;
 				}
 			}
@@ -106,9 +152,9 @@ impl Widget for Slider {
 		let box_area = Rect::new(vec2!(0, -y), vec2!(ctx.width(), -y - box_height));
 
 		self.hovering = col::intersect2d(box_area, ctx.mouse_pos());
-		self.unit = (self.max - self.min) / ctx.width();
+		self.unit = (self.max - self.min).into_f32() / ctx.width();
 
-		let ratio = (self.val - self.min) / (self.max - self.min);
+		let ratio = (self.val - self.min).into_f32() / (self.max - self.min).into_f32();
 
 		let handle_pos = vec2!(
 			HANDLE_WIDTH * 0.5 + (ctx.width() - HANDLE_WIDTH) * ratio,
