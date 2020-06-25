@@ -2,6 +2,7 @@
 
 use super::*;
 
+/// UI Theme
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
 	pub bar_color: Color,

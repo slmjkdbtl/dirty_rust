@@ -18,16 +18,16 @@ impl<T: Any> AsAny for T {
 	}
 }
 
+/// Trait for Building a Widget
 pub trait Widget: AsAny + 'static {
-
 	// TODO: take WidgetCtx
+	/// process widget events, return if an event is processed and should stop propogation
 	fn event(&mut self, _: &Event) -> bool {
 		return false;
 	}
-
+	/// draw widget, return the final widget height
 	fn draw(&mut self, _: &mut Gfx, _: &WidgetCtx) -> Result<f32> {
 		return Ok(0.0);
 	}
-
 }
 

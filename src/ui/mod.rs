@@ -1,6 +1,27 @@
 // wengwengweng
 
-//! Simple Immediate Mode GUI for Debug
+//! Simple Immediate Mode Debug GUI
+//!
+//! ```ignore
+//! ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
+//!     p.text(ctx, "yo")?;
+//!     p.input(ctx, "name")?;
+//!     p.slider::<i32>(ctx, "height", 170, 0, 300)?;
+//!     p.select(ctx, "gender", &["unknown", "male", "female"], 1)?;
+//!     p.checkbox(ctx, "dead", false)?;
+//!     p.sep(ctx)?;
+//!     p.button(ctx, "explode")?;
+//!     return Ok(());
+//! })?;
+//! ```
+//!
+//! See [WidgetManager](struct.WidgetManager.html) and [widgets](widgets/index.html) for built in widgets, or [Widget](trait.Widget.html) trait to implement your own widget
+//!
+//! See [example](https://git.sr.ht/~slmjkdbtl/DIRTY/tree/master/examples/ui.rs) for full usage
+
+pub mod widgets;
+export!(widget);
+export!(theme);
 
 use std::any::TypeId;
 use std::collections::HashMap;
@@ -10,19 +31,11 @@ use crate::*;
 use math::*;
 use gfx::*;
 use input::*;
+use widgets::*;
 
-export!(widget);
-export!(theme);
-export!(tinput);
-export!(text);
-export!(slider);
-export!(button);
-export!(checkbox);
-export!(sep);
-export!(select);
+type ID = u64;
 
-pub type ID = u64;
-
+/// UI Context
 pub struct UI {
 	windows: HashMap<ID, Window>,
 	theme: Theme,
@@ -31,14 +44,21 @@ pub struct UI {
 
 impl UI {
 
+	/// create UI context
 	pub fn new() -> Self {
+		return Self::with_theme(Theme::default());
+	}
+
+	/// create with custom [Theme](struct.Theme.html)
+	pub fn with_theme(t: Theme) -> Self {
 		return Self {
 			windows: hmap![],
-			theme: Theme::default(),
+			theme: t,
 			draggin: None,
 		};
 	}
 
+	/// handle UI events, returns if an event is processed and should stop propagation
 	pub fn event(&mut self, d: &mut Ctx, e: &Event) -> bool {
 
 		use Event::*;
@@ -119,6 +139,7 @@ impl UI {
 
 	}
 
+	/// init a new window, use a callback with [WidgetManager](struct.WidgetManager) to add widgets
 	pub fn window(
 		&mut self,
 		d: &mut Ctx,
@@ -218,12 +239,13 @@ impl UI {
 }
 
 #[derive(Clone)]
-pub struct WindowCtx<'a> {
+struct WindowCtx<'a> {
 	theme: &'a Theme,
 	content_width: f32,
 	content_offset: Vec2,
 }
 
+/// Context For A Single Widget
 #[derive(Clone)]
 pub struct WidgetCtx<'a> {
 	mouse_pos: Vec2,
@@ -234,27 +256,33 @@ pub struct WidgetCtx<'a> {
 }
 
 impl<'a> WidgetCtx<'a> {
-	fn mouse_pos(&self) -> Vec2 {
+	/// get current mouse pos which origins from the top left corner of current widget
+	pub fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;
 	}
-	fn key_mods(&self) -> KeyMod {
+	/// get key mods
+	pub fn key_mods(&self) -> KeyMod {
 		return self.key_mods;
 	}
-	fn theme(&self) -> &Theme {
+	/// get current theme
+	pub fn theme(&self) -> &Theme {
 		return self.window.theme;
 	}
-	fn width(&self) -> f32 {
+	/// get content width
+	pub fn width(&self) -> f32 {
 		return self.window.content_width;
 	}
-	fn time(&self) -> Duration {
+	/// get time
+	pub fn time(&self) -> Duration {
 		return self.time;
 	}
-	fn dt(&self) -> Duration {
+	/// get dt
+	pub fn dt(&self) -> Duration {
 		return self.dt;
 	}
 }
 
-pub struct Window {
+struct Window {
 	pos: Vec2,
 	title: &'static str,
 	width: f32,
@@ -262,6 +290,7 @@ pub struct Window {
 	widgets: HashMap<ID, Box<dyn Widget>>,
 }
 
+/// Manager for Create Widgets
 pub struct WidgetManager<'a> {
 	widgets: &'a mut HashMap<ID, Box<dyn Widget>>,
 	cur_y: f32,
@@ -270,7 +299,8 @@ pub struct WidgetManager<'a> {
 
 impl<'a> WidgetManager<'a> {
 
-	fn widget_light<W: Widget>(&mut self, d: &mut Ctx, mut w: W) -> Result<()> {
+	/// add a widget with no persistent state
+	pub fn widget_light<W: Widget>(&mut self, d: &mut Ctx, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
 		let offset = self.window.content_offset + vec2!(0, -self.cur_y);
@@ -294,7 +324,8 @@ impl<'a> WidgetManager<'a> {
 
 	}
 
-	fn widget<O, W: Widget>(
+	/// add a widget with persistent state
+	pub fn widget<O, W: Widget>(
 		&mut self,
 		d: &mut Ctx,
 		id: ID,
