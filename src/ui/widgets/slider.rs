@@ -1,7 +1,7 @@
 // wengwengweng
 
 use std::fmt;
-use std::ops::*;
+use std::ops;
 use super::*;
 
 const HANDLE_WIDTH: f32 = 32.0;
@@ -9,7 +9,7 @@ const HANDLE_WIDTH: f32 = 32.0;
 pub trait SliderValue:
 	Copy
 	+ PartialOrd
-	+ Sub<Output = Self>
+	+ ops::Sub<Output = Self>
 	+ fmt::Display
 	+ 'static
 {

@@ -4,17 +4,14 @@
 	margin: 0;
 	padding: 0;
 	font-family: Monospace;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
 }
 
 body {
 	padding-top: calc(24px + 2vw);
 	padding-left: calc(24px + 2vw);
 	background: black;
-}
-
-img {
-	image-rendering: pixelated;
-	image-rendering: crisp-edges;
 }
 
 p {

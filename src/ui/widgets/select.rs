@@ -1,27 +1,42 @@
 // wengwengweng
 
+use std::fmt;
 use super::*;
 
 // TODO: clean up
 
-pub struct Select {
+pub trait SelectValue:
+	Clone
+	+ fmt::Display
+	+ 'static
+{}
+
+impl<T> SelectValue for T
+	where T:
+	Clone
+	+ fmt::Display
+	+ 'static
+{}
+
+pub struct Select<T: SelectValue> {
 	label: &'static str,
-	options: Vec<String>,
+	options: Vec<T>,
 	selected: usize,
 	state: State,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum State {
 	Expanded(Option<usize>),
 	Idle(bool),
 }
 
-impl Select {
+impl<T: SelectValue> Select<T> {
 
-	pub fn new(label: &'static str, options: &[&str], i: usize) -> Self {
+	pub fn new(label: &'static str, options: &[T], i: usize) -> Self {
 		return Self {
 			label,
-			options: options.iter().map(|s| s.to_string()).collect(),
+			options: options.to_vec(),
 			selected: i,
 			state: State::Idle(false),
 		};
@@ -33,7 +48,7 @@ impl Select {
 
 }
 
-impl Widget for Select {
+impl<T: SelectValue> Widget for Select<T> {
 
 	fn event(&mut self, e: &Event) -> bool {
 
@@ -96,7 +111,7 @@ impl Widget for Select {
 		gfx.draw_t(mat4!().ty(-theme.padding), &label_shape)?;
 
 		let option_shapes = self.options.iter().map(|s| {
-			return shapes::text(s)
+			return shapes::text(&format!("{}", s))
 				.size(theme.font_size)
 				.color(theme.title_color)
 				.align(gfx::Origin::TopLeft)
@@ -202,6 +217,14 @@ impl Widget for Select {
 
 		return Ok(bh);
 
+	}
+
+	fn busy(&self) -> bool {
+		if let State::Expanded(_) = self.state {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

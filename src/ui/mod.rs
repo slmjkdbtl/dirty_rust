@@ -40,22 +40,24 @@ pub struct UI {
 	windows: HashMap<ID, Window>,
 	theme: Theme,
 	draggin: Option<(ID, Vec2)>,
+	canvas: Canvas,
 }
 
 impl UI {
 
 	/// create UI context
-	pub fn new() -> Self {
-		return Self::with_theme(Theme::default());
+	pub fn new(d: &Ctx) -> Result<Self> {
+		return Self::with_theme(d, Theme::default());
 	}
 
 	/// create with custom [Theme](struct.Theme.html)
-	pub fn with_theme(t: Theme) -> Self {
-		return Self {
+	pub fn with_theme(d: &Ctx, t: Theme) -> Result<Self> {
+		return Ok(Self {
 			windows: hmap![],
 			theme: t,
 			draggin: None,
-		};
+			canvas: Canvas::new(d.gfx, d.gfx.width(), d.gfx.height())?,
+		});
 	}
 
 	/// handle UI events, returns if an event is processed and should stop propagation
@@ -70,13 +72,27 @@ impl UI {
 		for p in self.windows.values_mut() {
 			for w in p.widgets.values_mut() {
 				// TODO: construct WidgetCtx
-				if w.event(e) {
-					return true;
+				if w.busy() {
+					if w.event(e) {
+						return true;
+					}
+				}
+			}
+			for w in p.widgets.values_mut() {
+				// TODO: construct WidgetCtx
+				if !w.busy() {
+					if w.event(e) {
+						return true;
+					}
 				}
 			}
 		}
 
 		match e {
+
+			Resize(w, h) => {
+				self.canvas.resize(d.gfx, *w, *h).ok();
+			},
 
 			MouseMove(_) => {
 				if let Some((id, offset)) = self.draggin {
@@ -139,94 +155,29 @@ impl UI {
 
 	}
 
-	/// init a new window, use a callback with [WidgetManager](struct.WidgetManager) to add widgets
-	pub fn window(
-		&mut self,
-		d: &mut Ctx,
-		title: &'static str,
-		pos: Vec2,
-		w: f32,
-		h: f32,
-		f: impl FnOnce(&mut WidgetManager) -> Result<()>,
-	) -> Result<()> {
-
-		let window = self.windows
-			.entry(hash!(title))
-			.or_insert(Window {
-				title: title,
-				pos: pos,
-				width: w,
-				height: h,
-				widgets: hmap![],
-			});
-
-		let t = &self.theme;
-		let bar_height = t.font_size + t.padding * 2.0;
-		let box_height = window.height + bar_height;
-		let view_width = window.width;
-		let view_height = window.height;
-		let content_width = view_width - t.padding * 2.0;
-		let content_offset = vec2!(t.padding, -bar_height - t.padding);
+	pub fn frame(&mut self, d: &mut Ctx, f: impl FnOnce(WindowManager) -> Result<()>) -> Result<()> {
 
 		let d_window = &mut d.window;
 		let d_audio = &mut d.audio;
 		let d_app = &mut d.app;
 
-		let window_ctx = WindowCtx {
-			theme: t,
-			content_width: content_width,
-			content_offset: content_offset + window.pos,
-		};
+		let canvas = self.canvas.clone();
 
-		// drawing window frame
-		d.gfx.push_t(mat4!().t2(window.pos), |gfx| {
+		d.gfx.draw_on(&canvas, |gfx| {
 
-			// background
-			gfx.draw(
-				&shapes::rect(vec2!(0), vec2!(window.width, -box_height))
-					.fill(t.background_color)
-					.stroke(t.border_color)
-					.line_width(t.border_thickness)
-			)?;
+			gfx.clear();
 
-			// title bar
-			gfx.draw(
-				&shapes::rect(vec2!(0), vec2!(window.width, -bar_height))
-					.fill(t.bar_color)
-					.stroke(t.border_color)
-					.line_width(t.border_thickness)
-			)?;
+			let mut ctx = Ctx {
+				window: d_window,
+				audio: d_audio,
+				app: d_app,
+				gfx: gfx,
+			};
 
-			// title
-			gfx.draw_t(
-				mat4!().t2(vec2!(t.padding, -t.padding)),
-				&shapes::text(&window.title)
-					.size(t.font_size)
-					.color(t.title_color)
-					.align(Origin::TopLeft)
-			)?;
-
-			// widgets
-			gfx.push_t(mat4!().t2(content_offset), |gfx| {
-
-				let mut ctx = Ctx {
-					window: d_window,
-					audio: d_audio,
-					app: d_app,
-					gfx: gfx,
-				};
-
-				let mut wman = WidgetManager {
-					ctx: &mut ctx,
-					widgets: &mut window.widgets,
-					cur_y: 0.0,
-					window: window_ctx,
-				};
-
-				f(&mut wman)?;
-
-				return Ok(());
-
+			f(WindowManager {
+				ctx: &mut ctx,
+				windows: &mut self.windows,
+				theme: &self.theme,
 			})?;
 
 			return Ok(());
@@ -235,6 +186,11 @@ impl UI {
 
 		return Ok(());
 
+	}
+
+	pub fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+		d.gfx.draw(&shapes::canvas(&self.canvas))?;
+		return Ok(());
 	}
 
 }
@@ -289,6 +245,111 @@ struct Window {
 	widgets: HashMap<ID, Box<dyn Widget>>,
 }
 
+pub struct WindowManager<'a> {
+	ctx: &'a mut Ctx<'a>,
+	windows: &'a mut HashMap<ID, Window>,
+	theme: &'a Theme,
+}
+
+impl<'a> WindowManager<'a> {
+
+	/// init a new window, use a callback with [WidgetManager](struct.WidgetManager) to add widgets
+	pub fn window(
+		&mut self,
+		title: &'static str,
+		pos: Vec2,
+		w: f32,
+		h: f32,
+		f: impl FnOnce(WidgetManager) -> Result<()>,
+	) -> Result<()> {
+
+		let window = self.windows
+			.entry(hash!(title))
+			.or_insert(Window {
+				title: title,
+				pos: pos,
+				width: w,
+				height: h,
+				widgets: hmap![],
+			});
+
+		let t = &self.theme;
+		let bar_height = t.font_size + t.padding * 2.0;
+		let box_height = window.height + bar_height;
+		let view_width = window.width;
+		let view_height = window.height;
+		let content_width = view_width - t.padding * 2.0;
+		let content_offset = vec2!(t.padding, -bar_height - t.padding);
+
+		let d_window = &mut self.ctx.window;
+		let d_audio = &mut self.ctx.audio;
+		let d_app = &mut self.ctx.app;
+
+		let window_ctx = WindowCtx {
+			theme: t,
+			content_width: content_width,
+			content_offset: content_offset + window.pos,
+		};
+
+		// drawing window frame
+		self.ctx.gfx.push_t(mat4!().t2(window.pos), |gfx| {
+
+			// background
+			gfx.draw(
+				&shapes::rect(vec2!(0), vec2!(window.width, -box_height))
+					.fill(t.background_color)
+					.stroke(t.border_color)
+					.line_width(t.border_thickness)
+			)?;
+
+			// title bar
+			gfx.draw(
+				&shapes::rect(vec2!(0), vec2!(window.width, -bar_height))
+					.fill(t.bar_color)
+					.stroke(t.border_color)
+					.line_width(t.border_thickness)
+			)?;
+
+			// title
+			gfx.draw_t(
+				mat4!().t2(vec2!(t.padding, -t.padding)),
+				&shapes::text(&window.title)
+					.size(t.font_size)
+					.color(t.title_color)
+					.align(Origin::TopLeft)
+			)?;
+
+			// widgets
+			gfx.push_t(mat4!().t2(content_offset), |gfx| {
+
+				let mut ctx = Ctx {
+					window: d_window,
+					audio: d_audio,
+					app: d_app,
+					gfx: gfx,
+				};
+
+				f(WidgetManager {
+					ctx: &mut ctx,
+					widgets: &mut window.widgets,
+					cur_y: 0.0,
+					window: window_ctx,
+				})?;
+
+				return Ok(());
+
+			})?;
+
+			return Ok(());
+
+		})?;
+
+		return Ok(());
+
+	}
+
+}
+
 /// Manager for Create Widgets
 pub struct WidgetManager<'a> {
 	ctx: &'a mut Ctx<'a>,
@@ -313,7 +374,13 @@ impl<'a> WidgetManager<'a> {
 			dt: self.ctx.app.dt(),
 		};
 
-		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
+		let z = if w.busy() {
+			0.1
+		} else {
+			0.0
+		};
+
+		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y).tz(z), |gfx| {
 			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
@@ -356,7 +423,13 @@ impl<'a> WidgetManager<'a> {
 
 		val = Ok(f(w));
 
-		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
+		let z = if w.busy() {
+			0.1
+		} else {
+			0.0
+		};
+
+		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y).tz(z), |gfx| {
 			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
@@ -405,7 +478,7 @@ impl<'a> WidgetManager<'a> {
 		return self.widget_light(Sep);
 	}
 
-	pub fn select(&mut self, label: &'static str, options: &[&str], i: usize) -> Result<usize> {
+	pub fn select<T: SelectValue>(&mut self, label: &'static str, options: &[T], i: usize) -> Result<usize> {
 		return self.widget(hash!(label), || Select::new(label, options, i), |i| {
 			return i.selected();
 		});

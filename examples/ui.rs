@@ -9,9 +9,9 @@ struct Game {
 
 impl State for Game {
 
-	fn init(_: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 		return Ok(Self {
-			ui: ui::UI::new(),
+			ui: ui::UI::new(d)?,
 		});
 	}
 
@@ -35,23 +35,37 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
-		self.ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |p| {
+		self.ui.frame(d, |mut m| {
 
-			p.text("yo")?;
-			p.input("name")?;
-			p.slider::<i32>("height", 170, 0, 300)?;
-			p.select("gender", &["unknown", "male", "female"], 1)?;
-			p.checkbox("dead", false)?;
-			p.sep()?;
-			p.button("explode")?;
+			m.window("test", top_left + vec2!(64, -64), 240.0, 360.0, |mut p| {
+
+				p.text("yo")?;
+				p.input("name")?;
+				p.slider::<i32>("age", 18, 0, 100)?;
+				p.select("gender", &["unknown", "male", "female"], 1)?;
+				p.checkbox("dead", false)?;
+				p.sep()?;
+				p.button("explode")?;
+
+				return Ok(());
+
+			})?;
 
 			return Ok(());
 
 		})?;
+
+		return Ok(());
+
+	}
+
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+
+		self.ui.draw(d)?;
 
 		return Ok(());
 
