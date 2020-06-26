@@ -219,7 +219,7 @@ impl<T: SelectValue> Widget for Select<T> {
 
 	}
 
-	fn busy(&self) -> bool {
+	fn focused(&self) -> bool {
 		if let State::Expanded(_) = self.state {
 			return true;
 		} else {

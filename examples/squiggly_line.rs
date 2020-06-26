@@ -190,7 +190,6 @@ impl State for Game {
 
 			ui.window("options", top_left + vec2!(60, -60), 240.0, 360.0, |mut p| {
 
-				// TODO: this slider doesn't work for some reason
 				tol = p.slider::<usize>("tol", 3, 1, 10)?;
 				density = p.slider::<f32>("d", 3., 1.0, 10.0)?;
 				sz = p.slider::<isize>("sz", 200, 10, 500)?;

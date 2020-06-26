@@ -29,8 +29,8 @@ pub trait Widget: AsAny + 'static {
 	fn draw(&mut self, _: &mut Gfx, _: &WidgetCtx) -> Result<f32> {
 		return Ok(0.0);
 	}
-	/// if a widget is busy it'll be the first to process event and will be drawn on top
-	fn busy(&self) -> bool {
+	/// if a widget is focused it'll be the first to process event and will be drawn on top
+	fn focused(&self) -> bool {
 		return false;
 	}
 }

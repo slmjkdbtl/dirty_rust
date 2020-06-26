@@ -82,7 +82,7 @@ impl UI {
 		for p in self.windows.values_mut() {
 			for w in p.widgets.values_mut() {
 				// TODO: construct WidgetCtx
-				if w.busy() {
+				if w.focused() {
 					if w.event(e) {
 						return true;
 					}
@@ -90,7 +90,7 @@ impl UI {
 			}
 			for w in p.widgets.values_mut() {
 				// TODO: construct WidgetCtx
-				if !w.busy() {
+				if !w.focused() {
 					if w.event(e) {
 						return true;
 					}
@@ -386,7 +386,7 @@ impl<'a> WidgetManager<'a> {
 		};
 
 		// TODO: not use z
-		let z = if w.busy() {
+		let z = if w.focused() {
 			1.0
 		} else {
 			0.0
@@ -436,7 +436,7 @@ impl<'a> WidgetManager<'a> {
 		val = Ok(f(w));
 
 		// TODO: not use z
-		let z = if w.busy() {
+		let z = if w.focused() {
 			1.0
 		} else {
 			0.0

@@ -41,7 +41,7 @@ impl State for Game {
 
 		self.ui.frame(d, |mut m| {
 
-			m.window("test", top_left + vec2!(64, -64), 240.0, 360.0, |mut p| {
+			m.window("test", top_left + vec2!(64, -64), 240.0, 320.0, |mut p| {
 
 				p.text("yo")?;
 				p.input("name")?;

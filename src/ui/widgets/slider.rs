@@ -13,14 +13,24 @@ pub trait SliderValue:
 	+ fmt::Display
 	+ 'static
 {
-	fn into_f32(self) -> f32;
+	fn to_f32(self) -> f32;
 	fn from_f32(f: f32) -> Self;
 }
 
 macro_rules! impl_slider_val {
+	($ty:ty, $f:ident) => {
+		impl SliderValue for $ty {
+			fn to_f32(self) -> f32 {
+				return self as f32;
+			}
+			fn from_f32(f: f32) -> Self {
+				return f.$f() as $ty;
+			}
+		}
+	};
 	($ty:ty) => {
 		impl SliderValue for $ty {
-			fn into_f32(self) -> f32 {
+			fn to_f32(self) -> f32 {
 				return self as f32;
 			}
 			fn from_f32(f: f32) -> Self {
@@ -30,24 +40,24 @@ macro_rules! impl_slider_val {
 	}
 }
 
-impl_slider_val!(u8);
-impl_slider_val!(u16);
-impl_slider_val!(u32);
-impl_slider_val!(u64);
-impl_slider_val!(u128);
-impl_slider_val!(usize);
-impl_slider_val!(i8);
-impl_slider_val!(i16);
-impl_slider_val!(i32);
-impl_slider_val!(i64);
-impl_slider_val!(i128);
-impl_slider_val!(isize);
+impl_slider_val!(u8, round);
+impl_slider_val!(u16, round);
+impl_slider_val!(u32, round);
+impl_slider_val!(u64, round);
+impl_slider_val!(u128, round);
+impl_slider_val!(usize, round);
+impl_slider_val!(i8, round);
+impl_slider_val!(i16, round);
+impl_slider_val!(i32, round);
+impl_slider_val!(i64, round);
+impl_slider_val!(i128, round);
+impl_slider_val!(isize, round);
 impl_slider_val!(f32);
 impl_slider_val!(f64);
 
 pub struct Slider<T: SliderValue> {
 	label: &'static str,
-	val: T,
+	val: f32,
 	min: T,
 	max: T,
 	hovering: bool,
@@ -59,7 +69,7 @@ impl<T: SliderValue> Slider<T> {
 	pub fn new(p: &'static str, val: T, min: T, max: T) -> Self {
 		return Self {
 			label: p,
-			val: val,
+			val: val.to_f32(),
 			min: min,
 			max: max,
 			hovering: false,
@@ -68,7 +78,7 @@ impl<T: SliderValue> Slider<T> {
 		};
 	}
 	pub fn value(&self) -> T {
-		return self.val;
+		return T::from_f32(self.val);
 	}
 }
 
@@ -92,12 +102,14 @@ impl<T: SliderValue> Widget for Slider<T> {
 
 			MouseMove(delta) => {
 				if self.dragging {
-					self.val = T::from_f32(self.val.into_f32() + delta.x * self.unit);
-					if self.val > self.max {
-						self.val = self.max;
+					let max = self.max.to_f32();
+					let min = self.min.to_f32();
+					self.val = self.val + delta.x * self.unit;
+					if self.val > max {
+						self.val = max;
 					}
-					if self.val < self.min {
-						self.val = self.min;
+					if self.val < min {
+						self.val = min;
 					}
 					return true;
 				}
@@ -142,7 +154,7 @@ impl<T: SliderValue> Widget for Slider<T> {
 		// draw label
 		gfx.draw(&label_shape)?;
 
-		let value_shape = shapes::text(&format!("{:.2}", self.val))
+		let value_shape = shapes::text(&format!("{:.2}", self.value()))
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.format(gfx)
@@ -150,11 +162,13 @@ impl<T: SliderValue> Widget for Slider<T> {
 
 		let box_height = value_shape.height() + theme.padding * 2.0;
 		let box_area = Rect::new(vec2!(0, -y), vec2!(ctx.width(), -y - box_height));
+		let max = self.max.to_f32();
+		let min = self.min.to_f32();
 
 		self.hovering = col::intersect2d(box_area, ctx.mouse_pos());
-		self.unit = (self.max - self.min).into_f32() / ctx.width();
+		self.unit = (max - min) / ctx.width();
 
-		let ratio = (self.val - self.min).into_f32() / (self.max - self.min).into_f32();
+		let ratio = (self.val - min) / (max - min);
 
 		let handle_pos = vec2!(
 			HANDLE_WIDTH * 0.5 + (ctx.width() - HANDLE_WIDTH) * ratio,

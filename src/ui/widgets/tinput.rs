@@ -182,5 +182,9 @@ impl Widget for Input {
 
 	}
 
+	fn focused(&self) -> bool {
+		return self.focused;
+	}
+
 }
 
