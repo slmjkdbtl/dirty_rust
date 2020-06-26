@@ -1,13 +1,10 @@
 // wengwengweng
 
-// https://github.com/rust-windowing/winit/issues/1418
-
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
 use glutin::dpi::*;
-use glutin::event_loop::EventLoop;
 
 use crate::*;
 use math::*;
@@ -17,7 +14,7 @@ use window::*;
 /// The Window Context
 pub struct Window {
 	gl: Rc<glow::Context>,
-	event_loop: Option<EventLoop<()>>,
+	event_loop: glutin::EventsLoop,
 	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
@@ -39,31 +36,31 @@ impl Window {
 
 	pub(crate) fn new(conf: &conf::Conf) -> Result<Self> {
 
-		let event_loop = EventLoop::new();
+		let event_loop = glutin::EventsLoop::new();
 
-		let mut window_builder = glutin::window::WindowBuilder::new()
+		let mut window_builder = glutin::WindowBuilder::new()
 			.with_title(conf.title.to_owned())
 			.with_resizable(conf.resizable)
-			.with_transparent(conf.transparent)
+			.with_transparency(conf.transparent)
 			.with_decorations(!conf.borderless)
 			.with_always_on_top(conf.always_on_top)
-			.with_inner_size(LogicalSize::new(conf.width as f64, conf.height as f64))
+			.with_dimensions(LogicalSize::new(conf.width as f64, conf.height as f64))
 			;
 
 		if conf.fullscreen {
 			window_builder = window_builder
-				.with_fullscreen(Some(glutin::window::Fullscreen::Borderless(event_loop.primary_monitor())));
+				.with_fullscreen(Some(event_loop.get_primary_monitor()));
 		}
 
-		#[cfg(target_os = "macos")] {
+// 		#[cfg(target_os = "macos")] {
 
-			use glutin::platform::macos::WindowBuilderExtMacOS;
+// 			use glutin::platform::macos::WindowBuilderExtMacOS;
 
-			window_builder = window_builder
-				.with_disallow_hidpi(!conf.hidpi)
-				;
+// 			window_builder = window_builder
+// 				.with_disallow_hidpi(!conf.hidpi)
+// 				;
 
-		}
+// 		}
 
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
@@ -81,13 +78,13 @@ impl Window {
 		if conf.cursor_hidden {
 			windowed_ctx
 				.window()
-				.set_cursor_visible(false);
+				.hide_cursor(true);
 		}
 
 		if conf.cursor_locked {
 			windowed_ctx
 				.window()
-				.set_cursor_grab(true)
+				.grab_cursor(true)
 				.map_err(|_| format!("cannot set cursor grab"))?;
 		}
 
@@ -97,7 +94,7 @@ impl Window {
 
 		return Ok(Self {
 			gl: Rc::new(gl),
-			event_loop: Some(event_loop),
+			event_loop: event_loop,
 			windowed_ctx,
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
@@ -177,7 +174,7 @@ impl Window {
 
 	/// get current dpi
 	pub fn dpi(&self) -> f32 {
-		return self.windowed_ctx.window().scale_factor() as f32;
+		return self.windowed_ctx.window().get_hidpi_factor() as f32;
 	}
 
 	/// get current window width
@@ -200,7 +197,7 @@ impl Window {
 
 		let (w, h) = (self.width as f32, self.height as f32);
 		let mpos = vec2!(w / 2.0 + p.x, h / 2.0 - p.y);
-		let g_mpos: LogicalPosition<f64> = mpos.into();
+		let g_mpos: LogicalPosition = mpos.into();
 
 		self.windowed_ctx
 			.window()
@@ -217,12 +214,10 @@ impl Window {
 	/// set fullscreen
 	pub fn set_fullscreen(&mut self, b: bool) {
 
-		use glutin::window::Fullscreen;
-
 		let window = self.windowed_ctx.window();
 
 		if b {
-			window.set_fullscreen(Some(Fullscreen::Borderless(window.current_monitor())));
+			window.set_fullscreen(Some(window.get_current_monitor()));
 		} else {
 			window.set_fullscreen(None);
 		}
@@ -231,12 +226,12 @@ impl Window {
 
 	/// check if is fullscreen
 	pub fn is_fullscreen(&self) -> bool {
-		return self.windowed_ctx.window().fullscreen().is_some();
+		return self.windowed_ctx.window().get_fullscreen().is_some();
 	}
 
 	/// set cursor hidden
 	pub fn set_cursor_hidden(&mut self, b: bool) {
-		self.windowed_ctx.window().set_cursor_visible(!b);
+		self.windowed_ctx.window().hide_cursor(b);
 		self.cursor_hidden = b;
 	}
 
@@ -247,7 +242,7 @@ impl Window {
 
 	/// set cursor locked
 	pub fn set_cursor_locked(&mut self, b: bool) {
-		if let Err(e) = self.windowed_ctx.window().set_cursor_grab(b) {
+		if let Err(e) = self.windowed_ctx.window().grab_cursor(b) {
 			elog!("failed to set cursor grab");
 		}
 		self.cursor_locked = b;
@@ -271,7 +266,7 @@ impl Window {
 
 	/// set cursor icon
 	pub fn set_cursor(&mut self, c: CursorIcon) {
-		self.windowed_ctx.window().set_cursor_icon(c.to_winit());
+		self.windowed_ctx.window().set_cursor(c.to_winit());
 	}
 
 	/// quit
@@ -322,334 +317,306 @@ impl Window {
 
 		};
 
-		use glutin::event_loop::ControlFlow;
+		loop {
 
-		let mut update = false;
+			let mut wevents = vec![];
 
-		let event_loop = match self.event_loop.take() {
-			Some(e) => e,
-			None => return Ok(()),
-		};
-
-		event_loop.run(move |e, _, flow| {
-
-			*flow = ControlFlow::Poll;
+			self.event_loop.poll_events(|e| {
+				wevents.push(e);
+			});
 
 			let res = || -> Result<()> {
 
-				if self.quit {
-					handle(&mut self, WindowEvent::Quit)?;
-					*flow = ControlFlow::Exit;
-					self.quit = false;
-					return Ok(());
-				}
-
-				use glutin::event::WindowEvent as WEvent;
-				use glutin::event::DeviceEvent as DEvent;
-				use glutin::event::Event as WinitEvent;
-				use glutin::event::TouchPhase;
-				use glutin::event::ElementState;
+				use glutin::WindowEvent as WEvent;
+				use glutin::DeviceEvent as DEvent;
+				use glutin::Event as WinitEvent;
+				use glutin::TouchPhase;
+				use glutin::ElementState;
 				use input::*;
 
 				let mut events = vec![];
+
+				for e in wevents {
+
+					match e {
+
+						WinitEvent::WindowEvent { ref event, .. } => match event {
+
+							WEvent::CloseRequested => self.quit = true,
+
+							WEvent::HiDpiFactorChanged(dpi) => {
+								handle(&mut self, WindowEvent::DPIChange(*dpi as f32))?;
+								events.push(Event::DPIChange(*dpi as f32));
+							},
+
+							WEvent::KeyboardInput { input, .. } => {
+
+								if let Some(kc) = input.virtual_keycode {
+
+									if let Some(key) = Key::from_winit(kc) {
+
+										match input.state {
+
+											ElementState::Pressed => {
+
+												events.push(Event::KeyPressRepeat(key));
+
+												if !self.key_down(key) {
+													events.push(Event::KeyPress(key));
+												}
+
+												self.pressed_keys.insert(key);
+
+											},
+
+											ElementState::Released => {
+												self.pressed_keys.remove(&key);
+												events.push(Event::KeyRelease(key));
+											},
+
+										}
+
+									}
+
+								}
+
+							},
+
+							WEvent::MouseInput { button, state, .. } => {
+
+								if let Some(button) = Mouse::from_winit(*button) {
+
+									match state {
+
+										ElementState::Pressed => {
+											self.pressed_mouse.insert(button);
+											events.push(Event::MousePress(button));
+										},
+										ElementState::Released => {
+											self.pressed_mouse.remove(&button);
+											events.push(Event::MouseRelease(button));
+										},
+
+									}
+
+								}
+
+							},
+
+							WEvent::CursorMoved { position, .. } => {
+
+								let mpos: Vec2 = (*position).into();
+								let (w, h) = (self.width as f32, self.height as f32);
+								let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
+
+								self.mouse_pos = mpos;
+
+							},
+
+							WEvent::MouseWheel { delta, phase, .. } => {
+
+								match phase {
+									TouchPhase::Started => {
+										self.scroll_phase = ScrollPhase::Solid;
+									},
+									TouchPhase::Ended => {
+										self.scroll_phase = ScrollPhase::Trailing;
+									},
+									_ => {},
+								}
+
+								let p = self.scroll_phase;
+								let d: Vec2 = (*delta).into();
+
+								events.push(Event::Wheel(vec2!(d.x, -d.y), p));
+
+							},
+
+							WEvent::ReceivedCharacter(ch) => {
+								if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
+									events.push(Event::CharInput(*ch));
+								}
+							},
+
+							WEvent::Resized(size) => {
+
+								let dpi = self.dpi() as f64;
+								let w = size.width as i32;
+								let h = size.height as i32;
+
+								self.width = w;
+								self.height = h;
+								self.windowed_ctx.resize(size.to_physical(dpi));
+
+								handle(&mut self, WindowEvent::Resize(w, h))?;
+								events.push(Event::Resize(w, h));
+
+							},
+
+							WEvent::Touch(touch) => {
+								events.push(Event::Touch(touch.id as usize, touch.location.into()));
+							},
+
+							WEvent::HoveredFile(path) => {
+								events.push(Event::FileHover(path.to_path_buf()));
+							},
+
+							WEvent::HoveredFileCancelled => {
+								events.push(Event::FileHoverCancel);
+							},
+
+							WEvent::DroppedFile(path) => {
+								events.push(Event::FileDrop(path.to_path_buf()));
+							},
+
+							WEvent::Focused(b) => {
+								self.focused = *b;
+								events.push(Event::Focus(*b));
+							},
+
+							WEvent::CursorEntered { .. } => {
+								events.push(Event::CursorEnter);
+							},
+
+							WEvent::CursorLeft { .. } => {
+								events.push(Event::CursorLeave);
+							},
+
+							_ => (),
+
+						},
+
+						WinitEvent::DeviceEvent { event, .. } => match event {
+							DEvent::MouseMotion { delta } => {
+								events.push(Event::MouseMove(vec2!(delta.0, -delta.1)));
+							},
+							_ => (),
+						},
+
+						_ => {},
+
+					}
+
+				}
 
 				#[cfg(feature = "midi")]
 				for msg in midi_rx.try_iter() {
 					events.push(Event::MIDI(msg.clone()));
 				}
 
-				match e {
+				while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
 
-					WinitEvent::LoopDestroyed => *flow = ControlFlow::Exit,
+					use gilrs::ev::EventType::*;
 
-					WinitEvent::WindowEvent { ref event, .. } => match event {
+					let id: usize = id.into();
 
-						WEvent::CloseRequested => {
-							handle(&mut self, WindowEvent::Quit)?;
-							*flow = ControlFlow::Exit;
-							return Ok(());
-						},
+					match event {
 
-						WEvent::ScaleFactorChanged { scale_factor, .. } => {
-							handle(&mut self, WindowEvent::DPIChange(*scale_factor as f32))?;
-							events.push(Event::DPIChange(*scale_factor as f32));
-						},
+						ButtonPressed(button, ..) => {
 
-						WEvent::KeyboardInput { input, .. } => {
+							if let Some(button) = GamepadButton::from_gilrs(button) {
 
-							if let Some(kc) = input.virtual_keycode {
+								self
+									.gamepad_pressed_buttons
+									.entry(id)
+									.or_insert(hset![])
+									.insert(button);
 
-								if let Some(key) = Key::from_winit(kc) {
-
-									match input.state {
-
-										ElementState::Pressed => {
-
-											events.push(Event::KeyPressRepeat(key));
-
-											if !self.key_down(key) {
-												events.push(Event::KeyPress(key));
-											}
-
-											self.pressed_keys.insert(key);
-
-										},
-
-										ElementState::Released => {
-											self.pressed_keys.remove(&key);
-											events.push(Event::KeyRelease(key));
-										},
-
-									}
-
-								}
+								events.push(Event::GamepadPress(id, button));
 
 							}
 
 						},
 
-						WEvent::MouseInput { button, state, .. } => {
+						ButtonRepeated(button, ..) => {
+							if let Some(button) = GamepadButton::from_gilrs(button) {
+								events.push(Event::GamepadPressRepeat(id, button));
+							}
+						},
 
-							if let Some(button) = Mouse::from_winit(*button) {
+						ButtonReleased(button, ..) => {
 
-								match state {
+							if let Some(button) = GamepadButton::from_gilrs(button) {
 
-									ElementState::Pressed => {
-										self.pressed_mouse.insert(button);
-										events.push(Event::MousePress(button));
-									},
-									ElementState::Released => {
-										self.pressed_mouse.remove(&button);
-										events.push(Event::MouseRelease(button));
-									},
+								self
+									.gamepad_pressed_buttons
+									.entry(id)
+									.or_insert(hset![])
+									.remove(&button);
 
-								}
+								events.push(Event::GamepadRelease(id, button));
 
 							}
 
 						},
 
-						WEvent::CursorMoved { position, .. } => {
+						AxisChanged(axis, val, ..) => {
 
-							let mpos: Vec2 = position.to_logical(self.dpi() as f64).into();
-							let (w, h) = (self.width as f32, self.height as f32);
-							let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
+							let pos = self.gamepad_axis_pos
+								.entry(id)
+								.or_insert(hmap![])
+								;
 
-							self.mouse_pos = mpos;
-
-						},
-
-						WEvent::MouseWheel { delta, phase, .. } => {
-
-							match phase {
-								TouchPhase::Started => {
-									self.scroll_phase = ScrollPhase::Solid;
+							match axis {
+								gilrs::ev::Axis::LeftStickX => {
+									let lstick = pos
+										.entry(GamepadAxis::LStick)
+										.or_insert(vec2!(0));
+									lstick.x = val;
+									events.push(Event::GamepadAxis(id, GamepadAxis::LStick, *lstick));
 								},
-								TouchPhase::Ended => {
-									self.scroll_phase = ScrollPhase::Trailing;
+								gilrs::ev::Axis::LeftStickY => {
+									let lstick = pos
+										.entry(GamepadAxis::LStick)
+										.or_insert(vec2!(0));
+									lstick.y = val;
+									events.push(Event::GamepadAxis(id, GamepadAxis::LStick, *lstick));
 								},
-								_ => {},
-							}
-
-							let p = self.scroll_phase;
-							let d: Vec2 = (*delta).into();
-
-							events.push(Event::Wheel(vec2!(d.x, -d.y), p));
-
-						},
-
-						WEvent::ReceivedCharacter(ch) => {
-							if !INVALID_CHARS.contains(&ch) && !ch.is_control() {
-								events.push(Event::CharInput(*ch));
-							}
-						},
-
-						WEvent::Resized(size) => {
-
-							let dpi = self.dpi() as f64;
-							let lsize: LogicalSize<f64> = size.to_logical(dpi);
-							let w = lsize.width as i32;
-							let h = lsize.height as i32;
-
-							self.width = w;
-							self.height = h;
-							self.windowed_ctx.resize(*size);
-
-							handle(&mut self, WindowEvent::Resize(w, h))?;
-							events.push(Event::Resize(w, h));
-
-						},
-
-						WEvent::Touch(touch) => {
-							events.push(Event::Touch(touch.id as usize, touch.location.into()));
-						},
-
-						WEvent::HoveredFile(path) => {
-							events.push(Event::FileHover(path.to_path_buf()));
-						},
-
-						WEvent::HoveredFileCancelled => {
-							events.push(Event::FileHoverCancel);
-						},
-
-						WEvent::DroppedFile(path) => {
-							events.push(Event::FileDrop(path.to_path_buf()));
-						},
-
-						WEvent::Focused(b) => {
-							self.focused = *b;
-							events.push(Event::Focus(*b));
-						},
-
-						WEvent::CursorEntered { .. } => {
-							events.push(Event::CursorEnter);
-						},
-
-						WEvent::CursorLeft { .. } => {
-							events.push(Event::CursorLeave);
-						},
-
-						_ => (),
-
-					},
-
-					WinitEvent::DeviceEvent { event, .. } => match event {
-						DEvent::MouseMotion { delta } => {
-							events.push(Event::MouseMove(vec2!(delta.0, -delta.1)));
-						},
-						_ => (),
-					},
-
-					WinitEvent::RedrawRequested(_) => {
-
-						handle(&mut self, WindowEvent::Frame)?;
-						self.swap()?;
-
-					},
-
-					WinitEvent::MainEventsCleared => {
-
-						// ugly workaround
-						update = !update;
-
-						if update {
-							self.windowed_ctx
-								.window()
-								.request_redraw();
-						}
-
-						while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
-
-							use gilrs::ev::EventType::*;
-
-							let id: usize = id.into();
-
-							match event {
-
-								ButtonPressed(button, ..) => {
-
-									if let Some(button) = GamepadButton::from_gilrs(button) {
-
-										self
-											.gamepad_pressed_buttons
-											.entry(id)
-											.or_insert(hset![])
-											.insert(button);
-
-										events.push(Event::GamepadPress(id, button));
-
-									}
-
+								gilrs::ev::Axis::RightStickX => {
+									let rstick = pos
+										.entry(GamepadAxis::RStick)
+										.or_insert(vec2!(0));
+									rstick.x = val;
+									events.push(Event::GamepadAxis(id, GamepadAxis::RStick, *rstick));
 								},
-
-								ButtonRepeated(button, ..) => {
-									if let Some(button) = GamepadButton::from_gilrs(button) {
-										events.push(Event::GamepadPressRepeat(id, button));
-									}
+								gilrs::ev::Axis::RightStickY => {
+									let rstick = pos
+										.entry(GamepadAxis::RStick)
+										.or_insert(vec2!(0));
+									rstick.y = val;
+									events.push(Event::GamepadAxis(id, GamepadAxis::RStick, *rstick));
 								},
-
-								ButtonReleased(button, ..) => {
-
-									if let Some(button) = GamepadButton::from_gilrs(button) {
-
-										self
-											.gamepad_pressed_buttons
-											.entry(id)
-											.or_insert(hset![])
-											.remove(&button);
-
-										events.push(Event::GamepadRelease(id, button));
-
-									}
-
-								},
-
-								AxisChanged(axis, val, ..) => {
-
-									let pos = self.gamepad_axis_pos
-										.entry(id)
-										.or_insert(hmap![])
-										;
-
-									match axis {
-										gilrs::ev::Axis::LeftStickX => {
-											let lstick = pos
-												.entry(GamepadAxis::LStick)
-												.or_insert(vec2!(0));
-											lstick.x = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, *lstick));
-										},
-										gilrs::ev::Axis::LeftStickY => {
-											let lstick = pos
-												.entry(GamepadAxis::LStick)
-												.or_insert(vec2!(0));
-											lstick.y = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::LStick, *lstick));
-										},
-										gilrs::ev::Axis::RightStickX => {
-											let rstick = pos
-												.entry(GamepadAxis::RStick)
-												.or_insert(vec2!(0));
-											rstick.x = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, *rstick));
-										},
-										gilrs::ev::Axis::RightStickY => {
-											let rstick = pos
-												.entry(GamepadAxis::RStick)
-												.or_insert(vec2!(0));
-											rstick.y = val;
-											events.push(Event::GamepadAxis(id, GamepadAxis::RStick, *rstick));
-										},
-										_ => {},
-
-									}
-
-								},
-
-								Connected => {
-									events.push(Event::GamepadConnect(id));
-								},
-
-								Disconnected => {
-									events.push(Event::GamepadDisconnect(id));
-									self.gamepad_pressed_buttons.remove(&id);
-									self.gamepad_axis_pos.remove(&id);
-								},
-
 								_ => {},
 
 							}
 
-						}
+						},
 
-					},
+						Connected => {
+							events.push(Event::GamepadConnect(id));
+						},
 
-					_ => {},
+						Disconnected => {
+							events.push(Event::GamepadDisconnect(id));
+							self.gamepad_pressed_buttons.remove(&id);
+							self.gamepad_axis_pos.remove(&id);
+						},
 
-				};
+						_ => {},
+
+					}
+
+				}
 
 				for e in events {
 					handle(&mut self, WindowEvent::Input(e))?;
+				}
+
+				handle(&mut self, WindowEvent::Frame)?;
+				self.swap()?;
+
+				if self.quit {
+					handle(&mut self, WindowEvent::Quit)?;
 				}
 
 				return Ok(());
@@ -660,7 +627,13 @@ impl Window {
 				elog!("{}", err);
 			}
 
-		});
+			if self.quit {
+				break;
+			}
+
+		}
+
+		return Ok(());
 
 	}
 
@@ -681,14 +654,13 @@ impl Window {
 
 	/// minimize window
 	pub fn minimize(&self) {
-		self.windowed_ctx.window().set_minimized(true);
 	}
 
 }
 
-impl From<glutin::event::MouseScrollDelta> for Vec2 {
-	fn from(delta: glutin::event::MouseScrollDelta) -> Self {
-		use glutin::event::MouseScrollDelta;
+impl From<glutin::MouseScrollDelta> for Vec2 {
+	fn from(delta: glutin::MouseScrollDelta) -> Self {
+		use glutin::MouseScrollDelta;
 		match delta {
 			MouseScrollDelta::PixelDelta(pos) => {
 				return vec2!(pos.x, pos.y);
@@ -700,7 +672,7 @@ impl From<glutin::event::MouseScrollDelta> for Vec2 {
 	}
 }
 
-impl From<Vec2> for LogicalPosition<f64> {
+impl From<Vec2> for LogicalPosition {
 	fn from(pos: Vec2) -> Self {
 		return Self {
 			x: pos.x as f64,
@@ -709,8 +681,8 @@ impl From<Vec2> for LogicalPosition<f64> {
 	}
 }
 
-impl From<LogicalPosition<f64>> for Vec2 {
-	fn from(pos: LogicalPosition<f64>) -> Self {
+impl From<LogicalPosition> for Vec2 {
+	fn from(pos: LogicalPosition) -> Self {
 		return Self {
 			x: pos.x as f32,
 			y: pos.y as f32,
@@ -718,17 +690,8 @@ impl From<LogicalPosition<f64>> for Vec2 {
 	}
 }
 
-impl From<PhysicalPosition<f64>> for Vec2 {
-	fn from(pos: PhysicalPosition<f64>) -> Self {
-		return Self {
-			x: pos.x as f32,
-			y: pos.y as f32,
-		};
-	}
-}
-
-impl From<PhysicalPosition<i32>> for Vec2 {
-	fn from(pos: PhysicalPosition<i32>) -> Self {
+impl From<PhysicalPosition> for Vec2 {
+	fn from(pos: PhysicalPosition) -> Self {
 		return Self {
 			x: pos.x as f32,
 			y: pos.y as f32,
@@ -737,23 +700,23 @@ impl From<PhysicalPosition<i32>> for Vec2 {
 }
 
 impl CursorIcon {
-	fn to_winit(&self) -> glutin::window::CursorIcon {
+	fn to_winit(&self) -> glutin::MouseCursor {
 		return match self {
-			CursorIcon::Normal => glutin::window::CursorIcon::Default,
-			CursorIcon::Hand => glutin::window::CursorIcon::Hand,
-			CursorIcon::Cross => glutin::window::CursorIcon::Crosshair,
-			CursorIcon::Move => glutin::window::CursorIcon::Move,
-			CursorIcon::Progress => glutin::window::CursorIcon::Progress,
-			CursorIcon::Wait => glutin::window::CursorIcon::Wait,
-			CursorIcon::Text => glutin::window::CursorIcon::Text,
+			CursorIcon::Normal => glutin::MouseCursor::Default,
+			CursorIcon::Hand => glutin::MouseCursor::Hand,
+			CursorIcon::Cross => glutin::MouseCursor::Crosshair,
+			CursorIcon::Move => glutin::MouseCursor::Move,
+			CursorIcon::Progress => glutin::MouseCursor::Progress,
+			CursorIcon::Wait => glutin::MouseCursor::Wait,
+			CursorIcon::Text => glutin::MouseCursor::Text,
 		};
 	}
 }
 
 impl Key {
 
-	fn from_winit(k: glutin::event::VirtualKeyCode) -> Option<Self> {
-		use glutin::event::VirtualKeyCode::*;
+	fn from_winit(k: glutin::VirtualKeyCode) -> Option<Self> {
+		use glutin::VirtualKeyCode::*;
 		return match k {
 			Q => Some(Key::Q),
 			W => Some(Key::W),
@@ -836,8 +799,8 @@ impl Key {
 }
 
 impl Mouse {
-	fn from_winit(m: glutin::event::MouseButton) -> Option<Self> {
-		use glutin::event::MouseButton::*;
+	fn from_winit(m: glutin::MouseButton) -> Option<Self> {
+		use glutin::MouseButton::*;
 		return match m {
 			Left => Some(Mouse::Left),
 			Right => Some(Mouse::Right),
