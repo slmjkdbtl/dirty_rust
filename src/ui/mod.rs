@@ -3,14 +3,14 @@
 //! Simple Immediate Mode Debug GUI
 //!
 //! ```ignore
-//! ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
-//!     p.text(ctx, "yo")?;
-//!     p.input(ctx, "name")?;
-//!     p.slider::<i32>(ctx, "height", 170, 0, 300)?;
-//!     p.select(ctx, "gender", &["unknown", "male", "female"], 1)?;
-//!     p.checkbox(ctx, "dead", false)?;
-//!     p.sep(ctx)?;
-//!     p.button(ctx, "explode")?;
+//! ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |p| {
+//!     p.text("yo")?;
+//!     p.input("name")?;
+//!     p.slider::<i32>("height", 170, 0, 300)?;
+//!     p.select("gender", &["unknown", "male", "female"], 1)?;
+//!     p.checkbox("dead", false)?;
+//!     p.sep()?;
+//!     p.button("explode")?;
 //!     return Ok(());
 //! })?;
 //! ```
@@ -147,7 +147,7 @@ impl UI {
 		pos: Vec2,
 		w: f32,
 		h: f32,
-		f: impl FnOnce(&mut Ctx, &mut WidgetManager) -> Result<()>,
+		f: impl FnOnce(&mut WidgetManager) -> Result<()>,
 	) -> Result<()> {
 
 		let window = self.windows
@@ -217,12 +217,13 @@ impl UI {
 				};
 
 				let mut wman = WidgetManager {
+					ctx: &mut ctx,
 					widgets: &mut window.widgets,
 					cur_y: 0.0,
 					window: window_ctx,
 				};
 
-				f(&mut ctx, &mut wman)?;
+				f(&mut wman)?;
 
 				return Ok(());
 
@@ -238,7 +239,6 @@ impl UI {
 
 }
 
-#[derive(Clone)]
 struct WindowCtx<'a> {
 	theme: &'a Theme,
 	content_width: f32,
@@ -246,7 +246,6 @@ struct WindowCtx<'a> {
 }
 
 /// Context For A Single Widget
-#[derive(Clone)]
 pub struct WidgetCtx<'a> {
 	mouse_pos: Vec2,
 	key_mods: KeyMod,
@@ -292,6 +291,7 @@ struct Window {
 
 /// Manager for Create Widgets
 pub struct WidgetManager<'a> {
+	ctx: &'a mut Ctx<'a>,
 	widgets: &'a mut HashMap<ID, Box<dyn Widget>>,
 	cur_y: f32,
 	window: WindowCtx<'a>,
@@ -300,20 +300,20 @@ pub struct WidgetManager<'a> {
 impl<'a> WidgetManager<'a> {
 
 	/// add a widget with no persistent state
-	pub fn widget_light<W: Widget>(&mut self, d: &mut Ctx, mut w: W) -> Result<()> {
+	pub fn widget_light<W: Widget>(&mut self, mut w: W) -> Result<()> {
 
 		let mut height = 0.0;
 		let offset = self.window.content_offset + vec2!(0, -self.cur_y);
 
 		let wctx = WidgetCtx {
 			window: &self.window,
-			mouse_pos: d.window.mouse_pos() - offset,
-			key_mods: d.window.key_mods(),
-			time: d.app.time(),
-			dt: d.app.dt(),
+			mouse_pos: self.ctx.window.mouse_pos() - offset,
+			key_mods: self.ctx.window.key_mods(),
+			time: self.ctx.app.time(),
+			dt: self.ctx.app.dt(),
 		};
 
-		d.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
+		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
 			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
@@ -327,7 +327,6 @@ impl<'a> WidgetManager<'a> {
 	/// add a widget with persistent state
 	pub fn widget<O, W: Widget>(
 		&mut self,
-		d: &mut Ctx,
 		id: ID,
 		w: impl FnOnce() -> W,
 		f: impl FnOnce(&W) -> O
@@ -349,15 +348,15 @@ impl<'a> WidgetManager<'a> {
 
 		let wctx = WidgetCtx {
 			window: &self.window,
-			mouse_pos: d.window.mouse_pos() - offset,
-			key_mods: d.window.key_mods(),
-			time: d.app.time(),
-			dt: d.app.dt(),
+			mouse_pos: self.ctx.window.mouse_pos() - offset,
+			key_mods: self.ctx.window.key_mods(),
+			time: self.ctx.app.time(),
+			dt: self.ctx.app.dt(),
 		};
 
 		val = Ok(f(w));
 
-		d.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
+		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
 			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
@@ -368,53 +367,52 @@ impl<'a> WidgetManager<'a> {
 
 	}
 
-	pub fn text(&mut self, d: &mut Ctx, s: &str) -> Result<()> {
-		return self.widget_light(d, Text::new(s));
+	pub fn text(&mut self, s: &str) -> Result<()> {
+		return self.widget_light(Text::new(s));
 	}
 
-	pub fn input(&mut self, d: &mut Ctx, label: &'static str) -> Result<String> {
-		return self.widget(d, hash!(label), || Input::new(label), |i| {
+	pub fn input(&mut self, label: &'static str) -> Result<String> {
+		return self.widget(hash!(label), || Input::new(label), |i| {
 			return i.text();
 		});
 	}
 
 	pub fn slider<T: SliderValue>(
 		&mut self,
-		d: &mut Ctx,
 		label: &'static str,
 		val: T,
 		min: T,
 		max: T
 	) -> Result<T> {
-		return self.widget(d, hash!(label), || Slider::new(label, val, min, max), |i| {
+		return self.widget(hash!(label), || Slider::new(label, val, min, max), |i| {
 			return i.value();
 		});
 	}
 
-	pub fn button(&mut self, d: &mut Ctx, text: &'static str) -> Result<bool> {
-		return self.widget(d, hash!(text), || Button::new(text), |i| {
+	pub fn button(&mut self, text: &'static str) -> Result<bool> {
+		return self.widget(hash!(text), || Button::new(text), |i| {
 			return i.clicked();
 		});
 	}
 
-	pub fn checkbox(&mut self, d: &mut Ctx, label: &'static str, b: bool) -> Result<bool> {
-		return self.widget(d, hash!(label), || CheckBox::new(label, b), |i| {
+	pub fn checkbox(&mut self, label: &'static str, b: bool) -> Result<bool> {
+		return self.widget(hash!(label), || CheckBox::new(label, b), |i| {
 			return i.checked();
 		});
 	}
 
-	pub fn sep(&mut self, d: &mut Ctx) -> Result<()> {
-		return self.widget_light(d, Sep);
+	pub fn sep(&mut self) -> Result<()> {
+		return self.widget_light(Sep);
 	}
 
-	pub fn select(&mut self, d: &mut Ctx, label: &'static str, options: &[&str], i: usize) -> Result<usize> {
-		return self.widget(d, hash!(label), || Select::new(label, options, i), |i| {
+	pub fn select(&mut self, label: &'static str, options: &[&str], i: usize) -> Result<usize> {
+		return self.widget(hash!(label), || Select::new(label, options, i), |i| {
 			return i.selected();
 		});
 	}
 
 	// TODO
-	pub fn canvas(&mut self, d: &mut Ctx, f: impl FnOnce(&mut Ctx, &mut WidgetCtx) -> Result<()>) -> Result<()> {
+	pub fn canvas(&mut self, f: impl FnOnce(&mut Ctx, &mut WidgetCtx) -> Result<()>) -> Result<()> {
 		return Ok(());
 	}
 

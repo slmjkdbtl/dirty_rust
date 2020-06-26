@@ -10,8 +10,8 @@ here's a minimal window setup:
 
 ```rust
 use dirty::*;
-use gfx::shapes;
-use input::Key;
+use gfx::*;
+use input::*;
 
 struct Game;
 
@@ -21,9 +21,9 @@ impl State for Game {
 		return Ok(Self);
 	}
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
+	fn event(&mut self, d: &mut Ctx, e: &Event) -> Result<()> {
 
-		use input::Event::*;
+		use Event::*;
 
 		match e {
 			KeyPress(k) => {
@@ -77,10 +77,10 @@ the examples are under `examples/`, run them natively with
 $ cargo run --example (example_name)
 ```
 
-or go check out the built wasm examples [here](https://tool.enemyspy.xyz/examples.html)
+or go check out the built wasm examples [here](https://dirty.enemyspy.xyz/examples.html)
 
 ## doc
-docs are hosted [here](https://tool.enemyspy.xyz/doc/dirty/index.html), or you can `cargo doc` and generate yourself
+docs are hosted [here](https://dirty.enemyspy.xyz/doc/dirty/index.html), or you can `cargo doc` and generate yourself
 
 there're some extra docs under `doc/`
 

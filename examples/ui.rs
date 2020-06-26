@@ -39,15 +39,15 @@ impl State for Game {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
-		self.ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |ctx, p| {
+		self.ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |p| {
 
-			p.text(ctx, "yo")?;
-			p.input(ctx, "name")?;
-			p.slider::<i32>(ctx, "height", 170, 0, 300)?;
-			p.select(ctx, "gender", &["unknown", "male", "female"], 1)?;
-			p.checkbox(ctx, "dead", false)?;
-			p.sep(ctx)?;
-			p.button(ctx, "explode")?;
+			p.text("yo")?;
+			p.input("name")?;
+			p.slider::<i32>("height", 170, 0, 300)?;
+			p.select("gender", &["unknown", "male", "female"], 1)?;
+			p.checkbox("dead", false)?;
+			p.sep()?;
+			p.button("explode")?;
 
 			return Ok(());
 
