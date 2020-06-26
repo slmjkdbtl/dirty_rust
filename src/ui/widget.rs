@@ -29,7 +29,7 @@ pub trait Widget: AsAny + 'static {
 	fn draw(&mut self, _: &mut Gfx, _: &WidgetCtx) -> Result<f32> {
 		return Ok(0.0);
 	}
-	/// if a widget is busy it'll be the first to process event and the last to draw
+	/// if a widget is busy it'll be the first to process event and will be drawn on top
 	fn busy(&self) -> bool {
 		return false;
 	}

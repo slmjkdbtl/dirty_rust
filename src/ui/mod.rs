@@ -3,14 +3,17 @@
 //! Simple Immediate Mode Debug GUI
 //!
 //! ```ignore
-//! ui.window(d, "test", top_left + vec2!(64, -64), 240.0, 360.0, |p| {
-//!     p.text("yo")?;
-//!     p.input("name")?;
-//!     p.slider::<i32>("height", 170, 0, 300)?;
-//!     p.select("gender", &["unknown", "male", "female"], 1)?;
-//!     p.checkbox("dead", false)?;
-//!     p.sep()?;
-//!     p.button("explode")?;
+//! ui.frame(d, |w| {
+//!     w.window("test", top_left + vec2!(64, -64), 240.0, 360.0, |p| {
+//!         p.text("yo")?;
+//!         p.input("name")?;
+//!         p.slider::<i32>("height", 170, 0, 300)?;
+//!         p.select("gender", &["unknown", "male", "female"], 1)?;
+//!         p.checkbox("dead", false)?;
+//!         p.sep()?;
+//!         p.button("explode")?;
+//!         return Ok(());
+//!     })?;
 //!     return Ok(());
 //! })?;
 //! ```
@@ -66,6 +69,13 @@ impl UI {
 		use Event::*;
 		use geom::*;
 
+		match e {
+			Resize(w, h) => {
+				self.canvas.resize(d.gfx, *w, *h).ok();
+			},
+			_ => {},
+		}
+
 		let mpos = d.window.mouse_pos();
 		let t = &self.theme;
 
@@ -89,10 +99,6 @@ impl UI {
 		}
 
 		match e {
-
-			Resize(w, h) => {
-				self.canvas.resize(d.gfx, *w, *h).ok();
-			},
 
 			MouseMove(_) => {
 				if let Some((id, offset)) = self.draggin {
@@ -140,8 +146,10 @@ impl UI {
 			MouseRelease(m) => {
 				match m {
 					Mouse::Left => {
-						self.draggin = None;
-						return true;
+						if self.draggin.is_some() {
+							self.draggin = None;
+							return true;
+						}
 					}
 					_ => {},
 				}
@@ -155,6 +163,7 @@ impl UI {
 
 	}
 
+	/// start new ui frame, use a callback with [WindowManager](struct.WindowManager) to create windows
 	pub fn frame(&mut self, d: &mut Ctx, f: impl FnOnce(WindowManager) -> Result<()>) -> Result<()> {
 
 		let d_window = &mut d.window;
@@ -188,6 +197,7 @@ impl UI {
 
 	}
 
+	/// draw ui canvas
 	pub fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 		d.gfx.draw(&shapes::canvas(&self.canvas))?;
 		return Ok(());
@@ -245,6 +255,7 @@ struct Window {
 	widgets: HashMap<ID, Box<dyn Widget>>,
 }
 
+/// Manager for Creating Windows
 pub struct WindowManager<'a> {
 	ctx: &'a mut Ctx<'a>,
 	windows: &'a mut HashMap<ID, Window>,
@@ -350,7 +361,7 @@ impl<'a> WindowManager<'a> {
 
 }
 
-/// Manager for Create Widgets
+/// Manager for Creating Widgets
 pub struct WidgetManager<'a> {
 	ctx: &'a mut Ctx<'a>,
 	widgets: &'a mut HashMap<ID, Box<dyn Widget>>,
@@ -374,8 +385,9 @@ impl<'a> WidgetManager<'a> {
 			dt: self.ctx.app.dt(),
 		};
 
+		// TODO: not use z
 		let z = if w.busy() {
-			0.1
+			1.0
 		} else {
 			0.0
 		};
@@ -423,8 +435,9 @@ impl<'a> WidgetManager<'a> {
 
 		val = Ok(f(w));
 
+		// TODO: not use z
 		let z = if w.busy() {
-			0.1
+			1.0
 		} else {
 			0.0
 		};
@@ -482,11 +495,6 @@ impl<'a> WidgetManager<'a> {
 		return self.widget(hash!(label), || Select::new(label, options, i), |i| {
 			return i.selected();
 		});
-	}
-
-	// TODO
-	pub fn canvas(&mut self, f: impl FnOnce(&mut Ctx, &mut WidgetCtx) -> Result<()>) -> Result<()> {
-		return Ok(());
 	}
 
 }

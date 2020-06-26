@@ -98,13 +98,13 @@ struct Game {
 
 impl State for Game {
 
-	fn init(_: &mut Ctx) -> Result<Self> {
+	fn init(d: &mut Ctx) -> Result<Self> {
 		Ok(Self {
 			key_down: false,
 			lines: vec![],
 			buf: Polyline::new(vec![], rgba!(1.)),
 			t: 0,
-			ui: ui::UI::new(),
+			ui: ui::UI::new(d)?,
 			tol: 3,
 			density: 3.,
 			sz: 200,
@@ -184,35 +184,47 @@ impl State for Game {
 		let mut sz = 0;
 		let mut save = false;
 		let mut fname = String::new();
+		let mut color = None;
 
-		self.ui.window(d, "options", top_left, 240.0, 360.0, |ctx, p| {
+		self.ui.frame(d, |mut ui| {
 
-			tol = p.slider(ctx, "tol", 3., 1.0, 10.0)? as usize;
-			density = p.slider(ctx, "d", 3., 1.0, 10.0)?;
-			sz = p.slider(ctx, "sz", 200., 10., 500.)? as isize;
-			fname = p.input(ctx, "filename")?;
-			p.text(ctx, ".png")?;
-			save = p.button(ctx, "save")?;
+			ui.window("options", top_left + vec2!(60, -60), 240.0, 360.0, |mut p| {
+
+				// TODO: this slider doesn't work for some reason
+				tol = p.slider::<usize>("tol", 3, 1, 10)?;
+				density = p.slider::<f32>("d", 3., 1.0, 10.0)?;
+				sz = p.slider::<isize>("sz", 200, 10, 500)?;
+				fname = p.input("filename")?;
+				p.text(".png")?;
+				save = p.button("save")?;
+
+				Ok(())
+
+			})?;
+
+			ui.window("color", top_right + vec2!(-60.0 - 240.0, -60), 240.0, 360.0, |mut p| {
+				if p.button("red")? { color = Some(rgba!(1,0,0,1)); }
+				if p.button("green")? { color = Some(rgba!(0,1,0,1)); }
+				if p.button("blue")? { color = Some(rgba!(0,0,1,1)); }
+				if p.button("white")? { color = Some(rgba!(1)); }
+				if p.button("black")? { color = Some(rgba!(0,0,0,1)); }
+				Ok(())
+			})?;
 
 			Ok(())
 
 		})?;
+
+		self.ui.draw(d)?;
+
 		self.tol = tol;
 		self.density = density;
 		self.sz = sz;
+
 		if save {
 			self.save(d.gfx, &fname)?;
 		}
 
-		let mut color = None;
-		self.ui.window(d, "color", top_right-vec2!(240., 0.), 240.0, 360.0, |ctx, p| {
-			if p.button(ctx, "red")? 	{ color = Some(rgba!(1,0,0,1)); }
-			if p.button(ctx, "green")? 	{ color = Some(rgba!(0,1,0,1)); }
-			if p.button(ctx, "blue")? 	{ color = Some(rgba!(0,0,1,1)); }
-			if p.button(ctx, "white")? 	{ color = Some(rgba!(1)); }
-			if p.button(ctx, "black")? 	{ color = Some(rgba!(0,0,0,1)); }
-			Ok(())
-		})?;
 		if let Some(col) = color {
 			self.buf.color = col;
 		}

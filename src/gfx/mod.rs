@@ -263,7 +263,7 @@ impl Gfx {
 				gl.front_face(CullMode::CounterClockwise.to_glow());
 			}
 
-			gl.clear_color(0.0, 0.0, 0.0, 1.0);
+			gl.clear_color(0.0, 0.0, 0.0, 0.0);
 			gl.clear(Surface::Color.to_glow());
 			gl.clear(Surface::Depth.to_glow());
 			gl.clear(Surface::Stencil.to_glow());
