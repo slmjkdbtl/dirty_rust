@@ -453,6 +453,26 @@ impl<'a> WidgetManager<'a> {
 
 	}
 
+	pub fn canvas(
+		&mut self,
+		height: f32,
+		f: impl FnOnce(&mut Gfx) -> Result<()>
+	) -> Result<()> {
+
+		let p1 = vec2!(0, -self.cur_y);
+		let p2 = vec2!(self.window.content_width, -self.cur_y - height);
+
+		self.ctx.gfx.draw_within(p1, p2, |gfx| {
+			f(gfx)?;
+			return Ok(());
+		})?;
+
+		self.cur_y += height + self.window.theme.padding;
+
+		return Ok(());
+
+	}
+
 	pub fn text(&mut self, s: &str) -> Result<()> {
 		return self.widget_light(Text::new(s));
 	}
@@ -481,7 +501,11 @@ impl<'a> WidgetManager<'a> {
 		});
 	}
 
-	pub fn checkbox(&mut self, label: &'static str, b: bool) -> Result<bool> {
+	pub fn checkbox(
+		&mut self,
+		label: &'static str,
+		b: bool,
+	) -> Result<bool> {
 		return self.widget(hash!(label), || CheckBox::new(label, b), |i| {
 			return i.checked();
 		});
@@ -491,7 +515,12 @@ impl<'a> WidgetManager<'a> {
 		return self.widget_light(Sep);
 	}
 
-	pub fn select<T: SelectValue>(&mut self, label: &'static str, options: &[T], i: usize) -> Result<usize> {
+	pub fn select<T: SelectValue>(
+		&mut self,
+		label: &'static str,
+		options: &[T],
+		i: usize
+	) -> Result<usize> {
 		return self.widget(hash!(label), || Select::new(label, options, i), |i| {
 			return i.selected();
 		});
