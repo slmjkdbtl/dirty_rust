@@ -49,6 +49,7 @@ impl State for Game {
 				p.slider::<i32>("age", 18, 0, 100)?;
 				p.select("gender", &["unknown", "male", "female"], 1)?;
 				p.checkbox("dead", false)?;
+				p.color("color", rgba!(0, 0, 0, 1))?;
 				p.sep()?;
 				p.button("explode")?;
 

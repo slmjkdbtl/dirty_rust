@@ -11,4 +11,5 @@ export!(checkbox);
 export!(sep);
 export!(select);
 export!(tinput);
+export!(color);
 

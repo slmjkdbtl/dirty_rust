@@ -513,5 +513,11 @@ impl<'a> WidgetManager<'a> {
 		});
 	}
 
+	pub fn color(&mut self,label: &'static str, c: Color) -> Result<Color> {
+		return self.widget(hash!(label), || ColorPicker::new(label, c), |i| {
+			return i.color();
+		});
+	}
+
 }
 

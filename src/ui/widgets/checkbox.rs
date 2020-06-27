@@ -3,16 +3,16 @@
 use super::*;
 
 pub struct CheckBox {
-	prompt: &'static str,
+	label: &'static str,
 	checked: bool,
 	hovering: bool,
 }
 
 impl CheckBox {
-	pub fn new(prompt: &'static str, checked: bool,) -> Self {
+	pub fn new(label: &'static str, checked: bool,) -> Self {
 		return Self {
-			prompt,
-			checked,
+			label: label,
+			checked: checked,
 			hovering: false,
 		};
 	}
@@ -50,9 +50,9 @@ impl Widget for CheckBox {
 
 		let theme = ctx.theme();
 		let size = theme.font_size + 6.0;
-		let sep = 12.0;
+		let sep = theme.padding;
 
-		let label_shape = shapes::text(&self.prompt.to_string())
+		let label_shape = shapes::text(self.label)
 			.size(theme.font_size)
 			.color(theme.title_color)
 			.align(gfx::Origin::TopLeft)
