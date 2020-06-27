@@ -72,8 +72,9 @@ impl Widget for CheckBox {
 		gfx.draw(
 			&shapes::rect(vec2!(0), vec2!(size, -size))
 				.stroke(theme.border_color)
+				.line_join(shapes::LineJoin::Round)
 				.fill(fill)
-				.line_width(2.0)
+				.line_width(theme.line_width)
 		)?;
 
 		// draw checked fill
@@ -82,14 +83,15 @@ impl Widget for CheckBox {
 				&shapes::rect(vec2!(4, -4), vec2!(size, -size) + vec2!(-4, 4))
 					.fill(theme.border_color)
 					.stroke(theme.border_color)
-					.line_width(1.0)
+					.line_width(theme.line_width)
+					.line_join(shapes::LineJoin::Round)
 			)?;
 		}
 
 		// check mouse hover
-		let rect = Rect::new(vec2!(0), vec2!(size + sep + label_shape.width(), -size));
+		let area = Rect::new(vec2!(0), vec2!(size + sep + label_shape.width(), -size));
 
-		self.hovering = col::intersect2d(rect, ctx.mouse_pos());
+		self.hovering = col::intersect2d(area, ctx.mouse_pos());
 
 		return Ok(size);
 

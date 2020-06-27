@@ -128,94 +128,131 @@ impl<T: SelectValue> Widget for Select<T> {
 			}
 		});
 
-		let ox = label_shape.width() + theme.padding;
-		let bh = label_shape.height() + theme.padding * 2.0;
-		let bw = max_width + theme.padding * 2.0 + bh;
+		let box_x = label_shape.width() + theme.padding;
+		let box_height = label_shape.height() + theme.padding * 2.0;
+		let button_size = box_height;
+		let box_width = max_width + theme.padding * 2.0;
 
-		let area = Rect::new(vec2!(ox, 0.0), vec2!(ox + bw, -bh));
+		let box_area = Rect::new(vec2!(box_x, 0.0), vec2!(box_x + box_width + button_size, -box_height));
 
 		if let State::Idle(_) = self.state {
-			self.state = State::Idle(col::intersect2d(area, ctx.mouse_pos));
+			self.state = State::Idle(col::intersect2d(box_area, ctx.mouse_pos));
 		}
 
-		// draw container
+		// draw box
 		gfx.draw(
-			&shapes::rect(
-				vec2!(ox, 0.0),
-				vec2!(ox + bw, -bh),
-			)
+			&shapes::Rect::from_rect(box_area)
 				.fill(theme.bar_color)
 				.stroke(theme.border_color)
-				.line_width(2.0)
+				.line_join(shapes::LineJoin::Round)
+				.line_width(theme.line_width)
 		)?;
 
 		if let State::Expanded(_) = self.state {
 
-			let by = self.selected as f32 * bh;
-			let by2 = by - option_shapes.len() as f32 * bh;
+			let by = self.selected as f32 * box_height;
+			let by2 = by - option_shapes.len() as f32 * box_height;
 
-			gfx.draw(
-				&shapes::rect(
-					vec2!(ox, by),
-					vec2!(ox + bw - bh, by2),
-				)
-					.fill(theme.bar_color)
-					.stroke(theme.border_color)
-					.line_width(2.0)
-			)?;
+			gfx.push_t(mat4!().tz(1.0), |gfx| {
 
-			for (i, t) in option_shapes.iter().enumerate() {
+				gfx.draw(
+					&shapes::rect(
+						vec2!(box_x, by),
+						vec2!(box_x + box_width, by2),
+					)
+						.fill(theme.bar_color)
+						.stroke(theme.border_color)
+						.line_join(shapes::LineJoin::Round)
+						.line_width(theme.line_width)
+				)?;
 
-				let oy = (i as f32 - self.selected as f32) * bh;
-				let area = Rect::new(vec2!(ox, -oy), vec2!(ox + bw - bh, -oy - bh));
-				let hovered = col::intersect2d(area, ctx.mouse_pos);
+				for (i, t) in option_shapes.iter().enumerate() {
 
-				if hovered {
-					self.state = State::Expanded(Some(i));
-					gfx.draw(
-						&shapes::Rect::from_rect(area)
-							.fill(theme.border_color)
+					let oy = (i as f32 - self.selected as f32) * box_height;
+					let option_area = Rect::new(
+						vec2!(box_x, -oy),
+						vec2!(box_x + box_width, -oy - box_height)
+					);
+					let hovered = col::intersect2d(option_area, ctx.mouse_pos);
+
+					if hovered {
+						self.state = State::Expanded(Some(i));
+						gfx.draw(
+							&shapes::Rect::from_rect(option_area)
+								.fill(theme.border_color)
+						)?;
+					}
+
+					gfx.draw_t(
+						mat4!()
+							.t2(vec2!(box_x + theme.padding, -oy - theme.padding))
+							,
+						t
 					)?;
+
 				}
 
-				gfx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -oy - theme.padding)), t)?;
+				return Ok(());
 
-			}
+			})?;
 
 		}
 
 		if let Some(t) = option_shapes.get(self.selected) {
-			gfx.draw_t(mat4!().t2(vec2!(ox + theme.padding, -theme.padding)), t)?;
+			gfx.draw_t(mat4!().t2(vec2!(box_x + theme.padding, -theme.padding)), t)?;
 		}
 
-		// draw arrow (?)
+		// draw button
 		gfx.draw(
 			&shapes::rect(
-				vec2!(ox + bw - bh, 0.0),
-				vec2!(ox + bw, -bh),
+				vec2!(box_x + box_width, 0.0),
+				vec2!(box_x + box_width + button_size, -box_height),
 			)
 				.fill(theme.border_color)
 		)?;
 
-// 		gfx.draw(
-// 			&shapes::line(
-// 				vec2!(ox + bw - bh * 0.7, -bh * 0.4),
-// 				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
-// 			)
-// 				.color(theme.border_color)
-// 				.width(2.0)
-// 		)?;
+		// draw arrow
+		gfx.draw(
+			&shapes::line(
+				vec2!(box_x + box_width + button_size * 0.4, -button_size * 0.4),
+				vec2!(box_x + box_width + button_size * 0.5, -button_size * 0.3),
+			)
+				.color(theme.bar_color)
+				.cap(shapes::LineCap::Round)
+				.width(theme.line_width)
+		)?;
 
-// 		gfx.draw(
-// 			&shapes::line(
-// 				vec2!(ox + bw - bh * 0.3, -bh * 0.4),
-// 				vec2!(ox + bw - bh * 0.5, -bh * 0.6),
-// 			)
-// 				.color(theme.border_color)
-// 				.width(2.0)
-// 		)?;
+		gfx.draw(
+			&shapes::line(
+				vec2!(box_x + box_width + button_size * 0.6, -button_size * 0.6),
+				vec2!(box_x + box_width + button_size * 0.5, -button_size * 0.7),
+			)
+				.color(theme.bar_color)
+				.cap(shapes::LineCap::Round)
+				.width(theme.line_width)
+		)?;
 
-		return Ok(bh);
+		gfx.draw(
+			&shapes::line(
+				vec2!(box_x + box_width + button_size * 0.4, -button_size * 0.6),
+				vec2!(box_x + box_width + button_size * 0.5, -button_size * 0.7),
+			)
+				.color(theme.bar_color)
+				.cap(shapes::LineCap::Round)
+				.width(theme.line_width)
+		)?;
+
+		gfx.draw(
+			&shapes::line(
+				vec2!(box_x + box_width + button_size * 0.6, -button_size * 0.4),
+				vec2!(box_x + box_width + button_size * 0.5, -button_size * 0.3),
+			)
+				.color(theme.bar_color)
+				.cap(shapes::LineCap::Round)
+				.width(theme.line_width)
+		)?;
+
+		return Ok(box_height);
 
 	}
 

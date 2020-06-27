@@ -138,7 +138,8 @@ impl Widget for Input {
 		gfx.draw(
 			&shapes::rect(box_area.p1, box_area.p2)
 				.stroke(theme.border_color)
-				.line_width(2.0)
+				.line_join(shapes::LineJoin::Round)
+				.line_width(theme.line_width)
 				.fill(bg_color)
 		)?;
 
@@ -163,8 +164,9 @@ impl Widget for Input {
 							cpos + vec2!(theme.padding + 1.0, -theme.padding + 2.0),
 							cpos + vec2!(theme.padding + 1.0, -theme.padding - input_shape.height() - 2.0),
 						)
-							.width(2.0)
+							.width(theme.line_width)
 							.color(theme.border_color)
+							.cap(shapes::LineCap::Round)
 					)?;
 
 				}

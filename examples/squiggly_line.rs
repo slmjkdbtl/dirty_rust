@@ -214,7 +214,7 @@ impl State for Game {
 
 		})?;
 
-		self.ui.draw(d)?;
+		d.gfx.draw(&shapes::canvas(self.ui.canvas()))?;
 
 		self.tol = tol;
 		self.density = density;

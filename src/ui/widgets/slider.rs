@@ -4,8 +4,6 @@ use std::fmt;
 use std::ops;
 use super::*;
 
-const HANDLE_WIDTH: f32 = 32.0;
-
 pub trait SliderValue:
 	Copy
 	+ PartialOrd
@@ -169,9 +167,10 @@ impl<T: SliderValue> Widget for Slider<T> {
 		self.unit = (max - min) / ctx.width();
 
 		let ratio = (self.val - min) / (max - min);
+		let handle_width = theme.font_size * 2.5;
 
 		let handle_pos = vec2!(
-			HANDLE_WIDTH * 0.5 + (ctx.width() - HANDLE_WIDTH) * ratio,
+			handle_width * 0.5 + (ctx.width() - handle_width) * ratio,
 			-y - box_height * 0.5
 		);
 
@@ -185,15 +184,16 @@ impl<T: SliderValue> Widget for Slider<T> {
 		gfx.draw(
 			&shapes::rect(box_area.p1, box_area.p2)
 				.stroke(theme.border_color)
-				.line_width(2.0)
+				.line_join(shapes::LineJoin::Round)
+				.line_width(theme.line_width)
 				.fill(bg_color)
 		)?;
 
 		// draw handle
 		gfx.draw(
 			&shapes::rect(
-				handle_pos - vec2!(HANDLE_WIDTH * 0.5, box_height * 0.5),
-				handle_pos + vec2!(HANDLE_WIDTH * 0.5, box_height * 0.5),
+				handle_pos - vec2!(handle_width * 0.5, box_height * 0.5),
+				handle_pos + vec2!(handle_width * 0.5, box_height * 0.5),
 			)
 				.fill(theme.border_color)
 		)?;
@@ -210,6 +210,10 @@ impl<T: SliderValue> Widget for Slider<T> {
 
 		return Ok(y);
 
+	}
+
+	fn focused(&self) -> bool {
+		return self.dragging;
 	}
 
 }

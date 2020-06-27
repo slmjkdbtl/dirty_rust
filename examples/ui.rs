@@ -66,7 +66,7 @@ impl State for Game {
 
 	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
-		self.ui.draw(d)?;
+		d.gfx.draw(&shapes::canvas(self.ui.canvas()))?;
 
 		return Ok(());
 

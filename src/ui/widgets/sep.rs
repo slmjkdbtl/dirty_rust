@@ -13,7 +13,8 @@ impl Widget for Sep {
 		gfx.draw(
 			&shapes::line(vec2!(0, -t.padding * 0.5), vec2!(ctx.width(), -t.padding * 0.5))
 				.color(t.border_color)
-				.width(2.0)
+				.width(t.line_width)
+				.cap(shapes::LineCap::Round)
 		)?;
 
 		return Ok(t.padding);

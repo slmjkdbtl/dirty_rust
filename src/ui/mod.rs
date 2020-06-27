@@ -197,10 +197,9 @@ impl UI {
 
 	}
 
-	/// draw ui canvas
-	pub fn draw(&mut self, d: &mut Ctx) -> Result<()> {
-		d.gfx.draw(&shapes::canvas(&self.canvas))?;
-		return Ok(());
+	/// gives the canvas for drawing
+	pub fn canvas(&self) -> &Canvas {
+		return &self.canvas;
 	}
 
 }
@@ -308,9 +307,10 @@ impl<'a> WindowManager<'a> {
 			// background
 			gfx.draw(
 				&shapes::rect(vec2!(0), vec2!(window.width, -box_height))
-					.fill(t.background_color)
+					.fill(t.bg_color)
 					.stroke(t.border_color)
-					.line_width(t.border_thickness)
+					.line_join(shapes::LineJoin::Round)
+					.line_width(t.line_width)
 			)?;
 
 			// title bar
@@ -318,7 +318,8 @@ impl<'a> WindowManager<'a> {
 				&shapes::rect(vec2!(0), vec2!(window.width, -bar_height))
 					.fill(t.bar_color)
 					.stroke(t.border_color)
-					.line_width(t.border_thickness)
+					.line_join(shapes::LineJoin::Round)
+					.line_width(t.line_width)
 			)?;
 
 			// title
@@ -385,14 +386,7 @@ impl<'a> WidgetManager<'a> {
 			dt: self.ctx.app.dt(),
 		};
 
-		// TODO: not use z
-		let z = if w.focused() {
-			1.0
-		} else {
-			0.0
-		};
-
-		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y).tz(z), |gfx| {
+		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
 			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;
@@ -435,14 +429,7 @@ impl<'a> WidgetManager<'a> {
 
 		val = Ok(f(w));
 
-		// TODO: not use z
-		let z = if w.focused() {
-			1.0
-		} else {
-			0.0
-		};
-
-		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y).tz(z), |gfx| {
+		self.ctx.gfx.push_t(mat4!().ty(-self.cur_y), |gfx| {
 			height = w.draw(gfx, &wctx)?;
 			return Ok(());
 		})?;

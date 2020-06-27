@@ -80,8 +80,9 @@ impl Widget for Button {
 		gfx.draw(
 			&shapes::rect(vec2!(0), vec2!(box_width, -box_height))
 				.stroke(theme.border_color)
+				.line_join(shapes::LineJoin::Round)
 				.fill(bg_color)
-				.line_width(2.0)
+				.line_width(theme.line_width)
 		)?;
 
 		// draw label
