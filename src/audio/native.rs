@@ -15,7 +15,7 @@ pub struct Audio {
 
 impl Audio {
 
-	pub(crate) fn new(_: &crate::conf::Conf) -> Result<Self> {
+	pub(crate) fn new(_: &conf::Conf) -> Result<Self> {
 
 		let host = cpal::default_host();
 

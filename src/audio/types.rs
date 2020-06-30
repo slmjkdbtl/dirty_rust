@@ -21,12 +21,3 @@ pub enum ChannelCount {
 	Two,
 }
 
-impl ChannelCount {
-	pub(super) fn to_cpal(&self) -> cpal::ChannelCount {
-		return match self {
-			ChannelCount::One => 1,
-			ChannelCount::Two => 2,
-		};
-	}
-}
-

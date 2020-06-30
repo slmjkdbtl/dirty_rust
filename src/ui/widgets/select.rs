@@ -153,6 +153,7 @@ impl<T: SelectValue> Widget for Select<T> {
 			let by = self.selected as f32 * box_height;
 			let by2 = by - option_shapes.len() as f32 * box_height;
 
+			// TODO: do we have to use z for this? prob yes
 			gfx.push_t(mat4!().tz(1.0), |gfx| {
 
 				gfx.draw(

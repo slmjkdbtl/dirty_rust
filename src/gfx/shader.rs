@@ -38,7 +38,7 @@ impl<U: UniformLayout> Shader<U> {
 
 		let vert_src = TEMPLATE_VERT.replace("{{user}}", vert);
 		let frag_src = TEMPLATE_FRAG.replace("{{user}}", frag);
-		#[cfg(web)]
+		#[cfg(any(web, mobile))]
 		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
 		return Ok(Self {

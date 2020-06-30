@@ -6,6 +6,7 @@ pub struct ColorPicker {
 	label: &'static str,
 	color: Color,
 	hovering: bool,
+	pressing: bool,
 }
 
 impl ColorPicker {
@@ -14,6 +15,7 @@ impl ColorPicker {
 			label: label,
 			color: c,
 			hovering: false,
+			pressing: false,
 		};
 	}
 	pub fn color(&self) -> Color {
@@ -33,9 +35,18 @@ impl Widget for ColorPicker {
 					Mouse::Left => {
 						if self.hovering {
 							self.color = rand(rgba!(0, 0, 0, 1), rgba!(1, 1, 1, 1));
+							self.pressing = true;
 							return true;
 						}
 					},
+					_ => {},
+				}
+			},
+			MouseRelease(m) => {
+				match *m {
+					Mouse::Left => {
+						self.pressing = false;
+					}
 					_ => {},
 				}
 			},
@@ -66,9 +77,15 @@ impl Widget for ColorPicker {
 		// draw label
 		gfx.draw_t(mat4!().ty(-theme.padding * 0.5), &label_shape)?;
 
+		let scale = if self.pressing {
+			0.95
+		} else {
+			1.0
+		};
+
 		let area = Rect::new(
-			vec2!(box_x, 0.0),
-			vec2!(box_x + width, -height),
+			vec2!(box_x + width * (1.0 - scale), -height * (1.0 - scale)),
+			vec2!(box_x + width * scale, -height * scale),
 		);
 
 		self.hovering = col::intersect2d(area, ctx.mouse_pos());

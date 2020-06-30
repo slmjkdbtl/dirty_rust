@@ -1,5 +1,7 @@
 // wengwengweng
 
+// for glutin 0.21
+
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -52,22 +54,20 @@ impl Window {
 				.with_fullscreen(Some(event_loop.get_primary_monitor()));
 		}
 
-// 		#[cfg(target_os = "macos")] {
-
-// 			use glutin::platform::macos::WindowBuilderExtMacOS;
-
-// 			window_builder = window_builder
-// 				.with_disallow_hidpi(!conf.hidpi)
-// 				;
-
-// 		}
-
+		#[cfg(not(mobile))]
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
 			.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
 			;
 
+		#[cfg(mobile)]
+		let ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGlEs, (2, 0)))
+			;
+
 		let windowed_ctx = unsafe {
+
 			ctx_builder
 				.build_windowed(window_builder, &event_loop)
 				.map_err(|_| format!("failed to build window"))?

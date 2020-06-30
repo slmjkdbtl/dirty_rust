@@ -353,6 +353,12 @@ impl Window {
 								}
 								self.pressed_keys.insert(k);
 							}
+							let key = e.key();
+							if key.len() == 1 {
+								if let Some(ch) = key.chars().next() {
+									events.push(CharInput(ch));
+								}
+							}
 						},
 
 						WebEvent::KeyRelease(e) => {
@@ -365,6 +371,7 @@ impl Window {
 						WebEvent::MouseMove(e) => {
 
 							let (w, h) = (self.width as f32, self.height as f32);
+							// TODO: doesn't work on firefox, weird on safari
 							let mpos = vec2!(e.offset_x(), e.offset_y());
 							let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y as f32);
 							let prev_mpos = self.mouse_pos;

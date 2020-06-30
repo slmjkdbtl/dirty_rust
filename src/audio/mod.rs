@@ -31,10 +31,14 @@ export!(track);
 #[cfg(not(web))]
 export!(sound);
 
-#[cfg(not(web))]
+#[cfg(all(not(ios), not(web)))]
 export!(native);
+#[cfg(all(ios, not(web)))]
+export!(dummy);
 #[cfg(web)]
 export!(web);
+
+use crate::*;
 
 pub mod music;
 pub mod synth;

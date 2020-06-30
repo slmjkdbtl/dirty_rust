@@ -6,6 +6,7 @@ pub struct CheckBox {
 	label: &'static str,
 	checked: bool,
 	hovering: bool,
+	pressing: bool,
 }
 
 impl CheckBox {
@@ -14,6 +15,7 @@ impl CheckBox {
 			label: label,
 			checked: checked,
 			hovering: false,
+			pressing: false,
 		};
 	}
 	pub fn checked(&self) -> bool {
@@ -32,7 +34,16 @@ impl Widget for CheckBox {
 				match *m {
 					Mouse::Left if self.hovering => {
 						self.checked = !self.checked;
+						self.pressing = true;
 						return true;
+					}
+					_ => {},
+				}
+			},
+			MouseRelease(m) => {
+				match *m {
+					Mouse::Left => {
+						self.pressing = false;
 					}
 					_ => {},
 				}
@@ -68,9 +79,18 @@ impl Widget for CheckBox {
 			rgba!(0, 0, 0, 0)
 		};
 
+		let scale = if self.pressing {
+			0.95
+		} else {
+			1.0
+		};
+
 		// draw box
 		gfx.draw(
-			&shapes::rect(vec2!(0), vec2!(size, -size))
+			&shapes::rect(
+				vec2!(size * (1.0 - scale), -size * (1.0 - scale)),
+				vec2!(size * scale, -size * scale),
+			)
 				.stroke(theme.border_color)
 				.line_join(shapes::LineJoin::Round)
 				.fill(fill)
@@ -80,7 +100,10 @@ impl Widget for CheckBox {
 		// draw checked fill
 		if self.checked {
 			gfx.draw(
-				&shapes::rect(vec2!(4, -4), vec2!(size, -size) + vec2!(-4, 4))
+				&shapes::rect(
+					vec2!(size * (1.0 - scale) + 4.0, -size * (1.0 - scale) - 4.0),
+					vec2!(size, -size) * scale + vec2!(-4, 4)
+				)
 					.fill(theme.border_color)
 					.stroke(theme.border_color)
 					.line_width(theme.line_width)

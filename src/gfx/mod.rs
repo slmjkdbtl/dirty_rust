@@ -263,7 +263,9 @@ impl Gfx {
 				gl.front_face(CullMode::CounterClockwise.to_glow());
 			}
 
-			gl.clear_color(0.0, 0.0, 0.0, 0.0);
+			let cc = conf.clear_color;
+
+			gl.clear_color(cc.r, cc.g, cc.b, cc.a);
 			gl.clear(Surface::Color.to_glow());
 			gl.clear(Surface::Depth.to_glow());
 			gl.clear(Surface::Stencil.to_glow());
@@ -279,7 +281,7 @@ impl Gfx {
 
 		let vert_src = res::shader::TEMPLATE_VERT.replace("{{user}}", res::shader::DEFAULT_VERT);
 		let frag_src = res::shader::TEMPLATE_FRAG.replace("{{user}}", res::shader::DEFAULT_FRAG);
-		#[cfg(web)]
+		#[cfg(any(web, mobile))]
 		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
 		let pipeline = Pipeline::new(&gl, &vert_src, &frag_src)?;

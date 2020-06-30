@@ -4,10 +4,10 @@
 //!
 //! see methods under [Window](struct.Window.html)
 
-// #[cfg(not(web))]
-// export!(native);
 #[cfg(not(web))]
-export!(nativeo);
+export!(native);
+// #[cfg(not(web))]
+// export!(nativeo);
 #[cfg(web)]
 export!(web);
 

@@ -3,6 +3,7 @@
 //! Start Up Configs
 
 use crate::*;
+use math::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum CanvasRoot {
@@ -24,6 +25,7 @@ pub struct Conf {
 	pub vsync: bool,
 	pub cursor_hidden: bool,
 	pub cursor_locked: bool,
+	pub clear_color: Color,
 	pub cull_face: bool,
 	pub canvas_root: CanvasRoot,
 	pub default_font: Option<gfx::BitmapFontData>,
@@ -56,9 +58,10 @@ impl Default for Conf {
 			borderless: false,
 			transparent: false,
 			vsync: true,
-			cull_face: false,
 			cursor_hidden: false,
 			cursor_locked: false,
+			clear_color: rgba!(0, 0, 0, 0),
+			cull_face: false,
 			canvas_root: CanvasRoot::Body,
 			default_font: None,
 		};
@@ -126,6 +129,11 @@ impl Launcher {
 
 	pub fn always_on_top(mut self, b: bool) -> Self {
 		self.conf.always_on_top = b;
+		return self;
+	}
+
+	pub fn clear_color(mut self, c: Color) -> Self {
+		self.conf.clear_color = c;
 		return self;
 	}
 

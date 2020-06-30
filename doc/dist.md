@@ -38,3 +38,5 @@ $ wasm-bindgen target/wasm32-unknown-unknown/debug/(name).wasm --out-dir (anywhe
 
 then simply create a `.html` file that includes the generated `.js` file
 
+## iOS
+

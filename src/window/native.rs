@@ -26,12 +26,13 @@ pub struct Window {
 	width: i32,
 	height: i32,
 	mouse_pos: Vec2,
-	scroll_phase: input::ScrollPhase,
+	scroll_phase: ScrollPhase,
 	cursor_hidden: bool,
 	cursor_locked: bool,
 	title: String,
 	focused: bool,
 	quit: bool,
+	#[cfg(not(mobile))]
 	gamepad_ctx: gilrs::Gilrs,
 }
 
@@ -65,9 +66,16 @@ impl Window {
 
 		}
 
+		#[cfg(not(mobile))]
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
 			.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
+			;
+
+		#[cfg(mobile)]
+		let ctx_builder = glutin::ContextBuilder::new()
+			.with_vsync(conf.vsync)
+			.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGlEs, (2, 0)))
 			;
 
 		let windowed_ctx = unsafe {
@@ -106,12 +114,13 @@ impl Window {
 			mouse_pos: vec2!(),
 			width: conf.width,
 			height: conf.height,
-			scroll_phase: input::ScrollPhase::Solid,
+			scroll_phase: ScrollPhase::Solid,
 			cursor_hidden: conf.cursor_hidden,
 			cursor_locked: conf.cursor_locked,
 			title: conf.title.to_string(),
 			focused: true,
 			quit: false,
+			#[cfg(not(mobile))]
 			gamepad_ctx: gilrs::Gilrs::new()
 				.map_err(|_| format!("failed to create gamepad context"))?,
 		});
@@ -349,7 +358,6 @@ impl Window {
 				use glutin::event::Event as WinitEvent;
 				use glutin::event::TouchPhase;
 				use glutin::event::ElementState;
-				use input::*;
 
 				let mut events = vec![];
 
@@ -538,6 +546,7 @@ impl Window {
 								.request_redraw();
 						}
 
+						#[cfg(not(mobile))]
 						while let Some(gilrs::Event { id, event, .. }) = self.gamepad_ctx.next_event() {
 
 							use gilrs::ev::EventType::*;

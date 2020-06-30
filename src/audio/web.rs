@@ -8,7 +8,6 @@ use std::cell::RefCell;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::closure::Closure;
 
-use crate::*;
 use super::*;
 
 /// The Audio Context. See [mod-level doc](index.html) for usage.
@@ -17,7 +16,7 @@ pub struct Audio {
 }
 
 impl Audio {
-	pub(crate) fn new(_: &crate::conf::Conf) -> Result<Self> {
+	pub(crate) fn new(_: &conf::Conf) -> Result<Self> {
 		let ctx = web_sys::AudioContext::new()
 			.map_err(|_| format!("failed to create audio context"))?;
 		return Ok(Self {
