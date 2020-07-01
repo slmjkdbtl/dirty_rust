@@ -191,7 +191,7 @@ pub fn set_panic<F: 'static + Fn(Option<&str>, Option<&panic::Location>) + Send 
 }
 
 /// use a default cross-platform panic hook
-pub fn use_dirty_panic() {
+pub fn use_default_panic() {
 
 	set_panic(|msg, loc| {
 

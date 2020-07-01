@@ -1,5 +1,7 @@
 // wengwengweng
 
+use std::f32::consts::PI;
+
 use super::*;
 use std::ops::*;
 
@@ -163,45 +165,225 @@ pub fn cube(s: f32) -> MeshData {
 
 	let r = s * 0.5;
 
-	let rect = MeshData {
-		vertices: vec![
-			Vertex {
-				pos: vec3!(-r, -r, r),
-				normal: vec3!(0, 1, 0),
-				color: rgba!(1),
-				uv: vec2!(0, 0),
-			},
-			Vertex {
-				pos: vec3!(r, -r, r),
-				normal: vec3!(0, 1, 0),
-				color: rgba!(1),
-				uv: vec2!(0, 0),
-			},
-			Vertex {
-				pos: vec3!(r, -r, -r),
-				normal: vec3!(0, 1, 0),
-				color: rgba!(1),
-				uv: vec2!(0, 0),
-			},
-			Vertex {
-				pos: vec3!(-r, -r, -r),
-				normal: vec3!(0, 1, 0),
-				color: rgba!(1),
-				uv: vec2!(0, 0),
-			},
-		],
-		indices: vec![0, 1, 2, 0, 2, 3],
-	};
+	let vertices = vec![
+		// front
+		Vertex {
+			pos: vec3!(-r, -r, r),
+			normal: vec3!(0, 0, 1),
+			color: rgba!(1),
+			uv: vec2!(0, 0),
+		},
+		Vertex {
+			pos: vec3!(r, -r, r),
+			normal: vec3!(0, 0, 1),
+			color: rgba!(1),
+			uv: vec2!(1, 0),
+		},
+		Vertex {
+			pos: vec3!(r, r, r),
+			normal: vec3!(0, 0, 1),
+			color: rgba!(1),
+			uv: vec2!(1, 1),
+		},
+		Vertex {
+			pos: vec3!(-r, r, r),
+			normal: vec3!(0, 0, 1),
+			color: rgba!(1),
+			uv: vec2!(0, 1),
+		},
+		// back
+		Vertex {
+			pos: vec3!(-r, -r, -r),
+			normal: vec3!(0, 0, -1),
+			color: rgba!(1),
+			uv: vec2!(0, 0),
+		},
+		Vertex {
+			pos: vec3!(-r, r, -r),
+			normal: vec3!(0, 0, -1),
+			color: rgba!(1),
+			uv: vec2!(1, 0),
+		},
+		Vertex {
+			pos: vec3!(r, r, -r),
+			normal: vec3!(0, 0, -1),
+			color: rgba!(1),
+			uv: vec2!(1, 1),
+		},
+		Vertex {
+			pos: vec3!(r, -r, -r),
+			normal: vec3!(0, 0, -1),
+			color: rgba!(1),
+			uv: vec2!(0, 1),
+		},
+		// top
+		Vertex {
+			pos: vec3!(-r, r, -r),
+			normal: vec3!(0, 1, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 0),
+		},
+		Vertex {
+			pos: vec3!(-r, r, r),
+			normal: vec3!(0, 1, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 0),
+		},
+		Vertex {
+			pos: vec3!(r, r, r),
+			normal: vec3!(0, 1, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 1),
+		},
+		Vertex {
+			pos: vec3!(r, r, -r),
+			normal: vec3!(0, 1, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 1),
+		},
+		// bottom
+		Vertex {
+			pos: vec3!(-r, -r, -r),
+			normal: vec3!(0, -1, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 0),
+		},
+		Vertex {
+			pos: vec3!(r, -r, -r),
+			normal: vec3!(0, -1, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 0),
+		},
+		Vertex {
+			pos: vec3!(r, -r, r),
+			normal: vec3!(0, -1, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 1),
+		},
+		Vertex {
+			pos: vec3!(-r, -r, r),
+			normal: vec3!(0, -1, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 1),
+		},
+		// right
+		Vertex {
+			pos: vec3!(r, -r, -r),
+			normal: vec3!(1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 0),
+		},
+		Vertex {
+			pos: vec3!(r, r, -r),
+			normal: vec3!(1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 0),
+		},
+		Vertex {
+			pos: vec3!(r, r, r),
+			normal: vec3!(1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 1),
+		},
+		Vertex {
+			pos: vec3!(r, -r, r),
+			normal: vec3!(1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 1),
+		},
+		// left
+		Vertex {
+			pos: vec3!(-r, -r, -r),
+			normal: vec3!(-1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 0),
+		},
+		Vertex {
+			pos: vec3!(-r, -r, r),
+			normal: vec3!(-1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 0),
+		},
+		Vertex {
+			pos: vec3!(-r, r, r),
+			normal: vec3!(-1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(1, 1),
+		},
+		Vertex {
+			pos: vec3!(-r, r, -r),
+			normal: vec3!(-1, 0, 0),
+			color: rgba!(1),
+			uv: vec2!(0, 1),
+		},
+	];
 
-	return ops::extrude(&rect, &[(0, 1), (1, 2), (2, 3), (3, 1)], s);
+	let indices = vec![
+		0, 1, 2, 0, 2, 3, // front
+		4, 5, 6, 4, 6, 7, // back
+		8, 9, 10, 8, 10, 11, // top
+		12, 13, 14, 12, 14, 15, // bottom
+		16, 17, 18, 16, 18, 19, // right
+		20, 21, 22, 20, 22, 23 // left
+	];
+
+	return MeshData {
+		vertices: vertices,
+		indices: indices,
+	};
 
 }
 
-// TODO
-pub fn sphere(r: f32) -> MeshData {
+pub fn sphere(r: f32, rx: usize, ry: usize) -> MeshData {
 
-	let verts = vec![];
-	let indices = vec![];
+	let mut verts = vec![];
+	let mut indices = vec![];
+
+	for i in 0..=ry {
+
+		let t = i as f32 * PI / ry as f32;
+		let t_sin = t.sin();
+		let t_cos = t.cos();
+
+		for j in 0..=rx {
+
+			let p = j as f32 * 2.0 * PI / rx as f32;
+			let p_sin = p.sin();
+			let p_cos = p.cos();
+
+			let x = p_cos * t_sin;
+			let y = t_cos;
+			let z = p_sin * t_sin;
+
+			let u = 1.0 - (j as f32 / rx as f32);
+			let v = 1.0 - (i as f32 / ry as f32);
+
+			verts.push(Vertex {
+				pos: vec3!(x, y, z) * r,
+				normal: vec3!(x, y, z),
+				color: rgba!(1),
+				uv: vec2!(u, v),
+			});
+
+			if i < ry && j < rx {
+
+				let first = i * (rx + 1) + j;
+				let second = first + rx + 1;
+				let first = first as u32;
+				let second = second as u32;
+
+				indices.push(first);
+				indices.push(second);
+				indices.push(first + 1);
+				indices.push(second);
+				indices.push(second + 1);
+				indices.push(first + 1);
+
+			}
+
+		}
+
+	}
 
 	return MeshData {
 		vertices: verts,

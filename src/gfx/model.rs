@@ -302,7 +302,7 @@ impl Model {
 	}
 
 	/// load [`ModelData`](struct.ModelData.html) from [`MeshData`](struct.MeshData.html)
-	pub fn load_mesh_data(data: MeshData) -> ModelData {
+	pub fn load_meshdata(data: MeshData) -> ModelData {
 		return Self::load_raw(data.vertices, data.indices);
 	}
 
@@ -618,8 +618,8 @@ impl Model {
 	}
 
 	/// create model from a [`MeshData`](struct.MeshData.html)
-	pub fn from_mesh_data(ctx: &impl HasGL, data: MeshData) -> Result<Self> {
-		return Self::from_data(ctx, Self::load_mesh_data(data));
+	pub fn from_meshdata(ctx: &impl HasGL, data: MeshData) -> Result<Self> {
+		return Self::from_data(ctx, Self::load_meshdata(data));
 	}
 
 	/// create model from raw vertices & indices
