@@ -1,9 +1,9 @@
 // wengwengweng
 
 use std::f32::consts::PI;
+use std::ops::*;
 
 use super::*;
-use std::ops::*;
 
 const SPLINE_RES: f32 = 0.05;
 
@@ -46,7 +46,6 @@ pub fn spline<T>(pts: &[T]) -> Vec<T>
 		+ Mul<f32, Output = T>
 {
 
-	// TODO: calculate the capacity
 	let mut spts = Vec::with_capacity((1.0 / SPLINE_RES) as usize * pts.len());
 
 	for i in 0..pts.len() - 1 {
@@ -71,7 +70,6 @@ pub fn spline_loop<T>(pts: &[T]) -> Vec<T>
 		+ Mul<f32, Output = T>
 {
 
-	// TODO: calculate the capacity
 	let mut spts = Vec::with_capacity((1.0 / SPLINE_RES) as usize * pts.len());
 
 	for i in 0..pts.len() {
@@ -161,157 +159,155 @@ pub fn uv_quad(cols: usize, rows: usize) -> MeshData {
 
 }
 
-pub fn cube(s: f32) -> MeshData {
-
-	let r = s * 0.5;
+pub fn cube() -> MeshData {
 
 	let vertices = vec![
 		// front
 		Vertex {
-			pos: vec3!(-r, -r, r),
+			pos: vec3!(-1, -1, 1),
 			normal: vec3!(0, 0, 1),
 			color: rgba!(1),
 			uv: vec2!(0, 0),
 		},
 		Vertex {
-			pos: vec3!(r, -r, r),
+			pos: vec3!(1, -1, 1),
 			normal: vec3!(0, 0, 1),
 			color: rgba!(1),
 			uv: vec2!(1, 0),
 		},
 		Vertex {
-			pos: vec3!(r, r, r),
+			pos: vec3!(1, 1, 1),
 			normal: vec3!(0, 0, 1),
 			color: rgba!(1),
 			uv: vec2!(1, 1),
 		},
 		Vertex {
-			pos: vec3!(-r, r, r),
+			pos: vec3!(-1, 1, 1),
 			normal: vec3!(0, 0, 1),
 			color: rgba!(1),
 			uv: vec2!(0, 1),
 		},
 		// back
 		Vertex {
-			pos: vec3!(-r, -r, -r),
+			pos: vec3!(-1, -1, -1),
 			normal: vec3!(0, 0, -1),
 			color: rgba!(1),
 			uv: vec2!(0, 0),
 		},
 		Vertex {
-			pos: vec3!(-r, r, -r),
+			pos: vec3!(-1, 1, -1),
 			normal: vec3!(0, 0, -1),
 			color: rgba!(1),
 			uv: vec2!(1, 0),
 		},
 		Vertex {
-			pos: vec3!(r, r, -r),
+			pos: vec3!(1, 1, -1),
 			normal: vec3!(0, 0, -1),
 			color: rgba!(1),
 			uv: vec2!(1, 1),
 		},
 		Vertex {
-			pos: vec3!(r, -r, -r),
+			pos: vec3!(1, -1, -1),
 			normal: vec3!(0, 0, -1),
 			color: rgba!(1),
 			uv: vec2!(0, 1),
 		},
 		// top
 		Vertex {
-			pos: vec3!(-r, r, -r),
+			pos: vec3!(-1, 1, -1),
 			normal: vec3!(0, 1, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 0),
 		},
 		Vertex {
-			pos: vec3!(-r, r, r),
+			pos: vec3!(-1, 1, 1),
 			normal: vec3!(0, 1, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 0),
 		},
 		Vertex {
-			pos: vec3!(r, r, r),
+			pos: vec3!(1, 1, 1),
 			normal: vec3!(0, 1, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 1),
 		},
 		Vertex {
-			pos: vec3!(r, r, -r),
+			pos: vec3!(1, 1, -1),
 			normal: vec3!(0, 1, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 1),
 		},
 		// bottom
 		Vertex {
-			pos: vec3!(-r, -r, -r),
+			pos: vec3!(-1, -1, -1),
 			normal: vec3!(0, -1, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 0),
 		},
 		Vertex {
-			pos: vec3!(r, -r, -r),
+			pos: vec3!(1, -1, -1),
 			normal: vec3!(0, -1, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 0),
 		},
 		Vertex {
-			pos: vec3!(r, -r, r),
+			pos: vec3!(1, -1, 1),
 			normal: vec3!(0, -1, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 1),
 		},
 		Vertex {
-			pos: vec3!(-r, -r, r),
+			pos: vec3!(-1, -1, 1),
 			normal: vec3!(0, -1, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 1),
 		},
 		// right
 		Vertex {
-			pos: vec3!(r, -r, -r),
+			pos: vec3!(1, -1, -1),
 			normal: vec3!(1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 0),
 		},
 		Vertex {
-			pos: vec3!(r, r, -r),
+			pos: vec3!(1, 1, -1),
 			normal: vec3!(1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 0),
 		},
 		Vertex {
-			pos: vec3!(r, r, r),
+			pos: vec3!(1, 1, 1),
 			normal: vec3!(1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 1),
 		},
 		Vertex {
-			pos: vec3!(r, -r, r),
+			pos: vec3!(1, -1, 1),
 			normal: vec3!(1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 1),
 		},
 		// left
 		Vertex {
-			pos: vec3!(-r, -r, -r),
+			pos: vec3!(-1, -1, -1),
 			normal: vec3!(-1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 0),
 		},
 		Vertex {
-			pos: vec3!(-r, -r, r),
+			pos: vec3!(-1, -1, 1),
 			normal: vec3!(-1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 0),
 		},
 		Vertex {
-			pos: vec3!(-r, r, r),
+			pos: vec3!(-1, 1, 1),
 			normal: vec3!(-1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(1, 1),
 		},
 		Vertex {
-			pos: vec3!(-r, r, -r),
+			pos: vec3!(-1, 1, -1),
 			normal: vec3!(-1, 0, 0),
 			color: rgba!(1),
 			uv: vec2!(0, 1),
@@ -334,10 +330,10 @@ pub fn cube(s: f32) -> MeshData {
 
 }
 
-pub fn sphere(r: f32, rx: usize, ry: usize) -> MeshData {
+pub fn sphere(rx: usize, ry: usize) -> MeshData {
 
-	let mut verts = vec![];
-	let mut indices = vec![];
+	let mut verts = Vec::with_capacity(rx * ry);
+	let mut indices = Vec::with_capacity(rx * ry * 6);
 
 	for i in 0..=ry {
 
@@ -359,7 +355,7 @@ pub fn sphere(r: f32, rx: usize, ry: usize) -> MeshData {
 			let v = 1.0 - (i as f32 / ry as f32);
 
 			verts.push(Vertex {
-				pos: vec3!(x, y, z) * r,
+				pos: vec3!(x, y, z),
 				normal: vec3!(x, y, z),
 				color: rgba!(1),
 				uv: vec2!(u, v),
@@ -517,7 +513,7 @@ pub fn checkerboard(s: f32, c: usize, r: usize) -> MeshData {
 				tr,
 				tl,
 				bl,
-				br
+				br,
 			]);
 
 		}

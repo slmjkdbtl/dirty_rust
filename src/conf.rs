@@ -48,8 +48,8 @@ impl Default for Conf {
 
 	fn default() -> Self {
 		return Self {
-			width: 640,
-			height: 480,
+			width: 800,
+			height: 600,
 			title: String::new(),
 			hidpi: true,
 			resizable: false,

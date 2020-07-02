@@ -4,6 +4,10 @@
 
 // https://ccrma.stanford.edu/~craig/articles/linuxmidi/misc/essenmidi.html
 
+use std::sync::mpsc;
+use std::thread;
+use crate::*;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Msg {
 	NoteOn(i32, f32),
@@ -64,6 +68,41 @@ impl Msg {
 		return Msg::Unknown(msg.to_vec());
 
 	}
+
+}
+
+pub(crate) fn listen() -> Result<mpsc::Receiver<Msg>> {
+
+	let (midi_tx, midi_rx) = mpsc::channel();
+
+	thread::Builder::new()
+		.name(format!("dirty_midi"))
+		.spawn(move || {
+
+		// TODO: extremely slow
+		if let Ok(midi_in) = midir::MidiInput::new("dirty_midi") {
+
+			if let Some(port) = midi_in.ports().last() {
+
+				let port_name = midi_in.port_name(port).unwrap_or(format!("unknown"));
+
+				let _conn = midi_in.connect(port, &format!("dirty_midi - {}", port_name), move |_, msg, _| {
+					if let Err(e) = midi_tx.send(Msg::from(&msg)) {
+						elog!("failed to send midi msg");
+					}
+				}, ()).map_err(|_| format!("failed to read midi input"));
+
+				loop {}
+
+			}
+
+		} else {
+			elog!("failed to init midi input");
+		}
+
+	}).map_err(|_| format!("failed to spawn midi thread"))?;
+
+	return Ok(midi_rx);
 
 }
 
