@@ -54,7 +54,7 @@ pub struct BitmapFont {
 impl BitmapFont {
 
 	/// create bitmap font from a [`BitmapFontData`](struct.BitmapFontData)
-	pub fn from_data(ctx: &impl HasGL, data: BitmapFontData) -> Result<Self> {
+	pub fn from_data(ctx: &impl GLCtx, data: BitmapFontData) -> Result<Self> {
 
 		let font_tex = Texture::from_bytes(ctx, &data.img)?;
 
@@ -141,7 +141,7 @@ pub struct TruetypeFont {
 impl TruetypeFont {
 
 	/// load from bytes of a truetype font file
-	pub fn from_bytes(ctx: &impl HasGL, b: &[u8], size: i32) -> Result<Self> {
+	pub fn from_bytes(ctx: &impl GLCtx, b: &[u8], size: i32) -> Result<Self> {
 
 		let font = fontdue::Font::from_bytes(b, fontdue::FontSettings::default())?;
 		let (max_w, max_h) = (size * 32, size * 32);

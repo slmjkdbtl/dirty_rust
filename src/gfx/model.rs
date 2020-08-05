@@ -566,7 +566,7 @@ impl Model {
 	}
 
 	/// create model from [`ModelData`](struct.ModelData.html)
-	pub fn from_data(ctx: &impl HasGL, data: ModelData) -> Result<Self> {
+	pub fn from_data(ctx: &impl GLCtx, data: ModelData) -> Result<Self> {
 
 		let bbox = get_bbox(&data);
 
@@ -613,27 +613,27 @@ impl Model {
 	}
 
 	/// create model from a file
-	pub fn from_file(ctx: &impl HasGL, path: impl AsRef<Path>) -> Result<Self> {
+	pub fn from_file(ctx: &impl GLCtx, path: impl AsRef<Path>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_file(path)?);
 	}
 
 	/// create model from a [`MeshData`](struct.MeshData.html)
-	pub fn from_meshdata(ctx: &impl HasGL, data: MeshData) -> Result<Self> {
+	pub fn from_meshdata(ctx: &impl GLCtx, data: MeshData) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_meshdata(data));
 	}
 
 	/// create model from raw vertices & indices
-	pub fn from_raw(ctx: &impl HasGL, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
+	pub fn from_raw(ctx: &impl GLCtx, verts: Vec<Vertex>, indices: Vec<u32>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_raw(verts, indices));
 	}
 
 	/// create model from obj file
-	pub fn from_obj(ctx: &impl HasGL, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
+	pub fn from_obj(ctx: &impl GLCtx, obj: &str, mtl: Option<&str>, img: Option<&[u8]>) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_obj(obj, mtl, img)?);
 	}
 
 	/// create model from glb file
-	pub fn from_glb(ctx: &impl HasGL, bytes: &[u8]) -> Result<Self> {
+	pub fn from_glb(ctx: &impl GLCtx, bytes: &[u8]) -> Result<Self> {
 		return Self::from_data(ctx, Self::load_glb(bytes)?);
 	}
 

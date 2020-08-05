@@ -14,7 +14,6 @@ pub struct Window {
 	sdl_ctx: sdl2::Sdl,
 	gl_ctx: sdl2::video::GLContext,
 	window: sdl2::video::Window,
-	video_sys: sdl2::VideoSubsystem,
 	gl: Rc<glow::Context>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
@@ -80,7 +79,6 @@ impl Window {
 		return Ok(Self {
 			sdl_ctx: sdl_ctx,
 			window: window,
-			video_sys: video_sys,
 			gl_ctx: gl_ctx,
 			gl: Rc::new(gl),
 			pressed_keys: hset![],

@@ -117,7 +117,7 @@ impl Audio {
 			.lock()
 			.map_err(|_| format!("failed to get mixer"))?;
 
-		mixer.add(src)?;
+		mixer.add(src);
 
 		return Ok(());
 

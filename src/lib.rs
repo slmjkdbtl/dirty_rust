@@ -38,11 +38,9 @@
 #![allow(unused_parens)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
-#![deny(clippy::implicit_return)]
 
 #[macro_use]
 pub mod utils;
-pub mod res;
 
 pub mod conf;
 pub mod app;

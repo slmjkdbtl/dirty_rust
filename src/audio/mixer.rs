@@ -14,6 +14,7 @@ pub(super) struct Control {
 	pub paused: bool,
 	pub detach: bool,
 	pub looping: bool,
+	pub effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 }
 
 impl Default for Control {
@@ -24,6 +25,7 @@ impl Default for Control {
 			paused: false,
 			detach: false,
 			looping: false,
+			effects: vec![],
 		};
 	}
 }
@@ -31,7 +33,6 @@ impl Default for Control {
 struct SourceCtx {
 	src: Arc<Mutex<dyn Source + Send>>,
 	control: Arc<Mutex<Control>>,
-	effects: Vec<Arc<Mutex<dyn Effect + Send>>>,
 }
 
 pub(super) struct Mixer {
@@ -50,32 +51,20 @@ impl Mixer {
 		};
 	}
 
-	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) -> Result<SourceID> {
+	pub fn add(&mut self, src: Arc<Mutex<dyn Source + Send>>) -> Arc<Mutex<Control>> {
 
 		let id = self.last_id;
+		let ctrl = Arc::new(Mutex::new(Control::default()));
 
 		self.sources.insert(id, SourceCtx {
 			src: src,
-			control: Arc::new(Mutex::new(Control::default())),
-			effects: vec![],
+			control: ctrl.clone(),
 		});
 
 		self.last_id += 1;
 
-		return Ok(id);
+		return ctrl;
 
-	}
-
-	pub fn get_control(&self, id: &SourceID) -> Option<Arc<Mutex<Control>>> {
-		return self.sources.get(&id).map(|ctx| {
-			return ctx.control.clone();
-		});
-	}
-
-	pub fn add_effect(&mut self, id: &SourceID, e: Arc<Mutex<dyn Effect + Send>>) {
-		if let Some(ctx) = self.sources.get_mut(&id) {
-			ctx.effects.push(e);
-		}
 	}
 
 	pub fn count(&self) -> usize {
@@ -120,7 +109,7 @@ impl Iterator for Mixer {
 
 				} else if let Some(mut frame) = src.next() {
 
-					for e in &ctx.effects {
+					for e in &ctrl.effects {
 						if let Ok(mut e) = e.lock() {
 							frame = e.process(frame);
 						}
@@ -133,12 +122,12 @@ impl Iterator for Mixer {
 					let mut has_leftover = false;
 					let mut leftover_acc = Frame::default();
 
-					for i in 0..ctx.effects.len() {
-						if let Ok(mut e) = ctx.effects[i].lock() {
+					for i in 0..ctrl.effects.len() {
+						if let Ok(mut e) = ctrl.effects[i].lock() {
 							if let Some(mut leftover) = e.leftover() {
 								has_leftover = true;
-								for j in (i + 1)..ctx.effects.len() {
-									if let Ok(mut e2) = ctx.effects[j].lock() {
+								for j in (i + 1)..ctrl.effects.len() {
+									if let Ok(mut e2) = ctrl.effects[j].lock() {
 										leftover = e2.process(leftover);
 									}
 								}

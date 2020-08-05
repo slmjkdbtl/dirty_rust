@@ -13,7 +13,7 @@ export default {
 			}),
 			m("p#intro", [m("b", "DIRTY"), " is a cross-platform toolkit for making games / interactive experiences."]),
 			m("a", {
-				href: "https://git.sr.ht/~slmjkdbtl/DIRTY",
+				href: "https://github.com/slmjkdbtl/DIRTY",
 			}, "code"),
 			m("br"),
 			m("a", {

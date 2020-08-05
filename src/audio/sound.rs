@@ -34,7 +34,7 @@ impl Sound {
 			.lock()
 			.map_err(|_| format!("failed to get mixer"))?;
 
-		mixer.add(Arc::new(Mutex::new(self.playback.clone())))?;
+		mixer.add(Arc::new(Mutex::new(self.playback.clone())));
 
 		return Ok(());
 
@@ -85,20 +85,15 @@ impl<'a> SoundBuilder<'a> {
 			.lock()
 			.map_err(|_| format!("failed to get mixer"))?;
 
-		let id = mixer.add(Arc::new(Mutex::new(self.playback)))?;
+		let ctrl = mixer.add(Arc::new(Mutex::new(self.playback)));
+		let mut ctrl = ctrl.lock().unwrap();
 
 		for e in self.effects {
-			mixer.add_effect(&id, e);
+			ctrl.effects.push(e);
 		}
 
-		let control = mixer
-			.get_control(&id)
-			.ok_or(format!("failed to get sound control"))?;
-
-		if let Ok(mut ctrl) = control.lock() {
-			ctrl.pan = self.pan;
-			ctrl.volume = self.volume;
-		}
+		ctrl.pan = self.pan;
+		ctrl.volume = self.volume;
 
 		return Ok(());
 

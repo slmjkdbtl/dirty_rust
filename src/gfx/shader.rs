@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use crate::*;
 use gfx::*;
-use res::shader::*;
+use shaders::*;
 
 /// Custom Shader. See [mod-level doc](index.html) for Usage.
 #[derive(Clone, PartialEq)]
@@ -16,7 +16,7 @@ pub struct Shader<U: UniformLayout> {
 impl<U: UniformLayout> Shader<U> {
 
 	/// create shader from only fragment code
-	pub fn from_frag(ctx: &impl HasGL, frag: &str) -> Result<Self> {
+	pub fn from_frag(ctx: &impl GLCtx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			DEFAULT_VERT,
@@ -25,7 +25,7 @@ impl<U: UniformLayout> Shader<U> {
 	}
 
 	/// create shader from only vertex code
-	pub fn from_vert(ctx: &impl HasGL, vert: &str) -> Result<Self> {
+	pub fn from_vert(ctx: &impl GLCtx, vert: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
@@ -34,7 +34,7 @@ impl<U: UniformLayout> Shader<U> {
 	}
 
 	/// create shader from both vertex and fragment code
-	pub fn from_vert_frag(ctx: &impl HasGL, vert: &str, frag: &str) -> Result<Self> {
+	pub fn from_vert_frag(ctx: &impl GLCtx, vert: &str, frag: &str) -> Result<Self> {
 
 		let vert_src = TEMPLATE_VERT.replace("{{user}}", vert);
 		let frag_src = TEMPLATE_FRAG.replace("{{user}}", frag);
@@ -49,7 +49,7 @@ impl<U: UniformLayout> Shader<U> {
 	}
 
 	/// create default shader
-	pub fn default(ctx: &impl HasGL) -> Result<Self> {
+	pub fn default(ctx: &impl GLCtx) -> Result<Self> {
 		return Self::from_vert_frag(ctx, DEFAULT_VERT, DEFAULT_FRAG);
 	}
 

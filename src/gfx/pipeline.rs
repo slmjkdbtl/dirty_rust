@@ -20,7 +20,7 @@ pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
 
 impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
-	pub fn new(ctx: &impl HasGL, vert_src: &str, frag_src: &str) -> Result<Self> {
+	pub fn new(ctx: &impl GLCtx, vert_src: &str, frag_src: &str) -> Result<Self> {
 
 		unsafe {
 
@@ -84,11 +84,11 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 				if loc.is_some() {
 					match value.into_uniform() {
-						F1(f) => self.gl.uniform_1_f32(loc, f),
-						F2(f) => self.gl.uniform_2_f32(loc, f[0], f[1]),
-						F3(f) => self.gl.uniform_3_f32(loc, f[0], f[1], f[2]),
-						F4(f) => self.gl.uniform_4_f32(loc, f[0], f[1], f[2], f[3]),
-						Mat4(a) => self.gl.uniform_matrix_4_f32_slice(loc, false, &a),
+						F1(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
+						F2(f) => self.gl.uniform_2_f32(loc.as_ref(), f[0], f[1]),
+						F3(f) => self.gl.uniform_3_f32(loc.as_ref(), f[0], f[1], f[2]),
+						F4(f) => self.gl.uniform_4_f32(loc.as_ref(), f[0], f[1], f[2], f[3]),
+						Mat4(a) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &a),
 					}
 				}
 

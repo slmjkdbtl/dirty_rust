@@ -16,7 +16,7 @@ pub(super) struct IndexBuffer {
 
 impl IndexBuffer {
 
-	pub fn new(ctx: &impl HasGL, count: usize, usage: BufferUsage) -> Result<Self> {
+	pub fn new(ctx: &impl GLCtx, count: usize, usage: BufferUsage) -> Result<Self> {
 
 		unsafe {
 
@@ -44,7 +44,7 @@ impl IndexBuffer {
 
 	}
 
-	pub fn from(ctx: &impl HasGL, data: &[u32]) -> Result<Self> {
+	pub fn from(ctx: &impl GLCtx, data: &[u32]) -> Result<Self> {
 
 		let buf = Self::new(ctx, data.len(), BufferUsage::Static)?;
 		buf.data(0, data);

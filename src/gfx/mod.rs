@@ -161,7 +161,7 @@
 import!(vbuf);
 import!(ibuf);
 import!(pipeline);
-import!(renderer);
+import!(batch);
 
 export!(types);
 export!(desc);
@@ -176,6 +176,8 @@ export!(uniform);
 export!(model);
 
 pub mod shapes;
+pub mod fonts;
+pub mod shaders;
 
 use std::rc::Rc;
 
@@ -208,7 +210,7 @@ pub struct Gfx {
 	view: Mat4,
 	transform: Mat4,
 
-	renderer: BatchedMesh<Vertex, Uniform>,
+	renderer: BatchedRenderer<Vertex, Uniform>,
 
 	empty_tex: gfx::Texture,
 
@@ -216,7 +218,7 @@ pub struct Gfx {
 	cur_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
 	cur_custom_uniform: Option<UniformData>,
 
-	cur_canvas: Option<Canvas>,
+	on_canvas: bool,
 
 	default_font: gfx::BitmapFont,
 
@@ -225,17 +227,17 @@ pub struct Gfx {
 
 }
 
-pub trait HasGL {
+pub trait GLCtx {
 	fn gl(&self) -> &Rc<glow::Context>;
 }
 
-impl HasGL for Gfx {
+impl GLCtx for Gfx {
 	fn gl(&self) -> &Rc<glow::Context> {
 		return &self.gl;
 	}
 }
 
-impl HasGL for &Rc<glow::Context> {
+impl GLCtx for &Rc<glow::Context> {
 	fn gl(&self) -> &Rc<glow::Context> {
 		return &self;
 	}
@@ -279,8 +281,8 @@ impl Gfx {
 			far: DEFAULT_FAR,
 		};
 
-		let vert_src = res::shader::TEMPLATE_VERT.replace("{{user}}", res::shader::DEFAULT_VERT);
-		let frag_src = res::shader::TEMPLATE_FRAG.replace("{{user}}", res::shader::DEFAULT_FRAG);
+		let vert_src = shaders::TEMPLATE_VERT.replace("{{user}}", shaders::DEFAULT_VERT);
+		let frag_src = shaders::TEMPLATE_FRAG.replace("{{user}}", shaders::DEFAULT_FRAG);
 		#[cfg(any(web, mobile))]
 		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
@@ -289,7 +291,7 @@ impl Gfx {
 		let font_data = conf.default_font
 			.clone()
 			.take()
-			.unwrap_or(res::font::UNSCII);
+			.unwrap_or(fonts::UNSCII);
 
 		let font = gfx::BitmapFont::from_data(&gl, font_data)?;
 
@@ -299,7 +301,7 @@ impl Gfx {
 			height: window.height(),
 			dpi: window.dpi(),
 
-			renderer: BatchedMesh::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
+			renderer: BatchedRenderer::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
 
 			view: cam.view(),
 			proj: cam.proj(),
@@ -309,7 +311,7 @@ impl Gfx {
 			cur_pipeline: pipeline,
 			cur_custom_uniform: None,
 
-			cur_canvas: None,
+			on_canvas: false,
 
 			draw_calls_last: 0,
 			draw_calls: 0,
@@ -386,7 +388,7 @@ impl Gfx {
 		f: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
-		if self.cur_canvas.is_some() {
+		if self.on_canvas {
 			return Err(format!("cannot use canvas inside a canvas"));
 		}
 
@@ -408,7 +410,7 @@ impl Gfx {
 		self.proj = new_cam.proj();
 		self.view = new_cam.view();
 
-		self.cur_canvas = Some(canvas.clone());
+		self.on_canvas = true;
 		self.transform = mat4!();
 
 		unsafe {
@@ -425,7 +427,7 @@ impl Gfx {
 		self.flush();
 		canvas.unbind();
 
-		self.cur_canvas = None;
+		self.on_canvas = false;
 		self.transform = t;
 
 		self.proj = oproj;

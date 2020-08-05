@@ -17,7 +17,7 @@ pub struct Texture {
 impl Texture {
 
 	/// create a new empty texture with width & height
-	pub fn new(ctx: &impl HasGL, w: i32, h: i32) -> Result<Self> {
+	pub fn new(ctx: &impl GLCtx, w: i32, h: i32) -> Result<Self> {
 
 		unsafe {
 
@@ -57,7 +57,7 @@ impl Texture {
 	}
 
 	/// create a texture from raw pixels
-	pub fn from_raw(ctx: &impl HasGL, width: i32, height: i32, data: &[u8]) -> Result<Self> {
+	pub fn from_raw(ctx: &impl GLCtx, width: i32, height: i32, data: &[u8]) -> Result<Self> {
 
 		let tex = Self::new(ctx, width, height)?;
 		tex.data(data);
@@ -66,12 +66,12 @@ impl Texture {
 	}
 
 	/// create a texture from an [`Image`](../img/struct.Image.html)
-	pub fn from_img(ctx: &impl HasGL, img: img::Image) -> Result<Self> {
+	pub fn from_img(ctx: &impl GLCtx, img: img::Image) -> Result<Self> {
 		return Self::from_raw(ctx, img.width(), img.height(), &img.into_raw());
 	}
 
 	/// create a texture from bytes read from an image file
-	pub fn from_bytes(ctx: &impl HasGL, data: &[u8]) -> Result<Self> {
+	pub fn from_bytes(ctx: &impl GLCtx, data: &[u8]) -> Result<Self> {
 		return Self::from_img(ctx, img::Image::from_bytes(data)?);
 	}
 
@@ -143,7 +143,7 @@ impl Texture {
 
 			self.bind();
 
-			self.gl.tex_sub_image_2d_u8_slice(
+			self.gl.tex_sub_image_2d(
 				glow::TEXTURE_2D,
 				0,
 				x as i32,
@@ -152,7 +152,7 @@ impl Texture {
 				h as i32,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
-				Some(data),
+				glow::PixelUnpackData::Slice(data),
 			);
 
 			self.unbind();
@@ -179,18 +179,18 @@ impl Texture {
 	pub fn capture(&self) -> Result<img::Image> {
 
 		let size = (self.width * self.height * 4) as usize;
-		let pixels = vec![0.0 as u8; size];
+		let mut pixels = vec![0.0 as u8; size];
 
 		self.bind();
 
 		unsafe {
 
-			self.gl.get_tex_image_u8_slice(
+			self.gl.get_tex_image(
 				glow::TEXTURE_2D,
 				0,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
-				Some(&pixels),
+				glow::PixelPackData::Slice(&mut pixels),
 			);
 
 		}

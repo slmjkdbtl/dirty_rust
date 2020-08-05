@@ -192,7 +192,7 @@ impl AddAssign for Frame {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Spec {
-	channel_count: u16,
-	sample_rate: u32,
+	pub channel_count: u16,
+	pub sample_rate: u32,
 }
 

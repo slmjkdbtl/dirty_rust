@@ -101,7 +101,7 @@ impl State for Game {
 fn main() {
 
 	if let Err(err) = launcher()
-// 		.hidpi(false)
+		.hidpi(false)
 		.vsync(false)
 		.run::<Game>() {
 		elog!("{}", err);

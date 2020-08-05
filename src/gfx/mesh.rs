@@ -24,7 +24,7 @@ pub struct Mesh {
 impl Mesh {
 
 	/// create a mesh from vertices and indices
-	pub fn new(ctx: &impl HasGL, verts: &[Vertex], indices: &[u32]) -> Result<Self> {
+	pub fn new(ctx: &impl GLCtx, verts: &[Vertex], indices: &[u32]) -> Result<Self> {
 
 		let vbuf = VertexBuffer::<Vertex>::from(ctx, &verts)?;
 		let ibuf = IndexBuffer::from(ctx, &indices)?;
@@ -38,7 +38,7 @@ impl Mesh {
 	}
 
 	/// create a mesh from [`MeshData`](struct.MeshData.html)
-	pub fn from_meshdata(ctx: &impl HasGL, data: &MeshData) -> Result<Self> {
+	pub fn from_meshdata(ctx: &impl GLCtx, data: &MeshData) -> Result<Self> {
 		return Self::new(ctx, &data.vertices, &data.indices);
 	}
 
