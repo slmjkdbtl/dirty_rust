@@ -65,7 +65,7 @@ fn main() {
 - Linux
 - WASM
 - iOS (WIP)
-- Android (WIP)
+- Android (planned)
 
 for build instructions, check out `doc/dist.md`
 

@@ -199,6 +199,11 @@ impl Window {
 		return self.height;
 	}
 
+	/// get a touch position
+	pub fn touch_pos(&self, _: TouchID) -> Option<Vec2> {
+		return Some(self.mouse_pos);
+	}
+
 	/// get current mouse position
 	pub fn mouse_pos(&self) -> Vec2 {
 		return self.mouse_pos;

@@ -111,12 +111,6 @@ impl State for Game {
 		})
 	}
 
-	fn update(&mut self, _: &mut Ctx) -> Result<()> {
-		self.t += 1;
-		self.t %= 60;
-		Ok(())
-	}
-
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 		use input::Event::*;
 		if self.ui.event(d, &e) {
@@ -163,21 +157,13 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn update(&mut self, d: &mut Ctx) -> Result<()> {
+
+		self.t += 1;
+		self.t %= 60;
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 		let top_right = d.gfx.coord(gfx::Origin::TopRight);
-
-		d.gfx.draw(
-			&shapes::rect(vec2!(-self.sz, self.sz) * 0.5, vec2!(self.sz, -self.sz) * 0.5)
-				.fill(rgba!(0.5, 0.5, 0.5, 1)),
-		)?;
-
-		self.buf.draw(d.gfx)?;
-
-		for line in &self.lines {
-			line.draw(self.t, d.gfx)?;
-		}
 
 		let mut tol = 0;
 		let mut density = 0.;
@@ -214,8 +200,6 @@ impl State for Game {
 
 		})?;
 
-		d.gfx.draw(&shapes::canvas(self.ui.canvas()))?;
-
 		self.tol = tol;
 		self.density = density;
 		self.sz = sz;
@@ -227,6 +211,25 @@ impl State for Game {
 		if let Some(col) = color {
 			self.buf.color = col;
 		}
+
+		return Ok(());
+
+	}
+
+	fn draw(&self, d: &mut Ctx) -> Result<()> {
+
+		d.gfx.draw(
+			&shapes::rect(vec2!(-self.sz, self.sz) * 0.5, vec2!(self.sz, -self.sz) * 0.5)
+				.fill(rgba!(0.5, 0.5, 0.5, 1)),
+		)?;
+
+		self.buf.draw(d.gfx)?;
+
+		for line in &self.lines {
+			line.draw(self.t, d.gfx)?;
+		}
+
+		d.gfx.draw(&shapes::canvas(self.ui.canvas()))?;
 
 		Ok(())
 

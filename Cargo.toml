@@ -43,13 +43,11 @@ lewton = "0.10"
 hound = "3.4"
 sfxr = "0.1"
 midir = { version = "0.6", optional = true }
-cpal = "0.11"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 # TODO: 0.24 event lag bug
 glutin = "0.24"
 # glutin = "0.21"
-# sdl2 = { version = "0.34", features = [ "bundled", ] }
 gilrs = "0.7"
 # TODO: support wasm
 libimgui = { version = "0.4", optional = true, package = "imgui" }
@@ -85,4 +83,7 @@ features = [
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = "0.9"
+
+[target.'cfg(not(target_os="ios"))'.dependencies]
+cpal = "0.11"
 

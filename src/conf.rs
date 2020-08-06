@@ -16,7 +16,7 @@ pub struct Conf {
 	pub width: i32,
 	pub height: i32,
 	pub title: String,
-	pub hidpi: bool,
+	pub high_dpi: bool,
 	pub resizable: bool,
 	pub fullscreen: bool,
 	pub always_on_top: bool,
@@ -51,7 +51,7 @@ impl Default for Conf {
 			width: 640,
 			height: 480,
 			title: String::new(),
-			hidpi: true,
+			high_dpi: true,
 			resizable: false,
 			fullscreen: false,
 			always_on_top: false,
@@ -92,8 +92,8 @@ impl Launcher {
 		return self;
 	}
 
-	pub fn hidpi(mut self, b: bool) -> Self {
-		self.conf.hidpi = b;
+	pub fn high_dpi(mut self, b: bool) -> Self {
+		self.conf.high_dpi = b;
 		return self;
 	}
 

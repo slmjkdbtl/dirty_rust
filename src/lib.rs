@@ -46,13 +46,12 @@ pub mod conf;
 pub mod app;
 pub mod window;
 pub mod gfx;
+#[cfg(not(ios))]
 pub mod audio;
 pub mod input;
 
 mod run;
 pub use run::*;
-mod ctx;
-pub use ctx::*;
 
 pub mod fs;
 pub mod geom;

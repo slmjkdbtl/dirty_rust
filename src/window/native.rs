@@ -21,6 +21,7 @@ pub struct Window {
 	windowed_ctx: glutin::WindowedContext<glutin::PossiblyCurrent>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
+	touches: HashMap<TouchID, Vec2>,
 	gamepad_pressed_buttons: HashMap<GamepadID, HashSet<GamepadButton>>,
 	gamepad_axis_pos: HashMap<GamepadID, HashMap<GamepadAxis, Vec2>>,
 	width: i32,
@@ -61,22 +62,17 @@ impl Window {
 			use glutin::platform::macos::WindowBuilderExtMacOS;
 
 			window_builder = window_builder
-				.with_disallow_hidpi(!conf.hidpi)
+				.with_disallow_hidpi(!conf.high_dpi)
 				;
 
 		}
 
-		#[cfg(not(mobile))]
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
-			.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (2, 1)))
-			;
-
-		#[cfg(mobile)]
-		let ctx_builder = glutin::ContextBuilder::new()
-			.with_vsync(conf.vsync)
-			.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGlEs, (2, 0)))
-			;
+			.with_gl(glutin::GlRequest::GlThenGles {
+				opengl_version: (2, 1),
+				opengles_version: (2, 0),
+			});
 
 		let windowed_ctx = unsafe {
 			ctx_builder
@@ -112,6 +108,7 @@ impl Window {
 			gamepad_pressed_buttons: hmap![],
 			gamepad_axis_pos: hmap![],
 			mouse_pos: vec2!(),
+			touches: hmap![],
 			width: conf.width,
 			height: conf.height,
 			scroll_phase: ScrollPhase::Solid,
@@ -140,6 +137,12 @@ impl Window {
 			.swap_buffers()
 			.map_err(|_| format!("failed to swap buffer"))?;
 		return Ok(());
+	}
+
+	fn transform_pos(&self, pos: PhysicalPosition<f64>) -> Vec2 {
+		let tpos: Vec2 = pos.to_logical(self.dpi() as f64).into();
+		let (w, h) = (self.width as f32, self.height as f32);
+		return vec2!(tpos.x - w / 2.0, h / 2.0 - tpos.y);
 	}
 
 	pub fn focused(&self) -> bool {
@@ -197,6 +200,11 @@ impl Window {
 	/// get current window height
 	pub fn height(&self) -> i32 {
 		return self.height;
+	}
+
+	/// get a touch position
+	pub fn touch_pos(&self, id: TouchID) -> Option<Vec2> {
+		return self.touches.get(&id).cloned();
 	}
 
 	/// get current mouse position
@@ -305,6 +313,9 @@ impl Window {
 			None => return Ok(()),
 		};
 
+		handle(&mut self, WindowEvent::Frame)?;
+		self.swap()?;
+
 		event_loop.run(move |e, _, flow| {
 
 			*flow = ControlFlow::Poll;
@@ -403,13 +414,7 @@ impl Window {
 						},
 
 						WEvent::CursorMoved { position, .. } => {
-
-							let mpos: Vec2 = position.to_logical(self.dpi() as f64).into();
-							let (w, h) = (self.width as f32, self.height as f32);
-							let mpos = vec2!(mpos.x - w / 2.0, h / 2.0 - mpos.y);
-
-							self.mouse_pos = mpos;
-
+							self.mouse_pos = self.transform_pos(*position);
 						},
 
 						WEvent::MouseWheel { delta, phase, .. } => {
@@ -454,7 +459,31 @@ impl Window {
 						},
 
 						WEvent::Touch(touch) => {
-							events.push(Event::Touch(touch.id as usize, touch.location.into()));
+
+							let id = touch.id as usize;
+							let pos = self.transform_pos(touch.location);
+
+							let e = match touch.phase {
+								TouchPhase::Started => {
+									self.touches.insert(id, pos);
+									Event::TouchStart(id, pos)
+								},
+								TouchPhase::Moved => {
+									self.touches.insert(id, pos);
+									Event::TouchMove(id, pos)
+								},
+								TouchPhase::Ended => {
+									self.touches.remove(&id);
+									Event::TouchEnd(id, pos)
+								},
+								TouchPhase::Cancelled => {
+									self.touches.remove(&id);
+									Event::TouchCancel(id, pos)
+								},
+							};
+
+							events.push(e);
+
 						},
 
 						WEvent::HoveredFile(path) => {
@@ -494,10 +523,8 @@ impl Window {
 					},
 
 					WinitEvent::RedrawRequested(_) => {
-
 						handle(&mut self, WindowEvent::Frame)?;
 						self.swap()?;
-
 					},
 
 					WinitEvent::MainEventsCleared => {

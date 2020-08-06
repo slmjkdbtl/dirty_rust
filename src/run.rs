@@ -4,6 +4,15 @@ use crate::*;
 use window::*;
 use conf::*;
 
+/// Application Context
+pub struct Ctx<'a> {
+	pub window: &'a mut window::Window,
+	pub gfx: &'a mut gfx::Gfx,
+	pub app: &'a mut app::App,
+	#[cfg(not(ios))]
+	pub audio: &'a mut audio::Audio,
+}
+
 /// The Main Trait
 pub trait State: 'static + Sized {
 
@@ -17,7 +26,7 @@ pub trait State: 'static + Sized {
 		return Ok(());
 	}
 
-	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
+	fn draw(&self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 
@@ -48,6 +57,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 	let mut window = window::Window::new(&conf)?;
 	let mut gfx = gfx::Gfx::new(&window, &conf)?;
 	let mut app = app::App::new(&conf);
+	#[cfg(not(ios))]
 	let mut audio = audio::Audio::new(&conf)?;
 
 	window.swap()?;
@@ -56,6 +66,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 		window: &mut window,
 		gfx: &mut gfx,
 		app: &mut app,
+		#[cfg(not(ios))]
 		audio: &mut audio,
 	};
 
@@ -67,6 +78,7 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 			window: &mut window,
 			gfx: &mut gfx,
 			app: &mut app,
+			#[cfg(not(ios))]
 			audio: &mut audio,
 		};
 
@@ -80,8 +92,8 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 				ctx.gfx.set_dpi(dpi);
 			},
 
-			WindowEvent::Input(ie) => {
-				s.event(&mut ctx, &ie)?;
+			WindowEvent::Input(e) => {
+				s.event(&mut ctx, &e)?;
 			},
 
 			WindowEvent::Frame => {

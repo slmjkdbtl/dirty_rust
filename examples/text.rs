@@ -64,7 +64,7 @@ impl State for Game {
 		return Ok(());
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, d: &mut Ctx) -> Result<()> {
 
 		let aligns = [
 			gfx::Origin::TopLeft,

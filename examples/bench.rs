@@ -48,7 +48,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, d: &mut Ctx) -> Result<()> {
 
 		let w = d.gfx.width();
 		let h = d.gfx.height();
@@ -101,7 +101,7 @@ impl State for Game {
 fn main() {
 
 	if let Err(err) = launcher()
-		.hidpi(false)
+		.high_dpi(false)
 		.vsync(false)
 		.run::<Game>() {
 		elog!("{}", err);

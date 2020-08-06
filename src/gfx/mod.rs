@@ -696,9 +696,20 @@ impl Gfx {
 	}
 
 	pub(crate) fn begin_frame(&mut self) {
+
 		self.draw_calls_last = self.draw_calls;
 		self.draw_calls = 0;
 		self.clear();
+
+		unsafe {
+			self.gl.viewport(
+				0,
+				0,
+				(self.width as f32 * self.dpi) as i32,
+				(self.height as f32 * self.dpi) as i32,
+			);
+		}
+
 	}
 
 	pub(crate) fn end_frame(&mut self) {

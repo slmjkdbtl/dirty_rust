@@ -16,7 +16,7 @@ impl State for Game {
 
 		match e {
 			Event::KeyPress(k) => {
-				match *k {
+				match k {
 					Key::Esc => d.window.quit(),
 					_ => {},
 				}
@@ -28,7 +28,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw(&shapes::raw(&[
 			Vertex {
@@ -58,7 +58,8 @@ impl State for Game {
 }
 
 fn main() {
-	if let Err(e) = run::<Game>() {
+	if let Err(e) = launcher()
+		.run::<Game>() {
 		elog!("{}", e);
 	}
 }

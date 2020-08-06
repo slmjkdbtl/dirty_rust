@@ -5,14 +5,11 @@ use std::time::Duration;
 
 use crate::*;
 use math::*;
-use gfx::shapes;
 
 #[derive(Clone)]
 pub struct Sprite {
-	tex: gfx::Texture,
 	frames: Vec<Quad>,
 	cur_frame: usize,
-	offset: Vec2,
 	anims: HashMap<String, Anim>,
 	cur_anim: Option<String>,
 	timer: Duration,
@@ -21,24 +18,17 @@ pub struct Sprite {
 
 impl Sprite {
 
-	pub fn from_tex(tex: gfx::Texture) -> Self {
+	pub fn new() -> Self {
 		return Self {
-			tex,
 			frames: vec![quad!(0, 0, 1, 1)],
 			cur_frame: 0,
-			offset: vec2!(0),
-			anims: HashMap::new(),
+			anims: hmap![],
 			cur_anim: None,
 			timer: Duration::from_secs_f32(0.0),
 			speed: Duration::from_secs_f32(0.1),
 		};
 	}
 
-	pub fn from_bytes(ctx: &gfx::Gfx, b: &[u8]) -> Result<Self> {
-		return Ok(Self::from_tex(gfx::Texture::from_bytes(ctx, b)?));
-	}
-
-	#[cfg(feature = "ase")]
 	pub fn load_ase(&mut self, json: &str) -> Result<()> {
 
 		let data = ase::parse(json)?;
@@ -46,17 +36,20 @@ impl Sprite {
 		self.frames = data.frames;
 
 		for (name, anim) in data.anims {
-			self.add_anim(&name, anim.from, anim.to, true);
+			self.add_anim(&name, Anim {
+				from: anim.from,
+				to: anim.to,
+				looping: true,
+			});
 		}
 
 		return Ok(());
 
 	}
 
-	#[cfg(feature = "ase")]
-	pub fn from_ase(ctx: &gfx::Gfx, tex: gfx::Texture, json: &str) -> Result<Self> {
+	pub fn from_ase(json: &str) -> Result<Self> {
 
-		let mut sprite = Self::from_tex(tex);
+		let mut sprite = Self::new();
 
 		sprite.load_ase(json)?;
 
@@ -64,29 +57,12 @@ impl Sprite {
 
 	}
 
-	#[cfg(feature = "ase")]
-	pub fn from_bytes_ase(ctx: &gfx::Gfx, img: &[u8], json: &str) -> Result<Self> {
-		return Self::from_ase(ctx, gfx::Texture::from_bytes(ctx, img)?, json);
-	}
-
 	pub fn width(&self) -> f32 {
-		return self.frames[self.cur_frame].w * self.tex.width() as f32;
+		return self.frames[self.cur_frame].w;
 	}
 
 	pub fn height(&self) -> f32 {
-		return self.frames[self.cur_frame].h * self.tex.height() as f32;
-	}
-
-	pub fn tex(&self) -> &gfx::Texture {
-		return &self.tex;
-	}
-
-	pub fn tex_width(&self) -> i32 {
-		return self.tex.width();
-	}
-
-	pub fn tex_height(&self) -> i32 {
-		return self.tex.height();
+		return self.frames[self.cur_frame].h;
 	}
 
 	pub fn slice(&mut self, x: u8, y: u8) {
@@ -104,12 +80,8 @@ impl Sprite {
 
 	}
 
-	pub fn add_anim(&mut self, name: &str, from: usize, to: usize, looping: bool) {
-		self.anims.insert(name.to_owned(), Anim {
-			from,
-			to,
-			looping,
-		});
+	pub fn add_anim(&mut self, name: &str, anim: Anim) {
+		self.anims.insert(name.to_owned(), anim);
 	}
 
 	pub fn next(&mut self) {
@@ -124,32 +96,13 @@ impl Sprite {
 		}
 	}
 
-	pub fn set_offset(&mut self, o: Vec2) {
-		self.offset = o;
-	}
-
 	pub fn set_speed(&mut self, s: Duration) {
 		self.speed = s;
 	}
 
-	pub fn verts(&self) -> Vec<Vec2> {
-
-		let w = self.width();
-		let h = self.height();
-		let offset = self.offset * vec2!(w, h) * -0.5;
-
-		return vec![
-			vec2!(-w / 2.0, -h / 2.0) + offset,
-			vec2!(w / 2.0, -h / 2.0) + offset,
-			vec2!(w / 2.0, h/ 2.0) + offset,
-			vec2!(-w / 2.0, h/ 2.0) + offset,
-		];
-
-	}
-
 	pub fn play(&mut self, name: &str) {
 
-		self.cur_anim = Some(name.to_owned());
+		self.cur_anim = Some(String::from(name));
 
 		if let Some(anim) = self.anims.get(name) {
 			self.cur_frame = anim.from;
@@ -157,7 +110,7 @@ impl Sprite {
 
 	}
 
-	pub fn update(&mut self, dt: Duration,) {
+	pub fn update(&mut self, dt: Duration) {
 
 		let anim = match &self.cur_anim {
 			Some(cur_anim) => {
@@ -188,20 +141,10 @@ impl Sprite {
 
 	}
 
-	pub fn shape(&self) -> shapes::Sprite {
-		return shapes::sprite(&self.tex)
-			.quad(self.frames[self.cur_frame])
-			// TODO: use shape offse
-			.offset(self.offset)
-			;
+	pub fn frame(&self) -> Quad {
+		return self.frames[self.cur_frame];
 	}
 
-}
-
-impl gfx::Drawable for Sprite {
-	fn draw(&self, ctx: &mut gfx::Gfx) -> Result<()> {
-		return ctx.draw(&self.shape());
-	}
 }
 
 #[derive(Clone, Copy, Debug)]

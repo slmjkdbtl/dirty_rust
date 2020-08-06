@@ -161,7 +161,7 @@ impl State for Viewer {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, d: &mut Ctx) -> Result<()> {
 
 		let time = d.app.time().as_secs_f32();
 		let center = self.model.center();

@@ -167,6 +167,7 @@ impl UI {
 	pub fn frame(&mut self, d: &mut Ctx, f: impl FnOnce(WindowManager) -> Result<()>) -> Result<()> {
 
 		let d_window = &mut d.window;
+		#[cfg(not(ios))]
 		let d_audio = &mut d.audio;
 		let d_app = &mut d.app;
 
@@ -178,6 +179,7 @@ impl UI {
 
 			let mut ctx = Ctx {
 				window: d_window,
+				#[cfg(not(ios))]
 				audio: d_audio,
 				app: d_app,
 				gfx: gfx,
@@ -292,6 +294,7 @@ impl<'a> WindowManager<'a> {
 		let content_offset = vec2!(t.padding, -bar_height - t.padding);
 
 		let d_window = &mut self.ctx.window;
+		#[cfg(not(ios))]
 		let d_audio = &mut self.ctx.audio;
 		let d_app = &mut self.ctx.app;
 
@@ -336,6 +339,7 @@ impl<'a> WindowManager<'a> {
 
 				let mut ctx = Ctx {
 					window: d_window,
+					#[cfg(not(ios))]
 					audio: d_audio,
 					app: d_app,
 					gfx: gfx,

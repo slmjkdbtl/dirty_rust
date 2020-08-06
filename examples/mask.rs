@@ -30,7 +30,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn draw(&self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw_masked(|gfx| {
 			return gfx.draw(&shapes::circle(vec2!(0), 120.0));
