@@ -185,7 +185,7 @@ impl Window {
 	}
 
 	/// get current dpi
-	pub fn dpi(&self) -> f32 {
+	pub(crate) fn dpi(&self) -> f32 {
 		return 1.0;
 	}
 

@@ -29,29 +29,20 @@ impl Sprite {
 		};
 	}
 
-	pub fn load_ase(&mut self, json: &str) -> Result<()> {
+	pub fn from_ase(json: &str) -> Result<Self> {
 
+		let mut sprite = Self::new();
 		let data = ase::parse(json)?;
 
-		self.frames = data.frames;
+		sprite.frames = data.frames;
 
 		for (name, anim) in data.anims {
-			self.add_anim(&name, Anim {
+			sprite.add(&name, Anim {
 				from: anim.from,
 				to: anim.to,
 				looping: true,
 			});
 		}
-
-		return Ok(());
-
-	}
-
-	pub fn from_ase(json: &str) -> Result<Self> {
-
-		let mut sprite = Self::new();
-
-		sprite.load_ase(json)?;
 
 		return Ok(sprite);
 
@@ -80,7 +71,7 @@ impl Sprite {
 
 	}
 
-	pub fn add_anim(&mut self, name: &str, anim: Anim) {
+	pub fn add(&mut self, name: &str, anim: Anim) {
 		self.anims.insert(name.to_owned(), anim);
 	}
 

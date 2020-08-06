@@ -532,6 +532,10 @@ impl Gfx {
 
 	}
 
+	pub fn transform_pt(&self, pt: Vec2) -> Vec2 {
+		return vec2!(pt.x + self.width as f32 / 2.0, pt.y + self.height as f32 / 2.0) * self.dpi;
+	}
+
 	/// draw within a rect
 	pub fn draw_within(
 		&mut self,
@@ -539,14 +543,33 @@ impl Gfx {
 		p2: Vec2,
 		f: impl FnOnce(&mut Self) -> Result<()>
 	) -> Result<()> {
-		self.draw_masked(|gfx| {
-			return gfx.draw(&shapes::rect(p1, p2));
-		}, |gfx| {
-			return gfx.push_t(mat4!().t2(p1), |gfx| {
+
+		let pt1 = self.transform * p1;
+		let pt2 = self.transform * p2;
+		let (pt1, pt2) = (
+			self.transform_pt(vec2!(f32::min(pt1.x, pt2.x), f32::min(pt1.y, pt2.y))),
+			self.transform_pt(vec2!(f32::max(pt1.x, pt2.x), f32::max(pt1.y, pt2.y))),
+		);
+		let x = pt1.x;
+		let y = pt1.y;
+		let w = (pt2.x - pt1.x);
+		let h = (pt2.y - pt1.y);
+
+		unsafe {
+
+			self.flush();
+			self.gl.enable(Capability::ScissorTest.to_glow());
+			self.gl.scissor(x as i32, y as i32, w as i32, h as i32);
+			self.push_t(mat4!().t2(p1), |gfx| {
 				return f(gfx);
-			});
-		})?;
+			})?;
+			self.flush();
+			self.gl.disable(Capability::ScissorTest.to_glow());
+
+		}
+
 		return Ok(());
+
 	}
 
 	/// use custom blending
@@ -727,7 +750,7 @@ impl Gfx {
 		return self.height;
 	}
 
-	pub fn dpi(&self) -> f32 {
+	pub(crate) fn dpi(&self) -> f32 {
 		return self.dpi;
 	}
 

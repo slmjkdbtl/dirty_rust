@@ -139,10 +139,10 @@ impl Window {
 		return Ok(());
 	}
 
-	fn transform_pos(&self, pos: PhysicalPosition<f64>) -> Vec2 {
-		let tpos: Vec2 = pos.to_logical(self.dpi() as f64).into();
+	fn transform_pt(&self, pt: PhysicalPosition<f64>) -> Vec2 {
+		let t_pt: Vec2 = pt.to_logical(self.dpi() as f64).into();
 		let (w, h) = (self.width as f32, self.height as f32);
-		return vec2!(tpos.x - w / 2.0, h / 2.0 - tpos.y);
+		return vec2!(t_pt.x - w / 2.0, h / 2.0 - t_pt.y);
 	}
 
 	pub fn focused(&self) -> bool {
@@ -187,8 +187,7 @@ impl Window {
 			.unwrap_or(vec2!(0));
 	}
 
-	/// get current dpi
-	pub fn dpi(&self) -> f32 {
+	pub(crate) fn dpi(&self) -> f32 {
 		return self.windowed_ctx.window().scale_factor() as f32;
 	}
 
@@ -414,7 +413,7 @@ impl Window {
 						},
 
 						WEvent::CursorMoved { position, .. } => {
-							self.mouse_pos = self.transform_pos(*position);
+							self.mouse_pos = self.transform_pt(*position);
 						},
 
 						WEvent::MouseWheel { delta, phase, .. } => {
@@ -461,7 +460,7 @@ impl Window {
 						WEvent::Touch(touch) => {
 
 							let id = touch.id as usize;
-							let pos = self.transform_pos(touch.location);
+							let pos = self.transform_pt(touch.location);
 
 							let e = match touch.phase {
 								TouchPhase::Started => {

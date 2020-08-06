@@ -3,9 +3,11 @@
 use dirty::*;
 use kit::*;
 use sprite::*;
-use input::Key;
+use gfx::*;
+use input::*;
 
 struct Game {
+	tex: Texture,
 	sprite: Sprite,
 }
 
@@ -13,14 +15,20 @@ impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let mut sprite = Sprite::from_bytes(d.gfx, include_bytes!("res/car.png"))?;
+		let tex = Texture::from_bytes(d.gfx, include_bytes!("res/car.png"))?;
+		let mut sprite = Sprite::new();
 
 		sprite.slice(4, 1);
-		sprite.add_anim("run", 0, 3, true);
+		sprite.add("run", sprite::Anim {
+			from: 0,
+			to: 3,
+			looping: true,
+		});
 		sprite.play("run");
 
 		return Ok(Self {
-			sprite,
+			sprite: sprite,
+			tex: tex,
 		});
 
 	}
@@ -55,7 +63,7 @@ impl State for Game {
 
 	fn draw(&self, d: &mut Ctx) -> Result<()> {
 
-		d.gfx.draw(&self.sprite)?;
+		d.gfx.draw(&shapes::sprite(&self.tex).quad(self.sprite.frame()))?;
 
 		return Ok(());
 
