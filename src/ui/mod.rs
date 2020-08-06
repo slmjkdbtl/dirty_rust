@@ -64,14 +64,14 @@ impl UI {
 	}
 
 	/// handle UI events, returns if an event is processed and should stop propagation
-	pub fn event(&mut self, d: &mut Ctx, e: &Event) -> bool {
+	pub fn event(&mut self, d: &mut Ctx, e: &Event) -> Result<bool> {
 
 		use Event::*;
 		use geom::*;
 
 		match e {
 			Resize(w, h) => {
-				self.canvas.resize(d.gfx, *w, *h).ok();
+				self.canvas = Canvas::new(d.gfx, *w, *h)?;
 			},
 			_ => {},
 		}
@@ -84,7 +84,7 @@ impl UI {
 				// TODO: construct WidgetCtx
 				if w.focused() {
 					if w.event(e) {
-						return true;
+						return Ok(true);
 					}
 				}
 			}
@@ -92,7 +92,7 @@ impl UI {
 				// TODO: construct WidgetCtx
 				if !w.focused() {
 					if w.event(e) {
-						return true;
+						return Ok(true);
 					}
 				}
 			}
@@ -128,7 +128,7 @@ impl UI {
 
 								if col::intersect2d(mpos, bar) {
 									self.draggin = Some((*id, window.pos - mpos));
-									return true;
+									return Ok(true);
 								}
 
 							}
@@ -148,7 +148,7 @@ impl UI {
 					Mouse::Left => {
 						if self.draggin.is_some() {
 							self.draggin = None;
-							return true;
+							return Ok(true);
 						}
 					}
 					_ => {},
@@ -159,7 +159,7 @@ impl UI {
 
 		}
 
-		return false;
+		return Ok(false);
 
 	}
 

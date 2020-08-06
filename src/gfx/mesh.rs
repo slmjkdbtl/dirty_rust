@@ -54,11 +54,5 @@ impl Mesh {
 		return self.count;
 	}
 
-	/// create a mesh memory
-	pub fn free(self) {
-		self.vbuf.free();
-		self.ibuf.free();
-	}
-
 }
 

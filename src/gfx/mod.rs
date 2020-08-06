@@ -158,8 +158,7 @@
 //!
 //! OpenGL uses its own heap memory allocation, so you'll have to free memory yourself when you're done with them. Resource types [`Texture`](struct.Texture.html), [`Model`](struct.Model.html), [`Shader`](struct.Shader.html), [`Canvas`](struct.Canvas.html) and fonts all have a `free(self)` method that frees the memory.
 
-import!(vbuf);
-import!(ibuf);
+import!(buffer);
 import!(pipeline);
 import!(batch);
 

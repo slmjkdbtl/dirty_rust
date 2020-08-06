@@ -9,8 +9,22 @@ use glow::HasContext;
 use super::*;
 use crate::Result;
 
-#[derive(Clone, Debug)]
+struct ProgramHandle {
+	gl: std::rc::Rc<glow::Context>,
+	id: ProgramID,
+}
+
+impl Drop for ProgramHandle {
+	fn drop(&mut self) {
+		unsafe {
+			self.gl.delete_program(self.id);
+		}
+	}
+}
+
+#[derive(Clone)]
 pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
+	handle: Rc<ProgramHandle>,
 	gl: Rc<glow::Context>,
 	program_id: ProgramID,
 	attrs: VertexAttrGroup,
@@ -56,8 +70,14 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			gl.delete_shader(vert_id);
 			gl.delete_shader(frag_id);
 
+			let handle = ProgramHandle {
+				gl: gl.clone(),
+				id: program_id,
+			};
+
 			let program = Self {
 				gl: gl,
+				handle: Rc::new(handle),
 				attrs: V::attrs(),
 				program_id: program_id,
 				_vertex_layout: PhantomData,
@@ -163,12 +183,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 		}
 
-	}
-
-	pub fn free(self) {
-		unsafe {
-			self.gl.delete_program(self.program_id);
-		}
 	}
 
 }

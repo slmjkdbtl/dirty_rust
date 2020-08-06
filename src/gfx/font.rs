@@ -106,11 +106,6 @@ impl BitmapFont {
 		return self.grid_width as i32;
 	}
 
-	/// frees memory
-	pub fn free(self) {
-		self.tex.free();
-	}
-
 }
 
 impl Font for BitmapFont {
@@ -229,11 +224,6 @@ impl TruetypeFont {
 			.flatten()
 			.map(|q| q.w * self.tex.width() as f32)
 			.sum();
-	}
-
-	/// frees memory
-	pub fn free(self) {
-		self.tex.free();
 	}
 
 }

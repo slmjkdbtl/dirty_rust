@@ -53,11 +53,6 @@ impl<U: UniformLayout> Shader<U> {
 		return Self::from_vert_frag(ctx, DEFAULT_VERT, DEFAULT_FRAG);
 	}
 
-	/// free memory
-	pub fn free(self) {
-		self.pipeline.free();
-	}
-
 	pub(super) fn pipeline(&self) -> &Pipeline<Vertex, Uniform> {
 		return &self.pipeline;
 	}

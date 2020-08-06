@@ -2,31 +2,31 @@
 
 use dirty::*;
 use math::*;
-use gfx::shapes;
-use input::Key;
+use gfx::*;
+use input::*;
 
 const LOAD_COUNT: usize = 120;
 const SCALE: f32 = 9.0;
 
 struct Teapot {
 	transform: Mat4,
-	model: gfx::Model,
+	model: Model,
 }
 
 struct Game {
-	tasks: Vec<task::Task<Result<gfx::ModelData>>>,
+	tasks: Vec<task::Task<Result<ModelData>>>,
 	loaded: usize,
 	count: usize,
 	teapots: Vec<Teapot>,
-	shader: gfx::Shader<()>,
-	canvas: gfx::Canvas,
+	shader: Shader<()>,
+	canvas: Canvas,
 }
 
 impl Game {
 	fn load_more(&mut self) -> Result<()> {
 		for _ in 0..LOAD_COUNT {
 			self.tasks.push(task::Task::new(|| {
-				return gfx::Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
+				return Model::load_obj(&fs::read_str("examples/res/teapot.obj")?, None, None);
 			})?);
 		}
 		self.count += LOAD_COUNT;
@@ -44,8 +44,8 @@ impl State for Game {
 		let mut l = Self {
 			tasks: vec![],
 			teapots: vec![],
-			shader: gfx::Shader::from_frag(d.gfx, include_str!("res/blue.frag"))?,
-			canvas: gfx::Canvas::new(d.gfx, cw, ch)?,
+			shader: Shader::from_frag(d.gfx, include_str!("res/blue.frag"))?,
+			canvas: Canvas::new(d.gfx, cw, ch)?,
 			loaded: 0,
 			count: 0,
 		};
@@ -67,7 +67,7 @@ impl State for Game {
 				let cw = (*w as f32 / SCALE) as i32;
 				let ch = (*h as f32 / SCALE) as i32;
 
-				self.canvas.resize(d.gfx, cw, ch)?;
+				self.canvas = Canvas::new(d.gfx, cw, ch)?;
 
 			},
 
@@ -102,7 +102,7 @@ impl State for Game {
 						.ry(rand(0f32, 360f32).to_radians())
 						.rz(rand(0f32, 360f32).to_radians())
 						,
-					model: gfx::Model::from_data(d.gfx, data?)?,
+					model: Model::from_data(d.gfx, data?)?,
 				});
 			}
 		}
@@ -119,7 +119,7 @@ impl State for Game {
 
 		d.gfx.draw_on(&self.canvas, |gfx| {
 
-			gfx.clear_ex(gfx::Surface::Depth);
+			gfx.clear_ex(Surface::Depth);
 
 			gfx.push_t(mat4!().s3(vec3!(1.0 / SCALE)), |gfx| {
 
@@ -151,7 +151,7 @@ impl State for Game {
 			&shapes::canvas(&self.canvas)
 		)?;
 
-		let bot_left = d.gfx.coord(gfx::Origin::BottomLeft);
+		let bot_left = d.gfx.coord(Origin::BottomLeft);
 
 		d.gfx.draw_t(
 			mat4!()
@@ -160,7 +160,7 @@ impl State for Game {
 			&shapes::text(
 				&format!("{}/{}", self.loaded, self.count)
 			)
-				.align(gfx::Origin::BottomLeft)
+				.align(Origin::BottomLeft)
 				.size(16.0)
 				,
 		)?;
@@ -170,7 +170,7 @@ impl State for Game {
 				.t2(bot_left + vec2!(24, 24))
 				,
 			&shapes::text("press SPACE to load more")
-				.align(gfx::Origin::BottomLeft)
+				.align(Origin::BottomLeft)
 				.size(12.0)
 				,
 		)?;

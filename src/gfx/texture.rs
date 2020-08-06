@@ -5,9 +5,23 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
+struct TextureHandle {
+	gl: std::rc::Rc<glow::Context>,
+	id: TextureID,
+}
+
+impl Drop for TextureHandle {
+	fn drop(&mut self) {
+		unsafe {
+			self.gl.delete_texture(self.id);
+		}
+	}
+}
+
 /// 2D Texture
 #[derive(Clone)]
 pub struct Texture {
+	handle: Rc<TextureHandle>,
 	gl: Rc<glow::Context>,
 	id: TextureID,
 	width: i32,
@@ -24,7 +38,13 @@ impl Texture {
 			let gl = ctx.gl().clone();
 			let id = gl.create_texture()?;
 
+			let handle = TextureHandle {
+				id: id,
+				gl: gl.clone(),
+			};
+
 			let tex = Self {
+				handle: Rc::new(handle),
 				gl: gl,
 				id: id,
 				width: w,
@@ -203,13 +223,6 @@ impl Texture {
 
 	pub(super) fn id(&self) -> TextureID {
 		return self.id;
-	}
-
-	/// free memory
-	pub fn free(self) {
-		unsafe {
-			self.gl.delete_texture(self.id);
-		}
 	}
 
 }

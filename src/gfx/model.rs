@@ -667,15 +667,6 @@ impl Model {
 		return self.bbox;
 	}
 
-	/// free memory
-	pub fn free(self) {
-		for (_, node) in self.nodes {
-			for mesh in node.meshes {
-				mesh.free();
-			}
-		}
-	}
-
 }
 
 fn get_bbox_inner(

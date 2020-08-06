@@ -134,11 +134,6 @@ impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U
 		return self.draw_count;
 	}
 
-	pub fn free(self) {
-		self.vbuf.free();
-		self.ibuf.free();
-	}
-
 }
 
 

@@ -113,7 +113,7 @@ impl State for Game {
 
 	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
 		use input::Event::*;
-		if self.ui.event(d, &e) {
+		if self.ui.event(d, &e)? {
 			return Ok(());
 		}
 		match e {

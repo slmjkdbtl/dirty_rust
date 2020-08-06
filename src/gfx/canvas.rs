@@ -5,9 +5,25 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
+struct CanvasHandle {
+	gl: std::rc::Rc<glow::Context>,
+	fbo: FramebufferID,
+	rbo: RenderbufferID,
+}
+
+impl Drop for CanvasHandle {
+	fn drop(&mut self) {
+		unsafe {
+			self.gl.delete_renderbuffer(self.rbo);
+			self.gl.delete_framebuffer(self.fbo);
+		}
+	}
+}
+
 /// Off-screen Rendering Canvas
 #[derive(Clone)]
 pub struct Canvas {
+	handle: Rc<CanvasHandle>,
 	gl: Rc<glow::Context>,
 	id: FramebufferID,
 	rbo: RenderbufferID,
@@ -46,7 +62,14 @@ impl Canvas {
 
 			gl.bind_renderbuffer(glow::RENDERBUFFER, None);
 
+			let handle = CanvasHandle {
+				gl: gl.clone(),
+				fbo: id,
+				rbo: rbo,
+			};
+
 			let fbuf = Self {
+				handle: Rc::new(handle),
 				gl: gl,
 				id: id,
 				tex: tex,
@@ -121,28 +144,7 @@ impl Canvas {
 
 	/// capture content to an [`Image`](../img/struct.Image.html)
 	pub fn capture(&self) -> Result<img::Image> {
-		return Ok(self.tex.capture()?.flip_v());
-	}
-
-	/// resize canvas
-	pub fn resize(&mut self, ctx: &Gfx, w: i32, h: i32) -> Result<()> {
-
-		let new = Self::new(ctx, w, h)?;
-		let old = std::mem::replace(self, new);
-
-		old.free();
-
-		return Ok(());
-
-	}
-
-	/// free memory
-	pub fn free(self) {
-		unsafe {
-			self.tex.free();
-			self.gl.delete_framebuffer(self.id);
-			self.gl.delete_renderbuffer(self.rbo);
-		}
+		return self.tex.capture();
 	}
 
 }
