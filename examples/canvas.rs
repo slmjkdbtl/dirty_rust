@@ -44,7 +44,6 @@ impl State for Game {
 			KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
-					Key::Space => self.canvas.capture()?.save("test.png")?,
 					_ => {},
 				}
 			},

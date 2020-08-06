@@ -5,28 +5,12 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
-struct CanvasHandle {
-	gl: std::rc::Rc<glow::Context>,
-	fbo: FramebufferID,
-	rbo: RenderbufferID,
-}
-
-impl Drop for CanvasHandle {
-	fn drop(&mut self) {
-		unsafe {
-			self.gl.delete_renderbuffer(self.rbo);
-			self.gl.delete_framebuffer(self.fbo);
-		}
-	}
-}
-
 /// Off-screen Rendering Canvas
 #[derive(Clone)]
 pub struct Canvas {
-	handle: Rc<CanvasHandle>,
 	gl: Rc<glow::Context>,
-	id: FramebufferID,
-	rbo: RenderbufferID,
+	fbo: Rc<FramebufferHandle>,
+	rbo: Rc<RenderbufferHandle>,
 	tex: Texture,
 	width: i32,
 	height: i32,
@@ -44,14 +28,14 @@ impl Canvas {
 		unsafe {
 
 			let gl = ctx.gl().clone();
-			let id = gl.create_framebuffer()?;
+			let fbo = FramebufferHandle::new(gl.clone())?;
 
 			let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
 			let tex = Texture::from_raw(ctx, tw, th, &pixels)?;
 
-			let rbo = gl.create_renderbuffer()?;
+			let rbo = RenderbufferHandle::new(gl.clone())?;
 
-			gl.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo));
+			gl.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo.id()));
 
 			gl.renderbuffer_storage(
 				glow::RENDERBUFFER,
@@ -62,18 +46,11 @@ impl Canvas {
 
 			gl.bind_renderbuffer(glow::RENDERBUFFER, None);
 
-			let handle = CanvasHandle {
-				gl: gl.clone(),
-				fbo: id,
-				rbo: rbo,
-			};
-
 			let fbuf = Self {
-				handle: Rc::new(handle),
+				fbo: Rc::new(fbo),
+				rbo: Rc::new(rbo),
 				gl: gl,
-				id: id,
 				tex: tex,
-				rbo: rbo,
 				width: w,
 				height: h,
 			};
@@ -96,7 +73,7 @@ impl Canvas {
 				glow::FRAMEBUFFER,
 				glow::DEPTH_STENCIL_ATTACHMENT,
 				glow::RENDERBUFFER,
-				Some(rbo),
+				Some(fbuf.rbo.id()),
 			);
 
 			if fbuf.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
@@ -111,13 +88,9 @@ impl Canvas {
 
 	}
 
-	pub(super) fn id(&self) -> FramebufferID {
-		return self.id;
-	}
-
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.id));
+			self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.fbo.id()));
 		}
 	}
 
@@ -144,14 +117,14 @@ impl Canvas {
 
 	/// capture content to an [`Image`](../img/struct.Image.html)
 	pub fn capture(&self) -> Result<img::Image> {
-		return self.tex.capture();
+		return Ok(self.tex.capture()?.flip_v());
 	}
 
 }
 
 impl PartialEq for Canvas {
 	fn eq(&self, other: &Self) -> bool {
-		return self.id == other.id;
+		return self.fbo == other.fbo && self.rbo == other.rbo;
 	}
 }
 

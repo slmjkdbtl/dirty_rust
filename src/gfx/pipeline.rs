@@ -9,24 +9,10 @@ use glow::HasContext;
 use super::*;
 use crate::Result;
 
-struct ProgramHandle {
-	gl: std::rc::Rc<glow::Context>,
-	id: ProgramID,
-}
-
-impl Drop for ProgramHandle {
-	fn drop(&mut self) {
-		unsafe {
-			self.gl.delete_program(self.id);
-		}
-	}
-}
-
 #[derive(Clone)]
 pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
 	handle: Rc<ProgramHandle>,
 	gl: Rc<glow::Context>,
-	program_id: ProgramID,
 	attrs: VertexAttrGroup,
 	_vertex_layout: PhantomData<V>,
 	_uniform_layout: PhantomData<U>,
@@ -39,13 +25,13 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 		unsafe {
 
 			let gl = ctx.gl().clone();
-			let program_id = gl.create_program()?;
+			let handle = ProgramHandle::new(gl.clone())?;
 
 			let vert_id = gl.create_shader(ShaderType::Vertex.to_glow())?;
 
 			gl.shader_source(vert_id, vert_src);
 			gl.compile_shader(vert_id);
-			gl.attach_shader(program_id, vert_id);
+			gl.attach_shader(handle.id(), vert_id);
 
 			if !gl.get_shader_compile_status(vert_id) {
 				return Err(format!("vert error: {}", gl.get_shader_info_log(vert_id).trim()));
@@ -55,31 +41,25 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			gl.shader_source(frag_id, frag_src);
 			gl.compile_shader(frag_id);
-			gl.attach_shader(program_id, frag_id);
+			gl.attach_shader(handle.id(), frag_id);
 
 			if !gl.get_shader_compile_status(frag_id) {
 				return Err(format!("frag error: {}", gl.get_shader_info_log(frag_id).trim()));
 			}
 
-			gl.link_program(program_id);
+			gl.link_program(handle.id());
 
-			if !gl.get_program_link_status(program_id) {
-				return Err(format!("glsl error: {}", gl.get_program_info_log(program_id).trim()));
+			if !gl.get_program_link_status(handle.id()) {
+				return Err(format!("glsl error: {}", gl.get_program_info_log(handle.id()).trim()));
 			}
 
 			gl.delete_shader(vert_id);
 			gl.delete_shader(frag_id);
 
-			let handle = ProgramHandle {
-				gl: gl.clone(),
-				id: program_id,
-			};
-
 			let program = Self {
 				gl: gl,
 				handle: Rc::new(handle),
 				attrs: V::attrs(),
-				program_id: program_id,
 				_vertex_layout: PhantomData,
 				_uniform_layout: PhantomData,
 			};
@@ -96,11 +76,11 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			use UniformValue::*;
 
-			self.gl.use_program(Some(self.program_id));
+			self.gl.use_program(Some(self.handle.id()));
 
 			for (name, value) in uniform.values() {
 
-				let loc = self.gl.get_uniform_location(self.program_id, name);
+				let loc = self.gl.get_uniform_location(self.handle.id(), name);
 
 				if loc.is_some() {
 					match value.into_uniform() {
@@ -136,12 +116,12 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			let textures = uniform.textures();
 
-			self.gl.use_program(Some(self.program_id));
+			self.gl.use_program(Some(self.handle.id()));
 			vbuf.bind();
 
 			for attr in iter_attrs(&self.attrs) {
 
-				if let Some(index) = self.gl.get_attrib_location(self.program_id, &attr.name) {
+				if let Some(index) = self.gl.get_attrib_location(self.handle.id(), &attr.name) {
 
 					self.gl.vertex_attrib_pointer_f32(
 						index as u32,
@@ -189,7 +169,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 impl<V: VertexLayout, U: UniformLayout> PartialEq for Pipeline<V, U> {
 	fn eq(&self, other: &Self) -> bool {
-		return self.program_id == other.program_id;
+		return self.handle == other.handle;
 	}
 }
 

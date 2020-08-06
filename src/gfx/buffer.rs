@@ -65,24 +65,10 @@ pub(super) trait VertexLayout: Clone {
 	fn attrs() -> VertexAttrGroup;
 }
 
-struct BufferHandle {
-	gl: std::rc::Rc<glow::Context>,
-	id: BufferID,
-}
-
-impl Drop for BufferHandle {
-	fn drop(&mut self) {
-		unsafe {
-			self.gl.delete_buffer(self.id);
-		}
-	}
-}
-
 #[derive(Clone)]
 pub(super) struct VertexBuffer<V: VertexLayout> {
 	handle: Rc<BufferHandle>,
 	gl: Rc<glow::Context>,
-	id: BufferID,
 	_layout: PhantomData<V>,
 }
 
@@ -93,17 +79,11 @@ impl<V: VertexLayout> VertexBuffer<V> {
 		unsafe {
 
 			let gl = ctx.gl().clone();
-			let id = gl.create_buffer()?;
-
-			let handle = BufferHandle {
-				id: id,
-				gl: gl.clone(),
-			};
+			let handle = BufferHandle::new(gl.clone())?;
 
 			let buf = Self {
 				handle: Rc::new(handle),
 				gl: gl,
-				id: id,
 				_layout: PhantomData,
 			};
 
@@ -131,13 +111,9 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	}
 
-	pub(super) fn id(&self) -> BufferID {
-		return self.id;
-	}
-
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.id));
+			self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.handle.id()));
 		}
 	}
 
@@ -172,7 +148,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 impl<V: VertexLayout> PartialEq for VertexBuffer<V> {
 	fn eq(&self, other: &Self) -> bool {
-		return self.id == other.id;
+		return self.handle == other.handle;
 	}
 }
 
@@ -180,7 +156,6 @@ impl<V: VertexLayout> PartialEq for VertexBuffer<V> {
 pub(super) struct IndexBuffer {
 	handle: Rc<BufferHandle>,
 	gl: Rc<glow::Context>,
-	id: BufferID,
 }
 
 impl IndexBuffer {
@@ -190,17 +165,11 @@ impl IndexBuffer {
 		unsafe {
 
 			let gl = ctx.gl().clone();
-			let id = gl.create_buffer()?;
-
-			let handle = BufferHandle {
-				id: id,
-				gl: gl.clone(),
-			};
+			let handle = BufferHandle::new(gl.clone())?;
 
 			let buf = Self {
 				handle: Rc::new(handle),
-				gl,
-				id,
+				gl: gl,
 			};
 
 			buf.bind();
@@ -227,13 +196,9 @@ impl IndexBuffer {
 
 	}
 
-	pub(super) fn id(&self) -> BufferID {
-		return self.id;
-	}
-
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.id));
+			self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.handle.id()));
 		}
 	}
 
@@ -268,7 +233,7 @@ impl IndexBuffer {
 
 impl PartialEq for IndexBuffer {
 	fn eq(&self, other: &Self) -> bool {
-		return self.id == other.id;
+		return self.handle == other.handle;
 	}
 }
 

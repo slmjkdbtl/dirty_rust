@@ -5,25 +5,11 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
-struct TextureHandle {
-	gl: std::rc::Rc<glow::Context>,
-	id: TextureID,
-}
-
-impl Drop for TextureHandle {
-	fn drop(&mut self) {
-		unsafe {
-			self.gl.delete_texture(self.id);
-		}
-	}
-}
-
 /// 2D Texture
 #[derive(Clone)]
 pub struct Texture {
 	handle: Rc<TextureHandle>,
 	gl: Rc<glow::Context>,
-	id: TextureID,
 	width: i32,
 	height: i32,
 }
@@ -36,17 +22,11 @@ impl Texture {
 		unsafe {
 
 			let gl = ctx.gl().clone();
-			let id = gl.create_texture()?;
-
-			let handle = TextureHandle {
-				id: id,
-				gl: gl.clone(),
-			};
+			let handle = TextureHandle::new(gl.clone())?;
 
 			let tex = Self {
 				handle: Rc::new(handle),
 				gl: gl,
-				id: id,
 				width: w,
 				height: h,
 			};
@@ -147,7 +127,7 @@ impl Texture {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_texture(glow::TEXTURE_2D, Some(self.id));
+			self.gl.bind_texture(glow::TEXTURE_2D, Some(self.handle.id()));
 		}
 	}
 
@@ -222,14 +202,14 @@ impl Texture {
 	}
 
 	pub(super) fn id(&self) -> TextureID {
-		return self.id;
+		return self.handle.id();
 	}
 
 }
 
 impl PartialEq for Texture {
 	fn eq(&self, other: &Self) -> bool {
-		return self.id == other.id;
+		return self.handle == other.handle;
 	}
 }
 
