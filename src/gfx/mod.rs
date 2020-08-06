@@ -187,9 +187,6 @@ use crate::*;
 use math::*;
 use window::*;
 
-pub(self) type FramebufferID = <glow::Context as HasContext>::Framebuffer;
-pub(self) type RenderbufferID = <glow::Context as HasContext>::Renderbuffer;
-
 const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
 const DEFAULT_FAR: f32 = 4096.0;
@@ -250,24 +247,24 @@ impl Gfx {
 
 		unsafe {
 
-			gl.enable(Capability::Blend.to_glow());
-			gl.enable(Capability::DepthTest.to_glow());
-			gl.blend_func(BlendFac::SrcAlpha.to_glow(), BlendFac::OneMinusSrcAlpha.to_glow());
-			gl.depth_func(Cmp::LessOrEqual.to_glow());
+			gl.enable(Capability::Blend.as_glow());
+			gl.enable(Capability::DepthTest.as_glow());
+			gl.blend_func(BlendFac::SrcAlpha.as_glow(), BlendFac::OneMinusSrcAlpha.as_glow());
+			gl.depth_func(Cmp::LessOrEqual.as_glow());
 
 			// TODO: cull face doesn't work with some of the default geoms
 			if conf.cull_face {
-				gl.enable(Capability::CullFace.to_glow());
-				gl.cull_face(Face::Back.to_glow());
-				gl.front_face(CullMode::CounterClockwise.to_glow());
+				gl.enable(Capability::CullFace.as_glow());
+				gl.cull_face(Face::Back.as_glow());
+				gl.front_face(CullMode::CounterClockwise.as_glow());
 			}
 
 			let cc = conf.clear_color;
 
 			gl.clear_color(cc.r, cc.g, cc.b, cc.a);
-			gl.clear(Surface::Color.to_glow());
-			gl.clear(Surface::Depth.to_glow());
-			gl.clear(Surface::Stencil.to_glow());
+			gl.clear(Surface::Color.as_glow());
+			gl.clear(Surface::Depth.as_glow());
+			gl.clear(Surface::Stencil.as_glow());
 
 		}
 
@@ -329,9 +326,9 @@ impl Gfx {
 		self.flush();
 
 		unsafe {
-			self.gl.clear(Surface::Color.to_glow());
-			self.gl.clear(Surface::Depth.to_glow());
-			self.gl.clear(Surface::Stencil.to_glow());
+			self.gl.clear(Surface::Color.as_glow());
+			self.gl.clear(Surface::Depth.as_glow());
+			self.gl.clear(Surface::Stencil.as_glow());
 		}
 
 	}
@@ -342,7 +339,7 @@ impl Gfx {
 		self.flush();
 
 		unsafe {
-			self.gl.clear(s.to_glow());
+			self.gl.clear(s.as_glow());
 		}
 
 	}
@@ -478,22 +475,22 @@ impl Gfx {
 		unsafe {
 
 			self.flush();
-			self.gl.enable(Capability::StencilTest.to_glow());
-			self.gl.clear(Surface::Stencil.to_glow());
+			self.gl.enable(Capability::StencilTest.as_glow());
+			self.gl.clear(Surface::Stencil.as_glow());
 
 			// 1
-			self.gl.stencil_func(s1.cmp.to_glow(), 1, 0xff);
-			self.gl.stencil_op(s1.sfail.to_glow(), s1.dpfail.to_glow(), s1.dppass.to_glow());
+			self.gl.stencil_func(s1.cmp.as_glow(), 1, 0xff);
+			self.gl.stencil_op(s1.sfail.as_glow(), s1.dpfail.as_glow(), s1.dppass.as_glow());
 			f1(self)?;
 			self.flush();
 
 			// 2
-			self.gl.stencil_func(s2.cmp.to_glow(), 1, 0xff);
-			self.gl.stencil_op(s2.sfail.to_glow(), s2.dpfail.to_glow(), s2.dppass.to_glow());
+			self.gl.stencil_func(s2.cmp.as_glow(), 1, 0xff);
+			self.gl.stencil_op(s2.sfail.as_glow(), s2.dpfail.as_glow(), s2.dppass.as_glow());
 			f2(self)?;
 			self.flush();
 
-			self.gl.disable(Capability::StencilTest.to_glow());
+			self.gl.disable(Capability::StencilTest.as_glow());
 
 		}
 
@@ -555,13 +552,13 @@ impl Gfx {
 		unsafe {
 
 			self.flush();
-			self.gl.enable(Capability::ScissorTest.to_glow());
+			self.gl.enable(Capability::ScissorTest.as_glow());
 			self.gl.scissor(x as i32, y as i32, w as i32, h as i32);
 			self.push_t(mat4!().t2(p1), |gfx| {
 				return f(gfx);
 			})?;
 			self.flush();
-			self.gl.disable(Capability::ScissorTest.to_glow());
+			self.gl.disable(Capability::ScissorTest.as_glow());
 
 		}
 
@@ -576,15 +573,15 @@ impl Gfx {
 		f: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
-		let (dsrc, ddest) = Blend::Alpha.to_glow();
-		let (src, dest) = b.to_glow();
+		let (dsrc, ddest) = Blend::Alpha.as_glow();
+		let (src, dest) = b.as_glow();
 
 		unsafe {
 			self.flush();
-			self.gl.blend_func(src.to_glow(), dest.to_glow());
+			self.gl.blend_func(src.as_glow(), dest.as_glow());
 			f(self)?;
 			self.flush();
-			self.gl.blend_func(dsrc.to_glow(), ddest.to_glow());
+			self.gl.blend_func(dsrc.as_glow(), ddest.as_glow());
 		}
 
 		return Ok(());
@@ -647,10 +644,10 @@ impl Gfx {
 
 		unsafe {
 			self.flush();
-			self.gl.disable(Capability::DepthTest.to_glow());
+			self.gl.disable(Capability::DepthTest.as_glow());
 			f(self)?;
 			self.flush();
-			self.gl.enable(Capability::DepthTest.to_glow());
+			self.gl.enable(Capability::DepthTest.as_glow());
 		}
 
 		return Ok(());

@@ -14,7 +14,7 @@ macro_rules! bind_enum {
 		}
 
 		impl $name {
-			pub(super) fn to_glow(&self) -> $type {
+			pub(super) fn as_glow(&self) -> $type {
 				return match self {
 					$($name::$member => $dest,)+
 				};
@@ -147,7 +147,7 @@ pub enum Primitive {
 
 impl Primitive {
 
-	pub(super) fn to_glow(&self) -> u32 {
+	pub(super) fn as_glow(&self) -> u32 {
 		return match self {
 			Primitive::Point(_) => glow::POINTS,
 			Primitive::Line(_) => glow::LINES,
@@ -176,7 +176,7 @@ pub enum Blend {
 }
 
 impl Blend {
-	pub(super) fn to_glow(&self) -> (BlendFac, BlendFac) {
+	pub(super) fn as_glow(&self) -> (BlendFac, BlendFac) {
 		return match self {
 			Blend::Alpha => (BlendFac::SrcAlpha, BlendFac::OneMinusSrcAlpha),
 			Blend::Add => (BlendFac::SrcAlpha, BlendFac::DestAlpha),

@@ -18,8 +18,13 @@ pub struct Canvas {
 
 impl Canvas {
 
-	/// create a new canvas with width & height
+	/// create a new canvas with default conf
 	pub fn new(ctx: &Gfx, w: i32, h: i32) -> Result<Self> {
+		return Self::new_with_conf(ctx, w, h, TextureConf::default());
+	}
+
+	/// create a new canvas
+	pub fn new_with_conf(ctx: &Gfx, w: i32, h: i32, conf: TextureConf) -> Result<Self> {
 
 		let dpi = ctx.dpi();
 		let tw = (w as f32 * dpi) as i32;
@@ -31,7 +36,7 @@ impl Canvas {
 			let fbo = FramebufferHandle::new(gl.clone())?;
 
 			let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
-			let tex = Texture::from_raw(ctx, tw, th, &pixels)?;
+			let tex = Texture::from_raw_with_conf(ctx, tw, th, &pixels, conf)?;
 
 			let rbo = RenderbufferHandle::new(gl.clone())?;
 
@@ -57,9 +62,9 @@ impl Canvas {
 
 			fbuf.bind();
 
-			fbuf.gl.clear(Surface::Color.to_glow());
-			fbuf.gl.clear(Surface::Depth.to_glow());
-			fbuf.gl.clear(Surface::Stencil.to_glow());
+			fbuf.gl.clear(Surface::Color.as_glow());
+			fbuf.gl.clear(Surface::Depth.as_glow());
+			fbuf.gl.clear(Surface::Stencil.as_glow());
 
 			fbuf.gl.framebuffer_texture_2d(
 				glow::FRAMEBUFFER,

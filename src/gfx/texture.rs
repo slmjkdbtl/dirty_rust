@@ -5,6 +5,25 @@ use glow::HasContext;
 use crate::*;
 use gfx::*;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TextureConf {
+	pub min_filter: FilterMode,
+	pub mag_filter: FilterMode,
+	pub wrap_s: WrapMode,
+	pub wrap_t: WrapMode,
+}
+
+impl Default for TextureConf {
+	fn default() -> Self {
+		return Self {
+			min_filter: FilterMode::Nearest,
+			mag_filter: FilterMode::Nearest,
+			wrap_s: WrapMode::ClampToEdge,
+			wrap_t: WrapMode::ClampToEdge,
+		};
+	}
+}
+
 /// 2D Texture
 #[derive(Clone)]
 pub struct Texture {
@@ -16,8 +35,13 @@ pub struct Texture {
 
 impl Texture {
 
-	/// create a new empty texture with width & height
+	/// create a new empty texture with default conf
 	pub fn new(ctx: &impl GLCtx, w: i32, h: i32) -> Result<Self> {
+		return Self::new_with_conf(ctx, w, h, TextureConf::default());
+	}
+
+	/// create a new empty texture
+	pub fn new_with_conf(ctx: &impl GLCtx, w: i32, h: i32, conf: TextureConf) -> Result<Self> {
 
 		unsafe {
 
@@ -45,10 +69,31 @@ impl Texture {
 				None,
 			);
 
-			tex.unbind();
+			tex.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_MIN_FILTER,
+				conf.min_filter.as_glow(),
+			);
 
-			tex.set_filter(FilterMode::Nearest);
-			tex.set_wrap(WrapMode::ClampToEdge);
+			tex.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_MAG_FILTER,
+				conf.mag_filter.as_glow(),
+			);
+
+			tex.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_WRAP_S,
+				conf.wrap_s.as_glow(),
+			);
+
+			tex.gl.tex_parameter_i32(
+				glow::TEXTURE_2D,
+				glow::TEXTURE_WRAP_T,
+				conf.wrap_t.as_glow(),
+			);
+
+			tex.unbind();
 
 			return Ok(tex);
 
@@ -56,73 +101,33 @@ impl Texture {
 
 	}
 
-	/// create a texture from raw pixels
-	pub fn from_raw(ctx: &impl GLCtx, width: i32, height: i32, data: &[u8]) -> Result<Self> {
-
-		let tex = Self::new(ctx, width, height)?;
+	pub fn from_raw_with_conf(ctx: &impl GLCtx, width: i32, height: i32, data: &[u8], conf: TextureConf) -> Result<Self> {
+		let tex = Self::new_with_conf(ctx, width, height, conf)?;
 		tex.data(data);
 		return Ok(tex);
+	}
 
+	/// create a texture from raw pixels
+	pub fn from_raw(ctx: &impl GLCtx, width: i32, height: i32, data: &[u8]) -> Result<Self> {
+		return Self::from_raw_with_conf(ctx, width, height, data, TextureConf::default());
+	}
+
+	pub fn from_img_with_conf(ctx: &impl GLCtx, img: img::Image, conf: TextureConf) -> Result<Self> {
+		return Self::from_raw_with_conf(ctx, img.width(), img.height(), &img.into_raw(), conf);
 	}
 
 	/// create a texture from an [`Image`](../img/struct.Image.html)
 	pub fn from_img(ctx: &impl GLCtx, img: img::Image) -> Result<Self> {
-		return Self::from_raw(ctx, img.width(), img.height(), &img.into_raw());
+		return Self::from_img_with_conf(ctx, img, TextureConf::default());
+	}
+
+	pub fn from_bytes_with_conf(ctx: &impl GLCtx, data: &[u8], conf: TextureConf) -> Result<Self> {
+		return Self::from_img_with_conf(ctx, img::Image::from_bytes(data)?, conf);
 	}
 
 	/// create a texture from bytes read from an image file
 	pub fn from_bytes(ctx: &impl GLCtx, data: &[u8]) -> Result<Self> {
-		return Self::from_img(ctx, img::Image::from_bytes(data)?);
-	}
-
-	/// set min/max filter mode
-	pub fn set_filter(&self, f: FilterMode) {
-
-		unsafe {
-
-			self.bind();
-
-			self.gl.tex_parameter_i32(
-				glow::TEXTURE_2D,
-				glow::TEXTURE_MIN_FILTER,
-				f.to_glow(),
-			);
-
-			self.gl.tex_parameter_i32(
-				glow::TEXTURE_2D,
-				glow::TEXTURE_MAG_FILTER,
-				f.to_glow(),
-			);
-
-			self.unbind();
-
-		}
-
-	}
-
-	/// set wrap mode
-	pub fn set_wrap(&self, w: WrapMode) {
-
-		unsafe {
-
-			self.bind();
-
-			self.gl.tex_parameter_i32(
-				glow::TEXTURE_2D,
-				glow::TEXTURE_WRAP_S,
-				w.to_glow(),
-			);
-
-			self.gl.tex_parameter_i32(
-				glow::TEXTURE_2D,
-				glow::TEXTURE_WRAP_T,
-				w.to_glow(),
-			);
-
-			self.unbind();
-
-		}
-
+		return Self::from_bytes_with_conf(ctx, data, TextureConf::default());
 	}
 
 	pub(super) fn bind(&self) {

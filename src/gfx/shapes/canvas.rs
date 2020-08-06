@@ -56,11 +56,11 @@ impl<'a> Drawable for Canvas<'a> {
 			.flip(gfx::Flip::Y);
 
 		if let Some(w) = self.width {
-			sprite = sprite.width(w);
+			sprite = sprite.width(w * ctx.dpi());
 		}
 
 		if let Some(h) = self.height {
-			sprite = sprite.height(h);
+			sprite = sprite.height(h * ctx.dpi());
 		}
 
 		if let Some(o) = self.offset {
