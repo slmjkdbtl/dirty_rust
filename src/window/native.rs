@@ -57,16 +57,6 @@ impl Window {
 				.with_fullscreen(Some(glutin::window::Fullscreen::Borderless(event_loop.primary_monitor())));
 		}
 
-		#[cfg(target_os = "macos")] {
-
-			use glutin::platform::macos::WindowBuilderExtMacOS;
-
-			window_builder = window_builder
-				.with_disallow_hidpi(!conf.high_dpi)
-				;
-
-		}
-
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
 			.with_gl(glutin::GlRequest::GlThenGles {

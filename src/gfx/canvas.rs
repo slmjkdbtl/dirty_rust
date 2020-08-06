@@ -121,7 +121,7 @@ impl Canvas {
 
 	/// capture content to an [`Image`](../img/struct.Image.html)
 	pub fn capture(&self) -> Result<img::Image> {
-		return self.tex.capture();
+		return Ok(self.tex.capture()?.flip_v());
 	}
 
 	/// resize canvas

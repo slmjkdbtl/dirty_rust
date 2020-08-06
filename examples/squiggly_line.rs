@@ -77,7 +77,7 @@ impl Squiggly {
 		for (i, frame) in self.frames.iter().enumerate() {
 			let off = vec2!(sz / 2, 0) +
 					  vec2!(-sz * (N_FRAMES as isize) / 2, 0) +
-					  vec2!((i as isize) * sz as isize * gfx.dpi() as isize, 0);
+					  vec2!((i as isize) * sz as isize, 0);
 			frame.render(gfx, off)?;
 		}
 		Ok(())

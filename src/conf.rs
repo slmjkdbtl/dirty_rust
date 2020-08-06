@@ -16,7 +16,6 @@ pub struct Conf {
 	pub width: i32,
 	pub height: i32,
 	pub title: String,
-	pub high_dpi: bool,
 	pub resizable: bool,
 	pub fullscreen: bool,
 	pub always_on_top: bool,
@@ -51,7 +50,6 @@ impl Default for Conf {
 			width: 640,
 			height: 480,
 			title: String::new(),
-			high_dpi: true,
 			resizable: false,
 			fullscreen: false,
 			always_on_top: false,
@@ -89,11 +87,6 @@ impl Launcher {
 
 	pub fn title(mut self, t: &str) -> Self {
 		self.conf.title = t.to_owned();
-		return self;
-	}
-
-	pub fn high_dpi(mut self, b: bool) -> Self {
-		self.conf.high_dpi = b;
 		return self;
 	}
 
