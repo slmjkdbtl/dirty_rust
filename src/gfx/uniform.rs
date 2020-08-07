@@ -1,7 +1,6 @@
 // wengwengweng
 
-use crate::math::*;
-use super::Texture;
+use super::*;
 
 pub type UniformValues<'a> = Vec<(&'static str, &'a dyn IntoUniformValue)>;
 

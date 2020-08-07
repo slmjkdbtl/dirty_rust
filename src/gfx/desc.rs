@@ -1,10 +1,6 @@
 // wengwengweng
 
-use serde::Serialize;
-use serde::Deserialize;
-
-use crate::*;
-use gfx::*;
+use super::*;
 
 /// Default Vertex Type
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

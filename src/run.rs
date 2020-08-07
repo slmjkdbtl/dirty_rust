@@ -9,7 +9,6 @@ pub struct Ctx<'a> {
 	pub window: &'a mut window::Window,
 	pub gfx: &'a mut gfx::Gfx,
 	pub app: &'a mut app::App,
-	#[cfg(not(ios))]
 	pub audio: &'a mut audio::Audio,
 }
 
@@ -57,7 +56,6 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 	let mut window = window::Window::new(&conf)?;
 	let mut gfx = gfx::Gfx::new(&window, &conf)?;
 	let mut app = app::App::new(&conf);
-	#[cfg(not(ios))]
 	let mut audio = audio::Audio::new(&conf)?;
 
 	window.swap()?;
@@ -66,7 +64,6 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 		window: &mut window,
 		gfx: &mut gfx,
 		app: &mut app,
-		#[cfg(not(ios))]
 		audio: &mut audio,
 	};
 
@@ -78,7 +75,6 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 			window: &mut window,
 			gfx: &mut gfx,
 			app: &mut app,
-			#[cfg(not(ios))]
 			audio: &mut audio,
 		};
 

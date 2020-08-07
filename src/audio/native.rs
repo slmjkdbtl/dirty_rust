@@ -1,11 +1,7 @@
 // wengwengweng
 
-use std::sync::Mutex;
-use std::sync::Arc;
 use std::thread;
-
 use cpal::traits::*;
-
 use super::*;
 
 /// The Audio Context. See [mod-level doc](index.html) for usage.
@@ -111,16 +107,11 @@ impl Audio {
 		return &self.mixer;
 	}
 
-	pub fn play<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) -> Result<()> {
-
-		let mut mixer = self.mixer
+	pub fn play<S: Source + Send + 'static>(&mut self, src: Arc<Mutex<S>>) -> Result<Arc<Mutex<Control>>> {
+		return Ok(self.mixer
 			.lock()
-			.map_err(|_| format!("failed to get mixer"))?;
-
-		mixer.add(src);
-
-		return Ok(());
-
+			.map_err(|_| format!("failed to get mixer"))?
+			.add(src));
 	}
 
 }

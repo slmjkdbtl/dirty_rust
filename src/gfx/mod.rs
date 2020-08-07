@@ -179,13 +179,19 @@ pub mod shapes;
 pub mod fonts;
 pub mod shaders;
 
+use std::mem;
 use std::rc::Rc;
+use std::marker::PhantomData;
+use std::collections::HashMap;
 
 use glow::HasContext;
+use serde::Serialize;
+use serde::Deserialize;
 
 use crate::*;
 use math::*;
 use window::*;
+use geom::*;
 
 const DRAW_COUNT: usize = 65536;
 const DEFAULT_NEAR: f32 = -4096.0;
@@ -744,7 +750,7 @@ impl Gfx {
 		return self.height;
 	}
 
-	pub(crate) fn dpi(&self) -> f32 {
+	pub fn dpi(&self) -> f32 {
 		return self.dpi;
 	}
 

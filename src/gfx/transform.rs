@@ -1,10 +1,6 @@
 // wengwengweng
 
-use serde::Serialize;
-use serde::Deserialize;
-
-use crate::*;
-use math::*;
+use super::*;
 
 /// Transform Data for 3D Objects
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

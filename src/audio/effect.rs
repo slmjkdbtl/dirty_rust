@@ -1,9 +1,6 @@
 // wengwengweng
 
-use std::sync::Mutex;
-use std::sync::Arc;
 use std::f32::consts::PI;
-use std::time::Duration;
 use std::collections::VecDeque;
 
 use super::*;
@@ -13,19 +10,6 @@ pub trait Effect {
 	fn process(&mut self, _: Frame) -> Frame;
 	fn leftover(&mut self) -> Option<Frame> {
 		return None;
-	}
-}
-
-#[derive(Clone)]
-pub struct EffectChain {
-	effects: Vec<Arc<Mutex<dyn Effect>>>,
-}
-
-impl EffectChain {
-	pub fn new() -> Self {
-		return Self {
-			effects: vec![],
-		};
 	}
 }
 

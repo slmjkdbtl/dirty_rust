@@ -11,7 +11,6 @@ use crate::*;
 use math::*;
 use input::*;
 use window::*;
-use conf::CanvasRoot;
 
 // TODO: gamepad input
 
@@ -68,14 +67,14 @@ impl Window {
 		styles.insert("outline", "none".to_string());
 
 		match conf.canvas_root {
-			CanvasRoot::Body => {
+			conf::CanvasRoot::Body => {
 				document
 					.body()
 					.ok_or_else(|| format!("failed to get body"))?
 					.append_child(&canvas)
 					.map_err(|_| format!("failed to append canvas"))?;
 			},
-			CanvasRoot::Element(query) => {
+			conf::CanvasRoot::Element(query) => {
 				document
 					.query_selector(query)
 					.map_err(|_| format!("failed to get {}", query))?
@@ -185,7 +184,7 @@ impl Window {
 	}
 
 	/// get current dpi
-	pub(crate) fn dpi(&self) -> f32 {
+	pub fn dpi(&self) -> f32 {
 		return 1.0;
 	}
 

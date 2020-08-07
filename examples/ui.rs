@@ -20,7 +20,9 @@ impl State for Game {
 
 		use Event::*;
 
-		self.ui.event(d, &e);
+		if self.ui.event(d, &e)? {
+			return Ok(());
+		}
 
 		match e {
 			KeyPress(k) => {

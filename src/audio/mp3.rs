@@ -1,9 +1,5 @@
 // wengwengweng
 
-use std::io::Read;
-use std::io::Seek;
-use std::io::SeekFrom;
-
 use super::*;
 
 // TODO: puremp3 cannot decode mp3 with id3 tags

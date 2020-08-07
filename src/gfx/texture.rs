@@ -1,9 +1,6 @@
 // wengwengweng
 
-use glow::HasContext;
-
-use crate::*;
-use gfx::*;
+use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TextureConf {

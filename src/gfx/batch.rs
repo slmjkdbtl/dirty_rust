@@ -1,7 +1,6 @@
 // wengwengweng
 
 use super::*;
-use crate::Result;
 
 // TODO: take blending and stuff into account
 #[derive(Clone, PartialEq)]

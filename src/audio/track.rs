@@ -1,9 +1,5 @@
 // wengwengweng
 
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::io::Cursor;
-
 use super::*;
 
 /// Streamed Sound (mainly for music)

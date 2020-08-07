@@ -1,10 +1,6 @@
 // wengwengweng
 
-use std::marker::PhantomData;
-
-use crate::*;
-use gfx::*;
-use shaders::*;
+use super::*;
 
 /// Custom Shader. See [mod-level doc](index.html) for Usage.
 #[derive(Clone, PartialEq)]
@@ -19,7 +15,7 @@ impl<U: UniformLayout> Shader<U> {
 	pub fn from_frag(ctx: &impl GLCtx, frag: &str) -> Result<Self> {
 		return Self::from_vert_frag(
 			ctx,
-			DEFAULT_VERT,
+			shaders::DEFAULT_VERT,
 			&frag,
 		);
 	}
@@ -29,15 +25,15 @@ impl<U: UniformLayout> Shader<U> {
 		return Self::from_vert_frag(
 			ctx,
 			&vert,
-			DEFAULT_FRAG,
+			shaders::DEFAULT_FRAG,
 		);
 	}
 
 	/// create shader from both vertex and fragment code
 	pub fn from_vert_frag(ctx: &impl GLCtx, vert: &str, frag: &str) -> Result<Self> {
 
-		let vert_src = TEMPLATE_VERT.replace("{{user}}", vert);
-		let frag_src = TEMPLATE_FRAG.replace("{{user}}", frag);
+		let vert_src = shaders::TEMPLATE_VERT.replace("{{user}}", vert);
+		let frag_src = shaders::TEMPLATE_FRAG.replace("{{user}}", frag);
 		#[cfg(any(web, mobile))]
 		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
@@ -50,7 +46,7 @@ impl<U: UniformLayout> Shader<U> {
 
 	/// create default shader
 	pub fn default(ctx: &impl GLCtx) -> Result<Self> {
-		return Self::from_vert_frag(ctx, DEFAULT_VERT, DEFAULT_FRAG);
+		return Self::from_vert_frag(ctx, shaders::DEFAULT_VERT, shaders::DEFAULT_FRAG);
 	}
 
 	pub(super) fn pipeline(&self) -> &Pipeline<Vertex, Uniform> {

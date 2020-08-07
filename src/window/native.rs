@@ -177,7 +177,7 @@ impl Window {
 			.unwrap_or(vec2!(0));
 	}
 
-	pub(crate) fn dpi(&self) -> f32 {
+	pub fn dpi(&self) -> f32 {
 		return self.windowed_ctx.window().scale_factor() as f32;
 	}
 

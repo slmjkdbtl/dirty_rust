@@ -1,8 +1,6 @@
 // wengwengweng
 
-use crate::*;
-use geom::*;
-use gfx::*;
+use super::*;
 
 /// Describes Features of a Camera
 pub trait Camera {

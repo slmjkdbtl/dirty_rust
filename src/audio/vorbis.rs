@@ -1,8 +1,5 @@
 // wengwengweng
 
-use std::io::Read;
-use std::io::Seek;
-use std::io::SeekFrom;
 use std::vec;
 
 use lewton::inside_ogg::OggStreamReader;

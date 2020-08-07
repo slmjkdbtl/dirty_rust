@@ -23,10 +23,8 @@ impl State for Game {
 
 	fn event(&mut self, d: &mut Ctx, e: &Event) -> Result<()> {
 
-		use Event::*;
-
 		match e {
-			KeyPress(k) => {
+			Event::KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
 					_ => {},
@@ -77,7 +75,7 @@ the examples are under `examples/`, run them natively with
 $ cargo run --example (example_name)
 ```
 
-or go check out the built wasm examples [here](https://dirty.enemyspy.xyz/examples.html)
+or go check out the built wasm examples [here](https://dirty.enemyspy.xyz/examples)
 
 ## doc
 docs are hosted [here](https://dirty.enemyspy.xyz/doc/dirty/index.html), or you can `cargo doc` and generate yourself

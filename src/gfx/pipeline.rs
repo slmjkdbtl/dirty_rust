@@ -1,13 +1,6 @@
 // wengwengweng
 
-use std::mem;
-use std::rc::Rc;
-use std::marker::PhantomData;
-
-use glow::HasContext;
-
 use super::*;
-use crate::Result;
 
 #[derive(Clone)]
 pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {

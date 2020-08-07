@@ -1,8 +1,5 @@
 // wengwengweng
 
-use std::io::Read;
-use std::io::Seek;
-
 use super::*;
 
 pub(super) enum Decoder<R: Read + Seek> {

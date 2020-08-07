@@ -1,14 +1,10 @@
 // wengwengweng
 
-use std::sync::Mutex;
-use std::sync::Arc;
-use std::collections::HashMap;
-
 use super::*;
 
 pub(super) type SourceID = usize;
 
-pub(super) struct Control {
+pub struct Control {
 	pub volume: f32,
 	pub pan: Pan,
 	pub paused: bool,
