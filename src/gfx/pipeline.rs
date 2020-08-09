@@ -76,12 +76,13 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				let loc = self.gl.get_uniform_location(self.handle.id(), name);
 
 				if loc.is_some() {
-					match value.into_uniform() {
-						F1(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
-						F2(f) => self.gl.uniform_2_f32(loc.as_ref(), f[0], f[1]),
-						F3(f) => self.gl.uniform_3_f32(loc.as_ref(), f[0], f[1], f[2]),
-						F4(f) => self.gl.uniform_4_f32(loc.as_ref(), f[0], f[1], f[2], f[3]),
-						Mat4(a) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &a),
+					match value {
+						Float(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
+						Vec2(f) => self.gl.uniform_2_f32(loc.as_ref(), f.x, f.y),
+						Vec3(f) => self.gl.uniform_3_f32(loc.as_ref(), f.x, f.y, f.z),
+						Vec4(f) => self.gl.uniform_4_f32(loc.as_ref(), f.x, f.y, f.z, f.w),
+						Int(i) => self.gl.uniform_1_i32(loc.as_ref(), i),
+						Mat4(m) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &m.as_arr()),
 					}
 				}
 

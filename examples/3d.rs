@@ -17,11 +17,11 @@ struct Uniform {
 }
 
 impl UniformLayout for Uniform {
-	fn values(&self) -> UniformValues {
+	fn values(&self) -> Vec<(&'static str, UniformValue)> {
 		return vec![
-			("u_cam_pos", &self.cam_pos),
-			("u_fog_color", &self.fog_color),
-			("u_fog_level", &self.fog_level),
+			("u_cam_pos", UniformValue::Vec3(self.cam_pos)),
+			("u_fog_color", UniformValue::Vec4(self.fog_color.as_vec4())),
+			("u_fog_level", UniformValue::Float(self.fog_level)),
 		];
 	}
 }

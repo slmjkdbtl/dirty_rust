@@ -500,6 +500,10 @@ impl Color {
 		return vec3!(self.r, self.g, self.b);
 	}
 
+	pub fn as_vec4(&self) -> Vec4 {
+		return vec4!(self.r, self.g, self.b, self.a);
+	}
+
 	pub fn to_srgb(&self) -> Self {
 		return Self {
 			r: linear_to_srgb(self.r),

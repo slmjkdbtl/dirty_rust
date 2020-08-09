@@ -35,18 +35,18 @@ pub(super) struct Uniform {
 
 impl UniformLayout for Uniform {
 
-	fn values(&self) -> UniformValues {
+	fn values(&self) -> Vec<(&'static str, UniformValue)> {
 
-		let mut values: UniformValues = vec![
-			("u_proj", &self.proj),
-			("u_view", &self.view),
-			("u_model", &self.model),
-			("u_color", &self.color),
+		let mut values: Vec<(&'static str, UniformValue)> = vec![
+			("u_proj", UniformValue::Mat4(self.proj)),
+			("u_view", UniformValue::Mat4(self.view)),
+			("u_model", UniformValue::Mat4(self.model)),
+			("u_color", UniformValue::Vec4(self.color.as_vec4())),
 		];
 
 		if let Some(custom) = &self.custom {
 			for (name, v) in &custom.values {
-				values.push((name, v));
+				values.push((name, *v));
 			}
 		}
 
