@@ -24,7 +24,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			gl.shader_source(vert_id, vert_src);
 			gl.compile_shader(vert_id);
-			gl.attach_shader(handle.id(), vert_id);
 
 			if !gl.get_shader_compile_status(vert_id) {
 				return Err(format!("vert error: {}", gl.get_shader_info_log(vert_id).trim()));
@@ -34,10 +33,16 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			gl.shader_source(frag_id, frag_src);
 			gl.compile_shader(frag_id);
-			gl.attach_shader(handle.id(), frag_id);
 
 			if !gl.get_shader_compile_status(frag_id) {
 				return Err(format!("frag error: {}", gl.get_shader_info_log(frag_id).trim()));
+			}
+
+			gl.attach_shader(handle.id(), vert_id);
+			gl.attach_shader(handle.id(), frag_id);
+
+			for (i, (name, _)) in V::attrs().iter().enumerate() {
+				gl.bind_attrib_location(handle.id(), i as u32, name);
 			}
 
 			gl.link_program(handle.id());
@@ -63,7 +68,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	fn send(&self, uniform: &U) {
+	fn send_uniforms(&self, uniform: &U) {
 
 		unsafe {
 
@@ -71,6 +76,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.gl.use_program(Some(self.handle.id()));
 
+			// TODO: cache locations
 			for (name, value) in uniform.values() {
 
 				let loc = self.gl.get_uniform_location(self.handle.id(), name);
@@ -94,7 +100,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	// TODO: use RenderState
 	pub fn draw(
 		&self,
 		prim: Primitive,
@@ -106,29 +111,25 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 		unsafe {
 
-			self.send(&uniform);
+			self.send_uniforms(&uniform);
 
 			let textures = uniform.textures();
 
 			self.gl.use_program(Some(self.handle.id()));
 			vbuf.bind();
 
-			for attr in iter_attrs(&self.attrs) {
+			for (i, attr) in iter_attrs(&self.attrs).enumerate() {
 
-				if let Some(index) = self.gl.get_attrib_location(self.handle.id(), &attr.name) {
+				self.gl.vertex_attrib_pointer_f32(
+					i as u32,
+					attr.size,
+					glow::FLOAT,
+					false,
+					mem::size_of::<V>() as i32,
+					(attr.offset * mem::size_of::<f32>()) as i32,
+				);
 
-					self.gl.vertex_attrib_pointer_f32(
-						index as u32,
-						attr.size,
-						glow::FLOAT,
-						false,
-						mem::size_of::<V>() as i32,
-						(attr.offset * mem::size_of::<f32>()) as i32,
-					);
-
-					self.gl.enable_vertex_attrib_array(index as u32);
-
-				}
+				self.gl.enable_vertex_attrib_array(i as u32);
 
 			}
 

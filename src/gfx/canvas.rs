@@ -41,7 +41,7 @@ impl Canvas {
 
 			gl.renderbuffer_storage(
 				glow::RENDERBUFFER,
-				glow::DEPTH_STENCIL,
+				glow::DEPTH24_STENCIL8,
 				tw as i32,
 				th as i32,
 			);

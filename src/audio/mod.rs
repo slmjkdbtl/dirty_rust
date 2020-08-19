@@ -37,10 +37,8 @@ export!(track);
 #[cfg(not(web))]
 export!(sound);
 
-#[cfg(all(not(ios), not(web)))]
+#[cfg(not(web))]
 export!(native);
-#[cfg(all(ios, not(web)))]
-export!(dummy);
 #[cfg(web)]
 export!(web);
 

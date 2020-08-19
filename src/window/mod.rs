@@ -6,8 +6,6 @@
 
 #[cfg(not(web))]
 export!(native);
-// export!(nativeo);
-// export!(sdl);
 #[cfg(web)]
 export!(web);
 

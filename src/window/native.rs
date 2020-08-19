@@ -1,7 +1,5 @@
 // wengwengweng
 
-// https://github.com/rust-windowing/winit/issues/1418
-
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -518,7 +516,7 @@ impl Window {
 
 					WinitEvent::MainEventsCleared => {
 
-						// ugly workaround
+						// https://github.com/rust-windowing/winit/issues/1418
 						update = !update;
 
 						if update {

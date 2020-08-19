@@ -7,8 +7,8 @@ use super::*;
 #[repr(C)]
 pub struct Vertex {
 	pub pos: Vec3,
-	pub uv: Vec2,
 	pub normal: Vec3,
+	pub uv: Vec2,
 	pub color: Color,
 }
 
@@ -16,8 +16,8 @@ impl VertexLayout for Vertex {
 	fn attrs() -> VertexAttrGroup {
 		return &[
 			("a_pos", 3),
-			("a_uv", 2),
 			("a_normal", 3),
+			("a_uv", 2),
 			("a_color", 4),
 		];
 	}
