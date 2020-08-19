@@ -7,8 +7,8 @@ use super::*;
 pub struct Canvas {
 	gl: Rc<glow::Context>,
 	fbo: Rc<FramebufferHandle>,
-	rbo: Rc<RenderbufferHandle>,
-	tex: Texture,
+	color_tex: Texture,
+	depth_stencil_tex: Texture,
 	width: i32,
 	height: i32,
 }
@@ -33,50 +33,39 @@ impl Canvas {
 			let fbo = FramebufferHandle::new(gl.clone())?;
 
 			let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
-			let tex = Texture::from_raw_with_conf(ctx, tw, th, &pixels, conf)?;
-
-			let rbo = RenderbufferHandle::new(gl.clone())?;
-
-			gl.bind_renderbuffer(glow::RENDERBUFFER, Some(rbo.id()));
-
-			gl.renderbuffer_storage(
-				glow::RENDERBUFFER,
-				glow::DEPTH24_STENCIL8,
-				tw as i32,
-				th as i32,
-			);
-
-			gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+			let color_tex = Texture::from_raw_with_conf(ctx, tw, th, &pixels, conf)?;
+			let depth_stencil_tex = Texture::new_depth_stencil(ctx, tw, th)?;
 
 			let fbuf = Self {
 				fbo: Rc::new(fbo),
-				rbo: Rc::new(rbo),
 				gl: gl,
-				tex: tex,
+				color_tex: color_tex,
+				depth_stencil_tex: depth_stencil_tex,
 				width: w,
 				height: h,
 			};
 
 			fbuf.bind();
 
-			fbuf.gl.clear(Surface::Color.as_glow());
-			fbuf.gl.clear(Surface::Depth.as_glow());
-			fbuf.gl.clear(Surface::Stencil.as_glow());
-
 			fbuf.gl.framebuffer_texture_2d(
 				glow::FRAMEBUFFER,
 				glow::COLOR_ATTACHMENT0,
 				glow::TEXTURE_2D,
-				Some(fbuf.tex.id()),
+				Some(fbuf.color_tex.id()),
 				0,
 			);
 
-			fbuf.gl.framebuffer_renderbuffer(
+			fbuf.gl.framebuffer_texture_2d(
 				glow::FRAMEBUFFER,
 				glow::DEPTH_STENCIL_ATTACHMENT,
-				glow::RENDERBUFFER,
-				Some(fbuf.rbo.id()),
+				glow::TEXTURE_2D,
+				Some(fbuf.depth_stencil_tex.id()),
+				0,
 			);
+
+			fbuf.gl.clear(Surface::Color.as_glow());
+			fbuf.gl.clear(Surface::Depth.as_glow());
+			fbuf.gl.clear(Surface::Stencil.as_glow());
 
 			if fbuf.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
 				return Err(format!("failed to create framebuffer"));
@@ -114,19 +103,19 @@ impl Canvas {
 
 	/// get canvas texture
 	pub fn tex(&self) -> &Texture {
-		return &self.tex;
+		return &self.color_tex;
 	}
 
 	/// capture content to an [`Image`](../img/struct.Image.html)
 	pub fn capture(&self) -> Result<img::Image> {
-		return Ok(self.tex.capture()?.flip_v());
+		return Ok(self.color_tex.capture()?.flip_v());
 	}
 
 }
 
 impl PartialEq for Canvas {
 	fn eq(&self, other: &Self) -> bool {
-		return self.fbo == other.fbo && self.rbo == other.rbo;
+		return self.fbo == other.fbo;
 	}
 }
 

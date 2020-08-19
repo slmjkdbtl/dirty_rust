@@ -98,6 +98,42 @@ impl Texture {
 
 	}
 
+	pub(crate) fn new_depth_stencil(ctx: &impl GLCtx, w: i32, h: i32) -> Result<Self> {
+
+		unsafe {
+
+			let gl = ctx.gl().clone();
+			let handle = TextureHandle::new(gl.clone())?;
+
+			let tex = Self {
+				handle: Rc::new(handle),
+				gl: gl,
+				width: w,
+				height: h,
+			};
+
+			tex.bind();
+
+			tex.gl.tex_image_2d(
+				glow::TEXTURE_2D,
+				0,
+				glow::DEPTH24_STENCIL8 as i32,
+				w,
+				h,
+				0,
+				glow::DEPTH_STENCIL,
+				glow::UNSIGNED_INT_24_8,
+				None,
+			);
+
+			tex.unbind();
+
+			return Ok(tex);
+
+		}
+
+	}
+
 	pub fn from_raw_with_conf(ctx: &impl GLCtx, width: i32, height: i32, data: &[u8], conf: TextureConf) -> Result<Self> {
 		let tex = Self::new_with_conf(ctx, width, height, conf)?;
 		tex.data(data);
