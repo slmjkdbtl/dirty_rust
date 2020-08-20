@@ -76,6 +76,7 @@ bind_enum!(pub(super), Capability(u32) {
 	DepthTest => glow::DEPTH_TEST,
 	StencilTest => glow::STENCIL_TEST,
 	ScissorTest => glow::SCISSOR_TEST,
+	MultiSample => glow::MULTISAMPLE,
 });
 
 bind_enum!(pub(super), BlendFac(u32) {

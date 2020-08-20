@@ -2,44 +2,25 @@
 
 use super::*;
 
-pub type VertexAttrGroup = &'static[(&'static str, u8)];
+pub(super) fn bind_attrs<V: VertexLayout>(gl: &glow::Context) {
 
-pub(super) struct VertexAttrIter {
-	attrs: VertexAttrGroup,
-	cur_offset: usize,
-	cur_idx: usize,
-}
+	unsafe {
 
-pub(super) fn iter_attrs(attrs: VertexAttrGroup) -> VertexAttrIter {
-	return VertexAttrIter {
-		attrs: attrs,
-		cur_offset: 0,
-		cur_idx: 0,
-	};
-}
+		let mut offset = 0;
 
-impl Iterator for VertexAttrIter {
+		for (i, (name, size)) in V::attrs().into_iter().enumerate() {
 
-	type Item = VertexAttr;
+			gl.vertex_attrib_pointer_f32(
+				i as u32,
+				*size as i32,
+				glow::FLOAT,
+				false,
+				mem::size_of::<V>() as i32,
+				(offset * mem::size_of::<f32>()) as i32,
+			);
 
-	fn next(&mut self) -> Option<Self::Item> {
-
-		if let Some(data) = self.attrs.get(self.cur_idx) {
-
-			let attr = VertexAttr {
-				name: data.0,
-				size: data.1 as i32,
-				offset: self.cur_offset,
-			};
-
-			self.cur_offset += data.1 as usize;
-			self.cur_idx += 1;
-
-			return Some(attr);
-
-		} else {
-
-			return None;
+			gl.enable_vertex_attrib_array(i as u32);
+			offset += size;
 
 		}
 
@@ -47,15 +28,8 @@ impl Iterator for VertexAttrIter {
 
 }
 
-#[derive(Clone, Debug)]
-pub(super) struct VertexAttr {
-	pub name: &'static str,
-	pub size: i32,
-	pub offset: usize,
-}
-
 pub(super) trait VertexLayout: Clone {
-	fn attrs() -> VertexAttrGroup;
+	fn attrs() -> &'static[(&'static str, usize)];
 }
 
 #[derive(Clone)]

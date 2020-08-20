@@ -6,7 +6,6 @@ use super::*;
 pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
 	handle: Rc<ProgramHandle>,
 	gl: Rc<glow::Context>,
-	attrs: VertexAttrGroup,
 	_vertex_layout: PhantomData<V>,
 	_uniform_layout: PhantomData<U>,
 }
@@ -57,7 +56,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			let program = Self {
 				gl: gl,
 				handle: Rc::new(handle),
-				attrs: V::attrs(),
 				_vertex_layout: PhantomData,
 				_uniform_layout: PhantomData,
 			};
@@ -117,22 +115,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 			self.gl.use_program(Some(self.handle.id()));
 			vbuf.bind();
-
-			for (i, attr) in iter_attrs(&self.attrs).enumerate() {
-
-				self.gl.vertex_attrib_pointer_f32(
-					i as u32,
-					attr.size,
-					glow::FLOAT,
-					false,
-					mem::size_of::<V>() as i32,
-					(attr.offset * mem::size_of::<f32>()) as i32,
-				);
-
-				self.gl.enable_vertex_attrib_array(i as u32);
-
-			}
-
+			bind_attrs::<V>(&self.gl);
 			ibuf.bind();
 
 			for (i, tex) in textures.iter().enumerate() {

@@ -26,6 +26,7 @@ pub struct Conf {
 	pub cursor_locked: bool,
 	pub clear_color: Color,
 	pub cull_face: bool,
+	pub multi_sample: Option<u16>,
 	pub canvas_root: CanvasRoot,
 	pub default_font: Option<gfx::BitmapFontData>,
 }
@@ -60,6 +61,7 @@ impl Default for Conf {
 			cursor_locked: false,
 			clear_color: rgba!(0, 0, 0, 0),
 			cull_face: false,
+			multi_sample: None,
 			canvas_root: CanvasRoot::Body,
 			default_font: None,
 		};
@@ -132,6 +134,11 @@ impl Launcher {
 
 	pub fn cull_face(mut self, b: bool) -> Self {
 		self.conf.cull_face = b;
+		return self;
+	}
+
+	pub fn multi_sample(mut self, m: u16) -> Self {
+		self.conf.multi_sample = Some(m);
 		return self;
 	}
 

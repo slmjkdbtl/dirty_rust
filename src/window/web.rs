@@ -104,7 +104,7 @@ impl Window {
 
 		let mut config = web_sys::WebGlContextAttributes::new();
 
-		config.antialias(false);
+		config.antialias(conf.multi_sample.is_some());
 		config.depth(true);
 		config.stencil(true);
 

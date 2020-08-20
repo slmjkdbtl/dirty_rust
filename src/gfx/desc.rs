@@ -13,7 +13,7 @@ pub struct Vertex {
 }
 
 impl VertexLayout for Vertex {
-	fn attrs() -> VertexAttrGroup {
+	fn attrs() -> &'static[(&'static str, usize)] {
 		return &[
 			("a_pos", 3),
 			("a_normal", 3),

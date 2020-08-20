@@ -57,6 +57,7 @@ impl Window {
 
 		let ctx_builder = glutin::ContextBuilder::new()
 			.with_vsync(conf.vsync)
+			.with_multisampling(conf.multi_sample.unwrap_or(0))
 			.with_gl(glutin::GlRequest::GlThenGles {
 				opengl_version: (2, 1),
 				opengles_version: (2, 0),

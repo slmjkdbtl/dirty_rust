@@ -265,6 +265,10 @@ impl Gfx {
 				gl.front_face(CullMode::CounterClockwise.as_glow());
 			}
 
+			if conf.multi_sample.is_some() {
+				gl.enable(Capability::MultiSample.as_glow());
+			}
+
 			let cc = conf.clear_color;
 
 			gl.clear_color(cc.r, cc.g, cc.b, cc.a);
