@@ -34,11 +34,11 @@ build-web-all:
 
 run-site:
 	cd site; \
-		now dev
+		vc dev
 
 deploy-site:
 	cd site; \
-		now --prod
+		vc --prod
 
 test:
 	cargo test \

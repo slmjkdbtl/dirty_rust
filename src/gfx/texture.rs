@@ -98,7 +98,7 @@ impl Texture {
 
 	}
 
-	pub(crate) fn new_depth_stencil(ctx: &impl GLCtx, w: i32, h: i32) -> Result<Self> {
+	pub(super) fn new_depth_stencil(ctx: &impl GLCtx, w: i32, h: i32) -> Result<Self> {
 
 		unsafe {
 

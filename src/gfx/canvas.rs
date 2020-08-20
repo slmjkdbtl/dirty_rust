@@ -102,8 +102,13 @@ impl Canvas {
 	}
 
 	/// get canvas texture
-	pub fn tex(&self) -> &Texture {
+	pub fn color_tex(&self) -> &Texture {
 		return &self.color_tex;
+	}
+
+	/// get canvas texture
+	pub fn depth_stencil_tex(&self) -> &Texture {
+		return &self.depth_stencil_tex;
 	}
 
 	/// capture content to an [`Image`](../img/struct.Image.html)

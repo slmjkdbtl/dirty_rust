@@ -51,7 +51,7 @@ impl<'a> Drawable for Canvas<'a> {
 
 	fn draw(&self, ctx: &mut Gfx) -> Result<()> {
 
-		let mut sprite = sprite(&self.canvas.tex())
+		let mut sprite = sprite(&self.canvas.color_tex())
 			.color(self.color)
 			.flip(gfx::Flip::Y);
 
