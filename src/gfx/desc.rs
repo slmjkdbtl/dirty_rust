@@ -30,7 +30,7 @@ pub(super) struct Uniform {
 	pub model: Mat4,
 	pub color: Color,
 	pub tex: Texture,
-	pub custom: Option<UniformData>,
+	pub custom: Option<Vec<(&'static str, UniformValue)>>,
 }
 
 impl UniformLayout for Uniform {
@@ -42,24 +42,17 @@ impl UniformLayout for Uniform {
 			("u_view", UniformValue::Mat4(self.view)),
 			("u_model", UniformValue::Mat4(self.model)),
 			("u_color", UniformValue::Vec4(self.color.as_vec4())),
+			("u_tex", UniformValue::Texture(self.tex.clone())),
 		];
 
 		if let Some(custom) = &self.custom {
-			for (name, v) in &custom.values {
-				values.push((name, *v));
+			for (name, v) in custom {
+				values.push((name, v.clone()));
 			}
 		}
 
 		return values;
 
-	}
-
-	fn textures(&self) -> Vec<&Texture> {
-		let mut textures = vec![&self.tex];
-		if let Some(custom) = &self.custom {
-			textures.extend(custom.textures.iter());
-		}
-		return textures;
 	}
 
 }

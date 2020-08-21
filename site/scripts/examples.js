@@ -8,6 +8,7 @@ const list = [
 	"3d",
 	"canvas",
 	"input",
+	"displace",
 	"mask",
 	"spline",
 	"ui",

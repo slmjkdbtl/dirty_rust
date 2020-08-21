@@ -4,19 +4,15 @@ use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TextureConf {
-	pub min_filter: FilterMode,
-	pub mag_filter: FilterMode,
-	pub wrap_s: WrapMode,
-	pub wrap_t: WrapMode,
+	pub filter: FilterMode,
+	pub wrap: WrapMode,
 }
 
 impl Default for TextureConf {
 	fn default() -> Self {
 		return Self {
-			min_filter: FilterMode::Nearest,
-			mag_filter: FilterMode::Nearest,
-			wrap_s: WrapMode::ClampToEdge,
-			wrap_t: WrapMode::ClampToEdge,
+			filter: FilterMode::Nearest,
+			wrap: WrapMode::ClampToBorder,
 		};
 	}
 }
@@ -69,25 +65,25 @@ impl Texture {
 			tex.gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_MIN_FILTER,
-				conf.min_filter.as_glow(),
+				conf.filter.as_glow(),
 			);
 
 			tex.gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_MAG_FILTER,
-				conf.mag_filter.as_glow(),
+				conf.filter.as_glow(),
 			);
 
 			tex.gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_WRAP_S,
-				conf.wrap_s.as_glow(),
+				conf.wrap.as_glow(),
 			);
 
 			tex.gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_WRAP_T,
-				conf.wrap_t.as_glow(),
+				conf.wrap.as_glow(),
 			);
 
 			tex.unbind();

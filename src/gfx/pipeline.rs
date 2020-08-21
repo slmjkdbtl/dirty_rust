@@ -66,38 +66,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	}
 
-	fn send_uniforms(&self, uniform: &U) {
-
-		unsafe {
-
-			use UniformValue::*;
-
-			self.gl.use_program(Some(self.handle.id()));
-
-			// TODO: cache locations
-			for (name, value) in uniform.values() {
-
-				let loc = self.gl.get_uniform_location(self.handle.id(), name);
-
-				if loc.is_some() {
-					match value {
-						Float(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
-						Vec2(f) => self.gl.uniform_2_f32(loc.as_ref(), f.x, f.y),
-						Vec3(f) => self.gl.uniform_3_f32(loc.as_ref(), f.x, f.y, f.z),
-						Vec4(f) => self.gl.uniform_4_f32(loc.as_ref(), f.x, f.y, f.z, f.w),
-						Int(i) => self.gl.uniform_1_i32(loc.as_ref(), i),
-						Mat4(m) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &m.as_arr()),
-					}
-				}
-
-			}
-
-			self.gl.use_program(None);
-
-		}
-
-	}
-
 	pub fn draw(
 		&self,
 		prim: Primitive,
@@ -109,18 +77,35 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 		unsafe {
 
-			self.send_uniforms(&uniform);
-
-			let textures = uniform.textures();
-
 			self.gl.use_program(Some(self.handle.id()));
 			vbuf.bind();
 			bind_attrs::<V>(&self.gl);
 			ibuf.bind();
 
-			for (i, tex) in textures.iter().enumerate() {
-				self.gl.active_texture(glow::TEXTURE0 + i as u32);
-				tex.bind();
+			let mut tex_slots = vec![];
+
+			// TODO: cache locations
+			for (name, value) in uniform.values() {
+
+				let loc = self.gl.get_uniform_location(self.handle.id(), name);
+
+				if loc.is_some() {
+					match value {
+						UniformValue::Float(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
+						UniformValue::Vec2(f) => self.gl.uniform_2_f32(loc.as_ref(), f.x, f.y),
+						UniformValue::Vec3(f) => self.gl.uniform_3_f32(loc.as_ref(), f.x, f.y, f.z),
+						UniformValue::Vec4(f) => self.gl.uniform_4_f32(loc.as_ref(), f.x, f.y, f.z, f.w),
+						UniformValue::Int(i) => self.gl.uniform_1_i32(loc.as_ref(), i),
+						UniformValue::Mat4(m) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &m.as_arr()),
+						UniformValue::Texture(tex) => {
+							self.gl.uniform_1_i32(loc.as_ref(), tex_slots.len() as i32);
+							self.gl.active_texture(glow::TEXTURE0 + tex_slots.len() as u32);
+							tex.bind();
+							tex_slots.push(tex.clone());
+						},
+					}
+				}
+
 			}
 
 			match prim {
@@ -134,7 +119,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			vbuf.unbind();
 			self.gl.use_program(None);
 
-			for (i, tex) in textures.iter().enumerate() {
+			for (i, tex) in tex_slots.into_iter().enumerate() {
 				self.gl.active_texture(glow::TEXTURE0 + i as u32);
 				tex.unbind();
 			}
