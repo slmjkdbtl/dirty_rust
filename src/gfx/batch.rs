@@ -11,6 +11,7 @@ struct RenderState<V: VertexLayout, U: UniformLayout> {
 }
 
 pub(super) struct BatchedRenderer<V: VertexLayout, U: UniformLayout + PartialEq + Clone> {
+	gl: Rc<glow::Context>,
 	vbuf: VertexBuffer<V>,
 	ibuf: IndexBuffer,
 	vqueue: Vec<V>,
@@ -27,8 +28,9 @@ impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U
 		let ibuf = IndexBuffer::new(ctx, max_indices, BufferUsage::Dynamic)?;
 
 		return Ok(Self {
-			vbuf,
-			ibuf,
+			gl: ctx.gl().clone(),
+			vbuf: vbuf,
+			ibuf: ibuf,
 			vqueue: Vec::with_capacity(max_vertices),
 			iqueue: Vec::with_capacity(max_indices),
 			cur_state: None,
@@ -106,8 +108,10 @@ impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U
 		self.vbuf.data(0, &self.vqueue);
 		self.ibuf.data(0, &self.iqueue);
 
-		state.pipeline.draw(
+		draw(
+			&self.gl,
 			state.prim,
+			&state.pipeline,
 			&self.vbuf,
 			&self.ibuf,
 			self.iqueue.len(),

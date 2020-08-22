@@ -43,8 +43,10 @@ impl<'a> Drawable for Mesh<'a> {
 
 		let tex = self.tex.unwrap_or(&ctx.empty_tex);
 
-		ctx.cur_pipeline.draw(
+		gfx::draw(
+			&ctx.gl,
 			self.prim,
+			&ctx.cur_pipeline,
 			self.mesh.vbuf(),
 			self.mesh.ibuf(),
 			self.mesh.count(),

@@ -237,7 +237,7 @@ impl GLCtx for Gfx {
 	}
 }
 
-impl GLCtx for &Rc<glow::Context> {
+impl GLCtx for Rc<glow::Context> {
 	fn gl(&self) -> &Rc<glow::Context> {
 		return &self;
 	}
@@ -290,14 +290,14 @@ impl Gfx {
 		#[cfg(any(web, mobile))]
 		let frag_src = format!("{}{}", "precision mediump float;", frag_src);
 
-		let pipeline = Pipeline::new(&gl, &vert_src, &frag_src)?;
+		let pipeline = Pipeline::new(gl, &vert_src, &frag_src)?;
 
 		let font_data = conf.default_font
 			.clone()
 			.take()
 			.unwrap_or(fonts::UNSCII);
 
-		let font = gfx::BitmapFont::from_data(&gl, font_data)?;
+		let font = gfx::BitmapFont::from_data(gl, font_data)?;
 
 		return Ok(Self {
 
@@ -305,7 +305,7 @@ impl Gfx {
 			height: window.height(),
 			dpi: window.dpi(),
 
-			renderer: BatchedRenderer::<Vertex, Uniform>::new(&gl, DRAW_COUNT, DRAW_COUNT)?,
+			renderer: BatchedRenderer::<Vertex, Uniform>::new(gl, DRAW_COUNT, DRAW_COUNT)?,
 
 			view: cam.view(),
 			proj: cam.proj(),
@@ -320,7 +320,7 @@ impl Gfx {
 			draw_calls_last: 0,
 			draw_calls: 0,
 
-			empty_tex: Texture::from_raw(&gl, 1, 1, &[255; 4])?,
+			empty_tex: Texture::from_raw(gl, 1, 1, &[255; 4])?,
 
 			default_font: font,
 
@@ -764,7 +764,76 @@ impl Gfx {
 
 }
 
+pub(self) fn draw<V: VertexLayout, U: UniformLayout>(
+	ctx: &impl GLCtx,
+	prim: Primitive,
+	pip: &Pipeline<V, U>,
+	vbuf: &VertexBuffer<V>,
+	ibuf: &IndexBuffer,
+	count: usize,
+	uniform: &U,
+) {
+
+	unsafe {
+
+		let gl = ctx.gl();
+
+		pip.bind();
+		vbuf.bind();
+		bind_attrs::<V>(&gl);
+		ibuf.bind();
+
+		let mut tex_slots = vec![];
+
+		// TODO: cache locations
+		for (name, data) in uniform.data() {
+
+			let loc = pip.loc(name);
+
+			if loc.is_some() {
+				match data {
+					UniformData::Float(f) => gl.uniform_1_f32(loc.as_ref(), f),
+					UniformData::Vec2(f) => gl.uniform_2_f32(loc.as_ref(), f.x, f.y),
+					UniformData::Vec3(f) => gl.uniform_3_f32(loc.as_ref(), f.x, f.y, f.z),
+					UniformData::Vec4(f) => gl.uniform_4_f32(loc.as_ref(), f.x, f.y, f.z, f.w),
+					UniformData::Int(i) => gl.uniform_1_i32(loc.as_ref(), i),
+					UniformData::Mat4(m) => gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &m.as_arr()),
+					UniformData::Texture(tex) => {
+						gl.uniform_1_i32(loc.as_ref(), tex_slots.len() as i32);
+						gl.active_texture(glow::TEXTURE0 + tex_slots.len() as u32);
+						tex.bind();
+						tex_slots.push(tex.clone());
+					},
+				}
+			}
+
+		}
+
+		match prim {
+			Primitive::Line(w) => gl.line_width(w),
+			_ => {},
+		}
+
+		gl.draw_elements(prim.as_glow(), count as i32, glow::UNSIGNED_INT, 0);
+
+		ibuf.unbind();
+		vbuf.unbind();
+		gl.use_program(None);
+
+		for (i, tex) in tex_slots.into_iter().enumerate() {
+			gl.active_texture(glow::TEXTURE0 + i as u32);
+			tex.unbind();
+		}
+
+	}
+
+}
+
 pub trait Drawable {
 	fn draw(&self, ctx: &mut Gfx) -> Result<()>;
+}
+
+struct DrawCmd {
+
 }
 
