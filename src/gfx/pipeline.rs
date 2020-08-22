@@ -85,19 +85,19 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			let mut tex_slots = vec![];
 
 			// TODO: cache locations
-			for (name, value) in uniform.values() {
+			for (name, data) in uniform.data() {
 
 				let loc = self.gl.get_uniform_location(self.handle.id(), name);
 
 				if loc.is_some() {
-					match value {
-						UniformValue::Float(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
-						UniformValue::Vec2(f) => self.gl.uniform_2_f32(loc.as_ref(), f.x, f.y),
-						UniformValue::Vec3(f) => self.gl.uniform_3_f32(loc.as_ref(), f.x, f.y, f.z),
-						UniformValue::Vec4(f) => self.gl.uniform_4_f32(loc.as_ref(), f.x, f.y, f.z, f.w),
-						UniformValue::Int(i) => self.gl.uniform_1_i32(loc.as_ref(), i),
-						UniformValue::Mat4(m) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &m.as_arr()),
-						UniformValue::Texture(tex) => {
+					match data {
+						UniformData::Float(f) => self.gl.uniform_1_f32(loc.as_ref(), f),
+						UniformData::Vec2(f) => self.gl.uniform_2_f32(loc.as_ref(), f.x, f.y),
+						UniformData::Vec3(f) => self.gl.uniform_3_f32(loc.as_ref(), f.x, f.y, f.z),
+						UniformData::Vec4(f) => self.gl.uniform_4_f32(loc.as_ref(), f.x, f.y, f.z, f.w),
+						UniformData::Int(i) => self.gl.uniform_1_i32(loc.as_ref(), i),
+						UniformData::Mat4(m) => self.gl.uniform_matrix_4_f32_slice(loc.as_ref(), false, &m.as_arr()),
+						UniformData::Texture(tex) => {
 							self.gl.uniform_1_i32(loc.as_ref(), tex_slots.len() as i32);
 							self.gl.active_texture(glow::TEXTURE0 + tex_slots.len() as u32);
 							tex.bind();

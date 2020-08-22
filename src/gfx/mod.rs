@@ -119,7 +119,7 @@
 //! }
 //!
 //! impl UniformLayout for BlueUniform {
-//!     fn values(&self) -> UniformValues {
+//!     fn data(&self) -> UniformDatas {
 //!         return hmap![
 //!             "u_blueness": &self.blueness,
 //!         ];
@@ -216,7 +216,7 @@ pub struct Gfx {
 
 	default_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
 	cur_pipeline: Pipeline<gfx::Vertex, gfx::Uniform>,
-	cur_custom_uniform: Option<Vec<(&'static str, UniformValue)>>,
+	cur_custom_uniform: Option<Vec<(&'static str, UniformData)>>,
 
 	on_canvas: bool,
 
@@ -463,7 +463,7 @@ impl Gfx {
 
 		self.flush();
 		self.cur_pipeline = Pipeline::clone(&shader.pipeline());
-		self.cur_custom_uniform = Some(uniform.values());
+		self.cur_custom_uniform = Some(uniform.data());
 		f(self)?;
 		self.flush();
 		self.cur_pipeline = prev_pipeline;

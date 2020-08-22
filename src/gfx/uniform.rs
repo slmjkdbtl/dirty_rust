@@ -4,7 +4,7 @@ use super::*;
 
 /// Trait for Custom Uniform Data. See [mod-level doc](index.html) for Usage.
 pub trait UniformLayout {
-	fn values(&self) -> Vec<(&'static str, UniformValue)> {
+	fn data(&self) -> Vec<(&'static str, UniformData)> {
 		return vec![];
 	}
 }
@@ -12,7 +12,7 @@ pub trait UniformLayout {
 impl UniformLayout for () {}
 
 #[derive(Clone, PartialEq)]
-pub enum UniformValue {
+pub enum UniformData {
 	Float(f32),
 	Vec2(Vec2),
 	Vec3(Vec3),

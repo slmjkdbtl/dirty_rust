@@ -13,10 +13,10 @@ pub struct RainbowUniform {
 }
 
 impl UniformLayout for RainbowUniform {
-	fn values(&self) -> Vec<(&'static str, UniformValue)> {
+	fn data(&self) -> Vec<(&'static str, UniformData)> {
 		return vec![
-			("u_time", UniformValue::Float(self.time.as_secs_f32())),
-			("u_size", UniformValue::Float(self.size)),
+			("u_time", UniformData::Float(self.time.as_secs_f32())),
+			("u_size", UniformData::Float(self.size)),
 		];
 	}
 }
