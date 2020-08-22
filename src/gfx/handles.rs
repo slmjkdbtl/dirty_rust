@@ -8,11 +8,9 @@ macro_rules! make_handle {
 
 		paste::paste! {
 
-			pub(super) type [<$t ID>] = <glow::Context as HasContext>::$t;
-
 			pub(super) struct [<$t Handle>] {
 				ctx: Rc<glow::Context>,
-				id: [<$t ID>],
+				id: glow::$t,
 			}
 
 			impl [<$t Handle>] {
@@ -24,7 +22,7 @@ macro_rules! make_handle {
 						});
 					}
 				}
-				pub fn id(&self) -> [<$t ID>] {
+				pub fn id(&self) -> glow::$t {
 					return self.id;
 				}
 				pub fn ctx(&self) -> &glow::Context {

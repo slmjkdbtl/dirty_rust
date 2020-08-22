@@ -235,7 +235,7 @@ impl Texture {
 
 	}
 
-	pub(super) fn id(&self) -> TextureID {
+	pub(super) fn id(&self) -> glow::Texture {
 		return self.handle.id();
 	}
 

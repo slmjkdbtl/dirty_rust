@@ -76,7 +76,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 		}
 	}
 
-	pub(super) fn loc(&self, name: &'static str) -> Option<u32> {
+	pub(super) fn loc(&self, name: &'static str) -> Option<glow::UniformLocation> {
 		unsafe {
 			return self.gl.get_uniform_location(self.handle.id(), name);
 		}

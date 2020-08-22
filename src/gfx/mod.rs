@@ -788,7 +788,6 @@ pub(self) fn draw<V: VertexLayout, U: UniformLayout>(
 
 		let mut tex_slots = vec![];
 
-		// TODO: cache locations
 		for (name, data) in uniform.data() {
 
 			let loc = pip.loc(name);
@@ -836,7 +835,24 @@ pub trait Drawable {
 	fn draw(&self, ctx: &mut Gfx) -> Result<()>;
 }
 
-struct DrawCmd {
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct BlendState {
+	rgb_src: BlendFac,
+	rgb_dest: BlendFac,
+	a_src: BlendFac,
+	a_dest: BlendFac,
+}
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct DepthState {
+	write: bool,
+	test: bool,
+	func: Cmp,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct GLState {
+	blend: BlendState,
+	depth: DepthState,
 }
 
