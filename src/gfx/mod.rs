@@ -320,7 +320,10 @@ impl Gfx {
 			draw_calls_last: 0,
 			draw_calls: 0,
 
-			empty_tex: Texture::from_raw(gl, 1, 1, &[255; 4])?,
+			empty_tex: Texture::from_raw_with_conf(gl, 1, 1, &[255; 4], TextureConf {
+				filter: FilterMode::Nearest,
+				wrap: WrapMode::Repeat,
+			})?,
 
 			default_font: font,
 
