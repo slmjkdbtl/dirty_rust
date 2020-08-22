@@ -214,16 +214,12 @@ impl State for Game {
 }
 
 fn main() {
-
 	if let Err(err) = launcher()
 		.cursor_hidden(true)
 		.cursor_locked(true)
 		.resizable(true)
-// 		.hidpi(false)
-// 		.vsync(false)
 		.run::<Game>() {
 		elog!("{}", err);
 	}
-
 }
 

@@ -153,13 +153,8 @@
 //! | uniform | vec4      | u_color       | uniform color                   | frag       |
 //! |         | vec4()    | default_pos   | get the default vertex position | vert       |
 //! |         | vec4()    | default_color | get the default fragment color  | frag       |
-//!
-//! ## Memory Management
-//!
-//! OpenGL uses its own heap memory allocation, so you'll have to free memory yourself when you're done with them. Resource types [`Texture`](struct.Texture.html), [`Model`](struct.Model.html), [`Shader`](struct.Shader.html), [`Canvas`](struct.Canvas.html) and fonts all have a `free(self)` method that frees the memory.
 
 import!(buffer);
-import!(handles);
 import!(pipeline);
 import!(batch);
 
@@ -298,6 +293,19 @@ impl Gfx {
 			.unwrap_or(fonts::UNSCII);
 
 		let font = gfx::BitmapFont::from_data(gl, font_data)?;
+
+		let init_state = GLState {
+			blend: BlendState {
+				rgb_src: BlendFac::SrcAlpha,
+				rgb_dest: BlendFac::OneMinusSrcAlpha,
+				a_src: BlendFac::SrcAlpha,
+				a_dest: BlendFac::OneMinusSrcAlpha,
+			},
+			depth_write: true,
+			depth_test: Some(Cmp::LessOrEqual),
+			stencil_write: false,
+			stencil_test: None,
+		};
 
 		return Ok(Self {
 
@@ -479,9 +487,11 @@ impl Gfx {
 	/// draw with stencil operations
 	pub fn draw_masked_ex(
 		&mut self,
-		s1: StencilState,
+		// if render the stencil write function or not
+		draw_write: bool,
 		f1: impl FnOnce(&mut Self) -> Result<()>,
-		s2: StencilState,
+		// draw pixels that're present in the stencil buffer or draw those are not
+		draw_equal: bool,
 		f2: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
@@ -491,15 +501,17 @@ impl Gfx {
 			self.gl.enable(Capability::StencilTest.as_glow());
 			self.gl.clear(Surface::Stencil.as_glow());
 
-			// 1
-			self.gl.stencil_func(s1.cmp.as_glow(), 1, 0xff);
-			self.gl.stencil_op(s1.sfail.as_glow(), s1.dpfail.as_glow(), s1.dppass.as_glow());
+			// write to stencil buffer
+			let c1 = if draw_write { Cmp::Always } else { Cmp::Never };
+			self.gl.stencil_op(StencilOp::Replace.as_glow(), StencilOp::Replace.as_glow(), StencilOp::Replace.as_glow());
+			self.gl.stencil_func(c1.as_glow(), 1, 0xff);
 			f1(self)?;
 			self.flush();
 
-			// 2
-			self.gl.stencil_func(s2.cmp.as_glow(), 1, 0xff);
-			self.gl.stencil_op(s2.sfail.as_glow(), s2.dpfail.as_glow(), s2.dppass.as_glow());
+			// draw with stencil test
+			let c2 = if draw_equal { Cmp::Equal } else { Cmp::NotEqual };
+			self.gl.stencil_op(StencilOp::Keep.as_glow(), StencilOp::Keep.as_glow(), StencilOp::Keep.as_glow());
+			self.gl.stencil_func(c2.as_glow(), 1, 0xff);
 			f2(self)?;
 			self.flush();
 
@@ -510,36 +522,16 @@ impl Gfx {
 		return Ok(());
 	}
 
-	// TODO: learn more about stencil
 	/// mask pixels from first call to the second
 	pub fn draw_masked(
 		&mut self,
 		mask: impl FnOnce(&mut Self) -> Result<()>,
 		draw: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
-
-		self.draw_masked_ex(
-			StencilState {
-				cmp: Cmp::Never,
-				sfail: StencilOp::Replace,
-				dpfail: StencilOp::Replace,
-				dppass: StencilOp::Replace,
-			},
-			mask,
-			StencilState {
-				cmp: Cmp::Equal,
-				sfail: StencilOp::Keep,
-				dpfail: StencilOp::Keep,
-				dppass: StencilOp::Keep,
-			},
-			draw,
-		)?;
-
-		return Ok(());
-
+		return self.draw_masked_ex(false, mask, true, draw);
 	}
 
-	pub fn transform_pt(&self, pt: Vec2) -> Vec2 {
+	fn transform_pt(&self, pt: Vec2) -> Vec2 {
 		return vec2!(pt.x + self.width as f32 / 2.0, pt.y + self.height as f32 / 2.0) * self.dpi;
 	}
 
@@ -586,15 +578,30 @@ impl Gfx {
 		f: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
-		let (dsrc, ddest) = Blend::Alpha.as_glow();
-		let (src, dest) = b.as_glow();
+		let default = Blend::Alpha.state();
+		let custom = b.state();
 
 		unsafe {
+
 			self.flush();
-			self.gl.blend_func(src.as_glow(), dest.as_glow());
+
+			self.gl.blend_func_separate(
+				custom.rgb_src.as_glow(),
+				custom.rgb_dest.as_glow(),
+				custom.a_src.as_glow(),
+				custom.a_dest.as_glow(),
+			);
+
 			f(self)?;
 			self.flush();
-			self.gl.blend_func(dsrc.as_glow(), ddest.as_glow());
+
+			self.gl.blend_func_separate(
+				default.rgb_src.as_glow(),
+				default.rgb_dest.as_glow(),
+				default.a_src.as_glow(),
+				default.a_dest.as_glow(),
+			);
+
 		}
 
 		return Ok(());
@@ -844,15 +851,111 @@ struct BlendState {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct DepthState {
-	write: bool,
-	test: bool,
-	func: Cmp,
+struct GLState {
+	blend: BlendState,
+	depth_test: Option<Cmp>,
+	depth_write: bool,
+	stencil_test: Option<Cmp>,
+	stencil_write: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct GLState {
-	blend: BlendState,
-	depth: DepthState,
+pub enum Primitive {
+	Point(f32),
+	Line(f32),
+	Triangle,
+	LineStrip,
+	TriangleFan,
+	TriangleStrip,
+}
+
+impl Primitive {
+
+	pub(super) fn as_glow(&self) -> u32 {
+		return match self {
+			Primitive::Point(_) => glow::POINTS,
+			Primitive::Line(_) => glow::LINES,
+			Primitive::Triangle => glow::TRIANGLES,
+			Primitive::LineStrip => glow::LINE_STRIP,
+			Primitive::TriangleFan => glow::TRIANGLE_FAN,
+			Primitive::TriangleStrip => glow::TRIANGLE_STRIP,
+		};
+	}
+
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Flip {
+	None,
+	X,
+	Y,
+	XY,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Blend {
+	Alpha,
+	Add,
+	Replace,
+}
+
+impl Blend {
+	fn state(&self) -> BlendState {
+		return match self {
+			Blend::Alpha => BlendState {
+				rgb_src: BlendFac::SrcAlpha,
+				rgb_dest: BlendFac::OneMinusSrcAlpha,
+				a_src: BlendFac::SrcAlpha,
+				a_dest: BlendFac::OneMinusSrcAlpha
+			},
+			Blend::Add => BlendState {
+				rgb_src: BlendFac::SrcAlpha,
+				rgb_dest: BlendFac::DestAlpha,
+				a_src: BlendFac::SrcAlpha,
+				a_dest: BlendFac::DestAlpha
+			},
+			Blend::Replace => BlendState {
+				rgb_src: BlendFac::SrcAlpha,
+				rgb_dest: BlendFac::Zero,
+				a_src: BlendFac::SrcAlpha,
+				a_dest: BlendFac::Zero,
+			},
+		};
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Origin {
+	TopLeft,
+	Top,
+	TopRight,
+	Left,
+	Center,
+	Right,
+	BottomLeft,
+	Bottom,
+	BottomRight,
+}
+
+impl Origin {
+
+	pub fn as_pt(&self) -> Vec2 {
+
+		use Origin::*;
+
+		return match self {
+			TopLeft => vec2!(-1, 1),
+			Top => vec2!(0, 1),
+			TopRight => vec2!(1, 1),
+			Left => vec2!(-1, 0),
+			Center => vec2!(0, 0),
+			Right => vec2!(1, 0),
+			BottomLeft => vec2!(-1, -1),
+			Bottom => vec2!(0, -1),
+			BottomRight => vec2!(1, -1),
+		};
+
+	}
+
 }
 

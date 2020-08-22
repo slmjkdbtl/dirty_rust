@@ -2,6 +2,60 @@
 
 use super::*;
 
+macro_rules! make_handle {
+
+	($t:ident, $lt:ident) => {
+
+		paste::paste! {
+
+			pub(super) struct [<$t Handle>] {
+				ctx: Rc<glow::Context>,
+				id: glow::$t,
+			}
+
+			impl [<$t Handle>] {
+				pub fn new(ctx: Rc<glow::Context>) -> Result<Self> {
+					unsafe {
+						return Ok(Self {
+							id: ctx.[<create_ $lt>]()?,
+							ctx: ctx.clone(),
+						});
+					}
+				}
+				pub fn id(&self) -> glow::$t {
+					return self.id;
+				}
+				pub fn ctx(&self) -> &glow::Context {
+					return &self.ctx;
+				}
+			}
+
+			impl Drop for [<$t Handle>] {
+				fn drop(&mut self) {
+					unsafe {
+						self.ctx.[<delete_ $lt>](self.id);
+					}
+				}
+			}
+
+			impl PartialEq for [<$t Handle>] {
+				fn eq(&self, other: &Self) -> bool {
+					return self.id == other.id;
+				}
+			}
+
+		}
+
+	}
+
+}
+
+make_handle!(Buffer, buffer);
+make_handle!(Texture, texture);
+make_handle!(Program, program);
+make_handle!(Framebuffer, framebuffer);
+make_handle!(Renderbuffer, renderbuffer);
+
 macro_rules! bind_enum {
 
 	($vis:vis, $name:ident($type:ty) { $($member:ident => $dest:expr),+$(,)? }) => {
@@ -134,121 +188,4 @@ bind_enum!(pub(super), ShaderType(u32) {
 	Vertex => glow::VERTEX_SHADER,
 	Fragment => glow::FRAGMENT_SHADER,
 });
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Primitive {
-	Point(f32),
-	Line(f32),
-	Triangle,
-	LineStrip,
-	TriangleFan,
-	TriangleStrip,
-}
-
-impl Primitive {
-
-	pub(super) fn as_glow(&self) -> u32 {
-		return match self {
-			Primitive::Point(_) => glow::POINTS,
-			Primitive::Line(_) => glow::LINES,
-			Primitive::Triangle => glow::TRIANGLES,
-			Primitive::LineStrip => glow::LINE_STRIP,
-			Primitive::TriangleFan => glow::TRIANGLE_FAN,
-			Primitive::TriangleStrip => glow::TRIANGLE_STRIP,
-		};
-	}
-
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Flip {
-	None,
-	X,
-	Y,
-	XY,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Blend {
-	Alpha,
-	Add,
-	Replace,
-}
-
-impl Blend {
-	pub(super) fn as_glow(&self) -> (BlendFac, BlendFac) {
-		return match self {
-			Blend::Alpha => (BlendFac::SrcAlpha, BlendFac::OneMinusSrcAlpha),
-			Blend::Add => (BlendFac::SrcAlpha, BlendFac::DestAlpha),
-			Blend::Replace => (BlendFac::SrcAlpha, BlendFac::Zero),
-		};
-	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Origin {
-	TopLeft,
-	Top,
-	TopRight,
-	Left,
-	Center,
-	Right,
-	BottomLeft,
-	Bottom,
-	BottomRight,
-}
-
-impl Origin {
-
-	pub fn as_pt(&self) -> Vec2 {
-
-		use Origin::*;
-
-		return match self {
-			TopLeft => vec2!(-1, 1),
-			Top => vec2!(0, 1),
-			TopRight => vec2!(1, 1),
-			Left => vec2!(-1, 0),
-			Center => vec2!(0, 0),
-			Right => vec2!(1, 0),
-			BottomLeft => vec2!(-1, -1),
-			Bottom => vec2!(0, -1),
-			BottomRight => vec2!(1, -1),
-		};
-
-	}
-
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct BlendDesc {
-	pub src: BlendFac,
-	pub dest: BlendFac,
-	pub op: BlendOp,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct BlendState {
-	pub color: BlendDesc,
-	pub alpha: BlendDesc,
-}
-
-/// Describes a Stencil Operation
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct StencilState {
-	pub cmp: Cmp,
-	pub sfail: StencilOp,
-	pub dpfail: StencilOp,
-	pub dppass: StencilOp,
-}
-
-// TODO: use this
-#[derive(Clone, PartialEq)]
-pub(super) struct RenderState<'a, U: UniformLayout> {
-	pub prim: Primitive,
-	pub stencil: Option<StencilState>,
-	pub uniform: &'a U,
-	pub blend: BlendState,
-	pub canvas: Option<&'a Canvas>,
-}
 
