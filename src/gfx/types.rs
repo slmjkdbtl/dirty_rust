@@ -14,7 +14,7 @@ macro_rules! make_handle {
 			}
 
 			impl [<$t Handle>] {
-				pub fn new(ctx: Rc<glow::Context>) -> Result<Self> {
+				pub fn new(ctx: &Rc<glow::Context>) -> Result<Self> {
 					unsafe {
 						return Ok(Self {
 							id: ctx.[<create_ $lt>]()?,

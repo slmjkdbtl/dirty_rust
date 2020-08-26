@@ -5,7 +5,7 @@ name = "dirty"
 description = "dirty tool kit"
 version = "0.0.0"
 authors = ["tga <tga@enemyspy.xyz>"]
-repository = "https://git.sr.ht/~slmjkdbtl/DIRTY"
+repository = "https://github.com/slmjkdbtl/dirty"
 homepage = "http://dirty.enemyspy.xyz"
 license = "Zlib"
 edition = "2018"
@@ -18,10 +18,6 @@ exclude = [
 [features]
 midi = [
 	"midir",
-]
-
-imgui = [
-	"libimgui",
 ]
 
 [dependencies]
@@ -47,10 +43,7 @@ cpal = "0.11"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
 glutin = "0.24"
-# glutin = "0.21"
 gilrs = "0.7"
-# TODO: support wasm
-libimgui = { version = "0.4", optional = true, package = "imgui" }
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
 wasm-bindgen = "0.2"

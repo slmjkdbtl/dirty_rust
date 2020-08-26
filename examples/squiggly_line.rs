@@ -1,11 +1,11 @@
 // wengwengweng
 
-const N_FRAMES: usize = 10;
-
 use dirty::*;
-use dirty::math::*;
-use gfx::shapes;
-use input::Key;
+use math::*;
+use gfx::*;
+use input::*;
+
+const N_FRAMES: usize = 10;
 
 struct Polyline {
 	line: Vec<Vec2>,
@@ -28,7 +28,7 @@ impl Polyline {
 		self.line.clear();
 	}
 
-	fn draw(&self, gfx: &mut gfx::Gfx) -> Result<()> {
+	fn draw(&self, gfx: &mut Gfx) -> Result<()> {
 		gfx.draw(
 			&shapes::lines(&self.line)
 				.width(2.0)
@@ -37,7 +37,7 @@ impl Polyline {
 		Ok(())
 	}
 
-	fn render(&self, gfx: &mut gfx::Gfx, offset: Vec2) -> Result<()> {
+	fn render(&self, gfx: &mut Gfx, offset: Vec2) -> Result<()> {
 		for (p0, p1) in self.line.iter().zip(self.line.iter().skip(1)) {
 			gfx.draw(
 				&shapes::line(*p0 + offset, *p1 + offset)
@@ -67,13 +67,13 @@ impl Squiggly {
 		}
 	}
 
-	fn draw(&self, t: usize, gfx: &mut gfx::Gfx) -> Result<()> {
+	fn draw(&self, t: usize, gfx: &mut Gfx) -> Result<()> {
 		let f = &self.frames[t % self.frames.len()];
 		f.draw(gfx)?;
 		Ok(())
 	}
 
-	fn render(&self, gfx: &mut gfx::Gfx, sz: isize) -> Result<()> {
+	fn render(&self, gfx: &mut Gfx, sz: isize) -> Result<()> {
 		for (i, frame) in self.frames.iter().enumerate() {
 			let off = vec2!(sz / 2, 0) +
 					  vec2!(-sz * (N_FRAMES as isize) / 2, 0) +
@@ -162,8 +162,8 @@ impl State for Game {
 		self.t += 1;
 		self.t %= 60;
 
-		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
-		let top_right = d.gfx.coord(gfx::Origin::TopRight);
+		let top_left = d.gfx.coord(Origin::TopLeft);
+		let top_right = d.gfx.coord(Origin::TopRight);
 
 		let mut tol = 0;
 		let mut density = 0.;
@@ -216,7 +216,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw(
 			&shapes::rect(vec2!(-self.sz, self.sz) * 0.5, vec2!(self.sz, -self.sz) * 0.5)
@@ -225,7 +225,7 @@ impl State for Game {
 
 		self.buf.draw(d.gfx)?;
 
-		for line in &self.lines {
+		for line in &mut self.lines {
 			line.draw(self.t, d.gfx)?;
 		}
 
@@ -239,15 +239,15 @@ impl State for Game {
 
 impl Game {
 
-	fn save(&self, ctx: &mut gfx::Gfx, fname: &str) -> Result<()> {
+	fn save(&self, ctx: &mut Gfx, fname: &str) -> Result<()> {
 
 		if fname.is_empty() {
 			return Ok(());
 		}
 
-		let fbuf = gfx::Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32)?;
+		let fbuf = Canvas::new(ctx, self.sz as i32 * N_FRAMES as i32, self.sz as i32)?;
 
-		ctx.draw_on(&fbuf, |gfx| {
+		ctx.draw_on(&fbuf, CanvasAction::clear(), |gfx| {
 			for line in &self.lines {
 				line.render(gfx, self.sz)?;
 			}

@@ -201,9 +201,9 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 
 			} else {
 
-				if let Some((tex, quad)) = font.get(ch).or(font.get(conf.fallback_char)) {
+				if let Some(fch) = font.get(ch).or(font.get(conf.fallback_char)) {
 
-					let mut gw = tex.width() as f32 * quad.w * scale + conf.char_spacing;
+					let mut gw = fch.tex.width() as f32 * fch.quad.w * scale + conf.char_spacing;
 
 					if ch == '\t' {
 						gw *= conf.tab_width as f32;
@@ -224,8 +224,8 @@ fn format(chunks: &[TextChunk], font: &dyn gfx::Font, conf: &FormatConf) -> Form
 					cur_line.chars.push(FormattedChar {
 						ch: ch,
 						pos: vec2!(),
-						tex: tex.clone(),
-						quad: quad,
+						tex: fch.tex.clone(),
+						quad: fch.quad,
 						color: chunk.color,
 						width: gw - conf.char_spacing,
 						height: gh,

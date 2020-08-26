@@ -21,7 +21,6 @@ impl Default for TextureConf {
 #[derive(Clone)]
 pub struct Texture {
 	handle: Rc<TextureHandle>,
-	gl: Rc<glow::Context>,
 	width: i32,
 	height: i32,
 }
@@ -38,19 +37,12 @@ impl Texture {
 
 		unsafe {
 
-			let gl = ctx.gl().clone();
-			let handle = TextureHandle::new(gl.clone())?;
+			let handle = TextureHandle::new(ctx.gl())?;
+			let gl = handle.ctx();
 
-			let tex = Self {
-				handle: Rc::new(handle),
-				gl: gl,
-				width: w,
-				height: h,
-			};
+			gl.bind_texture(glow::TEXTURE_2D, Some(handle.id()));
 
-			tex.bind();
-
-			tex.gl.tex_image_2d(
+			gl.tex_image_2d(
 				glow::TEXTURE_2D,
 				0,
 				glow::RGBA as i32,
@@ -62,33 +54,37 @@ impl Texture {
 				None,
 			);
 
-			tex.gl.tex_parameter_i32(
+			gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_MIN_FILTER,
 				conf.filter.as_glow(),
 			);
 
-			tex.gl.tex_parameter_i32(
+			gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_MAG_FILTER,
 				conf.filter.as_glow(),
 			);
 
-			tex.gl.tex_parameter_i32(
+			gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_WRAP_S,
 				conf.wrap.as_glow(),
 			);
 
-			tex.gl.tex_parameter_i32(
+			gl.tex_parameter_i32(
 				glow::TEXTURE_2D,
 				glow::TEXTURE_WRAP_T,
 				conf.wrap.as_glow(),
 			);
 
-			tex.unbind();
+			gl.bind_texture(glow::TEXTURE_2D, None);
 
-			return Ok(tex);
+			return Ok(Self {
+				handle: Rc::new(handle),
+				width: w,
+				height: h,
+			});
 
 		}
 
@@ -98,19 +94,12 @@ impl Texture {
 
 		unsafe {
 
-			let gl = ctx.gl().clone();
-			let handle = TextureHandle::new(gl.clone())?;
+			let handle = TextureHandle::new(ctx.gl())?;
+			let gl = handle.ctx();
 
-			let tex = Self {
-				handle: Rc::new(handle),
-				gl: gl,
-				width: w,
-				height: h,
-			};
+			gl.bind_texture(glow::TEXTURE_2D, Some(handle.id()));
 
-			tex.bind();
-
-			tex.gl.tex_image_2d(
+			gl.tex_image_2d(
 				glow::TEXTURE_2D,
 				0,
 				glow::DEPTH24_STENCIL8 as i32,
@@ -122,9 +111,13 @@ impl Texture {
 				None,
 			);
 
-			tex.unbind();
+			gl.bind_texture(glow::TEXTURE_2D, None);
 
-			return Ok(tex);
+			return Ok(Self {
+				handle: Rc::new(handle),
+				width: w,
+				height: h,
+			});
 
 		}
 
@@ -161,13 +154,13 @@ impl Texture {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_texture(glow::TEXTURE_2D, Some(self.handle.id()));
+			self.handle.ctx().bind_texture(glow::TEXTURE_2D, Some(self.handle.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.gl.bind_texture(glow::TEXTURE_2D, None);
+			self.handle.ctx().bind_texture(glow::TEXTURE_2D, None);
 		}
 	}
 
@@ -177,7 +170,7 @@ impl Texture {
 
 			self.bind();
 
-			self.gl.tex_sub_image_2d(
+			self.handle.ctx().tex_sub_image_2d(
 				glow::TEXTURE_2D,
 				0,
 				x as i32,
@@ -213,20 +206,18 @@ impl Texture {
 	pub fn capture(&self) -> Result<img::Image> {
 
 		let size = (self.width * self.height * 4) as usize;
-		let mut pixels = vec![0.0 as u8; size];
+		let mut pixels = vec![0; size];
 
 		self.bind();
 
 		unsafe {
-
-			self.gl.get_tex_image(
+			self.handle.ctx().get_tex_image(
 				glow::TEXTURE_2D,
 				0,
 				glow::RGBA,
 				glow::UNSIGNED_BYTE,
 				glow::PixelPackData::Slice(&mut pixels),
 			);
-
 		}
 
 		self.unbind();

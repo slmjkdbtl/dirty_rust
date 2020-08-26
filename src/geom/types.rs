@@ -332,9 +332,9 @@ impl Dir {
 	pub fn as_vec2(&self) -> Vec2 {
 		return match self {
 			Dir::Right => vec2!(1, 0),
-			Dir::Down => vec2!(0, 1),
+			Dir::Down => vec2!(0, -1),
 			Dir::Left => vec2!(-1, 0),
-			Dir::Up => vec2!(0, -1),
+			Dir::Up => vec2!(0, 1),
 		};
 	}
 }

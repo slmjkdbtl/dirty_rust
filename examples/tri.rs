@@ -51,7 +51,7 @@ impl State for Tri {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 		d.gfx.draw(&shapes::raw(&VERTS, &INDICES))?;
 		return Ok(());
 	}

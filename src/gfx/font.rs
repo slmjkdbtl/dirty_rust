@@ -4,12 +4,20 @@ use super::*;
 
 const ASCII_CHARS: &str = r##" !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"##;
 
-pub type CharMap = HashMap<char, Quad>;
+#[derive(Clone, PartialEq)]
+pub struct Char {
+	pub ch: char,
+	pub tex: Texture,
+	pub quad: Quad,
+	pub bearing_x: f32,
+	pub bearing_y: f32,
+	pub advance: f32,
+}
 
 /// Describes Features of a Font
 pub trait Font {
 	/// get render information of a character
-	fn get(&self, ch: char) -> Option<(&Texture, Quad)>;
+	fn get(&self, ch: char) -> Option<&Char>;
 	/// character height
 	fn height(&self) -> f32;
 	/// if there's a fixed character width
@@ -40,7 +48,7 @@ impl BitmapFontData {
 #[derive(Clone, PartialEq)]
 pub struct BitmapFont {
 	tex: Texture,
-	map: HashMap<char, Quad>,
+	map: HashMap<char, Char>,
 	quad_size: Vec2,
 	grid_width: u8,
 	grid_height: u8,
@@ -77,18 +85,25 @@ impl BitmapFont {
 
 		for (i, ch) in chars.chars().enumerate() {
 
-			map.insert(ch, quad!(
-				(i as i32 % cols) as f32 * quad_size.x,
-				(i as i32 / cols) as f32 * quad_size.y,
-				quad_size.x,
-				quad_size.y
-			));
+			map.insert(ch, Char {
+				ch: ch,
+				tex: tex.clone(),
+				quad: quad!(
+					(i as i32 % cols) as f32 * quad_size.x,
+					(i as i32 / cols) as f32 * quad_size.y,
+					quad_size.x,
+					quad_size.y
+				),
+				bearing_x: 0.0,
+				bearing_y: 0.0,
+				advance: 0.0,
+			});
 
 		}
 
 		return Ok(Self {
-			tex,
-			map,
+			tex: tex,
+			map: map,
 			quad_size,
 			grid_width: gw,
 			grid_height: gh,
@@ -104,11 +119,8 @@ impl BitmapFont {
 }
 
 impl Font for BitmapFont {
-	fn get(&self, ch: char) -> Option<(&Texture, Quad)> {
-		return self.map
-			.get(&ch)
-			.map(|quad| (&self.tex, *quad))
-			;
+	fn get(&self, ch: char) -> Option<&Char> {
+		return self.map.get(&ch);
 	}
 	fn height(&self) -> f32 {
 		return self.grid_height as f32;
@@ -124,7 +136,7 @@ pub struct TruetypeFont {
 	font: fontdue::Font,
 	size: i32,
 	cur_pt: Pt,
-	map: HashMap<char, Quad>,
+	map: HashMap<char, Char>,
 	tex: Texture,
 }
 
@@ -181,12 +193,19 @@ impl TruetypeFont {
 
 		self.tex.sub_data(x as i32, y as i32, w as i32, self.size as i32, &nbitmap);
 
-		self.map.insert(ch, quad!(
-			x as f32 / tw as f32,
-			y as f32 / th as f32,
-			w as f32 / tw as f32,
-			h as f32 / th as f32,
-		));
+		self.map.insert(ch, Char {
+			ch: ch,
+			quad: quad!(
+				x as f32 / tw as f32,
+				y as f32 / th as f32,
+				w as f32 / tw as f32,
+				h as f32 / th as f32,
+			),
+			tex: self.tex.clone(),
+			bearing_x: 0.0,
+			bearing_y: 0.0,
+			advance: 0.0,
+		});
 
 		x += w;
 		self.cur_pt = pt!(x, y);
@@ -217,15 +236,15 @@ impl TruetypeFont {
 			.chars()
 			.map(|c| self.map.get(&c))
 			.flatten()
-			.map(|q| q.w * self.tex.width() as f32)
+			.map(|c| c.quad.w * self.tex.width() as f32)
 			.sum();
 	}
 
 }
 
 impl Font for TruetypeFont {
-	fn get(&self, ch: char) -> Option<(&Texture, Quad)> {
-		return self.map.get(&ch).map(|quad| (&self.tex, *quad));
+	fn get(&self, ch: char) -> Option<&Char> {
+		return self.map.get(&ch);
 	}
 	fn height(&self) -> f32 {
 		return self.size as f32;

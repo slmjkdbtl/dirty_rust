@@ -60,7 +60,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let time = d.app.time().as_secs_f32();
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);

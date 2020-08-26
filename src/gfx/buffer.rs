@@ -35,7 +35,6 @@ pub(super) trait VertexLayout: Clone {
 #[derive(Clone)]
 pub(super) struct VertexBuffer<V: VertexLayout> {
 	handle: Rc<BufferHandle>,
-	gl: Rc<glow::Context>,
 	_layout: PhantomData<V>,
 }
 
@@ -45,26 +44,23 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 		unsafe {
 
-			let gl = ctx.gl().clone();
-			let handle = BufferHandle::new(gl.clone())?;
+			let handle = BufferHandle::new(ctx.gl())?;
+			let gl = handle.ctx();
 
-			let buf = Self {
-				handle: Rc::new(handle),
-				gl: gl,
-				_layout: PhantomData,
-			};
+			gl.bind_buffer(glow::ARRAY_BUFFER, Some(handle.id()));
 
-			buf.bind();
-
-			buf.gl.buffer_data_size(
+			handle.ctx().buffer_data_size(
 				glow::ARRAY_BUFFER,
 				(count * mem::size_of::<V>()) as i32,
 				usage.as_glow(),
 			);
 
-			buf.unbind();
+			gl.bind_buffer(glow::ARRAY_BUFFER, None);
 
-			return Ok(buf);
+			return Ok(Self {
+				handle: Rc::new(handle),
+				_layout: PhantomData,
+			});
 
 		}
 
@@ -80,13 +76,13 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.handle.id()));
+			self.handle.ctx().bind_buffer(glow::ARRAY_BUFFER, Some(self.handle.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.gl.bind_buffer(glow::ARRAY_BUFFER, None);
+			self.handle.ctx().bind_buffer(glow::ARRAY_BUFFER, None);
 		}
 	}
 
@@ -99,7 +95,7 @@ impl<V: VertexLayout> VertexBuffer<V> {
 
 			self.bind();
 
-			self.gl.buffer_sub_data_u8_slice(
+			self.handle.ctx().buffer_sub_data_u8_slice(
 				glow::ARRAY_BUFFER,
 				(offset * mem::size_of::<V>()) as i32,
 				byte_slice,
@@ -122,7 +118,6 @@ impl<V: VertexLayout> PartialEq for VertexBuffer<V> {
 #[derive(Clone)]
 pub(super) struct IndexBuffer {
 	handle: Rc<BufferHandle>,
-	gl: Rc<glow::Context>,
 }
 
 impl IndexBuffer {
@@ -131,25 +126,22 @@ impl IndexBuffer {
 
 		unsafe {
 
-			let gl = ctx.gl().clone();
-			let handle = BufferHandle::new(gl.clone())?;
+			let handle = BufferHandle::new(ctx.gl())?;
+			let gl = handle.ctx();
 
-			let buf = Self {
-				handle: Rc::new(handle),
-				gl: gl,
-			};
+			gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(handle.id()));
 
-			buf.bind();
-
-			buf.gl.buffer_data_size(
+			gl.buffer_data_size(
 				glow::ELEMENT_ARRAY_BUFFER,
 				(count * mem::size_of::<u32>()) as i32,
 				usage.as_glow(),
 			);
 
-			buf.unbind();
+			gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
 
-			return Ok(buf);
+			return Ok(Self {
+				handle: Rc::new(handle),
+			});
 
 		}
 
@@ -165,13 +157,13 @@ impl IndexBuffer {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.handle.id()));
+			self.handle.ctx().bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.handle.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
+			self.handle.ctx().bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
 		}
 	}
 
@@ -184,7 +176,7 @@ impl IndexBuffer {
 
 			self.bind();
 
-			self.gl.buffer_sub_data_u8_slice(
+			self.handle.ctx().buffer_sub_data_u8_slice(
 				glow::ELEMENT_ARRAY_BUFFER,
 				(offset * mem::size_of::<u32>()) as i32,
 				byte_slice,

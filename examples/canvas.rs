@@ -1,22 +1,21 @@
 // wengwengweng
 
 use dirty::*;
-use gfx::shapes;
-use input::Key;
+use gfx::*;
+use input::*;
 
 struct Game {
-	canvas: gfx::Canvas,
+	canvas: Canvas,
 }
 
 impl State for Game {
 
 	fn init(d: &mut Ctx) -> Result<Self> {
 
-		let model = gfx::Model::from_glb(d.gfx, include_bytes!("res/btfly.glb"))?;
-		let canvas = gfx::Canvas::new(d.gfx, 160, 160)?;
+		let model = Model::from_glb(d.gfx, include_bytes!("res/btfly.glb"))?;
+		let canvas = Canvas::new(d.gfx, 160, 160)?;
 
-		d.gfx.draw_on(&canvas, |gfx| {
-			gfx.clear();
+		d.gfx.draw_on(&canvas, CanvasAction::clear(), |gfx| {
 			gfx.draw_t(
 				mat4!()
 					.s3(vec3!(300))
@@ -36,12 +35,10 @@ impl State for Game {
 
 	}
 
-	fn event(&mut self, d: &mut Ctx, e: &input::Event) -> Result<()> {
-
-		use input::Event::*;
+	fn event(&mut self, d: &mut Ctx, e: &Event) -> Result<()> {
 
 		match e {
-			KeyPress(k) => {
+			Event::KeyPress(k) => {
 				match *k {
 					Key::Esc => d.window.quit(),
 					_ => {},
@@ -54,13 +51,13 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let gw = d.gfx.width();
 		let gh = d.gfx.height();
 		let cw = self.canvas.width();
 		let ch = self.canvas.height();
-		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
+		let top_left = d.gfx.coord(Origin::TopLeft);
 
 		for i in 0..gw / cw {
 			for j in 0..gh / ch {
@@ -68,7 +65,7 @@ impl State for Game {
 					mat4!()
 						.t2(top_left + vec2!(i, j) * vec2!(cw, -ch)),
 					&shapes::canvas(&self.canvas)
-						.offset(gfx::Origin::TopLeft.as_pt())
+						.offset(Origin::TopLeft.as_pt())
 				)?;
 			}
 		}

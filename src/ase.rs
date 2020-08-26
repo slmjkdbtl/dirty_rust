@@ -6,8 +6,8 @@ use serde::Serialize;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-use crate::Result;
-use crate::math::*;
+use crate::*;
+use math::*;
 
 #[derive(Serialize, Deserialize)]
 struct SpritesheetData {
@@ -76,14 +76,14 @@ pub fn parse(json: &str) -> Result<SpriteData> {
 	let data: SpritesheetData = serde_json::from_str(&json)
 		.map_err(|_| format!("failed to decode json"))?;
 
-	let mut anims = HashMap::new();
+	let mut anims = hmap![];
 	let width = data.meta.size.w;
 	let height = data.meta.size.h;
 
 	let frames = data.frames
 		.iter()
 		.map(|f| {
-			return Quad::new(
+			return quad!(
 				f.frame.x as f32 / width as f32,
 				f.frame.y as f32 / height as f32,
 				f.frame.w as f32 / width as f32,
@@ -96,12 +96,10 @@ pub fn parse(json: &str) -> Result<SpriteData> {
 
 		for anim in frame_tags {
 
-			let mut from = anim.from;
-			let mut to = anim.to;
-
-			if let Direction::Reverse = anim.direction {
-				std::mem::swap(&mut from, &mut to);
-			}
+			let (from, to) = match anim.direction {
+				Direction::Reverse => (anim.to, anim.from),
+				Direction::Forward | Direction::Pingpong => (anim.from, anim.to),
+			};
 
 			anims.insert(anim.name, Anim {
 				from: from as usize,

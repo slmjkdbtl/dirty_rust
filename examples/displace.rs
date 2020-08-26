@@ -54,7 +54,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw_with(&self.shader, &DisplaceUniform {
 			tex: self.effect_tex.clone(),

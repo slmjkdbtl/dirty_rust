@@ -120,7 +120,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let spts = if self.looping {
 			geom::meshgen::spline_loop(&self.pts)

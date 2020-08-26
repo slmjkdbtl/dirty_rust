@@ -117,9 +117,11 @@ impl State for Game {
 				;
 		}
 
-		d.gfx.draw_on(&self.canvas, |gfx| {
-
-			gfx.clear_ex(Surface::Depth);
+		d.gfx.draw_on(&self.canvas, CanvasAction {
+			color: CanvasOp::Load,
+			depth: CanvasOp::Clear,
+			stencil: CanvasOp::Clear,
+		}, |gfx| {
 
 			gfx.push_t(mat4!().s3(vec3!(1.0 / SCALE)), |gfx| {
 
@@ -142,7 +144,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw_t(
 			mat4!()

@@ -20,6 +20,7 @@ build-web example:
 	cargo build \
 		--example {{example}} \
 		--release \
+		--all-features \
 		--target wasm32-unknown-unknown
 	wasm-bindgen target/wasm32-unknown-unknown/release/examples/{{example}}.wasm \
 		--out-dir site/examples \

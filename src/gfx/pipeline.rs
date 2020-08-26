@@ -4,7 +4,6 @@ use super::*;
 
 #[derive(Clone)]
 pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
-	gl: Rc<glow::Context>,
 	handle: Rc<ProgramHandle>,
 	_vertex_layout: PhantomData<V>,
 	_uniform_layout: PhantomData<U>,
@@ -16,8 +15,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 		unsafe {
 
-			let gl = ctx.gl().clone();
-			let handle = ProgramHandle::new(gl.clone())?;
+			let handle = ProgramHandle::new(ctx.gl())?;
+			let gl = handle.ctx();
 
 			let vert_id = gl.create_shader(ShaderType::Vertex.as_glow())?;
 
@@ -54,7 +53,6 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 			gl.delete_shader(frag_id);
 
 			return Ok(Self {
-				gl: gl,
 				handle: Rc::new(handle),
 				_vertex_layout: PhantomData,
 				_uniform_layout: PhantomData,
@@ -66,19 +64,19 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.gl.use_program(Some(self.handle.id()));
+			self.handle.ctx().use_program(Some(self.handle.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.gl.use_program(None);
+			self.handle.ctx().use_program(None);
 		}
 	}
 
 	pub(super) fn loc(&self, name: &'static str) -> Option<glow::UniformLocation> {
 		unsafe {
-			return self.gl.get_uniform_location(self.handle.id(), name);
+			return self.handle.ctx().get_uniform_location(self.handle.id(), name);
 		}
 	}
 

@@ -66,9 +66,6 @@ pub mod ase;
 
 #[cfg(feature = "midi")]
 pub mod midi;
-// TODO: support wasm
-#[cfg(all(feature = "imgui", not(web)))]
-pub mod imgui;
 
 pub type Error = String;
 pub type Result<T> = std::result::Result<T, Error>;

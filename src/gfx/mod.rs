@@ -341,30 +341,6 @@ impl Gfx {
 
 	}
 
-	/// clear current frame
-	pub fn clear(&mut self) {
-
-		self.flush();
-
-		unsafe {
-			self.gl.clear(Surface::Color.as_glow());
-			self.gl.clear(Surface::Depth.as_glow());
-			self.gl.clear(Surface::Stencil.as_glow());
-		}
-
-	}
-
-	/// clear specified buffer
-	pub fn clear_ex(&mut self, s: Surface) {
-
-		self.flush();
-
-		unsafe {
-			self.gl.clear(s.as_glow());
-		}
-
-	}
-
 	/// draw a [`Drawable`](trait.Drawable.html)
 	pub fn draw(&mut self, shape: &impl Drawable) -> Result<()> {
 		return shape.draw(self);
@@ -400,6 +376,7 @@ impl Gfx {
 	pub fn draw_on(
 		&mut self,
 		canvas: &Canvas,
+		action: CanvasAction,
 		f: impl FnOnce(&mut Self) -> Result<()>,
 	) -> Result<()> {
 
@@ -428,16 +405,31 @@ impl Gfx {
 		self.on_canvas = true;
 		self.transform = mat4!();
 
+		canvas.bind();
+
 		unsafe {
+
 			self.gl.viewport(
 				0,
 				0,
 				(cw as f32 * self.dpi) as i32,
 				(ch as f32 * self.dpi) as i32,
 			);
+
+			if action.color == CanvasOp::Clear {
+				self.gl.clear(Surface::Color.as_glow());
+			}
+
+			if action.depth == CanvasOp::Clear {
+				self.gl.clear(Surface::Depth.as_glow());
+			}
+
+			if action.stencil == CanvasOp::Clear {
+				self.gl.clear(Surface::Stencil.as_glow());
+			}
+
 		}
 
-		canvas.bind();
 		f(self)?;
 		self.flush();
 		canvas.unbind();
@@ -736,9 +728,13 @@ impl Gfx {
 
 		self.draw_calls_last = self.draw_calls;
 		self.draw_calls = 0;
-		self.clear();
 
 		unsafe {
+
+			self.gl.clear(Surface::Color.as_glow());
+			self.gl.clear(Surface::Depth.as_glow());
+			self.gl.clear(Surface::Stencil.as_glow());
+
 			self.gl.viewport(
 				0,
 				0,
@@ -850,6 +846,7 @@ struct BlendState {
 	a_dest: BlendFac,
 }
 
+// TODO
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct GLState {
 	blend: BlendState,
@@ -892,6 +889,7 @@ pub enum Flip {
 	XY,
 }
 
+/// built-in blend modes
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Blend {
 	Alpha,
@@ -924,6 +922,7 @@ impl Blend {
 	}
 }
 
+/// origin point of a view
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Origin {
 	TopLeft,
@@ -957,5 +956,36 @@ impl Origin {
 
 	}
 
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CanvasOp {
+	Clear,
+	Load,
+}
+
+/// specifies which buffer to clear or load
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CanvasAction {
+	pub color: CanvasOp,
+	pub depth: CanvasOp,
+	pub stencil: CanvasOp,
+}
+
+impl CanvasAction {
+	pub fn clear() -> Self {
+		return Self {
+			color: CanvasOp::Clear,
+			depth: CanvasOp::Clear,
+			stencil: CanvasOp::Clear,
+		};
+	}
+	pub fn load() -> Self {
+		return Self {
+			color: CanvasOp::Load,
+			depth: CanvasOp::Load,
+			stencil: CanvasOp::Load,
+		};
+	}
 }
 

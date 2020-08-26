@@ -25,7 +25,7 @@ pub trait State: 'static + Sized {
 		return Ok(());
 	}
 
-	fn draw(&self, _: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 

@@ -172,9 +172,7 @@ impl UI {
 
 		let canvas = self.canvas.clone();
 
-		d.gfx.draw_on(&canvas, |gfx| {
-
-			gfx.clear();
+		d.gfx.draw_on(&canvas, CanvasAction::clear(), |gfx| {
 
 			let mut ctx = Ctx {
 				window: d_window,

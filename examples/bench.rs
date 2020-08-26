@@ -48,7 +48,7 @@ impl State for Game {
 
 	}
 
-	fn draw(&self, d: &mut Ctx) -> Result<()> {
+	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let w = d.gfx.width();
 		let h = d.gfx.height();
