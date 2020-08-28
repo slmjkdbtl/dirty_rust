@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+use glow::HasRenderLoop;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::closure::Closure;
 
@@ -20,7 +21,6 @@ pub struct Window {
 	canvas: web_sys::HtmlCanvasElement,
 	window: web_sys::Window,
 	document: web_sys::Document,
-	render_loop: Option<glow::RenderLoop>,
 	pressed_keys: HashSet<Key>,
 	pressed_mouse: HashSet<Mouse>,
 	styles: HashMap<&'static str, String>,
@@ -98,8 +98,6 @@ impl Window {
 			canvas.request_fullscreen();
 		}
 
-		let render_loop = glow::RenderLoop::from_request_animation_frame();
-
 		canvas.set_attribute("style", &build_styles(&styles));
 
 		let mut config = web_sys::WebGlContextAttributes::new();
@@ -122,7 +120,6 @@ impl Window {
 			window: window,
 			document: document,
 			canvas: canvas,
-			render_loop: Some(render_loop),
 			pressed_keys: hset![],
 			pressed_mouse: hset![],
 			mouse_pos: vec2!(),
@@ -332,12 +329,7 @@ impl Window {
 		add_event!("wheel", web_sys::WheelEvent, Wheel);
 		add_event!("fullscreenchange", web_sys::Event, Fullscreen);
 
-		use glow::HasRenderLoop;
-
-		let render_loop = match self.render_loop.take() {
-			Some(l) => l,
-			None => return Ok(()),
-		};
+		let render_loop = glow::RenderLoop::from_request_animation_frame();
 
 		render_loop.run(move |running: &mut bool| {
 

@@ -19,7 +19,7 @@ impl Line3D {
 		return Self {
 			p1,
 			p2,
-			color: rgba!(),
+			color: rgba!(1),
 			width: 1.0,
 		};
 	}

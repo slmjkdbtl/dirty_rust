@@ -31,11 +31,11 @@ macro_rules! gen_vec {
 				macro_rules! $sname {
 
 					() => {
-						$crate::math::$name::default();
+						$crate::math::$name::default()
 					};
 
 					($v:expr) => {
-						$crate::math::$name { $($member: $v as $type),+ };
+						$crate::math::$name::all($v as $type)
 					};
 
 					($d($v:expr),*$d(,)?) => {
@@ -62,7 +62,15 @@ macro_rules! gen_vec {
 
 			pub const fn new($($member: $type,)+) -> Self {
 				return Self {
-					$($member: $member),+
+					$($member: $member,)+
+				};
+			}
+
+			pub const fn all(v: $type) -> Self {
+				return Self {
+					$(
+						$member: v,
+					)+
 				};
 			}
 

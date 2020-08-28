@@ -17,14 +17,6 @@ pub enum Msg {
 	Unknown(Vec<u8>),
 }
 
-// TODO: wait for Option::zip to be stable
-fn option_zip<A, B>(a: Option<A>, b: Option<B>) -> Option<(A, B)> {
-	return match (a, b) {
-		(Some(a), Some(b)) => Some((a, b)),
-		_ => None,
-	};
-}
-
 impl Msg {
 
 	pub fn from(msg: &[u8]) -> Msg {
@@ -40,25 +32,25 @@ impl Msg {
 		match first {
 			// note off
 			0x80..=0x8f => {
-				if let Some((note, vel)) = option_zip(second, third) {
+				if let Some((note, vel)) = Option::zip(second, third) {
 					return Msg::NoteOff(*note as i32, *vel as f32 / 127.0);
 				}
 			},
 			// note on
 			0x90..=0x9f => {
-				if let Some((note, vel)) = option_zip(second, third) {
+				if let Some((note, vel)) = Option::zip(second, third) {
 					return Msg::NoteOn(*note as i32, *vel as f32 / 127.0);
 				}
 			},
 			// continuous
 			0xb0..=0xbf => {
-				if let Some((id, val)) = option_zip(second, third) {
+				if let Some((id, val)) = Option::zip(second, third) {
 					return Msg::Control(*id as i32, *val as f32 / 127.0);
 				}
 			},
 			// pitch
 			0xe0..=0xef => {
-				if let Some((lsb, msb)) = option_zip(second, third) {
+				if let Some((lsb, msb)) = Option::zip(second, third) {
 					return Msg::Pitch(*lsb as f32 / 127.0, *msb as f32 / 127.0);
 				}
 			},
