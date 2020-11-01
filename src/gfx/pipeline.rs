@@ -4,7 +4,8 @@ use super::*;
 
 #[derive(Clone)]
 pub(super) struct Pipeline<V: VertexLayout, U: UniformLayout> {
-	handle: Rc<ProgramHandle>,
+	gl: Rc<glow::Context>,
+	gl_prog: Rc<ProgramHandle>,
 	_vertex_layout: PhantomData<V>,
 	_uniform_layout: PhantomData<U>,
 }
@@ -15,8 +16,8 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 		unsafe {
 
-			let handle = ProgramHandle::new(ctx.gl())?;
-			let gl = handle.ctx();
+			let gl = ctx.gl().clone();
+			let gl_prog = ProgramHandle::new(&gl)?;
 
 			let vert_id = gl.create_shader(ShaderType::Vertex.as_glow())?;
 
@@ -36,24 +37,25 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 				return Err(format!("frag error: {}", gl.get_shader_info_log(frag_id).trim()));
 			}
 
-			gl.attach_shader(handle.id(), vert_id);
-			gl.attach_shader(handle.id(), frag_id);
+			gl.attach_shader(gl_prog.id(), vert_id);
+			gl.attach_shader(gl_prog.id(), frag_id);
 
 			for (i, (name, _)) in V::attrs().iter().enumerate() {
-				gl.bind_attrib_location(handle.id(), i as u32, name);
+				gl.bind_attrib_location(gl_prog.id(), i as u32, name);
 			}
 
-			gl.link_program(handle.id());
+			gl.link_program(gl_prog.id());
 
-			if !gl.get_program_link_status(handle.id()) {
-				return Err(format!("glsl error: {}", gl.get_program_info_log(handle.id()).trim()));
+			if !gl.get_program_link_status(gl_prog.id()) {
+				return Err(format!("glsl error: {}", gl.get_program_info_log(gl_prog.id()).trim()));
 			}
 
 			gl.delete_shader(vert_id);
 			gl.delete_shader(frag_id);
 
 			return Ok(Self {
-				handle: Rc::new(handle),
+				gl: gl,
+				gl_prog: Rc::new(gl_prog),
 				_vertex_layout: PhantomData,
 				_uniform_layout: PhantomData,
 			});
@@ -64,19 +66,19 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.handle.ctx().use_program(Some(self.handle.id()));
+			self.gl.use_program(Some(self.gl_prog.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.handle.ctx().use_program(None);
+			self.gl.use_program(None);
 		}
 	}
 
 	pub(super) fn loc(&self, name: &'static str) -> Option<glow::UniformLocation> {
 		unsafe {
-			return self.handle.ctx().get_uniform_location(self.handle.id(), name);
+			return self.gl.get_uniform_location(self.gl_prog.id(), name);
 		}
 	}
 
@@ -84,7 +86,7 @@ impl<V: VertexLayout, U: UniformLayout> Pipeline<V, U> {
 
 impl<V: VertexLayout, U: UniformLayout> PartialEq for Pipeline<V, U> {
 	fn eq(&self, other: &Self) -> bool {
-		return self.handle == other.handle;
+		return self.gl_prog == other.gl_prog;
 	}
 }
 

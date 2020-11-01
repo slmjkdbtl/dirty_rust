@@ -9,3 +9,7 @@ pub trait Source: Iterator<Item = Frame> {
 	}
 }
 
+pub trait Stream: Send {
+	fn next(&mut self) -> Frame;
+}
+

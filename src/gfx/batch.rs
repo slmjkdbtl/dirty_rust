@@ -139,5 +139,3 @@ impl<V: VertexLayout, U: UniformLayout + PartialEq + Clone> BatchedRenderer<V, U
 
 }
 
-
-

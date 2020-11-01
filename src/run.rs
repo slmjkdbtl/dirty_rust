@@ -21,11 +21,7 @@ pub trait State: 'static + Sized {
 		return Ok(());
 	}
 
-	fn update(&mut self, _: &mut Ctx) -> Result<()> {
-		return Ok(());
-	}
-
-	fn draw(&mut self, _: &mut Ctx) -> Result<()> {
+	fn frame(&mut self, _: &mut Ctx) -> Result<()> {
 		return Ok(());
 	}
 
@@ -94,9 +90,8 @@ fn run_with_conf<S: State>(conf: conf::Conf) -> Result<()> {
 
 			WindowEvent::Frame => {
 				ctx.app.tick();
-				s.update(&mut ctx)?;
 				ctx.gfx.begin_frame();
-				s.draw(&mut ctx)?;
+				s.frame(&mut ctx)?;
 				ctx.gfx.end_frame();
 			},
 

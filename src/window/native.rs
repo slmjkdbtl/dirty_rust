@@ -84,9 +84,9 @@ impl Window {
 				.map_err(|_| format!("cannot set cursor grab"))?;
 		}
 
-		let gl = glow::Context::from_loader_function(|s| {
+		let gl = unsafe { glow::Context::from_loader_function(|s| {
 			return windowed_ctx.get_proc_address(s) as *const _;
-		});
+		}) };
 
 		return Ok(Self {
 			gl: Rc::new(gl),

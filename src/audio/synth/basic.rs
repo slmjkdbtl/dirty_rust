@@ -5,10 +5,11 @@ use super::*;
 use std::collections::VecDeque;
 use std::collections::HashMap;
 
+const BUF_SIZE: usize = 128;
+
 pub struct BasicSynth {
 	notes: HashMap<Note, Voice>,
 	volume: f32,
-	last_time: f32,
 	buf: VecDeque<f32>,
 	clock: f32,
 	sample_rate: u32,
@@ -20,8 +21,7 @@ impl BasicSynth {
 		return BasicSynth {
 			volume: 1.0,
 			notes: hmap![],
-			last_time: 0.0,
-			buf: VecDeque::with_capacity(120),
+			buf: VecDeque::with_capacity(BUF_SIZE),
 			clock: 0.0,
 			sample_rate: SPEC.sample_rate,
 		};
@@ -53,46 +53,28 @@ impl BasicSynth {
 	}
 
 	pub fn release(&mut self, n: Note) {
-
 		if let Some(n) = self.notes.get_mut(&n) {
 			n.release();
 		}
-
 	}
 
 }
 
-impl Source for BasicSynth {
-	fn sample_rate(&self) -> u32 {
-		return self.sample_rate;
-	}
-}
+impl Stream for BasicSynth {
 
-impl Iterator for BasicSynth {
+	fn next(&mut self) -> Frame {
 
-	type Item = Frame;
+		let dt = 1.0 / SPEC.sample_rate as f32;
 
-	fn next(&mut self) -> Option<Self::Item> {
+		self.clock += dt;
 
-		self.clock = (self.clock + 1.0) % self.sample_rate as f32;
-
-		let time = self.clock / self.sample_rate as f32;
-
-		let dt = if time >= self.last_time {
-			time - self.last_time
-		} else {
-			(1.0 + time) - self.last_time
-		};
-
-		self.last_time = time;
-
-		let mut sound = 0.0;
+		let mut frame = 0.0;
 
 		for n in self.notes.values_mut() {
-			sound += n.voice(time);
+			frame += n.voice(self.clock);
 		}
 
-		sound *= self.volume;
+		frame *= self.volume;
 
 		for n in self.notes.values_mut() {
 			n.tick(dt);
@@ -104,9 +86,9 @@ impl Iterator for BasicSynth {
 			self.buf.pop_front();
 		}
 
-		self.buf.push_back(sound);
+		self.buf.push_back(frame);
 
-		return Some(Frame::new(sound, sound));
+		return Frame::new(frame, frame);
 
 	}
 

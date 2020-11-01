@@ -20,7 +20,8 @@ impl Default for TextureConf {
 /// 2D Texture
 #[derive(Clone)]
 pub struct Texture {
-	handle: Rc<TextureHandle>,
+	gl_tex: Rc<TextureHandle>,
+	gl: Rc<glow::Context>,
 	width: i32,
 	height: i32,
 }
@@ -37,10 +38,10 @@ impl Texture {
 
 		unsafe {
 
-			let handle = TextureHandle::new(ctx.gl())?;
-			let gl = handle.ctx();
+			let gl = ctx.gl().clone();
+			let gl_tex = TextureHandle::new(&gl)?;
 
-			gl.bind_texture(glow::TEXTURE_2D, Some(handle.id()));
+			gl.bind_texture(glow::TEXTURE_2D, Some(gl_tex.id()));
 
 			gl.tex_image_2d(
 				glow::TEXTURE_2D,
@@ -81,7 +82,8 @@ impl Texture {
 			gl.bind_texture(glow::TEXTURE_2D, None);
 
 			return Ok(Self {
-				handle: Rc::new(handle),
+				gl_tex: Rc::new(gl_tex),
+				gl: gl,
 				width: w,
 				height: h,
 			});
@@ -94,10 +96,10 @@ impl Texture {
 
 		unsafe {
 
-			let handle = TextureHandle::new(ctx.gl())?;
-			let gl = handle.ctx();
+			let gl = ctx.gl().clone();
+			let gl_tex = TextureHandle::new(&gl)?;
 
-			gl.bind_texture(glow::TEXTURE_2D, Some(handle.id()));
+			gl.bind_texture(glow::TEXTURE_2D, Some(gl_tex.id()));
 
 			gl.tex_image_2d(
 				glow::TEXTURE_2D,
@@ -114,7 +116,8 @@ impl Texture {
 			gl.bind_texture(glow::TEXTURE_2D, None);
 
 			return Ok(Self {
-				handle: Rc::new(handle),
+				gl_tex: Rc::new(gl_tex),
+				gl: gl,
 				width: w,
 				height: h,
 			});
@@ -154,13 +157,13 @@ impl Texture {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.handle.ctx().bind_texture(glow::TEXTURE_2D, Some(self.handle.id()));
+			self.gl.bind_texture(glow::TEXTURE_2D, Some(self.gl_tex.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.handle.ctx().bind_texture(glow::TEXTURE_2D, None);
+			self.gl.bind_texture(glow::TEXTURE_2D, None);
 		}
 	}
 
@@ -170,7 +173,7 @@ impl Texture {
 
 			self.bind();
 
-			self.handle.ctx().tex_sub_image_2d(
+			self.gl.tex_sub_image_2d(
 				glow::TEXTURE_2D,
 				0,
 				x as i32,
@@ -211,7 +214,7 @@ impl Texture {
 		self.bind();
 
 		unsafe {
-			self.handle.ctx().get_tex_image(
+			self.gl.get_tex_image(
 				glow::TEXTURE_2D,
 				0,
 				glow::RGBA,
@@ -227,14 +230,14 @@ impl Texture {
 	}
 
 	pub(super) fn id(&self) -> glow::Texture {
-		return self.handle.id();
+		return self.gl_tex.id();
 	}
 
 }
 
 impl PartialEq for Texture {
 	fn eq(&self, other: &Self) -> bool {
-		return self.handle == other.handle;
+		return self.gl_tex == other.gl_tex;
 	}
 }
 

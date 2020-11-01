@@ -38,7 +38,7 @@ impl State for Game {
 
 	}
 
-	fn update(&mut self, d: &mut Ctx) -> Result<()> {
+	fn frame(&mut self, d: &mut Ctx) -> Result<()> {
 
 		let top_left = d.gfx.coord(gfx::Origin::TopLeft);
 
@@ -62,12 +62,6 @@ impl State for Game {
 			return Ok(());
 
 		})?;
-
-		return Ok(());
-
-	}
-
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
 
 		d.gfx.draw(&shapes::canvas(self.ui.canvas()))?;
 

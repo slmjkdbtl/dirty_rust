@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// Buffer Containing Audio Data
+/// Audio Buffer in Memory
 #[derive(Clone)]
 pub struct AudioBuffer {
 	frames: Vec<Frame>,

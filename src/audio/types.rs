@@ -22,6 +22,18 @@ impl Frame {
 			right: v,
 		};
 	}
+	pub fn zero() -> Self {
+		return Self {
+			left: 0.0,
+			right: 0.0,
+		};
+	}
+	pub fn clamp(self) -> Self {
+		return Self {
+			left: self.left.max(-1.0).min(1.0),
+			right: self.right.max(-1.0).min(1.0),
+		};
+	}
 }
 
 impl Default for Frame {

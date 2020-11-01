@@ -44,7 +44,7 @@ impl State for Game {
 					#[cfg(not(web))]
 					_ => self.sound
 						.builder()
-						.chain(Delay::new(Duration::from_secs_f32(0.2), 3, 0.5))
+						.effect(Delay::new(Duration::from_secs_f32(0.2), 3, 0.5))
 						.pan(math::rand(0.0, 1.0), math::rand(0.0, 1.0))
 						.volume(0.3)
 						.play()?

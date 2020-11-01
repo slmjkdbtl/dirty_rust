@@ -69,21 +69,19 @@ impl Mixer {
 
 }
 
-impl Iterator for Mixer {
+impl Stream for Mixer {
 
-	type Item = Frame;
-
-	fn next(&mut self) -> Option<Self::Item> {
+	fn next(&mut self) -> Frame {
 
 		if self.sources.is_empty() {
-			return None;
+			return Frame::zero();
 		}
 
 		let mut detached = hset![];
 
 		let sample = self.sources
 			.iter_mut()
-			.fold(Frame::new(0.0, 0.0), |frame_acc, (id, ctx)| {
+			.fold(Frame::zero(), |frame_acc, (id, ctx)| {
 
 				let ctrl = match ctx.control.lock() {
 					Ok(ctrl) => ctrl,
@@ -154,7 +152,7 @@ impl Iterator for Mixer {
 			return !detached.contains(id);
 		});
 
-		return Some(sample);
+		return sample;
 
 	}
 

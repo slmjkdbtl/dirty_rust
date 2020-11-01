@@ -27,35 +27,40 @@ impl Life {
 
 	pub fn update(&mut self, dt: f32) {
 
-		if !self.released {
-			self.life += dt;
-		} else {
-			self.afterlife += dt;
-		}
+		let e = &self.envelope;
 
-		let e = self.envelope;
-
-		if !self.released {
-			if self.life < e.attack {
+		// attack
+		if (self.life <= e.attack) {
+			if (e.attack == 0.0) {
+				self.volume = 1.0;
+			} else {
 				self.volume = self.life / e.attack;
-			} else if self.life >= e.attack && self.life < e.attack + e.decay {
-				self.volume = 1.0 - (self.life - e.attack) / e.decay * (1.0 - e.sustain);
-			} else {
-				self.volume = e.sustain;
 			}
+		// decay
+		} else if (self.life > e.attack && self.life <= e.attack + e.decay) {
+			self.volume = 1.0 - (self.life - e.attack) / e.decay * (1.0 - e.sustain);
 		} else {
-			if e.release == 0.0 {
-				self.volume = 0.0;
+			// systain
+			if (!self.released) {
+				self.volume = e.sustain;
+			// release
 			} else {
-				self.volume = e.sustain - (self.afterlife / e.release) * e.sustain;
+				if (e.release == 0.0) {
+					self.volume = 0.0;
+				} else {
+					self.volume = e.sustain * (1.0 - (self.afterlife / e.release));
+					if (self.volume <= 0.0) {
+						self.dead = true;
+						self.volume = 0.0;
+					}
+				}
 			}
 		}
+
+		self.life += dt;
 
 		if self.released {
-			if self.afterlife > e.release {
-				self.volume = 0.0;
-				self.dead = true;
-			}
+			self.afterlife += dt;
 		}
 
 	}

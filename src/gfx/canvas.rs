@@ -5,7 +5,8 @@ use super::*;
 /// Off-screen Rendering Canvas
 #[derive(Clone)]
 pub struct Canvas {
-	handle: Rc<FramebufferHandle>,
+	gl: Rc<glow::Context>,
+	gl_fbuf: Rc<FramebufferHandle>,
 	color_tex: Texture,
 	depth_stencil_tex: Texture,
 	width: i32,
@@ -28,14 +29,14 @@ impl Canvas {
 
 		unsafe {
 
-			let handle = FramebufferHandle::new(ctx.gl())?;
-			let gl = handle.ctx();
+			let gl = ctx.gl().clone();
+			let gl_fbuf = FramebufferHandle::new(&gl)?;
 
 			let pixels = vec![0.0 as u8; (tw * th * 4) as usize];
 			let color_tex = Texture::from_raw_with_conf(ctx, tw, th, &pixels, conf)?;
 			let depth_stencil_tex = Texture::new_depth_stencil(ctx, tw, th)?;
 
-			gl.bind_framebuffer(glow::FRAMEBUFFER, Some(handle.id()));
+			gl.bind_framebuffer(glow::FRAMEBUFFER, Some(gl_fbuf.id()));
 
 			gl.framebuffer_texture_2d(
 				glow::FRAMEBUFFER,
@@ -64,7 +65,8 @@ impl Canvas {
 			gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
 			return Ok(Self {
-				handle: Rc::new(handle),
+				gl: gl,
+				gl_fbuf: Rc::new(gl_fbuf),
 				color_tex: color_tex,
 				depth_stencil_tex: depth_stencil_tex,
 				width: w,
@@ -77,13 +79,13 @@ impl Canvas {
 
 	pub(super) fn bind(&self) {
 		unsafe {
-			self.handle.ctx().bind_framebuffer(glow::FRAMEBUFFER, Some(self.handle.id()));
+			self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.gl_fbuf.id()));
 		}
 	}
 
 	pub(super) fn unbind(&self) {
 		unsafe {
-			self.handle.ctx().bind_framebuffer(glow::FRAMEBUFFER, None);
+			self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 		}
 	}
 
@@ -123,7 +125,7 @@ impl Canvas {
 		unsafe {
 			self.bind();
 			let mut data = [0; 4];
-			self.handle.ctx().read_pixels(
+			self.gl.read_pixels(
 				pos.x as i32,
 				pos.y as i32,
 				1,
@@ -141,7 +143,7 @@ impl Canvas {
 
 impl PartialEq for Canvas {
 	fn eq(&self, other: &Self) -> bool {
-		return self.handle == other.handle;
+		return self.gl_fbuf == other.gl_fbuf;
 	}
 }
 

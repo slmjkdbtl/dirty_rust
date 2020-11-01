@@ -15,7 +15,7 @@ impl Sound {
 	pub fn from_bytes(ctx: &Audio, data: &[u8]) -> Result<Self> {
 
 		let buffer = AudioBuffer::from_bytes(data)?;
-		let playback = AudioBufferPlayback::new(buffer);
+		let playback = AudioBufferPlayback::new(Arc::new(buffer));
 
 		return Ok(Self {
 			playback: playback,
@@ -61,7 +61,7 @@ pub struct SoundBuilder<'a> {
 
 impl<'a> SoundBuilder<'a> {
 
-	pub fn chain(mut self, e: impl Effect + Send + 'static) -> Self {
+	pub fn effect(mut self, e: impl Effect + Send + 'static) -> Self {
 		self.effects.push(Arc::new(Mutex::new(e)));
 		return self;
 	}
@@ -105,9 +105,9 @@ struct AudioBufferPlayback {
 }
 
 impl AudioBufferPlayback {
-	pub fn new(buffer: AudioBuffer) -> Self {
+	pub fn new(buffer: Arc<AudioBuffer>) -> Self {
 		return AudioBufferPlayback {
-			buffer: Arc::new(buffer),
+			buffer: buffer,
 			cur_pos: 0,
 		};
 	}

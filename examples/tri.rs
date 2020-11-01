@@ -6,19 +6,19 @@ use input::*;
 
 const VERTS: &[Vertex] = &[
 	Vertex {
-		pos: vec3!(0, 96, 0),
+		pos: vec3!(0, 120, 0),
 		normal: vec3!(0, 0, 1),
 		color: rgba!(1, 0, 0, 1),
 		uv: vec2!(0),
 	},
 	Vertex {
-		pos: vec3!(-120, -96, 0),
+		pos: vec3!(-160, -120, 0),
 		normal: vec3!(0, 0, 1),
 		color: rgba!(0, 1, 0, 1),
 		uv: vec2!(0),
 	},
 	Vertex {
-		pos: vec3!(120, -96, 0),
+		pos: vec3!(160, -120, 0),
 		normal: vec3!(0, 0, 1),
 		color: rgba!(0, 0, 1, 1),
 		uv: vec2!(0),
@@ -51,7 +51,7 @@ impl State for Tri {
 
 	}
 
-	fn draw(&mut self, d: &mut Ctx) -> Result<()> {
+	fn frame(&mut self, d: &mut Ctx) -> Result<()> {
 		d.gfx.draw(&shapes::raw(&VERTS, &INDICES))?;
 		return Ok(());
 	}

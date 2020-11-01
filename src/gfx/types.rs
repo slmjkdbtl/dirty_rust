@@ -9,31 +9,28 @@ macro_rules! make_handle {
 		paste::paste! {
 
 			pub(super) struct [<$t Handle>] {
-				ctx: Rc<glow::Context>,
+				gl: Rc<glow::Context>,
 				id: glow::$t,
 			}
 
 			impl [<$t Handle>] {
-				pub fn new(ctx: &Rc<glow::Context>) -> Result<Self> {
+				pub fn new(gl: &Rc<glow::Context>) -> Result<Self> {
 					unsafe {
 						return Ok(Self {
-							id: ctx.[<create_ $lt>]()?,
-							ctx: ctx.clone(),
+							id: gl.[<create_ $lt>]()?,
+							gl: gl.clone(),
 						});
 					}
 				}
 				pub fn id(&self) -> glow::$t {
 					return self.id;
 				}
-				pub fn ctx(&self) -> &glow::Context {
-					return &self.ctx;
-				}
 			}
 
 			impl Drop for [<$t Handle>] {
 				fn drop(&mut self) {
 					unsafe {
-						self.ctx.[<delete_ $lt>](self.id);
+						self.gl.[<delete_ $lt>](self.id);
 					}
 				}
 			}
